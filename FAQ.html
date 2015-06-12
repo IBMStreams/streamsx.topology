@@ -76,13 +76,13 @@ If you need to initialize state for one of your stream operations (such as openi
 <br><br>
 In the RegexGrep sample that can be found in the documentation, the readResolve() method is used to initialize a Matcher object to look for regular expressions within a string:
 <pre><code>
-TStream<String> filtered = lines.filter(new Predicate<String>() {
-
+    TStream<String> filtered = lines.filter(new Predicate<String>() {
+	
 	@Override
 	public boolean test(String v1) {
-	    // Pass the line through if it matches the
-	    // regular expression pattern
-	    return matcher.reset(v1).matches();
+		// Pass the line through if it matches the
+		// regular expression pattern
+		return matcher.reset(v1).matches();
 	}
 
 	// Recreate the matcher (which is not serializable)
@@ -98,8 +98,8 @@ TStream<String> filtered = lines.filter(new Predicate<String>() {
 	 * which would require an if statement in the test method.
 	 */
 	private Object readResolve() throws ObjectStreamException {
-	    matcher = pattern.matcher("");
-	    return this;
+		matcher = pattern.matcher("");
+		return this;
 	}
 });
 </code></pre>
