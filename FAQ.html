@@ -80,9 +80,9 @@ TStream<String> filtered = lines.filter(new Predicate<String>() {
 
 	@Override
 	public boolean test(String v1) {
-	// Pass the line through if it matches the
-	// regular expression pattern
-	return matcher.reset(v1).matches();
+	    // Pass the line through if it matches the
+	    // regular expression pattern
+	    return matcher.reset(v1).matches();
 	}
 
 	// Recreate the matcher (which is not serializable)
@@ -98,8 +98,8 @@ TStream<String> filtered = lines.filter(new Predicate<String>() {
 	 * which would require an if statement in the test method.
 	 */
 	private Object readResolve() throws ObjectStreamException {
-	matcher = pattern.matcher("");
-	return this;
+	    matcher = pattern.matcher("");
+	    return this;
 	}
 });
 </code></pre>
