@@ -1,0 +1,36 @@
+<project name="streamsx.topology.toolkit" default="all" >
+    <description>
+        Build the streamsx.topology toolkit.
+    </description>
+
+  <import file="../common-build.xml"/>
+
+  <property name="spl.tk"
+     value="${streams.install}/toolkits/spl"/>
+
+  <target name="all">
+
+   <!-- icons copied from spl toolkit -->
+   <mkdir dir="${tk.opt}/icons"/>
+   <copy todir="${tk.opt}/icons">
+      <fileset dir="${spl.tk}/spl/relational/Filter"
+          includes="*.gif" />
+      <fileset dir="${spl.tk}/spl/relational/Functor"
+          includes="*.gif" />
+      <fileset dir="${spl.tk}/spl/relational/Join"
+          includes="*.gif" />
+      <fileset dir="${spl.tk}/spl/relational/Aggregate"
+          includes="*.gif" />
+   </copy>
+
+   <exec executable="${streams.install}/bin/spl-make-toolkit">
+     <arg value="-i"/>
+     <arg value="${tk}"/>
+   </exec>
+   </target>
+
+  <target name="clean" >
+    <delete dir="${tk.opt}/icons"/>
+    <delete file="${tk}/toolkit.xml"/>
+  </target>
+</project>

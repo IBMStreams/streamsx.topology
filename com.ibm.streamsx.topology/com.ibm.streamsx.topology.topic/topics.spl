@@ -1,0 +1,28 @@
+namespace com.ibm.streamsx.topology.topic ;
+
+public composite Publish(input In )
+{
+	param
+		expression<rstring> $topic ;
+	graph
+		() as ExportTopic = Export(In)
+		{
+			param
+				properties : { __spl_exportType = "topic", __spl_topic = $topic } ;
+		}
+
+}
+
+public composite Subscribe(output Out )
+{
+	param
+		type $streamType ;
+		expression<rstring> $topic ;
+	graph
+		stream<$streamType> Out = Import()
+		{
+			param
+				subscription : __spl_exportType == "topic" && __spl_topic == $topic ;
+		}
+
+}

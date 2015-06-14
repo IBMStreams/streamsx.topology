@@ -1,0 +1,23 @@
+<body>
+Sample applications and use of the Java topology API for IBM InfoSphere Streams.
+<h3>Sample Streaming Applications</h3>
+<TABLE class="overviewSummary" border=1 width="80%">
+<TR class="rowColor"><TH>Sample</TH><TH>Description</TH><TH>Focus</TH></TR>
+<TR class="altColor"><TD>{@link simple.HelloWorld}</TD><TD>Prints Hello World! to standard output.</TD>
+  <TD>Basic mechanics of declaring a topology and executing it.</TD></TR>
+<TR class="rowColor"><TD>{@link simple.Echo}</TD><TD>Echos command line arguments to standard out.</TD>
+  <TD>Passing in runtime values to a topology.</TD></TR>
+<TR class="altColor"><TD>{@link simple.FilterEcho}</TD><TD>Echos a subset of command line arguments to standard out</TD>
+<TD>Use of Java functional programming style for filtering.</TD></TR>
+<TR class="rowColor"><TD>{@link simple.Grep}</TD><TD>Continually watches a directory, reads new files in the directory and prints lines from the files containing a search term to standard out</TD>
+<TD>Use of utility methods provided by the Java topology API.</TD></TR>
+<TR><TD>{@link twitter.TwitterTrending}</TD><TD>Reads tweets from a specified directory and calculates the trending hashtags in parallel.</TD>
+<TD>A real-world usage for windowing.</TD></TR>
+<TR class="altColor"><TD>{@link simple.RegexGrep}</TD><TD>Continually watches a directory, reads new files in the directory and prints lines
+from the files that match a regular expression to standard out</TD>
+<TD>Java functional programming using an anonymous class with initialization.</TD></TR>
+<TR class="rowColor"><TD>{@link vwap.Vwap}</TD><TD>SPL Vwap sample reimplemented in Java.</TD>
+<TD>Java objects as tuples, integration with SPL operators and tuples.</TD></TR>
+<TR><TD>Sample</TD><TD>Description</TD><TD>Focus</TD></TR>
+</TABLE>
+</body>

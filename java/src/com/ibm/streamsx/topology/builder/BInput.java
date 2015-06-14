@@ -1,0 +1,18 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015  
+ */
+package com.ibm.streamsx.topology.builder;
+
+public class BInput extends BJSONObject {
+
+    private final GraphBuilder builder;
+
+    public BInput(GraphBuilder builder) {
+        this.builder = builder;
+    }
+
+    public GraphBuilder builder() {
+        return builder;
+    }
+}

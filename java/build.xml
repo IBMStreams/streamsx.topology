@@ -1,0 +1,53 @@
+<project name="streamsx.topology.java" default="all" >
+    <description>
+        Build the Streams Java functional api.
+    </description>
+
+  <import file="../common-build.xml"/>
+
+  <property name="src" location="src"/>
+  <property name="classes" location="classes"/>
+  <property name="jarname" value="com.ibm.streamsx.topology.jar"/>
+  <property name="jar" location="${tk.lib}/${jarname}"/>
+
+  <path id="compile.classpath">
+    <path refid="streams.classpath"/>
+    <path refid="tk.classpath"/>
+  </path>
+
+  <target name="all" depends="jar"/>
+
+
+  <target name="init">
+    <mkdir dir="${classes}"/>
+    <mkdir dir="${tk.lib}"/>
+  </target>
+
+  <target name="compile" depends="init">
+    <javac debug="true" includeantruntime="no"
+	   srcdir="${src}" 
+	   destdir="${classes}"
+	   classpathref="compile.classpath"/>
+  </target>
+
+
+  <target name="jar" depends="compile">
+  <manifestclasspath property="jar.classpath" jarfile="${jar}">
+     <classpath refid="tk.classpath" />
+  </manifestclasspath>
+    <jar destfile="${jar}" basedir="${classes}">
+       <manifest>
+          <attribute name="Class-Path" value="${jar.classpath}"/>
+       </manifest>
+    <fileset dir="${classes}"/>
+    <fileset dir="${src}"
+       excludes="com/ibm/streamsx/topology/internal/**"
+       />
+    </jar>
+  </target>
+
+  <target name="clean" >
+    <delete dir="${classes}"/>
+    <delete dir="${tk.lib}"/>
+  </target>
+</project>

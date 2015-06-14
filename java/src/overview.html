@@ -1,0 +1,149 @@
+<body>
+Java API to allow creation of streaming applications
+for IBM InfoSphere Streams by Java developers.
+<P>
+IBM&reg; InfoSphere&reg; Streams is an advanced analytic platform that allows user-developed =
+applications to quickly ingest, analyze and correlate information as it arrives from
+thousands of real-time sources. Streams can handle very high data throughput rates,
+millions of events or messages per second.
+<BR>
+With this API Java developers can build streaming applications that can be
+executed using IBM InfoSphere Streams, including the processing being distributed
+across multiple computing resources (hosts or machines) for scalability.
+<BR>
+The fundamental building block of a Java Streams application is a
+{@link com.ibm.streamsx.topology.TStream stream}, which  is 
+continuous sequence of tuples (messages, events, records).
+The API provides the ability to perform some form of processing or analytics
+on each tuple as it appears on a stream, resulting in a new stream containing
+tuples representing the result of the processing against the input tuples.
+<BR>
+{@link com.ibm.streamsx.topology.Topology#source source streams} are streams
+containing tuples from external systems, for example
+a source stream may be created from a reading messages from a message queue system,
+such as MQTT. The purpose of a source stream is to bring the external data into
+the Streams environment, so that it can be processed, analyzed, correlated with
+other streams, etc.
+<BR>
+Streams are terminated using {@link com.ibm.streamsx.topology.TStream#sink sink functions}
+that typically deliver tuples to external systems, such as real-time dashboards,
+SMS alerts, databases, HDFS files, etc.
+</P>
+<P>
+An application is represented by a
+{@link com.ibm.streamsx.topology.Topology}
+object containing instances of {@link com.ibm.streamsx.topology.TStream}.
+The Java interface {@link com.ibm.streamsx.topology.TStream TStream<T>}
+is a declaration of a stream of tuples, each tuple being an instance of the
+Java class or interface T. For example {@code TStream<String>} represents a stream where
+each tuple will be {@code String} object, while, for example, {@code TStream<CallDetailRecord>}
+represents a stream of {@code com.sometelco.switch.CallDetailRecord} tuples.
+Thus, tuples on streams are Java objects, rather than SPL tuples with an attribute based schema.
+</P>
+<P>
+Streams are created (sourced), transformed or terminated (sinked) generally though functions,
+where a function is represented by an instance of a Java class with a single method.
+Frequently, these functions are implemented by anonymous classes specific to an application,
+though utility methods may encapsulate one or more functions. Here is an example of
+filtering out all empty strings from stream {@code s} of type {@code String} 
+<pre>
+<code>
+Stream&lt;String> s = ...
+Stream&lt;String> filtered = s.filter(new Predicate&lt;String>() {
+             &#64;Override
+             public boolean test(String tuple) {
+                 return !tuple.isEmpty();
+             }} );
+</code>
+</pre>
+{@link com.ibm.streamsx.topology.TStream#filter s.filter()} is passed an instance of
+{@link com.ibm.streamsx.topology.function7.Predicate}, and sets up a filter
+where the output stream {@code filtered} will only contain tuples from the
+input stream {@code s} if the method {@code test()} returns {@code true}.
+This implementation of {@code Predicate}, provided as an anonymous class,
+returns true if the input tuple (a {@code String} object) is not empty.
+At runtime, every {@code String} tuple that appears on {@code s} will result in a
+call to {@code test}, if the {@code String} tuple is not empty, then {@code filtered} will
+contain the {@code String} tuple.
+</P>
+<P>
+The API is provided as as an SPL toolkit {@code com.ibm.streamsx.topology} containing the
+Java API in {@code lib/com.ibm.streamsx.topology.jar} as well as the SPL operators used
+to execute the Java functional transformations.
+</P>
+<H2>Features</H2>
+These features are supported:
+<TABLE class="overviewSummary" border="1" style="width:80%">
+<TR><TH>Feature</TH><TH>Reference</TH><TH>Since</TH></TR>
+
+<TR class="rowColor"><TD>Tuple types are Java objects.</TD><TD>{@link com.ibm.streamsx.topology.TStream}</TD><TD>0.7</TD></TR>
+<TR class="altColor"><TD>Functional programming, streams are transformed, filtered etc. by functional transformations
+implemented as Java functions. A Java function is an implementation of interface with a single method.</TD><TD>{@link com.ibm.streamsx.topology.TStream}</TD><TD>0.7</TD></TR>
+
+<TR class="rowColor"><TD>Execution within the Java virtual machine, IBM InfoSphere Streams
+4.0 Streams standalone or distributed</TD><TD>{@link com.ibm.streamsx.topology.context.StreamsContext}</TD><TD>0.7</TD></TR>
+
+<TR class="altColor"><TD>Pipeline topologies.</TD><TD>{@link com.ibm.streamsx.topology.Topology}</TD><TD>0.7</TD></TR>
+<TR class="rowColor"><TD>Fan-out, multiple independent functions may be applied to a
+single stream to produce multiple streams of different or the same type.</TD><TD>{@link com.ibm.streamsx.topology.TStream}</TD><TD>0.7</TD></TR>
+<TR class="altColor"><TD>Fan-in, multiple independent streams of the same type may transformed by a
+single function to produce a single stream.</TD><TD>{@link com.ibm.streamsx.topology.TStream#union union}</TD><TD>0.7</TD></TR>
+
+<TR class="rowColor"><TD>Window based aggregation and joins, including partitioning.</TD><TD>{@link com.ibm.streamsx.topology.TWindow}</TD><TD>0.7</TD></TR>
+<TR class="altColor"><TD>Parallel streams (UDP, User Defined Parallelism), including partitioning.</TD><TD>{@link com.ibm.streamsx.topology.TStream#parallel parallel}</TD><TD>0.7</TD></TR>
+<TR class="rowColor"><TD>Dynamic topic based publish-subscribe stream model for cross application communication (Streams dynamic connections).</TD>
+<TD>{@link com.ibm.streamsx.topology.TStream#publish publish}, {@link com.ibm.streamsx.topology.Topology#subscribe subscribe}</TD><TD>0.7</TD></TR>
+
+<TR class="altColor"><TD>Testing of topologies, including those using SPL operators,
+while running in distributed, standalone or embedded.</TD><TD>{@link com.ibm.streamsx.topology.tester.Tester}</TD><TD>0.7</TD></TR>
+
+<TR class="rowColor"><TD>Integration with SPL streams using SPL attribute schemas.</TD><TD>{@link com.ibm.streamsx.topology.spl.SPLStream}</TD><TD>0.7</TD></TR>
+<TR class="altColor"><TD>Invocation of existing SPL primitive or composite operators.</TD><TD>{@link com.ibm.streamsx.topology.spl.SPL}</TD><TD>0.7</TD></TR>
+</TABLE>
+
+<H2>Samples</H2>
+A number of sample Java applications are provided under samples. The samples declare a topology and then execute it,
+the Apache Ant {@code build.xml} file includes some targets for executing the samples, demonstrating the correct class path.
+<BR>
+The javadoc for the samples includes the sample source code (click on the class name of a sample), and is also copied
+into the SPL toolkit for reference, and is available here: <a href="../samples/javadoc/index.html" target="_blank">Java Functional Samples</a>
+<h2>Declaring a Topology</h2>
+Java code is used to create a streaming topology, or graph, starting with the {@link com.ibm.streamsx.topology.Topology}
+object and then creating instances of {@link com.ibm.streamsx.topology.TStream} by:
+<UL>
+<LI>&bull; Invoking methods such as {@link com.ibm.streamsx.topology.Topology#source source} to produce a source stream.</LI>
+<LI>&bull; Invoking utility static methods that declare a source stream, such as those in {@link com.ibm.streamsx.topology.streams.BeaconStreams}.</LI>
+<LI>&bull; Invoking methods such as {@link com.ibm.streamsx.topology.TStream#filter filter}
+ to produce a stream derived from another stream.</LI>
+</UL>
+<BR>
+Streams are terminated by {@link com.ibm.streamsx.topology.TStream#sink sinks}, typically the tuples are sent to an external system by the sink function.
+<P>
+A topology may be arbitrarily complex, including multiple sources and sinks, fan-out on any stream by having multiple functional transformations or fan-in
+by creating a {@link com.ibm.streamsx.topology.TStream#union union} of streams with identical tuple types.
+</P>
+<P>
+Creating the {@code Topology} and its streams as instances of {@code TStream} just declares how tuples will flow,
+it is not a runtime representation of the graph. The {@code TStream} is submitted to a 
+{@link com.ibm.streamsx.topology.context.StreamsContext} in order to execute the graph. 
+<h2>Java compilation and execution</h2>
+The API requires these jar files to be in the classpath for compilation and execution:
+<UL>
+<LI>&bull; {@code com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar} - Jar for this API.</LI>
+<LI>&bull; {@code $STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar} - IBM InfoSphere Streams Java Operator API.</LI>
+</UL>
+<BR>
+<H2>Testing</H2>
+The API includes the ability to test topologies, by allow the test program to capture the output tuples of a stream ({@code TStream})
+and validate them. This is described in the {@code com.ibm.streamsx.topology.tester} package overview.
+
+<H2>Integration with SPL</H2>
+While the design goal for the API is to not require knowledge of SPL, Java developers familiar with SPL may also
+utilize some
+{@link com.ibm.streamsx.topology.spl.SPL SPL primitive and composite operators}
+from existing toolkits and use
+{@link com.ibm.streamsx.topology.spl.SPLStream streams that have SPL schemas}.
+<BR>
+@see <a href="https://developer.ibm.com/streamsdev/new-to-streams/">New to IBM InfoSphere Streams</a>
+@see com.ibm.streamsx.topology.tester.Tester Testing support for topologies
+</body>
