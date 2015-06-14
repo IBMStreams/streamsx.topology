@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Streamsx.topology</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+                      <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+                      <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+                      <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+                      <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+            <section class="page-header">
+              <h1 class="project-name">Streamsx.topology</h1>
+              <h2 class="project-tagline">A project that supports building streaming topologies (applications) for InfoSphere Streams in different programming languages, such as Java.</h2>
+              <a href="https://github.com/ibmstreams/streamsx.topology" class="btn">View releases</a>
+              <a href="http://ibmstreams.github.io/streamsx.topology/doc.html" class="btn">Documentation</a>
+              <a href="http://ibmstreams.github.io/streamsx.topology/gettingstarted/gettingstarted.html" class="btn">Getting started</a>
+              <a href="http://ibmstreams.github.io/streamsx.topology/FAQ.html" class="btn">FAQ</a>
+            </section>
+
+            <section class="main-content">
+              <h3>
+                <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a>FAQ</h3>
+
+<h4>1) How do I compile and run my application?</h4>
+
+To compile your application, you only need to have the com.ibm.streamsx.topology.jar file in your classpath. For example:
+<pre><code>
+    $ javac -cp "~/streamsx-topology/com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar" my.application.java
+</code></pre>
+
+Running your application is similar, but you also need to add ${STREAMS_INSTALL}/lib to your classpath:
+<pre><code>
+    $ java -cp "~/streamsx-topology/com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:${STREAMS_INSTALL}/lib/*:." my.application
+</code></pre>
+
+<h4>2) I'm having issues reading and writing to files that I defined/initialized in my main() method. What gives?</h4>
+
+Any Java object that your application references must be statically initialized. For example the following approach to initializing a file would be invalid:
+<pre><code>
+public static BufferedWriter writer = null;
+public static void main(String[] args){
+writer = Files.newBufferedWriter("myFile.txt", charset);
+...
+myStream.sink(new FunctionV() {        
+        @Override
+        public void accept(String v) {
+            writer.write(v);
+        }
+    });
+...
+}
+</pre></code>
+That approach would fail because the writer variable is accessed statically by the application, so it would be seen as null. The following would be one way of properly initializing <i>writer</i>:
+<pre><code>
+public static BufferedWriter writer = null;
+static{
+    BufferedWriter tmp = null;
+    try{
+        Charset charset = Charset.forName("US-ASCII");
+        final Path outfile = (new File("outfile.txt")).toPath();
+        tmp = Files.newBufferedWriter(outfile, charset);
+    } catch(Exception e){
+        e.printStackTrace();
+    }
+    writer = tmp;
+}
+
+public static void main(String argv[]){...}
+</code></pre>
+
+<h4>3) I need to do some initialization in one of my stream transformations when running in standalone or distributed. How can I do this?</h4>
+If you need to initialize state for one of your stream operations (such as opening a file or a database connection), implement a readResolve() method in the body of the transformation. When your application is loaded, the readResolve() method is invoked once before other methods. 
+<br><br>
+In the RegexGrep sample that can be found in the documentation, the readResolve() method is used to initialize a Matcher object to look for regular expressions within a string:
+<pre><code>
+    TStream<String> filtered = lines.filter(new Predicate<String>() {
+	
+	@Override
+	public boolean test(String v1) {
+		// Pass the line through if it matches the
+		// regular expression pattern
+		return matcher.reset(v1).matches();
+	}
+
+	// Recreate the matcher (which is not serializable)
+	// when the object is deserialized using readResolve.
+	transient Matcher matcher;
+
+	/*
+	 * Since the constructor is no invoked after serialization
+	 * we use readResolve as a hook to execute initialization
+	 * code, in this case creating the matcher from the
+	 * pattern. 
+	 * The alternative would be to create it on its first use,
+	 * which would require an if statement in the test method.
+	 */
+	private Object readResolve() throws ObjectStreamException {
+		matcher = pattern.matcher("");
+		return this;
+	}
+});
+</code></pre>
+
+You'll notice that the Matcher is marked as transient. This is because not all Java objects are serializable, and must therefore be excluded from the objects that are serialized when your application is submitted. Otherwize, you may encounter a NotSerializableException.
+
+<h4>4) parallel() doesn't function properly when I run in an EMBEDDED context. Is this a bug?</h4>
+Currently, parallel() is not supported when running embedded. While your application will compile and run, no parallelism will actually occur. Another way of putting it is that when running embedded, any call to parallel() will result in the equivalent of calling parallel(1).
+
+
+
+
+
+
+</body>
+</html>
