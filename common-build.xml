@@ -1,0 +1,23 @@
+<project name="streamsx.topology.common">
+    <description>
+        Common definitions for streamsx.topology
+    </description>
+
+  <dirname property="streamsx.topology" file="${ant.file.streamsx.topology.common}"/>
+
+  <property environment="env"/>
+  <property name="streams.install" value="${env.STREAMS_INSTALL}"/>
+  <property name="tk.name" value="com.ibm.streamsx.topology"/>
+  <property name="tk" location="${streamsx.topology}/${tk.name}"/>
+  <property name="tk.opt" location="${tk}/opt"/>
+  <property name="tk.lib" location="${tk}/lib"/>
+
+  <property name="topology.test.root" location="${streamsx.topology}/test"/>
+
+  <path id="streams.classpath">
+    <pathelement location="${streams.install}/lib/com.ibm.streams.operator.samples.jar" />
+  </path>
+  <path id="tk.classpath">
+    <pathelement location="${tk.opt}/apache-mina-2.0.2/dist/mina-core-2.0.2.jar" />
+  </path>
+</project>

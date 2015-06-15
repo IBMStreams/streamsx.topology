@@ -1,0 +1,16 @@
+namespace testspl;
+
+/**
+  Simple filter to test testing of
+  an SPL composite.
+*/
+public composite Int32Filter(input In; output Out) {
+    param
+        attribute $attr;
+        expression<int32> $value;
+    graph
+    stream<In> Out = Filter(In) {
+       param
+          filter: $attr == $value;
+    }
+}

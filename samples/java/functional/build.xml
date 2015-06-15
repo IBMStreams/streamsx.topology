@@ -1,0 +1,89 @@
+<project name="FunctionalSamples" default="all" basedir=".">
+    <description>
+        Build the functional samples.
+    </description>
+
+  <property environment="env"/>
+  <property name="streams.install" value="${env.STREAMS_INSTALL}"/>
+  <property name="tk.lib" location="../../../com.ibm.streamsx.topology/lib"/>
+
+  <property name="classes" location="classes"/>
+  <property name="jarname" value="functionalsamples.jar"/>
+
+  <path id="compile.classpath">
+    <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
+    <pathelement location="${streams.install}/lib/com.ibm.streams.operator.samples.jar" />
+  </path>
+
+  <path id="run.classpath">
+    <pathelement location="${jarname}" />
+    <path refid="compile.classpath"/>
+  </path>
+
+  <target name="all" depends="jar"/>
+
+  <target name="init">
+    <mkdir dir="${classes}"/>
+  </target>
+
+  <target name="compile" depends="init">
+    <javac debug="true" 
+	   srcdir="${basedir}/src" 
+	   destdir="${classes}"
+	   classpathref="compile.classpath"
+	   includeantruntime="no"
+	   />
+  </target>
+  <target name="jar" depends="compile">
+    <jar destfile="${jarname}" basedir="${classes}"/>
+  </target>
+
+  <target name="clean" >
+    <delete dir="${classes}"/>
+    <delete file="${jarname}"/>
+  </target>
+
+  <target name="run.helloworld">
+     <java classname="simple.HelloWorld" classpathref="run.classpath" fork="yes"/>
+  </target>
+  <target name="run.echo">
+     <java classname="simple.Echo" classpathref="run.classpath" fork="yes">
+       <arg value="this is"/>
+       <arg value="being run"/>
+       <arg value="from ant!"/>
+     </java>
+  </target>
+     
+  <!-- Each word of this quote is a tuple in this example -->
+  <!--    It is not in the stars to hold our destiny but in ourselves -->
+  <!-- the output will only include destiny as the filter is starts with d -->
+  <target name="run.filterecho">
+     <java classname="simple.FilterEcho" classpathref="run.classpath" fork="yes">
+       <arg value="It"/> <arg value="is"/> <arg value="not"/>
+       <arg value="in"/> <arg value="the"/> <arg value="stars"/>
+       <arg value="to"/> <arg value="hold"/> <arg value="our"/>
+       <arg value="destiny"/> <arg value="but"/> <arg value="in"/>
+       <arg value="ourselves"/>
+     </java>
+  </target>
+
+  <target name="run.vwap">
+     <java classname="vwap.Vwap" classpathref="run.classpath" fork="yes">
+       <arg value="STANDALONE"/>
+     </java>
+  </target>
+
+  <target name="doc">
+       <mkdir dir="javadoc"/>
+       <javadoc destdir="javadoc" classpathref="compile.classpath"
+          Overview="src/overview.html"
+          Windowtitle="Java Functional Samples"
+          Footer="streamsx.topology @ IBMStreams GitHub"
+          linksource="yes"
+          >
+            <fileset dir="src">
+            </fileset>
+       </javadoc>
+  </target>
+</project>
+

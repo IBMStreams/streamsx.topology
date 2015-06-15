@@ -1,0 +1,89 @@
+<project name="streamsx.topology" default="all" >
+    <description>
+        Build the Streams Java functional api.
+    </description>
+
+  <import file="common-build.xml"/>
+
+  <property name="release.base" location="release-${ant.project.name}" />
+
+  <target name="all">
+    <ant dir="java"/>
+    <ant dir="samples/java/functional"/>
+    <ant dir="toolkit"/>
+    <ant dir="test/java"/>
+  </target>
+
+  <target name="clean" >
+    <ant dir="java" target="clean"/>
+    <ant dir="samples/java/functional" target="clean"/>
+    <ant dir="toolkit" target="clean"/>
+    <ant dir="test/java" target="clean"/>
+    <delete dir="${tk}/doc/javadoc"/>
+    <delete dir="${release.base}"/>
+  </target>
+
+  <target name="test" >
+    <ant dir="test/java">
+       <target name="unittest"/>
+       <target name="junit.report"/>
+       <target name="coverage.report"/>
+    </ant>
+  </target>
+
+  <target name="test.quick" >
+    <ant dir="test/java">
+       <target name="unittest.quick"/>
+       <target name="junit.report"/>
+    </ant>
+  </target>
+  <target name="test.report" >
+    <ant dir="test/java">
+       <target name="junit.report"/>
+    </ant>
+  </target>
+
+  <!-- Release targets !-->
+  <path id="javadoc.classpath">
+    <path location="${tk.lib}/com.ibm.streamsx.topology.jar"/>
+    <path refid="streams.classpath"/>
+    <path refid="tk.classpath"/>
+  </path>
+
+  <target name="release" depends="clean,all,doc,create_release_bundle"/>
+
+  <target name="doc">
+       <mkdir dir="${tk}/doc"/>
+       <ant dir="samples/java/functional" target="doc"/>
+       <mkdir dir="${tk}/doc/samples/javadoc"/>
+       <copy todir="${tk}/doc/samples/javadoc">
+           <fileset dir="samples/java/functional/javadoc"/>
+       </copy>
+       <javadoc destdir="${tk}/doc/javadoc" classpathref="javadoc.classpath"
+          Overview="java/src/overview.html"
+          Windowtitle="Java Topology API for InfoSphere Streams"
+          Footer="streamsx.topology 0.7 beta @ IBMStreams GitHub"
+          >
+            <fileset dir="java/src">
+               <include name="com/ibm/streamsx/topology/**"/>
+               <exclude name="com/ibm/streamsx/topology/internal/**"/>
+            </fileset>
+       </javadoc>
+
+  </target>
+  <target name="create_release_bundle">
+      <tstamp/>
+      <property name="release.dir" location="${release.base}" />
+      <mkdir dir="${release.dir}" />
+      <property name="releasefilename" value="${release.dir}/streamsx.topology-v0.7-${DSTAMP}-${TSTAMP}.tgz"/>
+      <tar compression="gzip" longfile="gnu" destfile="${releasefilename}"
+         basedir="${basedir}"
+         includes="com.ibm.streamsx.topology/** samples/**"
+         excludes="**/.gitignore" />
+      <checksum file="${releasefilename}"/>
+      <checksum algorithm="sha1" file="${releasefilename}"/>
+  </target>
+
+
+
+</project>
