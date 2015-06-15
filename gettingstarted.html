@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Streamsx.topology</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+                      <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+                      <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+                      <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+                      <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+            <section class="page-header">
+              <h1 class="project-name">Streamsx.topology</h1>
+              <h2 class="project-tagline">A project that supports building streaming topologies (applications) for InfoSphere Streams in different programming languages, such as Java.</h2>
+              <a href="https://github.com/Wmarshall484/streamsx.topology/releases" class="btn">View releases</a>
+              <a href="http://wmarshall484.github.io/streamsx.topology/doc.html" class="btn">Documentation</a>
+              <a href="http://wmarshall484.github.io/streamsx.topology/gettingstarted/gettingstarted.html" class="btn">Getting started</a>           
+	      <a href="http://wmarshall484.github.io/streamsx.topology/FAQ.html" class="btn">FAQ</a>
+            </section>
+
+            <section class="main-content">
+	              <h3>streamsx.topology Quick Start Guide</h3>
+        <p>
+        The streamsx.topology project allows you to write IBM Streams application in Java, without having to learn about SPL.  In this guide, we are going to show:
+<ul>
+<li>How to install the streamsx.topology project</li>
+<li>Setting up samples project in Eclipse</li>
+<li>How to write your first Streams application in Java and have it submitted to a Streams instance.</li>
+</ul>        
+
+<h3>Installation</h3>
+<p>You can try out this feature in one of two ways:</p>
+<ol>
+<li>Streams Quick Start Edition VM</li>
+<li>Manual Installation of the streamsx.topology toolkit</li>
+</ol>   
+
+<h3>Streams Quick Start Edition VM</h3>
+<p>You can try out this feature in one of two ways:</p>
+<ol>
+<li>Download the Streams Quick Start Edition VM image here:  http://www-01.ibm.com/software/data/infosphere/stream-computing/trials.html</li>
+<li>Extract and use a VM player of your choice to play the VM image</li>
+</ol>   
+
+The VM image has the streamsx.topology toolkit installed.  The toolkit is located at:
+/home/streamsadmin/streamx.topology/streamsx.topology-v<build id>/ 
+This directory contains two sub-directories:
+
+<ul>
+<li>com.ibm.streamsx.topology - the topology toolkit that enables you to write your Streams application in Java</li>
+<li>samples - a set of samples that demonstrate the Java APIs</li>
+</ul>
+<h4>Trying out Samples in Eclipse</h4>
+<p>To try out the samples, follow these steps:</p>
+
+<ol>
+<li>Double click on the InfoSphere Streams Studio (Eclipse) icon on the desktop to start Streams Studio.</li>
+<li>When prompted for a workspace, specify this as the workspace to open:  /home/streamsadmin/Workspaces/topology</li>
+</ol>
+
+<h3>Manual Installation</h3> 
+<p>If you already have a Streams v4.x installation, you can manually install this toolkit.</p>
+<ol>  
+<li>Download the latest release from here:  https://github.com/IBMStreams/streamsx.topology/releases</li>
+<li>Unzip the streamsx.topology*.tar.gz file onto the file system.</li>
+<li>Start Eclipse / Streams Studio.</li>
+<li>Set up classpath variable in your workspace:</li>
+<ol>
+<li>Open Windows -> Preferences -> Java -> Build Path -> Classpath Variables</li>
+<li>Click New...</li>
+<li>In the New Variable Entry dialog, provide a name for the library.  I put mine as "STREAMS_JAVA_FUNCTIONAL_API".</li>
+<li>Click File…</li>
+<li>Browse to locate the following file:  [streamsx.topology install path]/com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar</li>
+</ol>
+</ol>
+<p>This completes the installation of the streamsx.topology project.
+The steps above are specific to installing the toolkit in Eclipse or Streams Studio.  You may use other tooling of your choice.  In that case, make sure you add mina-core*.jar and com.ibm.streamsx.topology.jar file as part of your application class path.
+</p>
+<h4>Trying out samples in Eclipse</h4>
+<ol>
+<li>File -> Import -> General -> Existing Projects into Workspace</li>
+<li>Browse to <streamsx.topology_install_location>/samples/java/functional directory as the root to import.</li>
+<li>Select JavaFunctionalAPISamples. </li>
+<li>Select Copy projects into workspace</li>
+</ol>
+This will import the sample project into your workspace.  The project expect a classpath variable named STREAMS_JAVA_FUNCTIONAL_API.  Follow the steps from previous section to define this classpath variable.
+
+<h3>Exploring the Samples</h3>
+<p>
+The Streams Topology project contains a number of samples to help you learn the Streams Topology Java APIs.
+For a list of all samples available, refer to this page:  [LINK TO SAMPLES]
+</p>
+
+<h3>Running the Samples</h3>
+<p>
+You can run the sample like any Java application in Eclipse.  To run the samples:
+<ol>
+<li> Create a new Java launch configuration of the sample that you want to run.  For example, if you would like to run the 
+Vwap sample, create a Java launch configuration for the Vwap class.</li>
+<li>In the Java launch configuration dialog, open the Arguments.</li>
+<li>In the Arguments, specify one of the following values as the Program Arguments</li>
+    <ul>
+    <li>EMBEDDED - Run the application in embedded mode.  This is a simulated Java environment for running your Streams application.</li>
+    <li>STANDALONE - Run the application in stand alone mode.  When running in this mode, SPL code will be generated based on your Streams topology.  The SPL application is then
+      compiled as a Standalone application.  The application runs as a single process.</li>
+    <li>DISTRIBUTED - Run the application in distributed mode.  When running in this mode, SPL code will be generated based on your Streams topology.  The SPL application
+      is compiled in Distributed mode and therefore the application can be submitted to a Strams instance.  When running in this mode, the Streams topology API relies on 
+      the following environment variables to determine which domain and instance the application should be submitted to:
+          <ul>
+          <li>TODO:  look for env variables</li>
+          </ul> </li>
+    <ul>
+</ol> 
+</p>
+
+<h3>Monitoring your Streams Application</h3>
+
+<p>If you have launched your job as DISTRIBUTED, you can monitor your running job using the Streams Console.
+To open the Streams Console:</p>
+<ol>
+<li>Run this command at the command line:  streamstool geturl - This should provide you with the URL of the Streams Console for your domain.</li>
+<li>Open the browser and enter the URL</li>
+<li>You will be prompted for an user ID and password.  If you are using the Streams Quick Start VM, use streamsAdmin:passw0rd.</li> 
+</ol>
+
+<p>
+If you have Streams Studio installed, you may also see the running job in Streams Explorer view and Instance Graph.
+</p>
+
+</p>
+</section>
+</body>
+</html>
