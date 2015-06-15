@@ -3,13 +3,56 @@
   <head>
     <meta charset="UTF-8">
     <title>Streamsx.topology</title>
+    <style>
+#toc {
+width: 50%;
+    margin: 0 auto;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    position: relative;
+    background: #333;
+    box-shadow: inset -5px 0 5px 0px #000;
+    padding-top: 20px;
+    color: #fff;
+}
+
+#toc ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+#toc li {
+    padding: 5px 10px;
+}
+
+#toc a {
+    color: #fff;
+    text-decoration: none;
+    display: block;
+}
+
+#toc .toc-h2 {
+    padding-left: 10px;
+}
+
+#toc .toc-h3 {
+    padding-left: 20px;
+}
+
+#toc .toc-active {
+    background: #336699;
+    box-shadow: inset -5px 0px 10px -5px #000;
+}
+</style>
     <meta name="viewport" content="width=device-width, initial-scale=1">
                       <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
                       <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
                       <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
                       <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
   </head>
-  <body>
+
             <section class="page-header">
               <h1 class="project-name">Streamsx.topology</h1>
               <h2 class="project-tagline">A project that supports building streaming topologies (applications) for InfoSphere Streams in different programming languages, such as Java.</h2>
@@ -18,14 +61,19 @@
               <a href="gettingstarted.html" class="btn">Getting started</a>
               <a href="FAQ.html" class="btn">FAQ</a>
             </section>
+  <body>
 
             <section class="main-content">
-              <h3>
+<h3> Table of contents</h3>
+<div class="toc">
+</div>      
+        <h3>
                 <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Java Application API FAQ</h3>
-<h4>1) What version of streams do I need to be running to use the Java Application API?</h4>
+
+<h4>What version of streams do I need to be running to use the Java Application API?</h4>
 The Java Application API uses IBM Streams 4.0.0.0 or later.
 
-<h4>2) I'm having issues reading and writing to files that I defined/initialized in my main() method. What gives?</h4>
+<h4>I'm having issues reading and writing to files that I defined/initialized in my main() method. What gives?</h4>
 
 Any Java object that your application references must be statically initialized. For example the following approach to initializing a file would be invalid:
 <pre><code>
@@ -60,7 +108,7 @@ static{
 public static void main(String argv[]){...}
 </code></pre>
 
-<h4>3) I need to do some initialization in one of my stream transformations when running in standalone or distributed. How can I do this?</h4>
+<h4>I need to do some initialization in one of my stream transformations when running in standalone or distributed. How can I do this?</h4>
 If you need to initialize state for one of your stream operations (such as opening a file or a database connection), implement a readResolve() method in the body of the transformation. When your application is loaded, the readResolve() method is invoked once before other methods. 
 <br><br>
 In the RegexGrep sample that can be found in the documentation, the readResolve() method is used to initialize a Matcher object to look for regular expressions within a string:
@@ -95,7 +143,27 @@ In the RegexGrep sample that can be found in the documentation, the readResolve(
 
 You'll notice that the Matcher is marked as transient. This is because not all Java objects are serializable, and must therefore be excluded from the objects that are serialized when your application is submitted. Otherwize, you may encounter a NotSerializableException.
 
-<h4>4) parallel() doesn't function properly when I run in an EMBEDDED context. Is this a bug?</h4>
+<h4>parallel() doesn't function properly when I run in an EMBEDDED context. Is this a bug?</h4>
 Currently, parallel() is not supported when running embedded. While your application will compile and run, no parallelism will actually occur. Another way of putting it is that when running embedded, any call to parallel() will result in the equivalent of calling parallel(1).
+<script src="javascripts/jquery-2.1.4.js"></script>
+<script src="javascripts/toc.min.js"></script>
+<script>
+$('.toc').toc({'selectors': 'h4', //elements to use as headings
+    'container': 'body', //element to find all selectors in
+    'smoothScrolling': true, //enable or disable smooth scrolling on click
+    'prefix': 'toc', //prefix for anchor tags and class names
+    'onHighlight': function(el) {}, //called when a new section is highlighted 
+    'highlightOnScroll': true, //add class to heading that is currently in focus
+    'highlightOffset': 100, //offset to trigger the next headline
+    'anchorName': function(i, heading, prefix) { //custom function for anchor name
+        return prefix+i;
+    },
+    'headerText': function(i, heading, $heading) { //custom function building the header-item text
+        return $heading.text();
+    },
+'itemClass': function(i, heading, $heading, prefix) { // custom function for item class
+  return $heading[0].tagName.toLowerCase();
+}});
+</script>
 </body>
 </html>
