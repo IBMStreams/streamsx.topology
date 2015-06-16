@@ -21,6 +21,7 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.function7.Supplier;
 
 public class TopologyTest {
 
@@ -42,6 +43,27 @@ public class TopologyTest {
         final Topology f = new Topology();
         assertSame(f, f.topology());
         assertEquals("testDefaultName", f.getName());
+    }
+    
+    /**
+     * Test that we fail when an anonymous class
+     * captures a non-static reference.
+     */
+    @Test(expected=IllegalArgumentException.class)
+    public void testNonStaticContext() {
+        final Topology t = new Topology();
+        
+        // This captures a reference to the instance
+        // of TopologyTest running the test, which is
+        // not serializable, thus it will fail.
+        t.source(new Supplier<Iterable<String>>() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Iterable<String> get() {
+                // TODO Auto-generated method stub
+                return null;
+            }}, String.class);
     }
     
     /**
