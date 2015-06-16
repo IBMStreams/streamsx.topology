@@ -336,15 +336,42 @@ public class SPLGenerator {
 		return uniqueParents;
 	}
 
-	/**
+    /**
      * Takes a name String that might have characters which are incompatible in
-     * an SPL stream name and maps them to the '_' character.
+     * an SPL stream name (which just supports ASCII) and
+     * returns a valid SPL name.
+     * 
+     * This is a one way mapping, we only need to provide a name that
+     * is a unique mapping of the input.
      * 
      * @param name
      * @return A string which can be a valid SPL stream name.
      */
     static String getSPLCompatibleName(String name) {
-        return name.replaceAll("[^a-zA-Z0-9]", "_");
+
+        if (name.matches("^[a-zA-Z0-9_]+$"))
+            return name;
+
+        StringBuilder sb = new StringBuilder(name.length());
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')) {
+                sb.append(c);
+                continue;
+            }
+            if (c == '_') {
+                sb.append("__");
+                continue;
+            }
+            sb.append("_u");
+            String code = Integer.toHexString(c);
+            if (code.length() < 4)
+                sb.append("000".substring(code.length() - 1));
+            sb.append(code);
+        }
+    	
+    	return sb.toString();
     }
 
     static String basename(String name) {
