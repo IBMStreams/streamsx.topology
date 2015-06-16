@@ -4,23 +4,19 @@
  */
 package com.ibm.streamsx.topology.test;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-import com.ibm.streams.admin.internal.api.sec.SSLMutualAuthenticator.Context;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;

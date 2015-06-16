@@ -6,8 +6,11 @@ package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -46,4 +49,71 @@ public class JavaTupleTest extends TestTopology {
         }
 
     }
+    
+    /**
+     * Test a class with non-ascii characters in its name can be used.
+     */
+    @Test
+    public void testNonAsciiClass() throws Exception {
+    	
+    	List<NAŇÃ> nas = new ArrayList<>();
+    	nas.add(new NAŇÃ("one"));
+    	nas.add(new NAŇÃ("two"));
+    	nas.add(new NAŇÃ("three"));
+    	
+        final Topology topology = new Topology();
+        TStream<NAŇÃ> source = topology.constants(nas, NAŇÃ.class);
+            
+        completeAndValidate(source, 10,  "one-NAŇÃ", "two-NAŇÃ", "three-NAŇÃ");
+    }
+    
+    /**
+     * Test two classes with similar non-ascii characters in its name can be used
+     * 
+     */
+    @Test
+    public void testNonAsciiClasses() throws Exception {
+    	
+    	List<NAŇÃ> nas = new ArrayList<>();
+    	nas.add(new NAŇÃ("one"));
+    	nas.add(new NAŇÃ("two"));
+    	nas.add(new NAŇÃ("three"));
+    	
+    	List<NAÃÃ> naas = new ArrayList<>();
+    	naas.add(new NAÃÃ("one"));
+    	naas.add(new NAÃÃ("two"));
+    	naas.add(new NAÃÃ("three"));
+  	
+        final Topology topology = new Topology();
+        TStream<NAŇÃ> sourceNAŇÃ = topology.constants(nas, NAŇÃ.class);
+        TStream<NAÃÃ> sourceNAÃÃ = topology.constants(naas, NAÃÃ.class);
+            
+        completeAndValidate(sourceNAÃÃ, 10,  "one-NAÃÃ", "two-NAÃÃ", "three-NAÃÃ");
+    }
+    
+    public static class NAŇÃ implements Serializable {
+		private static final long serialVersionUID = 1L;
+		private final String s;
+    	 
+    	public NAŇÃ(String s) {
+    		this.s = s;
+    	}
+    	public String toString() {
+    		return s + "-NAŇÃ";
+    	}
+    }
+    
+    public static class NAÃÃ implements Serializable {
+		private static final long serialVersionUID = 1L;
+		private final String s;
+    	 
+    	public NAÃÃ(String s) {
+    		this.s = s;
+    	}
+    	public String toString() {
+    		return s + "-NAÃÃ";
+    	}
+    }
+    
+    
 }
