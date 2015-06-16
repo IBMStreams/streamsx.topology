@@ -172,7 +172,8 @@ public class JavaFunctional {
                         
             if (!Serializable.class.isAssignableFrom(fieldClass)) {
                 throw new IllegalArgumentException(
-                        "Functional logic argument " + logic + " contains a non-serializable field,"
+                        "Functional logic argument " + logic + " contains a non-serializable field:"
+                                + f.getName() + " ,"
                                 + "ensure anonymous classes are declared in a static context.");
             }           
         }
