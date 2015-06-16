@@ -42,6 +42,6 @@ This requires that your environment is setup so that `streamtool submitjob` subm
 ### Test reports
 
 Running the test targets produces two reports:
-* `test/report/junit/index.html` - JUnit test report
-* `test/report/coverage/index.html` - Code soverage report. Full coverage numbers are obtained by running the top-level `test` and `unittest.distributed` targets.
+* `test/java/report/junit/index.html` - JUnit test report
+* `test/java/report/coverage/index.html` - Code soverage report. Full coverage numbers are obtained by running the top-level `test` and `unittest.distributed` targets.
 
