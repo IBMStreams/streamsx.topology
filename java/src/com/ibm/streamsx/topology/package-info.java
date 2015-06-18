@@ -57,6 +57,7 @@
  * typically this object (the code declaring the topology) will not be serializable,
  * and is not required by the anonymous class for execution.
  * </li>
+ * <ul>
  * <li>
  * The code declaring the topology passes parameters into an anonymous class by
  * having local variables or method parameters that are {@code final} and thus
@@ -69,12 +70,18 @@
  * in an anonymous class that references a static file name set when
  * declaring the topology, will not see that value when executing at runtime.
  * </li>
+ * </ul>
  * <li>
  * When the functional logic is deserialized before being executed at runtime,
  * its constructor is not called. Thus any transient fields either need to
  * be initialized on their first use or using the Java serialization hooks
  * {@code readObject()} or {@code readResolve()}. The sample {@code RegexGrep}
  * has an example of this.
+ * </li>
+ * <li>
+ * A single deserialized instance of functional logic is called for all tuples on each
+ * {@link com.ibm.streamsx.topology.TStream#parallel(int) parallel channel}, when the stream is not parallelized
+ * a single instance is called.
  * </li>
  * </UL>
  * <h4>Synchronization of Functional Logic</h4>
@@ -91,9 +98,24 @@
  * from multiple concurrent calls or to ensure visibility.
  * 
  * <h4>Stateful Functional Logic</h4>
- * A single functional logic instance is used to process all tuples on
- * a stream, which means it may maintain state across those tuples.
- * 
+ * A functional logic instance lives for the lifetime of its container (embedded JVM, standalone process
+ * or processing element in distributed mode),
+ * thus it may maintain state across the invocations of its method. For a de-duplicating
+ * {@link com.ibm.streamsx.topology.function7.Predicate} may maintain a collection of
+ * previously seen tuples on the stream to filter out duplicates.
+ * <BR>
+ * In distributed mode, if a processing element (PE) restarts then any state will be lost and
+ * a new functional logic instance set to its initial deserialized state is created.
+ * <BR>
+ * For future compatibility:
+ * <ul>
+ * <li>
+ * any state that should not be persisted on a checkpoint
+ * must be marked as {@code transient}, such as connections to external systems.</li>
+ * <li>
+ * any non-changing instance fields should be marked as {@code final}.
+ * </li>
+ * </ul>
  * <H3>Pass by reference semantics for tuples</H3>
  * Where possible, tuples are passed by reference from one stream to another,
  * thus in a general case, a tuple (as a Java object) is returned from one

@@ -7,6 +7,8 @@ package com.ibm.streamsx.topology.internal.core;
 import static com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor.FUNCTIONAL_LOGIC_PARAM;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,6 +42,7 @@ public class JavaFunctional {
     public static BOperatorInvocation addFunctionalOperator(TopologyElement te,
             Class<? extends Operator> opClass, Serializable logic) {
 
+        verifySerializable(logic);
         String logicString = ObjectUtils.serializeLogic(logic);
         BOperatorInvocation bop = te.builder().addOperator(opClass,
                 Collections.singletonMap(FUNCTIONAL_LOGIC_PARAM, logicString));
@@ -59,7 +62,8 @@ public class JavaFunctional {
         if (params == null)
             params = new HashMap<>();
 
-        String logicString = ObjectUtils.serializeLogic(logic);
+        verifySerializable(logic);
+        String logicString = ObjectUtils.serializeLogic(logic);        
         params.put(FUNCTIONAL_LOGIC_PARAM, logicString);
         BOperatorInvocation bop = te.builder().addOperator(name, opClass,
                 params);
@@ -138,5 +142,40 @@ public class JavaFunctional {
     private static void addDependency(TopologyElement te,
             BOperatorInvocation bop, Object function) {
         te.topology().getDependencyResolver().addJarDependency(bop, function);
+    }
+    
+    /**
+     * Simple check of the fields in the serializable logic
+     * to ensure that all non-transient field are serializable. 
+     * @param logic
+     */
+    private static void verifySerializable(Serializable logic) {
+        
+        final Class<?> logicClass = logic.getClass();
+        
+        for (Field f : logicClass.getDeclaredFields()) {
+            final int modifiers = f.getModifiers();
+            if (Modifier.isStatic(modifiers))
+                continue;
+            if (Modifier.isTransient(modifiers))
+                continue;
+            
+            // We can't check for regular fields as the
+            // declaration might be valid as Object, but only
+            // contain serializable objects at runtime.
+            if (!f.isSynthetic())
+                continue;
+            
+            Class<?> fieldClass = f.getType();
+            if (fieldClass.isPrimitive())
+                continue;
+                        
+            if (!Serializable.class.isAssignableFrom(fieldClass)) {
+                throw new IllegalArgumentException(
+                        "Functional logic argument " + logic + " contains a non-serializable field:"
+                                + f.getName() + " ,"
+                                + "ensure anonymous classes are declared in a static context.");
+            }           
+        }
     }
 }
