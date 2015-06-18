@@ -41,13 +41,13 @@ public class JavaPrimitive {
                 getInvocationName(opClass),
                 opClass, params);
         SourceInfo.setSourceInfo(op, JavaPrimitive.class);
-        input.connectTo(op, false, null);
+        input.getStream().connectTo(op, false, null);
 
         return new SPLStreamImpl(input, op.addOutput(outputSchema));
     }
 
     /**
-     * Invocation a Java primitive operator that consumes a Stream.
+     * Invocation of a Java primitive operator that consumes a Stream.
      * 
      * @param opClass
      *            Class of the operator to be invoked
@@ -55,21 +55,21 @@ public class JavaPrimitive {
      *            Stream that will be connected to the only input port of the
      *            operator
      * @param params
-     *            Parameters for the SPL operator, ignored if null
+     *            Parameters for the operator, ignored if null
      */
     public static void invokeJavaPrimitiveSink(
-            Class<? extends Operator> opClass, SPLStream input,
+            Class<? extends Operator> opClass, SPLInput input,
             Map<String, ? extends Object> params) {
 
         BOperatorInvocation sink = input.builder().addOperator(
                 getInvocationName(opClass),
                 opClass, params);
         SourceInfo.setSourceInfo(sink, JavaPrimitive.class);
-        input.connectTo(sink, false, null);
+        input.getStream().connectTo(sink, false, null);
     }
 
     /**
-     * Invocation an SPL source operator to produce a SPL Stream.
+     * Invocation of a Java primitive source operator to produce a SPL Stream.
      * 
      * @param te
      *            Reference to Topology the operator will be in.

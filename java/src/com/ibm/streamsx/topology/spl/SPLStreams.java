@@ -6,10 +6,13 @@ package com.ibm.streamsx.topology.spl;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.StreamSchema;
+import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
@@ -127,5 +130,35 @@ public class SPLStreams {
                         return v2;
                     }
                 }, Schemas.STRING);
+    }
+
+    /**
+     * Convert window to an SPL window with a count based trigger policy.
+     * 
+     * @param window
+     *            Window to be converted.
+     * @param count
+     *            Count trigger policy value
+     * @return SPL window with that will trigger every {@code count} tuples.
+     */
+    public static SPLWindow triggerCount(TWindow<Tuple> window, int count) {
+        return new SPLWindowImpl(window, count);
+    }
+
+    /**
+     * Convert window to an SPL window with a time based trigger policy.
+     * 
+     * @param window
+     *            Window to be converted.
+     * @param time
+     *            TIme trigger policy value.
+     * @param unit
+     *            Unit for {@code time}.
+     * @return SPL window with that will trigger periodically according to
+     *         {@code time}.
+     */
+    public static SPLWindow triggerTime(TWindow<Tuple> window, long time,
+            TimeUnit unit) {
+        return new SPLWindowImpl(window, time, unit);
     }
 }

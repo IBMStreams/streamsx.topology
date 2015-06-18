@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.spl;
 
+import static com.ibm.streamsx.topology.spl.SPLStreams.stringToSPLStream;
+
 import java.util.Collections;
 
 import com.ibm.streams.operator.StreamSchema;
@@ -36,7 +38,7 @@ public class FileSPLStreams {
 
         SPLStream csvReader = SPL.invokeOperator(
                 "CSVFileReader",
-                "spl.adapter::FileSource", fileNames,
+                "spl.adapter::FileSource", stringToSPLStream(fileNames),
                 outputSchema, null);
         
         return csvReader;
@@ -55,7 +57,8 @@ public class FileSPLStreams {
      */
     public static SPLStream csvCompressedReader(TStream<String> fileNames,
             StreamSchema outputSchema, Compression compression) {
-        return SPL.invokeOperator("CSVCompressedFileReader", "spl.adapter::FileSource", fileNames,
+        return SPL.invokeOperator("CSVCompressedFileReader",
+                "spl.adapter::FileSource", stringToSPLStream(fileNames),
                 outputSchema,
                 Collections.singletonMap("compression", compression));
     }
