@@ -171,10 +171,9 @@ Vwap sample, create a Java launch configuration for the Vwap class.</li>
 <li>In the Arguments, specify one of the following values as the Program Arguments</li>
     <ul>
     <li>EMBEDDED - Run the application in embedded mode.  This is a simulated Java environment for running your Streams application.</li>
-    <li>STANDALONE - Run the application in stand alone mode.  When running in this mode, SPL code will be generated based on your Streams topology.  The SPL application is then
-      compiled as a Standalone application.  The application runs as a single process.</li>
-    <li>DISTRIBUTED - Run the application in distributed mode.  When running in this mode, SPL code will be generated based on your Streams topology.  The SPL application
-      is compiled in Distributed mode and therefore the application can be submitted to a Strams instance.</li>
+    <li>DISTRIBUTED - Run the application in distributed mode.  When an application is submitted with this context, a Streams Application Bundle (.sab file) is produced. The .sab file contains all of the application's logic and third-party dependencies, and can be submitted to a Streams instance. For information on how to submit an application bundle to an instance from the command line, please refer to the "Running Streams Applications in Distributed Mode" section of the <a href="domainsetup.html">Domain Setup Guide</a>.</li>
+    <li>STANDALONE - Run the application in stand alone mode.  When running in this mode, the application also produces a Streams Applicaition Bundle (.sab file), but rather than submitting it to a cluster, the bundle is instead executable. The bundle will run within its own process, and may be terminated with ctrl-C interrupts.</li>
+
     <ul>
 </ol> 
 </p>
