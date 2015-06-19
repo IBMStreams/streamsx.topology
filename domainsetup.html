@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Streamsx.topology</title>
+        <style>
+#toc {
+width: 50%;
+    margin: 0 auto;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    position: relative;
+    background: #333;
+    box-shadow: inset -5px 0 5px 0px #000;
+    padding-top: 20px;
+    color: #fff;
+}
+
+#toc ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+#toc li {
+    padding: 5px 10px;
+}
+
+#toc a {
+    color: #fff;
+    text-decoration: none;
+    display: block;
+}
+
+#toc .toc-h2 {
+    padding-left: 10px;
+}
+
+#toc .toc-h3 {
+    padding-left: 20px;
+}
+
+#toc .toc-active {
+    background: #336699;
+    box-shadow: inset -5px 0px 10px -5px #000;
+}
+</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+                      <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+                      <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+                      <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+                      <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+            <section class="page-header">
+              <h1 class="project-name">Streamsx.topology</h1>
+              <h2 class="project-tagline">A project that supports building streaming topologies (applications) for InfoSphere Streams in different programming languages, such as Java.</h2>
+              <a href="https://github.com/ibmstreams/streamsx.topology/releases" class="btn">View releases</a>
+              <a href="doc.html" class="btn">Documentation</a>
+              <a href="gettingstarted.html" class="btn">Getting started</a>           
+	      <a href="FAQ.html" class="btn">FAQ</a>
+            </section>
+
+            <section class="main-content">
+	      <h3> Table of contents</h3>
+	      <div class="toc">
+	      </div>      
+<h3>Streams Domain and Instance</h3>
+
+To run your application in distributed mode, you need a Streams Domain and a Streams Instance.  A domain is a logical grouping of resources (or containers) in a network for common management and administration.  It can contain one or more instances that share a security model, and a set of domain services.
+
+An instance is the Streams distributed runtime environment.  It is composed of a set of interacting services running across one or multiple resources.  The Streams Instance is responsible for running Streams applications.  When an application is submitted onto a Streams instance, it distributes the application code onto each of the resources.  It coordinates with the instance services to execute the processing elements.
+<h3>Setting up a Development Domain and Instance</h3>
+
+To set up a development domain and instance, follow these steps.  A development domain and instance runs on a single host.  You can dynamically add additional host to the domain later.
+
+First, if you have not already done so, set up the necessary environment variables by running the streamsprofile.sh.
+
+<code>
+source <Streams_Install>/bin/streamsprofile.sh
+</code>
+
+Next, start streamstool by typing the following command:
+
+<code>
+streamtool
+</code>
+
+When prompted to provide a ZooKeeper ensemble, enter the ZooKeeper ensemble string if you have a ZooKeeper server set up.  Otherwise, press enter to use the embedded ZooKeeper.
+
+streamtool is an interactive tool.  To get content assist and auto-complete,  press <Tab>.
+<h4>
+Domain
+</h4>
+
+To make a new domain, enter this command in the streamtool interactive command session:
+
+<code>
+mkdomain -d <domainName>
+</code>
+
+Generate public and private key for Streams, so you do not have to keep logging in:
+
+<code>
+genkey
+</code>
+
+Start the domain:
+
+<code>
+startdomain
+</code>
+
+<b>Tip:</b>  If the domain fails to start because a port is in use, you may change the port number by using setdomainproperty.  For example, if JMX and SWS ports are in use:
+
+<code>
+setdomainproperty jmx.port=<jmxPort> sws.port=<sws.Port>
+</code>
+
+<h4>
+Instance
+</h4>
+To make a new instance, enter this command:
+
+<code>
+mkinstance -i <instance-id>
+<code>
+
+Start the instance:
+
+<code>
+startinstance
+<code>
+
+<h3>
+Running Streams Applications in Distributed Mode
+</h3>
+
+Now that you have a domain and instance started, you can run your application in distributed mode.  To submit a job, find the application bundle file (*.sab), and run the following command:
+
+<code>
+streamtool submitjob appBundleName.sab
+</code>
+
+To submit our sample application, we will change into the output directory of the application and submit the application bundle:
+
+<code>
+cd output/application.TradesAppMain/
+streamtool submitjob application.TradesAppMain.sab
+</code>
+
+<h3>
+Querying for Job Status
+</h3>
+
+You may query job status from your Streams Instance using streamtool commands.
+
+If using embedded ZooKeeper:
+
+<code>
+streamtool lsjob -d <streamsDomainName> -i <instanceName> --embeddedzk
+</code>
+
+If using external ZooKeeper ensemble:
+
+<code>
+streamtool lsjob -d <streamsDomainName> -i <instanceName> --zkconnect <zooKeeperHost>:<zooKeeperPort>
+</code>
+
+You will see job status similar to this:
+
+<code>
+[streamsadmin@streamsqse Distributed]$ streamtool lsjobs -d StreamsDomain -i StreamsInstance --embeddedzk
+Instance: StreamsInstance
+ Id State Healthy User Date Name Group
+ 6 Running yes streamsadmin 2015-04-30T18:32:48-0400 application::TradesAppMain_6 default
+</code>
+</section>
+<script src="javascripts/jquery-2.1.4.js"></script>
+<script src="javascripts/toc.min.js"></script>
+<script>
+$('.toc').toc({'selectors': 'h3', //elements to use as headings
+    'container': 'body', //element to find all selectors in
+    'smoothScrolling': true, //enable or disable smooth scrolling on click
+    'prefix': 'toc', //prefix for anchor tags and class names
+    'onHighlight': function(el) {}, //called when a new section is highlighted 
+    'highlightOnScroll': true, //add class to heading that is currently in focus
+    'highlightOffset': 100, //offset to trigger the next headline
+    'anchorName': function(i, heading, prefix) { //custom function for anchor name
+        return prefix+i;
+    },
+    'headerText': function(i, heading, $heading) { //custom function building the header-item text
+        return $heading.text();
+    },
+'itemClass': function(i, heading, $heading, prefix) { // custom function for item class
+  return $heading[0].tagName.toLowerCase();
+}});
+</script>
+</body>
+</html>
