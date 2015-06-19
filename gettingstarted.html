@@ -179,22 +179,6 @@ Vwap sample, create a Java launch configuration for the Vwap class.</li>
 </ol> 
 </p>
 
-<h3>Command line usage of the Java Application API:</h3>
-
-To compile and run Java functional API programs through using the command line, be sure the classpath includes com.ibm.streamsx.topology.jar and the jars in ${STREAMS_INSTALL}/lib. If you don't include the proper jars, your program will fail to compile due to ClassNotFoundExceptions. For example, a program named myApplication may be compiled as follows:
-<pre>
-javac -cp "../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:${STREAMS_INSTALL}/lib/*" myApplication.java
-</pre>
-Be sure that every path specified in the Java classpath is either an absolute or relative path -- bash completions such as '~' will not work.
-
-The compiled application will produce a myApplication.class file, and potentially a number of generated classes of the form myApplication$1.class, myApplication$2.class, etc.
-
-To run your application use the same classpath as before, but also be sure to include the location of the compiled myApplication classes (in this case, the current working directory):
-<pre>
-java -cp ".:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:${STREAMS_INSTALL}/lib/*"
-</pre>
-This will run the compiled java program. If you have specified that the application should run distributed (as in, with a DISTRIBUTED context), then running the program will product a .sab bundle that can be submitted to a Streams domain. For documentation on how to create a streams Domain and submit a .sab file, see the tutorial at: <a href="domainsetup.html">Domain Setup Guide</a>.
-
 <h3>Monitoring your Streams Application</h3>
 
 <p>If you have launched your job as DISTRIBUTED, you can monitor your running job using the Streams Console.
@@ -212,6 +196,43 @@ If you have Streams Studio installed, you may also see the running job in Stream
 </p>
 
 </p>
+
+<h3>Command line usage of the Java Application API:</h3>
+<h4>Compiling and running Java Application API projects manually</h4>
+To compile and run Java functional API programs through using the command line, be sure the classpath includes com.ibm.streamsx.topology.jar and the jars in ${STREAMS_INSTALL}/lib. If you don't include the proper jars, your program will fail to compile due to ClassNotFoundExceptions. For example, a program named myApplication may be compiled as follows:
+<pre>
+javac -cp "../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:${STREAMS_INSTALL}/lib/*" myApplication.java
+</pre>
+Be sure that every path specified in the Java classpath is either an absolute or relative path -- bash completions such as '~' will not work.
+<br>
+The compiled application will produce a myApplication.class file, and potentially a number of generated classes of the form myApplication$1.class, myApplication$2.class, etc.
+<br>
+To run your application use the same classpath as before, but also be sure to include the location of the compiled myApplication classes (in this case, the current working directory):
+<pre>
+java -cp ".:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:${STREAMS_INSTALL}/lib/*"
+</pre>
+This will run the compiled java program. If you have specified that the application should run distributed (as in, with a DISTRIBUTED context), then running the program will product a .sab bundle that can be submitted to a Streams domain. For documentation on how to create a streams Domain and submit a .sab file, see the tutorial at: <a href="domainsetup.html">Domain Setup Guide</a>.
+<h4>Viewing logs for distributed applications from command line</h4>
+To view the log outputs of a Java Application API project that was submitted with the DISTRIBUTED context, use the <i>getlog</i> command. <i>getlog</i> collects the logs from every host that is connected with your domain, and aggregates then in a tar file. To collect the logs, simply run <code>streamtool getlog</code> at the command line.
+<br>
+Afterwards, a file name StreamsLogs.tgz should be present in the current working directory, which contains the following top-level directory structure:
+<pre>
+    $ls
+    autopdzip  &lt;host_id>  streams.0.log  streams.1.log  streams.2.log  version  &lt;domain_id>.json
+</pre>
+To view the logs for a particular job, cd to &lt;host_id>/instances/&lt;instance_id>/jobs/&lt;job_id>/. Inside, you should see log outputs for each source, sink, or transformation in the topology -- each assigned a unique number. For the "Hello World" example, in which there is only a source and a sink, there would be the following files present: 
+<pre>
+[user@sdsvm0001 4]$ ls -l
+total 16
+-rw-rw-r-- 1 wcmarsha wcmarsha  1 Jun 15 14:18 pec.37.out
+-rw-rw-r-- 1 wcmarsha wcmarsha  1 Jun 19 14:16 pec.38.out
+-rw-rw-r-- 1 wcmarsha wcmarsha  1 Jun 19 14:18 pec.pe.37.stdouterr
+-rw-rw-r-- 1 wcmarsha wcmarsha 12 Jun 19 14:18 pec.pe.38.stdouterr
+</pre>
+Where pec.pe.38.stdouterr contains the output "Hello World!".
+
+
+
 </section>
 <script src="javascripts/jquery-2.1.4.js"></script>
 <script src="javascripts/toc.min.js"></script>
