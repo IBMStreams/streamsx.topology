@@ -179,6 +179,22 @@ Vwap sample, create a Java launch configuration for the Vwap class.</li>
 </ol> 
 </p>
 
+<h3>Command line usage of the Java Application API:</h3>
+
+To compile and run Java functional API programs through using the command line, be sure the classpath includes com.ibm.streamsx.topology.jar and the jars in ${STREAMS_INSTALL}/lib. If you don't include the proper jars, your program will fail to compile due to ClassNotFoundExceptions. For example, a program named myApplication may be compiled as follows:
+<pre>
+javac -cp "../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:${STREAMS_INSTALL}/lib/*" myApplication.java
+</pre>
+Be sure that every path specified in the Java classpath is either an absolute or relative path -- bash completions such as '~' will not work.
+
+The compiled application will produce a myApplication.class file, and potentially a number of generated classes of the form myApplication$1.class, myApplication$2.class, etc.
+
+To run your application use the same classpath as before, but also be sure to include the location of the compiled myApplication classes (in this case, the current working directory):
+<pre>
+java -cp ".:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:${STREAMS_INSTALL}/lib/*"
+</pre>
+This will run the compiled java program. If you have specified that the application should run distributed (as in, with a DISTRIBUTED context), then running the program will product a .sab bundle that can be submitted to a Streams domain. For documentation on how to create a streams Domain and submit a .sab file, see the tutorial at: <a href="domainsetup.html">Domain Setup Guide</a>.
+
 <h3>Monitoring your Streams Application</h3>
 
 <p>If you have launched your job as DISTRIBUTED, you can monitor your running job using the Streams Console.

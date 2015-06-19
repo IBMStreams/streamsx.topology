@@ -77,61 +77,61 @@ To set up a development domain and instance, follow these steps.  A development 
 
 First, if you have not already done so, set up the necessary environment variables by running the streamsprofile.sh.
 
-<code>
-source <Streams_Install>/bin/streamsprofile.sh
-</code>
+<pre>
+source  &lt;Streams_Install>/bin/streamsprofile.sh
+</pre>
 
 Next, start streamstool by typing the following command:
 
-<code>
+<pre>
 streamtool
-</code>
+</pre>
 
 When prompted to provide a ZooKeeper ensemble, enter the ZooKeeper ensemble string if you have a ZooKeeper server set up.  Otherwise, press enter to use the embedded ZooKeeper.
 
-streamtool is an interactive tool.  To get content assist and auto-complete,  press <Tab>.
+streamtool is an interactive tool.  To get content assist and auto-complete,  press &lt;Tab>.
 <h4>
 Domain
 </h4>
 
 To make a new domain, enter this command in the streamtool interactive command session:
 
-<code>
-mkdomain -d <domainName>
-</code>
+<pre>
+mkdomain -d &lt;domainName>
+</pre>
 
 Generate public and private key for Streams, so you do not have to keep logging in:
 
-<code>
+<pre>
 genkey
-</code>
+</pre>
 
 Start the domain:
 
-<code>
+<pre>
 startdomain
-</code>
+</pre>
 
 <b>Tip:</b>  If the domain fails to start because a port is in use, you may change the port number by using setdomainproperty.  For example, if JMX and SWS ports are in use:
 
-<code>
-setdomainproperty jmx.port=<jmxPort> sws.port=<sws.Port>
-</code>
+<pre>
+setdomainproperty jmx.port=&lt;jmxPort> sws.port=&lt;sws.Port>
+</pre>
 
 <h4>
 Instance
 </h4>
 To make a new instance, enter this command:
 
-<code>
-mkinstance -i <instance-id>
-<code>
+<pre>
+mkinstance -i &lt;instance-id>
+</pre>
 
 Start the instance:
 
-<code>
+<pre>
 startinstance
-<code>
+</pre>
 
 <h3>
 Running Streams Applications in Distributed Mode
@@ -139,16 +139,16 @@ Running Streams Applications in Distributed Mode
 
 Now that you have a domain and instance started, you can run your application in distributed mode.  To submit a job, find the application bundle file (*.sab), and run the following command:
 
-<code>
+<pre>
 streamtool submitjob appBundleName.sab
-</code>
+</pre>
 
 To submit our sample application, we will change into the output directory of the application and submit the application bundle:
 
-<code>
+<pre>
 cd output/application.TradesAppMain/
 streamtool submitjob application.TradesAppMain.sab
-</code>
+</pre>
 
 <h3>
 Querying for Job Status
@@ -158,24 +158,24 @@ You may query job status from your Streams Instance using streamtool commands.
 
 If using embedded ZooKeeper:
 
-<code>
-streamtool lsjob -d <streamsDomainName> -i <instanceName> --embeddedzk
-</code>
+<pre>
+streamtool lsjob -d &lt;streamsDomainName> -i &lt;instanceName> --embeddedzk
+</pre>
 
 If using external ZooKeeper ensemble:
 
-<code>
-streamtool lsjob -d <streamsDomainName> -i <instanceName> --zkconnect <zooKeeperHost>:<zooKeeperPort>
-</code>
+<pre>
+streamtool lsjob -d &lt;streamsDomainName> -i &lt;instanceName> --zkconnect &lt;zooKeeperHost>:&lt;zooKeeperPort>
+</pre>
 
 You will see job status similar to this:
 
-<code>
+<pre>
 [streamsadmin@streamsqse Distributed]$ streamtool lsjobs -d StreamsDomain -i StreamsInstance --embeddedzk
 Instance: StreamsInstance
  Id State Healthy User Date Name Group
  6 Running yes streamsadmin 2015-04-30T18:32:48-0400 application::TradesAppMain_6 default
-</code>
+</pre>
 </section>
 <script src="javascripts/jquery-2.1.4.js"></script>
 <script src="javascripts/toc.min.js"></script>
