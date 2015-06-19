@@ -3,34 +3,116 @@
   <head>
     <meta charset="UTF-8">
     <title>Streamsx.topology</title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
-		      <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="stylesheets/bootstrap.css" media="screen">
+    <link rel="stylesheet" href="stylesheets/bootswatch.min.css">
+
+
+		      <!-- <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
 		      <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
 		      <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
-		      <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+		      <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen"> -->
+
   </head>
   <body>
-	    <section class="page-header">
-	      <h1 class="project-name">Streamsx.topology</h1>
-	      <h2 class="project-tagline">A project that supports building streaming topologies (applications) for IBM Streams in different programming languages, such as Java.</h2>
-	      <a href="https://github.com/Ibmstreams/streamsx.topology/releases" class="btn">View releases</a>
-	      <a href="doc.html" class="btn">Documentation</a>
-	      <a href="gettingstarted.html" class="btn">Getting started</a>
-	      <a href="FAQ.html" class="btn">FAQ</a>
-	    </section>
-	    
-	    <section class="main-content">
-	      <h3>
-		<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Java Application API</h3>
+<div class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a href="../" class="navbar-brand">streamsx.topology</a>
+          <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+        <div class="navbar-collapse collapse" id="navbar-main">
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="https://github.com/Ibmstreams/streamsx.topology/releases">Releases</a>
+            </li>
+            <li>
+              <a href="doc.html">Documentation</a>
+            </li>
+	    <li>
+              <a href="gettingstarted.html">Getting started</a>
+            </li>
+	    <li>
+              <a href="FAQ.html">FAQ</a>
+            </li>
+          </ul>
+
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="https://github.com/IBMStreams" target="_blank">An IBMStreams Project</a></li>
+            <li><a href="https://github.com/IBMStreams/streamsx.topology" target="_blank">Project Page</a></li>
+          </ul>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="page-header" id="banner">
+	<div class="row">
+	</div>
+      </div>
+      <div class="page-header" id="banner">
+	<div class="row">
+	  <div class="col-sm-2">
+	    <img src="InfoSphere-Streams-logo_140x140.png" height="140" width="140">
+	    <div class="row">
+	      <div class="col-sm-1">
 	      
-	      <p>The Java Application API enables a developer to create streaming applications entirely in Java for IBM Streams. The API employs a functional style of programming -- a developer may define a graph's flow and data manipulation simultaneously.
-          <p>Please refer to the <a href="gettingstarted.html">getting started guide</a>, <a href="FAQ.html">FAQ</a> page, and <a href="doc.html">documentation</a> for help.</p>
-      
-	      	<h3>Java Application API Quick Start VM</h3>
+
+		
+	      </div>
+	    </div>
+	  </div>
+	  <div class="col-sm-10">
+	    <div class="jumbotron">
+              <h1>streamsx.topology</h1>
+              <p>The streamsx.topology project provides the Java Application API -- a way of writing millisecond latency IBMStreams applications entirely in Java.</p>
+	  </div>
+	  <div class="col-sm-1">
+	  </div>
+	</div>
+      </div>	    
+	<section class="main-content">
+	  <h3>
+	    <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Java Application API</h3>
+	  
+	  <p>The Java Application API enables a developer to create streaming applications entirely in Java for IBM Streams. The API employs a functional style of programming -- a developer may define a graph's flow and data manipulation simultaneously.
+	    <div class="row">
+	      <div class="col-sm-7">
+		<pre><code>
+<em style="color: green;">    /*
+     * Declare a source stream (hw) with String as tuples that sends two tuples,
+     * "Hello" and "World!", and prints them to output.
+     */</em>
+    Topology topology = new Topology(<em style="color: blue;">"HelloWorld"</em>);
+    TStream<String> hw = topology.strings(<em style="color: blue;">"Hello"</em>, <em style="color: blue">"World!"</em>);
+    hw.print();
+    StreamsContextFactory.getEmbedded().submit(topology).get();
+		</code></pre>
+	      </div>
+	      <div class="col-sm-5">
+		<h3>Open source</h3>
+		<ul>
+		  <li>
+		    <p>Streamsx.topology is an open source project that <a href="https://github.com/IBMStreams/streamsx.topology">can be found</a> on github.  
+		  </li>
+		</ul>
+		<h3>Java Application API Quick Start VM</h3>
 	      
-	      <p>Get started now with the new Java Application API Quick Start VMware image by following this <a href="gettingstarted.html">getting started guide</a>.</p>      
-	    </section>
+		<p>Get started now with the new Java Application API Quick Start VMware image by following this <a href="gettingstarted.html">getting started guide</a>.</p>      
+	      </div>
+	    </div>
+	  <p>Please refer to the <a href="gettingstarted.html">getting started guide</a>, <a href="FAQ.html">FAQ</a> page, and <a href="doc.html">documentation</a> for help.</p>
+	  
+	</section>
 	    
+
 	    
   </body>
 </html>
