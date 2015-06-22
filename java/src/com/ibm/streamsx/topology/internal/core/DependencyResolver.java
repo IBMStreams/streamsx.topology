@@ -145,9 +145,10 @@ public class DependencyResolver {
                 BOperatorInvocation bop = (BOperatorInvocation)op;
                 if(Functional.class.isAssignableFrom(bop.op().getOperatorClass())){
                     JSONObject params = (JSONObject)bop.json().get("parameters");
-                    JSONArray op_jars = (JSONArray) params.get("jar");
+                    JSONObject op_jars = (JSONObject) params.get("jar");
+                    JSONArray value = (JSONArray) op_jars.get("value");
                     for(String jar : jars){
-                        op_jars.add(jar);
+                        value.add(jar);
                     }          
                 }
             }
