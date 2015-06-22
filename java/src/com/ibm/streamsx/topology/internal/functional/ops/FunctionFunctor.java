@@ -16,7 +16,7 @@ import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
  * 
  */
 @SharedLoader
-public abstract class FunctionFunctor extends AbstractOperator {
+public abstract class FunctionFunctor extends AbstractOperator implements Functional{
 
     public static final String FUNCTIONAL_LOGIC_PARAM = "functionalLogic";
 
