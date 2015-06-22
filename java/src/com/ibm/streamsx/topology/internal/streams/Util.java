@@ -43,4 +43,14 @@ public class Util {
             throw new IllegalStateException(name+" environment variable is not set.");
         return s;
     }
+    
+    /**
+     * Check if things are in place to successfully invoke streamtool
+     * @throws IllegalStateException if preconditions not met
+     */
+    public static void checkInvokeStreamtoolPreconditions() 
+            throws IllegalStateException {
+        Util.getenv(Util.STREAMS_DOMAIN_ID);
+        Util.getenv(Util.STREAMS_INSTANCE_ID);
+    }
 }

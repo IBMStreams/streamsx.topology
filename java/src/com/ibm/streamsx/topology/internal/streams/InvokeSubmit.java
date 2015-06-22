@@ -25,13 +25,16 @@ public class InvokeSubmit {
         super();
         this.bundle = bundle;
     }
+    
+    public static void checkPreconditions() throws IllegalStateException {
+        Util.checkInvokeStreamtoolPreconditions();
+    }
 
     public BigInteger invoke() throws Exception, InterruptedException {
         String si = Util.getStreamsInstall();
         File sj = new File(si, "bin/streamtool");
         
-        Util.getenv(Util.STREAMS_DOMAIN_ID);
-        Util.getenv(Util.STREAMS_INSTANCE_ID);
+        checkPreconditions();
         
         File jobidFile = Files.createTempFile("streamsjobid", "txt").toFile();
 
