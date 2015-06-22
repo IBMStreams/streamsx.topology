@@ -25,7 +25,7 @@ public class InvokeCancel {
     }
 
     public void invoke() throws Exception, InterruptedException {
-        String si = System.getenv("STREAMS_INSTALL");
+        String si = Util.getStreamsInstall();
         File sj = new File(si, "bin/streamtool");
 
         List<String> commands = new ArrayList<String>();

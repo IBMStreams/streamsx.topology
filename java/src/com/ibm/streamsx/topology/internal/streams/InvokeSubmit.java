@@ -27,8 +27,11 @@ public class InvokeSubmit {
     }
 
     public BigInteger invoke() throws Exception, InterruptedException {
-        String si = System.getenv("STREAMS_INSTALL");
+        String si = Util.getStreamsInstall();
         File sj = new File(si, "bin/streamtool");
+        
+        Util.getenv(Util.STREAMS_DOMAIN_ID);
+        Util.getenv(Util.STREAMS_INSTANCE_ID);
         
         File jobidFile = Files.createTempFile("streamsjobid", "txt").toFile();
 

@@ -56,7 +56,7 @@ public class InvokeSc {
     }
 
     public void invoke() throws Exception, InterruptedException {
-        String si = System.getenv("STREAMS_INSTALL");
+        String si = Util.getStreamsInstall();
         File sc = new File(si, "bin/sc");
 
         List<String> commands = new ArrayList<String>();
@@ -113,7 +113,7 @@ public class InvokeSc {
             sb.append(splPath);
         }
 
-        String streamsInstall = System.getenv("STREAMS_INSTALL");
+        String streamsInstall = Util.getStreamsInstall();
         String streamsInstallToolkits = streamsInstall + "/toolkits";
         sb.append(":");
         sb.append(streamsInstallToolkits);

@@ -4,6 +4,7 @@
     </description>
 
   <property environment="env"/>
+  <fail unless="env.STREAMS_INSTALL" message="STREAMS_INSTALL not set."/>
   <property name="streams.install" value="${env.STREAMS_INSTALL}"/>
   <property name="tk.lib" location="../../../com.ibm.streamsx.topology/lib"/>
 
