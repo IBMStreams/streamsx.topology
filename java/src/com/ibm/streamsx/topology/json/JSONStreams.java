@@ -6,28 +6,50 @@ package com.ibm.streamsx.topology.json;
 
 import java.io.IOException;
 
+import com.ibm.json.java.JSON;
+import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
+import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.function7.BiFunction;
 import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.spl.SPLStream;
+import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 /**
- * Utilities for JSON related streams.
+ * Utilities for JSON streams.
  * 
  */
 public class JSONStreams {
+    
+    /**
+     * When the JSON is an array the approach is to use an
+     * {@code JSONObject} with a single attribute {@value}
+     * containing the value.
+     */
+    public static final String PAYLOAD = "payload";
 
     /**
      * Function to deserialize a String to a JSONObject.
-     */
+     * If the serialized JSON is an array,
+     * then a JSON object is created, with
+     * a single attribute {@code payload} containing the deserialized
+     * value.
+      */
     public static final class DeserializeJSON implements
             Function<String, JSONObject> {
         private static final long serialVersionUID = 1L;
 
         @Override
-        public JSONObject apply(String v1) {
+        public JSONObject apply(String tuple) {
             try {
-                return JSONObject.parse(v1);
+                JSONArtifact artifact = JSON.parse(tuple);
+                if (artifact instanceof JSONObject)
+                    return (JSONObject) artifact;
+                JSONObject wrapper = new JSONObject();
+                wrapper.put(PAYLOAD, artifact);
+                return wrapper;
             } catch (IOException e) {
                 return null;
             }
@@ -52,7 +74,8 @@ public class JSONStreams {
     }
     
     /**
-     * Function to serialize a JSONObject to a String.
+     * Function to convert a {@link JSONAble}
+     * tuple to a {@code JSONObject}, using {@link JSONAble#toJSON()}. 
      */
     public static final class ToJSON<T extends JSONAble> implements
             Function<T, JSONObject> {
@@ -62,6 +85,29 @@ public class JSONStreams {
         public JSONObject apply(JSONAble v1) {
             return v1.toJSON();
         }
+    }
+    
+    /**
+     * Convert a JSON stream to an SPLStream.
+     * @param stream JSON stream to be converted.
+     * @return SPLStream with schema {@link JSONSchemas#JSON}.
+     */
+    public static SPLStream toSPL(TStream<JSONObject> stream) {
+        
+        return SPLStreams.convertStream(stream, 
+                new BiFunction<JSONObject, OutputTuple, OutputTuple>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public OutputTuple apply(JSONObject v1, OutputTuple v2) {
+                        try {
+                            v2.setString(0, v1.serialize());
+                            return v2;
+                        } catch (IOException e) {
+                            return null;
+                        }
+                    }
+        }, JSONSchemas.JSON);
     }
 
     /**
@@ -77,7 +123,10 @@ public class JSONStreams {
 
     /**
      * Create a stream of JSON objects from a stream of serialized JSON tuples.
-     * 
+     * If the serialized JSON is a simple value or an array,
+     * then a JSON object is created, with
+     * a single attribute {@code payload} containing the deserialized
+     * value.
      * @param stream
      *            Stream containing the JSON serialized values.
      * @return Stream that will contain the JSON objects.
@@ -86,6 +135,11 @@ public class JSONStreams {
         return stream.transform(new DeserializeJSON(), JSONObject.class);
     }
     
+    /**
+     * Create 
+     * @param stream
+     * @return
+     */
     public static <T extends JSONAble> TStream<JSONObject> toJSON(TStream<T> stream) {
         return stream.transform(new ToJSON<T>(), JSONObject.class);
     }
