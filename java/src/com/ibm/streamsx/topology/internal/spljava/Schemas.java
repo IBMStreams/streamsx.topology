@@ -9,19 +9,24 @@ import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 import com.ibm.streams.operator.Attribute;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Type;
+import com.ibm.streams.operator.types.Blob;
+import com.ibm.streams.operator.types.XML;
 
 public class Schemas {
 
     public static final StreamSchema STRING = getStreamSchema("tuple<rstring __spl_js>");
-
-    public static final StreamSchema INT32 = getStreamSchema("tuple<int32 __spl_ji>");
-
-    public static final StreamSchema INT64 = getStreamSchema("tuple<int64 __spl_jl>");
+    public static final StreamSchema BLOB = getStreamSchema("tuple<blob __spl_jb>");
+    public static final StreamSchema XML = getStreamSchema("tuple<xml __spl_jx>");
+    
 
     public StreamSchema getSPLSchema(Class<?> tupleClass) {
 
         if (String.class.equals(tupleClass))
             return STRING;
+        if (Blob.class.equals(tupleClass))
+            return BLOB;
+        if (XML.class.equals(tupleClass))
+            return XML;
 
         throw new IllegalArgumentException(tupleClass.getName());
     }
@@ -32,6 +37,12 @@ public class Schemas {
         if (String.class.equals(tupleClass)) {
             return (SPLMapping<T>) SPLMapping.JavaString;
         }
+        if (Blob.class.equals(tupleClass)) {
+            return (SPLMapping<T>) SPLMapping.JavaBlob;
+        }
+        if (XML.class.equals(tupleClass)) {
+            return (SPLMapping<T>) SPLMapping.JavaXML;
+        }
 
         return SPLJavaObject.createMappping(tupleClass);
     }
@@ -40,6 +51,12 @@ public class Schemas {
 
         if (STRING.equals(schema)) {
             return SPLMapping.JavaString;
+        }
+        if (BLOB.equals(schema)) {
+            return SPLMapping.JavaBlob;
+        }
+        if (XML.equals(schema)) {
+            return SPLMapping.JavaXML;
         }
 
         Attribute attr0 = schema.getAttribute(0);
