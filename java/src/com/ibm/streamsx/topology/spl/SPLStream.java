@@ -27,7 +27,23 @@ public interface SPLStream extends TStream<Tuple>, SPLInput {
 
     /**
      * Transform SPL tuples into JSON. Each tuple from this stream is converted
-     * into its JSON representation.
+     * into a JSON representation.
+     * <UL>
+     * <LI>
+     * If {@link #getSchema()} returns
+     * {@link com.ibm.streamsx.topology.json.JSONSchemas#JSON}
+     * then each tuple is taken as a serialized JSON and deserialized.
+     * If the serialized JSON is an array,
+     * then a JSON object is created, with
+     * a single attribute {@code payload} containing the deserialized
+     * value.
+     * </LI>
+     * <LI>
+     * Otherwise the tuple is converted to JSON using the
+     * encoding provided by the SPL Java Operator API
+     * {@code com.ibm.streams.operator.encoding.JSONEncoding}.
+     * </LI>
+     * </UL>
      * 
      * @return A stream with each tuple as a {@code JSONObject}.
      */
