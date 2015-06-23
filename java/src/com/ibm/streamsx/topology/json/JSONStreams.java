@@ -122,7 +122,7 @@ public class JSONStreams {
     }
 
     /**
-     * Create a stream of JSON objects from a stream of serialized JSON tuples.
+     * Declare a stream of JSON objects from a stream of serialized JSON tuples.
      * If the serialized JSON is a simple value or an array,
      * then a JSON object is created, with
      * a single attribute {@code payload} containing the deserialized
@@ -136,9 +136,10 @@ public class JSONStreams {
     }
     
     /**
-     * Create 
-     * @param stream
-     * @return
+     * Declare a stream of JSON objects from a stream
+     * of Java objects that implement {@link JSONAble}.  
+     * @param stream Stream containing {@code JSONAble} tuples.
+     * @return Stream that will contain the JSON objects.
      */
     public static <T extends JSONAble> TStream<JSONObject> toJSON(TStream<T> stream) {
         return stream.transform(new ToJSON<T>(), JSONObject.class);

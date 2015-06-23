@@ -8,6 +8,10 @@ import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 
 import com.ibm.streams.operator.StreamSchema;
 
+/**
+ * SPL schema for JSON.
+ *
+ */
 public class JSONSchemas {
 
     private JSONSchemas() {

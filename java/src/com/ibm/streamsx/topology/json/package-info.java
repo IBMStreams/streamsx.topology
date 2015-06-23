@@ -23,7 +23,7 @@
  * This is the convention used by the SPL toolkits
  * {@code com.ibm.streamsx.json} and {@code com.ibm.streamsx.inet}.
  * <h3>Conversions</h3>
- * <TABLE border="1">
+ * <TABLE border="1" style="width:50%">
  * <TR><TH colspan="2"></TH><TH colspan="2">To</TH></TR>
  * <TR><TH colspan="2">From</TH><TH>Java<BR>(TStream&lt;JSONObject>)</TH><TH>SPL<BR>({@code rstring jsonString})</TH></TR>
  * <TR><TH rowspan="3">Java</TH><TD>TStream&lt;JSONObject></TD>
