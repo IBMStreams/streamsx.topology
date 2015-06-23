@@ -398,6 +398,17 @@ public class Topology implements TopologyElement {
         return graphItems;
     }
     
+    private void addThirdPartyDependency(String location) {
+       JavaFunctional.addThirdPartyDependency(this, location); 
+    }
+    
+    /**
+     * Add a third-party dependency to all eligible operators.
+     */
+    private void addThirdPartyDependency(Class<?> clazz) {
+        JavaFunctional.addThirdPartyDependency(this, clazz); 
+    }
+    
     private void finalizeConfig() {
         JSONObject jsonConfig = builder().getConfig();
         
