@@ -18,12 +18,16 @@
   <path id="compile.classpath">
     <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
     <pathelement location="../../samples/java/functional/functionalsamples.jar"/>
+    <pathelement location="./resources/ThirdPartyResource.jar"/>
+    <pathelement location="./resources/classes"/>
     <path refid="streams.classpath"/>
   </path>
 
   <path id="test.classpath">
     <pathelement location="${jarname}" />
     <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
+    <pathelement location="./resources/ThirdPartyResource.jar"/>
+    <pathelement location="./resources/classes"/>
     <path refid="streams.classpath"/>
   </path>
   <path id="test.sample.classpath">
