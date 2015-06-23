@@ -34,14 +34,14 @@ public class JavaPrimitive {
      * @return SPLStream the represents the output of the operator.
      */
     public static SPLStream invokeJavaPrimitive(
-            Class<? extends Operator> opClass, SPLStream input,
+            Class<? extends Operator> opClass, SPLInput input,
             StreamSchema outputSchema, Map<String, ? extends Object> params) {
 
         BOperatorInvocation op = input.builder().addOperator(
                 getInvocationName(opClass),
                 opClass, params);
         SourceInfo.setSourceInfo(op, JavaPrimitive.class);
-        input.getStream().connectTo(op, false, null);
+        SPL.connectInputToOperator(input, op);
 
         return new SPLStreamImpl(input, op.addOutput(outputSchema));
     }
@@ -65,7 +65,7 @@ public class JavaPrimitive {
                 getInvocationName(opClass),
                 opClass, params);
         SourceInfo.setSourceInfo(sink, JavaPrimitive.class);
-        input.getStream().connectTo(sink, false, null);
+        SPL.connectInputToOperator(input, sink);
     }
 
     /**

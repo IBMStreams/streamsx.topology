@@ -39,4 +39,11 @@ public interface ContextProperties {
      */
     String KEEP_ARTIFACTS = "topology.keepArtifacts";
 
+    /**
+     * Trace level for a {@link StreamsContext.Type#DISTRIBUTED} or
+     * {@link StreamsContext.Type#STANDALONE} application. Value is an instance
+     * of {@code java.util.logging.Level} including instances of
+     * {@code com.ibm.streams.operator.logging.TraceLevel}.
+     */
+    String TRACING_LEVEL = "topology.tracing";
 }

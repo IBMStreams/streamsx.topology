@@ -18,6 +18,7 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.function7.BiFunction;
+import com.ibm.streamsx.topology.function7.Function;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionConvertToSPL;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
@@ -108,6 +109,22 @@ public class SPLStreams {
 
         BOutputPort convertedTuples = convOp.addOutput(schema);
         return new SPLStreamImpl(stream, convertedTuples);
+    }
+
+    public static TStream<String> toStringStream(SPLStream stream) {
+
+        return stream.convert(new Function<Tuple, String>() {
+
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public String apply(Tuple tuple) {
+                return tuple.getString(0);
+            }
+        }, String.class);
     }
 
     /**

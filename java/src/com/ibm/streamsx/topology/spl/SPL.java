@@ -47,10 +47,7 @@ public class SPL {
         BOperatorInvocation op = input.builder().addSPLOperator(
                 opNameFromKind(kind), kind, params);
         SourceInfo.setSourceInfo(op, SPL.class);
-        BInputPort inputPort = input.getStream().connectTo(op, false, null);
-        if (input instanceof SPLWindow) {
-            ((SPLWindowImpl) input).windowInput(inputPort);
-        }
+        SPL.connectInputToOperator(input, op);
         BOutputPort stream = op.addOutput(outputSchema);
         return new SPLStreamImpl(input, stream);
     }
@@ -61,14 +58,23 @@ public class SPL {
 
         BOperatorInvocation op = input.builder().addSPLOperator(name, kind, params);
         SourceInfo.setSourceInfo(op, SPL.class);
-        BInputPort inputPort = input.getStream().connectTo(op, false, null);
-        if (input instanceof SPLWindow) {
-            ((SPLWindowImpl) input).windowInput(inputPort);
-        }
+        SPL.connectInputToOperator(input, op);
         BOutputPort stream = op.addOutput(outputSchema);
         return new SPLStreamImpl(input, stream);
     }
 
+    /**
+     * Connect an input to an operator invocation, including making the input
+     * windowed if it is an instance of SPLWindow.
+     */
+    static BInputPort connectInputToOperator(SPLInput input,
+            BOperatorInvocation op) {
+        BInputPort inputPort = input.getStream().connectTo(op, false, null);
+        if (input instanceof SPLWindow) {
+            ((SPLWindowImpl) input).windowInput(inputPort);
+        }
+        return inputPort;
+    }
 
     /**
      * Invocation an SPL operator that consumes a Stream.
@@ -84,10 +90,29 @@ public class SPL {
     public static void invokeSink(String kind, SPLInput input,
             Map<String, ? extends Object> params) {
 
-        BOperatorInvocation op = input.builder().addSPLOperator(
-                opNameFromKind(kind), kind, params);
+        invokeSink(opNameFromKind(kind), kind, input, params);
+    }
+
+    /**
+     * Invocation an SPL operator that consumes a Stream.
+     * 
+     * @param name
+     *            Name of the operator
+     * @param kind
+     *            SPL kind of the operator to be invoked.
+     * @param input
+     *            Stream that will be connected to the only input port of the
+     *            operator
+     * @param params
+     *            Parameters for the SPL operator, ignored if it is null.
+     */
+    public static void invokeSink(String name, String kind, SPLInput input,
+            Map<String, ? extends Object> params) {
+
+        BOperatorInvocation op = input.builder().addSPLOperator(name, kind,
+                params);
         SourceInfo.setSourceInfo(op, SPL.class);
-        input.getStream().connectTo(op, false, null);
+        SPL.connectInputToOperator(input, op);
     }
     
     private static String opNameFromKind(String kind) {
