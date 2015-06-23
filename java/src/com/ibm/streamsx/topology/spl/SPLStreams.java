@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.ibm.streams.operator.Attribute;
 import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
@@ -111,6 +112,17 @@ public class SPLStreams {
         return new SPLStreamImpl(stream, convertedTuples);
     }
 
+    /**
+     * Convert an {@link SPLStream} to a TStream&lt;String>
+     * by taking its first attribute.
+     * The returned stream will contain a {@code String} tuple for
+     * each tuple {@code T} on {@code stream}, the value of the
+     * {@code String} tuple is {@code T.getString(0)}.
+     * A runtime error will occur if the first attribute (index 0)
+     * can not be converted using {@code Tuple.getString(0)}.
+     * @param stream Stream to be converted to a TStream&lt;String>.
+     * @return Stream that will contain the first attribute of tuples from {@code stream}
+     */
     public static TStream<String> toStringStream(SPLStream stream) {
 
         return stream.convert(new Function<Tuple, String>() {
@@ -123,6 +135,35 @@ public class SPLStreams {
             @Override
             public String apply(Tuple tuple) {
                 return tuple.getString(0);
+            }
+        }, String.class);
+    }
+    
+    /**
+     * Convert an {@link SPLStream} to a TStream&lt;String>
+     * by taking a specific attribute.
+     * The returned stream will contain a {@code String} tuple for
+     * each tuple {@code T} on {@code stream}, the value of the
+     * {@code String} tuple is {@code T.getString(attributeName)}.
+     * A runtime error will occur if the attribute
+     * can not be converted using {@code Tuple.getString(attributeName)}.
+     * @param stream Stream to be converted to a TStream&lt;String>.
+     * @return Stream that will contain a single attribute of tuples from {@code stream}
+     */
+    public static TStream<String> toStringStream(SPLStream stream, String attributeName) {
+
+        Attribute attribute = stream.getSchema().getAttribute(attributeName);
+        if (attribute == null) {
+            throw new IllegalArgumentException("Atttribute " + attributeName + " not present in SPL schema "
+                   + stream.getSchema().getLanguageType());
+        }
+        final int attributeIndex = attribute.getIndex();
+        return stream.convert(new Function<Tuple, String>() {
+           private static final long serialVersionUID = 1L;
+
+            @Override
+            public String apply(Tuple tuple) {
+                return tuple.getString(attributeIndex);
             }
         }, String.class);
     }
