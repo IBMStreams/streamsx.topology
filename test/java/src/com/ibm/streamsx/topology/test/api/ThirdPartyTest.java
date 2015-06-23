@@ -13,7 +13,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class ThirdParty {
+public class ThirdPartyTest {
     @Test
     public void includeThirdPartyJar() throws Exception {
         final Topology topology = new Topology("BasicStream");
