@@ -23,6 +23,7 @@ import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function7.UnaryOperator;
+import com.ibm.streamsx.topology.json.JSONSchemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
@@ -166,4 +167,21 @@ public class JSONStreamsTest extends TestTopology {
 
         checkJsonOutput(jo, jsonString);
     }
+    
+    @Test
+    public void testJsonSPL() throws Exception {
+        final Topology t = new Topology();
+        TStream<String> example = t.strings(JSON_EXAMPLE);
+
+        TStream<JSONObject> json = JSONStreams.deserialize(example);
+        
+        SPLStream spl = JSONStreams.toSPL(json);
+        assertEquals(JSONSchemas.JSON, spl.getSchema());
+        
+        TStream<JSONObject> jsonFromSPL = spl.toJSON();      
+        TStream<String> jsonString = JSONStreams.serialize(jsonFromSPL);
+
+        checkJsonOutput(JSON.parse(JSON_EXAMPLE), jsonString);
+    }
+    
 }
