@@ -30,6 +30,7 @@ import java.util.jar.JarOutputStream;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
+import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
@@ -37,6 +38,7 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor;
 import com.ibm.streamsx.topology.internal.functional.ops.Functional;
 import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
+import com.sun.org.apache.bcel.internal.generic.NEW;
 
 /**
  * The DependencyResolver class exists to separate the logic of jar
@@ -146,6 +148,12 @@ public class DependencyResolver {
                 if(Functional.class.isAssignableFrom(bop.op().getOperatorClass())){
                     JSONObject params = (JSONObject)bop.json().get("parameters");
                     JSONObject op_jars = (JSONObject) params.get("jar");
+                    if(null == op_jars){
+                        JSONObject val = new OrderedJSONObject();
+                        val.put("value", new JSONArray());
+                        params.put("jar", val);
+                        op_jars = val;
+                    }
                     JSONArray value = (JSONArray) op_jars.get("value");
                     for(String jar : jars){
                         value.add(jar);
