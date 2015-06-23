@@ -53,7 +53,7 @@ public interface TWindow<T> extends TopologyElement {
      */
     <A> TStream<A> aggregate(Function<Iterable<T>, A> aggregator,
             Class<A> tupleClass);
-    
+
     /**
      * Declares a stream that containing tuples that represent an aggregation of
      * this window. Approximately every {@code period} (with unit {@code unit})
@@ -61,22 +61,22 @@ public interface TWindow<T> extends TopologyElement {
      * {@code Iterable} that containing all the tuples in the current window.
      * The {@code Iterable} is stable during the method call, and returns the
      * tuples in order of insertion into the window, from oldest to newest. <BR>
-     * Thus the returned stream will contain a new tuple every {@code period} seconds
-     * (according to {@code unit}) aggregation of this
-     * window or window partition.
- 
+     * Thus the returned stream will contain a new tuple every {@code period}
+     * seconds (according to {@code unit}) aggregation of this window or window
+     * partition.
+     * 
      * @param aggregator
      *            Logic to aggregation the complete window contents.
-     * @param period Approximately how often to perform the aggregation.
-     * @param unit Time unit for {@code period}.
+     * @param period
+     *            Approximately how often to perform the aggregation.
+     * @param unit
+     *            Time unit for {@code period}.
      * @param tupleClass
      *            Class of the tuples in the returned stream.
      * @return A stream that contains the latest aggregations of this window.
      */
-    <A> TStream<A> aggregate(Function<Iterable<T>, A> aggregator,
-            long period,
-            TimeUnit unit,
-            Class<A> tupleClass);
+    <A> TStream<A> aggregate(Function<Iterable<T>, A> aggregator, long period,
+            TimeUnit unit, Class<A> tupleClass);
 
     /**
      * Join this window to a stream. This method is identical to calling
@@ -102,4 +102,11 @@ public interface TWindow<T> extends TopologyElement {
      * @return The class for tuples on this stream.
      */
     Class<T> getTupleClass();
+
+    /**
+     * Get this window's stream.
+     * 
+     * @return This window's stream.
+     */
+    TStream<T> getStream();
 }

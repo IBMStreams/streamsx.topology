@@ -169,6 +169,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
+    public TWindow<T> window(TWindow<?> window) {
+        return new WindowDefinition<T>(this, window);
+    }
+
+    @Override
     public TWindow<T> last(long time, TimeUnit unit) {
         return new WindowDefinition<T>(this, time, unit);
     }
@@ -186,8 +191,12 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public void publish(String topic) {
-        SPL.invokeSink("com.ibm.streamsx.topology.topic::Publish", this,
+
+        BOperatorInvocation op = builder().addSPLOperator("Publish",
+                "com.ibm.streamsx.topology.topic::Publish",
                 singletonMap("topic", topic));
+        SourceInfo.setSourceInfo(op, SPL.class);
+        this.connectTo(op, false, null);
     }
     
     public TStream<T> parallel(int width, Routing routing) {

@@ -28,6 +28,11 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     }
 
     @Override
+    public SPLStream getStream() {
+        return this;
+    }
+
+    @Override
     public StreamSchema getSchema() {
         return output().schema();
     }
