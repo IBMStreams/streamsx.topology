@@ -272,6 +272,19 @@ public interface TStream<T> extends TopologyElement {
     TWindow<T> last();
 
     /**
+     * Declare a {@link TWindow} on this stream that has the same configuration
+     * as another window..
+     * 
+     * When {@code T} implements {@link Keyable} then the window is partitioned
+     * using the value of {@link Keyable#getKey()}. In this case that means each
+     * partition independently maintains the list of tuples for that key.
+     * 
+     * @param configWindow
+     *            Window to copy the configuration from.
+     */
+    TWindow<T> window(TWindow<?> configWindow);
+
+    /**
      * Publish tuples from this stream to allow other applications to consume
      * them using:
      * <UL>

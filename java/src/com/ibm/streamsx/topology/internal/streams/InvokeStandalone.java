@@ -15,8 +15,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 
 import com.ibm.streams.operator.logging.TraceLevel;
+import com.ibm.streamsx.topology.context.ContextProperties;
 
 public class InvokeStandalone {
 
@@ -36,10 +38,31 @@ public class InvokeStandalone {
         commands.add(jvm.getAbsolutePath());
         commands.add("-jar");
         commands.add(bundle.getAbsolutePath());
-        TraceLevel traceLevel = (TraceLevel) config.get("streams.trace");
+        Level traceLevel = (Level) config
+                .get(ContextProperties.TRACING_LEVEL);
         if (traceLevel != null) {
             commands.add("-t");
-            commands.add("4");
+
+            // -t, --trace-level=INT Trace level: 0 - OFF, 1 - ERROR, 2 - WARN,
+            // 3 - INFO, 4 - DEBUG, 5 - TRACE.
+            
+            int tli = traceLevel.intValue();
+            String tls;
+            if (tli == Level.OFF.intValue())
+                tls = "0";
+            else if (tli == Level.ALL.intValue())
+                tls = "5";
+            else if (tli >= TraceLevel.ERROR.intValue())
+                tls = "1";
+            else if (tli >= TraceLevel.WARN.intValue())
+                tls = "2";
+            else if (tli >= TraceLevel.INFO.intValue())
+                tls = "3";
+            else if (tli >= TraceLevel.DEBUG.intValue())
+                tls = "4";
+            else
+                tls = "5";
+            commands.add(tls);
         }
 
         trace.info("Invoking standalone application");

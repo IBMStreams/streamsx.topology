@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
@@ -42,26 +41,40 @@ public class SPL {
      *            Parameters for the SPL operator, ignored if it is null.
      * @return SPLStream the represents the output of the operator.
      */
-    public static SPLStream invokeOperator(String kind, TStream<?> input,
+    public static SPLStream invokeOperator(String kind, SPLInput input,
             StreamSchema outputSchema, Map<String, ? extends Object> params) {
 
         BOperatorInvocation op = input.builder().addSPLOperator(
                 opNameFromKind(kind), kind, params);
         SourceInfo.setSourceInfo(op, SPL.class);
-        BInputPort inputPort = input.connectTo(op, false, null);
+        SPL.connectInputToOperator(input, op);
         BOutputPort stream = op.addOutput(outputSchema);
         return new SPLStreamImpl(input, stream);
     }
-    public static SPLStream invokeOperator(String name, String kind, TStream<?> input,
+
+    public static SPLStream invokeOperator(String name, String kind,
+            SPLInput input,
             StreamSchema outputSchema, Map<String, ? extends Object> params) {
 
         BOperatorInvocation op = input.builder().addSPLOperator(name, kind, params);
         SourceInfo.setSourceInfo(op, SPL.class);
-        BInputPort inputPort = input.connectTo(op, false, null);
+        SPL.connectInputToOperator(input, op);
         BOutputPort stream = op.addOutput(outputSchema);
         return new SPLStreamImpl(input, stream);
     }
 
+    /**
+     * Connect an input to an operator invocation, including making the input
+     * windowed if it is an instance of SPLWindow.
+     */
+    static BInputPort connectInputToOperator(SPLInput input,
+            BOperatorInvocation op) {
+        BInputPort inputPort = input.getStream().connectTo(op, false, null);
+        if (input instanceof SPLWindow) {
+            ((SPLWindowImpl) input).windowInput(inputPort);
+        }
+        return inputPort;
+    }
 
     /**
      * Invocation an SPL operator that consumes a Stream.
@@ -74,15 +87,32 @@ public class SPL {
      * @param params
      *            Parameters for the SPL operator, ignored if it is null.
      */
-    public static void invokeSink(String kind, TStream<?> input,
+    public static void invokeSink(String kind, SPLInput input,
             Map<String, ? extends Object> params) {
-        
 
+        invokeSink(opNameFromKind(kind), kind, input, params);
+    }
 
-        BOperatorInvocation op = input.builder().addSPLOperator(
-                opNameFromKind(kind), kind, params);
+    /**
+     * Invocation an SPL operator that consumes a Stream.
+     * 
+     * @param name
+     *            Name of the operator
+     * @param kind
+     *            SPL kind of the operator to be invoked.
+     * @param input
+     *            Stream that will be connected to the only input port of the
+     *            operator
+     * @param params
+     *            Parameters for the SPL operator, ignored if it is null.
+     */
+    public static void invokeSink(String name, String kind, SPLInput input,
+            Map<String, ? extends Object> params) {
+
+        BOperatorInvocation op = input.builder().addSPLOperator(name, kind,
+                params);
         SourceInfo.setSourceInfo(op, SPL.class);
-        input.connectTo(op, false, null);
+        SPL.connectInputToOperator(input, op);
     }
     
     private static String opNameFromKind(String kind) {

@@ -12,6 +12,7 @@ import java.util.concurrent.Future;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 public class DistributedStreamsContext extends
         BundleUserStreamsContext<BigInteger> {
@@ -30,6 +31,7 @@ public class DistributedStreamsContext extends
             throws Exception {
 
         // Wait to create the bundle.
+        preBundle();
         File bundle = bundler.submit(app, config).get();
 
         preInvoke();
@@ -43,5 +45,10 @@ public class DistributedStreamsContext extends
     }
     
     void preInvoke() {
+    }
+    
+    void preBundle() {
+        // fail early if invoke preconditions aren't met
+        InvokeSubmit.checkPreconditions();
     }
 }

@@ -20,11 +20,12 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionJoin;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.tuple.Keyable;
 
-class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
+public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
 
     private final TStream<T> stream;
-    private final StreamWindow.Policy policy;
-    private final long config;
+    // This is the eviction policy in SPL terms
+    protected final StreamWindow.Policy policy;
+    protected final long config;
 
     public WindowDefinition(TStream<T> stream, int count) {
         super(stream);
@@ -39,6 +40,19 @@ class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
         this.policy = Policy.TIME;
         this.config = unit.toMillis(time);
     }
+
+    public WindowDefinition(TStream<T> stream, TWindow<?> configWindow) {
+        super(stream);
+        this.stream = stream;
+        this.policy = ((WindowDefinition<?>) configWindow).policy;
+        this.config = ((WindowDefinition<?>) configWindow).config;
+    }
+
+    @Override
+    public TStream<T> getStream() {
+        return stream;
+    }
+
 
     @Override
     public Class<T> getTupleClass() {
@@ -74,7 +88,7 @@ class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
         return JavaFunctional.addJavaOutput(this, aggOp, tupleClass);
     }
 
-    private BInputPort addInput(BOperatorInvocation aggOp,
+    public BInputPort addInput(BOperatorInvocation aggOp,
             StreamWindow.Policy triggerPolicy, Object triggerConfig) {
         BInputPort bi = stream.connectTo(aggOp, true, null);
         return bi.window(Type.SLIDING, policy, config, triggerPolicy,

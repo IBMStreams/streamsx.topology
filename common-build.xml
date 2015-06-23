@@ -6,6 +6,7 @@
   <dirname property="streamsx.topology" file="${ant.file.streamsx.topology.common}"/>
 
   <property environment="env"/>
+  <fail unless="env.STREAMS_INSTALL" message="STREAMS_INSTALL not set."/>
   <property name="streams.install" value="${env.STREAMS_INSTALL}"/>
   <property name="tk.name" value="com.ibm.streamsx.topology"/>
   <property name="tk" location="${streamsx.topology}/${tk.name}"/>

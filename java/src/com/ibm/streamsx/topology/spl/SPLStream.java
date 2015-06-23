@@ -16,7 +16,7 @@ import com.ibm.streamsx.topology.function7.Function;
  * handled using any functional logic where each tuple will be an instance of
  * {@code com.ibm.streams.operator.Tuple}.
  */
-public interface SPLStream extends TStream<Tuple> {
+public interface SPLStream extends TStream<Tuple>, SPLInput {
 
     /**
      * SPL schema of this stream.
