@@ -1,7 +1,11 @@
-public class ThirdPartyResource{
+package ThirdParty;
+
+import java.io.Serializable;
+
+public class ThirdPartyResource implements Serializable{
     private String thirdPartyString;
 
-    ThirdPartyResource(String val){
+    public ThirdPartyResource(String val){
 	thirdPartyString = val;
     }
     public static String thirdPartyStaticMethod(){
