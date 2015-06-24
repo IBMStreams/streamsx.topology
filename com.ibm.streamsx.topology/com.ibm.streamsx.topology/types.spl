@@ -17,7 +17,7 @@ type Json = rstring jsonString;
 * and [com.ibm.streamsx.topology.topic::Subscribe]
 * allows exchange of tuples between SPL and Java.
 * 
-* Any Java stream of type `TStream&lt;String>`
+* Any Java stream of type `TStream<String>`
 * published by a Java application will have this schema.
 */
 type String = rstring __spl_js;
@@ -30,7 +30,7 @@ type String = rstring __spl_js;
 * and [com.ibm.streamsx.topology.topic::Subscribe]
 * allows exchange of tuples between SPL and Java.
 * 
-* Any Java stream of type `TStream&lt;com.ibm.streams.operator.types.XML>`
+* Any Java stream of type `TStream<com.ibm.streams.operator.types.XML>`
 * published by a Java application will have this schema.
 */
 type XML = xml __spl_jx;
@@ -43,7 +43,7 @@ type XML = xml __spl_jx;
 * and [com.ibm.streamsx.topology.topic::Subscribe]
 * allows exchange of tuples between SPL and Java.
 * 
-* Any Java stream of type `TStream&lt;com.ibm.streams.operator.types.Blob>`
+* Any Java stream of type `TStream<com.ibm.streams.operator.types.Blob>`
 * published by a Java application will have this schema.
 */
 type Blob = blob __spl_jb;
