@@ -20,9 +20,7 @@ public class Util {
      */
     public static String getStreamsInstall() throws IllegalStateException {
         if (streamsInstall==null) {
-            String si = System.getenv(STREAMS_INSTALL);
-            if (si==null)
-                throw new IllegalStateException(STREAMS_INSTALL+" environment variable is not set.");
+            String si = getenv(STREAMS_INSTALL);
             File f = new File(si, ".product");
             if (!f.exists())
                 throw new IllegalStateException(STREAMS_INSTALL+" "+si+" is not a Streams install directory.");
