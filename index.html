@@ -91,7 +91,7 @@
      * "Hello" and "World!", and prints them to output.
      */</em>
     Topology topology = new Topology(<em style="color: blue;">"HelloWorld"</em>);
-    TStream<String> hw = topology.strings(<em style="color: blue;">"Hello"</em>, <em style="color: blue">"World!"</em>);
+    TStream&lt;String> hw = topology.strings(<em style="color: blue;">"Hello"</em>, <em style="color: blue">"World!"</em>);
     hw.print();
     StreamsContextFactory.getEmbedded().submit(topology).get();
 		</code></pre>
