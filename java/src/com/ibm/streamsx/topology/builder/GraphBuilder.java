@@ -15,6 +15,7 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.operator.Operator;
+import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 
 /**
@@ -152,6 +153,24 @@ public class GraphBuilder extends BJSONObject {
         ops.add(op);
         return op;
     }
+    
+    /**
+     * @throws IllegalStateException if the topology can't run in 
+     *          StreamsContext.Type.EMBEDDED mode.
+     */
+    public void checkSupportsEmbeddedMode() throws IllegalStateException {
+        for (BOperator op : ops) {
+            String runtime = (String) op.json().get("runtime");
+            if (!"spl.java".equals(runtime)) {
+                String namespace = (String) json().get("namespace");
+                String name = (String) json().get("name");
+                throw new IllegalStateException(
+                        "Topology '"+namespace+"."+name+"'"
+                        + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
+                        + " the topology contains non-Java operators.");
+            }
+        }
+    }
 
     private Map<String, String> regionMarkers = new HashMap<>();
 
@@ -178,5 +197,12 @@ public class GraphBuilder extends BJSONObject {
         json.put("operators", oa);
 
         return json;
+    }
+
+    /**
+     * @return the ops
+     */
+    public List<BOperator> getOps() {
+        return ops;
     }
 }

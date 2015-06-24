@@ -18,12 +18,16 @@
   <path id="compile.classpath">
     <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
     <pathelement location="../../samples/java/functional/functionalsamples.jar"/>
+    <pathelement location="resources/ThirdPartyResource.jar"/>
+    <pathelement location="resources/classes/ThirdParty"/>
     <path refid="streams.classpath"/>
   </path>
 
   <path id="test.classpath">
     <pathelement location="${jarname}" />
     <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
+    <pathelement location="resources/ThirdPartyResource.jar"/>
+    <pathelement location="resources/classes/ThirdParty"/>
     <path refid="streams.classpath"/>
   </path>
   <path id="test.sample.classpath">
@@ -110,7 +114,7 @@
        <formatter type="xml"/>
        <batchtest todir="${topology.test.dir}">
           <fileset dir="${basedir}/src">
-             <include name="**/*Test.java"/>
+             <include name="**/*ThirdPartyTest.java"/>
              <exclude name="**/samples/*Test.java"/>
           </fileset>
        </batchtest>

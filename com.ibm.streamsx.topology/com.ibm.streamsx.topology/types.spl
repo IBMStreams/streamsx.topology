@@ -1,0 +1,49 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015  
+ */
+namespace com.ibm.streamsx.topology;
+
+/**
+* Tuple type for representing JSON in SPL.
+*/
+type Json = rstring jsonString;
+
+/**
+* Tuple type representing string tuples published
+* by an application from the Java Application API.
+* Using this schema in an SPL application with
+* [com.ibm.streamsx.topology.topic::Publish]
+* and [com.ibm.streamsx.topology.topic::Subscribe]
+* allows exchange of tuples between SPL and Java.
+* 
+* Any Java stream of type `TStream<String>`
+* published by a Java application will have this schema.
+*/
+type String = rstring __spl_js;
+
+/**
+* Tuple type representing XML tuples published
+* by an application from the Java Application API.
+* Using this schema in an SPL application with
+* [com.ibm.streamsx.topology.topic::Publish]
+* and [com.ibm.streamsx.topology.topic::Subscribe]
+* allows exchange of tuples between SPL and Java.
+* 
+* Any Java stream of type `TStream<com.ibm.streams.operator.types.XML>`
+* published by a Java application will have this schema.
+*/
+type XML = xml __spl_jx;
+
+/**
+* Tuple type representing Blob tuples published
+* by an application from the Java Application API.
+* Using this schema in an SPL application with
+* [com.ibm.streamsx.topology.topic::Publish]
+* and [com.ibm.streamsx.topology.topic::Subscribe]
+* allows exchange of tuples between SPL and Java.
+* 
+* Any Java stream of type `TStream<com.ibm.streams.operator.types.Blob>`
+* published by a Java application will have this schema.
+*/
+type Blob = blob __spl_jb;

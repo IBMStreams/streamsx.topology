@@ -25,6 +25,8 @@ public class EmbeddedStreamsContext extends
     public Future<JavaTestableGraph> submit(Topology app,
             Map<String, Object> config) throws Exception {
 
+        app.builder().checkSupportsEmbeddedMode();
+        
         return jot.executable(app.graph()).execute();
         // jot.executable(app.graph()).executeToCompletion();
     }

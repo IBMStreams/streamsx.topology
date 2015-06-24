@@ -8,14 +8,18 @@ import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 
 import com.ibm.streams.operator.StreamSchema;
 
+/**
+ * SPL schema for JSON.
+ *
+ */
 public class JSONSchemas {
 
     private JSONSchemas() {
     }
 
     /**
-     * SPL schema used by Tuple&lt;String> streams. Consists of a single
-     * attribute of type {@code rstring __spl_js}.
+     * SPL schema used for SPL streams with JSON data. Consists of a single
+     * attribute of type {@code rstring jsonString}.
      */
     public static StreamSchema JSON = getStreamSchema("tuple<rstring jsonString>");
 }

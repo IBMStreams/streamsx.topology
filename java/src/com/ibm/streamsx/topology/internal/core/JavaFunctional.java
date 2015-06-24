@@ -125,6 +125,22 @@ public class JavaFunctional {
         addDependency(te, receivingBop, tupleTypeClass);
         return receivingBop.inputFrom(output, input);
     }
+    
+    /**
+     * Add a third-party dependency to all eligible operators
+     */
+    public static void addThirdPartyDependency(TopologyElement te,
+            String location) {
+        te.topology().getDependencyResolver().addThirdPartyDependency(location);
+    }
+    
+    /**
+     * Add a third-party dependency to all eligible operators.
+     */
+    public static void addThirdPartyDependency(TopologyElement te,
+            Class<?> clazz) {
+        te.topology().getDependencyResolver().addThirdPartyDependency(clazz);
+    }
 
     /**
      * Add a dependency for the operator to a Java tuple type.
