@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
@@ -26,7 +25,6 @@ import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
-import com.ibm.streamsx.topology.test.api.TopologyTest;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
@@ -113,6 +111,25 @@ public class SPLStreamsTest extends TestTopology {
 
         completeAndValidate(iands, 10,  "n:465 s:325", "n:597 s:457",
                 "n:9465 s:9325");
+    }
+    
+    @Test
+    public void testConversionFromSPLToString() throws Exception {
+        final Topology topology = new Topology();
+        SPLStream splStream = testTupleStream(topology);
+        TStream<String> strings = SPLStreams.toStringStream(splStream);
+        assertEquals(String.class, strings.getTupleClass());
+
+        completeAndValidate(strings, 10,  "0", "1", "2", "3");
+    }
+    @Test
+    public void testConversionFromSPLToStringAttribute() throws Exception {
+        final Topology topology = new Topology();
+        SPLStream splStream = testTupleStream(topology);
+        TStream<String> strings = SPLStreams.toStringStream(splStream, "vl");
+        assertEquals(String.class, strings.getTupleClass());
+
+        completeAndValidate(strings, 10,  "34535", "43675232", "654932", "82343");
     }
 
     private static TStream<IntAndString> createStreamFromSPLStream(

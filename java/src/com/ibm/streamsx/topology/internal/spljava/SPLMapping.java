@@ -17,6 +17,8 @@ import com.ibm.streams.operator.Tuple;
 public abstract class SPLMapping<T> {
 
     static final StringMapping JavaString = new StringMapping();
+    static final BlobMapping JavaBlob = new BlobMapping();
+    static final XMLMapping JavaXML = new XMLMapping();
 
     private final StreamSchema schema;
     private final Class<T> tupleClass;
