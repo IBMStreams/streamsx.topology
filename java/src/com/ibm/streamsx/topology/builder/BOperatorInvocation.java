@@ -219,7 +219,10 @@ public class BOperatorInvocation extends BOperator {
         return json;
     }
 
-    // TEMP
+    // Needed by the DependencyResolver to determine whether the operator
+    // has a 'jar' parameter by calling 
+    //
+    // op instance of FunctionFunctor
     public OperatorInvocation<? extends Operator> op() {
         return op;
     }

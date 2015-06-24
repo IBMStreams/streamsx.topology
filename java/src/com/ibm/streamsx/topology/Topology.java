@@ -398,6 +398,48 @@ public class Topology implements TopologyElement {
         return graphItems;
     }
     
+    /**
+     * Includes a jar file, specified by the {@code location} String, into 
+     * the application runtime. For example, the following code includes the 
+     * myResource.jar jar file such that it can be used when running in a 
+     * DISTRIBUTED or STANDALONE context.
+     * <pre><code>
+     * Topology top = new Topology("myTopology");
+     * top.addThirdPartyDependency("./libs/myResource.jar");
+     * </pre></code> 
+     * For running embedded, simply adding the jar to the classpath when 
+     * compiling/running is sufficient.
+     * 
+     * @param location The location of a jar to be included in the application's
+     * runtime when submitting with a DISTRIBUTED or STANDALONE context.
+     */
+    public void addThirdPartyDependency(String location) {
+       JavaFunctional.addThirdPartyDependency(this, location); 
+    }
+    
+    /**
+     * Includes a class file into the application's runtime. The following 
+     * would be a valid usage:
+     * <pre><code>
+     * Topology top = new Topology("myTopology");
+     * top.addThirdPartyDependency(myThirdPartyResource.class);
+     * </pre></code> 
+     * As with
+     * {@link com.ibm.streamsx.topology.Topology#addThirdPartyDependency(String location)},
+     * this is only required when using third-party libraries when running with
+     * a DISTRIBUTED or STANDALONE context.
+     * <br><br>
+     * If the .class file is part of a package structure, the package will be
+     * copied and compressed into a jar file to be included in the Applicatoin's
+     * runtime.
+     * @param clazz The class of a third party resource to be included in the 
+     * application's runtime when submitting with a DISTRIBUTED or STANDALONE 
+     * context.
+     */
+    public void addThirdPartyDependency(Class<?> clazz) {
+        JavaFunctional.addThirdPartyDependency(this, clazz); 
+    }
+    
     private void finalizeConfig() {
         JSONObject jsonConfig = builder().getConfig();
         

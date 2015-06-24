@@ -179,4 +179,11 @@ public class GraphBuilder extends BJSONObject {
 
         return json;
     }
+
+    /**
+     * @return the ops
+     */
+    public List<BOperator> getOps() {
+        return ops;
+    }
 }
