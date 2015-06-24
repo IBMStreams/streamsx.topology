@@ -4,25 +4,75 @@
     <meta charset="UTF-8">
     <title>Streamsx.topology</title>
     <style>
-</style>
+      .toc .h3 {
+      font-size: 16px;
+      margin-top: 0px;
+      margin botton: 8px;
+      }
+      .toc .h4 {
+      font-size: 16px;
+      margin-left: 0em;
+      }
+
+    </style>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-                      <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
-                      <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-                      <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
-                      <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="stylesheets/bootstrap.css" media="screen">
+    <link rel="stylesheet" href="stylesheets/bootswatch.min.css">
+
+
+    <!-- <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+         <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+         <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen"> -->
+
   </head>
   <body>
-            <section class="page-header">
-              <h1 class="project-name">Streamsx.topology</h1>
-              <h2 class="project-tagline">A project that supports building streaming topologies (applications) for InfoSphere Streams in different programming languages, such as Java.</h2>
-              <a href="https://github.com/ibmstreams/streamsx.topology/releases" class="btn">View releases</a>
-              <a href="doc.html" class="btn">Documentation</a>
-              <a href="gettingstarted.html" class="btn">Getting started</a>
-              <a href="FAQ.html" class="btn">FAQ</a>
-            </section>
+    <div class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a href="../" class="navbar-brand">streamsx.topology</a>
+          <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+        <div class="navbar-collapse collapse" id="navbar-main">
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="https://github.com/Ibmstreams/streamsx.topology/releases">Releases</a>
+            </li>
+            <li>
+              <a href="doc.html">Documentation</a>
+            </li>
+            <li>
+              <a href="gettingstarted.html">Getting started</a>
+            </li>
+            <li>
+              <a href="FAQ.html">FAQ</a>
+            </li>
+          </ul>
 
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="https://github.com/IBMStreams" target="_blank">An IBM Streams Project</a></li>
+            <li><a href="https://github.com/IBMStreams/streamsx.topology" target="_blank">Project Page</a></li>
+          </ul>
 
-            <section class="main-content">
+        </div>
+      </div>
+    </div>
+
+    <!-- Begin main content -->
+
+    <div class="container">
+      <div class="page-header" id="banner">
+        <div class="row">
+        </div>
+      </div>
+
+      <section class="main-content">
+
 <h3> Table of contents</h3>
 <div class="toc" id="toc">
 </div>      
@@ -31,7 +81,7 @@
 
 <h4>What version of streams do I need to be running to use the Java Application API?</h4>
 The Java Application API uses IBM Streams 4.0.0.0 or later.
-
+<br>
 <h4>I'm having issues reading and writing to files that I defined/initialized in my main() method. What gives?</h4>
 
 Any Java object that your application references must be statically initialized. For example the following approach to initializing a file would be invalid:
@@ -66,7 +116,7 @@ static{
 
 public static void main(String argv[]){...}
 </code></pre>
-
+<br>
 <h4>I need to do some initialization in one of my stream transformations when running in standalone or distributed. How can I do this?</h4>
 If you need to initialize state for one of your stream operations (such as opening a file or a database connection), implement a readResolve() method in the body of the transformation. When your application is loaded, the readResolve() method is invoked once before other methods. 
 <br><br>
@@ -101,13 +151,13 @@ In the RegexGrep sample that can be found in the documentation, the readResolve(
 </code></pre>
 
 You'll notice that the Matcher is marked as transient. This is because not all Java objects are serializable, and must therefore be excluded from the objects that are serialized when your application is submitted. Otherwize, you may encounter a NotSerializableException.
-
+<br>
 <h4>parallel() doesn't function properly when I run in an EMBEDDED context. Is this a bug?</h4>
 Currently, parallel() is not supported when running embedded. While your application will compile and run, no parallelism will actually occur. Another way of putting it is that when running embedded, any call to parallel() will result in the equivalent of calling parallel(1).
 <script src="javascripts/jquery-2.1.4.js"></script>
 <script src="javascripts/toc.min.js"></script>
 <script>
-$('.toc').toc({'selectors': 'h4', //elements to use as headings
+$('.toc').toc({'selectors': 'h3,h4', //elements to use as headings
     'container': 'body', //element to find all selectors in
     'smoothScrolling': true, //enable or disable smooth scrolling on click
     'prefix': 'toc', //prefix for anchor tags and class names
