@@ -114,7 +114,7 @@
        <formatter type="xml"/>
        <batchtest todir="${topology.test.dir}">
           <fileset dir="${basedir}/src">
-             <include name="**/*ThirdPartyTest.java"/>
+             <include name="**/*Test.java"/>
              <exclude name="**/samples/*Test.java"/>
           </fileset>
        </batchtest>
