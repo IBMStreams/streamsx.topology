@@ -162,6 +162,15 @@ public interface StreamsContext<T> {
      * @return type of this context.
      */
     Type getType();
+    
+    /**
+     * Answers if this StreamsContext supports execution of the
+     * {@code topology}.
+     * @see Type#EMBEDDED
+     * @param topology Topology to evaluate.
+     * @return true if this context supports execution of the topology.
+     */
+    boolean isSupported(Topology topology);
 
     /**
      * Submit {@code topology} to this Streams context.

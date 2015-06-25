@@ -24,12 +24,25 @@ public class EmbeddedTester extends StreamsContextImpl<JavaTestableGraph> {
     @Override
     public Future<JavaTestableGraph> submit(Topology app,
             Map<String, Object> config) throws Exception {
+
+        app.builder().checkSupportsEmbeddedMode();
+
         JavaTestableGraph tg = jot.executable(app.graph());
 
         TupleCollection tester = (TupleCollection) app.getTester();
         tester.setupEmbeddedTestHandlers(tg);
 
         return tg.execute();
+    }
+
+    @Override
+    public boolean isSupported(Topology topology) {
+        try {
+            topology.builder().checkSupportsEmbeddedMode();
+            return true;
+        } catch(IllegalStateException e) {
+            return false;
+        }
     }
 
 }

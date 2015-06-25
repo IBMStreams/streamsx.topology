@@ -160,14 +160,18 @@ public class GraphBuilder extends BJSONObject {
      */
     public void checkSupportsEmbeddedMode() throws IllegalStateException {
         for (BOperator op : ops) {
+            // note: runtime==null for markers
             String runtime = (String) op.json().get("runtime");
             if (!"spl.java".equals(runtime)) {
-                String namespace = (String) json().get("namespace");
-                String name = (String) json().get("name");
-                throw new IllegalStateException(
-                        "Topology '"+namespace+"."+name+"'"
-                        + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
-                        + " the topology contains non-Java operators.");
+                Boolean marker = (Boolean) op.json().get("marker");
+                if (marker==null || !marker) {
+                    String namespace = (String) json().get("namespace");
+                    String name = (String) json().get("name");
+                    throw new IllegalStateException(
+                            "Topology '"+namespace+"."+name+"'"
+                            + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
+                            + " the topology contains non-Java operators.");
+                }
             }
         }
     }
