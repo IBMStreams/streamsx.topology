@@ -69,6 +69,7 @@
                <exclude name="com/ibm/streamsx/topology/internal/**"/>
             </fileset>
        </javadoc>
+       <ant dir="toolkit" target="spldoc"/>
 
   </target>
   <target name="create_release_bundle">

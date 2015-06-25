@@ -2,6 +2,26 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
+
+/**
+ * Interchangable SPL types.
+ * SPL tuple types that can be used to interchange
+ * streams between IBM Streams applications implemented
+ * in different languages, such as SPL and Java.
+ *
+ * SPL uses structural equivalence for types,
+ * which means that types of the same structural composition
+ * are considered identical. This means that another
+ * toolkit or application need not use these type
+ * definitions, and thus can avoid being dependent
+ * on this toolkit. For example all these streams
+ * definitions are identical:
+ *
+ * * `stream<rstring jsonString>`
+ * * `stream<com.ibm.streamsx.json.Json>`
+ * * `stream<com.ibm.streamsx.topology.Json>`
+*/
+
 namespace com.ibm.streamsx.topology;
 
 /**
@@ -36,7 +56,7 @@ type String = rstring __spl_js;
 type XML = xml __spl_jx;
 
 /**
-* Tuple type representing Blob tuples published
+* Tuple type representing binary tuples published
 * by an application from the Java Application API.
 * Using this schema in an SPL application with
 * [com.ibm.streamsx.topology.topic::Publish]
