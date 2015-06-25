@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Streamsx.topology</title>
+    <style>
+      .toc .h3 {
+      font-size: 16px;
+      margin-top: 0px;
+      margin botton: 8px;
+      }
+      .toc .h4 {
+      font-size: 14px;
+      margin-left: 4em;
+      }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="stylesheets/bootstrap.css" media="screen">
+    <link rel="stylesheet" href="stylesheets/bootswatch.min.css">
+
+
+    <!-- <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+         <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+         <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen"> -->
+
+  </head>
+  <body>
+    <div class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a href="index.html" class="navbar-brand">streamsx.topology</a>
+          <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+        <div class="navbar-collapse collapse" id="navbar-main">
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="https://github.com/Ibmstreams/streamsx.topology/releases">Releases</a>
+            </li>
+            <li>
+              <a href="doc.html">Documentation</a>
+            </li>
+            <li>
+              <a href="gettingstarted.html">Getting started</a>
+            </li>
+            <li>
+              <a href="FAQ.html">FAQ</a>
+            </li>
+          </ul>
+
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="https://github.com/IBMStreams" target="_blank">An IBM Streams Project</a></li>
+            <li><a href="https://github.com/IBMStreams/streamsx.topology" target="_blank">Project Page</a></li>
+          </ul>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Begin main content -->
+
+    <div class="container">
+      <div class="page-header" id="banner">
+        <div class="row">
+        </div>
+      </div>
+
+      <section class="main-content">
+        <h3> Table of contents</h3>
+        <div class="toc">
+        </div>
+        
+        <h3>Setting up with Eclipse/Streams Studio</h3>
+        <p>If you already have a Streams v4.x installation, you can manually install this toolkit with Eclipse.</p>
+        <ol>
+          <li>Download the latest release from here:  <a href="https://github.com/IBMStreams/streamsx.topology/releases">https://github.com/IBMStreams/streamsx.topology/releases</a></li>
+          <li>Unzip the streamsx.topology*.tar.gz file onto the file system.</li>
+          <li>Start Eclipse / Streams Studio.</li>
+          <li>Set up classpath variable in your workspace:</li>
+          <ol>
+            <li>Open Windows -> Preferences -> Java -> Build Path -> Classpath Variables</li>
+            <li>Click New...</li>
+            <li>In the New Variable Entry dialog, provide a name for the library.  I put mine as "STREAMS_JAVA_FUNCTIONAL_API".</li>
+            <li>Click File…</li>
+            <li>Browse to locate the following file:  &lt;streamsx.topology install path>/com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar</li>
+          </ol>
+        </ol>
+        <p>This completes the installation of the streamsx.topology project.
+          The steps above are specific to installing the Java Application API libraries in Eclipse or Streams Studio (or any Java IDE, really).<br>
+          If you haven't yet linked Eclipse/Streams Studio with IBM Streams, ensure the following jar files are part of the classpath:
+          <ul>
+            <li>&lt;streamsx.topology install path>/com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar</li>
+            <li>$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar</li>
+          </ul>
+        </p>
+        <h4>Importing samples in Eclipse</h4>
+        <ol>
+          <li>File -> Import -> General -> Existing Projects into Workspace</li>
+          <li>Browse to <streamsx.topology_install_location>/samples/java/functional directory as the root to import.</li>
+          <li>Select JavaFunctionalAPISamples. </li>
+          <li>Select Copy projects into workspace</li>
+        </ol>
+        This will import the sample project into your workspace.  The project expect a classpath variable named STREAMS_JAVA_FUNCTIONAL_API.  If you haven't yet, follow the steps from previous section to define this classpath variable.
+
+        <h3>Exploring the Samples</h3>
+        <p>
+          The Java Application API contains a number of samples to help you learn the API.
+          For a list of all samples available, refer to this page:  <a href="http://ibmstreams.github.io/streamsx.topology/doc/samples/javadoc/index.html">Java Application APIs Samples</a>
+        </p>
+
+        <h3>Running the Samples</h3>
+
+        Before you can run the samples, you need to set up the Streams environment. If you've already configured and started your Streams <i>domain</i>, <i>instance</i>, and <i>Zookeeper</i> instances, you may skip the next section. Otherwise, follow these steps to set up the Streams environment.
+        <h4>Setting up Streams Runtime Environment</h4>
+        <ol>
+          <li>Set up Streams environment by running the streamsprofile.sh.</li>
+          <p>Go to $STREAMS_INSTALL/bin directory and run the following command: </p>
+          <p><code>source streamsprofile.sh</code></p>
+          <li>Set STREAMS_ZKCONNECT environment - This is the Zookeeper ensemble to be used by Streams.</li>
+          <li>Follow this guide to create a domain and an instance:  <a href="domainsetup.html">Domain Setup Guide</a> </li>
+          <li>Set the following environments.  These environments are used for the Java Application APIs to determine the domain and instance to use when application is launched in distributed mode.</li>
+          <ul>
+            <li> STREAMS_DOMAIN_ID - Streams domain to launch a distributed application to</li>
+            <li> STREAMS_INSTANCE_ID - Streams instance to launch a distributed application to</li>
+          </ul>
+        </ol>
+        <p>
+          You can run the sample like any Java application in Eclipse.  To run the samples:
+          <ol>
+            <li> Create a new Java launch configuration of the sample that you want to run.  For example, if you would like to run the
+              simple.HelloWorld sample, create a Java launch configuration for the HelloWorld class.</li>
+            <li>In the Java launch configuration dialog, open the Arguments.</li>
+            <li>In the Arguments, specify one of the following values as the Program Arguments</li>
+            <ul>
+              <li>EMBEDDED - Run the application in embedded mode.  This is a simulated Java environment for running your Streams application.</li>
+              <li>DISTRIBUTED - Run the application in distributed mode.  When an application is submitted with this context, a Streams Application Bundle (.sab file) is produced. The .sab file contains all of the application's logic and third-party dependencies, and is submitted to a Streams instance automatically. 
+              <li>STANDALONE - Run the application in stand alone mode.  When running in this mode, the application also produces a Streams Applicaition Bundle (.sab file), but rather than submitting it to a cluster, the bundle is instead executable. The bundle will run within its own process, and may be terminated with ctrl-C interrupts.</li>
+              <ul>
+          </ol>
+        </p>
+
+      </section>
+      <script src="javascripts/jquery-2.1.4.js"></script>
+      <script src="javascripts/toc.min.js"></script>
+      <script>
+        $('.toc').toc({'selectors': 'h3,h4', //elements to use as headings
+        'container': 'body', //element to find all selectors in
+        'smoothScrolling': true, //enable or disable smooth scrolling on click
+        'prefix': 'toc', //prefix for anchor tags and class names
+        'onHighlight': function(el) {}, //called when a new section is highlighted
+        'highlightOnScroll': true, //add class to heading that is currently in focus
+        'highlightOffset': 100, //offset to trigger the next headline
+        'anchorName': function(i, heading, prefix) { //custom function for anchor name
+        return prefix+i;
+        },
+        'headerText': function(i, heading, $heading) { //custom function building the header-item text
+        return $heading.text();
+        },
+        'itemClass': function(i, heading, $heading, prefix) { // custom function for item class
+        return $heading[0].tagName.toLowerCase();
+        }});
+      </script>
+    </div>
+  </body>
+</html>
+
