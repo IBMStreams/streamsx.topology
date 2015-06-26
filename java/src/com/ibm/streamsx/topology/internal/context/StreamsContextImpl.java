@@ -16,4 +16,14 @@ abstract class StreamsContextImpl<T> implements StreamsContext<T> {
     public final Future<T> submit(Topology topology) throws Exception {
         return submit(topology, new HashMap<String, Object>());
     }
+
+    /**
+     * Default implementation.
+     * @return true; the context supports the topology
+     */
+    @Override
+    public boolean isSupported(Topology topology) {
+        return true;
+    }
+    
 }

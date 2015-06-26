@@ -31,4 +31,15 @@ public class EmbeddedStreamsContext extends
         // jot.executable(app.graph()).executeToCompletion();
     }
 
+    @Override
+    public boolean isSupported(Topology topology) {
+        try {
+            topology.builder().checkSupportsEmbeddedMode();
+            return true;
+        } catch(IllegalStateException e) {
+            return false;
+        }
+    }
+
+    
 }

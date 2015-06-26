@@ -60,7 +60,7 @@ public class DependencyResolver {
     }
     
     @SuppressWarnings("unused")
-    public void addThirdPartyDependency(String location) throws IllegalArgumentException{
+    public void addJarDependency(String location) throws IllegalArgumentException{
         File f = new File(location);
         if(null == f){
             throw new IllegalArgumentException("File not found. Invalid "
@@ -69,7 +69,7 @@ public class DependencyResolver {
         globalDependencies.add(f.toPath().toAbsolutePath());    
     }
     
-    public void addThirdPartyDependency(Class<?> clazz){
+    public void addClassDependency(Class<?> clazz){
         CodeSource source = clazz.getProtectionDomain().getCodeSource();
         Path absolutePath=null;
         try {
