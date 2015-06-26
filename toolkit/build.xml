@@ -29,8 +29,16 @@
    </exec>
    </target>
 
+   <target name="spldoc" depends="all">
+   <exec executable="${streams.install}/bin/spl-make-doc">
+     <arg value="-i"/>
+     <arg value="${tk}"/>
+   </exec>
+   </target>
+
   <target name="clean" >
     <delete dir="${tk.opt}/icons"/>
+    <delete dir="${tk}/doc"/>
     <delete file="${tk}/toolkit.xml"/>
   </target>
 </project>

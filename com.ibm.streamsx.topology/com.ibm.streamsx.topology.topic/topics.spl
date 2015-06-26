@@ -1,5 +1,13 @@
 namespace com.ibm.streamsx.topology.topic ;
 
+/**
+ * Publish a stream to a topic. Allows other IBM Streams
+ * applications to subscribe to the input stream, including
+ * those written in different languages.
+ * See [namespace:com.ibm.streamsx.topology.topic] for details.
+ * @input In Stream to be published as a topic.
+ * @param topic Topic to publish stream to.
+*/
 public composite Publish(input In )
 {
 	param
@@ -13,13 +21,24 @@ public composite Publish(input In )
 
 }
 
-public composite Subscribe(output Out )
+/**
+ * Subscribe to a topic.
+ * Generates a stream that is subscribed, through
+ * IBM Streams dynamic connections, to all streams
+ * published to the same `topic` and `streamType`.
+ * See [namespace:com.ibm.streamsx.topology.topic] for details.
+ 
+ * @output Topic Subscription to `topic`.
+ * @param topic Topic to subscribe to.
+ * @param streamType Type of output stream `Topic`.
+*/
+public composite Subscribe(output Topic )
 {
-	param
-		type $streamType ;
+	param		
 		expression<rstring> $topic ;
+		type $streamType ;
 	graph
-		stream<$streamType> Out = Import()
+		stream<$streamType> Topic = Import()
 		{
 			param
 				subscription : __spl_exportType == "topic" && __spl_topic == $topic ;
