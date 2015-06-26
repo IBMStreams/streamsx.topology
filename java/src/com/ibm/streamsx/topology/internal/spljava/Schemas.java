@@ -14,9 +14,9 @@ import com.ibm.streams.operator.types.XML;
 
 public class Schemas {
 
-    public static final StreamSchema STRING = getStreamSchema("tuple<rstring __spl_js>");
-    public static final StreamSchema BLOB = getStreamSchema("tuple<blob __spl_jb>");
-    public static final StreamSchema XML = getStreamSchema("tuple<xml __spl_jx>");
+    public static final StreamSchema STRING = getStreamSchema("tuple<rstring string>");
+    public static final StreamSchema BLOB = getStreamSchema("tuple<blob binary>");
+    public static final StreamSchema XML = getStreamSchema("tuple<xml document>");
     
 
     public StreamSchema getSPLSchema(Class<?> tupleClass) {

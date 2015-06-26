@@ -14,7 +14,7 @@ public class SPLSchemas {
 
     /**
      * SPL schema used by Tuple&lt;String> streams. Consists of a single
-     * attribute of type {@code rstring __spl_js}.
+     * attribute of type {@code rstring string}.
      */
     public StreamSchema STRING = Schemas.STRING;
 }
