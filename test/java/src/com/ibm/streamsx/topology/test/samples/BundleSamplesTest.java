@@ -14,8 +14,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.ibm.streamsx.topology.test.TestTopology;
-
 import parallel.ParallelRegexGrep;
 import parallel.PartitionedParallelRegexGrep;
 import simple.Grep;
@@ -23,6 +21,8 @@ import simple.RegexGrep;
 import topic.PublishBeacon;
 import topic.SubscribeBeacon;
 import vwap.Vwap;
+
+import com.ibm.streamsx.topology.test.TestTopology;
 
 public class BundleSamplesTest extends TestTopology {
     
@@ -82,7 +82,7 @@ public class BundleSamplesTest extends TestTopology {
         File bundle = new File("topic.PublishBeacon.sab");
         bundle.delete();
         assertFalse(bundle.exists());
-        PublishBeacon.main(new String[0]);
+        PublishBeacon.main(new String[] { "/atopic", "BUNDLE"});
         assertTrue(bundle.exists());
         bundle.delete();
         assertFalse(bundle.exists());
@@ -93,7 +93,7 @@ public class BundleSamplesTest extends TestTopology {
         File bundle = new File("topic.SubscribeBeacon.sab");
         bundle.delete();
         assertFalse(bundle.exists());
-        SubscribeBeacon.main(new String[0]);
+        SubscribeBeacon.main(new String[] { "/atopic", "BUNDLE"});
         assertTrue(bundle.exists());
         bundle.delete();
         assertFalse(bundle.exists());

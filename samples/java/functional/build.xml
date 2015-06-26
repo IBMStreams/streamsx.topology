@@ -74,6 +74,13 @@
      </java>
   </target>
 
+  <target name="run.publish">
+     <java classname="topic.PublishBeacon" classpathref="run.classpath" fork="yes"/>
+  </target>
+  <target name="run.subscribe">
+     <java classname="topic.SubscribeBeacon" classpathref="run.classpath" fork="yes"/>
+  </target>
+
   <target name="doc">
        <mkdir dir="javadoc"/>
        <javadoc destdir="javadoc" classpathref="compile.classpath"
@@ -81,9 +88,8 @@
           Windowtitle="Java Functional Samples"
           Footer="streamsx.topology @ IBMStreams GitHub"
           linksource="yes"
+          sourcepath="src"
           >
-            <fileset dir="src">
-            </fileset>
        </javadoc>
   </target>
 </project>
