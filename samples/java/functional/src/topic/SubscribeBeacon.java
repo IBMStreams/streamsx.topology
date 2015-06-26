@@ -10,8 +10,20 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
+/**
+ * Application which subscribes to a topic.
+ * 
+ * @see PublishBeacon Sample application that
+ * publishes a topic
+ * @see <a href="../../../spldoc/html/tk$com.ibm.streamsx.topology/ns$com.ibm.streamsx.topology.topic$1.html">Integration with SPL applications</a>
+ */
 public class SubscribeBeacon {
 
+    /**
+     * Submit this application which subscribes to a topic.
+     * @param args Command line arguments, accepts a single optional topic name.
+     * @throws Exception Error running the application
+     */
     public static void main(String[] args) throws Exception {
         String topic = "/beacon";
 
@@ -24,7 +36,7 @@ public class SubscribeBeacon {
                 BeaconTuple.class);
         beacon.print();
 
-        StreamsContextFactory.getStreamsContext(StreamsContext.Type.BUNDLE)
+        StreamsContextFactory.getStreamsContext(StreamsContext.Type.DISTRIBUTED)
                 .submit(topology);
     }
 }
