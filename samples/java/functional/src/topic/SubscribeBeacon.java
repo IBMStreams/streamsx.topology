@@ -6,7 +6,6 @@ package topic;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
@@ -26,9 +25,13 @@ public class SubscribeBeacon {
      */
     public static void main(String[] args) throws Exception {
         String topic = "/beacon";
+        String type = "DISTRIBUTED";
 
-        if (args.length == 1)
+        if (args.length >= 1)
             topic = "/" + args[0];
+        if (args.length == 2)
+            type = args[1];
+            
 
         Topology topology = new Topology("SubscribeBeacon");
 
@@ -36,7 +39,7 @@ public class SubscribeBeacon {
                 BeaconTuple.class);
         beacon.print();
 
-        StreamsContextFactory.getStreamsContext(StreamsContext.Type.DISTRIBUTED)
+        StreamsContextFactory.getStreamsContext(type)
                 .submit(topology);
     }
 }

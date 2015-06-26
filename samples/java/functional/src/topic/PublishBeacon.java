@@ -7,7 +7,6 @@ package topic;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
 
@@ -44,8 +43,12 @@ public class PublishBeacon {
         // Select the topic name for the command line
         // using '/beacon' if not supplied.
         String topic = "/beacon";
-        if (args.length == 1)
+        String type = "DISTRIBUTED";
+
+        if (args.length >= 1)
             topic = "/" + args[0];
+        if (args.length == 2)
+            type = args[1];
 
         Topology topology = new Topology("PublishBeacon");
 
@@ -58,7 +61,7 @@ public class PublishBeacon {
         /*
          * Publish-Subscribe only works with distributed.
          */
-        StreamsContextFactory.getStreamsContext(StreamsContext.Type.DISTRIBUTED)
+        StreamsContextFactory.getStreamsContext(type)
                 .submit(topology);
     }
 }
