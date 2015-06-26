@@ -22,6 +22,8 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function7.Predicate;
 import com.ibm.streamsx.topology.spl.FileSPLStreams;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
@@ -114,6 +116,24 @@ public class SimpleEmbeddedTest {
         assertEquals("Hello", collector2.getTuples().get(0).getString(0));
         assertEquals("Test!!", collector2.getTuples().get(1).getString(0));
     }
+    
+    private Predicate<String> nilFilter = getNilFilter();
+    private static Predicate<String> getNilFilter() {
+        Predicate<String> nilFilter = new Predicate<String>() {
+            private static final long serialVersionUID = 1L;
+            public boolean test(String tuple) { return true; }
+        };
+        return nilFilter;
+    }
+
+    private static class AppendXform implements Function<String, String> {
+        private static final long serialVersionUID = 1L;
+        private final String s;
+        public AppendXform(String s) { this.s = s; }
+        public String apply(String tuple) {
+            return tuple+s;
+        }
+    }
 
     @Test
     public void testIsSupported() throws Exception {
@@ -121,8 +141,16 @@ public class SimpleEmbeddedTest {
 
         Topology topology = new Topology("test");
 
-        @SuppressWarnings("unused")
         TStream<String> hw = topology.strings("Hello", "World!", "Test!!");
+        TStream<String> hw2 = hw.transform(new AppendXform("(stream-2)"), String.class);
+        // make sure "marker" ops are ok: union,parallel,unparallel
+        hw
+            .union(hw2)
+            .parallel(2)
+                .filter(nilFilter)
+                .filter(nilFilter)
+            .unparallel()
+        .print();
 
         StreamsContext<?> sc = StreamsContextFactory
                 .getStreamsContext(StreamsContext.Type.EMBEDDED);
