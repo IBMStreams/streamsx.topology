@@ -88,10 +88,10 @@ public class ParallelTest {
         Topology topology = new Topology("testObjectHashPartition");
         final int count = new Random().nextInt(10) + 37;
 
-        TStream<BeaconTuple> kb = topology.source(
-                beaconTuple5Counter(count), BeaconTuple.class);
-        TStream<BeaconTuple> pb = kb.parallel(5, TStream.Routing.PARTITIONED);
-        TStream<ChannelAndSequence> cs = pb.transform(beaconTupleChannelSeqTransformer(),
+        TStream<String> kb = topology.source(
+                stringTuple5Counter(count), String.class);
+        TStream<String> pb = kb.parallel(5, TStream.Routing.PARTITIONED);
+        TStream<ChannelAndSequence> cs = pb.transform(stringTupleChannelSeqTransformer(),
                 ChannelAndSequence.class);
         TStream<ChannelAndSequence> joined = cs.unparallel();
 
@@ -205,20 +205,20 @@ public class ParallelTest {
     }
 
     @SuppressWarnings("serial")
-    static Supplier<Iterable<BeaconTuple>> beaconTuple5Counter(
+    static Supplier<Iterable<String>> stringTuple5Counter(
             final int count) {
-        return new Supplier<Iterable<BeaconTuple>>() {
+        return new Supplier<Iterable<String>>() {
 
             @Override
-            public Iterable<BeaconTuple> get() {
-                List<BeaconTuple> ret = new ArrayList<BeaconTuple>();
+            public Iterable<String> get() {
+                List<String> ret = new ArrayList<String>();
                 for (int i = 0; i < count; i++) {
                     // Send 5 BeaconTuples with the same iteration count
                     // as a key. We then test that all BeaconTuples with the
                     // same
                     // key are sent to the same partition.
                     for (int j = 0; j < 5; j++) {
-                        ret.add(new BeaconTuple(i));
+                        ret.add(Integer.toString(i));
                     }
                 }
                 // TODO Auto-generated method stub
@@ -246,18 +246,18 @@ public class ParallelTest {
     }
     
     @SuppressWarnings("serial")
-    static Function<BeaconTuple, ChannelAndSequence> beaconTupleChannelSeqTransformer() {
-        return new Function<BeaconTuple, ChannelAndSequence>() {
+    static Function<String, ChannelAndSequence> stringTupleChannelSeqTransformer() {
+        return new Function<String, ChannelAndSequence>() {
             int channel = -1;
 
             @Override
-            public ChannelAndSequence apply(BeaconTuple v) {
+            public ChannelAndSequence apply(String v) {
                
                 if (channel == -1) {
                     channel = PERuntime.getCurrentContext().getChannel();
                 }
                 // TODO Auto-generated method stub
-                return new ChannelAndSequence(channel, (int)(v.getSequence()));
+                return new ChannelAndSequence(channel, Integer.parseInt(v));
             }
 
         };
