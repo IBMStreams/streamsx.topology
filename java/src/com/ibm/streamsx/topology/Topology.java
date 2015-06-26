@@ -401,8 +401,8 @@ public class Topology implements TopologyElement {
     /**
      * Includes a jar file, specified by the {@code location} String, into 
      * the application runtime. For example, the following code includes the 
-     * myResource.jar jar file such that it can be used when running in a 
-     * DISTRIBUTED or STANDALONE context.
+     * myResource.jar jar file such that it could be used when running in a 
+     * non-EMBEDDED context.
      * <pre><code>
      * Topology top = new Topology("myTopology");
      * top.addThirdPartyDependency("./libs/myResource.jar");
@@ -413,31 +413,44 @@ public class Topology implements TopologyElement {
      * @param location The location of a jar to be included in the application's
      * runtime when submitting with a DISTRIBUTED or STANDALONE context.
      */
-    public void addThirdPartyDependency(String location) {
-       JavaFunctional.addThirdPartyDependency(this, location); 
+    public void addJarDependency(String location) {
+       JavaFunctional.addJarDependency(this, location); 
     }
     
     /**
-     * Includes a class file into the application's runtime. The following 
-     * would be a valid usage:
+     * Ensures that a class file is loaded into the application's runtime. 
+     * If the .class file  is contained in a jar file, the jar file is also included
+     * in the application's runtime. If the .class file is in the directory
+     * structure of a package, the top-level directory is converted to a jar file 
+     * and included in the application's runtime. <br><br>
+     * For example, if the class exists in the following package directory structure:
+     * <pre><code>
+     * upperDir
+     *     |_com
+     *         |_foo
+     *             |_bar
+     *             |   |_bar.class
+     *             |   |_baz.class
+     *             |_fiz
+     *                 |_buzz.class
+     * </pre></code>
+     * and addClassDependency is invoked as follows:
      * <pre><code>
      * Topology top = new Topology("myTopology");
-     * top.addThirdPartyDependency(myThirdPartyResource.class);
+     * top.addThirdPartyDependency(bar.class);
      * </pre></code> 
-     * As with
+     * Then the entire contents of upperDir is turned into a jar file and included 
+     * in the application's runtime -- this includes baz and buzz, not just bar!
+     * <br><br>As with
      * {@link com.ibm.streamsx.topology.Topology#addThirdPartyDependency(String location)},
-     * this is only required when using third-party libraries when running with
-     * a DISTRIBUTED or STANDALONE context.
-     * <br><br>
-     * If the .class file is part of a package structure, the package will be
-     * copied and compressed into a jar file to be included in the Applicatoin's
-     * runtime.
+     * this is only required when using third-party libraries when running in 
+     * a non-EMBEDDED context.
      * @param clazz The class of a third party resource to be included in the 
      * application's runtime when submitting with a DISTRIBUTED or STANDALONE 
      * context.
      */
-    public void addThirdPartyDependency(Class<?> clazz) {
-        JavaFunctional.addThirdPartyDependency(this, clazz); 
+    public void addClassDependency(Class<?> clazz) {
+        JavaFunctional.addClassDependency(this, clazz); 
     }
     
     private void finalizeConfig() {

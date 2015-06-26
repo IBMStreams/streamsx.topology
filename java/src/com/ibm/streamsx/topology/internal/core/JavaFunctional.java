@@ -129,17 +129,17 @@ public class JavaFunctional {
     /**
      * Add a third-party dependency to all eligible operators
      */
-    public static void addThirdPartyDependency(TopologyElement te,
+    public static void addJarDependency(TopologyElement te,
             String location) {
-        te.topology().getDependencyResolver().addThirdPartyDependency(location);
+        te.topology().getDependencyResolver().addJarDependency(location);
     }
     
     /**
      * Add a third-party dependency to all eligible operators.
      */
-    public static void addThirdPartyDependency(TopologyElement te,
+    public static void addClassDependency(TopologyElement te,
             Class<?> clazz) {
-        te.topology().getDependencyResolver().addThirdPartyDependency(clazz);
+        te.topology().getDependencyResolver().addClassDependency(clazz);
     }
 
     /**
