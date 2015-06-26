@@ -23,6 +23,9 @@
           includes="*.gif" />
    </copy>
 
+   <mkdir dir="${tk}/license"/>
+   <copy file="${streamsx.topology}/LICENSE" todir="${tk}/license"/>
+
    <exec executable="${streams.install}/bin/spl-make-toolkit">
      <arg value="-i"/>
      <arg value="${tk}"/>
@@ -40,5 +43,6 @@
     <delete dir="${tk.opt}/icons"/>
     <delete dir="${tk}/doc"/>
     <delete file="${tk}/toolkit.xml"/>
+    <delete dir="${tk}/license"/>
   </target>
 </project>
