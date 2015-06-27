@@ -133,6 +133,7 @@ public class BOperatorInvocation extends BOperator {
             op.setBigDecimalParameter(name, (BigDecimal) value);
             jsonValue = value.toString(); // Need to maintain exact value
         } else if (value instanceof Enum) {
+            op.setCustomLiteralParameter(name, (Enum<?>) value);
             jsonValue = ((Enum<?>) value).name();
             jsonType = "enum";
         } else if (value instanceof StreamSchema) {
