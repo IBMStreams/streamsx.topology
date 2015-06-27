@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Streamsx.topology</title>
+    <style>
+      .toc .h3 {
+      font-size: 16px;
+      margin-top: 0px;
+      margin botton: 8px;
+      }
+      .toc .h4 {
+      font-size: 14px;
+      margin-left: 4em;
+      }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="stylesheets/bootstrap.css" media="screen">
+    <link rel="stylesheet" href="stylesheets/bootswatch.min.css">
+
+
+    <!-- <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+         <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+         <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+         <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen"> -->
+
+  </head>
+  <body>
+    <div class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a href="index.html" class="navbar-brand">streamsx.topology</a>
+          <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+        <div class="navbar-collapse collapse" id="navbar-main">
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="https://github.com/Ibmstreams/streamsx.topology/releases">Releases</a>
+            </li>
+            <li>
+              <a href="doc.html">Documentation</a>
+            </li>
+            <li>
+              <a href="gettingstarted.html">Getting started</a>
+            </li>
+            <li>
+              <a href="FAQ.html">FAQ</a>
+            </li>
+          </ul>
+
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="https://github.com/IBMStreams" target="_blank">An IBM Streams Project</a></li>
+            <li><a href="https://github.com/IBMStreams/streamsx.topology" target="_blank">Project Page</a></li>
+          </ul>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Begin main content -->
+
+    <div class="container">
+      <div class="page-header" id="banner">
+        <div class="row">
+        </div>
+      </div>
+
+      <section class="main-content">
+        <h3> Table of contents</h3>
+        <div class="toc">
+        </div>
+
+        <h3>Command line usage of the Java Application API</h3>
+        <h4>Compiling and running Java Application API projects manually</h4>
+        To compile and run Java functional API programs through using the command line, be sure the classpath includes com.ibm.streamsx.topology.jar and the jars in ${STREAMS_INSTALL}/lib. If you don't include the proper jars, your program will fail to compile due to ClassNotFoundExceptions. For example, a program named myApplication may be compiled as follows:
+        <pre>
+    javac -cp "../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:${STREAMS_INSTALL}/lib/*" myApplication.java
+        </pre>
+        Be sure that every path specified in the Java classpath is either an absolute or relative path -- bash completions such as '~' will not work.
+        <br><br>
+        The compiled application will produce a myApplication.class file, and potentially a number of generated classes of the form myApplication$1.class, myApplication$2.class, etc.
+        <br><br>
+        To run your application use the same classpath as before, but also be sure to include the location of the compiled myApplication classes (in this case, the current working directory):
+        <pre>
+    java -cp ".:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:${STREAMS_INSTALL}/lib/*"
+        </pre>
+        This will run the compiled java program. If you have specified that the application should run distributed (as in, with a DISTRIBUTED context), then running the program will product a .sab bundle that can be submitted to a Streams domain. For documentation on how to create a streams Domain and submit a .sab file, see the tutorial at: <a href="domainsetup.html">Domain Setup Guide</a>.
+        <h4>Viewing logs for distributed applications from command line</h4>
+        To view the log outputs of a Java Application API project that was submitted with the DISTRIBUTED context, use the <i>getlog</i> command. <i>getlog</i> collects the logs from every host that is connected with your domain, and aggregates then in a tar file. To collect the logs, simply run <code>streamtool getlog</code> at the command line.
+        <br>
+        Afterwards, a file name StreamsLogs.tgz should be present in the current working directory, which contains the following top-level directory structure:
+        <pre>
+    $ls
+    autopdzip  &lt;host_id>  streams.0.log  streams.1.log  streams.2.log  version  &lt;domain_id>.json
+        </pre>
+        To view the logs for a particular job, cd to &lt;host_id>/instances/&lt;instance_id>/jobs/&lt;job_id>/. Inside, you should see log outputs for each source, sink, or transformation in the topology -- each assigned a unique number. For the "Hello World" example, in which there is only a source and a sink, there would be the following files present:
+        <pre>
+    [user@sdsvm0001 4]$ ls -l
+    total 16
+    -rw-rw-r-- 1 wcmarsha wcmarsha  1 Jun 15 14:18 pec.37.out
+    -rw-rw-r-- 1 wcmarsha wcmarsha  1 Jun 19 14:16 pec.38.out
+    -rw-rw-r-- 1 wcmarsha wcmarsha  1 Jun 19 14:18 pec.pe.37.stdouterr
+    -rw-rw-r-- 1 wcmarsha wcmarsha 12 Jun 19 14:18 pec.pe.38.stdouterr
+        </pre>
+        Where pec.pe.38.stdouterr contains the output "Hello World!".
+	
+	<h3>Monitoring your Streams Application from Streams Console</h3>
+
+        <p>If you have launched your job as DISTRIBUTED, you can monitor your running job using the Streams Console.
+          To open the Streams Console:</p>
+        <ol>
+          <li>Run this command at the command line:
+            <p> <code> streamstool geturl </code> </p>
+            <p>This should return the URL of the Streams Console for your domain.</p></li>
+          <li>Open the browser with the URL.</li>
+          <li>You will be prompted for an user ID and password.  If you are using the Streams Quick Start VM, use streamsAdmin:passw0rd.</li>
+        </ol>
+
+        <p>
+          If you have Streams Studio installed, you may also see the running job in Streams Explorer view and Instance Graph.
+        </p>
+
+
+
+      </section>
+      <script src="javascripts/jquery-2.1.4.js"></script>
+      <script src="javascripts/toc.min.js"></script>
+      <script>
+        $('.toc').toc({'selectors': 'h3,h4', //elements to use as headings
+        'container': 'body', //element to find all selectors in
+        'smoothScrolling': true, //enable or disable smooth scrolling on click
+        'prefix': 'toc', //prefix for anchor tags and class names
+        'onHighlight': function(el) {}, //called when a new section is highlighted
+        'highlightOnScroll': true, //add class to heading that is currently in focus
+        'highlightOffset': 100, //offset to trigger the next headline
+        'anchorName': function(i, heading, prefix) { //custom function for anchor name
+        return prefix+i;
+        },
+        'headerText': function(i, heading, $heading) { //custom function building the header-item text
+        return $heading.text();
+        },
+        'itemClass': function(i, heading, $heading, prefix) { // custom function for item class
+        return $heading[0].tagName.toLowerCase();
+        }});
+      </script>
+    </div>
+  </body>
+</html>
+

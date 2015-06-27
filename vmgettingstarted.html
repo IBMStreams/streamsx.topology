@@ -74,27 +74,42 @@
         <h3> Table of contents</h3>
         <div class="toc">
         </div>
-        <h3>Getting started with the Java Application API</h3>
-	<p>There are three primary ways to get started with the API. If you are trying the API for the first time, the Streams Quick Start Edition VM is likely the fastest way to start working with a few sample applications. If you would like to install the Java Application API on your own machine to use or contribute to streamsx.topology, follow the instructions for cloning the Gitub repository and integrating it with eclipse or running via command line.</p>
 
-	<h3>Streams Quick Start Edition VM</h3>
-	    <p>The Streams Quick Start Edition VM contains the first release of the Java Application API, a ready-to-go release of IBM InfoSphere Streams, and a selection of commented sample applications that range from "Hello World" to a Volume Weighted Average Price stock trading simulation. Additionally, the Quick Start VM comes bundled with IBM Streams Studio, which provides an intuitive, visual representation of your streaming application. 
-	      <br><br>
-	      For information on using the Quick Start VM and getting started with samples, please follow the <a href="vmgettingstarted.html"> Quick Start VM setup guide</a>.</p><br>
-	      Download the VM: <a href="http://www-01.ibm.com/software/data/infosphere/stream-computing/trials.html" class="btn btn-primary btn-lg">Streams Quick Start Edition VM</a>
+        <h3>Streams Quick Start Edition VM Guide</h3>
+        <p>Getting Streams Quick Start Edition VM:</p>
+        <ol>
+          <li>Download the Streams Quick Start Edition VM image here:  <a href="http://www-01.ibm.com/software/data/infosphere/stream-computing/trials.html"> IBM InfoSphere Streams 4.0 Java API Beta QuickStart VM Image</a></li>
+          <li>Extract and use a VM player of your choice to play the VM image</li>
+        </ol>
 
-
-	    <h3>Integrating with Eclipse/Streams Studio</h3>
-	    <p>
-	      If you would like to use the Java Application API with Eclipse or Streams Studio on your own machine, make sure it already has a working release of IBM Streams (minimum version 4.0.0.0) -- it's not sufficient to have just the API. Detailed instruction on installing and configuring IBM Streams 4.0.0.0 can be found at the <a href="https://www-01.ibm.com/support/knowledgecenter/SSCRJU_4.0.0/com.ibm.streams.install.doc/doc/ibminfospherestreams-install-interactive-silent-section.html">IBM Knowledge Center</a>.
-	      <br><br>
-	      The Eclipse/Streams Studio integration guide <a href="manualgettingstarted.html">may be found here</a>. It provides instructions on linking Eclipse with an IBM Streams install, including the Java Application API libraries, and setting relevant environment variables.
-	      </p>
-
-	    <h3>Command line usage & Log Viewing</h3>
-	    <p>
-	      If you are a command line user, instructions on manually compiling and running Java Application API programs can be found in the <a href="clgettingstarted.html">command line getting guide</a>. The guide also contains instructions for viewing the logs of distributed applications, both from the command line and the Streams Console GUI.
-	      </p>
+        <p>The VM image has the com.ibm.streamsx.topology toolkit installed.  The toolkit is located at:
+          /home/streamsadmin/streamx.topology/streamsx.topology
+        </p>
+        <p>
+          This directory contains two sub-directories:
+        </p>
+        <ul>
+          <li>com.ibm.streamsx.topology - the topology toolkit that enables you to write your Streams application in Java</li>
+          <li>samples - a set of samples that demonstrate the Java Application APIs</li>
+        </ul>
+        <h4>Running the sample applications</h4>
+        <p>To try out the samples, follow these steps:</p>
+        <ol>
+          <li>Double click on the <b>InfoSphere Streams Studio (Eclipse)</b> icon on the desktop to start Streams Studio.</li>
+          <li>When prompted for a workspace, specify this as the workspace to open:  <b>/home/streamsadmin/Workspaces/topology/ </b> </li>
+        </ol>
+	<p>You should see the JavaFunctionalAPISamples project in the Project Explorer tab on the left. In its src directory, you should see several packages - <i>parallel</i>, <i>simple</i>, <i>topic</i>, <i>twitter</i>, and <i>Vwap</i>. Brief explanations for each may be found in the <a href="http://ibmstreams.github.io/streamsx.topology/doc/samples/javadoc/index.html">sample's Javadoc</a>.
+	  <br><br>
+	  To start, let's run the "Hello World" sample application. In the Project Explorer tab, right click on src->simple->HelloWorld, and select Run As -> Run Configurations. In the Run Configurations 'Main' tab, make sure that the <b>Main class</b> field is set to <b>simple.HelloWorld</b>. In the <b>arguments</b> tab, set the <b>Program arguments</b> field to <b>EMBEDDED</b>.
+	  <br><br>
+	  The EMBEDDED argument causes the HelloWorld application to create an EMBEDDED <i>context</i>, which contains information as to how the application is submitted. In this case, an EMBEDDED context runs the application in a single JVM, and does not use the IBM Stream's C++ runtime. This has the benefit of being faster to deploy, and allows a developer to develop, run, and test entirely within Eclipse. While this is great for prototyping and debugging, it should be noted that EMBEDDED applications are limited to a single process, and can't use the full functionality of the IBM Streams runtime. For a full list of contexts and their functionality, view the <a href="http://ibmstreams.github.io/streamsx.topology/doc/javadoc/index.html">Streams context Javadoc</a> hosted on Github.
+	  <br><br>
+After you have set the required arguments, run the application. You should see the following output:
+	  <pre>
+    Hello
+    world!
+	      </pre>
+	  Feel free to try the other sample applications. Be sure to read the comments for how they should be run!</p>
       </section>
       <script src="javascripts/jquery-2.1.4.js"></script>
       <script src="javascripts/toc.min.js"></script>

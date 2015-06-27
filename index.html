@@ -20,7 +20,7 @@
 <div class="navbar navbar-default navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
-          <a href="../" class="navbar-brand">streamsx.topology</a>
+          <a href="index.html" class="navbar-brand">streamsx.topology</a>
           <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
@@ -87,8 +87,8 @@
 	      <div class="col-sm-7">
 		<pre><code>
 <em style="color: green;">    /*
-     * Declare a source stream (hw) with String as tuples that sends two tuples,
-     * "Hello" and "World!", and prints them to output.
+     * Declare a source stream (hw) with String as tuples that sends two
+     * tuples "Hello" and "World!", and prints them to output.
      */</em>
     Topology topology = new Topology(<em style="color: blue;">"HelloWorld"</em>);
     TStream&lt;String> hw = topology.strings(<em style="color: blue;">"Hello"</em>, <em style="color: blue">"World!"</em>);
