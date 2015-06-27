@@ -100,6 +100,7 @@
      <property name="topology.test.sc_ok" value="true"/>
      <property name="topology.test.perf_ok" value="true"/>
      <property name="topology.test.coverage" value="true"/>
+     <property name="topology.test.resource_dir" location="resources"/>
    <jacoco:coverage enabled="${topology.test.coverage}">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="no"
            haltonfailure="yes" failureproperty="topology.tests.failed">
@@ -107,6 +108,8 @@
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>
        <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
        <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
+       <sysproperty key="topology.test.resource_dir" file="resources"/>
+       
        <classpath>
          <path refid="test.classpath"/>
        </classpath>

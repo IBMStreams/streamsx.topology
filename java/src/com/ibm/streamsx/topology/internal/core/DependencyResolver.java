@@ -62,9 +62,9 @@ public class DependencyResolver {
     @SuppressWarnings("unused")
     public void addJarDependency(String location) throws IllegalArgumentException{
         File f = new File(location);
-        if(null == f){
+        if(!f.exists()){
             throw new IllegalArgumentException("File not found. Invalid "
-                    + "third party dependency location.");
+      	       + "third party dependency location:"+ f.toPath().toAbsolutePath().toString());
         }
         globalDependencies.add(f.toPath().toAbsolutePath());    
     }
@@ -136,8 +136,8 @@ public class DependencyResolver {
                 continue;
             }
             String jarName = resolveDependency(dep, config);
-            jars.add("impl/lib/" + jarName);
-        }
+            jars.add("impl/lib/" + jarName);	    
+        }	
         
         List<BOperator> ops = parentTopology.builder().getOps();
         if(jars.size() != 0){
