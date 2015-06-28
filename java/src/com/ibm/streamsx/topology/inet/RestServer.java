@@ -76,7 +76,7 @@ public class RestServer {
      * @param name
      *            Relative name (to {@code context}) of the resource.
      * 
-     * @return
+     * @return null (future will be the path to the tuples)
      */
     @SuppressWarnings("unchecked")
     public String viewer(TWindow<?> window, String context,
