@@ -405,7 +405,7 @@ public class Topology implements TopologyElement {
      * non-EMBEDDED context.
      * <pre><code>
      * Topology top = new Topology("myTopology");
-     * top.addThirdPartyDependency("./libs/myResource.jar");
+     * top.addJarDependency("./libs/myResource.jar");
      * </pre></code> 
      * For running embedded, simply adding the jar to the classpath when 
      * compiling/running is sufficient.
@@ -437,15 +437,15 @@ public class Topology implements TopologyElement {
      * and addClassDependency is invoked as follows:
      * <pre><code>
      * Topology top = new Topology("myTopology");
-     * top.addThirdPartyDependency(bar.class);
+     * top.addJarDependency(bar.class);
      * </pre></code> 
      * Then the entire contents of upperDir is turned into a jar file and included 
      * in the application's runtime -- this includes baz and buzz, not just bar!
      * <br><br>As with
-     * {@link com.ibm.streamsx.topology.Topology#addThirdPartyDependency(String location)},
-     * this is only required when using third-party libraries when running in 
+     * {@link com.ibm.streamsx.topology.Topology#addJarDependency(String location)},
+     * this is only required when using additional jars  when running in 
      * a non-EMBEDDED context.
-     * @param clazz The class of a third party resource to be included in the 
+     * @param clazz The class of a resource to be included in the 
      * application's runtime when submitting with a DISTRIBUTED or STANDALONE 
      * context.
      */

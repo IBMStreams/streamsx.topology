@@ -16,9 +16,9 @@
  * <LI>(Future) - Using a release of IBM Streams that includes a suitable version.</LI>
  * </UL>
  * Releases of the toolkit are available from:
-    <a href="https://github.com/IBMStreams/streamsx.inet/releases">https://github.com/IBMStreams/streamsx.inet/releases</a>. Release 2.6.0 or later is required by this toolkit.
+    <a href="http://github.com/IBMStreams/streamsx.inet/releases" target="_blank">http://github.com/IBMStreams/streamsx.inet/releases</a>. Release 2.6.0 or later is required by this toolkit.
  * <BR>
- * Currently a more recent version (2.6.0 or later) of the toolkit is required than the one supplied IBM Streams (2.0).
+ * Currently a more recent version (2.6.0 or later) of the toolkit is required than the one supplied IBM Streams 4.0.
  * </P>
  */
 package com.ibm.streamsx.topology.inet;
