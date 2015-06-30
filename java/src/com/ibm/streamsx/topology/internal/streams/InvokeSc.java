@@ -76,6 +76,7 @@ public class InvokeSc {
 
         trace.info("Invoking SPL compiler (sc) for main composite: "
                 + mainCompositeName);
+        trace.info(Util.concatenate(commands));
 
         ProcessBuilder pb = new ProcessBuilder(commands);
         

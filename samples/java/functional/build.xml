@@ -59,6 +59,7 @@
   <!--    It is not in the stars to hold our destiny but in ourselves -->
   <!-- the output will only include destiny as the filter is starts with d -->
   <target name="run.filterecho">
+  	 <echo message="Expect only 'destiny' to be output" />
      <java classname="simple.FilterEcho" classpathref="run.classpath" fork="yes">
        <arg value="It"/> <arg value="is"/> <arg value="not"/>
        <arg value="in"/> <arg value="the"/> <arg value="stars"/>
@@ -71,6 +72,15 @@
   <target name="run.vwap">
      <java classname="vwap.Vwap" classpathref="run.classpath" fork="yes">
        <arg value="STANDALONE"/>
+     </java>
+  </target>
+
+  <target name="run.vwap.distributed">
+     <fail unless="env.STREAMS_DOMAIN_ID" message="STREAMS_DOMAIN_ID not set."/>
+     <fail unless="env.STREAMS_INSTANCE_ID" message="STREAMS_INSTANCE_ID not set."/>
+     <echo message="Job will be submitted to Streams instance ${env.STREAMS_INSTANCE_ID} in domain ${env.STREAMS_DOMAIN_ID}" />
+     <java classname="vwap.Vwap" classpathref="run.classpath" fork="yes">
+       <arg value="DISTRIBUTED"/>
      </java>
   </target>
 
