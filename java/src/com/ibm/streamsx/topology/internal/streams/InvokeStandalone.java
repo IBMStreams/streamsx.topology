@@ -66,6 +66,8 @@ public class InvokeStandalone {
         }
 
         trace.info("Invoking standalone application");
+        trace.info(Util.concatenate(commands));
+
         ProcessBuilder pb = new ProcessBuilder(commands);
         pb.inheritIO();
         Process standaloneProcess = pb.start();

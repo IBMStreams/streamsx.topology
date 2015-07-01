@@ -29,17 +29,14 @@ public class DistributedStreamsContext extends
     public Future<BigInteger> submit(Topology app, Map<String, Object> config)
             throws Exception {
 
-        // Wait to create the bundle.
         preBundle();
         File bundle = bundler.submit(app, config).get();
 
         preInvoke();
-        return streamtoolSubmit(bundle);
-    }
-
-    private Future<BigInteger> streamtoolSubmit(File bundle) throws Exception {
         InvokeSubmit submitjob = new InvokeSubmit(bundle);
-        BigInteger jobId = submitjob.invoke();
+
+        BigInteger jobId = submitjob.invoke(config);
+        
         return new CompletedFuture<BigInteger>(jobId);
     }
     
