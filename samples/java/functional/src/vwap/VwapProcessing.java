@@ -11,6 +11,7 @@ import com.ibm.streamsx.topology.logic.Logic;
 
 public class VwapProcessing {
 
+    @SuppressWarnings("serial")
     public static TStream<Bargain> bargains(TStream<Trade> trades,
             TStream<Quote> quotes) {
 

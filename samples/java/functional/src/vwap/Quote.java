@@ -32,6 +32,7 @@ public class Quote extends Ticker {
                 + askprice + " asksize=" + asksize;
     }
 
+    @SuppressWarnings("serial")
     public static TStream<Quote> getQuotes(SPLStream tradeQuotes) {
         return tradeQuotes.transform(new Function<Tuple, Quote>() {
             @Override

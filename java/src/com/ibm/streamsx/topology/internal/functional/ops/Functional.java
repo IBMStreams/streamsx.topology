@@ -1,7 +1,5 @@
 package com.ibm.streamsx.topology.internal.functional.ops;
 
-import com.ibm.streams.operator.model.Parameter;
-
 public interface Functional {
     /**
      * Gets the functional logic string

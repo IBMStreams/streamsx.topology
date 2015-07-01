@@ -5,7 +5,6 @@
 package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +20,7 @@ import com.ibm.streamsx.topology.tuple.Keyable;
 
 public class WindowTest extends TestTopology {
 
+    @SuppressWarnings("serial")
     private static final class SumInt implements
             Function<Iterable<Number>, Integer> {
         @Override
@@ -98,6 +98,7 @@ public class WindowTest extends TestTopology {
 
     };
 
+    @SuppressWarnings("serial")
     public static class StockPrice implements Keyable<String> {
 
         private final String ticker;
@@ -123,6 +124,7 @@ public class WindowTest extends TestTopology {
 
     }
 
+    @SuppressWarnings("serial")
     public static class AveragePrice implements
             Function<Iterable<StockPrice>, StockPrice> {
 

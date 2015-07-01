@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.streams.operator.PERuntime;
@@ -40,15 +39,14 @@ public class ParallelTest {
         TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
         TStream<BeaconTuple> pb = fb.parallel(5);
 
-        @SuppressWarnings("serial")
         TStream<Integer> is = pb.transform(randomHashProducer(), Integer.class);
         TStream<Integer> joined = is.unparallel();
         TStream<String> numRegions = joined.transform(
                 uniqueIdentifierMap(count), String.class);
 
         Tester tester = topology.getTester();
-        Condition expectedCount = tester.tupleCount(numRegions, 1);
-        Condition regionCount = tester.stringContents(numRegions, "5");
+        Condition<Long> expectedCount = tester.tupleCount(numRegions, 1);
+        Condition<List<String>> regionCount = tester.stringContents(numRegions, "5");
 
         StreamsContextFactory
                 .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
@@ -74,8 +72,8 @@ public class ParallelTest {
                 String.class);
 
         Tester tester = topology.getTester();
-        Condition expectedCount = tester.tupleCount(valid_count, 1);
-        Condition validCount = tester.stringContents(valid_count, "5");
+        Condition<Long> expectedCount = tester.tupleCount(valid_count, 1);
+        Condition<List<String>> validCount = tester.stringContents(valid_count, "5");
 
          StreamsContextFactory.getStreamsContext(StreamsContext.Type.STANDALONE_TESTER).submit(topology).get();
 
@@ -99,8 +97,8 @@ public class ParallelTest {
                 String.class);
 
         Tester tester = topology.getTester();
-        Condition expectedCount = tester.tupleCount(valid_count, 1);
-        Condition validCount = tester.stringContents(valid_count, "5");
+        Condition<Long> expectedCount = tester.tupleCount(valid_count, 1);
+        Condition<List<String>> validCount = tester.stringContents(valid_count, "5");
 
          StreamsContextFactory.getStreamsContext(StreamsContext.Type.STANDALONE_TESTER).submit(topology).get();
 

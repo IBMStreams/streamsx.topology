@@ -133,7 +133,7 @@ public class TestTopology {
      *   
      * In a distributed environment the 
      */
-    public boolean complete(Tester tester, Condition endCondition, long timeout, TimeUnit unit) throws Exception {
+    public boolean complete(Tester tester, Condition<?> endCondition, long timeout, TimeUnit unit) throws Exception {
         
         return tester.complete(getTesterContext(), getConfig(), endCondition, timeout, unit);
     }

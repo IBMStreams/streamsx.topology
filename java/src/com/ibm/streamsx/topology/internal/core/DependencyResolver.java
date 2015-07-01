@@ -59,7 +59,6 @@ public class DependencyResolver {
         this.parentTopology = parentTopology;
     }
     
-    @SuppressWarnings("unused")
     public void addJarDependency(String location) throws IllegalArgumentException{
         File f = new File(location);
         if(!f.exists()){

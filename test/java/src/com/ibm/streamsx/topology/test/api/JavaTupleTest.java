@@ -85,6 +85,7 @@ public class JavaTupleTest extends TestTopology {
     	naas.add(new NAÃÃ("three"));
   	
         final Topology topology = new Topology();
+        @SuppressWarnings("unused")
         TStream<NAŇÃ> sourceNAŇÃ = topology.constants(nas, NAŇÃ.class);
         TStream<NAÃÃ> sourceNAÃÃ = topology.constants(naas, NAÃÃ.class);
             

@@ -8,15 +8,11 @@ import com.ibm.streamsx.topology.function7.Function;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
-import java.util.Properties;
+import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import ThirdParty.ThirdPartyResource;
 import org.junit.Test;
-import org.junit.Ignore;
 
 public class ThirdPartyTest {
     @Test
@@ -30,8 +26,8 @@ public class ThirdPartyTest {
 							    , String.class);
         
         Tester tester = topology.getTester();
-        Condition expectedCount = tester.tupleCount(thirdPartyOutput, 3);
-        Condition stringContents = tester.stringContents(thirdPartyOutput, 
+        Condition<Long> expectedCount = tester.tupleCount(thirdPartyOutput, 3);
+        Condition<List<String>> stringContents = tester.stringContents(thirdPartyOutput, 
                 "This was returned from a third-party method1",
                 "This was returned from a third-party method2",
                 "This was returned from a third-party method3");
@@ -51,8 +47,8 @@ public class ThirdPartyTest {
 							    , String.class);
         
         Tester tester = topology.getTester();
-        Condition expectedCount = tester.tupleCount(thirdPartyOutput, 3);
-        Condition stringContents = tester.stringContents(thirdPartyOutput, 
+        Condition<Long> expectedCount = tester.tupleCount(thirdPartyOutput, 3);
+        Condition<List<String>> stringContents = tester.stringContents(thirdPartyOutput, 
                 "This string was set.1",
                 "This string was set.2",
                 "This string was set.3");
