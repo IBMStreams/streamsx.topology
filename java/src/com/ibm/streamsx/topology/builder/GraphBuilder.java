@@ -87,6 +87,22 @@ public class GraphBuilder extends BJSONObject {
     public static String UNION = "$Union$";
     public static String PARALLEL = "$Parallel$";
     public static String UNPARALLEL = "$Unparallel$";
+    public static String LOW_LATENCY = "$LowLatency$";
+    public static String END_LOW_LATENCY = "$EndLowLatency";
+    public static String ISOLATE = "$Isolate$";
+    
+    public BOutput lowLatency(BOutput parent){
+        BOutput lowLatencyOutput = addPassThroughMarker(parent, LOW_LATENCY, true);
+        return lowLatencyOutput;
+    }
+    
+    public BOutput endLowLatency(BOutput parent){
+        return addPassThroughMarker(parent, END_LOW_LATENCY, false);
+    }
+    
+    public BOutput isolate(BOutput parent){
+        return addPassThroughMarker(parent, ISOLATE, false);
+    }
 
     public BOutput addUnion(Set<BOutput> outputs) {
         BOperator op = addVirtualMarkerOperator(UNION);

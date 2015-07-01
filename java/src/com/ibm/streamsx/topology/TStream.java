@@ -507,6 +507,24 @@ public interface TStream<T> extends TopologyElement {
      *             than 1.0.
      */
     TStream<T> sample(double fraction);
+    
+    /**
+     * Add docs
+     * @return isolate tstream
+     */
+    TStream<T> isolate();
+    
+    /**
+     * Start low latency region
+     * @return Low latency tstream
+     */
+    TStream<T> lowLatency();
+    
+    /**
+     * end low latency region
+     * @return Non-low latency tstream.
+     */
+    TStream<T> endLowLatency();
 
     /**
      * Throttle a stream by ensuring any tuple is submitted with least
