@@ -72,6 +72,7 @@ public class SPLStreamsTest extends TestTopology {
     }
 
 
+    @SuppressWarnings("serial")
     public static class IntAndString implements Serializable {
         public int n;
         public String s;
@@ -132,6 +133,7 @@ public class SPLStreamsTest extends TestTopology {
         completeAndValidate(strings, 10,  "34535", "43675232", "654932", "82343");
     }
 
+    @SuppressWarnings("serial")
     private static TStream<IntAndString> createStreamFromSPLStream(
             SPLStream stream) {
         return stream.convert(new Function<Tuple, IntAndString>() {
@@ -146,6 +148,7 @@ public class SPLStreamsTest extends TestTopology {
         }, IntAndString.class);
     }
 
+    @SuppressWarnings("serial")
     private static SPLStream createSPLFlowFromStream(final Topology topology,
             final boolean skipSecond) {
         TStream<String> source = topology.strings("325", "457", "9325");

@@ -106,6 +106,7 @@ public class SPLStreams {
 
         BOperatorInvocation convOp = JavaFunctional.addFunctionalOperator(
                 stream, opName, FunctionConvertToSPL.class, converter);
+        @SuppressWarnings("unused")
         BInputPort inputPort = stream.connectTo(convOp, true, null);
 
         BOutputPort convertedTuples = convOp.addOutput(schema);

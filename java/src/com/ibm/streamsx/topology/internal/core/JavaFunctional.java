@@ -102,6 +102,7 @@ public class JavaFunctional {
     public static <T> TStream<T> addSubscribeOperator(TopologyElement te,
             String topic, Class<T> tupleTypeClass) {
         SPLMapping<T> mapping = Schemas.getSPLMapping(tupleTypeClass);
+        @SuppressWarnings("unused")
         SPLStream splImport = SPLStreams.subscribe(te, topic,
                 mapping.getSchema());
         return null; // TODO

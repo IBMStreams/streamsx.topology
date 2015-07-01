@@ -183,7 +183,7 @@ public interface StreamsContext<T> {
     Future<T> submit(Topology topology) throws Exception;
 
     /**
-     * Submit {@code topology} to this Streams context ith a specific configuration.
+     * Submit {@code topology} to this Streams context with a specific configuration.
      * @param topology Topology to be submitted.
      * @param config Configuration to be used for the submission, may be modified by this method.
      * @return Future for the submission, see the descriptions for the {@link Type}

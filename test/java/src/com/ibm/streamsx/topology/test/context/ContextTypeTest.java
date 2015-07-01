@@ -20,7 +20,7 @@ public class ContextTypeTest {
     @Test
     public void testFactoryByType() {
         for (StreamsContext.Type type : StreamsContext.Type.values()) {
-            StreamsContext context = StreamsContextFactory
+            StreamsContext<?> context = StreamsContextFactory
                     .getStreamsContext(type);
             assertNotNull(context);
             assertSame(type, context.getType());

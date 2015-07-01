@@ -9,7 +9,8 @@ import java.io.Serializable;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 import com.ibm.streamsx.topology.tuple.Keyable;
 
-public class KeyableBeaconTuple implements Keyable, Serializable {
+@SuppressWarnings("serial")
+public class KeyableBeaconTuple implements Keyable<Object>, Serializable {
     BeaconTuple tup;
 
     public KeyableBeaconTuple(BeaconTuple tup) {

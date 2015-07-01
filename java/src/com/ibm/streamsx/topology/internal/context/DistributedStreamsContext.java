@@ -12,7 +12,6 @@ import java.util.concurrent.Future;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
-import com.ibm.streamsx.topology.internal.streams.Util;
 
 public class DistributedStreamsContext extends
         BundleUserStreamsContext<BigInteger> {

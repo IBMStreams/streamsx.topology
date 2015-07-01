@@ -189,6 +189,8 @@ class OperatorGenerator {
             case TUMBLING:
                 sb.append("tumbing,");
                 break;
+            default:
+                throw new IllegalStateException("Internal error");
             }
 
             appendWindowPolicy(window.get("evictPolicy"),

@@ -103,6 +103,7 @@ public class TuplePassingTest extends TestTopology {
         });
     }
 
+    @SuppressWarnings("serial")
     public static <T> void addTimer(TStream<T> input) {
 
         input.sink(new Consumer<T>() {

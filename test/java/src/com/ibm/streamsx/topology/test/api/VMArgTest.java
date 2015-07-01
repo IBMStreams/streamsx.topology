@@ -6,20 +6,15 @@ package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assume.assumeTrue;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Assume;
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.context.StreamsContext.Type;
-import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function7.Supplier;
 import com.ibm.streamsx.topology.test.TestTopology;
 
@@ -39,6 +34,7 @@ public class VMArgTest extends TestTopology {
         TStream<String> source = topology.limitedSource(new ReadProperty(propertyName), 1, String.class);
 
         final Map<String,Object> config = getConfig();
+        @SuppressWarnings("unchecked")
         List<String> vmArgs = (List<String>) config.get(ContextProperties.VMARGS);
         vmArgs.add(vmArg);
         
@@ -48,6 +44,7 @@ public class VMArgTest extends TestTopology {
         completeAndValidate(config, source, 10, propertyValue);
     }
     
+    @SuppressWarnings("serial")
     public static class ReadProperty implements Supplier<String> {
 
         private final String property;

@@ -15,7 +15,6 @@ import java.util.regex.Pattern;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Function;
 import com.ibm.streamsx.topology.function7.Predicate;
 
 /* begin_generated_IBM_copyright_prolog                             */

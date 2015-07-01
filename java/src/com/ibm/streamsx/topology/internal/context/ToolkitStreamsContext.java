@@ -68,6 +68,7 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
             }
             if (value instanceof Collection) {
                 JSONArray ja = new JSONArray();
+                @SuppressWarnings("unchecked")
                 Collection<Object> coll = (Collection<Object>) value;
                 ja.addAll(coll);
                 graphConfig.put(key, ja);            

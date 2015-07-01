@@ -60,7 +60,7 @@ public abstract class SlidingSet<I, O> extends
         case EVICTION:
             // we only support count and time based eviction, which
             // means any eviction is always the oldest N tuples.
-            for (Tuple splTuple : event.getTuples()) {
+            for (@SuppressWarnings("unused") Tuple splTuple : event.getTuples()) {
                 tuples.removeFirst();
             }
             break;

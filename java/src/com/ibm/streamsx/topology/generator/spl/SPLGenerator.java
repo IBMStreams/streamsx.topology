@@ -306,7 +306,8 @@ public class SPLGenerator {
 		return uniqueChildren;
 	}
 	
-	private List<JSONObject> getParents(JSONObject visitOp, JSONObject graph){
+	@SuppressWarnings("unused")
+    private List<JSONObject> getParents(JSONObject visitOp, JSONObject graph){
 		List<JSONObject> uniqueParents = new ArrayList<>();
 		Set<JSONObject> parents = new HashSet<>();
 		JSONArray inputs = (JSONArray) visitOp.get("inputs");

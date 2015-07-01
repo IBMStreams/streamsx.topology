@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.test.api;
 
 import java.io.Serializable;
 
+@SuppressWarnings("serial")
 public class ChannelAndSequence implements Serializable {
     int channel;
     int sequence;

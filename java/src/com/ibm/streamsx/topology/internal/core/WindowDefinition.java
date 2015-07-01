@@ -110,8 +110,10 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
         
         SourceInfo.setSourceInfo(joinOp, WindowDefinition.class);
                
+        @SuppressWarnings("unused")
         BInputPort input0 = addInput(joinOp, Policy.COUNT, Integer.MAX_VALUE);
 
+        @SuppressWarnings("unused")
         BInputPort input1 = xstream.connectTo(joinOp, true, null);
 
         return JavaFunctional.addJavaOutput(this, joinOp, tupleClass);
