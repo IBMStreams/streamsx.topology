@@ -8,6 +8,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.ibm.streams.operator.logging.TraceLevel;
 import com.ibm.streamsx.topology.context.ContextProperties;
@@ -15,6 +16,7 @@ import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 
 public class Util {
+    private static Logger LOGGER = Logger.getLogger("simple.util");
     
     private static Map<String,Level> levelMap = new HashMap<String,Level>();
     static {
@@ -75,7 +77,7 @@ public class Util {
                             value = Boolean.valueOf(valStr);
                         
                         config.put(item, value);
-                        System.out.println("Setting config: item="+item+" value="+value+"  [arg="+arg+"]");
+                        LOGGER.info("Setting config: item="+item+" value="+value+"  [arg="+arg+"]");
                     }
                 }
             }

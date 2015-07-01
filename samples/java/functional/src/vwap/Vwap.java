@@ -37,14 +37,14 @@ public class Vwap {
      * @param args
      */
     public static void main(String[] args) throws Exception {
-        String mode = args[0];
+        String type = args[0];
         Map<String,Object> configMap = Util.createConfig(args);
 
         TStream<Bargain> bargains = createVwapTopology();
 
         bargains.print();
 
-        StreamsContext<?> sc = StreamsContextFactory.getStreamsContext(mode);
+        StreamsContext<?> sc = StreamsContextFactory.getStreamsContext(type);
         sc.submit(bargains.topology(), configMap).get();
     }
     
