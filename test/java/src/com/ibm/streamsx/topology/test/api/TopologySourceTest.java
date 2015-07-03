@@ -93,7 +93,7 @@ public class TopologySourceTest extends TestTopology {
             if (lastTime != null) {
                 assertTrue(time >= lastTime);
                 long diff = time - lastTime;
-                assertTrue(diff > 450);
+                assertTrue("Source get time difference:" + diff, diff > 450);
             }
             
             lastTime = time;
