@@ -169,11 +169,10 @@ public class WindowTest extends TestTopology {
     }
     
     /**
-     * Test a periodic source.
-     * @throws Exception
+     * Test a continuous aggregation.
      */
     @Test
-    public void testLastSeconds() throws Exception {
+    public void testContinuousAggregateLastSeconds() throws Exception {
         final Topology t = new Topology();
         TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS, String.class);
         
@@ -190,7 +189,6 @@ public class WindowTest extends TestTopology {
         
         assertTrue(ending.valid());  
         
-        long lastTs = 0;
         long startTs = 0;
         for (String output : contents.getResult()) {
             JSONObject agg = JSONObject.parse(output);
@@ -200,8 +198,9 @@ public class WindowTest extends TestTopology {
             // Should see around 30 tuples per window, once we
             // pass the first three seconds.
             assertTrue("Number of tuples in window:" + items.size(), items.size() <= 45);
-            if (lastTs != 0) {
-                assertTrue(ts >= lastTs);
+            if (agg.containsKey("delta")) {
+                long delta = (Long) agg.get("delta");
+                assertTrue(delta >= 0);
                 
                 if (startTs == 0) {
                     startTs = ts;
@@ -213,7 +212,55 @@ public class WindowTest extends TestTopology {
                                 items.size() >= 25);
                 }
             }
-            lastTs = ts;
+        }
+    }
+    
+    /**
+     * Test a continuous aggregation.
+     */
+    @Test
+    public void testPeriodicAggregateLastSeconds() throws Exception {
+        final Topology t = new Topology();
+        TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS, String.class);
+        
+        TStream<JSONObject> aggregate = source.last(3, TimeUnit.SECONDS).aggregate(
+                new AggregateStrings(), 1, TimeUnit.SECONDS, JSONObject.class);
+        TStream<String> strings = JSONStreams.serialize(aggregate);
+        
+        Tester tester = t.getTester();
+        
+        Condition<List<String>> contents = tester.stringContents(strings);
+        
+        // 10 tuples per second, aggregate every second, so 15 seconds is around 15 tuples.
+        Condition<Long> ending = tester.atLeastTupleCount(strings, 15);
+        complete(tester, ending, 30, TimeUnit.SECONDS);
+        
+        assertTrue(ending.valid());  
+        
+        long startTs = 0;
+        for (String output : contents.getResult()) {
+            JSONObject agg = JSONObject.parse(output);
+            JSONArray items  = (JSONArray) agg.get("items");
+            long ts = (Long) agg.get("ts");
+            
+            // Should see around 30 tuples per window, once we
+            // pass the first three seconds.
+            assertTrue("Number of tuples in window:" + items.size(), items.size() <= 45);
+            if (agg.containsKey("delta")) {
+                long delta = (Long) agg.get("delta");
+                assertTrue(delta >= 0);
+                assertTrue("timeBetweenAggs: " + delta, delta > 800 && delta < 1200);
+             
+                if (startTs == 0) {
+                    startTs = ts;
+                } else {
+                    long diff = ts - startTs;
+                    if (diff > 3000)
+                        assertTrue(
+                                "Number of tuples in window:" + items.size(),
+                                items.size() >= 25);
+                }
+            }
         }
     }
     
@@ -223,6 +270,9 @@ public class WindowTest extends TestTopology {
          * 
          */
         private static final long serialVersionUID = 1L;
+        
+        private transient long lastts;
+        private transient int count;
 
         @Override
         public JSONObject apply(Iterable<String> v) {
@@ -231,7 +281,15 @@ public class WindowTest extends TestTopology {
             for (String e : v)
                 items.add(e);
             agg.put("items", items);
-            agg.put("ts", System.currentTimeMillis());
+            long ts = System.currentTimeMillis();
+            agg.put("ts", ts);
+            if (lastts != 0)
+                agg.put("delta", ts - lastts);
+            
+            lastts = ts;
+            agg.put("count", ++count);
+
+
             return agg;
         }
     }
