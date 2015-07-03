@@ -5,20 +5,41 @@
 package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
+import com.ibm.json.java.JSONArray;
+import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
+import com.ibm.streamsx.topology.tester.Condition;
+import com.ibm.streamsx.topology.tester.Tester;
 import com.ibm.streamsx.topology.tuple.Keyable;
 
 public class WindowTest extends TestTopology {
+
+    public static final class PeriodicStrings implements Supplier<String> {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+        private int id;
+
+        @Override
+        public String get() {
+            return Integer.toString(id++) + ":" + Long.toString(System.currentTimeMillis()); 
+        }
+    }
 
     @SuppressWarnings("serial")
     private static final class SumInt implements
@@ -146,5 +167,72 @@ public class WindowTest extends TestTopology {
         }
 
     }
+    
+    /**
+     * Test a periodic source.
+     * @throws Exception
+     */
+    @Test
+    public void testLastSeconds() throws Exception {
+        final Topology t = new Topology();
+        TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS, String.class);
+        
+        TStream<JSONObject> aggregate = source.last(3, TimeUnit.SECONDS).aggregate(new AggregateStrings(), JSONObject.class);
+        TStream<String> strings = JSONStreams.serialize(aggregate);
+        
+        Tester tester = t.getTester();
+        
+        Condition<List<String>> contents = tester.stringContents(strings);
+        
+        // 10 tuples per second, each is aggregated, so 15 seconds is around 150 tuples.
+        Condition<Long> ending = tester.atLeastTupleCount(strings, 150);
+        complete(tester, ending, 30, TimeUnit.SECONDS);
+        
+        assertTrue(ending.valid());  
+        
+        long lastTs = 0;
+        long startTs = 0;
+        for (String output : contents.getResult()) {
+            JSONObject agg = JSONObject.parse(output);
+            JSONArray items  = (JSONArray) agg.get("items");
+            long ts = (Long) agg.get("ts");
+            
+            // Should see around 30 tuples per window, once we
+            // pass the first three seconds.
+            assertTrue("Number of tuples in window:" + items.size(), items.size() <= 45);
+            if (lastTs != 0) {
+                assertTrue(ts >= lastTs);
+                
+                if (startTs == 0) {
+                    startTs = ts;
+                } else {
+                    long diff = ts - startTs;
+                    if (diff > 3000)
+                        assertTrue(
+                                "Number of tuples in window:" + items.size(),
+                                items.size() >= 25);
+                }
+            }
+            lastTs = ts;
+        }
+    }
+    
+    public static class AggregateStrings implements Function<Iterable<String>, JSONObject> {
 
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public JSONObject apply(Iterable<String> v) {
+            JSONObject agg = new JSONObject();
+            JSONArray items = new JSONArray();
+            for (String e : v)
+                items.add(e);
+            agg.put("items", items);
+            agg.put("ts", System.currentTimeMillis());
+            return agg;
+        }
+    }
 }
