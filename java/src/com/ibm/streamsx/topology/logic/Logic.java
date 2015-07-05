@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.logic;
 
+import java.util.List;
+
 import com.ibm.streamsx.topology.function7.BiFunction;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
 
@@ -20,7 +22,7 @@ public class Logic {
      * @return Wrapper {@code Function2} that accepts an iterator of type
      *         {@code U} and passes the first value, if any to {@code logic}.
      */
-    public static <T, U, R> BiFunction<T, Iterable<U>, R> first(
+    public static <T, U, R> BiFunction<T, List<U>, R> first(
             final BiFunction<T, U, R> logic) {
         return new FirstOfSecondParameterIterator<T, U, R>(logic);
     }

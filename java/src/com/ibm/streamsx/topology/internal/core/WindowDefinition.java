@@ -99,7 +99,7 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
 
     @Override
     public <J, U> TStream<J> join(TStream<U> xstream,
-            BiFunction<U, Iterable<T>, J> joiner, Class<J> tupleClass) {
+            BiFunction<U, List<T>, J> joiner, Class<J> tupleClass) {
         
         String opName = LogicUtils.functionName(joiner);
         if (opName.isEmpty()) {

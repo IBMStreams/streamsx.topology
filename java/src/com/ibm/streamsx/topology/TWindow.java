@@ -95,7 +95,7 @@ public interface TWindow<T> extends TopologyElement {
      * @see TStream#join(TWindow, BiFunction, Class)
      */
     <J, U> TStream<J> join(TStream<U> stream,
-            BiFunction<U, Iterable<T>, J> joiner, Class<J> tupleClass);
+            BiFunction<U, List<T>, J> joiner, Class<J> tupleClass);
 
     /**
      * The class for tuples on this stream.

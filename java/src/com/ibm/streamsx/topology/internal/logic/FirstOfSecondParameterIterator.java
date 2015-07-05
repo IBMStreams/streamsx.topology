@@ -4,12 +4,12 @@
  */
 package com.ibm.streamsx.topology.internal.logic;
 
-import java.util.Iterator;
+import java.util.List;
 
 import com.ibm.streamsx.topology.function7.BiFunction;
 
 public class FirstOfSecondParameterIterator<T, U, R> implements
-        BiFunction<T, Iterable<U>, R>, WrapperFunction {
+        BiFunction<T, List<U>, R>, WrapperFunction {
     private final BiFunction<T, U, R> logic;
     private static final long serialVersionUID = 6560697226858925739L;
 
@@ -18,12 +18,11 @@ public class FirstOfSecondParameterIterator<T, U, R> implements
     }
 
     @Override
-    public R apply(T t, Iterable<U> us) {
-        Iterator<U> it = us.iterator();
-        if (it.hasNext()) {
-            return logic.apply(t, it.next());
-        }
-        return null;
+    public R apply(T t, List<U> us) {
+        if (us.isEmpty())
+            return null;
+        
+        return logic.apply(t, us.get(0));
     }
 
     @Override
