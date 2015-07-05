@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.streamsx.topology.function7.BiFunction;
@@ -38,8 +39,8 @@ public interface TWindow<T> extends TopologyElement {
      * this window. Each time the contents of the window is updated by a new
      * tuple being added to it, or a tuple being evicted from the window
      * {@code aggregator.call(tuples)} is called, where {@code tuples} is an
-     * {@code Iterable} that containing all the tuples in the current window.
-     * The {@code Iterable} is stable during the method call, and returns the
+     * {@code List} that containing all the tuples in the current window.
+     * The {@code List} is stable during the method call, and returns the
      * tuples in order of insertion into the window, from oldest to newest. <BR>
      * Thus the returned stream will contain a sequence of tuples that where the
      * most recent tuple represents the most up to date aggregation of this
@@ -51,15 +52,15 @@ public interface TWindow<T> extends TopologyElement {
      *            Class of the tuples in the returned stream.
      * @return A stream that contains the latest aggregations of this window.
      */
-    <A> TStream<A> aggregate(Function<Iterable<T>, A> aggregator,
+    <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
             Class<A> tupleClass);
 
     /**
      * Declares a stream that containing tuples that represent an aggregation of
      * this window. Approximately every {@code period} (with unit {@code unit})
      * {@code aggregator.call(tuples)} is called, where {@code tuples} is an
-     * {@code Iterable} that containing all the tuples in the current window.
-     * The {@code Iterable} is stable during the method call, and returns the
+     * {@code List} that containing all the tuples in the current window.
+     * The {@code List} is stable during the method call, and returns the
      * tuples in order of insertion into the window, from oldest to newest. <BR>
      * Thus the returned stream will contain a new tuple every {@code period}
      * seconds (according to {@code unit}) aggregation of this window or window
@@ -75,7 +76,7 @@ public interface TWindow<T> extends TopologyElement {
      *            Class of the tuples in the returned stream.
      * @return A stream that contains the latest aggregations of this window.
      */
-    <A> TStream<A> aggregate(Function<Iterable<T>, A> aggregator, long period,
+    <A> TStream<A> aggregate(Function<List<T>, A> aggregator, long period,
             TimeUnit unit, Class<A> tupleClass);
 
     /**

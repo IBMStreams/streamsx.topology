@@ -4,6 +4,8 @@
  */
 package vwap;
 
+import java.util.List;
+
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.function7.BiFunction;
 import com.ibm.streamsx.topology.function7.Function;
@@ -16,10 +18,10 @@ public class VwapProcessing {
             TStream<Quote> quotes) {
 
         TStream<VWapT> vwap = trades.last(4).aggregate(
-                new Function<Iterable<Trade>, VWapT>() {
+                new Function<List<Trade>, VWapT>() {
 
                     @Override
-                    public VWapT apply(Iterable<Trade> tuples) {
+                    public VWapT apply(List<Trade> tuples) {
                         VWapT vwap = null;
                         for (Trade trade : tuples) {
                             if (vwap == null)

@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.streams.operator.window.StreamWindow;
@@ -60,18 +61,18 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
     }
 
     @Override
-    public <A> TStream<A> aggregate(Function<Iterable<T>, A> aggregator,
+    public <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
             Class<A> tupleClass) {
         
         return aggregate(aggregator, tupleClass, Policy.COUNT, 1);
     }
     @Override
-    public <A> TStream<A> aggregate(Function<Iterable<T>, A> aggregator,
+    public <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
             long period, TimeUnit unit, Class<A> tupleClass) {
         return aggregate(aggregator, tupleClass, Policy.TIME, unit.toMillis(period));
     }
     
-    private <A> TStream<A> aggregate(Function<Iterable<T>, A> aggregator,
+    private <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
             Class<A> tupleClass, Policy triggerPolicy, Object triggerConfig) {
         
         String opName = LogicUtils.functionName(aggregator);

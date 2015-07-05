@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.internal.functional.window;
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.window.StreamWindow;
@@ -26,7 +27,7 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
  */
 public abstract class SlidingSetAggregator<I, O> extends SlidingSet<I, O> {
 
-    private Function<Iterable<I>, O> aggregator;
+    private Function<List<I>, O> aggregator;
 
     public SlidingSetAggregator(FunctionWindow<?> op, StreamWindow<Tuple> window)
             throws ClassNotFoundException {

@@ -43,9 +43,9 @@ public class WindowTest extends TestTopology {
 
     @SuppressWarnings("serial")
     private static final class SumInt implements
-            Function<Iterable<Number>, Integer> {
+            Function<List<Number>, Integer> {
         @Override
-        public Integer apply(Iterable<Number> v1) {
+        public Integer apply(List<Number> v1) {
             int sum = 0;
             int count = 0;
             for (Number i : v1) {
@@ -147,10 +147,10 @@ public class WindowTest extends TestTopology {
 
     @SuppressWarnings("serial")
     public static class AveragePrice implements
-            Function<Iterable<StockPrice>, StockPrice> {
+            Function<List<StockPrice>, StockPrice> {
 
         @Override
-        public StockPrice apply(Iterable<StockPrice> tuples) {
+        public StockPrice apply(List<StockPrice> tuples) {
             int price = 0;
             int count = 0;
             StockPrice last = null;
@@ -264,7 +264,7 @@ public class WindowTest extends TestTopology {
         }
     }
     
-    public static class AggregateStrings implements Function<Iterable<String>, JSONObject> {
+    public static class AggregateStrings implements Function<List<String>, JSONObject> {
 
         /**
          * 
@@ -275,7 +275,7 @@ public class WindowTest extends TestTopology {
         private transient int count;
 
         @Override
-        public JSONObject apply(Iterable<String> v) {
+        public JSONObject apply(List<String> v) {
             JSONObject agg = new JSONObject();
             JSONArray items = new JSONArray();
             for (String e : v)

@@ -9,6 +9,7 @@ import static com.ibm.streamsx.topology.file.FileStreams.textFileReader;
 
 import java.io.ObjectStreamException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -105,10 +106,10 @@ public class TwitterTrending {
 
         // Extract the most frequent hashtags
         TStream<ListContainer> hashTagMap = hashtags.last(40000).aggregate(
-                new Function<Iterable<String>, ListContainer>() {
+                new Function<List<String>, ListContainer>() {
 
                     @Override
-                    public ListContainer apply(Iterable<String> v1) {
+                    public ListContainer apply(List<String> v1) {
                         Trender tre = new Trender();
                         for (String s_iter : v1) {
                             tre.add(s_iter);
