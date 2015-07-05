@@ -91,6 +91,10 @@
      <java classname="topic.SubscribeBeacon" classpathref="run.classpath" fork="yes"/>
   </target>
 
+  <target name="run.fizzbuzz">
+     <java classname="games.FizzBuzz" classpathref="run.classpath" fork="yes"/>
+  </target>
+
   <target name="doc">
        <mkdir dir="javadoc"/>
        <javadoc destdir="javadoc" classpathref="compile.classpath"

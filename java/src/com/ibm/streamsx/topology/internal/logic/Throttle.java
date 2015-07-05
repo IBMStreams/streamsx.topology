@@ -26,8 +26,11 @@ public final class Throttle<T> implements Function<T, T> {
                 try {
                     Thread.sleep(nextTupleTime - now);
                 } catch (InterruptedException e) {
+                    // Force parent thread to terminate
+                    Thread.currentThread().interrupt();
                     return null;
                 }
+                now = System.currentTimeMillis();
             }
         }
         nextTupleTime = now + delayms;
