@@ -90,7 +90,7 @@ public class BInputPort extends BInput {
                 port().triggerCount(((Number) triggerConfig).intValue());
                 break;
             case TIME:
-                port().triggerTime((Long) evictConfig, TimeUnit.MILLISECONDS);
+                port().triggerTime((Long) triggerConfig, TimeUnit.MILLISECONDS);
                 break;
             default:
                 ;
