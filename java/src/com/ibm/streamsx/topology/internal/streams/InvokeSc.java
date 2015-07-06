@@ -49,6 +49,17 @@ public class InvokeSc {
                 .getLocation();
 
         // Assumption it is at lib in the toolkit.
+        
+        // Allow overriding to support test debug in eclipse,
+        // where the tkroot location relationship to this code isn't as
+        // isn't as expected during normal execution.
+        String tkRootPath = System.getProperty(
+                "com.ibm.streamsx.topology.invokeSc.functionalTkRoot");
+        if (tkRootPath!=null) {
+            File tkRoot = new File(tkRootPath);
+            addToolkit(tkRoot);
+            return;
+        }
 
         Path functionaljar = Paths.get(location.toURI());
         File tkRoot = functionaljar.getParent().getParent().toFile();
