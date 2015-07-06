@@ -7,8 +7,10 @@ package com.ibm.streamsx.topology.internal.core;
 import static java.util.Collections.singletonMap;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -95,9 +97,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                         getTupleClass().getSimpleName();                
         }
 
+        Map<String,Object> params = new HashMap<>();
+        params.put("queueSize", 100);
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
-                FunctionTransform.class, transformer);
+                FunctionTransform.class, transformer, params);
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
         return JavaFunctional.addJavaOutput(this, bop, tupleTypeClass);
