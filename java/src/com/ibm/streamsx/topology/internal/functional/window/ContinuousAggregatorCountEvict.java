@@ -29,7 +29,7 @@ public class ContinuousAggregatorCountEvict<I, O> extends SlidingSetAggregator<I
     }
 
     /**
-     *  For a count based window, the eviction preceeds the
+     *  For a count based window, the eviction precedes the
      * insertion, but should be seen as a single action,
      * so the eviction does not result in calling the function.
      * It will be immediately followed by the INSERTION

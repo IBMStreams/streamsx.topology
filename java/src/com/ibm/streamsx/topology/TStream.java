@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -241,7 +242,7 @@ public interface TStream<T> extends TopologyElement {
      *         {@code window}.
      */
     <J, U> TStream<J> join(TWindow<U> window,
-            BiFunction<T, Iterable<U>, J> joiner, Class<J> tupleClass);
+            BiFunction<T, List<U>, J> joiner, Class<J> tupleClass);
 
     /**
      * Declare a {@link TWindow} that represents the last {@code time} seconds

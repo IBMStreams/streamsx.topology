@@ -8,6 +8,7 @@ import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.get
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.window.StreamWindow;
@@ -26,7 +27,7 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
  */
 public class SlidingJoin<T, U, J> extends SlidingSet<U, J> {
 
-    private BiFunction<T, Iterable<U>, J> joiner;
+    private BiFunction<T, List<U>, J> joiner;
     protected SPLMapping<T> input1Mapping;
 
     public SlidingJoin(FunctionWindow<?> op, StreamWindow<Tuple> window)

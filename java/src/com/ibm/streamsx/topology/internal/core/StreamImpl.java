@@ -8,6 +8,7 @@ import static java.util.Collections.singletonMap;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -185,7 +186,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public <J, U> TStream<J> join(TWindow<U> window,
-            BiFunction<T, Iterable<U>, J> joiner, Class<J> tupleClass) {
+            BiFunction<T, List<U>, J> joiner, Class<J> tupleClass) {
         return window.join(this, joiner, tupleClass);
     }
 
