@@ -73,8 +73,8 @@ public interface TStream<T> extends TopologyElement {
      * 
      * <pre>
      * <code>
-     * Stream&lt;String> s = ...
-     * Stream&lt;String> filtered = s.filter(new Predicate&lt;String>() {
+     * TStream&lt;String> s = ...
+     * TStream&lt;String> filtered = s.filter(new Predicate&lt;String>() {
      *             &#64;Override
      *             public boolean test(String t) {
      *                 return !t.isEmpty();
@@ -176,8 +176,8 @@ public interface TStream<T> extends TopologyElement {
      * 
      * <pre>
      * <code>
-     * Stream&lt;String> values = ...
-     * values.sink(new FunctionV<String>() {
+     * TStream&lt;String> values = ...
+     * values.sink(new Consumer<String>() {
      *             
      *             &#64;Override
      *             public void accept(String v) {
