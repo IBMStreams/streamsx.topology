@@ -118,6 +118,8 @@ public class Topology implements TopologyElement {
 
     /**
      * Get the underlying {@code OperatorGraph}. Internal use only.
+     * <BR>
+     * Not intended to be called by applications, may be removed at any time.
      */
     public OperatorGraph graph() {
         return builder().graph();
@@ -381,6 +383,8 @@ public class Topology implements TopologyElement {
     /**
      * Resolves the jar dependencies, sets the respective parameters. Internal
      * use only.
+     * <BR>
+     * Not intended to be called by applications, may be removed at any time.
      * 
      * @throws Exception
      */
@@ -520,6 +524,8 @@ public class Topology implements TopologyElement {
 
     /**
      * Internal use only.
+     * <BR>
+     * Not intended to be called by applications, may be removed at any time.
      * @return the dependencyResolver
      */
     public DependencyResolver getDependencyResolver() {

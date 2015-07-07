@@ -516,12 +516,21 @@ public interface TStream<T> extends TopologyElement {
      */
     TStream<T> throttle(long delay, TimeUnit unit);
 
+    /**
+     * Internal method.
+     * <BR>
+     * Not intended to be called by applications, may be removed at any time.
+     */
     BOutput output();
 
     /**
+     * Internal method.
      * Connect this stream to a downstream operator. If input is null then a new
      * input port will be created, otherwise it will be used to connect to this
      * stream. Returns input or the new port if input was null.
+     * 
+     * <BR>
+     * Not intended to be called by applications, may be removed at any time.
      */
     BInputPort connectTo(BOperatorInvocation receivingBop, boolean functional, BInputPort input);
 }
