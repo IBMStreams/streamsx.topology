@@ -33,6 +33,7 @@ public abstract class SlidingSetAggregator<I, O> extends SlidingSet<I, O> {
             throws ClassNotFoundException {
         super(op, window);
         aggregator = getLogicObject(op.getFunctionalLogic());
+        op.setLogic(aggregator);
     }
 
     protected void aggregate(Object partition, LinkedList<I> tuples)

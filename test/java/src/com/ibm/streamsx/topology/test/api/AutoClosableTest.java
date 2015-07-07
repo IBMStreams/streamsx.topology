@@ -4,6 +4,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Before;
@@ -37,6 +38,7 @@ public class AutoClosableTest extends TestTopology {
         stream = stream.filter(new ClosePredicate()) ;
         stream = stream.modify(new CloseUnary()) ;
         stream = stream.multiTransform(new CloseMultiTransform(), String.class) ;
+        stream = stream.last().aggregate(new CloseAggregate(), String.class);
         stream.sink(new CloseConsumer());
         
         this.getTesterContext().submit(topology).get();
@@ -45,7 +47,8 @@ public class AutoClosableTest extends TestTopology {
         assertTrue(ClosePredicate.seenClose.get());
         assertTrue(CloseUnary.seenClose.get());
         assertTrue(CloseMultiTransform.seenClose.get());
-        assertTrue(CloseConsumer.seenClose.get());       
+        assertTrue(CloseAggregate.seenClose.get());
+        assertTrue(CloseConsumer.seenClose.get());    
     }
     
     public static class CloseSupplier implements Supplier<Iterable<String>>, AutoCloseable {
@@ -115,6 +118,20 @@ public class AutoClosableTest extends TestTopology {
         @Override
         public Iterable<String> apply(String v) {
             return Collections.singleton(v);
+        }      
+    }
+    public static class CloseAggregate implements Function<List<String>,String>, AutoCloseable {
+        private static final long serialVersionUID = 1L;
+        public final static AtomicBoolean seenClose = new AtomicBoolean();
+
+        @Override
+        public void close() {
+            seenClose.set(true);          
+        }
+
+        @Override
+        public String apply(List<String> v) {
+            return v.get(0);
         }      
     }
 }

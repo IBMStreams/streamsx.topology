@@ -65,7 +65,7 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
         super.shutdown();
     }
     
-    void setLogic(Object logicInstance) {
+    public void setLogic(Object logicInstance) {
         this.logicInstance = logicInstance;
     }
     
