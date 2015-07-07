@@ -94,19 +94,20 @@ public interface TStream<T> extends TopologyElement {
      * Declare a new stream that transforms each tuple from this stream into one
      * (or zero) tuple of a different type {@code U}. For each tuple {@code t}
      * on this stream, the returned stream will contain a tuple that is the
-     * result of {@code transformer.call(t)} when the return is not {@code null}
-     * .
+     * result of {@code transformer.apply(t)} when the return is not {@code null}.
+     * If {@code transformer.apply(t)} returns {@code null} then no tuple
+     * is submitted to the returned stream for {@code t}.
      * 
      * <P>
      * Example of transforming a stream containing numeric values as
-     * {@code String}s into a stream of {@code Double} values.
+     * {@code String} objects into a stream of {@code Double} values.
      * 
      * <pre>
      * <code>
-     * Stream&lt;String> strings = ...
-     * Stream&lt;Double> doubles = strings.transform(new Function<String, Double>() {
+     * TStream&lt;String> strings = ...
+     * TStream&lt;Double> doubles = strings.transform(new Function<String, Double>() {
      *             &#64;Override
-     *             public Double call(String v) {
+     *             public Double apply(String v) {
      *                 return Double.valueOf(v);
      *             }}, Double.class );
      * </code>
@@ -118,7 +119,7 @@ public interface TStream<T> extends TopologyElement {
      *            Transformation logic to be executed against each tuple.
      * @param tupleTypeClass
      *            Type {@code U} of the returned stream.
-     * @return Stream contained tuples of type {@code U} transformed from this
+     * @return Stream that will contain tuples of type {@code U} transformed from this
      *         stream's tuples.
      */
     <U> TStream<U> transform(Function<T, U> transformer, Class<U> tupleTypeClass);
