@@ -20,6 +20,7 @@ import com.ibm.streamsx.topology.builder.GraphBuilder;
 public class SPLGenerator {
 	//Needed for composite name generation
 	private int numParallelComposites = 0;
+	private int colocationCount = 0;
 	
 	//The final list of composites (Main composite and parallel regions), which
 	//compose the graph.
@@ -30,11 +31,7 @@ public class SPLGenerator {
         return generateSPL(graph.complete());
     }
 
-    public String generateSPL(JSONObject graph) throws IOException {
-    	JSONObject comp = new OrderedJSONObject();
-    	comp.put("name", graph.get("name"));
-    	comp.put("public", true);    	
-    	
+    public String generateSPL(JSONObject graph) throws IOException {    		
     	// Check whether graph is valid for colocations
     	ArrayList<JSONObject> isolateOperators = findIsolates(graph);
     	for(JSONObject jso : isolateOperators){
@@ -45,7 +42,17 @@ public class SPLGenerator {
     	    }
     	}
     	
+    	// Assign isolation regions their partition colocations
+    	for(JSONObject isolate : isolateOperators){
+            assignColocations(isolate, getParents(isolate, graph), graph);
+            assignColocations(isolate, getChildren(isolate, graph), graph);
+    	}
+    	
     	// Generate parallel composites
+        JSONObject comp = new OrderedJSONObject();
+        comp.put("name", graph.get("name"));
+        comp.put("public", true);
+    	
     	ArrayList<JSONObject> starts = findStarts(graph);
     	separateIntoComposites(starts, comp, graph);
         StringBuilder sb = new StringBuilder();
@@ -291,6 +298,37 @@ public class SPLGenerator {
 		return unparallelOp;
     }
     
+    private void assignColocations(JSONObject isolate, Collection<JSONObject> starts, JSONObject graph){
+        // If the region has already been assigned a colocation tag, simply return.
+        Iterator<JSONObject> it = starts.iterator();
+        if(it.hasNext()){
+            JSONObject jso = it.next();
+            String regionTag = (String) jso.get("colocationTag");
+            if(regionTag != null && !regionTag.isEmpty()){
+                return;
+            }
+        }
+        
+        Set<JSONObject> visited = new HashSet<JSONObject>();    
+        List<JSONObject> unvisited = new ArrayList<JSONObject>();
+        
+        visited.add(isolate);
+        unvisited.addAll(starts);
+        
+        String colocationTag = "Colocation" + Integer.toString(colocationCount++);
+        
+        while(unvisited.size() > 0){
+            JSONObject op = unvisited.get(0);
+            visited.add(op);
+            unvisited.remove(0);
+            
+            op.put("colocationTag", colocationTag);   
+            
+            getUnvisitedAdjacentNodes(visited, unvisited, op, graph);       
+        }
+        
+    }
+    
     /**
      * Determine whether any isolated region is ever joined with its parent. 
      * I.E:
@@ -299,11 +337,10 @@ public class SPLGenerator {
      *   ----|              |----
      *       |--------------|
      * </code></pre>
-     * @param isolates An $Isolate$ operator in the graph
+     * @param isolate An $Isolate$ operator in the graph
      * @return a boolean which is false if the the Isolated region is later 
      * merged with its parent.
      */
-    @SuppressWarnings("unused")
     private boolean checkValidColocationRegion(JSONObject isolate, JSONObject graph){
         List<JSONObject> isolateChildren = getChildren(isolate, graph);
         Set<JSONObject> visited = new HashSet<JSONObject>();    
@@ -324,46 +361,52 @@ public class SPLGenerator {
             visited.add(op);
             unvisited.remove(0);
             
-            List<JSONObject> parents = getParents(op, graph);
-            List<JSONObject> children = getChildren(op, graph);
-            removeVisited(parents, visited);
-            removeVisited(children, visited);
-            
-            // --- Process parents ---
-            
-            // Set removes potential redundancies
-            Set<JSONObject> allIsoChildren = new HashSet<>();
-            List<JSONObject> isolatedParents = new ArrayList<>();
-            for(JSONObject parent : parents){
-                if("$Isolate$".equals((String)parent.get("kind"))){
-                    isolatedParents.add(parent);                 
-                    allIsoChildren.addAll(getChildren(parent, graph));
-                }
-            }
-            
-            visited.addAll(isolatedParents);
-            parents.removeAll(isolatedParents);
-            
-            removeVisited(allIsoChildren, visited);
-            assertNotIsolated(allIsoChildren);   
-            parents.addAll(allIsoChildren);
-            
-            unvisited.addAll(parents);
-            
-            // --- Process children --- 
-            
-            List<JSONObject> childrenToRemove = new ArrayList<JSONObject>();
-            for(JSONObject child : children){
-                if("$Isolate$".equals((String)child.get("kind"))){
-                    visited.add(child);
-                    childrenToRemove.add(child);
-                }
-            }
-            children.removeAll(childrenToRemove);
-            unvisited.addAll(children);                  
+            getUnvisitedAdjacentNodes(visited, unvisited, op, graph);                
         }
         
         return true;
+    }
+    
+    private void getUnvisitedAdjacentNodes(Collection<JSONObject> visited,
+            Collection<JSONObject> unvisited, JSONObject op, JSONObject graph) {
+        List<JSONObject> parents = getParents(op, graph);
+        List<JSONObject> children = getChildren(op, graph);
+        removeVisited(parents, visited);
+        removeVisited(children, visited);
+
+        // --- Process parents ---
+        Set<JSONObject> allIsoChildren = new HashSet<>();
+        List<JSONObject> isolatedParents = new ArrayList<>();
+        for (JSONObject parent : parents) {
+            if ("$Isolate$".equals((String) parent.get("kind"))) {
+                isolatedParents.add(parent);
+                allIsoChildren.addAll(getChildren(parent, graph));
+            }
+        }
+        visited.addAll(isolatedParents);
+        parents.removeAll(isolatedParents);
+
+        removeVisited(allIsoChildren, visited);
+        parents.addAll(allIsoChildren);
+
+        unvisited.addAll(parents);
+
+        // --- Process children ---
+        List<JSONObject> childrenToRemove = new ArrayList<JSONObject>();
+        Set<JSONObject> allIsoParents = new HashSet<>();
+        for (JSONObject child : children) {
+            if ("$Isolate$".equals((String) child.get("kind"))) {
+                childrenToRemove.add(child);
+                allIsoParents.addAll(getParents(child, graph));
+            }
+        }
+        visited.addAll(childrenToRemove);
+        children.removeAll(childrenToRemove);
+
+        removeVisited(allIsoParents, visited);
+        children.addAll(allIsoParents);
+
+        unvisited.addAll(children);
     }
     
     private static void assertNotIsolated(Collection<JSONObject> jsos){
@@ -375,7 +418,7 @@ public class SPLGenerator {
         }
     }
     
-    private static void removeVisited(Collection<JSONObject> ops, Set<JSONObject> visited){
+    private static void removeVisited(Collection<JSONObject> ops, Collection<JSONObject> visited){
         Iterator<JSONObject> it = ops.iterator();
         // Iterate in this manner to preserve list structure while deleting
         while(it.hasNext()){
@@ -427,7 +470,6 @@ public class SPLGenerator {
 		return uniqueChildren;
 	}
 	
-    @SuppressWarnings("unused")
     private List<JSONObject> getParents(JSONObject visitOp, JSONObject graph){
 		List<JSONObject> uniqueParents = new ArrayList<>();
 		Set<JSONObject> parents = new HashSet<>();

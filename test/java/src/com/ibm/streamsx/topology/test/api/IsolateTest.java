@@ -14,7 +14,7 @@ import com.ibm.streamsx.topology.function7.Function;
 public class IsolateTest {
     @Test
     public void multipleIsolationTest() throws Exception{
-        Topology topology = new Topology("RegexGrep");
+        Topology topology = new Topology("isolationTest");
 
         TStream<String> ss = topology.strings("hello", "world");
         TStream<String> ss0 = ss.isolate();
@@ -41,7 +41,7 @@ public class IsolateTest {
     
     @Test(expected = IllegalStateException.class)
     public void multipleIsolationExceptionTest() throws Exception{
-        Topology topology = new Topology("RegexGrep");
+        Topology topology = new Topology("isolationTest");
 
         TStream<String> ss = topology.strings("hello", "world");
         TStream<String> ss0 = ss.isolate();
