@@ -26,7 +26,8 @@ public class FunctionSink<T> extends FunctionFunctor {
             throws Exception {
         super.initialize(context);
 
-        sinker = getLogicObject(getFunctionalLogic());
+        setLogic(sinker = getLogicObject(getFunctionalLogic()));
+        
         mapping = getInputMapping(this, 0);
     }
 

@@ -23,7 +23,7 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @PrimitiveOperator
 @OutputPortSet(cardinality = 1)
 @SharedLoader
-public class FunctionSource<T> extends ProcessTupleProducer {
+public class FunctionSource<T> extends ProcessTupleProducer implements Functional {
 
     private Supplier<Iterable<T>> data;
     private SPLMapping<T> mapping;
@@ -39,12 +39,12 @@ public class FunctionSource<T> extends ProcessTupleProducer {
 
         FunctionalHelper.addLibraries(this, getJar());
 
-        data = getLogicObject(getFunctionLogic());
+        data = getLogicObject(getFunctionalLogic());
         output = getOutput(0);
         mapping = getOutputMapping(this, 0);
     }
 
-    protected String getFunctionLogic() {
+    public String getFunctionalLogic() {
         return functionalLogic;
     }
 
@@ -65,13 +65,24 @@ public class FunctionSource<T> extends ProcessTupleProducer {
     @Override
     protected void process() throws Exception {
 
-        for (T tuple : data.get()) {
-            if (Thread.interrupted())
-                return;
-            if (tuple == null)
-                continue;
-            output.submit(mapping.convertTo(tuple));
+        try {
+            for (T tuple : data.get()) {
+                if (Thread.interrupted())
+                    return;
+                if (tuple == null)
+                    continue;
+                output.submit(mapping.convertTo(tuple));
+            }
+        } finally {
+            FunctionFunctor.closeLogic(data);
+            data = null;
         }
         output.punctuate(StreamingData.Punctuation.FINAL_MARKER);
+    }
+    
+    @Override
+    public void shutdown() throws Exception {
+        FunctionFunctor.closeLogic(data);
+        super.shutdown();
     }
 }

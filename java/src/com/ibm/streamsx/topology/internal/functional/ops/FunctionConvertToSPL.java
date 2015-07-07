@@ -34,7 +34,7 @@ public class FunctionConvertToSPL<T> extends FunctionFunctor {
             throws Exception {
         super.initialize(context);
 
-        convert = getLogicObject(getFunctionalLogic());
+        setLogic(convert = getLogicObject(getFunctionalLogic()));
         output = getOutput(0);
         inputMapping = getInputMapping(this, 0);
     }

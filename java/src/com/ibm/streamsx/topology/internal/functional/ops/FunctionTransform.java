@@ -36,7 +36,7 @@ public class FunctionTransform<T, U> extends FunctionFunctor {
             throws Exception {
         super.initialize(context);
 
-        transform = getLogicObject(getFunctionalLogic());
+        setLogic(transform = getLogicObject(getFunctionalLogic()));
         output = getOutput(0);
         inputMapping = getInputMapping(this, 0);
         outputMapping = getOutputMapping(this, 0);
