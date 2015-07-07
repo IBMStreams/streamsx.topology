@@ -66,6 +66,19 @@ public class RestServer {
      * array of JSON objects.
      * 
      * <BR>
+     * Conversion to JSON depends on the type of stream
+     * that populates {@code window}.
+     * <UL>
+     * <LI>
+     * {@code TStream<String>} - Each tuple will be a JSON object with a single
+     * attribute '{@code string}' with the tuple's value.
+     * </LI>
+     * <LI>{@link com.ibm.streamsx.topology.spl.SPLStream SPLStream} -
+     * Each {@code Tuple} is converted to JSON using the encoding provided
+     * by the Java Operator API {@code com.ibm.streams.operator.encoding.JSONEncoding}.
+     * </LI>
+
+     * </UL>
      * Only windows for streams of type {@code SPLStream} and
      * {@code TStream<String>} are currently supported.
      * 

@@ -3,19 +3,19 @@
 # Copyright IBM Corp. 2015  
  */
 /**
- * Java application API for IBM InfoSphere Streams.
+ * Java application API for IBM Streams.
  * 
  * This API is used to generate streaming topologies for
- * execution by IBM InfoSphere Streams 4.0. An instance
+ * execution by IBM Streams 4.0 or later. An instance
  * of {@link com.ibm.streamsx.topology.Topology} is created
  * that then is used to build a topology (or graph) of
  * streams, represented by {@link com.ibm.streamsx.topology.TStream}
  * instances. This topology is the declaration of the application,
  * and it may then be :
  * <UL>
- * <LI>Submitted to an IBM InfoSphere Streams instance.</LI>
- * <LI>Executed as an IBM InfoSphere Streams standalone application.</LI>
- * <LI>Compiled into an IBM InfoSphere Streams application bundle ({@code .sab} file).</LI>
+ * <LI>Submitted to an IBM Streams instance.</LI>
+ * <LI>Executed as an IBM Streams standalone application.</LI>
+ * <LI>Compiled into an IBM Streams application bundle ({@code .sab} file).</LI>
  * <LI>Executed within the local JVM (not all toppologies are supported).</LI>
  * </UL>
  * 
@@ -152,7 +152,18 @@
  * from its method.</i>.
  * </LI>
  * </UL>
- * 
+ *  <h3>Included Libraries</h3>
+ *  This API requires the IBM Streams Java Operator API
+ *  which results in these libraries in the class path:
+ *  <UL>
+ *  <LI>
+ *  <a target="_blank" href="http://www-01.ibm.com/support/knowledgecenter/SSCRJU_4.0.0/com.ibm.streams.spl-java-operators.doc/api/overview-summary.html">IBM Streams Java Operator API</a> - {@code $STREAMS_INSTALL/lib/com.ibm.streams.operator.jar}</LI>
+ *  <LI>
+ *  <a target="_blank" href="http://www-01.ibm.com/support/knowledgecenter/SSCRJU_4.0.0/com.ibm.streams.spl-java-operators.doc/samples/overview-summary.html">IBM Streams Java Operator samples</a> - {@code $STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar}</LI>
+ *  <LI><a target="_blank" href="http://commons.apache.org/proper/commons-math/javadocs/api-2.2/index.html">Apache Commons Math 2.2</a> - {@code $STREAMS_INSTALL/ext/lib/commons-math-2.1.jar}</LI>
+ *  <LI><a target="_blank" href="https://logging.apache.org/log4j/1.2/apidocs/">Apache Log4j 1.2.17</a> - {@code $STREAMS_INSTALL/ext/lib/log4j-1.2.17.jar}</LI>
+ *  <LI><a target="_blank" href="http://www-01.ibm.com/support/knowledgecenter/api/content/SS7K4U_8.5.5/com.ibm.websphere.javadoc.liberty.doc/com.ibm.websphere.appserver.api.json_1.0-javadoc/index.html">JSON4J</a> - {@code $STREAMS_INSTALL/ext/lib/JSON4J.jar}</LI>
+ *  </UL>
  */
 package com.ibm.streamsx.topology;
 

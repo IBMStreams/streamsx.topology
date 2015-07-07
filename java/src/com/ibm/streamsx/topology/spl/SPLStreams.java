@@ -184,7 +184,6 @@ public class SPLStreams {
 
                     @Override
                     public OutputTuple apply(String v1, OutputTuple v2) {
-                        // TODO Auto-generated method stub
                         v2.setString(0, v1);
                         return v2;
                     }

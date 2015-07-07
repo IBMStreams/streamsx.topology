@@ -48,8 +48,8 @@ though utility methods may encapsulate one or more functions. Here is an example
 filtering out all empty strings from stream {@code s} of type {@code String} 
 <pre>
 <code>
-Stream&lt;String> s = ...
-Stream&lt;String> filtered = s.filter(new Predicate&lt;String>() {
+TStream&lt;String> s = ...
+TStream&lt;String> filtered = s.filter(new Predicate&lt;String>() {
              &#64;Override
              public boolean test(String tuple) {
                  return !tuple.isEmpty();
