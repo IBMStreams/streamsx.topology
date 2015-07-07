@@ -325,7 +325,11 @@ class OperatorGenerator {
             sb.append(";\n");
         }
         
-        
-        
+        String colocationTag = (String) config.get("colocationTag");
+        if(colocationTag != null && !colocationTag.isEmpty()){
+            sb.append("    placement: partitionColocation(\"");
+            sb.append(colocationTag);
+            sb.append("\");\n");
+        }
     }
 }

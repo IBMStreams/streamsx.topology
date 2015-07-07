@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
@@ -31,22 +32,9 @@ public class SPLGenerator {
         return generateSPL(graph.complete());
     }
 
-    public String generateSPL(JSONObject graph) throws IOException {    		
-    	// Check whether graph is valid for colocations
-    	ArrayList<JSONObject> isolateOperators = findIsolates(graph);
-    	for(JSONObject jso : isolateOperators){
-    	    if(!checkValidColocationRegion(jso, graph)){
-    	        throw new IllegalStateException("Invalid isolation "+
-    	            "configuration. An isolated region is joined with a non-"+
-    	            "isolated region.");
-    	    }
-    	}
-    	
-    	// Assign isolation regions their partition colocations
-    	for(JSONObject isolate : isolateOperators){
-            assignColocations(isolate, getParents(isolate, graph), graph);
-            assignColocations(isolate, getChildren(isolate, graph), graph);
-    	}
+    public String generateSPL(JSONObject graph) throws IOException { 
+        
+        tagIsolationRegions(graph);
     	
     	// Generate parallel composites
         JSONObject comp = new OrderedJSONObject();
@@ -322,7 +310,13 @@ public class SPLGenerator {
             visited.add(op);
             unvisited.remove(0);
             
-            op.put("colocationTag", colocationTag);   
+            JSONObject config = (JSONObject) op.get("config");
+            if (config == null || config.isEmpty()){
+                config = new OrderedJSONObject();
+                op.put("config", config);
+            }
+            
+            config.put("colocationTag", colocationTag);   
             
             getUnvisitedAdjacentNodes(visited, unvisited, op, graph);       
         }
@@ -407,6 +401,108 @@ public class SPLGenerator {
         children.addAll(allIsoParents);
 
         unvisited.addAll(children);
+    }
+    
+    private void tagIsolationRegions(JSONObject graph){
+        // Check whether graph is valid for colocations
+        List<JSONObject> isolateOperators = findIsolates(graph);
+        for(JSONObject jso : isolateOperators){
+            if(!checkValidColocationRegion(jso, graph)){
+                throw new IllegalStateException("Invalid isolation "+
+                    "configuration. An isolated region is joined with a non-"+
+                    "isolated region.");
+            }
+        }
+        
+        // Assign isolation regions their partition colocations
+        for(JSONObject isolate : isolateOperators){
+            assignColocations(isolate, getParents(isolate, graph), graph);
+            assignColocations(isolate, getChildren(isolate, graph), graph);
+        }
+        
+        removeIsolationOperators(isolateOperators, graph);
+    }
+    
+    private void removeIsolationOperators(List<JSONObject> isolateOperators, JSONObject graph){
+        for(JSONObject iso : isolateOperators){
+            
+            //Get parents and children of $Isolate$ operator
+            List<JSONObject> isoParents = getParents(iso, graph);
+            List<JSONObject> isoChildren = getChildren(iso, graph);
+            
+            JSONArray isoOutputs = (JSONArray) iso.get("outputs");
+            if (isoOutputs.size() == 0) {
+                throw new IllegalStateException("Isolate operator must have at least one child.");  
+            }
+            
+            // Get the output name of the $Isolate$ operator
+            JSONObject isoFirstOutput = (JSONObject) isoOutputs.get(0);
+            String isoOutName = (String) isoFirstOutput.get("name");
+            
+            // Also get input name
+            JSONArray isoInputs = (JSONArray) iso.get("inputs");
+            JSONObject isoFirstInput = (JSONObject) isoInputs.get(0);
+            String isoInName = (String) isoFirstInput.get("name");
+            
+            // Respectively, the names of the child and parent input and 
+            // output ports connected to the $Isolate$ operator.
+            List<String> childInputPortNames = new ArrayList<>();
+            List<String> parentOutputPortNames = new ArrayList<>();
+            
+            // References to the list of connections for the parent and child
+            // output and input ports that are connected to the $isolate$ 
+            // operator.
+            List<JSONArray> childConnections = new ArrayList<>();
+            List<JSONArray> parentConnections = new ArrayList<>();
+            
+            // Get names of children's input ports that are connected to the
+            // $Isolate$ operator;
+            for (JSONObject child : isoChildren) {
+                JSONArray inputs = (JSONArray) child.get("inputs");
+                for(Object inputObj : inputs){
+                    JSONObject input = (JSONObject)inputObj;
+                    JSONArray connections = (JSONArray)input.get("connections");
+                    for(Object connectionObj : connections){
+                        String connection = (String)connectionObj;
+                        if(connection.equals(isoOutName)){
+                            childInputPortNames.add((String)input.get("name"));
+                            childConnections.add(connections);
+                            connections.remove(connection);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Get names of parent's output ports that are connected to the
+            // $Isolate$ operator;
+            for (JSONObject parent : isoParents) {
+                JSONArray outputs = (JSONArray) parent.get("outputs");
+                for(Object outputObj : outputs){
+                    JSONObject output = (JSONObject)outputObj;
+                    JSONArray connections = (JSONArray)output.get("connections");
+                    for(Object connectionObj : connections){
+                        String connection = (String)connectionObj;
+                        if(connection.equals(isoInName)){
+                            parentOutputPortNames.add((String)output.get("name"));
+                            parentConnections.add(connections);
+                            connections.remove(connection);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Connect child to parents
+            for(JSONArray childConnection : childConnections){
+                childConnection.addAll(parentOutputPortNames);
+            }
+            
+            // Connect parent to children
+            for(JSONArray parentConnection : parentConnections){
+                parentConnection.addAll(childInputPortNames);
+            }       
+        }
     }
     
     private static void assertNotIsolated(Collection<JSONObject> jsos){
