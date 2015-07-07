@@ -7,8 +7,8 @@ package com.ibm.streamsx.topology.context;
 /**
  * Context properties specific to a {@link StreamsContext.Type#DISTRIBUTED}
  * context -- InfoSphere Streams jobs.
- * @see {@link StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)}
- * @see {@link ContextProperties}
+ * @see StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)
+ * @see ContextProperties
  */
 public interface JobProperties {
     

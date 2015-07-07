@@ -61,8 +61,9 @@
        </copy>
        <javadoc destdir="${tk}/doc/javadoc" classpathref="javadoc.classpath"
           Overview="java/src/overview.html"
-          Windowtitle="Java Topology API for InfoSphere Streams"
+          Windowtitle="Java Application API for InfoSphere Streams"
           Footer="streamsx.topology 0.7 beta @ IBMStreams GitHub"
+          failonwarning="yes"
           >
             <fileset dir="java/src">
                <include name="com/ibm/streamsx/topology/**"/>

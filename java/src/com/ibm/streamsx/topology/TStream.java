@@ -124,6 +124,37 @@ public interface TStream<T> extends TopologyElement {
      */
     <U> TStream<U> transform(Function<T, U> transformer, Class<U> tupleTypeClass);
 
+    /**
+     * Declare a new stream that transforms each tuple from this stream into one
+     * (or zero) tuple of the same type {@code T}. For each tuple {@code t}
+     * on this stream, the returned stream will contain a tuple that is the
+     * result of {@code modifier.apply(t)} when the return is not {@code null}.
+     * The function may return the same reference as its input {@code t} or
+     * a different object of the same type.
+     * If {@code modifier.apply(t)} returns {@code null} then no tuple
+     * is submitted to the returned stream for {@code t}.
+     * 
+     * <P>
+     * Example of modifying a stream  {@code String} values by adding the suffix '{@code extra}'.
+     * 
+     * <pre>
+     * <code>
+     * TStream&lt;String> strings = ...
+     * TStream&lt;String> modifiedStrings = strings.modify(new UnaryOperator<String>() {
+     *             &#64;Override
+     *             public String apply(String v) {
+     *                 return v.concat("extra");
+     *             }});
+     * </code>
+     * </pre>
+     * 
+     * </P>
+     * 
+     * @param modifier
+     *            Modifier logic to be executed against each tuple.
+     * @return Stream that will contain tuples of type {@code T} modified from this
+     *         stream's tuples.
+     */
     TStream<T> modify(UnaryOperator<T> modifier);
 
     /**

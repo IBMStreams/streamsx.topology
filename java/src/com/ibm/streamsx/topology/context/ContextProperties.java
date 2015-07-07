@@ -6,8 +6,8 @@ package com.ibm.streamsx.topology.context;
 
 /**
  * Properties that can be specified when submitting the topology to a context.
- * @see {@link StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)}
- * @see {@link JobProperties}
+ * @see StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)
+ * @see JobProperties
  */
 public interface ContextProperties {
 
