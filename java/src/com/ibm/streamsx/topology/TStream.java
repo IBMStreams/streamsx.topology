@@ -125,7 +125,7 @@ public interface TStream<T> extends TopologyElement {
     <U> TStream<U> transform(Function<T, U> transformer, Class<U> tupleTypeClass);
 
     /**
-     * Declare a new stream that transforms each tuple from this stream into one
+     * Declare a new stream that modifies each tuple from this stream into one
      * (or zero) tuple of the same type {@code T}. For each tuple {@code t}
      * on this stream, the returned stream will contain a tuple that is the
      * result of {@code modifier.apply(t)} when the return is not {@code null}.
@@ -149,6 +149,10 @@ public interface TStream<T> extends TopologyElement {
      * </pre>
      * 
      * </P>
+     * <P>
+     * This method is equivalent to
+     * {@code transform(Function<T,T> modifier, T.class}).
+     * </P
      * 
      * @param modifier
      *            Modifier logic to be executed against each tuple.
