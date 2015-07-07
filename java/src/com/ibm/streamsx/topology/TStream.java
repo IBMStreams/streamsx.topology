@@ -73,8 +73,8 @@ public interface TStream<T> extends TopologyElement {
      * 
      * <pre>
      * <code>
-     * Stream&lt;String> s = ...
-     * Stream&lt;String> filtered = s.filter(new Predicate&lt;String>() {
+     * TStream&lt;String> s = ...
+     * TStream&lt;String> filtered = s.filter(new Predicate&lt;String>() {
      *             &#64;Override
      *             public boolean test(String t) {
      *                 return !t.isEmpty();
@@ -94,19 +94,20 @@ public interface TStream<T> extends TopologyElement {
      * Declare a new stream that transforms each tuple from this stream into one
      * (or zero) tuple of a different type {@code U}. For each tuple {@code t}
      * on this stream, the returned stream will contain a tuple that is the
-     * result of {@code transformer.call(t)} when the return is not {@code null}
-     * .
+     * result of {@code transformer.apply(t)} when the return is not {@code null}.
+     * If {@code transformer.apply(t)} returns {@code null} then no tuple
+     * is submitted to the returned stream for {@code t}.
      * 
      * <P>
      * Example of transforming a stream containing numeric values as
-     * {@code String}s into a stream of {@code Double} values.
+     * {@code String} objects into a stream of {@code Double} values.
      * 
      * <pre>
      * <code>
-     * Stream&lt;String> strings = ...
-     * Stream&lt;Double> doubles = strings.transform(new Function<String, Double>() {
+     * TStream&lt;String> strings = ...
+     * TStream&lt;Double> doubles = strings.transform(new Function<String, Double>() {
      *             &#64;Override
-     *             public Double call(String v) {
+     *             public Double apply(String v) {
      *                 return Double.valueOf(v);
      *             }}, Double.class );
      * </code>
@@ -118,25 +119,55 @@ public interface TStream<T> extends TopologyElement {
      *            Transformation logic to be executed against each tuple.
      * @param tupleTypeClass
      *            Type {@code U} of the returned stream.
-     * @return Stream contained tuples of type {@code U} transformed from this
+     * @return Stream that will contain tuples of type {@code U} transformed from this
      *         stream's tuples.
      */
     <U> TStream<U> transform(Function<T, U> transformer, Class<U> tupleTypeClass);
 
+    /**
+     * Declare a new stream that transforms each tuple from this stream into one
+     * (or zero) tuple of the same type {@code T}. For each tuple {@code t}
+     * on this stream, the returned stream will contain a tuple that is the
+     * result of {@code modifier.apply(t)} when the return is not {@code null}.
+     * The function may return the same reference as its input {@code t} or
+     * a different object of the same type.
+     * If {@code modifier.apply(t)} returns {@code null} then no tuple
+     * is submitted to the returned stream for {@code t}.
+     * 
+     * <P>
+     * Example of modifying a stream  {@code String} values by adding the suffix '{@code extra}'.
+     * 
+     * <pre>
+     * <code>
+     * TStream&lt;String> strings = ...
+     * TStream&lt;String> modifiedStrings = strings.modify(new UnaryOperator<String>() {
+     *             &#64;Override
+     *             public String apply(String v) {
+     *                 return v.concat("extra");
+     *             }});
+     * </code>
+     * </pre>
+     * 
+     * </P>
+     * 
+     * @param modifier
+     *            Modifier logic to be executed against each tuple.
+     * @return Stream that will contain tuples of type {@code T} modified from this
+     *         stream's tuples.
+     */
     TStream<T> modify(UnaryOperator<T> modifier);
 
     /**
      * Declare a new stream that transforms tuples from this stream into one or
      * more (or zero) tuples of a different type {@code U}. For each tuple
      * {@code t} on this stream, the returned stream will contain all tuples in
-     * the {@code Iterator<U>} that is the result of {@code transformer.call(t)}
-     * . Tuples will be added to the returned stream in the order the iterator
+     * the {@code Iterator<U>} that is the result of {@code transformer.apply(t)}.
+     * Tuples will be added to the returned stream in the order the iterator
      * returns them.
      * 
      * <BR>
      * If the return is null or an empty iterator then no tuples are added to
-     * the return stream for input tuple {@code t}. when the return is not
-     * {@code null}.
+     * the returned stream for input tuple {@code t}.
      * <P>
      * Example of transforming a stream containing lines of text into a stream
      * of words split out from each line. The order of the words in the stream
@@ -144,10 +175,10 @@ public interface TStream<T> extends TopologyElement {
      * 
      * <pre>
      * <code>
-     * Stream&lt;String> lines = ...
-     * Stream&lt;String> words = lines.multiTransform(new Function<String, Iterable<String>>() {
+     * TStream&lt;String> lines = ...
+     * TStream&lt;String> words = lines.multiTransform(new Function<String, Iterable<String>>() {
      *             &#64;Override
-     *             public Iterable<String> call(String t) {
+     *             public Iterable<String> apply(String t) {
      *                 return Arrays.asList(t.split(" "));
      *             }}, String.class);
      * </code>
@@ -159,7 +190,7 @@ public interface TStream<T> extends TopologyElement {
      *            Transformation logic to be executed against each tuple.
      * @param tupleTypeClass
      *            Type {@code U} of the returned stream.
-     * @return Stream contained tuples of type {@code U} transformed from this
+     * @return Stream that will contain tuples of type {@code U} transformed from this
      *         stream's tuples.
      */
     <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer,
@@ -176,8 +207,8 @@ public interface TStream<T> extends TopologyElement {
      * 
      * <pre>
      * <code>
-     * Stream&lt;String> values = ...
-     * values.sink(new FunctionV<String>() {
+     * TStream&lt;String> values = ...
+     * values.sink(new Consumer<String>() {
      *             
      *             &#64;Override
      *             public void accept(String v) {
