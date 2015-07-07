@@ -322,6 +322,7 @@ public class SPLGenerator {
                 return false;
             }
             visited.add(op);
+            unvisited.remove(0);
             
             List<JSONObject> parents = getParents(op, graph);
             List<JSONObject> children = getChildren(op, graph);
@@ -334,7 +335,7 @@ public class SPLGenerator {
             Set<JSONObject> allIsoChildren = new HashSet<>();
             List<JSONObject> isolatedParents = new ArrayList<>();
             for(JSONObject parent : parents){
-                if("$Isolate".equals((String)parent.get("kind"))){
+                if("$Isolate$".equals((String)parent.get("kind"))){
                     isolatedParents.add(parent);                 
                     allIsoChildren.addAll(getChildren(parent, graph));
                 }
@@ -353,7 +354,7 @@ public class SPLGenerator {
             
             List<JSONObject> childrenToRemove = new ArrayList<JSONObject>();
             for(JSONObject child : children){
-                if("$Isolate".equals((String)child.get("kind"))){
+                if("$Isolate$".equals((String)child.get("kind"))){
                     visited.add(child);
                     childrenToRemove.add(child);
                 }
@@ -453,7 +454,7 @@ public class SPLGenerator {
 				}
 			}
 		}
-		
+		uniqueParents.addAll(parents);
 		return uniqueParents;
 	}
 
