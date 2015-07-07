@@ -318,14 +318,17 @@ class OperatorGenerator {
             return;
         
         Boolean streamViewability = (Boolean) config.get("streamViewability");
-        if (streamViewability != null) {
+        String colocationTag = (String) config.get("colocationTag");
+        if(streamViewability != null || (colocationTag != null && !colocationTag.isEmpty())){
             sb.append("  config\n");
+        }
+        if (streamViewability != null) {
             sb.append("    streamViewability: ");
             sb.append(streamViewability);
             sb.append(";\n");
         }
         
-        String colocationTag = (String) config.get("colocationTag");
+        
         if(colocationTag != null && !colocationTag.isEmpty()){
             sb.append("    placement: partitionColocation(\"");
             sb.append(colocationTag);
