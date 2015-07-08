@@ -19,7 +19,8 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 
 class OperatorGenerator {
 
-    static String generate(JSONObject graphConfig, JSONObject op) throws IOException {
+    static String generate(JSONObject graphConfig, JSONObject op)
+            throws IOException {
         StringBuilder sb = new StringBuilder();
         noteAnnotations(op, sb);
         parallelAnnotation(op, sb);
@@ -35,15 +36,15 @@ class OperatorGenerator {
 
         return sb.toString();
     }
-    
-    private static void noteAnnotations(JSONObject op, StringBuilder sb) throws IOException {
+
+    private static void noteAnnotations(JSONObject op, StringBuilder sb)
+            throws IOException {
         JSONArray ja = (JSONArray) op.get("sourcelocation");
         if (ja == null || ja.isEmpty())
             return;
-        
-        JSONArtifact jsource = 
-                ja.size() == 1 ? (JSONArtifact) ja.get(0) : ja;
-        
+
+        JSONArtifact jsource = ja.size() == 1 ? (JSONArtifact) ja.get(0) : ja;
+
         sb.append("@spl_note(id=\"__spl_sourcelocation\"");
         sb.append(", text=");
         String sourceInfo = jsource.serialize();
@@ -52,21 +53,23 @@ class OperatorGenerator {
     }
 
     private static void parallelAnnotation(JSONObject op, StringBuilder sb) {
-    	Boolean parallel = (Boolean)op.get("parallelOperator");
-        if(parallel != null && parallel){
-			sb.append("@parallel(width=" + Integer.toString((int)op.get("width")));
-			Boolean partitioned = (Boolean)op.get("partitioned");
-			if(partitioned != null && partitioned){
-				String parallelInputPortName = (String) op.get("parallelInputPortName");
-				parallelInputPortName = splBasename(parallelInputPortName);
-				sb.append(", partitionBy=[{port=" + parallelInputPortName
-						+ ", attributes=[__spl_hash]}]");
-			}
-			sb.append(")\n");
-		}	
-	}
+        Boolean parallel = (Boolean) op.get("parallelOperator");
+        if (parallel != null && parallel) {
+            sb.append("@parallel(width="
+                    + Integer.toString((int) op.get("width")));
+            Boolean partitioned = (Boolean) op.get("partitioned");
+            if (partitioned != null && partitioned) {
+                String parallelInputPortName = (String) op
+                        .get("parallelInputPortName");
+                parallelInputPortName = splBasename(parallelInputPortName);
+                sb.append(", partitionBy=[{port=" + parallelInputPortName
+                        + ", attributes=[__spl_hash]}]");
+            }
+            sb.append(")\n");
+        }
+    }
 
-	static void outputClause(JSONObject op, StringBuilder sb) {
+    static void outputClause(JSONObject op, StringBuilder sb) {
 
         JSONArray outputs = (JSONArray) op.get("outputs");
         if (outputs == null || outputs.isEmpty()) {
@@ -241,9 +244,11 @@ class OperatorGenerator {
         }
     }
 
-    static void paramClause(JSONObject graphConfig, JSONObject op, StringBuilder sb) {
-        
-        JSONArray vmArgs = (JSONArray) graphConfig.get(ContextProperties.VMARGS);
+    static void paramClause(JSONObject graphConfig, JSONObject op,
+            StringBuilder sb) {
+
+        JSONArray vmArgs = (JSONArray) graphConfig
+                .get(ContextProperties.VMARGS);
         boolean hasVMArgs = vmArgs != null && !vmArgs.isEmpty();
 
         // VMArgs only apply to Java SPL operators.
@@ -268,7 +273,7 @@ class OperatorGenerator {
             parameterValue(param, sb);
             sb.append(";\n");
         }
-        
+
         if (hasVMArgs) {
             JSONObject tmpVMArgParam = new JSONObject();
             tmpVMArgParam.put("value", vmArgs);
@@ -280,13 +285,13 @@ class OperatorGenerator {
             sb.append(";\n");
         }
     }
-    
+
     // Set of "type"s where the "value" in the JSON is printed as-is.
     private static final Set<String> PARAM_TYPES_TOSTRING = new HashSet<>();
     static {
         PARAM_TYPES_TOSTRING.add("enum");
         PARAM_TYPES_TOSTRING.add("spltype");
-        PARAM_TYPES_TOSTRING.add("attribute");    
+        PARAM_TYPES_TOSTRING.add("attribute");
     }
 
     static void parameterValue(JSONObject param, StringBuilder sb) {
@@ -311,15 +316,17 @@ class OperatorGenerator {
 
         sb.append(value);
     }
-    
-    static void configClause(JSONObject graphConfig, JSONObject op, StringBuilder sb) {
+
+    static void configClause(JSONObject graphConfig, JSONObject op,
+            StringBuilder sb) {
         JSONObject config = (JSONObject) op.get("config");
         if (config == null || config.isEmpty())
             return;
-        
+
         Boolean streamViewability = (Boolean) config.get("streamViewability");
         String colocationTag = (String) config.get("colocationTag");
-        if(streamViewability != null || (colocationTag != null && !colocationTag.isEmpty())){
+        if (streamViewability != null
+                || (colocationTag != null && !colocationTag.isEmpty())) {
             sb.append("  config\n");
         }
         if (streamViewability != null) {
@@ -327,9 +334,8 @@ class OperatorGenerator {
             sb.append(streamViewability);
             sb.append(";\n");
         }
-        
-        
-        if(colocationTag != null && !colocationTag.isEmpty()){
+
+        if (colocationTag != null && !colocationTag.isEmpty()) {
             sb.append("    placement: partitionColocation(\"");
             sb.append(colocationTag);
             sb.append("\");\n");
