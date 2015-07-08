@@ -289,4 +289,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         return receivingBop.inputFrom(output, input);
     }
+
+    @Override
+    public TStream<T> isolate() {
+        BOutput toBeIsolated = output();
+        BOutput isolatedOutput = builder().isolate(toBeIsolated); 
+        return new StreamImpl<T>(this, isolatedOutput, getTupleClass());
+    }
 }

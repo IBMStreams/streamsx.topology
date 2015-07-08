@@ -507,6 +507,32 @@ public interface TStream<T> extends TopologyElement {
      *             than 1.0.
      */
     TStream<T> sample(double fraction);
+    
+    /**
+     * Return a TStream that runs in a separate process from the parent. The
+     * children of the returned TStream will also run in another process. If a
+     * child of the returned TStream is combined with another TStream through a 
+     * union(), both TStreams will run in another process, including their ancestors
+     * and children up until other isolate() boundaries.
+     * <br><br>
+     * In other words, for the following Topology:
+     * <pre><code>
+     *                    |--.isolate()---transform2--|
+     * ------transform1---|                           |--.isolate()--filter---
+     *                    |--.isolate()---transform3--|
+     * </code></pre>
+     * 
+     * Three separate processes will be created -- one process will contain
+     * transform1, another will contain both transform2 and transform3, and the
+     * last will contain filter.
+     * 
+     * <br><br>
+     * Merging an isolated stream with its parent stream will throw an exception.
+     * @return A TStream whose children will run in a separate process from 
+     * their parents.
+     */
+    TStream<T> isolate();
+
 
     /**
      * Throttle a stream by ensuring any tuple is submitted with least
