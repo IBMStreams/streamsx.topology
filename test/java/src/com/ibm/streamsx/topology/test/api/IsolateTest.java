@@ -48,7 +48,7 @@ public class IsolateTest {
         try{
         StreamsContextFactory
                 .getStreamsContext(StreamsContext.Type.DISTRIBUTED_TESTER)
-                .submit(topology).get(60, TimeUnit.SECONDS);
+                .submit(topology).get(90, TimeUnit.SECONDS);
         } catch(Exception e){
             e.printStackTrace();
         }
