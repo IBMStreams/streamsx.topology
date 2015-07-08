@@ -7,14 +7,18 @@ package com.ibm.streamsx.topology.inet;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.Tuple;
+import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
+import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.spl.SPLWindow;
+import com.ibm.streamsx.topology.tuple.JSONAble;
 
 /**
  * Adds a HTTP REST server to a topology to provide external interaction with
@@ -63,14 +67,21 @@ public class RestServer {
     /**
      * Declare a HTTP REST view of tuples in a window. A HTTP GET to the the
      * server at runtime will return the current contents of the window as an
-     * array of JSON objects.
+     * array of JSON objects, with each tuple converted to a JSON object.
      * 
      * <BR>
      * Conversion to JSON depends on the type of stream
      * that populates {@code window}.
      * <UL>
      * <LI>
-     * {@code TStream<String>} - Each tuple will be a JSON object with a single
+     * {@code TStream<JSONObject>} - Each tuple is the JSON object.
+     * </LI>
+     * <LI>
+     * {@code TStream<? extends JSONAble>} - Each tuple is converted to a JSON object
+     * using {@link JSONAble#toJSON()}.
+     * </LI>
+     * <LI>
+     * {@code TStream<String>} - Each tuple will be converted to a JSON object with a single
      * attribute '{@code string}' with the tuple's value.
      * </LI>
      * <LI>{@link com.ibm.streamsx.topology.spl.SPLStream SPLStream} -
@@ -79,8 +90,7 @@ public class RestServer {
      * </LI>
 
      * </UL>
-     * Only windows for streams of type {@code SPLStream} and
-     * {@code TStream<String>} are currently supported.
+     * Other stream types are not supported.
      * 
      * @param window
      *            Window to expose through the HTTP GET
@@ -101,22 +111,41 @@ public class RestServer {
         if (String.class.equals(window.getTupleClass())) {
             return viewerString((TWindow<String>) window, context, name);
         }
-        /*
-         * if (JSONAble.class.isAssignableFrom(window.getTupleClass())) {
-         * JSONStreams.toJSON(stream) }
-         */
+        
+        if (JSONObject.class.equals(window.getTupleClass())) {
+            return viewerJSON((TWindow<JSONObject>) window, context, name);
+        }
+        if (JSONAble.class.isAssignableFrom(window.getTupleClass())) {
+            return viewerJSONable((TWindow<? extends JSONAble>) window, context, name);
+        }
 
         throw new IllegalArgumentException("Stream type not yet supported!:"
                 + window.getTupleClass());
+    }
+    
+    private String viewerJSON(TWindow<JSONObject> window,
+            String context, String name) {
+        
+        SPLStream splStream = JSONStreams.toSPL(window.getStream());
+
+        return viewerSpl(splStream.window(window), context, name);
+    }
+    private String viewerJSONable(TWindow<? extends JSONAble> window,
+            String context, String name) {
+        
+        TStream<JSONObject> jsonStream = JSONStreams.toJSON(window.getStream());
+        
+        SPLStream splStream = JSONStreams.toSPL(jsonStream);
+
+        return viewerSpl(splStream.window(window), context, name);
     }
     
     private String viewerString(TWindow<String> window,
             String context, String name) {
 
         SPLStream splStream = SPLStreams.stringToSPLStream(window.getStream());
-        TWindow<Tuple> tWindow = splStream.window(window);
 
-        return viewerSpl(tWindow, context, name);
+        return viewerSpl(splStream.window(window), context, name);
     }
 
     private String viewerSpl(TWindow<Tuple> window, String context, String name) {
