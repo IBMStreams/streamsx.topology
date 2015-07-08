@@ -18,113 +18,114 @@ import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
 
 public class SPLGenerator {
-	//Needed for composite name generation
-	private int numParallelComposites = 0;
-	private int colocationCount = 0;
-	
-	//The final list of composites (Main composite and parallel regions), which
-	//compose the graph.
-	ArrayList<JSONObject> composites = new ArrayList<JSONObject>();
+    // Needed for composite name generation
+    private int numParallelComposites = 0;
+    private int colocationCount = 0;
 
+    // The final list of composites (Main composite and parallel regions), which
+    // compose the graph.
+    ArrayList<JSONObject> composites = new ArrayList<JSONObject>();
 
     public String generateSPL(GraphBuilder graph) throws IOException {
         return generateSPL(graph.complete());
     }
 
-    public String generateSPL(JSONObject graph) throws IOException { 
-        
+    public String generateSPL(JSONObject graph) throws IOException {
+
         tagIsolationRegions(graph);
-    	
-    	// Generate parallel composites
+
+        // Generate parallel composites
         JSONObject comp = new OrderedJSONObject();
         comp.put("name", graph.get("name"));
         comp.put("public", true);
-    	
-    	ArrayList<JSONObject> starts = findStarts(graph);
-    	separateIntoComposites(starts, comp, graph);
+
+        ArrayList<JSONObject> starts = findStarts(graph);
+        separateIntoComposites(starts, comp, graph);
         StringBuilder sb = new StringBuilder();
         generateGraph(graph, sb);
         return sb.toString();
     }
-    
+
     private ArrayList<JSONObject> findStarts(JSONObject graph) {
-    	ArrayList<JSONObject> starts = new ArrayList<JSONObject>();
-    	JSONArray ops = (JSONArray) graph.get("operators");
-		for(int k = 0; k < ops.size(); k++){
-			JSONObject op = (JSONObject)(ops.get(k));
-			JSONArray inputs = (JSONArray) op.get("inputs");
-			if(inputs == null || inputs.size() == 0){
-				if(((JSONObject) ops.get(k)).get("name") != null && 
-						!((String) ((JSONObject) ops.get(k)).get("name")).startsWith("$")){
-					starts.add((JSONObject) ops.get(k));	
-				}
-			}
-		}
-		return starts;
-	}
-    
+        ArrayList<JSONObject> starts = new ArrayList<JSONObject>();
+        JSONArray ops = (JSONArray) graph.get("operators");
+        for (int k = 0; k < ops.size(); k++) {
+            JSONObject op = (JSONObject) (ops.get(k));
+            JSONArray inputs = (JSONArray) op.get("inputs");
+            if (inputs == null || inputs.size() == 0) {
+                if (((JSONObject) ops.get(k)).get("name") != null
+                        && !((String) ((JSONObject) ops.get(k)).get("name"))
+                                .startsWith("$")) {
+                    starts.add((JSONObject) ops.get(k));
+                }
+            }
+        }
+        return starts;
+    }
+
     private ArrayList<JSONObject> findIsolates(JSONObject graph) {
         ArrayList<JSONObject> isolates = new ArrayList<JSONObject>();
         JSONArray ops = (JSONArray) graph.get("operators");
-        for(int k = 0; k < ops.size(); k++){
-            JSONObject op = (JSONObject)(ops.get(k));
+        for (int k = 0; k < ops.size(); k++) {
+            JSONObject op = (JSONObject) (ops.get(k));
             String kind = (String) op.get("kind");
-            if(kind != null && kind.equals("$Isolate$")){
+            if (kind != null && kind.equals("$Isolate$")) {
                 isolates.add(op);
             }
         }
         return isolates;
     }
 
-	void generateGraph(JSONObject graph, StringBuilder sb) throws IOException {
-    	
+    void generateGraph(JSONObject graph, StringBuilder sb) throws IOException {
+
         String namespace = (String) graph.get("namespace");
         if (namespace != null && !namespace.isEmpty()) {
             sb.append("namespace ");
             sb.append(namespace);
             sb.append(";\n");
         }
-        
+
         JSONObject graphConfig = getGraphConfig(graph);
 
-        for(int i = 0; i < composites.size(); i++){
-        	StringBuilder compBuilder = new StringBuilder();   
-        	generateComposite(graphConfig, composites.get(i), compBuilder);
-        	sb.append(compBuilder.toString()); 
+        for (int i = 0; i < composites.size(); i++) {
+            StringBuilder compBuilder = new StringBuilder();
+            generateComposite(graphConfig, composites.get(i), compBuilder);
+            sb.append(compBuilder.toString());
         }
-    }	
-    
-    void generateComposite(JSONObject graphConfig, JSONObject graph, StringBuilder compBuilder) throws IOException {
-    	Boolean isPublic = (Boolean) graph.get("public");
-    	String name = (String) graph.get("name");
-    	name = getSPLCompatibleName(name);
-    	if (isPublic != null && isPublic)
-            compBuilder.append("public "); 
-    	
-    	compBuilder.append("composite ");
-
-    	compBuilder.append(name);
-    	if(name.startsWith("__parallel_")){
-    		String iput = (String) graph.get("inputName");
-    		String oput = (String) graph.get("outputName");
-    		
-    		iput = splBasename(iput);
-    		oput = splBasename(oput);
-    		
-    		compBuilder.append("(input " + iput + "; output "
-    				+ oput + ")");
-    	}
-    	compBuilder.append("\n{\n");
-
-    	compBuilder.append("graph\n");
-        operators(graphConfig, graph, compBuilder);
-
-        compBuilder.append("}\n");  	
     }
 
-    void operators(JSONObject graphConfig, JSONObject graph, StringBuilder sb) throws IOException {
+    void generateComposite(JSONObject graphConfig, JSONObject graph,
+            StringBuilder compBuilder) throws IOException {
+        Boolean isPublic = (Boolean) graph.get("public");
+        String name = (String) graph.get("name");
+        name = getSPLCompatibleName(name);
+        if (isPublic != null && isPublic)
+            compBuilder.append("public ");
+
+        compBuilder.append("composite ");
+
+        compBuilder.append(name);
+        if (name.startsWith("__parallel_")) {
+            String iput = (String) graph.get("inputName");
+            String oput = (String) graph.get("outputName");
+
+            iput = splBasename(iput);
+            oput = splBasename(oput);
+
+            compBuilder.append("(input " + iput + "; output " + oput + ")");
+        }
+        compBuilder.append("\n{\n");
+
+        compBuilder.append("graph\n");
+        operators(graphConfig, graph, compBuilder);
+
+        compBuilder.append("}\n");
+    }
+
+    void operators(JSONObject graphConfig, JSONObject graph, StringBuilder sb)
+            throws IOException {
         JSONArray ops = (JSONArray) graph.get("operators");
-        
+
         if (ops == null || ops.isEmpty())
             return;
 
@@ -134,232 +135,266 @@ public class SPLGenerator {
             String splOp = OperatorGenerator.generate(graphConfig, op);
             sb.append(splOp);
             sb.append("\n");
-            
+
         }
     }
 
     /**
      * Recursively breaks the graph into different composites, separating the
-     * Main composite from the parallel ones. Should work with nested 
+     * Main composite from the parallel ones. Should work with nested
      * parallelism, but hasn't yet been tested.
-     * @param starts A list of operators that indicate the start of the region.
-     * These are either source operators, or operators in a composite that read
-     * from the composite's input port.
-     * @param comp A JSON object representing a composite with a name field,
-     * but not an operator field.
-     * @param graph The top-level JSON graph that contains all the operators.
-     * Necessary to pass it to the getChildren function.
+     * 
+     * @param starts
+     *            A list of operators that indicate the start of the region.
+     *            These are either source operators, or operators in a composite
+     *            that read from the composite's input port.
+     * @param comp
+     *            A JSON object representing a composite with a name field, but
+     *            not an operator field.
+     * @param graph
+     *            The top-level JSON graph that contains all the operators.
+     *            Necessary to pass it to the getChildren function.
      */
-    JSONObject separateIntoComposites(ArrayList<JSONObject> starts, JSONObject comp, JSONObject graph){
-    	// Contains all ops which have been reached by graph traversal,
-    	// regardless of whether they are 'special' operators, such as the ones
-    	// whose kind begins with '$', or whether they're included in the final
-    	// physical graph.
-    	HashSet<JSONObject> allTraversedOps = new HashSet<JSONObject>();
-    	
-    	// Only contains operators that are in the final physical graph.
-    	List<JSONObject> visited = new ArrayList<JSONObject>();
-    	
-    	// Operators which might not have been visited yet.
-    	List<JSONObject> unvisited = new ArrayList<JSONObject>();
-    	JSONObject unparallelOp = null;
-    	
-    	unvisited.addAll(starts);
-    	
-    	// While there are still nodes to visit
-    	while(unvisited.size() > 0){
-    		// Get the first unvisited node
-    		JSONObject visitOp = unvisited.get(0);
-    		// Check whether we've seen it before. Remember, allTraversedOps
-    		// contains *every* operator we've traversed in the JSON graph,
-    		// while visited is a list of only the physical operators that will
-    		// be included in the graph.
-    		if(allTraversedOps.contains(visitOp)){
-    			unvisited.remove(0);
-    			continue;
-    		}
-    		// We've now traversed this operator.
-    		allTraversedOps.add(visitOp);
-    		
-    		// If the operator is not a special operator, add it to the 
-    		// visited list.
-    		if(!isParallelStart(visitOp) && !isParallelEnd(visitOp)){
-    			ArrayList<JSONObject> children = getChildren(visitOp, graph);
-        		unvisited.addAll(children);
-        		visited.add(visitOp);		
-    		} 
-    		
-    		// If the operator is the start of a parallel region, make a new JSON 
-    		// operator to insert into the main graph, make a new JSON graph to 
-    		// represent the parallel composite, find the parallel region's start
-    		// operators, and recursively call this function to populate the new composite.
-    		else if(isParallelStart(visitOp)){
-    			// The new composite, represented in JSON
-    			JSONObject subComp = new OrderedJSONObject();
-    			// The operator to include in the graph that refers to the 
-    			// parallel composite.
-    			JSONObject compOperator = new OrderedJSONObject();
-    			subComp.put("name", "__parallel_Composite_" + Integer.toString(numParallelComposites));
-    			subComp.put("public", false);
-    			
-    			compOperator.put("kind", "__parallel_Composite_" + Integer.toString(numParallelComposites));
-    			compOperator.put("name", "paraComp_" + Integer.toString(numParallelComposites));
-    			compOperator.put("inputs", visitOp.get("inputs"));
-    			
-    			Boolean partitioned = (Boolean) ((JSONObject)((JSONArray)visitOp.get("outputs"))
-    					.get(0)).get("partitioned");
-    			if(partitioned != null && partitioned){
-    				JSONArray inputs = (JSONArray) visitOp.get("inputs");
-    				String parallelInputPortName = null;
-    				
-    				// Get the first port that has the __spl_hash attribute
-    				for(int i = 0; i < inputs.size(); i++){
-    					JSONObject input = (JSONObject) inputs.get(i);
-    					String type = (String) input.get("type");
-    					if(type.contains("__spl_hash")){
-    						parallelInputPortName = (String) input.get("name");
-    					}
-    				}
-    				compOperator.put("partitioned", true);
-    				compOperator.put("parallelInputPortName", parallelInputPortName);
-    			}
-    			
-    			// Necessary to later indicate whether the composite the operator
-    			//refers to is parallelized.
-    			compOperator.put("parallelOperator", true);
-    			
-    			JSONArray outputs = (JSONArray) visitOp.get("outputs");
-    			JSONObject output = (JSONObject) outputs.get(0);
-    			compOperator.put("width", output.get("width"));
-    			numParallelComposites++;
-    			
-    			// Get the start operators in the parallel region -- the ones
-    			// immediately downstream from the $Parallel operator
-    			ArrayList<JSONObject> parallelStarts = getChildren(visitOp, graph);
-    			
-    			// Once you have the start operators, recursively call the function
-    			// to populate the parallel composite.
-    			JSONObject parallelEnd = separateIntoComposites(parallelStarts, subComp, graph);
-    			
-    			// The name of the input port of the composite should be the 
-    			// name of the input port of the first child operator. For now,
-    			// we're assuming that all start operators in a parallel region
-    			// all read from the same upstream port.
-    			subComp.put("inputName", ((JSONArray) ((JSONObject) ((JSONArray) parallelStarts.get(0).
-    					get("inputs")).get(0)).get("connections")).get(0));
-    			
-    			// If the parallel region ended by invoking unparallel,
-    			// the output port of the invocation of the composite operator
-    			// should be the same as the output port of the $unparallel
-    			// operator
-    			if(parallelEnd != null){
-    				ArrayList<JSONObject> children = getChildren(parallelEnd, graph);
-    				unvisited.addAll(children);
-    				compOperator.put("outputs", parallelEnd.get("outputs"));
-        			subComp.put("outputName", ((JSONArray) ((JSONObject) ((JSONArray) parallelEnd.
-        					get("inputs")).get(0)).get("connections")).get(0));
-    			}
-    			
-    			// Add comp operator to the list of physical operators
-    			visited.add(compOperator);
-    		}
-    	
-    		// Is end of parallel region
-    		else {
-    			unparallelOp = visitOp;
-    		}
-    		
-    		// remove the operator we've traversed from the list of unvisited
-    		// operators.
-    		unvisited.remove(0);
-    	}
-    	
-		JSONArray compOps = new JSONArray(visited.size());
-		compOps.addAll(visited);
-		
-		comp.put("operators", compOps);
-		composites.add(comp);
-		
-		// If one of the operators in the composite was the $unparallel operator
-		// then return that $unparallel operator, otherwise return null.
-		return unparallelOp;
+    JSONObject separateIntoComposites(ArrayList<JSONObject> starts,
+            JSONObject comp, JSONObject graph) {
+        // Contains all ops which have been reached by graph traversal,
+        // regardless of whether they are 'special' operators, such as the ones
+        // whose kind begins with '$', or whether they're included in the final
+        // physical graph.
+        HashSet<JSONObject> allTraversedOps = new HashSet<JSONObject>();
+
+        // Only contains operators that are in the final physical graph.
+        List<JSONObject> visited = new ArrayList<JSONObject>();
+
+        // Operators which might not have been visited yet.
+        List<JSONObject> unvisited = new ArrayList<JSONObject>();
+        JSONObject unparallelOp = null;
+
+        unvisited.addAll(starts);
+
+        // While there are still nodes to visit
+        while (unvisited.size() > 0) {
+            // Get the first unvisited node
+            JSONObject visitOp = unvisited.get(0);
+            // Check whether we've seen it before. Remember, allTraversedOps
+            // contains *every* operator we've traversed in the JSON graph,
+            // while visited is a list of only the physical operators that will
+            // be included in the graph.
+            if (allTraversedOps.contains(visitOp)) {
+                unvisited.remove(0);
+                continue;
+            }
+            // We've now traversed this operator.
+            allTraversedOps.add(visitOp);
+
+            // If the operator is not a special operator, add it to the
+            // visited list.
+            if (!isParallelStart(visitOp) && !isParallelEnd(visitOp)) {
+                ArrayList<JSONObject> children = getChildren(visitOp, graph);
+                unvisited.addAll(children);
+                visited.add(visitOp);
+            }
+
+            // If the operator is the start of a parallel region, make a new
+            // JSON
+            // operator to insert into the main graph, make a new JSON graph to
+            // represent the parallel composite, find the parallel region's
+            // start
+            // operators, and recursively call this function to populate the new
+            // composite.
+            else if (isParallelStart(visitOp)) {
+                // The new composite, represented in JSON
+                JSONObject subComp = new OrderedJSONObject();
+                // The operator to include in the graph that refers to the
+                // parallel composite.
+                JSONObject compOperator = new OrderedJSONObject();
+                subComp.put(
+                        "name",
+                        "__parallel_Composite_"
+                                + Integer.toString(numParallelComposites));
+                subComp.put("public", false);
+
+                compOperator.put(
+                        "kind",
+                        "__parallel_Composite_"
+                                + Integer.toString(numParallelComposites));
+                compOperator.put("name",
+                        "paraComp_" + Integer.toString(numParallelComposites));
+                compOperator.put("inputs", visitOp.get("inputs"));
+
+                Boolean partitioned = (Boolean) ((JSONObject) ((JSONArray) visitOp
+                        .get("outputs")).get(0)).get("partitioned");
+                if (partitioned != null && partitioned) {
+                    JSONArray inputs = (JSONArray) visitOp.get("inputs");
+                    String parallelInputPortName = null;
+
+                    // Get the first port that has the __spl_hash attribute
+                    for (int i = 0; i < inputs.size(); i++) {
+                        JSONObject input = (JSONObject) inputs.get(i);
+                        String type = (String) input.get("type");
+                        if (type.contains("__spl_hash")) {
+                            parallelInputPortName = (String) input.get("name");
+                        }
+                    }
+                    compOperator.put("partitioned", true);
+                    compOperator.put("parallelInputPortName",
+                            parallelInputPortName);
+                }
+
+                // Necessary to later indicate whether the composite the
+                // operator
+                // refers to is parallelized.
+                compOperator.put("parallelOperator", true);
+
+                JSONArray outputs = (JSONArray) visitOp.get("outputs");
+                JSONObject output = (JSONObject) outputs.get(0);
+                compOperator.put("width", output.get("width"));
+                numParallelComposites++;
+
+                // Get the start operators in the parallel region -- the ones
+                // immediately downstream from the $Parallel operator
+                ArrayList<JSONObject> parallelStarts = getChildren(visitOp,
+                        graph);
+
+                // Once you have the start operators, recursively call the
+                // function
+                // to populate the parallel composite.
+                JSONObject parallelEnd = separateIntoComposites(parallelStarts,
+                        subComp, graph);
+
+                // The name of the input port of the composite should be the
+                // name of the input port of the first child operator. For now,
+                // we're assuming that all start operators in a parallel region
+                // all read from the same upstream port.
+                subComp.put("inputName",
+                        ((JSONArray) ((JSONObject) ((JSONArray) parallelStarts
+                                .get(0).get("inputs")).get(0))
+                                .get("connections")).get(0));
+
+                // If the parallel region ended by invoking unparallel,
+                // the output port of the invocation of the composite operator
+                // should be the same as the output port of the $unparallel
+                // operator
+                if (parallelEnd != null) {
+                    ArrayList<JSONObject> children = getChildren(parallelEnd,
+                            graph);
+                    unvisited.addAll(children);
+                    compOperator.put("outputs", parallelEnd.get("outputs"));
+                    subComp.put("outputName",
+                            ((JSONArray) ((JSONObject) ((JSONArray) parallelEnd
+                                    .get("inputs")).get(0)).get("connections"))
+                                    .get(0));
+                }
+
+                // Add comp operator to the list of physical operators
+                visited.add(compOperator);
+            }
+
+            // Is end of parallel region
+            else {
+                unparallelOp = visitOp;
+            }
+
+            // remove the operator we've traversed from the list of unvisited
+            // operators.
+            unvisited.remove(0);
+        }
+
+        JSONArray compOps = new JSONArray(visited.size());
+        compOps.addAll(visited);
+
+        comp.put("operators", compOps);
+        composites.add(comp);
+
+        // If one of the operators in the composite was the $unparallel operator
+        // then return that $unparallel operator, otherwise return null.
+        return unparallelOp;
     }
-    
-    private void assignColocations(JSONObject isolate, Collection<JSONObject> starts, JSONObject graph){
-        // If the region has already been assigned a colocation tag, simply return.
+
+    private void assignColocations(JSONObject isolate,
+            Collection<JSONObject> starts, JSONObject graph) {
+        // If the region has already been assigned a colocation tag, simply
+        // return.
         Iterator<JSONObject> it = starts.iterator();
-        if(it.hasNext()){
+        if (it.hasNext()) {
             JSONObject jso = it.next();
             String regionTag = (String) jso.get("colocationTag");
-            if(regionTag != null && !regionTag.isEmpty()){
+            if (regionTag != null && !regionTag.isEmpty()) {
                 return;
             }
         }
-        
-        Set<JSONObject> visited = new HashSet<JSONObject>();    
+
+        Set<JSONObject> visited = new HashSet<JSONObject>();
         List<JSONObject> unvisited = new ArrayList<JSONObject>();
-        
+
         visited.add(isolate);
         unvisited.addAll(starts);
-        
-        String colocationTag = "Colocation" + Integer.toString(colocationCount++);
-        
-        while(unvisited.size() > 0){
+
+        String colocationTag = "Colocation"
+                + Integer.toString(colocationCount++);
+
+        while (unvisited.size() > 0) {
             JSONObject op = unvisited.get(0);
             visited.add(op);
             unvisited.remove(0);
-            
+
             JSONObject config = (JSONObject) op.get("config");
-            if (config == null || config.isEmpty()){
+            if (config == null || config.isEmpty()) {
                 config = new OrderedJSONObject();
                 op.put("config", config);
             }
-            
-            config.put("colocationTag", colocationTag);   
-            
-            getUnvisitedAdjacentNodes(visited, unvisited, op, graph);       
+
+            config.put("colocationTag", colocationTag);
+
+            getUnvisitedAdjacentNodes(visited, unvisited, op, graph);
         }
-        
+
     }
-    
+
     /**
-     * Determine whether any isolated region is ever joined with its parent. 
+     * Determine whether any isolated region is ever joined with its parent.
      * I.E:
-     * <pre><code>
+     * 
+     * <pre>
+     * <code>
      *       |---$Isolate---|
      *   ----|              |----
      *       |--------------|
-     * </code></pre>
-     * @param isolate An $Isolate$ operator in the graph
-     * @return a boolean which is false if the the Isolated region is later 
-     * merged with its parent.
+     * </code>
+     * </pre>
+     * 
+     * @param isolate
+     *            An $Isolate$ operator in the graph
+     * @return a boolean which is false if the the Isolated region is later
+     *         merged with its parent.
      */
-    private boolean checkValidColocationRegion(JSONObject isolate, JSONObject graph){
+    private boolean checkValidColocationRegion(JSONObject isolate,
+            JSONObject graph) {
         List<JSONObject> isolateChildren = getChildren(isolate, graph);
-        Set<JSONObject> visited = new HashSet<JSONObject>();    
+        Set<JSONObject> visited = new HashSet<JSONObject>();
         List<JSONObject> unvisited = new ArrayList<JSONObject>();
-        
+
         visited.add(isolate);
-        
+
         List<JSONObject> isoParents = getParents(isolate, graph);
         assertNotIsolated(isoParents);
         unvisited.addAll(isoParents);
-        
-        while(unvisited.size() > 0){
-            JSONObject op = unvisited.get(0);     
-            
-            if(isolateChildren.contains(op)){
+
+        while (unvisited.size() > 0) {
+            JSONObject op = unvisited.get(0);
+
+            if (isolateChildren.contains(op)) {
                 return false;
             }
             visited.add(op);
             unvisited.remove(0);
-            
-            getUnvisitedAdjacentNodes(visited, unvisited, op, graph);                
+
+            getUnvisitedAdjacentNodes(visited, unvisited, op, graph);
         }
-        
+
         return true;
     }
-    
+
     private void getUnvisitedAdjacentNodes(Collection<JSONObject> visited,
             Collection<JSONObject> unvisited, JSONObject op, JSONObject graph) {
         List<JSONObject> parents = getParents(op, graph);
@@ -401,70 +436,74 @@ public class SPLGenerator {
 
         unvisited.addAll(children);
     }
-    
-    private void tagIsolationRegions(JSONObject graph){
+
+    private void tagIsolationRegions(JSONObject graph) {
         // Check whether graph is valid for colocations
         List<JSONObject> isolateOperators = findIsolates(graph);
-        for(JSONObject jso : isolateOperators){
-            if(!checkValidColocationRegion(jso, graph)){
-                throw new IllegalStateException("Invalid isolation "+
-                    "configuration. An isolated region is joined with a non-"+
-                    "isolated region.");
+        for (JSONObject jso : isolateOperators) {
+            if (!checkValidColocationRegion(jso, graph)) {
+                throw new IllegalStateException(
+                        "Invalid isolation "
+                                + "configuration. An isolated region is joined with a non-"
+                                + "isolated region.");
             }
         }
-        
+
         // Assign isolation regions their partition colocations
-        for(JSONObject isolate : isolateOperators){
+        for (JSONObject isolate : isolateOperators) {
             assignColocations(isolate, getParents(isolate, graph), graph);
             assignColocations(isolate, getChildren(isolate, graph), graph);
         }
-        
+
         removeIsolationOperators(isolateOperators, graph);
     }
-    
-    private void removeIsolationOperators(List<JSONObject> isolateOperators, JSONObject graph){
-        for(JSONObject iso : isolateOperators){
-            
-            //Get parents and children of $Isolate$ operator
+
+    private void removeIsolationOperators(List<JSONObject> isolateOperators,
+            JSONObject graph) {
+        for (JSONObject iso : isolateOperators) {
+
+            // Get parents and children of $Isolate$ operator
             List<JSONObject> isoParents = getParents(iso, graph);
             List<JSONObject> isoChildren = getChildren(iso, graph);
-            
+
             JSONArray isoOutputs = (JSONArray) iso.get("outputs");
             if (isoOutputs.size() == 0) {
-                throw new IllegalStateException("Isolate operator must have at least one child.");  
+                throw new IllegalStateException(
+                        "Isolate operator must have at least one child.");
             }
-            
+
             // Get the output name of the $Isolate$ operator
             JSONObject isoFirstOutput = (JSONObject) isoOutputs.get(0);
             String isoOutName = (String) isoFirstOutput.get("name");
-            
+
             // Also get input name
             JSONArray isoInputs = (JSONArray) iso.get("inputs");
             JSONObject isoFirstInput = (JSONObject) isoInputs.get(0);
             String isoInName = (String) isoFirstInput.get("name");
-            
-            // Respectively, the names of the child and parent input and 
+
+            // Respectively, the names of the child and parent input and
             // output ports connected to the $Isolate$ operator.
             List<String> childInputPortNames = new ArrayList<>();
             List<String> parentOutputPortNames = new ArrayList<>();
-            
+
             // References to the list of connections for the parent and child
-            // output and input ports that are connected to the $isolate$ 
+            // output and input ports that are connected to the $isolate$
             // operator.
             List<JSONArray> childConnections = new ArrayList<>();
             List<JSONArray> parentConnections = new ArrayList<>();
-            
+
             // Get names of children's input ports that are connected to the
             // $Isolate$ operator;
             for (JSONObject child : isoChildren) {
                 JSONArray inputs = (JSONArray) child.get("inputs");
-                for(Object inputObj : inputs){
-                    JSONObject input = (JSONObject)inputObj;
-                    JSONArray connections = (JSONArray)input.get("connections");
-                    for(Object connectionObj : connections){
-                        String connection = (String)connectionObj;
-                        if(connection.equals(isoOutName)){
-                            childInputPortNames.add((String)input.get("name"));
+                for (Object inputObj : inputs) {
+                    JSONObject input = (JSONObject) inputObj;
+                    JSONArray connections = (JSONArray) input
+                            .get("connections");
+                    for (Object connectionObj : connections) {
+                        String connection = (String) connectionObj;
+                        if (connection.equals(isoOutName)) {
+                            childInputPortNames.add((String) input.get("name"));
                             childConnections.add(connections);
                             connections.remove(connection);
                             break;
@@ -472,18 +511,20 @@ public class SPLGenerator {
                     }
                 }
             }
-            
+
             // Get names of parent's output ports that are connected to the
             // $Isolate$ operator;
             for (JSONObject parent : isoParents) {
                 JSONArray outputs = (JSONArray) parent.get("outputs");
-                for(Object outputObj : outputs){
-                    JSONObject output = (JSONObject)outputObj;
-                    JSONArray connections = (JSONArray)output.get("connections");
-                    for(Object connectionObj : connections){
-                        String connection = (String)connectionObj;
-                        if(connection.equals(isoInName)){
-                            parentOutputPortNames.add((String)output.get("name"));
+                for (Object outputObj : outputs) {
+                    JSONObject output = (JSONObject) outputObj;
+                    JSONArray connections = (JSONArray) output
+                            .get("connections");
+                    for (Object connectionObj : connections) {
+                        String connection = (String) connectionObj;
+                        if (connection.equals(isoInName)) {
+                            parentOutputPortNames.add((String) output
+                                    .get("name"));
                             parentConnections.add(connections);
                             connections.remove(connection);
                             break;
@@ -491,117 +532,128 @@ public class SPLGenerator {
                     }
                 }
             }
-            
+
             // Connect child to parents
-            for(JSONArray childConnection : childConnections){
+            for (JSONArray childConnection : childConnections) {
                 childConnection.addAll(parentOutputPortNames);
             }
-            
+
             // Connect parent to children
-            for(JSONArray parentConnection : parentConnections){
+            for (JSONArray parentConnection : parentConnections) {
                 parentConnection.addAll(childInputPortNames);
-            }       
-        }
-    }
-    
-    private static void assertNotIsolated(Collection<JSONObject> jsos){
-        for(JSONObject jso : jsos){
-            if("$Isolate".equals((String)jso.get("kind"))){
-                throw new IllegalStateException("Cannot put \"isolate\" regions immediately" + 
-                        " adjacent to each other. E.g -- .isolate().isolate()");      
             }
         }
     }
-    
-    private static void removeVisited(Collection<JSONObject> ops, Collection<JSONObject> visited){
+
+    private static void assertNotIsolated(Collection<JSONObject> jsos) {
+        for (JSONObject jso : jsos) {
+            if ("$Isolate".equals((String) jso.get("kind"))) {
+                throw new IllegalStateException(
+                        "Cannot put \"isolate\" regions immediately"
+                                + " adjacent to each other. E.g -- .isolate().isolate()");
+            }
+        }
+    }
+
+    private static void removeVisited(Collection<JSONObject> ops,
+            Collection<JSONObject> visited) {
         Iterator<JSONObject> it = ops.iterator();
         // Iterate in this manner to preserve list structure while deleting
-        while(it.hasNext()){
+        while (it.hasNext()) {
             JSONObject op = it.next();
-            if(visited.contains(op)){
+            if (visited.contains(op)) {
                 it.remove();
             }
         }
     }
-    
+
     private boolean isParallelEnd(JSONObject visitOp) {
-		return visitOp.get("kind").equals("$Unparallel$");
-	}
+        return visitOp.get("kind").equals("$Unparallel$");
+    }
 
-	private boolean isParallelStart(JSONObject visitOp) {
-		// TODO Auto-generated method stub
-		return visitOp.get("kind").equals("$Parallel$");
-	}
+    private boolean isParallelStart(JSONObject visitOp) {
+        // TODO Auto-generated method stub
+        return visitOp.get("kind").equals("$Parallel$");
+    }
 
-	// Get the children of the operator. Should probably be re-worked.
-	private ArrayList<JSONObject> getChildren(JSONObject visitOp, JSONObject graph) {
-		ArrayList<JSONObject> uniqueChildren = new ArrayList<JSONObject>();
-		HashSet<JSONObject> children = new HashSet<JSONObject>();
-		JSONArray outputs = (JSONArray) visitOp.get("outputs");
-		if(outputs == null || outputs.size() == 0){
+    // Get the children of the operator. Should probably be re-worked.
+    private ArrayList<JSONObject> getChildren(JSONObject visitOp,
+            JSONObject graph) {
+        ArrayList<JSONObject> uniqueChildren = new ArrayList<JSONObject>();
+        HashSet<JSONObject> children = new HashSet<JSONObject>();
+        JSONArray outputs = (JSONArray) visitOp.get("outputs");
+        if (outputs == null || outputs.size() == 0) {
             return uniqueChildren;
         }
 
-		for(int i = 0; i < outputs.size(); i++){
-			JSONArray connections = (JSONArray) ((JSONObject) outputs.get(i)).get("connections");
-			for(int j = 0; j < connections.size(); j++){
-				String inputPort = (String) connections.get(j);
-				//TODO: build index instead of iterating through graph each time
-				JSONArray ops = (JSONArray) graph.get("operators");
-				for(int k = 0; k < ops.size(); k++){
-					JSONArray inputs = (JSONArray) ((JSONObject) ops.get(k)).get("inputs");
-					if(inputs != null && inputs.size() != 0){
-						for(int l = 0; l < inputs.size(); l++){
-							String name = (String) ((JSONObject) inputs.get(l)).get("name");
-							if(name.equals(inputPort)){
-								children.add((JSONObject) ops.get(k));
-							}
-						}
-					}
-				}
-			}
-		}
-		uniqueChildren.addAll(children);
-		return uniqueChildren;
-	}
-	
-    private List<JSONObject> getParents(JSONObject visitOp, JSONObject graph){
-		List<JSONObject> uniqueParents = new ArrayList<>();
-		Set<JSONObject> parents = new HashSet<>();
-		JSONArray inputs = (JSONArray) visitOp.get("inputs");
-		if(inputs == null || inputs.size() == 0){
+        for (int i = 0; i < outputs.size(); i++) {
+            JSONArray connections = (JSONArray) ((JSONObject) outputs.get(i))
+                    .get("connections");
+            for (int j = 0; j < connections.size(); j++) {
+                String inputPort = (String) connections.get(j);
+                // TODO: build index instead of iterating through graph each
+                // time
+                JSONArray ops = (JSONArray) graph.get("operators");
+                for (int k = 0; k < ops.size(); k++) {
+                    JSONArray inputs = (JSONArray) ((JSONObject) ops.get(k))
+                            .get("inputs");
+                    if (inputs != null && inputs.size() != 0) {
+                        for (int l = 0; l < inputs.size(); l++) {
+                            String name = (String) ((JSONObject) inputs.get(l))
+                                    .get("name");
+                            if (name.equals(inputPort)) {
+                                children.add((JSONObject) ops.get(k));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        uniqueChildren.addAll(children);
+        return uniqueChildren;
+    }
+
+    private List<JSONObject> getParents(JSONObject visitOp, JSONObject graph) {
+        List<JSONObject> uniqueParents = new ArrayList<>();
+        Set<JSONObject> parents = new HashSet<>();
+        JSONArray inputs = (JSONArray) visitOp.get("inputs");
+        if (inputs == null || inputs.size() == 0) {
             return uniqueParents;
         }
-		for(int i = 0; i < inputs.size(); i++){
-			JSONArray connections = (JSONArray) ((JSONObject) inputs.get(i)).get("connections");
-			for(int j = 0; j < connections.size(); j++){
-				String outputPort = (String) connections.get(j);
-				//TODO: build index instead of iterating through graph each time
-				JSONArray ops = (JSONArray) graph.get("operators");
-				for(int k = 0; k < ops.size(); k++){
-					JSONArray outputs = (JSONArray) ((JSONObject) ops.get(k)).get("outputs");
-					if(outputs != null && outputs.size() != 0){
-						for(int l = 0; l < outputs.size(); l++){
-							String name = (String) ((JSONObject) outputs.get(l)).get("name");
-							if(name.equals(outputPort)){
-								parents.add((JSONObject) ops.get(k));
-							}
-						}
-					}
-				}
-			}
-		}
-		uniqueParents.addAll(parents);
-		return uniqueParents;
-	}
+        for (int i = 0; i < inputs.size(); i++) {
+            JSONArray connections = (JSONArray) ((JSONObject) inputs.get(i))
+                    .get("connections");
+            for (int j = 0; j < connections.size(); j++) {
+                String outputPort = (String) connections.get(j);
+                // TODO: build index instead of iterating through graph each
+                // time
+                JSONArray ops = (JSONArray) graph.get("operators");
+                for (int k = 0; k < ops.size(); k++) {
+                    JSONArray outputs = (JSONArray) ((JSONObject) ops.get(k))
+                            .get("outputs");
+                    if (outputs != null && outputs.size() != 0) {
+                        for (int l = 0; l < outputs.size(); l++) {
+                            String name = (String) ((JSONObject) outputs.get(l))
+                                    .get("name");
+                            if (name.equals(outputPort)) {
+                                parents.add((JSONObject) ops.get(k));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        uniqueParents.addAll(parents);
+        return uniqueParents;
+    }
 
     /**
      * Takes a name String that might have characters which are incompatible in
-     * an SPL stream name (which just supports ASCII) and
-     * returns a valid SPL name.
+     * an SPL stream name (which just supports ASCII) and returns a valid SPL
+     * name.
      * 
-     * This is a one way mapping, we only need to provide a name that
-     * is a unique mapping of the input.
+     * This is a one way mapping, we only need to provide a name that is a
+     * unique mapping of the input.
      * 
      * @param name
      * @return A string which can be a valid SPL stream name.
@@ -629,8 +681,8 @@ public class SPLGenerator {
                 sb.append("000".substring(code.length() - 1));
             sb.append(code);
         }
-    	
-    	return sb.toString();
+
+        return sb.toString();
     }
 
     static String basename(String name) {
@@ -645,31 +697,31 @@ public class SPLGenerator {
     static String splBasename(String name) {
         return getSPLCompatibleName(basename(name));
     }
-    
+
     static void stringLiteral(StringBuilder sb, String value) {
         sb.append('"');
-        
+
         // Replace any backslash with an escaped version
         // to stop SPL treating the value as an escape leadin
         value = value.replace("\\", "\\\\");
-        
+
         // Replace new-lines with its SPL escaped version, \n
         // which is \\n as a Java string literal
         value = value.replace("\n", "\\n");
-        
+
         value = value.replace("\"", "\\\"");
-        
+
         sb.append(value);
         sb.append('"');
     }
-    
+
     /**
-     * Append the value with the correct SPL suffix. 
-     * Integer & Double do not require a suffix.
+     * Append the value with the correct SPL suffix. Integer & Double do not
+     * require a suffix.
      */
     static void numberLiteral(StringBuilder sb, Number value) {
         sb.append(value);
- 
+
         if (value instanceof Byte)
             sb.append('b');
         else if (value instanceof Short)
@@ -678,14 +730,14 @@ public class SPLGenerator {
             sb.append('l');
         else if (value instanceof Float)
             sb.append("w"); // word, meaning 32 bits
-        
+
     }
-    
+
     static JSONObject getGraphConfig(JSONObject graph) {
         JSONObject config = (JSONObject) graph.get("config");
         if (config == null)
             config = new JSONObject();
         return config;
-        
+
     }
 }
