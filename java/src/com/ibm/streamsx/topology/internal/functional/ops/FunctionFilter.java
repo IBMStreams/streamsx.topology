@@ -33,7 +33,8 @@ public class FunctionFilter<T> extends FunctionFunctor {
     public void initialize(OperatorContext context) throws Exception {
         super.initialize(context);
 
-        filter = getLogicObject(getFunctionalLogic());
+        setLogic(filter = getLogicObject(getFunctionalLogic()));
+        
         passed = getOutput(0);
         mapping = getInputMapping(this, 0);
     }
@@ -50,4 +51,6 @@ public class FunctionFilter<T> extends FunctionFunctor {
         if (submitTuple)
             passed.submit(tuple);
     }
+    
+    
 }

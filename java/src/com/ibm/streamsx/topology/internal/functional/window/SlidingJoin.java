@@ -34,6 +34,7 @@ public class SlidingJoin<T, U, J> extends SlidingSet<U, J> {
             throws ClassNotFoundException {
         super(op, window);
         joiner = getLogicObject(op.getFunctionalLogic());
+        op.setLogic(joiner);
         input1Mapping = getInputMapping(op, 1);
     }
 
