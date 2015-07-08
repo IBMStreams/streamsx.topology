@@ -8,7 +8,10 @@ import java.io.Serializable;
 
 /**
  * A function that tests a tuple.
- * 
+ * <BR>
+ * If an implementation also implements
+ * {@code java.lang.AutoCloseable} then it will be
+ * automatically closed when the application terminates.
  * @param <T>
  *            Type of the input to the predicate
  */

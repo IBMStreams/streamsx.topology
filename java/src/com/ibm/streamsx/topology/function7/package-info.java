@@ -18,6 +18,11 @@
  * must be created in a static context, otherwise it will capture
  * a reference to the instance it is created from. This typically
  * is not what is required.
+ * <P>
+ * If the implementation of the functional class implements
+ * {@code java.lang.AutoCloseable} then the {@code close()}
+ * method will be called when the application terminates.
+ * </P>
  * 
  * @see com.ibm.streamsx.topology.TStream
  */

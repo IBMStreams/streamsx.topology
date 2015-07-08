@@ -8,6 +8,10 @@ import java.io.Serializable;
 
 /**
  * A function that is passed two arguments and returns a value.
+ * <BR>
+ * If an implementation also implements
+ * {@code java.lang.AutoCloseable} then it will be
+ * automatically closed when the application terminates.
  * 
  * @param <T1>
  *            Type of the first argument
