@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
@@ -34,6 +35,7 @@ import com.ibm.streamsx.topology.internal.functional.ops.ObjectHashAdder;
 import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
+import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.tuple.Keyable;
 
@@ -192,6 +194,13 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public void publish(String topic) {
+        
+        if (JSONObject.class.equals(getTupleClass())) {
+            @SuppressWarnings("unchecked")
+            TStream<JSONObject> json = (TStream<JSONObject>) this;
+            JSONStreams.toSPL(json).publish(topic);
+            return;
+        }
 
         BOperatorInvocation op = builder().addSPLOperator("Publish",
                 "com.ibm.streamsx.topology.topic::Publish",

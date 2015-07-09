@@ -4,7 +4,7 @@
  */
 
 /**
- * Interchangable SPL types.
+ * Interchangeable SPL types.
  * SPL tuple types that can be used to interchange
  * streams between IBM Streams applications implemented
  * in different languages, such as SPL and Java.
