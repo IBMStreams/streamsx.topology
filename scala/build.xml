@@ -1,0 +1,44 @@
+<project name="streamsx.topology.java" default="all" >
+    <description>
+        Build the Streams Scala functional api.
+    </description>
+
+  <import file="../common-build.xml"/>
+
+  <property name="scala.home" value="${env.SCALA_HOME}"/>
+  <property name="scala-library.jar"
+            value="${scala.home}/lib/scala-library.jar"/>
+  <property name="src" location="src"/>
+  <property name="classes" location="../java/classes"/>
+
+  <path id="compile.classpath">
+    <path refid="streams.classpath"/>
+    <pathelement location="${scala-library.jar}"/>
+    <pathelement location="${classes}"/>
+  </path>
+
+ <taskdef resource="scala/tools/ant/antlib.xml">
+   <classpath>
+     <pathelement location="${scala.home}/lib/scala-compiler.jar"   />
+     <pathelement location="${scala.home}/lib/scala-reflect.jar"   />
+     <pathelement location="${scala-library.jar}"   />
+   </classpath>
+ </taskdef>
+
+  <target name="all" depends="compile"/> 
+
+
+  <target name="init" if="env.SCALA_HOME">
+     <echo message="Scala:${scala.home}"/>
+     <mkdir dir="${tk.opt}/scala"/>
+     <copy file="${scala-library.jar}" todir="${tk.opt}/scala"/>
+  </target>
+
+  <target name="compile" depends="init" if="env.SCALA_HOME">
+    <scalac srcdir="${src}" target="jvm-1.7" addparams="-usemanifestcp"
+                destdir="${classes}"
+                            classpathref="compile.classpath">
+    </scalac>
+  </target>
+
+</project>

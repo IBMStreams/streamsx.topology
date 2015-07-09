@@ -34,6 +34,7 @@
 	   classpathref="compile.classpath"
 	   includeantruntime="no"
 	   />
+    <ant dir="../../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
   <target name="jar" depends="compile">
     <jar destfile="${jarname}" basedir="${classes}"/>

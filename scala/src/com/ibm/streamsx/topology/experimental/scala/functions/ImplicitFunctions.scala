@@ -1,0 +1,36 @@
+package com.ibm.streamsx.topology.experimental.scala.functions;
+
+import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.function7.Consumer;
+import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.function7.UnaryOperator;
+import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function7.Function;
+
+import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
+
+import scala.language.implicitConversions;
+
+trait FunctionImplicits {
+  implicit def toPredicate[T](f: (T) => Boolean) = new Predicate[T] with WrapperFunction {
+      def test(v: T) = f(v)
+      def getWrappedFunction() = f
+  }
+  implicit def toUnaryOperator[T](f: (T) => T) = new UnaryOperator[T] with WrapperFunction {
+      def apply(v: T) = f(v)
+      def getWrappedFunction() = f
+  }
+  implicit def toFunction[T,U](f: (T) => U) = new Function[T,U] with WrapperFunction {
+      def apply(v: T) = f(v)
+      def getWrappedFunction() = f
+  }
+  implicit def toConsumer[T](f: (T) => Unit) = new Consumer[T] with WrapperFunction {
+      def accept(v: T) = f(v)
+      def getWrappedFunction() = f
+  }
+  implicit def toSupplier[T](f: () => T) = new Supplier[T] with WrapperFunction {
+      def get() = f()
+      def getWrappedFunction() = f
+  }
+}
