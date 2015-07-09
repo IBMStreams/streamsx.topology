@@ -8,15 +8,10 @@ import java.io.Serializable;
 
 /**
  * A function that supplies a value.
- * <BR>
- * If an implementation also implements
- * {@code java.lang.AutoCloseable} then it will be
- * automatically closed when the application terminates.
- * 
- * @param <T>
- *            Type of the return value.
+ *
+ * @deprecated Replaced by
+ * {@link com.ibm.streamsx.topology.function.Supplier}
  */
-public interface Supplier<T> extends Serializable {
-
-    T get();
-}
+@Deprecated
+public interface Supplier<T> extends 
+   com.ibm.streamsx.topology.function.Supplier<T> { }
