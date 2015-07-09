@@ -556,6 +556,20 @@ public interface TStream<T> extends TopologyElement {
      * their parents.
      */
     TStream<T> isolate();
+    
+    /**
+     * Start low latency region
+     * 
+     * @return Low latency tstream
+     */
+    TStream<T> lowLatency();
+
+    /**
+     * end low latency region
+     * 
+     * @return Non-low latency tstream.
+     */
+    TStream<T> endLowLatency();
 
 
     /**

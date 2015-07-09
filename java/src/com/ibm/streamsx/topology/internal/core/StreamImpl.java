@@ -310,4 +310,18 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         BOutput isolatedOutput = builder().isolate(toBeIsolated); 
         return new StreamImpl<T>(this, isolatedOutput, getTupleClass());
     }
+    
+    @Override
+    public TStream<T> lowLatency() {
+        BOutput toBeLowLatency = output();
+        BOutput lowLatencyOutput = builder().lowLatency(toBeLowLatency);
+        return new StreamImpl<T>(this, lowLatencyOutput, getTupleClass());
+    }
+
+    @Override
+    public TStream<T> endLowLatency() {
+        BOutput toEndLowLatency = output();
+        BOutput endedLowLatency = builder().endLowLatency(toEndLowLatency);
+        return new StreamImpl<T>(this, endedLowLatency, getTupleClass());
+    }
 }
