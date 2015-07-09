@@ -334,15 +334,21 @@ public interface TStream<T> extends TopologyElement {
      * A subscriber matches to a publisher if:
      * <UL>
      * <LI>
-     * The topic is an exact match.</LI>
+     * The topic is an exact match, and:</LI>
      * <LI>
-     * For Java streams ({@code Stream&lt;T>}), the declared Java type ({@code T}
+     * For JSON streams ({@code TStream<JSONObject>}) the subscription is to
+     * a JSON stream.
+     * </LI
+     * <LI>
+     * For Java streams ({@code TStream<T>}) the declared Java type ({@code T}
      * ) of the stream is an exact match.</LI>
      * <LI>
-     * For {@link SPLStream SPL streams}, the {@link SPLStream#getSchema() SPL
-     * scehma} is an exact match.</LI>
+     * For {@link SPLStream SPL streams} the {@link SPLStream#getSchema() SPL
+     * schema} is an exact match.</LI>
      * </UL>
      * 
+     * @see Topology#subscribe(String, Class)
+     * @see com.ibm.streamsx.topology.spl.SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
      */
     void publish(String topic);
 

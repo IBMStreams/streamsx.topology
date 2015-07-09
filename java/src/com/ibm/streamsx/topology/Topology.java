@@ -38,6 +38,7 @@ import com.ibm.streamsx.topology.internal.logic.SingleToIterableSupplier;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.internal.tester.TupleCollection;
+import com.ibm.streamsx.topology.json.JSONSchemas;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -368,11 +369,28 @@ public class Topology implements TopologyElement {
      * even within the same application) to communicate
      * using published streams.
      * </P>
+     * <P>
+     * If {@code tupleTypeClass} is {@code JSONObject.class} then the
+     * subscription is the generic IBM Streams schema for JSON
+     * ({@link JSONSchemas#JSON}). Streams of type {@code JSONObject}
+     * are always published and subscribed using the generic schema
+     * to allow interchange between applications implemented in
+     * different languages.
+     * </P>
      * @param topic Topic to subscribe to.
      * @param tupleTypeClass Type to subscribe to.
      * @return Stream the will contain tuples from matching publishers.
+     * 
+     * @see TStream#publish(String)
+     * @see SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
      */
     public <T> TStream<T> subscribe(String topic, Class<T> tupleTypeClass) {
+        if (JSONObject.class.equals(tupleTypeClass)) {
+            
+            @SuppressWarnings("unchecked")
+            TStream<T> json = (TStream<T>) SPLStreams.subscribe(this, topic, JSONSchemas.JSON).toJSON();
+            return json;
+        }
         SPLMapping<T> mapping = Schemas.getSPLMapping(tupleTypeClass);
         SPLStream splImport = SPLStreams.subscribe(this, topic,
                 mapping.getSchema());

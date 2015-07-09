@@ -18,7 +18,7 @@ public class JSONSchemas {
     }
 
     /**
-     * SPL schema used for SPL streams with JSON data. Consists of a single
+     * IBM Streams schema used for streams with JSON data. Consists of a single
      * attribute of type {@code rstring jsonString}.
      */
     public static StreamSchema JSON = getStreamSchema("tuple<rstring jsonString>");
