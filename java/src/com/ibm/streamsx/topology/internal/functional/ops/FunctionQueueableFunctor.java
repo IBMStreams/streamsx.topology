@@ -10,6 +10,14 @@ import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
+/**
+ * Queuing functional operator with a queue on port 0 if:
+ * 
+ * Parameter queueSize >= 0
+ * AND
+ * The input port is not connected to a PE port. In this case
+ * there is already a thread for the processing.
+ */
 abstract class FunctionQueueableFunctor<T> extends FunctionFunctor implements StreamHandler<T> {
     
     private int queueSize;
@@ -20,11 +28,10 @@ abstract class FunctionQueueableFunctor<T> extends FunctionFunctor implements St
     @Override
     public synchronized void initialize(OperatorContext context)
             throws Exception {
-        // TODO Auto-generated method stub
         super.initialize(context);
         inputMapping = getInputMapping(this, 0);
-        if (getQueueSize() == 0)
-            handler = this;
+        if (getQueueSize() <=0 || getInput(0).isConnectedToPEPort())
+            handler = this; // not queued
         else
             handler = new FunctionalQueue<T>(context, getQueueSize(), this);
     }
