@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.function7;
 
-import java.io.Serializable;
 
 /**
  * A function that takes an argument and returns nothing.

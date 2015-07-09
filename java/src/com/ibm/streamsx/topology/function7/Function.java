@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.function7;
 
-import java.io.Serializable;
 
 /**
  * A function that is passed an argument and returns a value.
