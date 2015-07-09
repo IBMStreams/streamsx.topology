@@ -29,7 +29,7 @@ class FunctionalQueue<T> implements StreamHandler<T>, Runnable {
     public void run() {
         while (!Thread.interrupted()) {
             try {
-                T tuple = queue.take();                
+                T tuple = queue.take();
                 handler.tuple(tuple);
 
             } catch (InterruptedException e) {
