@@ -325,8 +325,14 @@ class OperatorGenerator {
 
         Boolean streamViewability = (Boolean) config.get("streamViewability");
         String colocationTag = (String) config.get("colocationTag");
+        String  lowLatencyTag = (String) config.get("lowLatencyTag");
+        Boolean lowLatencyIsSet = (lowLatencyTag != null && !lowLatencyTag.isEmpty());
+//      String threadedPortInfo = ...;
         if (streamViewability != null
-                || (colocationTag != null && !colocationTag.isEmpty())) {
+                || (colocationTag != null && !colocationTag.isEmpty())
+//              || ((threadedPortInfo != null && !threadedPortInfo.isEmpty()
+//                      && !lowLatencyIsSet)
+                ) {
             sb.append("  config\n");
         }
         if (streamViewability != null) {
@@ -340,5 +346,9 @@ class OperatorGenerator {
             sb.append(colocationTag);
             sb.append("\");\n");
         }
+//      if((threadedPortInfo != null && !threadedPortInfo.isEmpty())
+//              && !lowLatencyIsSet){
+//            /* Set threaded port information here */
+//      }
     }
 }

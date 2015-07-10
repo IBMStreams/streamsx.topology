@@ -604,9 +604,9 @@ public class SPLGenerator {
             assignLowLatency(llStart, getChildren(llStart, graph), graph);
         }
         
-        for(JSONObject llEnd : lowLatencyEndOperators){
-            unmarkLowLatencyEndOp(llEnd, getParents(llEnd, graph), graph);
-        }
+//        for(JSONObject llEnd : lowLatencyEndOperators){
+//            unmarkLowLatencyEndOp(llEnd, getParents(llEnd, graph), graph);
+//        }
         
         List<JSONObject> allLowLatencyOps = new ArrayList<>();
         allLowLatencyOps.addAll(lowLatencyEndOperators);
@@ -615,46 +615,46 @@ public class SPLGenerator {
         removeOperators(allLowLatencyOps, graph);
     }
     
-    private void unmarkLowLatencyEndOp(JSONObject llEnd, List<JSONObject> llEndParents, JSONObject graph){
-        List<JSONObject> llParents = getParents(llEnd, graph);
-        String iportName = (String) ((JSONArray)((JSONObject)((JSONArray)llEnd.get("inputs")).get(0))
-                           .get("connections")).get(0);
-        for(JSONObject parent : llParents){
-            JSONArray parentOutputs = (JSONArray) parent.get("outputs");
-            for(Object outputObj : parentOutputs){
-                JSONObject output = (JSONObject)outputObj;
-                JSONArray connections = (JSONArray) output
-                        .get("connections");
-                for (Object connectionObj : connections) {
-                    String connection = (String) connectionObj;
-                    if (connection.equals(iportName)) {
-                        output.put("lowLatency", false);
-                    }
-                }
-            }
-        }
-    }
+//    private void unmarkLowLatencyEndOp(JSONObject llEnd, List<JSONObject> llEndParents, JSONObject graph){
+//        List<JSONObject> llParents = getParents(llEnd, graph);
+//        String iportName = (String) ((JSONArray)((JSONObject)((JSONArray)llEnd.get("inputs")).get(0))
+//                           .get("connections")).get(0);
+//        for(JSONObject parent : llParents){
+//            JSONArray parentOutputs = (JSONArray) parent.get("outputs");
+//            for(Object outputObj : parentOutputs){
+//                JSONObject output = (JSONObject)outputObj;
+//                JSONArray connections = (JSONArray) output
+//                        .get("connections");
+//                for (Object connectionObj : connections) {
+//                    String connection = (String) connectionObj;
+//                    if (connection.equals(iportName)) {
+//                        output.put("lowLatency", false);
+//                    }
+//                }
+//            }
+//        }
+//    }
     
     private void assignLowLatency(JSONObject llStart, List<JSONObject> llStartChildren, JSONObject graph){
         // Check whether parent output ports are marked as LowLatency
         // If not, mark them.
-        List<JSONObject> llParents = getParents(llStart, graph);
-        String iportName = (String) ((JSONArray)((JSONObject)((JSONArray)llStart.get("inputs")).get(0))
-                           .get("connections")).get(0);
-        for(JSONObject parent : llParents){
-            JSONArray parentOutputs = (JSONArray) parent.get("outputs");
-            for(Object outputObj : parentOutputs){
-                JSONObject output = (JSONObject)outputObj;
-                JSONArray connections = (JSONArray) output
-                        .get("connections");
-                for (Object connectionObj : connections) {
-                    String connection = (String) connectionObj;
-                    if (connection.equals(iportName)) {
-                        output.put("lowLatency", true);
-                    }
-                }
-            }
-        }
+//        List<JSONObject> llParents = getParents(llStart, graph);
+//        String iportName = (String)((JSONObject)((JSONArray)llStart.get("inputs")).get(0))
+//                .get("name");
+//        for(JSONObject parent : llParents){
+//            JSONArray parentOutputs = (JSONArray) parent.get("outputs");
+//            for(Object outputObj : parentOutputs){
+//                JSONObject output = (JSONObject)outputObj;
+//                JSONArray connections = (JSONArray) output
+//                        .get("connections");
+//                for (Object connectionObj : connections) {
+//                    String connection = (String) connectionObj;
+//                    if (connection.equals(iportName)) {
+//                        output.put("lowLatency", true);
+//                    }
+//                }
+//            }
+//        }
         
         // If the region has already been assigned a lowLatency tag, simply
         // return.
@@ -681,13 +681,13 @@ public class SPLGenerator {
             visited.add(op);
             unvisited.remove(0);
 
-            JSONArray outputs = (JSONArray) op.get("outputs");
-            if (outputs != null) {
-                for (Object outputObj : outputs) {
-                    JSONObject output = (JSONObject) outputObj;
-                    output.put("lowLatency", true);
-                }
-            }
+//            JSONArray outputs = (JSONArray) op.get("outputs");
+//            if (outputs != null) {
+//                for (Object outputObj : outputs) {
+//                    JSONObject output = (JSONObject) outputObj;
+//                    output.put("lowLatency", true);
+//                }
+//            }
             op.put("lowLatencyTag", lowLatencyTag);
             
             List<String> boundaries = new ArrayList<>();
