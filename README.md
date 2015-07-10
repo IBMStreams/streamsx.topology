@@ -1,6 +1,7 @@
 # streamsx.topology
 A project that supports building streaming topologies (applications)
 for IBM Streams in different programming languages, such as Java.
+http://ibmstreams.github.io/streamsx.topology/
 
 
 ## Java Application API
