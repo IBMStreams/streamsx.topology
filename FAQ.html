@@ -84,6 +84,9 @@ The Java Application API uses IBM Streams 4.0.0.0 or later.
 <br>
 <h4>Can I use Java 8 lambda functions with the Java Application API?</h4>
 Yes, IBM Streams 4.0.1 or later includes and supports Java 8. 
+<h4>How do I submit to a Streams instance that requires authentication?</h4>
+Create the application bundle using the BUNDLE context and then submit using streamtool submitjob or Streams Console.
+Direct submission with authentication will be supported in the future.
 <h4>I'm having issues reading and writing to files that I defined/initialized in my main() method. What gives?</h4>
 
 Any Java object that your application references must be statically initialized. For example the following approach to initializing a file would be invalid:
