@@ -16,6 +16,8 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
+import com.ibm.streamsx.topology.function7.Consumer;
+import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 
 public class SPLGenerator {
     // Needed for composite name generation
@@ -41,67 +43,11 @@ public class SPLGenerator {
         comp.put("name", graph.get("name"));
         comp.put("public", true);
 
-        ArrayList<JSONObject> starts = findStarts(graph);
+        ArrayList<JSONObject> starts = GraphUtilities.findStarts(graph);
         separateIntoComposites(starts, comp, graph);
         StringBuilder sb = new StringBuilder();
         generateGraph(graph, sb);
         return sb.toString();
-    }
-
-    private ArrayList<JSONObject> findStarts(JSONObject graph) {
-        ArrayList<JSONObject> starts = new ArrayList<JSONObject>();
-        JSONArray ops = (JSONArray) graph.get("operators");
-        for (int k = 0; k < ops.size(); k++) {
-            JSONObject op = (JSONObject) (ops.get(k));
-            JSONArray inputs = (JSONArray) op.get("inputs");
-            if (inputs == null || inputs.size() == 0) {
-                if (((JSONObject) ops.get(k)).get("name") != null
-                        && !((String) ((JSONObject) ops.get(k)).get("name"))
-                                .startsWith("$")) {
-                    starts.add((JSONObject) ops.get(k));
-                }
-            }
-        }
-        return starts;
-    }
-
-    private ArrayList<JSONObject> findIsolates(JSONObject graph) {
-        ArrayList<JSONObject> isolates = new ArrayList<JSONObject>();
-        JSONArray ops = (JSONArray) graph.get("operators");
-        for (int k = 0; k < ops.size(); k++) {
-            JSONObject op = (JSONObject) (ops.get(k));
-            String kind = (String) op.get("kind");
-            if (kind != null && kind.equals("$Isolate$")) {
-                isolates.add(op);
-            }
-        }
-        return isolates;
-    }
-    
-    private ArrayList<JSONObject> findLowLatencyStarts(JSONObject graph) {
-        ArrayList<JSONObject> lowLatencyStarts = new ArrayList<JSONObject>();
-        JSONArray ops = (JSONArray) graph.get("operators");
-        for (int k = 0; k < ops.size(); k++) {
-            JSONObject op = (JSONObject) (ops.get(k));
-            String kind = (String) op.get("kind");
-            if (kind != null && kind.equals("$LowLatency$")) {
-                lowLatencyStarts.add(op);
-            }
-        }
-        return lowLatencyStarts;
-    }
-    
-    private ArrayList<JSONObject> findLowLatencyEnds(JSONObject graph) {
-        ArrayList<JSONObject> lowLatencyStarts = new ArrayList<JSONObject>();
-        JSONArray ops = (JSONArray) graph.get("operators");
-        for (int k = 0; k < ops.size(); k++) {
-            JSONObject op = (JSONObject) (ops.get(k));
-            String kind = (String) op.get("kind");
-            if (kind != null && kind.equals("$EndLowLatency$")) {
-                lowLatencyStarts.add(op);
-            }
-        }
-        return lowLatencyStarts;
     }
 
     void generateGraph(JSONObject graph, StringBuilder sb) throws IOException {
@@ -181,7 +127,7 @@ public class SPLGenerator {
      *            not an operator field.
      * @param graph
      *            The top-level JSON graph that contains all the operators.
-     *            Necessary to pass it to the getChildren function.
+     *            Necessary to pass it to the GraphUtilities.getChildren function.
      */
     JSONObject separateIntoComposites(ArrayList<JSONObject> starts,
             JSONObject comp, JSONObject graph) {
@@ -218,7 +164,7 @@ public class SPLGenerator {
             // If the operator is not a special operator, add it to the
             // visited list.
             if (!isParallelStart(visitOp) && !isParallelEnd(visitOp)) {
-                ArrayList<JSONObject> children = getChildren(visitOp, graph);
+                ArrayList<JSONObject> children = GraphUtilities.getChildren(visitOp, graph);
                 unvisited.addAll(children);
                 visited.add(visitOp);
             }
@@ -281,7 +227,7 @@ public class SPLGenerator {
 
                 // Get the start operators in the parallel region -- the ones
                 // immediately downstream from the $Parallel operator
-                ArrayList<JSONObject> parallelStarts = getChildren(visitOp,
+                ArrayList<JSONObject> parallelStarts = GraphUtilities.getChildren(visitOp,
                         graph);
 
                 // Once you have the start operators, recursively call the
@@ -304,7 +250,7 @@ public class SPLGenerator {
                 // should be the same as the output port of the $unparallel
                 // operator
                 if (parallelEnd != null) {
-                    ArrayList<JSONObject> children = getChildren(parallelEnd,
+                    ArrayList<JSONObject> children = GraphUtilities.getChildren(parallelEnd,
                             graph);
                     unvisited.addAll(children);
                     compOperator.put("outputs", parallelEnd.get("outputs"));
@@ -339,45 +285,37 @@ public class SPLGenerator {
         return unparallelOp;
     }
 
+    @SuppressWarnings("serial")
     private void assignColocations(JSONObject isolate,
-            Collection<JSONObject> starts, JSONObject graph) {
-        // If the region has already been assigned a colocation tag, simply
-        // return.
-        Iterator<JSONObject> it = starts.iterator();
-        if (it.hasNext()) {
-            JSONObject jso = it.next();
-            String regionTag = (String) jso.get("colocationTag");
-            if (regionTag != null && !regionTag.isEmpty()) {
-                return;
-            }
-        }
-
-        Set<JSONObject> visited = new HashSet<JSONObject>();
-        List<JSONObject> unvisited = new ArrayList<JSONObject>();
-
-        visited.add(isolate);
-        unvisited.addAll(starts);
-
-        String colocationTag = "Colocation"
+            List<JSONObject> starts, JSONObject graph) {
+        
+        final String colocationTag = "Colocation"
                 + Integer.toString(colocationCount++);
+        
+        List<String> boundaries = new ArrayList<>();
+        boundaries.add("$Isolate$");
+        
+        GraphUtilities.visitOnce(starts, boundaries, graph, new Consumer<JSONObject>(){
 
-        while (unvisited.size() > 0) {
-            JSONObject op = unvisited.get(0);
-            visited.add(op);
-            unvisited.remove(0);
+            @Override
+            public void accept(JSONObject op) {
+                // If the region has already been assigned a colocation tag, simply
+                // return.
+                String regionTag = (String) op.get("colocationTag");
+                if (regionTag != null && !regionTag.isEmpty()) {
+                    return;
+                }
+                
+                JSONObject config = (JSONObject) op.get("config");
+                if (config == null || config.isEmpty()) {
+                    config = new OrderedJSONObject();
+                    op.put("config", config);
+                }
 
-            JSONObject config = (JSONObject) op.get("config");
-            if (config == null || config.isEmpty()) {
-                config = new OrderedJSONObject();
-                op.put("config", config);
+                config.put("colocationTag", colocationTag);
             }
-
-            config.put("colocationTag", colocationTag);
-            List<String> boundaries = new ArrayList<>();
-            boundaries.add("$Isolate$");
-            getUnvisitedAdjacentNodes(visited, unvisited, op, graph, boundaries);
-        }
-
+            
+        });
     }
 
     /**
@@ -397,193 +335,50 @@ public class SPLGenerator {
      * @return a boolean which is false if the the Isolated region is later
      *         merged with its parent.
      */
-    private boolean checkValidColocationRegion(JSONObject isolate,
+    @SuppressWarnings("serial")
+    private void checkValidColocationRegion(JSONObject isolate,
             JSONObject graph) {
-        List<JSONObject> isolateChildren = getChildren(isolate, graph);
-        Set<JSONObject> visited = new HashSet<JSONObject>();
-        List<JSONObject> unvisited = new ArrayList<JSONObject>();
-
-        visited.add(isolate);
-
-        List<JSONObject> isoParents = getParents(isolate, graph);
+        final List<JSONObject> isolateChildren = GraphUtilities.getChildren(isolate, graph);
+        List<JSONObject> isoParents = GraphUtilities.getParents(isolate, graph);
+              
         assertNotIsolated(isoParents);
-        unvisited.addAll(isoParents);
+        
+        List<String> boundaries = new ArrayList<>();
+        boundaries.add("$Isolate$");
+        
+        GraphUtilities.visitOnce(isoParents, boundaries, graph, new Consumer<JSONObject>(){
+            @Override
+            public void accept(JSONObject op) {
+                if (isolateChildren.contains(op)) {
+                    throw new IllegalStateException(
+                            "Invalid isolation "
+                                    + "configuration. An isolated region is joined with a non-"
+                                    + "isolated region.");
+                }    
+            }         
+        });     
+    }    
 
-        while (unvisited.size() > 0) {
-            JSONObject op = unvisited.get(0);
 
-            if (isolateChildren.contains(op)) {
-                return false;
-            }
-            visited.add(op);
-            unvisited.remove(0);
-
-            List<String> boundaries = new ArrayList<>();
-            boundaries.add("$Isolate$");
-            getUnvisitedAdjacentNodes(visited, unvisited, op, graph, boundaries);
-        }
-
-        return true;
-    }
-    
-    private static boolean equalsAny(List<String> boundaries, String opKind){
-        for(String boundary : boundaries){
-            if(boundary.equals(opKind))
-                return true;
-        }
-        return false;
-    }
-
-    private void getUnvisitedAdjacentNodes(Collection<JSONObject> visited,
-            Collection<JSONObject> unvisited, JSONObject op, JSONObject graph,
-            List<String> boundaries) {
-        List<JSONObject> parents = getParents(op, graph);
-        List<JSONObject> children = getChildren(op, graph);
-        removeVisited(parents, visited);
-        removeVisited(children, visited);
-
-        // --- Process parents ---
-        Set<JSONObject> allOperatorChildren = new HashSet<>();
-        List<JSONObject> operatorParents = new ArrayList<>();
-        for (JSONObject parent : parents) {
-            if (equalsAny(boundaries, (String) parent.get("kind"))) {
-                operatorParents.add(parent);
-                allOperatorChildren.addAll(getChildren(parent, graph));
-            }
-        }
-        visited.addAll(operatorParents);
-        parents.removeAll(operatorParents);
-
-        removeVisited(allOperatorChildren, visited);
-        parents.addAll(allOperatorChildren);
-
-        unvisited.addAll(parents);
-
-        // --- Process children ---
-        List<JSONObject> childrenToRemove = new ArrayList<JSONObject>();
-        Set<JSONObject> allOperatorParents = new HashSet<>();
-        for (JSONObject child : children) {
-            if (equalsAny(boundaries, (String) child.get("kind"))) {
-                childrenToRemove.add(child);
-                allOperatorParents.addAll(getParents(child, graph));
-            }
-        }
-        visited.addAll(childrenToRemove);
-        children.removeAll(childrenToRemove);
-
-        removeVisited(allOperatorParents, visited);
-        children.addAll(allOperatorParents);
-
-        unvisited.addAll(children);
-    }
 
     private void tagIsolationRegions(JSONObject graph) {
         // Check whether graph is valid for colocations
-        List<JSONObject> isolateOperators = findIsolates(graph);
+        List<JSONObject> isolateOperators = GraphUtilities.
+                findOperatorByKind(GraphBuilder.ISOLATE, graph);
         for (JSONObject jso : isolateOperators) {
-            if (!checkValidColocationRegion(jso, graph)) {
-                throw new IllegalStateException(
-                        "Invalid isolation "
-                                + "configuration. An isolated region is joined with a non-"
-                                + "isolated region.");
-            }
+            checkValidColocationRegion(jso, graph);  
         }
 
         // Assign isolation regions their partition colocations
         for (JSONObject isolate : isolateOperators) {
-            assignColocations(isolate, getParents(isolate, graph), graph);
-            assignColocations(isolate, getChildren(isolate, graph), graph);
+            assignColocations(isolate, GraphUtilities.getParents(isolate, graph), graph);
+            assignColocations(isolate, GraphUtilities.getChildren(isolate, graph), graph);
         }
 
-        removeOperators(isolateOperators, graph);
+        GraphUtilities.removeOperators(isolateOperators, graph);
     }
 
-    private void removeOperators(List<JSONObject> operators,
-            JSONObject graph) {
-        for (JSONObject iso : operators) {
 
-            // Get parents and children of operator
-            List<JSONObject> operatorParents = getParents(iso, graph);
-            List<JSONObject> operatorChildren = getChildren(iso, graph);
-
-            JSONArray operatorOutputs = (JSONArray) iso.get("outputs");
-            if (operatorOutputs.size() == 0) {
-                throw new IllegalStateException(
-                        "Isolate operator must have at least one child.");
-            }
-
-            // Get the output name of the operator
-            JSONObject operatorFirstOutput = (JSONObject) operatorOutputs.get(0);
-            String operatorOutName = (String) operatorFirstOutput.get("name");
-
-            // Also get input name
-            JSONArray operatorInputs = (JSONArray) iso.get("inputs");
-            JSONObject operatorFirstInput = (JSONObject) operatorInputs.get(0);
-            String operatorInName = (String) operatorFirstInput.get("name");
-
-            // Respectively, the names of the child and parent input and
-            // output ports connected to the operator.
-            List<String> childInputPortNames = new ArrayList<>();
-            List<String> parentOutputPortNames = new ArrayList<>();
-
-            // References to the list of connections for the parent and child
-            // output and input ports that are connected to the $isolate$
-            // operator.
-            List<JSONArray> childConnections = new ArrayList<>();
-            List<JSONArray> parentConnections = new ArrayList<>();
-
-            // Get names of children's input ports that are connected to the
-            // $Isolate$ operator;
-            for (JSONObject child : operatorChildren) {
-                JSONArray inputs = (JSONArray) child.get("inputs");
-                for (Object inputObj : inputs) {
-                    JSONObject input = (JSONObject) inputObj;
-                    JSONArray connections = (JSONArray) input
-                            .get("connections");
-                    for (Object connectionObj : connections) {
-                        String connection = (String) connectionObj;
-                        if (connection.equals(operatorOutName)) {
-                            childInputPortNames.add((String) input.get("name"));
-                            childConnections.add(connections);
-                            connections.remove(connection);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Get names of parent's output ports that are connected to the
-            // $Isolate$ operator;
-            for (JSONObject parent : operatorParents) {
-                JSONArray outputs = (JSONArray) parent.get("outputs");
-                for (Object outputObj : outputs) {
-                    JSONObject output = (JSONObject) outputObj;
-                    JSONArray connections = (JSONArray) output
-                            .get("connections");
-                    for (Object connectionObj : connections) {
-                        String connection = (String) connectionObj;
-                        if (connection.equals(operatorInName)) {
-                            parentOutputPortNames.add((String) output
-                                    .get("name"));
-                            parentConnections.add(connections);
-                            connections.remove(connection);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Connect child to parents
-            for (JSONArray childConnection : childConnections) {
-                childConnection.addAll(parentOutputPortNames);
-            }
-
-            // Connect parent to children
-            for (JSONArray parentConnection : parentConnections) {
-                parentConnection.addAll(childInputPortNames);
-            }
-        }
-    }
 
     private static void assertNotIsolated(Collection<JSONObject> jsos) {
         for (JSONObject jso : jsos) {
@@ -596,120 +391,48 @@ public class SPLGenerator {
     }
     
     private void tagLowLatencyRegions(JSONObject graph) {
-        List<JSONObject> lowLatencyStartOperators = findLowLatencyStarts(graph);
-        List<JSONObject> lowLatencyEndOperators = findLowLatencyEnds(graph);
+        List<JSONObject> lowLatencyStartOperators = GraphUtilities.
+                findOperatorByKind(GraphBuilder.LOW_LATENCY, graph);
+        List<JSONObject> lowLatencyEndOperators = GraphUtilities.
+                findOperatorByKind(GraphBuilder.END_LOW_LATENCY, graph);
         
         // Assign isolation regions their lowLatency tag
         for (JSONObject llStart : lowLatencyStartOperators) {
-            assignLowLatency(llStart, getChildren(llStart, graph), graph);
+            assignLowLatency(llStart, GraphUtilities.getChildren(llStart, graph), graph);
         }
-        
-//        for(JSONObject llEnd : lowLatencyEndOperators){
-//            unmarkLowLatencyEndOp(llEnd, getParents(llEnd, graph), graph);
-//        }
         
         List<JSONObject> allLowLatencyOps = new ArrayList<>();
         allLowLatencyOps.addAll(lowLatencyEndOperators);
         allLowLatencyOps.addAll(lowLatencyStartOperators);
         
-        removeOperators(allLowLatencyOps, graph);
+        GraphUtilities.removeOperators(allLowLatencyOps, graph);
     }
     
-//    private void unmarkLowLatencyEndOp(JSONObject llEnd, List<JSONObject> llEndParents, JSONObject graph){
-//        List<JSONObject> llParents = getParents(llEnd, graph);
-//        String iportName = (String) ((JSONArray)((JSONObject)((JSONArray)llEnd.get("inputs")).get(0))
-//                           .get("connections")).get(0);
-//        for(JSONObject parent : llParents){
-//            JSONArray parentOutputs = (JSONArray) parent.get("outputs");
-//            for(Object outputObj : parentOutputs){
-//                JSONObject output = (JSONObject)outputObj;
-//                JSONArray connections = (JSONArray) output
-//                        .get("connections");
-//                for (Object connectionObj : connections) {
-//                    String connection = (String) connectionObj;
-//                    if (connection.equals(iportName)) {
-//                        output.put("lowLatency", false);
-//                    }
-//                }
-//            }
-//        }
-//    }
     
+    @SuppressWarnings("serial")
     private void assignLowLatency(JSONObject llStart, List<JSONObject> llStartChildren, JSONObject graph){
-        // Check whether parent output ports are marked as LowLatency
-        // If not, mark them.
-//        List<JSONObject> llParents = getParents(llStart, graph);
-//        String iportName = (String)((JSONObject)((JSONArray)llStart.get("inputs")).get(0))
-//                .get("name");
-//        for(JSONObject parent : llParents){
-//            JSONArray parentOutputs = (JSONArray) parent.get("outputs");
-//            for(Object outputObj : parentOutputs){
-//                JSONObject output = (JSONObject)outputObj;
-//                JSONArray connections = (JSONArray) output
-//                        .get("connections");
-//                for (Object connectionObj : connections) {
-//                    String connection = (String) connectionObj;
-//                    if (connection.equals(iportName)) {
-//                        output.put("lowLatency", true);
-//                    }
-//                }
-//            }
-//        }
-        
-        // If the region has already been assigned a lowLatency tag, simply
-        // return.
-        Iterator<JSONObject> it = llStartChildren.iterator();
-        if (it.hasNext()) {
-            JSONObject jso = it.next();
-            String regionTag = (String) jso.get("lowLatencyTag");
-            if (regionTag != null && !regionTag.isEmpty()) {
-                return;
-            }
-        }
-        
-        Set<JSONObject> visited = new HashSet<JSONObject>();
-        List<JSONObject> unvisited = new ArrayList<JSONObject>();
 
-        visited.add(llStart);
-        unvisited.addAll(llStartChildren);
+        final String lowLatencyTag = "LowLatencyRegion"
+                + Integer.toString(lowLatencyRegionCount++);       
 
-        String lowLatencyTag = "LowLatencyRegion" 
-                + Integer.toString(lowLatencyRegionCount++);
-
-        while (unvisited.size() > 0) {
-            JSONObject op = unvisited.get(0);
-            visited.add(op);
-            unvisited.remove(0);
-
-//            JSONArray outputs = (JSONArray) op.get("outputs");
-//            if (outputs != null) {
-//                for (Object outputObj : outputs) {
-//                    JSONObject output = (JSONObject) outputObj;
-//                    output.put("lowLatency", true);
-//                }
-//            }
-            op.put("lowLatencyTag", lowLatencyTag);
-            
-            List<String> boundaries = new ArrayList<>();
-            boundaries.add("$LowLatency$");
-            boundaries.add("$EndLowLatency$");
-            getUnvisitedAdjacentNodes(visited, unvisited, op, graph, boundaries);
-        }
+        List<String> boundaries = new ArrayList<>();
+        boundaries.add("$LowLatency$");
+        boundaries.add("$EndLowLatency$");
         
-        
-        
-    }
+        GraphUtilities.visitOnce(llStartChildren, boundaries, graph, 
+                new Consumer<JSONObject>(){            
+                    @Override
+                    public void accept(JSONObject op) {
+                        // If the region has already been assigned a lowLatency tag, simply
+                        // return.
+                        String regionTag = (String) op.get("lowLatencyTag");
+                        if (regionTag != null && !regionTag.isEmpty()) {
+                            return;
+                        }
+                        op.put("lowLatencyTag", lowLatencyTag);
+                    }    
+        });
 
-    private static void removeVisited(Collection<JSONObject> ops,
-            Collection<JSONObject> visited) {
-        Iterator<JSONObject> it = ops.iterator();
-        // Iterate in this manner to preserve list structure while deleting
-        while (it.hasNext()) {
-            JSONObject op = it.next();
-            if (visited.contains(op)) {
-                it.remove();
-            }
-        }
     }
 
     private boolean isParallelEnd(JSONObject visitOp) {
@@ -719,77 +442,6 @@ public class SPLGenerator {
     private boolean isParallelStart(JSONObject visitOp) {
         // TODO Auto-generated method stub
         return visitOp.get("kind").equals("$Parallel$");
-    }
-
-    // Get the children of the operator. Should probably be re-worked.
-    private ArrayList<JSONObject> getChildren(JSONObject visitOp,
-            JSONObject graph) {
-        ArrayList<JSONObject> uniqueChildren = new ArrayList<JSONObject>();
-        HashSet<JSONObject> children = new HashSet<JSONObject>();
-        JSONArray outputs = (JSONArray) visitOp.get("outputs");
-        if (outputs == null || outputs.size() == 0) {
-            return uniqueChildren;
-        }
-
-        for (int i = 0; i < outputs.size(); i++) {
-            JSONArray connections = (JSONArray) ((JSONObject) outputs.get(i))
-                    .get("connections");
-            for (int j = 0; j < connections.size(); j++) {
-                String inputPort = (String) connections.get(j);
-                // TODO: build index instead of iterating through graph each
-                // time
-                JSONArray ops = (JSONArray) graph.get("operators");
-                for (int k = 0; k < ops.size(); k++) {
-                    JSONArray inputs = (JSONArray) ((JSONObject) ops.get(k))
-                            .get("inputs");
-                    if (inputs != null && inputs.size() != 0) {
-                        for (int l = 0; l < inputs.size(); l++) {
-                            String name = (String) ((JSONObject) inputs.get(l))
-                                    .get("name");
-                            if (name.equals(inputPort)) {
-                                children.add((JSONObject) ops.get(k));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        uniqueChildren.addAll(children);
-        return uniqueChildren;
-    }
-
-    private List<JSONObject> getParents(JSONObject visitOp, JSONObject graph) {
-        List<JSONObject> uniqueParents = new ArrayList<>();
-        Set<JSONObject> parents = new HashSet<>();
-        JSONArray inputs = (JSONArray) visitOp.get("inputs");
-        if (inputs == null || inputs.size() == 0) {
-            return uniqueParents;
-        }
-        for (int i = 0; i < inputs.size(); i++) {
-            JSONArray connections = (JSONArray) ((JSONObject) inputs.get(i))
-                    .get("connections");
-            for (int j = 0; j < connections.size(); j++) {
-                String outputPort = (String) connections.get(j);
-                // TODO: build index instead of iterating through graph each
-                // time
-                JSONArray ops = (JSONArray) graph.get("operators");
-                for (int k = 0; k < ops.size(); k++) {
-                    JSONArray outputs = (JSONArray) ((JSONObject) ops.get(k))
-                            .get("outputs");
-                    if (outputs != null && outputs.size() != 0) {
-                        for (int l = 0; l < outputs.size(); l++) {
-                            String name = (String) ((JSONObject) outputs.get(l))
-                                    .get("name");
-                            if (name.equals(outputPort)) {
-                                parents.add((JSONObject) ops.get(k));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        uniqueParents.addAll(parents);
-        return uniqueParents;
     }
 
     /**
