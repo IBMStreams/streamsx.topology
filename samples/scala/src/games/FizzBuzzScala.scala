@@ -1,16 +1,16 @@
 package games
 
-import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.streams.BeaconStreams;
-import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.Topology
+import com.ibm.streamsx.topology.streams.BeaconStreams
+import com.ibm.streamsx.topology.context.StreamsContextFactory
 
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit
 
-import com.ibm.streamsx.topology.functions.FunctionConversions._;
+import com.ibm.streamsx.topology.functions.FunctionConversions._
 
-object FizzBuzzScala /* extends FunctionImplicits */ {
+object FizzBuzzScala {
   def main(args: Array[String]) {
-    val topology = new Topology("FizzBuzz")
+    val topology = new Topology("FizzBuzzScala")
 
     var counting = BeaconStreams.longBeacon(topology)
         

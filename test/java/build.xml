@@ -95,7 +95,9 @@
   </target>
 
   <target name="unittest.base.scala">
-    <ant dir="../scala" target="unittest" useNativeBasedir="true" inheritAll="no"/>
+    <ant dir="../scala" target="unittest" useNativeBasedir="true" inheritAll="no">
+     <property name="topology.test.type" value="${topology.test.type}"/>
+    </ant>
   </target>
 
   <target name="unittest.base" depends="jar,unittest.base.scala">
