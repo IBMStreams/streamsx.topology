@@ -58,6 +58,20 @@ public class IsolateTest {
 	    .getStreamsContext(StreamsContext.Type.TOOLKIT)
 	    .submit(topology).get();
     }
+    
+    @Test
+    public void isolateIsEndOfStreamTest() throws Exception{
+        assumeTrue(SC_OK);
+        Topology topology = new Topology("isolationTest");
+
+        // Construct topology
+        TStream<String> ss = topology.strings("hello");
+        TStream<String> ss1 = topology.strings("hello");
+        TStream<String> un = ss.union(ss1);
+        un.isolate();
+        StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT)
+                .submit(topology).get();
+    }
 
     @Test(expected = IllegalStateException.class)
     public void multipleIsolationExceptionTest() throws Exception{
