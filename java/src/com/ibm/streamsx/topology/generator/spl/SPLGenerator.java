@@ -127,7 +127,8 @@ public class SPLGenerator {
      *            not an operator field.
      * @param graph
      *            The top-level JSON graph that contains all the operators.
-     *            Necessary to pass it to the GraphUtilities.getChildren function.
+     *            Necessary to pass it to the GraphUtilities.getChildren
+     *            function.
      */
     JSONObject separateIntoComposites(ArrayList<JSONObject> starts,
             JSONObject comp, JSONObject graph) {
@@ -164,7 +165,8 @@ public class SPLGenerator {
             // If the operator is not a special operator, add it to the
             // visited list.
             if (!isParallelStart(visitOp) && !isParallelEnd(visitOp)) {
-                ArrayList<JSONObject> children = GraphUtilities.getChildren(visitOp, graph);
+                ArrayList<JSONObject> children = GraphUtilities.getChildren(
+                        visitOp, graph);
                 unvisited.addAll(children);
                 visited.add(visitOp);
             }
@@ -227,8 +229,8 @@ public class SPLGenerator {
 
                 // Get the start operators in the parallel region -- the ones
                 // immediately downstream from the $Parallel operator
-                ArrayList<JSONObject> parallelStarts = GraphUtilities.getChildren(visitOp,
-                        graph);
+                ArrayList<JSONObject> parallelStarts = GraphUtilities
+                        .getChildren(visitOp, graph);
 
                 // Once you have the start operators, recursively call the
                 // function
@@ -250,8 +252,8 @@ public class SPLGenerator {
                 // should be the same as the output port of the $unparallel
                 // operator
                 if (parallelEnd != null) {
-                    ArrayList<JSONObject> children = GraphUtilities.getChildren(parallelEnd,
-                            graph);
+                    ArrayList<JSONObject> children = GraphUtilities
+                            .getChildren(parallelEnd, graph);
                     unvisited.addAll(children);
                     compOperator.put("outputs", parallelEnd.get("outputs"));
                     subComp.put("outputName",
@@ -286,36 +288,38 @@ public class SPLGenerator {
     }
 
     @SuppressWarnings("serial")
-    private void assignColocations(JSONObject isolate,
-            List<JSONObject> starts, JSONObject graph) {
-        
+    private void assignColocations(JSONObject isolate, List<JSONObject> starts,
+            JSONObject graph) {
+
         final String colocationTag = "Colocation"
                 + Integer.toString(colocationCount++);
-        
+
         List<String> boundaries = new ArrayList<>();
         boundaries.add("$Isolate$");
-        
-        GraphUtilities.visitOnce(starts, boundaries, graph, new Consumer<JSONObject>(){
 
-            @Override
-            public void accept(JSONObject op) {
-                // If the region has already been assigned a colocation tag, simply
-                // return.
-                String regionTag = (String) op.get("colocationTag");
-                if (regionTag != null && !regionTag.isEmpty()) {
-                    return;
-                }
-                
-                JSONObject config = (JSONObject) op.get("config");
-                if (config == null || config.isEmpty()) {
-                    config = new OrderedJSONObject();
-                    op.put("config", config);
-                }
+        GraphUtilities.visitOnce(starts, boundaries, graph,
+                new Consumer<JSONObject>() {
 
-                config.put("colocationTag", colocationTag);
-            }
-            
-        });
+                    @Override
+                    public void accept(JSONObject op) {
+                        // If the region has already been assigned a colocation
+                        // tag, simply
+                        // return.
+                        String regionTag = (String) op.get("colocationTag");
+                        if (regionTag != null && !regionTag.isEmpty()) {
+                            return;
+                        }
+
+                        JSONObject config = (JSONObject) op.get("config");
+                        if (config == null || config.isEmpty()) {
+                            config = new OrderedJSONObject();
+                            op.put("config", config);
+                        }
+
+                        config.put("colocationTag", colocationTag);
+                    }
+
+                });
     }
 
     /**
@@ -336,49 +340,77 @@ public class SPLGenerator {
      *         merged with its parent.
      */
     @SuppressWarnings("serial")
-    private void checkValidColocationRegion(JSONObject isolate,
-            JSONObject graph) {
-        final List<JSONObject> isolateChildren = GraphUtilities.getChildren(isolate, graph);
+    private void checkValidColocationRegion(JSONObject isolate, JSONObject graph) {
+        final List<JSONObject> isolateChildren = GraphUtilities.getChildren(
+                isolate, graph);
         List<JSONObject> isoParents = GraphUtilities.getParents(isolate, graph);
-              
+
         assertNotIsolated(isoParents);
-        
+
         List<String> boundaries = new ArrayList<>();
         boundaries.add("$Isolate$");
-        
-        GraphUtilities.visitOnce(isoParents, boundaries, graph, new Consumer<JSONObject>(){
-            @Override
-            public void accept(JSONObject op) {
-                if (isolateChildren.contains(op)) {
-                    throw new IllegalStateException(
-                            "Invalid isolation "
-                                    + "configuration. An isolated region is joined with a non-"
-                                    + "isolated region.");
-                }    
-            }         
-        });     
-    }    
 
-
+        GraphUtilities.visitOnce(isoParents, boundaries, graph,
+                new Consumer<JSONObject>() {
+                    @Override
+                    public void accept(JSONObject op) {
+                        if (isolateChildren.contains(op)) {
+                            throw new IllegalStateException(
+                                    "Invalid isolation "
+                                            + "configuration. An isolated region is joined with a non-"
+                                            + "isolated region.");
+                        }
+                    }
+                });
+    }
 
     private void tagIsolationRegions(JSONObject graph) {
         // Check whether graph is valid for colocations
-        List<JSONObject> isolateOperators = GraphUtilities.
-                findOperatorByKind(GraphBuilder.ISOLATE, graph);
+        List<JSONObject> isolateOperators = GraphUtilities.findOperatorByKind(
+                GraphBuilder.ISOLATE, graph);
+        
         for (JSONObject jso : isolateOperators) {
-            checkValidColocationRegion(jso, graph);  
+            checkValidColocationRegion(jso, graph);
         }
 
         // Assign isolation regions their partition colocations
         for (JSONObject isolate : isolateOperators) {
-            assignColocations(isolate, GraphUtilities.getParents(isolate, graph), graph);
-            assignColocations(isolate, GraphUtilities.getChildren(isolate, graph), graph);
+            assignColocations(isolate,
+                    GraphUtilities.getParents(isolate, graph), graph);
+            assignColocations(isolate,
+                    GraphUtilities.getChildren(isolate, graph), graph);
         }
 
         GraphUtilities.removeOperators(isolateOperators, graph);
+        
+        tagIslandIsolatedRegions(graph);
     }
-
-
+    
+    @SuppressWarnings("serial")
+    private void tagIslandIsolatedRegions(JSONObject graph){
+        List<JSONObject> starts = GraphUtilities.findStarts(graph);   
+        
+        for(JSONObject start : starts){
+            final String colocationTag = "Colocation"
+                    + Integer.toString(colocationCount++);
+            
+            String regionTag = (String) start.get("colocationTag");
+            if (regionTag != null && !regionTag.isEmpty()) {
+                continue;
+            }
+            
+            List<JSONObject> startList = new ArrayList<JSONObject>();
+            startList.add(start);
+            
+            GraphUtilities.visitOnce(startList, null, graph,
+                    new Consumer<JSONObject>() {
+                        @Override
+                        public void accept(JSONObject op) {
+                            op.put("colocationTag", colocationTag);
+                        }
+                    });           
+        }
+    }
 
     private static void assertNotIsolated(Collection<JSONObject> jsos) {
         for (JSONObject jso : jsos) {
@@ -389,49 +421,51 @@ public class SPLGenerator {
             }
         }
     }
-    
+
     private void tagLowLatencyRegions(JSONObject graph) {
-        List<JSONObject> lowLatencyStartOperators = GraphUtilities.
-                findOperatorByKind(GraphBuilder.LOW_LATENCY, graph);
-        List<JSONObject> lowLatencyEndOperators = GraphUtilities.
-                findOperatorByKind(GraphBuilder.END_LOW_LATENCY, graph);
-        
+        List<JSONObject> lowLatencyStartOperators = GraphUtilities
+                .findOperatorByKind(GraphBuilder.LOW_LATENCY, graph);
+        List<JSONObject> lowLatencyEndOperators = GraphUtilities
+                .findOperatorByKind(GraphBuilder.END_LOW_LATENCY, graph);
+
         // Assign isolation regions their lowLatency tag
         for (JSONObject llStart : lowLatencyStartOperators) {
-            assignLowLatency(llStart, GraphUtilities.getChildren(llStart, graph), graph);
+            assignLowLatency(llStart,
+                    GraphUtilities.getChildren(llStart, graph), graph);
         }
-        
+
         List<JSONObject> allLowLatencyOps = new ArrayList<>();
         allLowLatencyOps.addAll(lowLatencyEndOperators);
         allLowLatencyOps.addAll(lowLatencyStartOperators);
-        
+
         GraphUtilities.removeOperators(allLowLatencyOps, graph);
     }
-    
-    
+
     @SuppressWarnings("serial")
-    private void assignLowLatency(JSONObject llStart, List<JSONObject> llStartChildren, JSONObject graph){
+    private void assignLowLatency(JSONObject llStart,
+            List<JSONObject> llStartChildren, JSONObject graph) {
 
         final String lowLatencyTag = "LowLatencyRegion"
-                + Integer.toString(lowLatencyRegionCount++);       
+                + Integer.toString(lowLatencyRegionCount++);
 
         List<String> boundaries = new ArrayList<>();
         boundaries.add("$LowLatency$");
         boundaries.add("$EndLowLatency$");
-        
-        GraphUtilities.visitOnce(llStartChildren, boundaries, graph, 
-                new Consumer<JSONObject>(){            
+
+        GraphUtilities.visitOnce(llStartChildren, boundaries, graph,
+                new Consumer<JSONObject>() {
                     @Override
                     public void accept(JSONObject op) {
-                        // If the region has already been assigned a lowLatency tag, simply
+                        // If the region has already been assigned a lowLatency
+                        // tag, simply
                         // return.
                         String regionTag = (String) op.get("lowLatencyTag");
                         if (regionTag != null && !regionTag.isEmpty()) {
                             return;
                         }
                         op.put("lowLatencyTag", lowLatencyTag);
-                    }    
-        });
+                    }
+                });
 
     }
 

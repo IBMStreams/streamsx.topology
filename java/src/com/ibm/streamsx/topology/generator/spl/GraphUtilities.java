@@ -28,8 +28,9 @@ public class GraphUtilities {
         }
         return starts;
     }
-    
-    public static ArrayList<JSONObject> findOperatorByKind(String opKind, JSONObject graph) {
+
+    public static ArrayList<JSONObject> findOperatorByKind(String opKind,
+            JSONObject graph) {
         ArrayList<JSONObject> lowLatencyStarts = new ArrayList<JSONObject>();
         JSONArray ops = (JSONArray) graph.get("operators");
         for (int k = 0; k < ops.size(); k++) {
@@ -41,7 +42,7 @@ public class GraphUtilities {
         }
         return lowLatencyStarts;
     }
-    
+
     // Get the children of the operator. Should probably be re-worked.
     public static ArrayList<JSONObject> getChildren(JSONObject visitOp,
             JSONObject graph) {
@@ -79,7 +80,8 @@ public class GraphUtilities {
         return uniqueChildren;
     }
 
-    public static List<JSONObject> getParents(JSONObject visitOp, JSONObject graph) {
+    public static List<JSONObject> getParents(JSONObject visitOp,
+            JSONObject graph) {
         List<JSONObject> uniqueParents = new ArrayList<>();
         Set<JSONObject> parents = new HashSet<>();
         JSONArray inputs = (JSONArray) visitOp.get("inputs");
@@ -112,14 +114,16 @@ public class GraphUtilities {
         uniqueParents.addAll(parents);
         return uniqueParents;
     }
-    
+
     public static void removeOperators(List<JSONObject> operators,
             JSONObject graph) {
         for (JSONObject iso : operators) {
 
             // Get parents and children of operator
-            List<JSONObject> operatorParents = GraphUtilities.getParents(iso, graph);
-            List<JSONObject> operatorChildren = GraphUtilities.getChildren(iso, graph);
+            List<JSONObject> operatorParents = GraphUtilities.getParents(iso,
+                    graph);
+            List<JSONObject> operatorChildren = GraphUtilities.getChildren(iso,
+                    graph);
 
             JSONArray operatorOutputs = (JSONArray) iso.get("outputs");
             if (operatorOutputs.size() == 0) {
@@ -128,7 +132,8 @@ public class GraphUtilities {
             }
 
             // Get the output name of the operator
-            JSONObject operatorFirstOutput = (JSONObject) operatorOutputs.get(0);
+            JSONObject operatorFirstOutput = (JSONObject) operatorOutputs
+                    .get(0);
             String operatorOutName = (String) operatorFirstOutput.get("name");
 
             // Also get input name
@@ -199,11 +204,12 @@ public class GraphUtilities {
             }
         }
     }
-    
+
     // Visits every node in the region defined by the boundaries, and applies
     // to it the consumer's accept() method.
-    public static void visitOnce(List<JSONObject> starts, List<String> boundaries,
-            JSONObject graph, Consumer<JSONObject> consumer){      
+    public static void visitOnce(List<JSONObject> starts,
+            List<String> boundaries, JSONObject graph,
+            Consumer<JSONObject> consumer) {
         Set<JSONObject> visited = new HashSet<JSONObject>();
         List<JSONObject> unvisited = new ArrayList<JSONObject>();
 
@@ -215,15 +221,17 @@ public class GraphUtilities {
             unvisited.remove(0);
 
             consumer.accept(op);
-            
-            GraphUtilities.getUnvisitedAdjacentNodes(visited, unvisited, op, graph, boundaries);
-        } 
-    
+
+            GraphUtilities.getUnvisitedAdjacentNodes(visited, unvisited, op,
+                    graph, boundaries);
+        }
+
     }
-    
-    public static void getUnvisitedAdjacentNodes(Collection<JSONObject> visited,
-            Collection<JSONObject> unvisited, JSONObject op, JSONObject graph,
-            List<String> boundaries) {
+
+    public static void getUnvisitedAdjacentNodes(
+            Collection<JSONObject> visited, Collection<JSONObject> unvisited,
+            JSONObject op, JSONObject graph, List<String> boundaries) {
+        
         List<JSONObject> parents = GraphUtilities.getParents(op, graph);
         List<JSONObject> children = GraphUtilities.getChildren(op, graph);
         removeVisited(parents, visited);
@@ -235,7 +243,8 @@ public class GraphUtilities {
         for (JSONObject parent : parents) {
             if (equalsAny(boundaries, (String) parent.get("kind"))) {
                 operatorParents.add(parent);
-                allOperatorChildren.addAll(GraphUtilities.getChildren(parent, graph));
+                allOperatorChildren.addAll(GraphUtilities.getChildren(parent,
+                        graph));
             }
         }
         visited.addAll(operatorParents);
@@ -252,7 +261,8 @@ public class GraphUtilities {
         for (JSONObject child : children) {
             if (equalsAny(boundaries, (String) child.get("kind"))) {
                 childrenToRemove.add(child);
-                allOperatorParents.addAll(GraphUtilities.getParents(child, graph));
+                allOperatorParents.addAll(GraphUtilities.getParents(child,
+                        graph));
             }
         }
         visited.addAll(childrenToRemove);
@@ -263,7 +273,7 @@ public class GraphUtilities {
 
         unvisited.addAll(children);
     }
-    
+
     private static void removeVisited(Collection<JSONObject> ops,
             Collection<JSONObject> visited) {
         Iterator<JSONObject> it = ops.iterator();
@@ -275,10 +285,14 @@ public class GraphUtilities {
             }
         }
     }
-    
-    private static boolean equalsAny(List<String> boundaries, String opKind){
-        for(String boundary : boundaries){
-            if(boundary.equals(opKind))
+
+    private static boolean equalsAny(List<String> boundaries, String opKind) {
+        if(boundaries == null){
+            return false;
+        }
+        
+        for (String boundary : boundaries) {
+            if (boundary.equals(opKind))
                 return true;
         }
         return false;
