@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.logic;
 
-import com.ibm.streamsx.topology.function7.Consumer;
+import com.ibm.streamsx.topology.function.Consumer;
 
 public final class Print<T> implements Consumer<T> {
     private static final long serialVersionUID = 1L;

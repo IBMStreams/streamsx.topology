@@ -8,7 +8,7 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.Function;
 
 /**
  * A {@code SPLStream} is a declaration of a continuous sequence of tuples with

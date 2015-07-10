@@ -9,11 +9,11 @@
 
   <property name="classes" location="classes"/>
   <property name="jarname" value="streamsx.topology.test.jar"/>
-  <property name="test.dir" value="unittests"/>
-  <property name="report.dir" value="report"/>
-  <property name="topology.src.dir" value="../../java/src"/>
-  <property name="samples.src.dir" value="../../samples/java/functional/src"/>
-  <property name="samples.jar" value="../../samples/java/functional/functionalsamples.jar"/>
+  <property name="test.dir" location="unittests"/>
+  <property name="report.dir" location="report"/>
+  <property name="topology.src.dir" location="../../java/src"/>
+  <property name="samples.src.dir" location="../../samples/java/functional/src"/>
+  <property name="samples.jar" location="../../samples/java/functional/functionalsamples.jar"/>
 
   <path id="compile.classpath">
     <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
@@ -43,9 +43,11 @@
 
   <target name="compile" depends="init">
     <javac debug="true" 
+           includeantruntime="yes"
 	   srcdir="${basedir}/src" 
 	   destdir="${classes}"
 	   classpathref="compile.classpath"/>
+    <ant dir="../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
   <target name="jar" depends="compile">
     <jar destfile="${jarname}" basedir="${classes}"/>
@@ -78,25 +80,34 @@
   </target>
 
   <target name="unittest.main">
-     <antcall target="unittest.base"/>
+     <antcall target="unittest.base" inheritAll="no">
+       <param name="topology.test.type" value="EMBEDDED_TESTER"/>
+     </antcall>
   </target>
 
   <target name="unittest.standalone">
-     <property name="topology.test.type" value="STANDALONE_TESTER"/>
-     <antcall target="unittest.base"/>
+     <antcall target="unittest.base" inheritAll="no">
+       <param name="topology.test.type" value="STANDALONE_TESTER"/>
+     </antcall>
   </target>
 
   <target name="unittest.distributed">
-     <property name="topology.test.type" value="DISTRIBUTED_TESTER"/>
-     <antcall target="unittest.base"/>
+     <antcall target="unittest.base" inheritAll="no">
+       <param name="topology.test.type" value="DISTRIBUTED_TESTER"/>
+     </antcall>
      <fail message="Unittests failed" if="topology.tests.failed"/>
   </target>
 
-  <target name="unittest.base" depends="jar">
+  <target name="unittest.base.scala">
+    <ant dir="../scala" target="unittest" useNativeBasedir="true" inheritAll="no">
+     <property name="topology.test.type" value="${topology.test.type}"/>
+    </ant>
+  </target>
+
+  <target name="unittest.base" depends="jar,unittest.base.scala">
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
      <mkdir dir="${topology.test.dir}"/>
-     <property name="topology.test.type" value="EMBEDDED_TESTER"/>
      <property name="topology.test.sc_ok" value="true"/>
      <property name="topology.test.perf_ok" value="true"/>
      <property name="topology.test.coverage" value="true"/>

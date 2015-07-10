@@ -6,7 +6,7 @@ package com.ibm.streamsx.topology.streams;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.logic.Identity;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 

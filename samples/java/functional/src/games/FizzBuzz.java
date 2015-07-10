@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
 
 /**

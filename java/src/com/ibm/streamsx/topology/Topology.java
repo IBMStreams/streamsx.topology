@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology;
 
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.SPL_PREFIX;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -21,8 +22,8 @@ import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
 import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.DependencyResolver;
 import com.ibm.streamsx.topology.internal.core.InternalProperties;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
@@ -93,6 +94,8 @@ public class Topology implements TopologyElement {
         dependencyResolver = new DependencyResolver(this);
         name = defaultNames[1];
         builder = new GraphBuilder(defaultNames[0], name);
+        
+        checkForScala();
     }
     
     /**
@@ -103,6 +106,31 @@ public class Topology implements TopologyElement {
         String[] defaultNames = defaultNamespaceName(false);
         dependencyResolver = new DependencyResolver(this);
         builder = new GraphBuilder(defaultNames[0], name);
+        
+        checkForScala();
+    }
+    
+    /**
+     * If Scala is in the class path then automatically
+     * add the Scala library to the bundle.
+     */
+    private void checkForScala() {
+        try {
+            Class<?> csf = Class.forName("scala.Function");
+            if (csf.getProtectionDomain().getCodeSource() != null)
+                addClassDependency(csf);
+            else {
+                // Loaded from system loader, look for SCALA_HOME
+                String scalaHome = System.getenv("SCALA_HOME");
+                if (scalaHome != null) {
+                    File scalaLib = new File(scalaHome, "lib/scala-library.jar");
+                    addJarDependency(scalaLib.getAbsolutePath());
+                }
+            }
+            
+        } catch (ClassNotFoundException e) {
+            // not using Scala!
+        }
     }
 
     /**

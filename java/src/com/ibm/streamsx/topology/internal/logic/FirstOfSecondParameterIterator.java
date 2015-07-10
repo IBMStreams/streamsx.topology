@@ -6,7 +6,7 @@ package com.ibm.streamsx.topology.internal.logic;
 
 import java.util.List;
 
-import com.ibm.streamsx.topology.function7.BiFunction;
+import com.ibm.streamsx.topology.function.BiFunction;
 
 public class FirstOfSecondParameterIterator<T, U, R> implements
         BiFunction<T, List<U>, R>, WrapperFunction {

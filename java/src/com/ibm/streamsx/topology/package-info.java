@@ -22,7 +22,7 @@
  * A {@link com.ibm.streamsx.topology.TStream TStream} represents a continuous stream of tuples
  * with a specific type {@code T}. Streams are transformed into
  * new streams through functional transformations, defined using
- * a single method of an interface like {@link com.ibm.streamsx.topology.function7.Function}.
+ * a single method of an interface like {@link com.ibm.streamsx.topology.function.Function}.
  * <P>
  * A transformation consists of an instance of a functional interface,
  * known as the <i>functional logic</i>
@@ -33,12 +33,12 @@
  * is applied, for example:
  * <UL>
  * <LI>
- *  {@link com.ibm.streamsx.topology.TStream#filter(com.ibm.streamsx.topology.function7.Predicate)} declares that the <i>functional logic</i> will be
+ *  {@link com.ibm.streamsx.topology.TStream#filter(com.ibm.streamsx.topology.function.Predicate)} declares that the <i>functional logic</i> will be
  *  called for each tuple on the stream, and if it returns {@code true} then the
  *  input tuple is submitted to the new stream, otherwise the input tuple is discarded.
  * </LI>
  * <LI>
- * {@link com.ibm.streamsx.topology.TStream#transform(com.ibm.streamsx.topology.function7.Function, Class)} declares that the <i>functional logic</i> will be
+ * {@link com.ibm.streamsx.topology.TStream#transform(com.ibm.streamsx.topology.function.Function, Class)} declares that the <i>functional logic</i> will be
  *  called for each tuple and its return value will be submitted to the output stream, unless
  *  it is {@code null}, in which case no tuple will be submitted.
  * </LI>
@@ -46,7 +46,7 @@
  * <h3>Functional Logic semantics</h3>
  * <h4>Declaring Functional Logic</h4>
  * When declaring (building) the topology any <i>functional logic</i> is an instance
- * of a Java interface, such as {@link com.ibm.streamsx.topology.function7.Predicate}.
+ * of a Java interface, such as {@link com.ibm.streamsx.topology.function.Predicate}.
  * These objects are <b> always </b> serialized and deserialized before being
  * executed against tuples on streams, regardless of the type of the {@code StreamsContext}.
  * <BR>
@@ -101,7 +101,7 @@
  * A functional logic instance lives for the lifetime of its container (embedded JVM, standalone process
  * or processing element in distributed mode),
  * thus it may maintain state across the invocations of its method. For a de-duplicating
- * {@link com.ibm.streamsx.topology.function7.Predicate} may maintain a collection of
+ * {@link com.ibm.streamsx.topology.function.Predicate} may maintain a collection of
  * previously seen tuples on the stream to filter out duplicates.
  * <BR>
  * In distributed mode, if a processing element (PE) restarts then any state will be lost and

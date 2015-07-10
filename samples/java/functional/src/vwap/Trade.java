@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.spl.SPLStream;
 
 public class Trade extends Ticker {

@@ -15,7 +15,7 @@ import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streams.operator.samples.patterns.PollingTupleProducer;
-import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 

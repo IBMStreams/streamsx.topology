@@ -4,8 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.logic;
 
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Supplier;
 
 public class NonNSupplier<T> implements Function<Long, T>, WrapperFunction {
 

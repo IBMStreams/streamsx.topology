@@ -15,7 +15,7 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.test.TestTopology;
 
 public class VMArgTest extends TestTopology {

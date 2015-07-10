@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.logic;
 
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.Function;
 
 public final class Throttle<T> implements Function<T, T> {
     /**

@@ -4,18 +4,12 @@
  */
 package com.ibm.streamsx.topology.function7;
 
-import java.io.Serializable;
 
 /**
  * A function that takes an argument and returns nothing.
- * <BR>
- * If an implementation also implements
- * {@code java.lang.AutoCloseable} then it will be
- * automatically closed when the application terminates.
- 
- * @param <T>
- *            Type of the first (and only) argument
+ * @deprecated Replaced by
+ * {@link com.ibm.streamsx.topology.function.Consumer}
  */
-public interface Consumer<T> extends Serializable {
-    void accept(T v);
-}
+@Deprecated
+public interface Consumer<T> extends 
+   com.ibm.streamsx.topology.function.Consumer<T> { }

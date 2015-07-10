@@ -13,10 +13,16 @@
   <property name="tk.opt" location="${tk}/opt"/>
   <property name="tk.lib" location="${tk}/lib"/>
 
+  <property name="junit.jar" location="${user.home}/.ant/lib/junit-4.10.jar"/>
+
+  <property name="ant.build.javac.source" value="7"/>
+  <property name="ant.build.javac.target" value="7"/>
+
   <property name="topology.test.root" location="${streamsx.topology}/test"/>
 
   <path id="streams.classpath">
     <pathelement location="${streams.install}/lib/com.ibm.streams.operator.samples.jar" />
+    <pathelement location="${streams.install}/lib/com.ibm.streams.operator.jar" />
   </path>
   <path id="tk.classpath">
     <pathelement location="${tk.opt}/apache-mina-2.0.2/dist/mina-core-2.0.2.jar" />

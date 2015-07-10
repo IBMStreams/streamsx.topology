@@ -18,8 +18,8 @@ import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
-import com.ibm.streamsx.topology.function7.BiFunction;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionConvertToSPL;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
@@ -92,7 +92,7 @@ public class SPLStreams {
      *            Schema of returned stream.
      * @return Stream containing the converted tuples.
      * 
-     * @see SPLStream#convert(com.ibm.streamsx.topology.function7.Function,
+     * @see SPLStream#convert(com.ibm.streamsx.topology.function.Function,
      *      Class)
      */
     public static <T> SPLStream convertStream(TStream<T> stream,

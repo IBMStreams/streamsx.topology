@@ -21,7 +21,7 @@ import org.junit.Test;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.file.FileStreams;
-import com.ibm.streamsx.topology.function7.Consumer;
+import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;

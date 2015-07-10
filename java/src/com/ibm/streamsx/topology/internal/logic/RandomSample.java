@@ -6,7 +6,7 @@ package com.ibm.streamsx.topology.internal.logic;
 
 import java.util.Random;
 
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 
 public final class RandomSample<T> implements Predicate<T> {
     private static final long serialVersionUID = 1L;

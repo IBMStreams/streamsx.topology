@@ -11,11 +11,11 @@ import java.util.concurrent.TimeUnit;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
-import com.ibm.streamsx.topology.function7.BiFunction;
-import com.ibm.streamsx.topology.function7.Consumer;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Predicate;
-import com.ibm.streamsx.topology.function7.UnaryOperator;
+import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.tuple.Keyable;
 

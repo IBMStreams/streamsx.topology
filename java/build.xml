@@ -28,12 +28,15 @@
 	   srcdir="${src}" 
 	   destdir="${classes}"
 	   classpathref="compile.classpath"/>
+    <ant dir="../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
 
 
   <target name="jar" depends="compile">
   <manifestclasspath property="jar.classpath" jarfile="${jar}">
-     <classpath refid="tk.classpath" />
+     <classpath>
+       <path refid="tk.classpath"/>
+     </classpath>
   </manifestclasspath>
     <jar destfile="${jar}" basedir="${classes}">
        <manifest>
