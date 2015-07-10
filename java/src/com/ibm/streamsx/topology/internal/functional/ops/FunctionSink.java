@@ -12,7 +12,7 @@ import com.ibm.streams.operator.StreamingInput;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.PrimitiveOperator;
-import com.ibm.streamsx.topology.function7.Consumer;
+import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 @PrimitiveOperator

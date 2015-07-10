@@ -43,7 +43,7 @@ import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.internal.test.handlers.StringTupleTester;
 import com.ibm.streamsx.topology.internal.tester.ops.TesterSink;
 import com.ibm.streamsx.topology.spl.SPLStream;

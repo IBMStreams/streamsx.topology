@@ -5,8 +5,8 @@
 package com.ibm.streamsx.topology.streams;
 
 import com.ibm.streamsx.topology.TStream;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
 
 /**
  * Utilities for streams containing {@code String} tuples.

@@ -13,7 +13,7 @@ import java.util.List;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindowEvent;
-import com.ibm.streamsx.topology.function7.BiFunction;
+import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 

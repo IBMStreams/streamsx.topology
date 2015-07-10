@@ -7,8 +7,8 @@ package com.ibm.streamsx.topology;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.ibm.streamsx.topology.function7.BiFunction;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.tuple.Keyable;
 
 /**

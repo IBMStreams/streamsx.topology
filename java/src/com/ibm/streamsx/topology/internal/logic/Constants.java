@@ -6,7 +6,7 @@ package com.ibm.streamsx.topology.internal.logic;
 
 import java.util.List;
 
-import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.function.Supplier;
 
 public final class Constants<T> implements Supplier<Iterable<T>> {
     private static final long serialVersionUID = 1L;

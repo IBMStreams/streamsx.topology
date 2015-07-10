@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.logic;
 
-import com.ibm.streamsx.topology.function7.UnaryOperator;
+import com.ibm.streamsx.topology.function.UnaryOperator;
 
 /**
  * Identity unary function that returns its input.
