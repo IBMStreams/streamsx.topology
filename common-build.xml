@@ -13,6 +13,11 @@
   <property name="tk.opt" location="${tk}/opt"/>
   <property name="tk.lib" location="${tk}/lib"/>
 
+  <property name="junit.jar" location="${user.home}/.ant/lib/junit-4.10.jar"/>
+
+  <property name="ant.build.javac.source" value="7"/>
+  <property name="ant.build.javac.target" value="7"/>
+
   <property name="topology.test.root" location="${streamsx.topology}/test"/>
 
   <path id="streams.classpath">

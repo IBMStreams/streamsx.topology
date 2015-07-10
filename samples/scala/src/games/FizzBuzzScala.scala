@@ -6,9 +6,9 @@ import com.ibm.streamsx.topology.context.StreamsContextFactory;
 
 import java.util.concurrent.TimeUnit;
 
-import com.ibm.streamsx.topology.experimental.scala.functions.FunctionImplicits;
+import com.ibm.streamsx.topology.functions.FunctionConversions._;
 
-object FizzBuzzScala extends FunctionImplicits {
+object FizzBuzzScala /* extends FunctionImplicits */ {
   def main(args: Array[String]) {
     val topology = new Topology("FizzBuzz")
 
