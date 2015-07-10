@@ -92,7 +92,7 @@ public class SPLStreams {
      *            Schema of returned stream.
      * @return Stream containing the converted tuples.
      * 
-     * @see SPLStream#convert(com.ibm.streamsx.topology.function7.Function,
+     * @see SPLStream#convert(com.ibm.streamsx.topology.function.Function,
      *      Class)
      */
     public static <T> SPLStream convertStream(TStream<T> stream,
