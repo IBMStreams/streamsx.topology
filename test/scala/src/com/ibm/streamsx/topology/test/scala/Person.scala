@@ -4,6 +4,4 @@ package com.ibm.streamsx.topology.test.scala
 class Person(name: String, val age: Int)  extends Serializable {
   
   override def toString() : String = name + " is " + age 
-  
-  def ageOf() = age
 }
