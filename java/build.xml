@@ -40,7 +40,7 @@
   </manifestclasspath>
     <jar destfile="${jar}" basedir="${classes}">
        <manifest>
-          <attribute name="Class-Path" value="${jar.classpath} ../opt/scala/scala-library.jar"/>
+          <attribute name="Class-Path" value="${jar.classpath}"/>
        </manifest>
     <fileset dir="${classes}"/>
     <fileset dir="${src}"

@@ -80,6 +80,7 @@
   </target>
 
   <target name="unittest.main">
+     <property name="topology.test.type" value="EMBEDDED_TESTER"/>
      <antcall target="unittest.base"/>
   </target>
 
