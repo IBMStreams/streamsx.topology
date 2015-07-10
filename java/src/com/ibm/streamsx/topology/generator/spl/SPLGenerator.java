@@ -374,7 +374,7 @@ public class SPLGenerator {
 
             config.put("colocationTag", colocationTag);
             List<String> boundaries = new ArrayList<>();
-            boundaries.add("$Isolate");
+            boundaries.add("$Isolate$");
             getUnvisitedAdjacentNodes(visited, unvisited, op, graph, boundaries);
         }
 
@@ -419,7 +419,7 @@ public class SPLGenerator {
             unvisited.remove(0);
 
             List<String> boundaries = new ArrayList<>();
-            boundaries.add("$Isolate");
+            boundaries.add("$Isolate$");
             getUnvisitedAdjacentNodes(visited, unvisited, op, graph, boundaries);
         }
 
@@ -587,7 +587,7 @@ public class SPLGenerator {
 
     private static void assertNotIsolated(Collection<JSONObject> jsos) {
         for (JSONObject jso : jsos) {
-            if ("$Isolate".equals((String) jso.get("kind"))) {
+            if ("$Isolate$".equals((String) jso.get("kind"))) {
                 throw new IllegalStateException(
                         "Cannot put \"isolate\" regions immediately"
                                 + " adjacent to each other. E.g -- .isolate().isolate()");
