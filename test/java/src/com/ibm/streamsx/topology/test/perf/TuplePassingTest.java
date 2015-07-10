@@ -14,9 +14,9 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Consumer;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.test.TestTopology;
 
 public class TuplePassingTest extends TestTopology {

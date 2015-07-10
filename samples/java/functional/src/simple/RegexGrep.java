@@ -13,7 +13,7 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.file.FileStreams;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 
 /**
  * Sample continuous (streaming) regular expression grep topology application.

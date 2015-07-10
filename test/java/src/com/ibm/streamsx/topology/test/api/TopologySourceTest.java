@@ -14,8 +14,8 @@ import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;

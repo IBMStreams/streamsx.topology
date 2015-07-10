@@ -20,8 +20,8 @@ import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;

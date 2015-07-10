@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.test;
 
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 
 @SuppressWarnings("serial")
 public class AllowAll<T> implements Predicate<T> {

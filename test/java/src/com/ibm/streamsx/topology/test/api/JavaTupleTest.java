@@ -16,7 +16,7 @@ import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.test.TestTopology;
 
 public class JavaTupleTest extends TestTopology {

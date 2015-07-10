@@ -5,26 +5,18 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
-import com.ibm.streams.flow.handlers.StreamCollector;
 import com.ibm.streams.operator.PERuntime;
-import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.internal.tester.TupleCollection;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 

@@ -15,8 +15,8 @@ import java.util.regex.Pattern;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
 
 public class ParallelRegexGrep {
     static final Logger trace = Logger.getLogger("samples");

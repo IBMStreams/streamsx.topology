@@ -22,7 +22,7 @@ import com.ibm.streams.flow.handlers.MostRecent;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.function7.UnaryOperator;
+import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.json.JSONSchemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.spl.SPLStream;

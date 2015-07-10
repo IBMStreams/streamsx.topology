@@ -7,7 +7,7 @@ package simple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 
 /**
 * Sample filtering echo topology application. This Java application builds a

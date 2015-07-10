@@ -14,7 +14,7 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.spl.FileSPLStreams;
 import com.ibm.streamsx.topology.spl.FileSPLStreams.Compression;
 import com.ibm.streamsx.topology.spl.SPLStream;

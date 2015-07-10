@@ -7,8 +7,8 @@ package vwap;
 import java.util.List;
 
 import com.ibm.streamsx.topology.TStream;
-import com.ibm.streamsx.topology.function7.BiFunction;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.logic.Logic;
 
 public class VwapProcessing {

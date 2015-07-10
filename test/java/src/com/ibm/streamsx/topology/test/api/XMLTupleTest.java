@@ -20,7 +20,7 @@ import com.ibm.streams.operator.types.ValueFactory;
 import com.ibm.streams.operator.types.XML;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.test.TestTopology;
 
 @SuppressWarnings("serial")

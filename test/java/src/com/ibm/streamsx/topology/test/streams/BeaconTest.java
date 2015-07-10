@@ -17,7 +17,7 @@ import com.ibm.json.java.JSON;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
 import com.ibm.streamsx.topology.streams.StringStreams;
