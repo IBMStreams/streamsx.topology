@@ -80,18 +80,21 @@
   </target>
 
   <target name="unittest.main">
-     <property name="topology.test.type" value="EMBEDDED_TESTER"/>
-     <antcall target="unittest.base"/>
+     <antcall target="unittest.base" inheritAll="no">
+       <param name="topology.test.type" value="EMBEDDED_TESTER"/>
+     </antcall>
   </target>
 
   <target name="unittest.standalone">
-     <property name="topology.test.type" value="STANDALONE_TESTER"/>
-     <antcall target="unittest.base"/>
+     <antcall target="unittest.base" inheritAll="no">
+       <param name="topology.test.type" value="STANDALONE_TESTER"/>
+     </antcall>
   </target>
 
   <target name="unittest.distributed">
-     <property name="topology.test.type" value="DISTRIBUTED_TESTER"/>
-     <antcall target="unittest.base"/>
+     <antcall target="unittest.base" inheritAll="no">
+       <param name="topology.test.type" value="DISTRIBUTED_TESTER"/>
+     </antcall>
      <fail message="Unittests failed" if="topology.tests.failed"/>
   </target>
 
@@ -105,7 +108,6 @@
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
      <mkdir dir="${topology.test.dir}"/>
-     <property name="topology.test.type" value="EMBEDDED_TESTER"/>
      <property name="topology.test.sc_ok" value="true"/>
      <property name="topology.test.perf_ok" value="true"/>
      <property name="topology.test.coverage" value="true"/>
