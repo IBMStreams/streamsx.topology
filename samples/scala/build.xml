@@ -39,8 +39,6 @@
 
   <target name="init" if="env.SCALA_HOME">
      <echo message="Scala:${scala.home}"/>
-     <mkdir dir="${tk.opt}/scala"/>
-     <copy file="${scala-library.jar}" todir="${tk.opt}/scala"/>
   </target>
 
   <target name="compile" depends="init" if="env.SCALA_HOME">
