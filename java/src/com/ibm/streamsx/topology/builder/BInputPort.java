@@ -110,5 +110,24 @@ public class BInputPort extends BInput {
 
         return this;
     }
-
+    
+    /**
+     * Add a declaration of a default queue to this input port.
+     * @param functional True if this is for a functional operator.
+     */
+    public void addQueue(boolean functional) {
+        JSONObject queue = new JSONObject();
+        queue.put("functional", functional);
+        json().put("queue", queue);
+        if (functional) {
+            JSONObject params = (JSONObject) op.json().get("parameters");
+            if (params == null) {
+                params = new JSONObject();
+                op.json().put("parameters", params);             
+            }
+            JSONObject value = new JSONObject();
+            value.put("value", 100);
+            params.put("queueSize", value);
+        }
+    }
 }

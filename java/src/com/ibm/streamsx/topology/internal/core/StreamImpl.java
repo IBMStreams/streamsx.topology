@@ -99,7 +99,9 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 opName,
                 FunctionTransform.class, transformer);
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
-        connectTo(bop, true, null);
+        BInputPort inputPort = connectTo(bop, true, null);
+        // By default add a queue
+        inputPort.addQueue(true);
         return JavaFunctional.addJavaOutput(this, bop, tupleTypeClass);
     }
 
@@ -121,7 +123,10 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 FunctionMultiTransform.class, transformer);
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
-        connectTo(bop, true, null);
+        BInputPort inputPort = connectTo(bop, true, null);
+        // By default add a queue
+        inputPort.addQueue(true);
+
         return JavaFunctional.addJavaOutput(this, bop, tupleTypeClass);
     }
 
