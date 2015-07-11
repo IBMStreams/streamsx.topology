@@ -8,6 +8,7 @@ these additional developement software tools.
 * Apache Ant 1.9.4: The build uses Ant, the version it has been tested with is 1.9.4. - https://ant.apache.org/
 * JUnit 4.10: Java unit tests are written using JUnit, tested at version 4.10. - http://junit.org/
 * Jacoco 0.7.5: The JUnit tests have code coverage enabled by default, using Jacoco, tested with version 0.7.5. - http://www.eclemma.org/jacoco/
+* Scala - Optional, Scala support will be built if SCALA_HOME is set. Development was done with 2.11.7 - http://www.scala-lang.org/
 
 The Apache Ant `build.xml` files are setup to assume that the Junit and Jacoco jars are copied into `$HOME/.ant/lib`.
 ```
@@ -24,7 +25,7 @@ InfoSphere Streams environment variables have been set.
 ### Building
 
 The top-level Ant file `streamsx.topology/build.xml` has these main targets:
-* `all` (default) : Build the project, including the Java code for the Java Application API, the SPL `com.ibm.streamsx.topology` SPL toolkit and the sample applications.
+* `all` (default) : Build the project, including the Java code for the Java Application API, the SPL `com.ibm.streamsx.topology` SPL toolkit and the sample applications. If SCALA_HOME is set then Scala support is also built.
 * `clean` : Clean the project
 * `test` : Run the JUnit tests, most of the tests are run twice, once in embedded mode (within the JVM) and once in Streams standalone mode.
 * `test.report` : Build a test report for the JUnit test runs. This is invoked automatically when the `test` target passes, but in case of a failure, this may be invoked to produce a test report to easily display the failure(s).
