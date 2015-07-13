@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015  
+ */
 package com.ibm.streamsx.topology.functions
 
 import com.ibm.streamsx.topology.Topology
@@ -38,8 +42,5 @@ object FunctionConversions {
       def apply(v: T) = f(v)
       def getWrappedFunction() = f
   }
-
-
-
-
 }
+
