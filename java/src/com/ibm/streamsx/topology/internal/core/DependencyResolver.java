@@ -244,7 +244,6 @@ public class DependencyResolver {
             File absoluteFile = absolutePath.toFile();
             String fileName = absolutePath.getFileName().toString();
                     
-            // If it's a file, we assume its a jar file.
             if (absoluteFile.isFile()) {
                 try {
                     Files.copy(absolutePath, new File(toolkitRoot, fileName).toPath(),

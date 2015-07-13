@@ -4,6 +4,10 @@
  */
 package com.ibm.streamsx.topology.kafka;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -101,6 +105,9 @@ public class KafkaStreams {
     }
     
     /**
+     * Creates a stream of messages from a Kafka Cluster.
+     * This is an adapter to a Kafka KafkaConsumer.
+     * <p>
      * Same as {@code source(te, topic, 1, kafkaConsumerConfig)}
      * @param te Topology element representing the topology the source stream will be contained in.
      * @param kafkaConsumerConfig see the Kafka documentation.
@@ -122,17 +129,19 @@ public class KafkaStreams {
     }
     
     private static void addPropertiesFile(TopologyElement te) {
-        // TODO create tmp empty properties file "etc/emptyKafkaAdapterProperties"
-       /*
-         File tmpDir = mkTmpDir
-         File etcDir = mkDir(tmpDir, "etc");
-         File props = mkFile(tmpDir, PROPS_FILE);
-         props.createNewFile();
-         
-        te.addFileDependency(props.getAbsolutePath());
-        
-        when will it get removed?  if instead Topology makes the copy...???
-         */
+        try {
+            Path tmpToolkitRootPath = Files.createTempDirectory("tmpToolkitRoot");
+            File tmpToolkitRoot = tmpToolkitRootPath.toFile();
+            File etc = new File(tmpToolkitRoot, "etc");
+            etc.mkdir();
+            File propertiesFile = new File(tmpToolkitRoot, PROP_FILE);
+            propertiesFile.createNewFile();
+            
+            te.topology().addFileDependency(tmpToolkitRoot.getAbsolutePath());
+        }
+        catch (IOException e) {
+            throw new IllegalStateException("Unable to create a properties file: " + e, e);
+        }
     }
 
     /**
