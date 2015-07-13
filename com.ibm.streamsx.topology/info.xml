@@ -4,10 +4,9 @@
     <name>com.ibm.streamsx.topology</name>
     <description>
     Toolkit providing mechanisms to build IBM InfoSphere Streams
-    applications in other programming languages, with Java support
-    initially.
+    applications in other programming languages, with Java & Scala support.
     </description>
-    <version>0.7.2.beta</version>
+    <version>0.8.0.beta</version>
     <requiredProductVersion>4.0.0.0</requiredProductVersion>
   </identity>
   <dependencies/>
