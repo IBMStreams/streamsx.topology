@@ -37,10 +37,12 @@ public class LowLatencyTest {
         Topology topology = new Topology("lowLatencyTest");
 
         // Construct topology
-        TStream<String> ss = topology.strings("hello");
+        TStream<String> ss = topology.strings("hello")
+                .transform(getPEId(), String.class).transform(getPEId(), String.class);
+        
         TStream<String> ss1 = ss.transform(getPEId(), String.class).lowLatency();
         TStream<String> ss2 = ss1.transform(getPEId(), String.class).
-                transform(getPEId(), String.class).endLowLatency();
+                transform(getPEId(), String.class).endLowLatency().transform(getPEId(), String.class);
         TStream<String> ss3 = ss2.transform(getPEId(), String.class).lowLatency();
         ss3.transform(getPEId(), String.class).transform(getPEId(), String.class)
             .endLowLatency().print();

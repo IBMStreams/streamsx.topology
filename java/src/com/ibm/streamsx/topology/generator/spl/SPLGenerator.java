@@ -77,7 +77,7 @@ public class SPLGenerator {
                 
                 // Currently, threadedPorts are only supported on operators
                 // with one input port.
-                if(inputs.size() != 1){
+                if(inputs == null || inputs.size() != 1){
                     return;
                 }
                 
