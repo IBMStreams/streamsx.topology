@@ -325,13 +325,10 @@ class OperatorGenerator {
 
         Boolean streamViewability = (Boolean) config.get("streamViewability");
         String colocationTag = (String) config.get("colocationTag");
-        String  lowLatencyTag = (String) config.get("lowLatencyTag");
-        Boolean lowLatencyIsSet = (lowLatencyTag != null && !lowLatencyTag.isEmpty());
-//      String threadedPortInfo = ...;
+        JSONObject queue = (JSONObject) config.get("queue");
         if (streamViewability != null
                 || (colocationTag != null && !colocationTag.isEmpty())
-//              || ((threadedPortInfo != null && !threadedPortInfo.isEmpty()
-//                      && !lowLatencyIsSet)
+                || (queue != null && !queue.isEmpty())
                 ) {
             sb.append("  config\n");
         }
@@ -346,9 +343,14 @@ class OperatorGenerator {
             sb.append(colocationTag);
             sb.append("\");\n");
         }
-//      if((threadedPortInfo != null && !threadedPortInfo.isEmpty())
-//              && !lowLatencyIsSet){
-//            /* Set threaded port information here */
-//      }
+        if(queue != null && !queue.isEmpty()){
+            sb.append("    threadedPort: queue(");
+            sb.append((String)queue.get("inputPortName") + ", ");
+            sb.append((String)queue.get("congestionPolicy") + ",");
+            sb.append(((Integer)queue.get("queueSize")).toString());
+            sb.append(");\n");
+        }
+      
+        
     }
 }
