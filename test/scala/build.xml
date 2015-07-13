@@ -83,7 +83,6 @@
        </batchtest>
      </junit>
    </jacoco:coverage>
-     <echo message="Scala tests DONE: ${basedir}"/>
   </target>
 
 </project>
