@@ -9,7 +9,7 @@ import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 import com.ibm.streams.operator.StreamSchema;
 
 /**
- * SPL schema for tuples associated with streamsx.messaging 
+ * SPL schema for tuples associated with com.ibm.streamsx.messaging toolkit
  * SPL {@code KafkaConsumer} and {@code KafkaProducer} operators.
  */
 public class KafkaSchemas {
