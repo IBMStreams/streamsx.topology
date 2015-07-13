@@ -28,6 +28,8 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
+import org.apache.commons.io.FileUtils;
+
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
@@ -46,6 +48,7 @@ import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 public class DependencyResolver {
     private final Map<BOperatorInvocation, Set<Path>> operatorToJarDependencies = new HashMap<>();
     private final Set<Path> globalDependencies = new HashSet<>();
+    private final Set<Path> globalFileDependencies = new HashSet<>();
 
     /**
      * Ensure we don't copy files multiple times and keep
@@ -113,6 +116,15 @@ public class DependencyResolver {
             operatorToJarDependencies.get(op).add(absolutePath);
         }
     }
+    
+    public void addFileDependency(String location) throws IllegalArgumentException{
+        File f = new File(location);
+        if(!f.exists()){
+            throw new IllegalArgumentException("File not found. Invalid "
+               + "file dependency location:"+ f.toPath().toAbsolutePath().toString());
+        }
+        globalFileDependencies.add(f.toPath().toAbsolutePath());    
+    }
 
     // Resolve the dependencies. Copies jars to the impl/lib part of the bundle
     public void resolveDependencies(Map<String, Object> config)
@@ -162,6 +174,13 @@ public class DependencyResolver {
                 }
             }
         }
+
+        for(Path dep : globalFileDependencies){
+            if(previouslyCopiedDependencies.containsKey(dep)){
+                continue;
+            }
+            resolveFileDependency(dep, config);
+        }   
     }
     
     private String resolveDependency(Path pa, Map<String, Object> config){ 
@@ -211,6 +230,43 @@ public class DependencyResolver {
             throw new IllegalStateException("Error resolving dependency "+ pa);
         }
         return jarName;
+    }
+    
+    /**
+     * Copy path (recursively) to the toolkitRoot
+     */
+    private void resolveFileDependency(Path pa, Map<String, Object> config){ 
+        final File toolkitRoot = new File((String) (config
+                .get(ContextProperties.TOOLKIT_DIR)));
+        
+        if (!previouslyCopiedDependencies.containsKey(pa)) {
+            Path absolutePath = pa;
+            File absoluteFile = absolutePath.toFile();
+            String fileName = absolutePath.getFileName().toString();
+                    
+            // If it's a file, we assume its a jar file.
+            if (absoluteFile.isFile()) {
+                try {
+                    Files.copy(absolutePath, new File(toolkitRoot, fileName).toPath(),
+                        StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e) {
+                    throw new IllegalStateException("Error resolving dependency "+ pa + " " + e);
+                }
+            } 
+            
+            else if (absoluteFile.isDirectory()) {
+                try {
+                    FileUtils.copyDirectory(absoluteFile, toolkitRoot);
+                } catch (IOException e) {
+                    throw new IllegalStateException("Error resolving dependency "+ pa + " " + e);
+                }
+            }
+            
+            else {
+                throw new IllegalArgumentException("Path not a file or directory:" + pa);
+            }
+            previouslyCopiedDependencies.put(pa, fileName);
+        } 
     }
     
     /**

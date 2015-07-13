@@ -129,7 +129,7 @@
        <batchtest todir="${topology.test.dir}">
           <fileset dir="${basedir}/src">
              <include name="**/*Test.java"/>
-             <exclude name="**/samples/*Test.java"/>
+             <exclude name="**/samples/*Test.java **/test/kafka/"/>
           </fileset>
        </batchtest>
      </junit>
@@ -149,6 +149,48 @@
        <batchtest todir="${topology.test.dir}">
           <fileset dir="${basedir}/src">
              <include name="**/samples/*Test.java"/>
+          </fileset>
+       </batchtest>
+     </junit>
+   </jacoco:coverage>
+   </target>
+
+  <target name="unittest.kafka">
+     <echo message="See com.ibm.streamsx.topology.test.kafka.package-info.java for required configuration information."/>
+     <property name="topology.test.type" value="DISTRIBUTED_TESTER"/>
+     <property name="topology.test.include.name" value="**/kafka/*Test.java"/>
+     <antcall target="unittest.simple"/>
+     <fail message="Unittests failed" if="topology.tests.failed"/>
+  </target>
+
+  <target name="unittest.simple" depends="jar">
+     <mkdir dir="${test.dir}"/>
+     <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
+     <mkdir dir="${topology.test.dir}"/>
+     <property name="topology.test.include.name" value="ERROR-CALLER-MUST-SPECIFY"/>
+     <property name="topology.test.type" value="EMBEDDED_TESTER"/>
+     <property name="topology.test.sc_ok" value="true"/>
+     <property name="topology.test.perf_ok" value="true"/>
+     <property name="topology.test.coverage" value="true"/>
+     <property name="topology.test.resource_dir" location="resources"/>
+  	 <property name="topology.test.showoutput" value="no"/>
+   <jacoco:coverage enabled="${topology.test.coverage}">
+     <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="{topology.test.showoutput}"
+           haltonfailure="yes" failureproperty="topology.tests.failed">
+       <sysproperty key="topology.test.root" value="${topology.test.root}"/>
+       <sysproperty key="topology.test.type" value="${topology.test.type}"/>
+       <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
+       <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
+       <sysproperty key="topology.test.resource_dir" file="resources"/>
+       
+       <classpath>
+         <path refid="test.classpath"/>
+       </classpath>
+       <assertions><enable/></assertions>
+       <formatter type="xml"/>
+       <batchtest todir="${topology.test.dir}">
+          <fileset dir="${basedir}/src">
+             <include name="${topology.test.include.name}"/>
           </fileset>
        </batchtest>
      </junit>
