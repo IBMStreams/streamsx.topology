@@ -8,7 +8,7 @@ The Java Application API enables a developer to create streaming applications en
 
 Please refer to the [getting started guide](http://ibmstreams.github.io/streamsx.topology/gettingstarted.html), [FAQ page](http://ibmstreams.github.io/streamsx.topology/FAQ.html), and [documentation](http://ibmstreams.github.io/streamsx.topology/doc.html) for help.
 
-## Scala Application API
-The Scala Application API enables a developer to create streaming applications entirely in Scala for IBM Streams. The Scala API is currently calls into the Java Application API (as Java & Scala are both JVM languages), and includes implicit conversions to allow Scala anonymous functions to be used as the functional transformations.
+## Scala Support
+Scala support enables a developer to create streaming applications entirely in Scala for IBM Streams. Scala support requires the application calls into the Java Application API (as Java & Scala are both JVM languages), and includes implicit conversions to allow Scala anonymous functions to be used as the functional transformations.
 
 Please see this initial documentation: https://github.com/IBMStreams/streamsx.topology/wiki/Scala-Support
