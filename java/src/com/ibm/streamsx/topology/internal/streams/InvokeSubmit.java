@@ -128,7 +128,7 @@ public class InvokeSubmit {
         }
     }
     
-    private String toTracingLevel(Level level) {
+    public static String toTracingLevel(Level level) {
         int tli = level.intValue();
         String tls;
         if (tli == Level.OFF.intValue())

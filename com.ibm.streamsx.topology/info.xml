@@ -9,6 +9,10 @@
     </description>
     <version>0.7.2.beta</version>
     <requiredProductVersion>4.0.0.0</requiredProductVersion>
-  </identity>
+    </identity>
   <dependencies/>
+  <sabFiles>
+   	<exclude path="opt/httpcomponents-client-4.3.6/**"/>
+    	<exclude path="opt/icons/**"/>
+  </sabFiles>
 </toolkitInfoModel>

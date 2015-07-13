@@ -40,7 +40,7 @@ public interface JobProperties {
      */
     String OVERRIDE_RESOURCE_LOAD_PROTECTION = "job.overrideResourceLoadProtection";
     
-    /*
+    /**
      * Optionally specify whether to preload the job onto all resources in
      * the instance. Valid values are true and false.
      * Preloading the job can improve the performance if PE is relocated to

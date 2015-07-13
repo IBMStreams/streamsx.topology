@@ -16,6 +16,7 @@ import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -39,7 +40,10 @@ import org.apache.http.util.EntityUtils;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
+import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
 
 public class AnalyticsServiceStreamsContext extends
         BundleUserStreamsContext<BigInteger> {
@@ -149,7 +153,7 @@ public class AnalyticsServiceStreamsContext extends
         HttpGet getStatus = new HttpGet(url);
         JSONObject jsonResponse = getJsonResponse(httpClient, getStatus);
         
-        System.out.println("STATUS=" + jsonResponse);
+        Topology.STREAMS_LOGGER.info("Streaming Analytics Service instance status response:" + jsonResponse.serialize());
         
         if (!Boolean.TRUE.equals(jsonResponse.get("enabled")))
             throw new IllegalStateException("Service is not enabled!");
@@ -193,10 +197,10 @@ public class AnalyticsServiceStreamsContext extends
         return sb.toString();
     }
     
-    private void postJob(CloseableHttpClient httpClient, JSONObject credentials, File bundle)
+    private BigInteger postJob(CloseableHttpClient httpClient, JSONObject credentials, File bundle, JSONObject submitConfig)
             throws ClientProtocolException, IOException {
 
-        JSONObject submitConfig = new JSONObject();
+        
         String url = getSubmitURL(credentials, bundle);
         
         HttpPost postJobWithConfig = new HttpPost(url);
@@ -215,7 +219,44 @@ public class AnalyticsServiceStreamsContext extends
 
         JSONObject jsonResponse = getJsonResponse(httpClient, postJobWithConfig);
         
-        System.out.println("SUBMIT=" + jsonResponse);
+        Topology.STREAMS_LOGGER.info("Streaming Analytics Service submit job response:" + jsonResponse.serialize());
+        
+        Object jobId = jsonResponse.get("jobId");
+        if (jobId == null)
+            return BigInteger.valueOf(-1);
+        return new BigInteger(jobId.toString());
+    }
+    
+    private JSONObject getBluemixSubmitConfig( Map<String, Object> config) throws IOException {
+        JSONObject submitConfig = new JSONObject();
+        
+        addSubmitValue(submitConfig, config, JobProperties.NAME, "jobName");
+        addSubmitValue(submitConfig, config, JobProperties.GROUP, "jobGroup");
+        addSubmitValue(submitConfig, config, JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION, "overrideResourceLoadProtection");
+        
+        JSONObject submitConfigConfig = new JSONObject();
+        addSubmitValue(submitConfigConfig, config, JobProperties.DATA_DIRECTORY, "data-directory");
+        addSubmitValue(submitConfigConfig, config, JobProperties.PRELOAD_APPLICATION_BUNDLES, "preload");
+        if (config.containsKey(ContextProperties.TRACING_LEVEL)) {
+            Level traceLevel = (Level) config.get(ContextProperties.TRACING_LEVEL);
+            submitConfigConfig.put("tracing", InvokeSubmit.toTracingLevel(traceLevel));
+        }
+        if (!submitConfigConfig.isEmpty())
+            submitConfig.put("configurationSettings", submitConfigConfig);
+        
+        Topology.STREAMS_LOGGER.fine("Streaming Analytics Service submit job request:" + submitConfig.serialize());
+        
+        return submitConfig;
+    }
+    
+    private static void addSubmitValue(JSONObject json, Map<String, Object> config, String key, String jsonKey) {
+        Object value = config.get(key);
+        if (value == null)
+            return;
+        if (value instanceof String && value.toString().isEmpty())
+            return;
+        
+        json.put(jsonKey, value);
     }
     
     private BigInteger submitJobToService(File bundle, Map<String, Object> config) throws IOException {
@@ -225,12 +266,13 @@ public class AnalyticsServiceStreamsContext extends
         
         final CloseableHttpClient httpClient = createHttpClient(credentials);
         try {
+            Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Checking status :" + service.get("name"));           
             checkInstanceStatus(httpClient, credentials);
-            postJob(httpClient, credentials, bundle);
+            
+            Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Submitting bundle : " + bundle.getName() + " to " + service.get("name"));
+            return postJob(httpClient, credentials, bundle, getBluemixSubmitConfig(config));
         } finally {
             httpClient.close();
         }
-        
-        return null;
     }
 }
