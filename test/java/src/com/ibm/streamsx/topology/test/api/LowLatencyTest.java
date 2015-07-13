@@ -31,6 +31,23 @@ public class LowLatencyTest {
         StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT).submit(topology).get();
     }
     
+    @Test
+    public void multipleRegionLowLatencyTest() throws Exception{
+        assumeTrue(SC_OK);
+        Topology topology = new Topology("lowLatencyTest");
+
+        // Construct topology
+        TStream<String> ss = topology.strings("hello");
+        TStream<String> ss1 = ss.transform(getPEId(), String.class).lowLatency();
+        TStream<String> ss2 = ss1.transform(getPEId(), String.class).
+                transform(getPEId(), String.class).endLowLatency();
+        TStream<String> ss3 = ss2.transform(getPEId(), String.class).lowLatency();
+        ss3.transform(getPEId(), String.class).transform(getPEId(), String.class)
+            .endLowLatency().print();
+        
+        StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT).submit(topology).get();
+    }
+    
     @SuppressWarnings("serial")
     private static Function<String, String> getPEId(){
         return new Function<String, String>(){
