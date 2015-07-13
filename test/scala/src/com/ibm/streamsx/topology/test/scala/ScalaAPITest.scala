@@ -86,5 +86,21 @@ class ScalaAPITest extends TestTopology  {
       // just verifying we can write a consumer
       supplierStream.sink((p : Person) => { Console.println(p) });
   }
-  
+    
+        @Test
+    def testScalaMultiTransform() {
+        val topology = new Topology("testScalaMultiTransform");
+        val source = topology.strings("mary had a little lamb",
+                "its fleece was white as snow");
+
+        val words : TStream[String] = source.multiTransform((s : String) => {
+                     val sseq : Seq[String] = s.split(" ")
+                     sseq
+                     } : java.lang.Iterable[String] ,
+                classOf[String]);
+        
+        completeAndValidate(words, 10, "mary", "had",
+                "a", "little", "lamb", "its", "fleece", "was", "white", "as",
+                "snow");
+    }
 }
