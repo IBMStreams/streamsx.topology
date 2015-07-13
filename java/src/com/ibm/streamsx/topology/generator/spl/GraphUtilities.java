@@ -217,15 +217,16 @@ public class GraphUtilities {
 
         while (unvisited.size() > 0) {
             JSONObject op = unvisited.get(0);
-            visited.add(op);
-            unvisited.remove(0);
-
+            // Modify and THEN add to hashSet as to not break the hashCode of
+            // the object in the hashSet.
             consumer.accept(op);
-
+            visited.add(op);  
             GraphUtilities.getUnvisitedAdjacentNodes(visited, unvisited, op,
                     graph, boundaries);
+            unvisited.remove(0);
+            
+  
         }
-
     }
 
     public static void getUnvisitedAdjacentNodes(

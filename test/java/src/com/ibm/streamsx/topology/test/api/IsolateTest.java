@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.streams.operator.PERuntime;
@@ -22,6 +23,7 @@ import com.ibm.streamsx.topology.tester.Tester;
 
 public class IsolateTest {
 
+    @Ignore
     @Test
     public void simpleIsolationTest() throws Exception {
         assumeTrue(SC_OK);
@@ -55,7 +57,8 @@ public class IsolateTest {
         StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT)
                 .submit(topology).get();
     }
-
+    
+    @Ignore
     @Test
     public void isolateIsEndOfStreamTest() throws Exception {
         assumeTrue(SC_OK);
@@ -70,7 +73,8 @@ public class IsolateTest {
                 .submit(topology).get();
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Ignore
+    @Test
     public void multipleIsolationTest() throws Exception {
         Topology topology = new Topology("isolationTest");
 
@@ -91,7 +95,8 @@ public class IsolateTest {
                 .submit(topology).get();
     }
 
-    @Test
+    @Ignore
+    @Test(expected = IllegalStateException.class)
     public void multipleIsolationExceptionTest() throws Exception {
         Topology topology = new Topology("isolationTest");
 
@@ -130,6 +135,7 @@ public class IsolateTest {
         .submit(topology).get();
     }
 
+    @Ignore
     @Test
     public void unionIsolateTest() throws Exception {
         Topology topology = new Topology("isolationTest");

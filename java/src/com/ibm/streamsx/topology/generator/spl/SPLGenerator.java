@@ -302,20 +302,20 @@ public class SPLGenerator {
 
                     @Override
                     public void accept(JSONObject op) {
-                        // If the region has already been assigned a colocation
-                        // tag, simply
-                        // return.
-                        String regionTag = (String) op.get("colocationTag");
-                        if (regionTag != null && !regionTag.isEmpty()) {
-                            return;
-                        }
-
                         JSONObject config = (JSONObject) op.get("config");
                         if (config == null || config.isEmpty()) {
                             config = new OrderedJSONObject();
                             op.put("config", config);
                         }
 
+                        // If the region has already been assigned a colocation
+                        // tag, simply
+                        // return.
+                        String regionTag = (String) config.get("colocationTag");
+                        if (regionTag != null && !regionTag.isEmpty()) {
+                            return;
+                        }
+                        
                         config.put("colocationTag", colocationTag);
                     }
 
@@ -380,10 +380,9 @@ public class SPLGenerator {
             assignColocations(isolate,
                     GraphUtilities.getChildren(isolate, graph), graph);
         }
-
-        GraphUtilities.removeOperators(isolateOperators, graph);
-        
+ 
         tagIslandIsolatedRegions(graph);
+        GraphUtilities.removeOperators(isolateOperators, graph);
     }
     
     @SuppressWarnings("serial")
@@ -402,11 +401,28 @@ public class SPLGenerator {
             List<JSONObject> startList = new ArrayList<JSONObject>();
             startList.add(start);
             
-            GraphUtilities.visitOnce(startList, null, graph,
+            List<String> boundaries = new ArrayList<>();
+            boundaries.add("$Isolate$");
+            
+            GraphUtilities.visitOnce(startList, boundaries, graph,
                     new Consumer<JSONObject>() {
                         @Override
                         public void accept(JSONObject op) {
-                            op.put("colocationTag", colocationTag);
+                            JSONObject config = (JSONObject) op.get("config");
+                            if (config == null || config.isEmpty()) {
+                                config = new OrderedJSONObject();
+                                op.put("config", config);
+                            }
+
+                            // If the region has already been assigned a colocation
+                            // tag, simply
+                            // return.
+                            String regionTag = (String) config.get("colocationTag");
+                            if (regionTag != null && !regionTag.isEmpty()) {
+                                return;
+                            }
+                            
+                            config.put("colocationTag", colocationTag);
                         }
                     });           
         }
