@@ -533,41 +533,51 @@ public interface TStream<T> extends TopologyElement {
     TStream<T> sample(double fraction);
     
     /**
-     * Return a TStream that runs in a separate process from the parent. The
-     * children of the returned TStream will also run in another process. If a
-     * child of the returned TStream is combined with another TStream through a 
-     * union(), both TStreams will run in another process, including their ancestors
-     * and children up until other isolate() boundaries.
-     * <br><br>
-     * In other words, for the following Topology:
+     * Return a TStream that runs in a separate process from the calling TStream. 
+     * For the following Topology:
      * <pre><code>
-     *                    |--.isolate()---transform2--|
-     * ------transform1---|                           |--.isolate()--filter---
-     *                    |--.isolate()---transform3--|
+     * ---source---transform1---.isolate()---transform2---.isolate()--sink
      * </code></pre>
      * 
-     * Three separate processes will be created -- one process will contain
+     * Three separate processes will be created -- one process will contain source and
      * transform1, another will contain both transform2 and transform3, and the
-     * last will contain filter.
+     * last will contain the sink.
      * 
      * <br><br>
-     * Merging an isolated stream with its parent stream will throw an exception.
-     * @return A TStream whose children will run in a separate process from 
-     * their parents.
+     * @return A TStream that runs in a separate process from the calling
+     * TStream.
      */
     TStream<T> isolate();
     
     /**
-     * Start low latency region
+     * Return a stream that is guaranteed to run in the same process as the
+     * calling TStream. All streams that are created from the returned stream 
+     * are also guaranteed to run in the same process until {@link TStream#endLowLatency()}
+     * is called.
+     * <br><br>
+     * For example, for the following topology:
+     * <pre><code>
+     * ---source---.lowLatency()---filter---transform---.endLowLatency()---
+     * </code></pre>
+     * It is guaranteed that the filter and transform operations will run in
+     * the same process.
      * 
-     * @return Low latency tstream
+     * @return A stream that is guaranteed to run in the same process as the 
+     * calling stream.
      */
     TStream<T> lowLatency();
 
     /**
-     * end low latency region
-     * 
-     * @return Non-low latency tstream.
+     * Return a TStream that is no longer guaranteed to run in the same process
+     * as the calling stream. For example, in the following topology:
+     * <pre><code>
+     * ---source---.lowLatency()---filter---transform---.endLowLatency()---filter2
+     * </code></pre>
+     * It is guaranteed that the filter and transform operations will run in
+     * the same process, but it is not guaranteed that the transform and
+     * filter2 operations will run in the same process.
+     * @return A stream that is not guaranteed to run in the same process as the 
+     * calling stream.
      */
     TStream<T> endLowLatency();
 
