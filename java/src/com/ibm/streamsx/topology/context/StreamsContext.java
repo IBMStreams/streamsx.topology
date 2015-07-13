@@ -114,8 +114,6 @@ public interface StreamsContext<T> {
          * When {@code submit} returns the {@code Future} will be complete,
          * but the Streams job will still be running, as typically distributed
          * jobs are long running, consuming continuous streams of data.
-         * <BR>
-         * Calling {@code Future.cancel(true)} will cancel the job in the Streams instance.
          * </P>
          * <P>
          * This initial implementation uses {@code streamtool} to submit and cancel jobs,
@@ -153,7 +151,33 @@ public interface StreamsContext<T> {
          * streams, sub-topologies, and, SPL primitive operators and composites.
          */
         DISTRIBUTED_TESTER,
-
+        
+        
+        /**
+         * The topology is submitted to a Streams instance running
+         * in Streaming Analytics Service on
+         * <a href="http://www.ibm.com/Bluemix‎" target="_blank">IBM Bluemix</a>.
+         * <P>
+         * The returned type for the {@code submit} calls is
+         * a {@code Future&lt;BigInteger>} where the value is
+         * the job identifier.
+         * <BR>
+         * When {@code submit} returns the {@code Future} will be complete,
+         * but the Streams job will still be running, as typically distributed
+         * jobs are long running, consuming continuous streams of data.
+         * </P>
+         * <P>
+         * The name of the Streaming Analytics Service must be set as a
+         * configuration property for a submit, using {@link AnalyticsServiceProperties#SERVICE_NAME}.
+         * The definition for the service is defined one of two ways:
+         * <UL>
+         * <LI>Using the configuration property {@link AnalyticsServiceProperties#VCAP_SERVICES}.
+         * This takes precedence over the environment variable.</LI>
+         * <LI>Using the environment variable {@code VCAP_SERVICES}</LI>
+         * </UL>
+         * </P>
+         */
+        ANALYTICS_SERVICE,
         ;
     }
 
