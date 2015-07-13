@@ -503,6 +503,37 @@ public class Topology implements TopologyElement {
         JavaFunctional.addClassDependency(this, clazz); 
     }
     
+    /**
+     * Includes a file or directory tree, specified by the
+     * {@code location} String, into the toolkit root in the application bundle.
+     * <p>
+     * Use {@link #addClassDependency(Class)} or {@link #addJarDependency(String)}
+     * to add class or jar dependencies.
+     * <p>
+     * If the location is a directory, the directory tree is copied.
+     * The copied file or directory tree overwrites existing files if any.
+     * <p>
+     * For example, the following code copies "etc/someConfigFile" to
+     * the toolkit root such that it could be used when running in a 
+     * non-EMBEDDED context.
+     * <pre><code>
+     *  // create a temporary directory with an "etc"
+     *  // subdirectory with a "someConfigFile" file in it
+     *  // ...
+     * String tmpToolkitRootdir = ...;
+     * Topology top = new Topology("myTopology");
+     * top.addJarDependency(tmpToolkitRootdir);
+     * </pre></code> 
+     * @param location path to a file or directory tree to add.
+     * 
+     * @throws IllegalArgumentException if the location is not valid.
+     * 
+     * @see Topology#addJarDependency(String)
+     */
+    public void addFileDependency(String location) {
+        dependencyResolver.addFileDependency(location);
+    }
+    
     private void finalizeConfig() {
         JSONObject jsonConfig = builder().getConfig();
         
