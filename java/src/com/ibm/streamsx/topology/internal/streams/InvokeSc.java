@@ -76,6 +76,7 @@ public class InvokeSc {
 
         commands.add(sc.getAbsolutePath());
         commands.add("--optimized-code-generation");
+        commands.add("--num-make-threads=4");
         if (standalone)
             commands.add("--standalone");
 
