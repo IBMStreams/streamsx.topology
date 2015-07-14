@@ -125,21 +125,28 @@ public class GraphUtilities {
             List<JSONObject> operatorChildren = GraphUtilities.getChildren(iso,
                     graph);
 
+            
             JSONArray operatorOutputs = (JSONArray) iso.get("outputs");
-            if (operatorOutputs.size() == 0) {
-                throw new IllegalStateException(
-                        "Operator must have at least one child.");
-            }
-
+            
             // Get the output name of the operator
-            JSONObject operatorFirstOutput = (JSONObject) operatorOutputs
-                    .get(0);
-            String operatorOutName = (String) operatorFirstOutput.get("name");
-
+            String operatorOutName="";
+            if(operatorOutputs != null){
+                JSONObject operatorFirstOutput = (JSONObject) operatorOutputs
+                        .get(0);
+                if(operatorFirstOutput != null){
+                    operatorOutName = (String) operatorFirstOutput.get("name");
+                }
+            }
+            
             // Also get input name
+            String operatorInName="";
             JSONArray operatorInputs = (JSONArray) iso.get("inputs");
-            JSONObject operatorFirstInput = (JSONObject) operatorInputs.get(0);
-            String operatorInName = (String) operatorFirstInput.get("name");
+            if(operatorInputs != null){
+                JSONObject operatorFirstInput = (JSONObject) operatorInputs.get(0);
+                if(operatorFirstInput != null){
+                    operatorInName = (String) operatorFirstInput.get("name");
+                }
+            }
 
             // Respectively, the names of the child and parent input and
             // output ports connected to the operator.
