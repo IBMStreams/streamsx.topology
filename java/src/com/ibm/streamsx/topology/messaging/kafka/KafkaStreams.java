@@ -69,13 +69,15 @@ public class KafkaStreams {
         Map<String, Object> params = new HashMap<>();
         params.put("topic", topics);
         params.put("threadsPerTopic", threadsPerTopic);
+        // workaround streamsx.messaging issue #107
         params.put("propertiesFile", PROP_FILE);
         if (kafkaConsumerConfig!=null && !kafkaConsumerConfig.isEmpty())
             params.put("kafkaProperty", toKafkaProperty(kafkaConsumerConfig));
         
         addPropertiesFile(te);
 
-        boolean confirmedMultiTopicConsumerWorks = false; // seems broken
+        // see streamsx.messaging issue #109
+        boolean confirmedMultiTopicConsumerWorks = false;
         if (topics.length==1 || confirmedMultiTopicConsumerWorks) {
             SPLStream rawKafka = SPL.invokeSource(
                             te,
@@ -218,6 +220,7 @@ public class KafkaStreams {
                 KafkaSchemas.KAFKA);
             
         Map<String,Object> params = new HashMap<String,Object>();
+        // workaround streamsx.messaging issue #107
         params.put("propertiesFile", PROP_FILE);
         if (kafkaProducerConfig!=null && !kafkaProducerConfig.isEmpty())
             params.put("kafkaProperty", toKafkaProperty(kafkaProducerConfig));
