@@ -4,7 +4,7 @@
  */
 
 /**
- * Context for executing IBM InfoSphere Streams Java topologies.
+ * Context for executing IBM Streams Java topologies.
  * <h3>Submission/Execution</h3>
  * There are four (primary) mechanisms to submit or execute a Java topology:
  * <UL>

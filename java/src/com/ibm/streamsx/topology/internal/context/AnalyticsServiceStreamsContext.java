@@ -170,11 +170,19 @@ public class AnalyticsServiceStreamsContext extends
         CloseableHttpResponse response = httpClient.execute(request);
         JSONObject jsonResponse;
         try {
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK)
+            HttpEntity entity = response.getEntity();
+            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                final String errorInfo;
+                if (entity != null)
+                    errorInfo = " -- " + EntityUtils.toString(entity);
+                else
+                    errorInfo = "";
                 throw new IllegalStateException(
                         "Unexpected HTTP resource from service:"
-                                + response.getStatusLine().getStatusCode());
-            HttpEntity entity = response.getEntity();
+                                + response.getStatusLine().getStatusCode() + ":" +
+                                response.getStatusLine().getReasonPhrase() + errorInfo);
+            }
+            
             if (entity == null)
                 throw new IllegalStateException("No HTTP resource from service");
 
@@ -236,7 +244,7 @@ public class AnalyticsServiceStreamsContext extends
         
         JSONObject submitConfigConfig = new JSONObject();
         addSubmitValue(submitConfigConfig, config, JobProperties.DATA_DIRECTORY, "data-directory");
-        addSubmitValue(submitConfigConfig, config, JobProperties.PRELOAD_APPLICATION_BUNDLES, "preload");
+        addSubmitValue(submitConfigConfig, config, JobProperties.PRELOAD_APPLICATION_BUNDLES, "preloadApplicationBundles");
         if (config.containsKey(ContextProperties.TRACING_LEVEL)) {
             Level traceLevel = (Level) config.get(ContextProperties.TRACING_LEVEL);
             submitConfigConfig.put("tracing", InvokeSubmit.toTracingLevel(traceLevel));
@@ -244,7 +252,7 @@ public class AnalyticsServiceStreamsContext extends
         if (!submitConfigConfig.isEmpty())
             submitConfig.put("configurationSettings", submitConfigConfig);
         
-        Topology.STREAMS_LOGGER.fine("Streaming Analytics Service submit job request:" + submitConfig.serialize());
+        Topology.STREAMS_LOGGER.info("Streaming Analytics Service submit job request:" + submitConfig.serialize());
         
         return submitConfig;
     }
@@ -255,6 +263,10 @@ public class AnalyticsServiceStreamsContext extends
             return;
         if (value instanceof String && value.toString().isEmpty())
             return;
+        
+        // Streams REST service requires a String value
+        if (JobProperties.PRELOAD_APPLICATION_BUNDLES.equals(key))
+            value = value.toString();
         
         json.put(jsonKey, value);
     }
