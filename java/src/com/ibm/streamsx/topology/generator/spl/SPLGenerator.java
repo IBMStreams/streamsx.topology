@@ -109,7 +109,7 @@ public class SPLGenerator {
                 JSONObject config = (JSONObject) op.get("config");
                 colocTag = (String) config.get("colocationTag");
 
-                List<JSONObject> parents = GraphUtilities.getParents(op, graph);
+                List<JSONObject> parents = GraphUtilities.getUpstream(op, graph);
                 for(JSONObject parent : parents){
                     JSONObject parentConfig = (JSONObject)parent.get("config");
                     String parentColocTag  = (String) parentConfig.get("colocationTag");
@@ -264,7 +264,7 @@ public class SPLGenerator {
             // If the operator is not a special operator, add it to the
             // visited list.
             if (!isParallelStart(visitOp) && !isParallelEnd(visitOp)) {
-                ArrayList<JSONObject> children = GraphUtilities.getChildren(
+                ArrayList<JSONObject> children = GraphUtilities.getDownstream(
                         visitOp, graph);
                 unvisited.addAll(children);
                 visited.add(visitOp);
@@ -329,7 +329,7 @@ public class SPLGenerator {
                 // Get the start operators in the parallel region -- the ones
                 // immediately downstream from the $Parallel operator
                 ArrayList<JSONObject> parallelStarts = GraphUtilities
-                        .getChildren(visitOp, graph);
+                        .getDownstream(visitOp, graph);
 
                 // Once you have the start operators, recursively call the
                 // function
@@ -352,7 +352,7 @@ public class SPLGenerator {
                 // operator
                 if (parallelEnd != null) {
                     ArrayList<JSONObject> children = GraphUtilities
-                            .getChildren(parallelEnd, graph);
+                            .getDownstream(parallelEnd, graph);
                     unvisited.addAll(children);
                     compOperator.put("outputs", parallelEnd.get("outputs"));
                     subComp.put("outputName",
@@ -440,9 +440,9 @@ public class SPLGenerator {
      */
     @SuppressWarnings("serial")
     private void checkValidColocationRegion(JSONObject isolate, JSONObject graph) {
-        final List<JSONObject> isolateChildren = GraphUtilities.getChildren(
+        final List<JSONObject> isolateChildren = GraphUtilities.getDownstream(
                 isolate, graph);
-        List<JSONObject> isoParents = GraphUtilities.getParents(isolate, graph);
+        List<JSONObject> isoParents = GraphUtilities.getUpstream(isolate, graph);
 
         assertNotIsolated(isoParents);
 
@@ -475,9 +475,9 @@ public class SPLGenerator {
         // Assign isolation regions their partition colocations
         for (JSONObject isolate : isolateOperators) {
             assignColocations(isolate,
-                    GraphUtilities.getParents(isolate, graph), graph);
+                    GraphUtilities.getUpstream(isolate, graph), graph);
             assignColocations(isolate,
-                    GraphUtilities.getChildren(isolate, graph), graph);
+                    GraphUtilities.getDownstream(isolate, graph), graph);
         }
  
         tagIslandIsolatedRegions(graph);
@@ -546,7 +546,7 @@ public class SPLGenerator {
         // Assign isolation regions their lowLatency tag
         for (JSONObject llStart : lowLatencyStartOperators) {
             assignLowLatency(llStart,
-                    GraphUtilities.getChildren(llStart, graph), graph);
+                    GraphUtilities.getDownstream(llStart, graph), graph);
         }
 
         List<JSONObject> allLowLatencyOps = new ArrayList<>();
