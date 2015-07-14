@@ -8,9 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
@@ -38,6 +36,7 @@ public class SPLGenerator {
         tagIsolationRegions(graph);
         tagLowLatencyRegions(graph);
         preProcessThreadedPorts(graph);
+        removeUnionOperators(graph);
        
         // Generate parallel composites
         JSONObject comp = new OrderedJSONObject();
@@ -49,6 +48,12 @@ public class SPLGenerator {
         StringBuilder sb = new StringBuilder();
         generateGraph(graph, sb);
         return sb.toString();
+    }
+    
+    // At this point, the $Union$ operators in the graph are just place holders.
+    private void removeUnionOperators(JSONObject graph){
+        List<JSONObject> unionOps = GraphUtilities.findOperatorByKind(GraphBuilder.UNION, graph);
+        GraphUtilities.removeOperators(unionOps, graph);
     }
    
     @SuppressWarnings("serial")
