@@ -63,7 +63,7 @@ public class Topology implements TopologyElement {
     public static Logger TOPOLOGY_LOGGER = Logger.getLogger("com.ibm.streamsx.topology");
     
     /**
-     * Logger used for the interactions with IBM InfoSphere Streams functionality, name {@code com.ibm.streamsx.topology.streams}.
+     * Logger used for the interactions with IBM Streams functionality, name {@code com.ibm.streamsx.topology.streams}.
      */
     public static Logger STREAMS_LOGGER = Logger.getLogger("com.ibm.streamsx.topology.streams");
 

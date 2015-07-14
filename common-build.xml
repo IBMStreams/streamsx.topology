@@ -24,7 +24,13 @@
     <pathelement location="${streams.install}/lib/com.ibm.streams.operator.samples.jar" />
     <pathelement location="${streams.install}/lib/com.ibm.streams.operator.jar" />
   </path>
+  <path id="httpclient.classpath">
+        <fileset dir="${tk.opt}/httpcomponents-client-4.3.6/lib">
+           <include name="*.jar" />
+        </fileset>
+  </path>
   <path id="tk.classpath">
     <pathelement location="${tk.opt}/apache-mina-2.0.2/dist/mina-core-2.0.2.jar" />
+    <path refid="httpclient.classpath" />
   </path>
 </project>

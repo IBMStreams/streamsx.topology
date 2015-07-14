@@ -5,8 +5,8 @@
 package com.ibm.streamsx.topology.context;
 
 /**
- * Context properties specific to a {@link StreamsContext.Type#DISTRIBUTED}
- * context -- InfoSphere Streams jobs.
+ * Job properties specific to a {@link StreamsContext.Type#DISTRIBUTED}
+ * context.
  * @see StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)
  * @see ContextProperties
  */
@@ -16,8 +16,7 @@ public interface JobProperties {
      * Name for a submitted  application.
      * Argument is a String.
      * <p>
-     * Specifying a job name is optional.  
-     * Use of this property requires InfoSphere Streams v4.0 and later. 
+     * Specifying a job name is optional.
      */
     String NAME = "job.name";
     
@@ -40,7 +39,7 @@ public interface JobProperties {
      */
     String OVERRIDE_RESOURCE_LOAD_PROTECTION = "job.overrideResourceLoadProtection";
     
-    /*
+    /**
      * Optionally specify whether to preload the job onto all resources in
      * the instance. Valid values are true and false.
      * Preloading the job can improve the performance if PE is relocated to

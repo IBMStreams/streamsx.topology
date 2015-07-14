@@ -33,13 +33,13 @@ import com.ibm.streamsx.topology.context.StreamsContextFactory;
  * <i>CONTEXT_TYPE</i> - Run directly from the command line with a specific
  * {@code StreamsContext} where <i>CONTEXT_TYPE</i> is one of:
  * <UL>
- * <LI>{@code DISTRIBUTED} - Run as an IBM InfoSphere Streams distributed
+ * <LI>{@code DISTRIBUTED} - Run as an IBM Streams distributed
  * application.</LI>
- * <LI>{@code STANDALONE} - Run as an IBM InfoSphere Streams standalone
+ * <LI>{@code STANDALONE} - Run as an IBM Streams standalone
  * application.</LI>
  * <LI>{@code EMBEDDED} - Run embedded within this JVM.</LI>
- * <LI>{@code BUNDLE} - Create an IBM InfoSphere Streams application bundle.</LI>
- * <LI>{@code TOOLKIT} - Create an IBM InfoSphere Streams application toolkit.</LI>
+ * <LI>{@code BUNDLE} - Create an IBM Streams application bundle.</LI>
+ * <LI>{@code TOOLKIT} - Create an IBM Streams application toolkit.</LI>
  * </UL>
  * </LI>
  * <LI>
