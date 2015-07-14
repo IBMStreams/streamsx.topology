@@ -116,7 +116,7 @@ public class SPLGenerator {
                 }
                 
                 // Remove the threaded port if necessary
-                if(!(differentColocationThanParent || regionTagExists)){
+                if(differentColocationThanParent || regionTagExists){
                     input.remove(queue);
                     if(functional){
                         JSONObject params = (JSONObject) op.get("parameters");

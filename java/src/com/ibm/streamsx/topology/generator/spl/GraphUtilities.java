@@ -128,7 +128,7 @@ public class GraphUtilities {
             JSONArray operatorOutputs = (JSONArray) iso.get("outputs");
             if (operatorOutputs.size() == 0) {
                 throw new IllegalStateException(
-                        "Isolate operator must have at least one child.");
+                        "Operator must have at least one child.");
             }
 
             // Get the output name of the operator
@@ -297,10 +297,5 @@ public class GraphUtilities {
                 return true;
         }
         return false;
-    }
-    
-    public static void removeThreadedPort(JSONObject op){
-        
-    }
-    
+    }    
 }
