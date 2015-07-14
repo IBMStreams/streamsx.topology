@@ -2,16 +2,14 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.kafka;
+package com.ibm.streamsx.topology.tuple;
 
 import java.io.Serializable;
 
 /**
- * Stream object class usable with KafkaStreams sources.
- * 
- * @see KafkaStreams
+ * A Simple implementation of {@link Message}
  */
-public class KafkaMessageImpl implements Serializable, KafkaMessage {
+public class SimpleMessage implements Serializable, Message {
     private static final long serialVersionUID = 1L;
 
     private final String topic;
@@ -19,22 +17,22 @@ public class KafkaMessageImpl implements Serializable, KafkaMessage {
     private final String message;
 
     /**
-     * Create a {@code KafkaMessageImpl} that lacks a topic and a key.
+     * Create a {@code SimpleMessage} that lacks a topic and a key.
      * 
      * @param message
      *            the message
      */
-    public KafkaMessageImpl(String message) {
+    public SimpleMessage(String message) {
         this(message, null);
     }
     /**
-     * Create a {@code KafkaMessageImpl} that lacks a topic.
+     * Create a {@code SimpleMessage} that lacks a topic.
      * @param message
      *            the message
      * @param key
      *            Optional key associated with the message.  May be null.
      */
-    public KafkaMessageImpl(String message, String key) {
+    public SimpleMessage(String message, String key) {
         if (message == null)
             throw new IllegalArgumentException("message==null");
         this.topic = null;
@@ -43,7 +41,7 @@ public class KafkaMessageImpl implements Serializable, KafkaMessage {
     }
 
     /**
-     * Create a {@code KafkaMessageImpl} that includes a topic.
+     * Create a {@code SimpleMessage} that includes a topic.
      * @param message
      *            the message
      * @param key
@@ -53,7 +51,7 @@ public class KafkaMessageImpl implements Serializable, KafkaMessage {
      * @throws IllegalArgumentException if topic == null
      * @throws IllegalArgumentException if message == null
      */
-    public KafkaMessageImpl(String message, String key, String topic) {
+    public SimpleMessage(String message, String key, String topic) {
         if (topic == null)
             throw new IllegalArgumentException("topic==null");
         if (message == null)
@@ -64,17 +62,17 @@ public class KafkaMessageImpl implements Serializable, KafkaMessage {
     }
     
     @Override
-    public String getKafkaTopic() {
+    public String getTopic() {
         return topic;
     }
     
     @Override
-    public String getKafkaKey() {
+    public String getKey() {
         return key;
     }
 
     @Override
-    public String getKafkaMessage() {
+    public String getMessage() {
         return message;
     }
 
@@ -101,7 +99,7 @@ public class KafkaMessageImpl implements Serializable, KafkaMessage {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        KafkaMessageImpl other = (KafkaMessageImpl) obj;
+        SimpleMessage other = (SimpleMessage) obj;
         if (message != other.message
             && (message == null || !message.equals(other.message))) {
                 return false;

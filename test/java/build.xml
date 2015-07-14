@@ -156,7 +156,7 @@
    </target>
 
   <target name="unittest.kafka">
-     <echo message="See com.ibm.streamsx.topology.test.kafka.package-info.java for required configuration information."/>
+     <echo message="See com.ibm.streamsx.topology.test.messaging.kafka.package-info.java for required configuration information."/>
      <property name="topology.test.type" value="DISTRIBUTED_TESTER"/>
      <property name="topology.test.include.name" value="**/kafka/*Test.java"/>
      <antcall target="unittest.simple"/>

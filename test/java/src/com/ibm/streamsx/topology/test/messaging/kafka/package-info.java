@@ -3,7 +3,7 @@
 # Copyright IBM Corp. 2015  
  */
 /**
- * Tests for {@link com.ibm.streamsx.topology.kafka.KafkaStreams KafkaStreams}.
+ * Tests for {@link com.ibm.streamsx.topology.messaging.kafka.KafkaStreams KafkaStreams}.
  *
  * <p>The tests require access to an operational Kafka Cluster with the
  * following configuration:
@@ -13,7 +13,7 @@
  * <li>the Kafka topics {@code testTopic1} and {@code testTopic2} exist</li>
  * </ul>
  * 
- * <p>See the {@link com.ibm.streamsx.topology.test.kafka.KafkaStreamsTest KafkaStreamsTest}
+ * <p>See the {@link com.ibm.streamsx.topology.test.messaging.kafka.KafkaStreamsTest KafkaStreamsTest}
  * class documentation to specify different configuration properties. 
  *  
  * <p>Information on setting up a Kafka Cluster and creating topics can
@@ -30,5 +30,5 @@
  * <li>{@code bin/kafka-topics.sh --list --zookeeper localhost:2181}</li>
  * </ul>
  */
-package com.ibm.streamsx.topology.test.kafka;
+package com.ibm.streamsx.topology.test.messaging.kafka;
 
