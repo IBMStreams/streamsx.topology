@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.kafka;
+package com.ibm.streamsx.topology.messaging.kafka;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +24,8 @@ import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
+import com.ibm.streamsx.topology.tuple.Message;
+import com.ibm.streamsx.topology.tuple.SimpleMessage;
 
 /**
  * Stream Source and Sink adapters to Apache Kafka messaging system.
@@ -50,12 +52,12 @@ public class KafkaStreams {
      * </ul>
      * @param threadsPerTopic number of threads to allocate to processing each topic
      * @param topics one or more Kafka topics to subscribe to
-     * @return TStream&lt;KafkaTuple>
+     * @return TStream&lt;Message>
      *      The generated tuples do not have a {@code topic}.
      * @throws IllegalArgumentException if topics is null or empty.
      * @throws IllegalArgumentException if threadsPerTopic <= 0.
      */
-    public static TStream<KafkaMessage> source(TopologyElement te, Properties kafkaConsumerConfig,
+    public static TStream<Message> consumer(TopologyElement te, Properties kafkaConsumerConfig,
             int threadsPerTopic,
             String... topics) {
         
@@ -81,11 +83,11 @@ public class KafkaStreams {
                             params,
                             KafkaSchemas.KAFKA);
 
-            return toKafkaTupleStream(rawKafka);
+            return toMessageStream(rawKafka);
         }
         else {
             // fake it with N kafkaConsumers
-            List<TStream<KafkaMessage>> list = new ArrayList<TStream<KafkaMessage>>(topics.length);
+            List<TStream<Message>> list = new ArrayList<TStream<Message>>(topics.length);
             for (String topic : topics) {
                 Map<String,Object> myParams = new HashMap<>(params);
                 myParams.put("topic", topic);
@@ -96,9 +98,9 @@ public class KafkaStreams {
                         myParams,
                         KafkaSchemas.KAFKA);
                 
-                list.add(toKafkaTupleStream(rawKafka));
+                list.add(toMessageStream(rawKafka));
             }
-            TStream<KafkaMessage> kafka = list.remove(0);
+            TStream<Message> kafka = list.remove(0);
             
             return kafka = kafka.union(new HashSet<>(list));
         }
@@ -113,11 +115,11 @@ public class KafkaStreams {
      * @param kafkaConsumerConfig see the Kafka documentation.
      *        Minimal configuration typically includes:
      * @param topics one or more Kafka topics to subscribe to
-     * @return TStream&lt;KafkaTuple>
+     * @return TStream&lt;Message>
      */
-    public static TStream<KafkaMessage> source(TopologyElement te, Properties kafkaConsumerConfig,
+    public static TStream<Message> consumer(TopologyElement te, Properties kafkaConsumerConfig,
             String... topics) {
-        return source(te, kafkaConsumerConfig, 1, topics);
+        return consumer(te, kafkaConsumerConfig, 1, topics);
     }
     
     private static String[] toKafkaProperty(Properties props) {
@@ -146,22 +148,22 @@ public class KafkaStreams {
 
     /**
      * Convert an {@link SPLStream} with schema {@link KafkaSchemas.KAFKA}
-     * to a TStream&lt;{@link KafkaMessageImpl}>.
-     * The returned stream will contain a {@code KafkaTuple} tuple for
-     * each tuple {@code T} on {@code stream}.
+     * to a TStream&lt;{@link Message}>.
+     * The returned stream will contain a {@code Message} tuple for
+     * each tuple on {@code stream}.
      * A runtime error will occur if the schema of {@code stream} doesn't
      * have the attributes defined by {@code KafkaSchemas.KAFKA}.
-     * @param stream Stream to be converted to a TStream&lt;KafkaTuple>.
-     * @return Stream of {@code KafkaTuple} tuples from {@code stream}.
+     * @param stream Stream to be converted to a TStream&lt;Message>.
+     * @return Stream of {@code Message} tuples from {@code stream}.
      */
-    private static TStream<KafkaMessage> toKafkaTupleStream(SPLStream stream) {
+    private static TStream<Message> toMessageStream(SPLStream stream) {
 
-        return stream.convert(new Function<Tuple, KafkaMessage>() {
+        return stream.convert(new Function<Tuple, Message>() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public KafkaMessage apply(Tuple tuple) {
-                return new KafkaMessageImpl(fromSplValue(tuple.getString("message")),
+            public Message apply(Tuple tuple) {
+                return new SimpleMessage(fromSplValue(tuple.getString("message")),
                                     fromSplValue(tuple.getString("key")));
             }
             
@@ -170,74 +172,11 @@ public class KafkaStreams {
                 // assume an empty string meant null.
                 return (s==null || s.isEmpty()) ? null : s;
             }
-        }, KafkaMessage.class);
+        }, Message.class);
     }
 
     /**
-     * Send a stream of messages to a Kafka Cluster.
-     * This is an adapter to a Kafka KafkaProducer.
-     * <p>
-     * N.B., A topology that includes this will not support
-     * {@code StreamsContext.EMBEDDED}.
-     *  
-     * @param kafkaProducerProperties see the Kafka documentation.
-     *          Minimal configuration typically includes:
-     * <ul>
-     * <li><code>metadata.broker.list</code></li>
-     * <li><code>serializer.class</code></li>
-     * <li><code>request.required.acks</code></li>
-     * </ul>
-     * @param topic optional Kafka topic to publish to.
-     *          Whens specified, a {@link KafkaMessageImpl#getKafkaTopic()} value is ignored.
-     *          If null, {@code toKafkaTupleFunc} must generate tuples that have a topic.
-     * @param stream the stream to publish to Kafka
-     * @param toKafkaMessageFunc function to generate a {@code KafkaTuple} from a tuple {@code T}.
-     *          If {@code topic} is null, the generated {@code KafkaTuple} <b>must</b> contain a {@code topic}.
-     */
-    public static <T> void sink(TopologyElement te,
-            Properties kafkaProducerConfig,
-            final String topic,
-            TStream<T> stream,
-            final Function<T,? extends KafkaMessage> toKafkaMessageFunc)
-    {
-        SPLStream splStream = SPLStreams.convertStream(stream, 
-            new BiFunction<T,OutputTuple,OutputTuple>() {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public OutputTuple apply(T v1, OutputTuple v2) {
-                    KafkaMessage kafkaTuple = toKafkaMessageFunc.apply(v1);
-                    v2.setString("key", toSplValue(kafkaTuple.getKafkaKey()));
-                    v2.setString("message", toSplValue(kafkaTuple.getKafkaMessage()));
-                    if (topic==null)
-                        v2.setString("topic", toSplValue(kafkaTuple.getKafkaTopic()));
-                    else
-                        v2.setString("topic", topic);
-                    return v2;
-                }
-                
-                private String toSplValue(String s) {
-                    // SPL doesn't allow null
-                    return s==null ? "" : s;
-                }
-            },
-            KafkaSchemas.KAFKA);
-        
-        Map<String,Object> params = new HashMap<String,Object>();
-        params.put("propertiesFile", PROP_FILE);
-        if (kafkaProducerConfig!=null && !kafkaProducerConfig.isEmpty())
-            params.put("kafkaProperty", toKafkaProperty(kafkaProducerConfig));
-       
-        SPL.invokeSink(
-                "com.ibm.streamsx.messaging.kafka::KafkaProducer",
-                splStream,
-                params);
-        
-        addPropertiesFile(splStream.topology());
-    }
-
-    /**
-     * Send a stream of {@code KafkaTuple} tuples to a Kafka Cluster.
+     * Send a stream of {@code Message} tuples to a Kafka Cluster.
      * This is an adapter to a Kafka KafkaProducer.
      * <p>
      * N.B., A topology that includes this will not support
@@ -245,27 +184,27 @@ public class KafkaStreams {
      * @param te
      * @param kafkaProducerConfig
      * @param topic optional Kafka topic to publish to.
-     *          Whens specified, a {@link KafkaMessageImpl#getKafkaTopic()} value is ignored.
-     * @param stream a stream of {@link KafkaMessageImpl} to publish.
-     *          When {@code topic} is null, each {@code KafkaTuple}
+     *          Whens specified, a {@link Message#getTopic()} value is ignored.
+     * @param stream a stream of {@link Message} to publish.
+     *          When {@code topic} is null, each {@code Message}
      *          <b>must</b> contain a {@code topic}.
      */
-    public static void sink(TopologyElement te,
+    public static void producer(TopologyElement te,
             Properties kafkaProducerConfig,
             final String topic,
-            TStream<? extends KafkaMessage> stream)
+            TStream<? extends Message> stream)
     {
         @SuppressWarnings("unchecked")
-        SPLStream splStream = SPLStreams.convertStream((TStream<KafkaMessage>)stream, 
-                new BiFunction<KafkaMessage,OutputTuple,OutputTuple>() {
+        SPLStream splStream = SPLStreams.convertStream((TStream<Message>)stream, 
+                new BiFunction<Message,OutputTuple,OutputTuple>() {
                     private static final long serialVersionUID = 1L;
 
                     @Override
-                    public OutputTuple apply(KafkaMessage v1, OutputTuple v2) {
-                        v2.setString("key", toSplValue(v1.getKafkaKey()));
-                        v2.setString("message", toSplValue(v1.getKafkaMessage()));
+                    public OutputTuple apply(Message v1, OutputTuple v2) {
+                        v2.setString("key", toSplValue(v1.getKey()));
+                        v2.setString("message", toSplValue(v1.getMessage()));
                         if (topic==null)
-                            v2.setString("topic", toSplValue(v1.getKafkaTopic()));
+                            v2.setString("topic", toSplValue(v1.getTopic()));
                         else
                             v2.setString("topic", topic);
                         return v2;

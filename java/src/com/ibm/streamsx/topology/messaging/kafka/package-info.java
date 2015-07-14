@@ -7,5 +7,5 @@
  * Apache Kafka related streams.
  *
  */
-package com.ibm.streamsx.topology.kafka;
+package com.ibm.streamsx.topology.messaging.kafka;
 

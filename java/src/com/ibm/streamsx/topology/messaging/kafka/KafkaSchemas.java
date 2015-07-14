@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.kafka;
+package com.ibm.streamsx.topology.messaging.kafka;
 
 import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 
