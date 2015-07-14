@@ -31,19 +31,29 @@ public class GraphUtilities {
 
     public static ArrayList<JSONObject> findOperatorByKind(String opKind,
             JSONObject graph) {
-        ArrayList<JSONObject> lowLatencyStarts = new ArrayList<JSONObject>();
+        ArrayList<JSONObject> kindOperators = new ArrayList<JSONObject>();
         JSONArray ops = (JSONArray) graph.get("operators");
         for (int k = 0; k < ops.size(); k++) {
             JSONObject op = (JSONObject) (ops.get(k));
             String kind = (String) op.get("kind");
             if (kind != null && kind.equals(opKind)) {
-                lowLatencyStarts.add(op);
+                kindOperators.add(op);
             }
         }
-        return lowLatencyStarts;
+        return kindOperators;
     }
 
-    // Get the children of the operator. Should probably be re-worked.
+    /**
+     * Get all operators immediately downstream of the {@code visitOp}
+     * operator. No exceptions are made for marker operators. 
+     * <br><br>
+     * Specifically, searches the graph, and returns a list of operators which 
+     * have an input port connected to any output port of {@code visitOp}.
+     * @param visitOp The operator for which all immediate downstream 
+     * operators should be returned.
+     * @param graph The graph JSONObject in which {@code visitOp} resides.
+     * @return A list of all operators immediately downstream from {@code visitOp}
+     */
     public static ArrayList<JSONObject> getChildren(JSONObject visitOp,
             JSONObject graph) {
         ArrayList<JSONObject> uniqueChildren = new ArrayList<JSONObject>();
@@ -80,6 +90,17 @@ public class GraphUtilities {
         return uniqueChildren;
     }
 
+    /**
+     * Get all operators immediately upstream of the {@code visitOp}
+     * operator. No exceptions are made for marker operators. 
+     * <br><br>
+     * Specifically, searches the graph, and returns a list of operators which 
+     * have an output port connected to any input port of {@code visitOp}.
+     * @param visitOp The operator for which all immediate upstream 
+     * operators should be returned.
+     * @param graph The graph JSONObject in which {@code visitOp} resides.
+     * @return A list of all operators immediately upstream from {@code visitOp}
+     */
     public static List<JSONObject> getParents(JSONObject visitOp,
             JSONObject graph) {
         List<JSONObject> uniqueParents = new ArrayList<>();

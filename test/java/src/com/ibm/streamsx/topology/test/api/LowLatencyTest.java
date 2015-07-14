@@ -3,8 +3,6 @@ package com.ibm.streamsx.topology.test.api;
 import static com.ibm.streamsx.topology.test.TestTopology.SC_OK;
 import static org.junit.Assume.assumeTrue;
 
-import java.math.BigInteger;
-
 import org.junit.Test;
 
 import com.ibm.json.java.JSONArray;
@@ -87,11 +85,9 @@ public class LowLatencyTest {
     @SuppressWarnings("serial")
     private static Function<String, String> getPEId(){
         return new Function<String, String>(){
-            int counter = 0;
             @Override
-                public String apply(String v) {
-                // TODO Auto-generated method stub
-                return ((BigInteger) PERuntime.getCurrentContext().getPE().getPEId()).toString();
+            public String apply(String v) {
+                return PERuntime.getCurrentContext().getPE().getPEId().toString();
             }
 
         };

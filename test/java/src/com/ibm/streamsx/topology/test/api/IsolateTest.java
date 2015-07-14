@@ -4,7 +4,6 @@ import static com.ibm.streamsx.topology.test.TestTopology.SC_OK;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -94,6 +93,14 @@ public class IsolateTest {
                 .submit(topology).get();
     }
 
+    /**
+     * Test that a topology fails to generate SPL if an isolated stream is 
+     * unioned with its parent.
+     * @throws Exception Thrown because the ss4 stream is the parent of the ss7
+     * stream. Taking the union of the two is currently not supported. In
+     * future releases, we will automatically insert an isolation marker to 
+     * support this kind of union.
+     */
     @Test(expected = IllegalStateException.class)
     public void multipleIsolationExceptionTest() throws Exception {
         Topology topology = new Topology("isolationTest");
@@ -111,6 +118,7 @@ public class IsolateTest {
 
         TStream<String> ss7 = ss3.transform(getPEId(), String.class);
 
+        // Unions a stream with its parent.
         ss7.union(ss4).print();
 
         StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT)
@@ -170,15 +178,10 @@ public class IsolateTest {
     @SuppressWarnings("serial")
     private static Function<String, String> getPEId() {
         return new Function<String, String>() {
-            int counter = 0;
-
             @Override
             public String apply(String v) {
-                // TODO Auto-generated method stub
-                return ((BigInteger) PERuntime.getCurrentContext().getPE()
-                        .getPEId()).toString();
+                return PERuntime.getCurrentContext().getPE().getPEId().toString();
             }
-
         };
     }
 }

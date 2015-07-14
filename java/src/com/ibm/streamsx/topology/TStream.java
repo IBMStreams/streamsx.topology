@@ -533,13 +533,13 @@ public interface TStream<T> extends TopologyElement {
     TStream<T> sample(double fraction);
     
     /**
-     * Return a TStream that runs in a separate process from the calling TStream. 
+     * Return a TStream that runs in a separate process from the calling TStream.
      * For the following Topology:
      * <pre><code>
-     * ---source---transform1---.isolate()---transform2---.isolate()--sink
+     * ---transform1---.isolate()---transform2---transform3---.isolate()--sink
      * </code></pre>
      * 
-     * Three separate processes will be created -- one process will contain source and
+     * Three separate processes will be created -- one process will contain transform1 and
      * transform1, another will contain both transform2 and transform3, and the
      * last will contain the sink.
      * <br><br>
