@@ -325,8 +325,11 @@ class OperatorGenerator {
 
         Boolean streamViewability = (Boolean) config.get("streamViewability");
         String colocationTag = (String) config.get("colocationTag");
+        JSONObject queue = (JSONObject) config.get("queue");
         if (streamViewability != null
-                || (colocationTag != null && !colocationTag.isEmpty())) {
+                || (colocationTag != null && !colocationTag.isEmpty())
+                || (queue != null && !queue.isEmpty())
+                ) {
             sb.append("  config\n");
         }
         if (streamViewability != null) {
@@ -340,5 +343,14 @@ class OperatorGenerator {
             sb.append(colocationTag);
             sb.append("\");\n");
         }
+        if(queue != null && !queue.isEmpty()){
+            sb.append("    threadedPort: queue(");
+            sb.append((String)queue.get("inputPortName") + ", ");
+            sb.append((String)queue.get("congestionPolicy") + ",");
+            sb.append(((Integer)queue.get("queueSize")).toString());
+            sb.append(");\n");
+        }
+      
+        
     }
 }

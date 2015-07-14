@@ -88,7 +88,7 @@ public class GraphBuilder extends BJSONObject {
     public static String PARALLEL = "$Parallel$";
     public static String UNPARALLEL = "$Unparallel$";
     public static String LOW_LATENCY = "$LowLatency$";
-    public static String END_LOW_LATENCY = "$EndLowLatency";
+    public static String END_LOW_LATENCY = "$EndLowLatency$";
     public static String ISOLATE = "$Isolate$";
     
     public BOutput lowLatency(BOutput parent){
