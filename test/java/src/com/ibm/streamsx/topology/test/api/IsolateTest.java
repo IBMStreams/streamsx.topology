@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -41,20 +42,21 @@ public class IsolateTest {
 
         // Jenkins seems to fail when running this with a distributed tester.
         // Not sure why, but the tests pass on my local build.
-        /*
-         * try{ StreamsContextFactory
-         * .getStreamsContext(StreamsContext.Type.DISTRIBUTED_TESTER)
-         * .submit(topology).get(90, TimeUnit.SECONDS); } catch(Exception e){
-         * e.printStackTrace(); } Integer result1 =
-         * Integer.parseInt(condss1.getResult().get(0)); Integer result2 =
-         * Integer.parseInt(condss2.getResult().get(0));
-         * 
-         * Set<Integer> m = new HashSet<>();
-         * 
-         * m.add(result1); m.add(result2); assertTrue(m.size() == 2);
-         */
-        StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT)
-                .submit(topology).get();
+        try {
+            StreamsContextFactory
+                    .getStreamsContext(StreamsContext.Type.DISTRIBUTED_TESTER)
+                    .submit(topology).get(90, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Integer result1 = Integer.parseInt(condss1.getResult().get(0));
+        Integer result2 = Integer.parseInt(condss2.getResult().get(0));
+
+        Set<Integer> m = new HashSet<>();
+
+        m.add(result1);
+        m.add(result2);
+        assertTrue(m.size() == 2);
     }
     
     @Test
