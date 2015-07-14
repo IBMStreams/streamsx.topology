@@ -23,7 +23,7 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 public class IsolateTest {
-
+    @Ignore
     @Test
     public void simpleIsolationTest() throws Exception {
         assumeTrue(SC_OK);
