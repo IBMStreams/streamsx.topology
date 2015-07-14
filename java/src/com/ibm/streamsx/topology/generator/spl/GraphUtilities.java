@@ -202,6 +202,8 @@ public class GraphUtilities {
             for (JSONArray parentConnection : parentConnections) {
                 parentConnection.addAll(childInputPortNames);
             }
+            JSONArray ops = (JSONArray) graph.get("operators");
+            ops.remove(iso);
         }
     }
 
