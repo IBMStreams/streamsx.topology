@@ -542,8 +542,8 @@ public interface TStream<T> extends TopologyElement {
      * Three separate processes will be created -- one process will contain source and
      * transform1, another will contain both transform2 and transform3, and the
      * last will contain the sink.
-     * 
      * <br><br>
+     * Only applies for distributed contexts.
      * @return A TStream that runs in a separate process from the calling
      * TStream.
      */
@@ -561,7 +561,8 @@ public interface TStream<T> extends TopologyElement {
      * </code></pre>
      * It is guaranteed that the filter and transform operations will run in
      * the same process.
-     * 
+     * <br><br>
+     * Only applies for distributed contexts.
      * @return A stream that is guaranteed to run in the same process as the 
      * calling stream.
      */
@@ -576,6 +577,8 @@ public interface TStream<T> extends TopologyElement {
      * It is guaranteed that the filter and transform operations will run in
      * the same process, but it is not guaranteed that the transform and
      * filter2 operations will run in the same process.
+     * <br><br>
+     * Only applies for distributed contexts.
      * @return A stream that is not guaranteed to run in the same process as the 
      * calling stream.
      */
