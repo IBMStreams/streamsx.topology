@@ -502,36 +502,33 @@ public class Topology implements TopologyElement {
     public void addClassDependency(Class<?> clazz) {
         JavaFunctional.addClassDependency(this, clazz); 
     }
-    
+
     /**
-     * Includes a file or directory tree, specified by the
-     * {@code location} String, into the toolkit root in the application bundle.
+     * Add file or directory tree {@code location} to directory
+     * {@code dstDirName} in the application bundle, making it
+     * available to the application at runtime.
      * <p>
      * Use {@link #addClassDependency(Class)} or {@link #addJarDependency(String)}
      * to add class or jar dependencies.
      * <p>
-     * If the location is a directory, the directory tree is copied.
-     * The copied file or directory tree overwrites existing files if any.
+     * Legal values for {@code dstDirName} are {@code etc} or {@code opt}.
      * <p>
-     * For example, the following code copies "etc/someConfigFile" to
-     * the toolkit root such that it could be used when running in a 
-     * non-EMBEDDED context.
-     * <pre><code>
-     *  // create a temporary directory with an "etc"
-     *  // subdirectory with a "someConfigFile" file in it
-     *  // ...
-     * String tmpToolkitRootdir = ...;
-     * Topology top = new Topology("myTopology");
-     * top.addJarDependency(tmpToolkitRootdir);
-     * </pre></code> 
-     * @param location path to a file or directory tree to add.
+     * e.g.,
+     * <pre>
+     * // add "myConfigFile" to the bundle's "etc" directory
+     * addFileDependency("etc", "/tmp/myConfigFile");
      * 
-     * @throws IllegalArgumentException if the location is not valid.
+     * // add "myApp" directory tree to the bundle's "etc" directory
+     * addFileDependency("etc", "/tmp/myApp");
+     * </pre>
      * 
-     * @see Topology#addJarDependency(String)
+     * @param dstDirName name of directory in the bundle
+     * @param location path to a file or directory
+     * @throws IllegalArgumentException if {@code dstDirName} is not {@code etc}
+     *     or {@code opt}, or {@code location} is not a file or directory.
      */
-    public void addFileDependency(String location) {
-        dependencyResolver.addFileDependency(location);
+    public void addFileDependency(String dstDirName, String location) {
+        dependencyResolver.addFileDependency(dstDirName, location);
     }
     
     private void finalizeConfig() {

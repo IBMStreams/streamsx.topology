@@ -31,7 +31,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * Stream Source and Sink adapters to Apache Kafka messaging system.
  */
 public class KafkaStreams {
-    private static final String PROP_FILE = "etc/emptySPLKafkaAdapterProperties";
+    private static final String PROP_FILE_PARAM = "etc/kafkaStreams/emptyProperties";
     
     /**
      * Creates a stream of messages from a Kafka Cluster.
@@ -70,7 +70,7 @@ public class KafkaStreams {
         params.put("topic", topics);
         params.put("threadsPerTopic", threadsPerTopic);
         // workaround streamsx.messaging issue #107
-        params.put("propertiesFile", PROP_FILE);
+        params.put("propertiesFile", PROP_FILE_PARAM);
         if (kafkaConsumerConfig!=null && !kafkaConsumerConfig.isEmpty())
             params.put("kafkaProperty", toKafkaProperty(kafkaConsumerConfig));
         
@@ -134,14 +134,20 @@ public class KafkaStreams {
     
     private static void addPropertiesFile(TopologyElement te) {
         try {
-            Path tmpToolkitRootPath = Files.createTempDirectory("tmpToolkitRoot");
-            File tmpToolkitRoot = tmpToolkitRootPath.toFile();
-            File etc = new File(tmpToolkitRoot, "etc");
-            etc.mkdir();
-            File propertiesFile = new File(tmpToolkitRoot, PROP_FILE);
-            propertiesFile.createNewFile();
+            File tmpDir = Files.createTempDirectory("kafkaStreams").toFile();
             
-            te.topology().addFileDependency(tmpToolkitRoot.getAbsolutePath());
+            Path p = new File(PROP_FILE_PARAM).toPath();
+            String dstDirName = p.getName(0).toString();
+            Path pathInDst = p.subpath(1, p.getNameCount());
+            if (pathInDst.getNameCount() > 1) {
+                File dir = new File(tmpDir, pathInDst.getParent().toString());
+                dir.mkdirs();
+            }
+            new File(tmpDir, pathInDst.toString()).createNewFile();
+            File location = new File(tmpDir, pathInDst.getName(0).toString());
+            
+            te.topology().addFileDependency(dstDirName, 
+                    location.getAbsolutePath());
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to create a properties file: " + e, e);
@@ -221,7 +227,7 @@ public class KafkaStreams {
             
         Map<String,Object> params = new HashMap<String,Object>();
         // workaround streamsx.messaging issue #107
-        params.put("propertiesFile", PROP_FILE);
+        params.put("propertiesFile", PROP_FILE_PARAM);
         if (kafkaProducerConfig!=null && !kafkaProducerConfig.isEmpty())
             params.put("kafkaProperty", toKafkaProperty(kafkaProducerConfig));
        
