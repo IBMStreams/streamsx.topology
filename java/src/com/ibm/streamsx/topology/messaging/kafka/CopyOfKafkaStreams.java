@@ -30,7 +30,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
 /**
  * Stream Source and Sink adapters to Apache Kafka messaging system.
  */
-public class KafkaStreams {
+public class CopyOfKafkaStreams {
     private static final String PROP_FILE_PARAM = "etc/kafkaStreams/emptyProperties";
     
     /**

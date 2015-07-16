@@ -175,7 +175,7 @@
      <property name="topology.test.resource_dir" location="resources"/>
   	 <property name="topology.test.showoutput" value="no"/>
    <jacoco:coverage enabled="${topology.test.coverage}">
-     <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="{topology.test.showoutput}"
+     <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
            haltonfailure="yes" failureproperty="topology.tests.failed">
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>

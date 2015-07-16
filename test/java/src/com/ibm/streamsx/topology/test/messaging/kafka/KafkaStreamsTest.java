@@ -23,7 +23,9 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
-import com.ibm.streamsx.topology.messaging.kafka.KafkaStreams;
+import com.ibm.streamsx.topology.function.UnaryOperator;
+import com.ibm.streamsx.topology.messaging.kafka.ConsumerConnector;
+import com.ibm.streamsx.topology.messaging.kafka.ProducerConnector;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -43,6 +45,8 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * </ul>
  */
 public class KafkaStreamsTest extends TestTopology {
+    
+    private static int SEC_TIMEOUT = 15;
     
     private static List<Vals> testMsgVals = new ArrayList<>();
     static {
@@ -216,7 +220,7 @@ public class KafkaStreamsTest extends TestTopology {
     }
     
     private void checkAssumes() {
-        // Embedded and KafkaStreams implementation leveraging 
+        // Embedded and KafkaConnector implementation leveraging 
         // SPL kafkaProducer,Consumer ops don't mix.
         assumeTrue(!isEmbedded());
         
@@ -232,10 +236,13 @@ public class KafkaStreamsTest extends TestTopology {
         
         checkAssumes();
         
-        Topology top = new Topology("testExplicitTopicProducer");
+        Topology top = new Topology("testNewExplicitTopicProducer");
         MsgGenerator mgen = new MsgGenerator(top.getName());
 
         String topic = getKafkaTopics()[0];
+        
+        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig());
         
         // Test producer that takes an arbitrary TStream<T> and explicit topic
         
@@ -248,11 +255,9 @@ public class KafkaStreamsTest extends TestTopology {
         TStream<Message> msgsToPublish = valsToPublish.transform(
                                 msgFromValsFunc(null), Message.class);
         
-        KafkaStreams.producer(top, createProducerConfig(),
-                                topic, msgsToPublish);
+        producer.publish(topic, msgsToPublish);
         
-        TStream<Message> rcvdMsgs = KafkaStreams.consumer(top,
-                                createConsumerConfig(), topic);
+        TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
         // for validation...
         rcvdMsgs.print();
@@ -260,11 +265,11 @@ public class KafkaStreamsTest extends TestTopology {
         TStream<String> rcvdAsString = rcvdMsgs.transform(
                                             msgToJSONStringFunc(), String.class);
         List<Message> expectedAsKafka = mapList(msgs,
-                                            msgFromValsFunc(null));
+                                            msgFromValsFunc(topic));
         List<String> expectedAsStringList = mapList(expectedAsKafka,
                                             msgToJSONStringFunc());
 
-        completeAndValidate(rcvdAsString, 10, expectedAsStringList.toArray(new String[0]));
+        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
     }
     
     @Test
@@ -276,6 +281,9 @@ public class KafkaStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
 
         String topic = getKafkaTopics()[0];
+
+        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig());
         
         // Test producer that takes an arbitrary TStream<T> and implicit topic
         
@@ -288,11 +296,9 @@ public class KafkaStreamsTest extends TestTopology {
         TStream<Message> msgsToPublish = valsToPublish.transform(
                                 msgFromValsFunc(topic), Message.class);
         
-        KafkaStreams.producer(top, createProducerConfig(),
-                                null/*topic*/, msgsToPublish);
+        producer.publish(msgsToPublish);
         
-        TStream<Message> rcvdMsgs = KafkaStreams.consumer(top,
-                                createConsumerConfig(), topic);
+        TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
         // for validation...
         rcvdMsgs.print();
@@ -300,11 +306,11 @@ public class KafkaStreamsTest extends TestTopology {
         TStream<String> rcvdAsString = rcvdMsgs.transform(
                                             msgToJSONStringFunc(), String.class);
         List<Message> expectedAsKafka = mapList(msgs,
-                                            msgFromValsFunc(null));
+                                            msgFromValsFunc(topic));
         List<String> expectedAsStringList = mapList(expectedAsKafka,
                                             msgToJSONStringFunc());
 
-        completeAndValidate(rcvdAsString, 10, expectedAsStringList.toArray(new String[0]));
+        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
     }
     
     @Test
@@ -316,6 +322,9 @@ public class KafkaStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
 
         String topic = getKafkaTopics()[0];
+
+        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig());
         
         // Test producer that takes TStream<SimpleMessage> and an explicit topic.
         
@@ -325,21 +334,20 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<Message> msgsToPublish = top.constants(msgs, Message.class);
         
-        KafkaStreams.producer(top, createProducerConfig(),
-                                topic, msgsToPublish);
+        producer.publish(topic, msgsToPublish);
         
-        TStream<Message> rcvdMsgs = KafkaStreams.consumer(top,
-                                createConsumerConfig(), topic);
+        TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
         // for validation...
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(
                                             msgToJSONStringFunc(), String.class);
+        msgs = modifyList(msgs, setTopic(topic));
         List<String> expectedAsStringList = mapList(msgs,
                                             msgToJSONStringFunc());
 
-        completeAndValidate(rcvdAsString, 10, expectedAsStringList.toArray(new String[0]));
+        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
     }
     
     @Test
@@ -351,7 +359,10 @@ public class KafkaStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
 
         String topic = getKafkaTopics()[0];
-        
+
+        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig());
+       
         // Test producer that takes a TStream<MyMsgSubtype>
         
         List<MyMsgSubtype> msgs = new ArrayList<>();
@@ -360,11 +371,9 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs, MyMsgSubtype.class);
         
-        KafkaStreams.producer(top, createProducerConfig(),
-                                topic, msgsToPublish);
+        producer.publish(topic, msgsToPublish);
         
-        TStream<Message> rcvdMsgs = KafkaStreams.consumer(top,
-                                createConsumerConfig(), topic);
+        TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
         // for validation...
         rcvdMsgs.print();
@@ -372,9 +381,9 @@ public class KafkaStreamsTest extends TestTopology {
         TStream<String> rcvdAsString = rcvdMsgs.transform(
                                             msgToJSONStringFunc(), String.class);
         List<String> expectedAsStringList = mapList(msgs,
-                                            subtypeMsgToJSONStringFunc());
+                                            subtypeMsgToJSONStringFunc(topic));
 
-        completeAndValidate(rcvdAsString, 10, expectedAsStringList.toArray(new String[0]));
+        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
     }
     
     @Test
@@ -386,6 +395,9 @@ public class KafkaStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
 
         String topic = getKafkaTopics()[0];
+
+        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig());
         
         // Test producer that takes a TStream<MyMsgSubtype> implicit topic
         
@@ -395,22 +407,19 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs, MyMsgSubtype.class);
         
-        KafkaStreams.producer(top, createProducerConfig(),
-                                null/*topic*/, msgsToPublish);
+        producer.publish(msgsToPublish);
         
-        TStream<Message> rcvdMsgs = KafkaStreams.consumer(top,
-                                createConsumerConfig(), topic);
+        TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
         // for validation...
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        rcvdMsgs = addTopic(rcvdMsgs, topic);
         TStream<String> rcvdAsString = rcvdMsgs.transform(
                                             msgToJSONStringFunc(), String.class);
         List<String> expectedAsStringList = mapList(msgs,
-                                            subtypeMsgToJSONStringFunc());
+                                            subtypeMsgToJSONStringFunc(null));
 
-        completeAndValidate(rcvdAsString, 10, expectedAsStringList.toArray(new String[0]));
+        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
     }
     
     @Test
@@ -424,6 +433,9 @@ public class KafkaStreamsTest extends TestTopology {
         String[] topics = getKafkaTopics();
         String topic1 = topics[0];
         String topic2 = topics[1];
+
+        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig());
         
         // Test producer that publishes to multiple topics (implies implicit topic)
         
@@ -440,19 +452,13 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<Message> msgsToPublish = top.constants(msgs, Message.class);
         
-        KafkaStreams.producer(top, createProducerConfig(),
-                                null/*topic*/, msgsToPublish);
+        producer.publish(msgsToPublish);
         
-        TStream<Message> rcvdTopic1Msgs = KafkaStreams.consumer(top,
-                                createConsumerConfig(), topic1);
-        
-        TStream<Message> rcvdTopic2Msgs = KafkaStreams.consumer(top,
-                                createConsumerConfig(), topic2);
+        TStream<Message> rcvdTopic1Msgs = consumer.subscribe(topic1);
+        TStream<Message> rcvdTopic2Msgs = consumer.subscribe(topic2);
         
         // for validation...
         
-        rcvdTopic1Msgs = addTopic(rcvdTopic1Msgs, topic1);
-        rcvdTopic2Msgs = addTopic(rcvdTopic2Msgs, topic2);
         TStream<Message> rcvdMsgs = rcvdTopic1Msgs.union(rcvdTopic2Msgs);
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
@@ -461,7 +467,7 @@ public class KafkaStreamsTest extends TestTopology {
         List<String> expectedAsStringList = mapList(msgs,
                                             msgToJSONStringFunc());
                                             
-        completeAndValidateUnordered(top, rcvdAsString, 10, expectedAsStringList.toArray(new String[0]));
+        completeAndValidateUnordered(top, rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
     }
     
     @Test
@@ -475,30 +481,30 @@ public class KafkaStreamsTest extends TestTopology {
         String[] topics = getKafkaTopics();
         String topic1 = topics[0];
         String topic2 = topics[1];
-        
+
+        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig());
+      
         // Test consumer that receives from multiple topics
         
         List<Message> topic1Msgs = new ArrayList<>();
-        topic1Msgs.add(new SimpleMessage(mgen.create(topic1, "Hello")));
-        topic1Msgs.add(new SimpleMessage(mgen.create(topic1, "Are you there?")));
+        topic1Msgs.add(new SimpleMessage(mgen.create(topic1, "Hello"), "mykey1", topic1));
+        topic1Msgs.add(new SimpleMessage(mgen.create(topic1, "Are you there?"), "mykey2", topic1));
         
         List<Message> topic2Msgs = new ArrayList<>();
-        topic2Msgs.add(new SimpleMessage(mgen.create(topic2, "Hello")));
-        topic2Msgs.add(new SimpleMessage(mgen.create(topic2, "Are you there?")));
+        topic2Msgs.add(new SimpleMessage(mgen.create(topic2, "Hello"), "mykey1", topic2));
+        topic2Msgs.add(new SimpleMessage(mgen.create(topic2, "Are you there?"), "mykey2", topic2));
         
         List<Message> msgs = new ArrayList<>(topic1Msgs);
         msgs.addAll(topic2Msgs);
         
         TStream<Message> topic1MsgsToPublish = top.constants(topic1Msgs, Message.class);
-        KafkaStreams.producer(top, createProducerConfig(),
-                                topic1, topic1MsgsToPublish);
+        producer.publish(topic1MsgsToPublish);
         
         TStream<Message> topic2MsgsToPublish = top.constants(topic2Msgs, Message.class);
-        KafkaStreams.producer(top, createProducerConfig(),
-                                topic2, topic2MsgsToPublish);
+        producer.publish(topic2MsgsToPublish);
         
-        TStream<Message> rcvdMsgs = KafkaStreams.consumer(top,
-                                createConsumerConfig(), topics);
+        TStream<Message> rcvdMsgs = consumer.subscribe(topics);
         
         // for validation...
         rcvdMsgs.print();
@@ -508,7 +514,7 @@ public class KafkaStreamsTest extends TestTopology {
         List<String> expectedAsStringList = mapList(msgs,
                                             msgToJSONStringFunc());
 
-        completeAndValidateUnordered(top, rcvdAsString, 10, expectedAsStringList.toArray(new String[0]));
+        completeAndValidateUnordered(top, rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
     }
     
     // would be nice if Tester provided this too
@@ -527,20 +533,6 @@ public class KafkaStreamsTest extends TestTopology {
         assertTrue("valid:" + sCount, sCount.valid());
     }
 
-    private static TStream<Message> addTopic(TStream<Message> stream,
-                                            final String topic) { 
-        return stream.transform(
-            new Function<Message,Message>() {
-                private static final long serialVersionUID = 1L;
-    
-                @Override
-                public Message apply(Message v) {
-                    return new SimpleMessage(v.getMessage(), v.getKey(), topic);
-                }
-            },
-            Message.class);
-    }
-
     private static TStream<Message> selectMsgs(TStream<Message> stream,
                                             final String pattern) { 
         return stream.filter(
@@ -555,6 +547,17 @@ public class KafkaStreamsTest extends TestTopology {
     }
 
     /**
+     * Modify List<T> => List<T> via func
+     */
+    private <T> List<T> modifyList(List<T> list, UnaryOperator<T> func) {
+        List<T> l = new ArrayList<>();
+        for (T o : list) {
+            l.add(func.apply(o));
+        }
+        return l;
+    }
+
+    /**
      * Transform List<T> => List<R> via func
      */
     private <T,R> List<R> mapList(List<T> list, Function<T, R> func) {
@@ -563,6 +566,17 @@ public class KafkaStreamsTest extends TestTopology {
             l.add(func.apply(o));
         }
         return l;
+    }
+    
+    private static UnaryOperator<Message> setTopic(final String topic) {
+        return new UnaryOperator<Message>() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Message apply(Message v) {
+                return new SimpleMessage(v.getMessage(), v.getKey(), topic);
+            }
+        };
     }
     
     /**
@@ -604,12 +618,14 @@ public class KafkaStreamsTest extends TestTopology {
     /**
      * Function for MyMsgSubtype => toJSON().toString()
      */
-    private static Function<MyMsgSubtype,String> subtypeMsgToJSONStringFunc() {
+    private static Function<MyMsgSubtype,String> subtypeMsgToJSONStringFunc(final String topic) {
         return new Function<MyMsgSubtype,String>() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public String apply(MyMsgSubtype v) {
+                if (topic!=null)
+                    v = new MyMsgSubtype(v.msg, v.key, topic);
                 return toJson(v);
             }
         };
