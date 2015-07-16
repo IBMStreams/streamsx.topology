@@ -18,7 +18,8 @@ public class KafkaSchemas {
     }
 
     /**
-     * SPL schema used for {@link SPLStream} of Kafka messages.
+     * SPL schema used for {@link com.ibm.streamsx.topology.spl.SPLStream SPLStream}
+     * of Kafka messages.
      * Consists of three attributes: {@code rstring topic}, {@code rstring key}
      * and {@code rstring message}.
      */

@@ -73,7 +73,6 @@ public class ConsumerConnector {
      * </ul>
      * @param te {@link TopologyElement} 
      * @param config KafkaConsumer configuration information.
-     * @return the connector
      */
     public ConsumerConnector(TopologyElement te, Properties config) {
         this.te = te;

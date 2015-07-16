@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * An interface for tuple attributes common to messaging adapters
- * in {@link com.ibm.streamsx.topology.messaging}.
+ * in {@code com.ibm.streamsx.topology.messaging}.
  */
 public interface Message extends Serializable {
 

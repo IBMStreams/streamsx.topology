@@ -71,7 +71,6 @@ public class ProducerConnector {
      * </ul>
      *
      * @param config KafkaProducer configuration information.
-     * @return the connector
      */
     public ProducerConnector(TopologyElement te, Properties config) {
         this.te = te;
@@ -88,7 +87,7 @@ public class ProducerConnector {
 
     /**
      * Publish {@code stream} tuples to the Kafka Broker.
-     * Each {@stream} tuple is sent to the topic specified by its
+     * Each {@code stream} tuple is sent to the topic specified by its
      * {@link Message#getTopic()}.
      * Same as {@code produce(null, stream)}.
      * @param stream the stream to publish
