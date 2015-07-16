@@ -3,7 +3,8 @@
 # Copyright IBM Corp. 2015  
  */
 /**
- * Tests for {@link com.ibm.streamsx.topology.messaging.kafka.KafkaConnector KafkaConnector}.
+ * Tests for {@link com.ibm.streamsx.topology.messaging.kafka.ConsumerConnector ConsumerConnector}
+ * and {@link com.ibm.streamsx.topology.messaging.kafka.ProducerConnector ProducerConnector}
  *
  * <p>The tests require access to an operational Kafka Cluster with the
  * following configuration:
