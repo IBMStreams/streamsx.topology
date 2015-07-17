@@ -22,10 +22,10 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @InputPortSet(cardinality = 1)
 @OutputPortSet(cardinality = 1)
 @Icons(location16 = "opt/icons/functor_16.gif", location32 = "opt/icons/functor_32.gif")
-public class FunctionTransform<T, U> extends FunctionQueueableFunctor<T> {
+public class FunctionTransform extends FunctionQueueableFunctor {
 
-    private Function<T, U> transform;
-    private SPLMapping<U> outputMapping;
+    private Function<Object, Object> transform;
+    private SPLMapping<Object> outputMapping;
     private StreamingOutput<OutputTuple> output;
 
     @Override
@@ -38,9 +38,9 @@ public class FunctionTransform<T, U> extends FunctionQueueableFunctor<T> {
         outputMapping = getOutputMapping(this, 0);
     }
     
-    public void tuple(T value) throws Exception {
+    public void tuple(Object value) throws Exception {
 
-        U modValue;
+        Object modValue;
         synchronized (transform) {
             modValue = transform.apply(value);
         }

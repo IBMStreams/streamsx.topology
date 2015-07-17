@@ -11,7 +11,7 @@ import com.ibm.streamsx.topology.tuple.Keyable;
 
 public class PartitionedSlidingJoin<T, U, J> extends SlidingJoin<T, U, J> {
 
-    public PartitionedSlidingJoin(FunctionWindow<?> op,
+    public PartitionedSlidingJoin(FunctionWindow op,
             StreamWindow<Tuple> window) throws ClassNotFoundException {
         super(op, window);
     }

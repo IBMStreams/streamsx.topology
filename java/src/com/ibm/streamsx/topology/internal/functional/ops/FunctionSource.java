@@ -23,10 +23,10 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @PrimitiveOperator
 @OutputPortSet(cardinality = 1)
 @SharedLoader
-public class FunctionSource<T> extends ProcessTupleProducer implements Functional {
+public class FunctionSource extends ProcessTupleProducer implements Functional {
 
-    private Supplier<Iterable<T>> data;
-    private SPLMapping<T> mapping;
+    private Supplier<Iterable<Object>> data;
+    private SPLMapping<Object> mapping;
 
     private String functionalLogic;
     private String[] jar;
@@ -66,7 +66,7 @@ public class FunctionSource<T> extends ProcessTupleProducer implements Functiona
     protected void process() throws Exception {
 
         try {
-            for (T tuple : data.get()) {
+            for (Object tuple : data.get()) {
                 if (Thread.interrupted())
                     return;
                 if (tuple == null)

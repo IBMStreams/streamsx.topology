@@ -23,10 +23,10 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @InputPortSet(cardinality = 1)
 @OutputPortSet(cardinality = 1)
 @Icons(location16 = "opt/icons/filter_16.gif", location32 = "opt/icons/filter_32.gif")
-public class FunctionFilter<T> extends FunctionFunctor {
+public class FunctionFilter extends FunctionFunctor {
 
-    private Predicate<T> filter;
-    private SPLMapping<T> mapping;
+    private Predicate<Object> filter;
+    private SPLMapping<?> mapping;
     private StreamingOutput<OutputTuple> passed;
 
     @Override
@@ -42,7 +42,7 @@ public class FunctionFilter<T> extends FunctionFunctor {
     @Override
     public void process(StreamingInput<Tuple> stream, Tuple tuple)
             throws Exception {
-        T value = mapping.convertFrom(tuple);
+        Object value = mapping.convertFrom(tuple);
 
         boolean submitTuple;
         synchronized (filter) {
@@ -51,6 +51,4 @@ public class FunctionFilter<T> extends FunctionFunctor {
         if (submitTuple)
             passed.submit(tuple);
     }
-    
-    
 }

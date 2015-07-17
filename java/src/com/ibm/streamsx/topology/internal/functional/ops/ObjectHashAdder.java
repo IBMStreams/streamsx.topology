@@ -9,10 +9,10 @@ import com.ibm.streams.operator.model.PrimitiveOperator;
 
 @PrimitiveOperator
 @Icons(location16 = "opt/icons/functor_16.gif", location32 = "opt/icons/functor_32.gif")
-public class ObjectHashAdder<T> extends HashAdder<T> {
+public class ObjectHashAdder extends HashAdder {
     
     @Override
-    int getHash(T value) {
+    int getHash(Object value) {
         return value.hashCode();
     }
 }

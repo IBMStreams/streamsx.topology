@@ -17,9 +17,9 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 @PrimitiveOperator
 @InputPortSet(cardinality = 1)
-public class FunctionSink<T> extends FunctionFunctor {
-    private Consumer<T> sinker;
-    private SPLMapping<T> mapping;
+public class FunctionSink extends FunctionFunctor {
+    private Consumer<Object> sinker;
+    private SPLMapping<?> mapping;
 
     @Override
     public synchronized void initialize(OperatorContext context)
@@ -34,7 +34,7 @@ public class FunctionSink<T> extends FunctionFunctor {
     @Override
     public void process(StreamingInput<Tuple> stream, Tuple tuple)
             throws Exception {
-        T value = mapping.convertFrom(tuple);
+        Object value = mapping.convertFrom(tuple);
         synchronized (sinker) {
             sinker.accept(value);
         }

@@ -23,10 +23,10 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @InputPortSet(cardinality = 1)
 @OutputPortSet(cardinality = 1)
 @Icons(location16 = "opt/icons/functor_16.gif", location32 = "opt/icons/functor_32.gif")
-public class FunctionConvertToSPL<T> extends FunctionFunctor {
+public class FunctionConvertToSPL extends FunctionFunctor {
 
-    private BiFunction<T, OutputTuple, OutputTuple> convert;
-    private SPLMapping<T> inputMapping;
+    private BiFunction<Object, OutputTuple, OutputTuple> convert;
+    private SPLMapping<Object> inputMapping;
     private StreamingOutput<OutputTuple> output;
 
     @Override
@@ -42,7 +42,7 @@ public class FunctionConvertToSPL<T> extends FunctionFunctor {
     @Override
     public void process(StreamingInput<Tuple> stream, Tuple tuple)
             throws Exception {
-        T value = inputMapping.convertFrom(tuple);
+        Object value = inputMapping.convertFrom(tuple);
         OutputTuple outTuple = output.newTuple();
         synchronized (convert) {
             outTuple = convert.apply(value, outTuple);

@@ -15,7 +15,7 @@ import com.ibm.streamsx.topology.internal.functional.window.PeriodicAggregator;
 
 @PrimitiveOperator
 @Icons(location16 = "opt/icons/aggregate_16.gif", location32 = "opt/icons/aggregate_32.gif")
-public class FunctionAggregate<T, A> extends FunctionWindow<T> {
+public class FunctionAggregate<T, A> extends FunctionWindow {
     @Override
     void createWindowListener(StreamWindow<Tuple> window)
             throws ClassNotFoundException {

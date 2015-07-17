@@ -30,7 +30,7 @@ public class SlidingJoin<T, U, J> extends SlidingSet<U, J> {
     private BiFunction<T, List<U>, J> joiner;
     protected SPLMapping<T> input1Mapping;
 
-    public SlidingJoin(FunctionWindow<?> op, StreamWindow<Tuple> window)
+    public SlidingJoin(FunctionWindow op, StreamWindow<Tuple> window)
             throws ClassNotFoundException {
         super(op, window);
         joiner = getLogicObject(op.getFunctionalLogic());

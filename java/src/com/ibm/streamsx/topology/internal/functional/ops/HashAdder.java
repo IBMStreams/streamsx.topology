@@ -23,10 +23,10 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
  */
 @InputPorts({@InputPortSet(cardinality = 1)})
 @OutputPorts({@OutputPortSet(cardinality = 1)})
-public abstract class HashAdder<T> extends
+public abstract class HashAdder extends
         FunctionFunctor {
 
-    protected SPLMapping<T> mapping;
+    protected SPLMapping<Object> mapping;
     protected StreamingOutput<OutputTuple> output;
 
     @Override
@@ -42,14 +42,14 @@ public abstract class HashAdder<T> extends
     public void process(StreamingInput<Tuple> stream, Tuple tuple)
             throws Exception {
         // Take the hash code, add it to the tuple, and submit.
-        T value = mapping.convertFrom(tuple);
+        Object value = mapping.convertFrom(tuple);
         OutputTuple ot = output.newTuple();
         ot.setObject(0, tuple.getObject(0));
         ot.setInt(1, getHash(value));
         output.submit(ot);
     }
     
-    abstract int getHash(T value);
+    abstract int getHash(Object value);
 
     /**
      * Removed this as a parameter.

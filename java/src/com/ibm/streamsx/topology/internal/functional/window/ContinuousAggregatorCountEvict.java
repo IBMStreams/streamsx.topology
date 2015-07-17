@@ -23,7 +23,7 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
  */
 public class ContinuousAggregatorCountEvict<I, O> extends SlidingSetAggregator<I, O> {
 
-    public ContinuousAggregatorCountEvict(FunctionWindow<?> op, StreamWindow<Tuple> window)
+    public ContinuousAggregatorCountEvict(FunctionWindow op, StreamWindow<Tuple> window)
             throws ClassNotFoundException {
         super(op, window);
     }
