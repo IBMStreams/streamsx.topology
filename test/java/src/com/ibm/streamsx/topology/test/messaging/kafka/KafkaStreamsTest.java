@@ -249,13 +249,15 @@ public class KafkaStreamsTest extends TestTopology {
         List<Vals> msgs = new ArrayList<>();
         msgs.add(new Vals(mgen.create(topic, "Hello"), null, null));
         msgs.add(new Vals(mgen.create(topic, "key1", "Are you there?"), "key1", null));
+        msgs.add(new Vals(mgen.create(topic, "Msg with an empty key"), "", null));
+        msgs.add(new Vals("", mgen.create(topic, null, "Msg with an empty msg (this is the key)"), null));
         
         TStream<Vals> valsToPublish = top.constants(msgs, Vals.class);
         
         TStream<Message> msgsToPublish = valsToPublish.transform(
                                 msgFromValsFunc(null), Message.class);
         
-        producer.publish(topic, msgsToPublish);
+        producer.publish(msgsToPublish, topic);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
@@ -264,12 +266,13 @@ public class KafkaStreamsTest extends TestTopology {
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(
                                             msgToJSONStringFunc(), String.class);
-        List<Message> expectedAsKafka = mapList(msgs,
+        List<Message> expectedAsMessage = mapList(msgs,
                                             msgFromValsFunc(topic));
-        List<String> expectedAsStringList = mapList(expectedAsKafka,
+        expectedAsMessage = modifyList(expectedAsMessage, adjustKey());
+        List<String> expectedAsString = mapList(expectedAsMessage,
                                             msgToJSONStringFunc());
 
-        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
+        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
     @Test
@@ -305,12 +308,12 @@ public class KafkaStreamsTest extends TestTopology {
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(
                                             msgToJSONStringFunc(), String.class);
-        List<Message> expectedAsKafka = mapList(msgs,
+        List<Message> expectedAsMessage = mapList(msgs,
                                             msgFromValsFunc(topic));
-        List<String> expectedAsStringList = mapList(expectedAsKafka,
+        List<String> expectedAsString = mapList(expectedAsMessage,
                                             msgToJSONStringFunc());
 
-        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
+        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
     @Test
@@ -334,7 +337,7 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<Message> msgsToPublish = top.constants(msgs, Message.class);
         
-        producer.publish(topic, msgsToPublish);
+        producer.publish(msgsToPublish, topic);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
@@ -344,10 +347,10 @@ public class KafkaStreamsTest extends TestTopology {
         TStream<String> rcvdAsString = rcvdMsgs.transform(
                                             msgToJSONStringFunc(), String.class);
         msgs = modifyList(msgs, setTopic(topic));
-        List<String> expectedAsStringList = mapList(msgs,
+        List<String> expectedAsString = mapList(msgs,
                                             msgToJSONStringFunc());
 
-        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
+        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
     @Test
@@ -371,7 +374,7 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs, MyMsgSubtype.class);
         
-        producer.publish(topic, msgsToPublish);
+        producer.publish(msgsToPublish, topic);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
@@ -380,10 +383,10 @@ public class KafkaStreamsTest extends TestTopology {
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(
                                             msgToJSONStringFunc(), String.class);
-        List<String> expectedAsStringList = mapList(msgs,
+        List<String> expectedAsString = mapList(msgs,
                                             subtypeMsgToJSONStringFunc(topic));
 
-        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
+        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
     @Test
@@ -416,10 +419,10 @@ public class KafkaStreamsTest extends TestTopology {
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(
                                             msgToJSONStringFunc(), String.class);
-        List<String> expectedAsStringList = mapList(msgs,
+        List<String> expectedAsString = mapList(msgs,
                                             subtypeMsgToJSONStringFunc(null));
 
-        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
+        completeAndValidate(rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
     @Test
@@ -464,10 +467,10 @@ public class KafkaStreamsTest extends TestTopology {
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(
                                             msgToJSONStringFunc(), String.class);
-        List<String> expectedAsStringList = mapList(msgs,
+        List<String> expectedAsString = mapList(msgs,
                                             msgToJSONStringFunc());
                                             
-        completeAndValidateUnordered(top, rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
+        completeAndValidateUnordered(top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
     @Test
@@ -511,10 +514,10 @@ public class KafkaStreamsTest extends TestTopology {
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(
                                             msgToJSONStringFunc(), String.class);
-        List<String> expectedAsStringList = mapList(msgs,
+        List<String> expectedAsString = mapList(msgs,
                                             msgToJSONStringFunc());
 
-        completeAndValidateUnordered(top, rcvdAsString, SEC_TIMEOUT, expectedAsStringList.toArray(new String[0]));
+        completeAndValidateUnordered(top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
     // would be nice if Tester provided this too
@@ -541,7 +544,9 @@ public class KafkaStreamsTest extends TestTopology {
     
                 @Override
                 public boolean test(Message tuple) {
-                    return tuple.getMessage().matches(pattern);
+                    return tuple.getMessage().matches(pattern)
+                            || (tuple.getKey()!=null
+                                && tuple.getKey().matches(pattern));
                 }
             });
     }
@@ -575,6 +580,23 @@ public class KafkaStreamsTest extends TestTopology {
             @Override
             public Message apply(Message v) {
                 return new SimpleMessage(v.getMessage(), v.getKey(), topic);
+            }
+        };
+    }
+    
+    /**
+     * Convert a Message with an empty key to have a null key.
+     */
+    private static UnaryOperator<Message> adjustKey() {
+        return new UnaryOperator<Message>() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Message apply(Message v) {
+                String key = v.getKey(); 
+                if (key!=null && key.isEmpty())
+                    key = null;
+                return new SimpleMessage(v.getMessage(), key, v.getTopic());
             }
         };
     }

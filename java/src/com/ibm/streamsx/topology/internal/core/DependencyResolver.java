@@ -145,12 +145,12 @@ public class DependencyResolver {
     /**
      * Add a file dependency {@code location} to be 
      * added to directory {@code dstDirName} in the bundle.
-     * @param dstDirName name of directory in the bundle
      * @param location path to a file or directory
+     * @param dstDirName name of directory in the bundle
      * @throws IllegalArgumentException if {@code dstDirName} is not {@code etc}
      *     or {@code opt}, or {@code location} is not a file or directory.
      */
-    public void addFileDependency(String dstDirName, String location)
+    public void addFileDependency(String location, String dstDirName)
             throws IllegalArgumentException {
         
         if (dstDirName==null || !(dstDirName.equals("etc") || dstDirName.equals("opt")))

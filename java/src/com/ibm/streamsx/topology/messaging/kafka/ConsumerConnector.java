@@ -23,10 +23,10 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
 
 /**
  * A simple connector to an Apache Kafka cluster for consuming Kafka messages
- * -- subscribing to Kafka topics.
+ * -- subscribing to Kafka topics and creating a {@code TStream<Message>}.
  * <p>
- * A single connector is for a specific Kafka cluster as specified by
- * the KafkaConsumer configuration.
+ * A single connector is for a specific Kafka cluster as specified in
+ * the consumer configuration.
  * <p> 
  * A connector can create any number of consumers in the topology.
  * A consumer can subscribe to one or more topics.
@@ -39,8 +39,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * TStream<Message> rcvdMsgs = cc.consumer("myTopic");
  * </pre>
  * 
- * @see <a
- *      href="http://kafka.apache.org/documentation.html">Apache Kafka</a>
+ * @see <a href="http://kafka.apache.org">http://kafka.apache.org</a>
  * @see <a
  *      href="http://ibmstreams.github.io/streamsx.messaging/">com.ibm.streamsx.messaging</a>
  */
@@ -58,10 +57,10 @@ public class ConsumerConnector {
     }
 
     /**
-     * Create a KafkaConsumer connector for subscribing to topics.
+     * Create a consumer connector for subscribing to topics.
      * <p>
-     * See the Apache Kafka documentation for KafkaConsumer
-     * configuration properties.
+     * See the Apache Kafka documentation for {@code KafkaConsumer}
+     * configuration properties at <a href="http://kafka.apache.org">http://kafka.apache.org</a>.
      * <p>
      * Minimal configuration typically includes:
      * <ul>
@@ -111,14 +110,21 @@ public class ConsumerConnector {
      *        topic. 
      * @param topics one or more Kafka topics to subscribe to
      * @return TStream&lt;Message>
-     *      The generated tuples have a {@code topic}.
-     * @throws IllegalArgumentException if topics is null or empty.
+     *      The generated {@code Message} tuples have a non-null {@code topic}.
+     *      The tuple's {@code key} will be null if the Kafka message
+     *      lacked a key or it's key was the empty string. 
+     * @throws IllegalArgumentException if topics is null or empty, or if
+     *         any of the topic values are null or empty.
      * @throws IllegalArgumentException if threadsPerTopic <= 0.
      */
     public TStream<Message> subscribe(int threadsPerTopic, String... topics)
     {
         if (topics==null || topics.length==0)
             throw new IllegalArgumentException("topics");
+        for (String topic : topics) {
+            if (topic==null || topic.isEmpty())
+                throw new IllegalArgumentException("topics");
+        }
         if (threadsPerTopic <= 0)
             throw new IllegalArgumentException("threadsPerTopic");
 
@@ -182,9 +188,9 @@ public class ConsumerConnector {
 
             @Override
             public Message apply(Tuple tuple) {
-                return new SimpleMessage(fromSplValue(tuple.getString("message")),
+                return new SimpleMessage(tuple.getString("message"),
                                     fromSplValue(tuple.getString("key")),
-                                    fromSplValue(tuple.getString("topic")));
+                                    tuple.getString("topic"));
             }
             
             private String fromSplValue(String s) {

@@ -7,7 +7,7 @@ package com.ibm.streamsx.topology.tuple;
 import java.io.Serializable;
 
 /**
- * A Simple implementation of {@link Message}
+ * A Simple implementation of an immutable {@link Message}.
  */
 public class SimpleMessage implements Serializable, Message {
     private static final long serialVersionUID = 1L;
@@ -17,14 +17,15 @@ public class SimpleMessage implements Serializable, Message {
     private final String message;
 
     /**
-     * Create a {@code SimpleMessage} that lacks a topic and a key.
+     * Create a {@code SimpleMessage} that lacks a key and topic.
      * 
      * @param message
      *            the message
      */
     public SimpleMessage(String message) {
-        this(message, null);
+        this(message, null, null);
     }
+    
     /**
      * Create a {@code SimpleMessage} that lacks a topic.
      * @param message
@@ -33,27 +34,21 @@ public class SimpleMessage implements Serializable, Message {
      *            Optional key associated with the message.  May be null.
      */
     public SimpleMessage(String message, String key) {
-        if (message == null)
-            throw new IllegalArgumentException("message==null");
-        this.topic = null;
-        this.key = key;
-        this.message = message;
+        this(message, key, null);
     }
 
     /**
-     * Create a {@code SimpleMessage} that includes a topic.
+     * Create a {@code SimpleMessage}.
      * @param message
      *            the message
      * @param key
      *            Optional key associated with the message.  May be null.
      * @param topic
-     *            Kafka topic identifier.
-     * @throws IllegalArgumentException if topic == null
+     *            Optional topic identifier associated with the message.
+     *            May be null.
      * @throws IllegalArgumentException if message == null
      */
     public SimpleMessage(String message, String key, String topic) {
-        if (topic == null)
-            throw new IllegalArgumentException("topic==null");
         if (message == null)
             throw new IllegalArgumentException("message==null");
         this.topic = topic;

@@ -506,10 +506,18 @@ public class Topology implements TopologyElement {
     /**
      * Add file or directory tree {@code location} to directory
      * {@code dstDirName} in the application bundle, making it
-     * available to the application at runtime.
+     * available to the topology's SPL operators at runtime - e.g.,
+     * an operator configuration file in "etc" in the application directory.
      * <p>
      * Use {@link #addClassDependency(Class)} or {@link #addJarDependency(String)}
      * to add class or jar dependencies.
+     * <p>
+     * Functional logic implementations that need to access resources should
+     * package the resources in a jar or classes directory, add that to the
+     * topology as a dependency using {@code addJarDependency(String)}
+     * or {@code addClassDependency(Class)} and access them as resources from
+     * the class loader as described here:
+     *   <a href="https://docs.oracle.com/javase/tutorial/deployment/webstart/retrievingResources.html">https://docs.oracle.com/javase/tutorial/deployment/webstart/retrievingResources.html</a>
      * <p>
      * Legal values for {@code dstDirName} are {@code etc} or {@code opt}.
      * <p>
@@ -521,14 +529,14 @@ public class Topology implements TopologyElement {
      * // add "myApp" directory tree to the bundle's "etc" directory
      * addFileDependency("etc", "/tmp/myApp");
      * </pre>
-     * 
-     * @param dstDirName name of directory in the bundle
      * @param location path to a file or directory
+     * @param dstDirName name of directory in the bundle
+     * 
      * @throws IllegalArgumentException if {@code dstDirName} is not {@code etc}
      *     or {@code opt}, or {@code location} is not a file or directory.
      */
-    public void addFileDependency(String dstDirName, String location) {
-        dependencyResolver.addFileDependency(dstDirName, location);
+    public void addFileDependency(String location, String dstDirName) {
+        dependencyResolver.addFileDependency(location, dstDirName);
     }
     
     private void finalizeConfig() {

@@ -20,10 +20,10 @@ import com.ibm.streamsx.topology.tuple.Message;
 
 /**
  * A simple connector to an Apache Kafka cluster for producing Kafka messages
- * -- publishing to Kafka topics.
+ * -- publishing a {@code TStream<Message>} to Kafka topics.
  * <p>
- * A single connector is for a specific Kafka Broker as specified by
- * the KafkaConsumer configuration.
+ * A single connector is for a specific Kafka Broker as specified in
+ * the producer configuration.
  * <p> 
  * A connector can create any number of producers in the topology.  
  * A producer can publish to one or more topics.
@@ -36,11 +36,10 @@ import com.ibm.streamsx.topology.tuple.Message;
  *  
  * TStream<MyType> myStream = ...
  * TStream<Message> msgsToSend = myStream.transform(MyType to SimpleMessage);
- * pc.publish("myTopic", msgsToSend);
+ * pc.publish(msgsToSend, "myTopic");
  * </pre>
  * 
- * @see <a
- *      href="http://kafka.apache.org/documentation.html">Apache Kafka</a>
+ * @see <a href="http://kafka.apache.org">http://kafka.apache.org</a>
  * @see <a
  *      href="http://ibmstreams.github.io/streamsx.messaging/">com.ibm.streamsx.messaging</a>
  */
@@ -58,10 +57,10 @@ public class ProducerConnector {
     }
    
     /**
-     * Create a KafkaProducer connector for publishing tuples.
+     * Create a producer connector for publishing tuples.
      * <p>
-     * See the Apache Kafka documentation for KafkaProducer
-     * configuration properties.
+     * See the Apache Kafka documentation for {@code KafkaProducer}
+     * configuration properties at <a href="http://kafka.apache.org">http://kafka.apache.org</a>.
      * <p>
      * Minimal configuration typically includes:
      * <ul>
@@ -89,23 +88,32 @@ public class ProducerConnector {
      * Publish {@code stream} tuples to the Kafka Broker.
      * Each {@code stream} tuple is sent to the topic specified by its
      * {@link Message#getTopic()}.
-     * Same as {@code produce(null, stream)}.
+     * Same as {@code produce(stream, null)}.
      * @param stream the stream to publish
      */
     public void publish(TStream<? extends Message> stream)
     {
-        publish(null/*topic*/, stream);
+        publish(stream, null/*topic*/);
     }
 
     /**
      * Publish {@code stream} tuples to the Kafka Broker.
-     * If {@code topic} is null, each tuples is published to the topic
+     * <p>
+     * If {@code topic} is null, each tuple is published to the topic
      * specified by its {@link Message#getTopic()}.
-     * Otherwise, all topics are published to {@code topic}.
-     * @param topic topic to publish to.  May be null.
+     * Otherwise, all tuples are published to {@code topic}.
+     * <p>
+     * The messages added to Kafka include a topic, message and key.
+     * If {@link Message#getKey()} is null, an empty key value is published.
      * @param stream the stream to publish
+     * @param topic topic to publish to.  May be null.
+     * 
+     * @throws IllegalArgumentException if an empty {@code topic} is specified.
      */
-    public void publish(String topic, TStream<? extends Message> stream) {
+    public void publish(TStream<? extends Message> stream, String topic) {
+        if (topic!=null && topic.isEmpty())
+            throw new IllegalArgumentException("topic");
+        
         @SuppressWarnings("unchecked")
         SPLStream splStream = SPLStreams.convertStream((TStream<Message>)stream,
                 cvtMsgFunc(topic), KafkaSchemas.KAFKA);

@@ -49,8 +49,8 @@ class Util {
             new File(tmpDir, pathInDst.toString()).createNewFile();
             File location = new File(tmpDir, pathInDst.getName(0).toString());
             
-            te.topology().addFileDependency(dstDirName, 
-                    location.getAbsolutePath());
+            te.topology().addFileDependency(location.getAbsolutePath(), 
+                    dstDirName);
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to create a properties file: " + e, e);
