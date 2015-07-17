@@ -88,6 +88,7 @@ public class JavaFunctional {
             BOperatorInvocation bop, Class<T> tupleTypeClass) {
         SPLMapping<T> mapping = Schemas.getSPLMapping(tupleTypeClass);
         BOutputPort bstream = bop.addOutput(mapping.getSchema());
+        bstream.json().put("type.native", tupleTypeClass.getName());
         addDependency(te, bop, tupleTypeClass);
         
         // If the stream is just a Java object as a blob
