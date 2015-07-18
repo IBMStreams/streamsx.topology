@@ -28,6 +28,8 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
+import org.apache.commons.io.FileUtils;
+
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
@@ -46,7 +48,33 @@ import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 public class DependencyResolver {
     private final Map<BOperatorInvocation, Set<Path>> operatorToJarDependencies = new HashMap<>();
     private final Set<Path> globalDependencies = new HashSet<>();
+    private final Set<Artifact> globalFileDependencies = new HashSet<>();
 
+    private static class Artifact {
+        final String dstDirName;
+        final Path absPath;
+        Artifact(String dirName, Path absPath) {
+            if (dirName==null || absPath==null)
+                throw new IllegalArgumentException("dstDirName="+dirName+" absPath="+absPath);
+            this.dstDirName = dirName;
+            this.absPath = absPath;
+        }
+        @Override
+        public boolean equals(Object o) {
+            if (o==this)
+                return true;
+            if (!(o instanceof Artifact))
+                return false;
+            Artifact o2 = (Artifact)o;
+            return dstDirName.equals(o2.dstDirName) && absPath.equals(o2.absPath); 
+        }
+        @Override
+        public int hashCode() {
+            // no need to get fancy here
+            return absPath.hashCode();
+        }
+    }
+    
     /**
      * Ensure we don't copy files multiple times and keep
      * a map between a code source and the jar we generate.
@@ -113,8 +141,37 @@ public class DependencyResolver {
             operatorToJarDependencies.get(op).add(absolutePath);
         }
     }
+    
+    /**
+     * Add a file dependency {@code location} to be 
+     * added to directory {@code dstDirName} in the bundle.
+     * @param location path to a file or directory
+     * @param dstDirName name of directory in the bundle
+     * @throws IllegalArgumentException if {@code dstDirName} is not {@code etc}
+     *     or {@code opt}, or {@code location} is not a file or directory.
+     */
+    public void addFileDependency(String location, String dstDirName)
+            throws IllegalArgumentException {
+        
+        if (dstDirName==null || !(dstDirName.equals("etc") || dstDirName.equals("opt")))
+            throw new IllegalArgumentException("dstDirName="+dstDirName);
+        
+        File f = new File(location);
+        if (!f.exists() || (!f.isFile() && !f.isDirectory()))
+            throw new IllegalArgumentException("Not a file or directory. Invalid "
+                    + "file dependency location:"+ f.toPath().toAbsolutePath().toString());
+        
+        globalFileDependencies.add(new Artifact(dstDirName,
+                f.toPath().toAbsolutePath()));    
+    }
 
-    // Resolve the dependencies. Copies jars to the impl/lib part of the bundle
+    /**
+     * Resolve the dependencies. Copies jars to the impl/lib part of the bundle
+     * and file/directory dependencies to the bundle.
+     * @param config context configuration
+     * @throws IOException
+     * @throws URISyntaxException
+     */
     public void resolveDependencies(Map<String, Object> config)
             throws IOException, URISyntaxException {
         for (BOperatorInvocation op : operatorToJarDependencies.keySet()) {    
@@ -162,6 +219,9 @@ public class DependencyResolver {
                 }
             }
         }
+
+        for(Artifact dep : globalFileDependencies)
+            resolveFileDependency(dep, config);
     }
     
     private String resolveDependency(Path pa, Map<String, Object> config){ 
@@ -211,6 +271,28 @@ public class DependencyResolver {
             throw new IllegalStateException("Error resolving dependency "+ pa);
         }
         return jarName;
+    }
+    
+    /**
+     * Copy the Artifact to the toolkit
+     */
+    private void resolveFileDependency(Artifact a, Map<String, Object> config)
+            throws IOException {
+        final File dstDir = new File((String) (config
+                .get(ContextProperties.TOOLKIT_DIR)), a.dstDirName);
+        File absFile = a.absPath.toFile();
+        try {
+            if (absFile.isFile()) {
+                Files.copy(a.absPath, 
+                        new File(dstDir, absFile.getName()).toPath(),
+                        StandardCopyOption.REPLACE_EXISTING);
+            }
+            else if (absFile.isDirectory()) {
+                FileUtils.copyDirectoryToDirectory(absFile, dstDir);
+            }
+        } catch (IOException e) {
+            throw new IOException("Error copying file dependency "+ a.absPath + ": " + e, e);
+        }
     }
     
     /**

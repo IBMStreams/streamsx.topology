@@ -123,9 +123,13 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
         File tkNamespace = new File(toolkitRoot, namespace);
         File tkImplLib = new File(toolkitRoot, "impl/lib");
+        File tkEtc = new File(toolkitRoot, "etc");
+        File tkOpt = new File(toolkitRoot, "opt");
 
         tkImplLib.mkdirs();
         tkNamespace.mkdirs();
+        tkEtc.mkdir();
+        tkOpt.mkdir();
     }
 
 }
