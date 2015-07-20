@@ -15,12 +15,14 @@ import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.types.Blob;
 
-public class SPLJavaObject<T> extends SPLMapping<T> {
+class SPLJavaObject<T> extends SPLMapping<T> {
 
     public static final String SPL_JAVA_PREFIX = "__spl_j";
     
     public static final String SPL_JAVA_PREFIX_SIMPLE = SPL_JAVA_PREFIX + "o_";
     public static final String SPL_JAVA_PREFIX_ENCODED = SPL_JAVA_PREFIX + "ou_";
+    
+    public static final String SPL_JAVA_OBJECT = SPL_JAVA_PREFIX + "object";
 
     private final Class<T> tupleClass;
 
@@ -165,7 +167,7 @@ public class SPLJavaObject<T> extends SPLMapping<T> {
         return encodedSPLAttributeNameToClassName(attrName);
     }
 
-    public static <T> SPLMapping<T> createMappping(Class<T> tupleClass) {
+    static <T> SPLMapping<T> createMappping(Class<T> tupleClass) {
 
         String splName = classNameToSPLAttributeName(tupleClass);
         StreamSchema schema = Type.Factory.getStreamSchema("tuple<blob "
@@ -174,7 +176,7 @@ public class SPLJavaObject<T> extends SPLMapping<T> {
         return new SPLJavaObject<T>(schema, tupleClass);
     }
 
-    public static SPLMapping<Object> getMapping(StreamSchema schema) {
+    static SPLMapping<Object> getMapping(StreamSchema schema) {
         assert schema.getAttributeCount() == 1;
 
         Attribute blobAttr = schema.getAttribute(0);

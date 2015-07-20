@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -202,6 +204,43 @@ public class PublishSubscribeTest extends TestTopology {
     }
     
     /**
+     * Publish two Java object streams to the same topic
+     * but ensure that the subscriber selects the correct one
+     * based upon type.
+     */
+    @SuppressWarnings("serial")
+    public static TStream<String> publishJavaObjectMultiple() throws Exception {
+    
+        final Topology t = new Topology();
+        List<SimpleInt> ints = new ArrayList<>();
+        ints.add(new SimpleInt(0));
+        ints.add(new SimpleInt(1));
+        ints.add(new SimpleInt(2));
+        ints.add(new SimpleInt(3));
+        TStream<SimpleInt> sints = t.constants(ints, SimpleInt.class);
+        sints = sints.modify(new Delay<SimpleInt>());
+        sints.publish("/testPublishJavaObjects");
+        
+        TStream<String> source = t.strings("publishing", "a", "java object");       
+        source = source.modify(new Delay<String>());
+        
+        TStream<SimpleString> objects = source.transform(new Function<String,SimpleString>() {
+
+            @Override
+            public SimpleString apply(String v) {
+                return new SimpleString(v);
+            }}, SimpleString.class);
+        
+        objects.publish("/testPublishJavaObjects");
+                
+        TStream<SimpleString> subscribe = t.subscribe("/testPublishJavaObjects", SimpleString.class);
+        
+        TStream<String> strings = StringStreams.toString(subscribe);  
+
+        return strings;
+    }
+    
+    /**
      * Delay to ensure that tuples are not dropped while dynamic
      * connections are being made.
      */
@@ -234,6 +273,17 @@ public class PublishSubscribeTest extends TestTopology {
         @Override
         public String toString() {
             return value;
+        }
+    }
+    @SuppressWarnings("serial")
+    public static class SimpleInt implements Serializable {
+        private final int value;
+        public SimpleInt(int value) {
+            this.value = value;
+        }
+        @Override
+        public String toString() {
+            return "SimpleInt:" + value;
         }
     }
 }
