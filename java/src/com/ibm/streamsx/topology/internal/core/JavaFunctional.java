@@ -107,12 +107,6 @@ public class JavaFunctional {
         SPLStream splImport = SPLStreams.subscribe(te, topic,
                 mapping.getSchema());
         return null; // TODO
-        /*
-         * return new OutputPortStream<T>(bop, te, splImport.getPort(),
-         * tupleTypeClass); return GraphUtils.portToStream(this,
-         * splImport.getPort(), tupleTypeClass);
-         */
-
     }
 
     /**

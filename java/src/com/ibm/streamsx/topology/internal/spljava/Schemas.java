@@ -6,9 +6,7 @@ package com.ibm.streamsx.topology.internal.spljava;
 
 import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 
-import com.ibm.streams.operator.Attribute;
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.types.Blob;
 import com.ibm.streams.operator.types.XML;
 
@@ -63,17 +61,7 @@ public class Schemas {
             return SPLMapping.JavaXML;
         }
 
-        Attribute attr0 = schema.getAttribute(0);
-
-        if (attr0.getType().getMetaType() == Type.MetaType.BLOB) {
-            if (attr0.getName().startsWith(SPLJavaObject.SPL_JAVA_PREFIX))
-                return SPLJavaObject.getMapping(schema);
-        }
-
         return new SPLTuple(schema);
-
-        // throw new UnsupportedOperationException(
-        // "Mapping not defined:" + schema.getLanguageType());
     }
 
 }
