@@ -17,6 +17,7 @@ public class Schemas {
     public static final StreamSchema STRING = getStreamSchema("tuple<rstring string>");
     public static final StreamSchema BLOB = getStreamSchema("tuple<blob binary>");
     public static final StreamSchema XML = getStreamSchema("tuple<xml document>");
+    public static final StreamSchema JAVA_OBJECT = getStreamSchema("tuple<blob " + SPLJavaObject.SPL_JAVA_OBJECT + ">");
     
 
     public StreamSchema getSPLSchema(Class<?> tupleClass) {
@@ -51,6 +52,9 @@ public class Schemas {
 
         if (STRING.equals(schema)) {
             return SPLMapping.JavaString;
+        }
+        if (JAVA_OBJECT.equals(schema)) {
+            return new SPLJavaObject<Object>(schema, Object.class);
         }
         if (BLOB.equals(schema)) {
             return SPLMapping.JavaBlob;

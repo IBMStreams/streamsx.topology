@@ -169,10 +169,11 @@ class SPLJavaObject<T> extends SPLMapping<T> {
 
     static <T> SPLMapping<T> createMappping(Class<T> tupleClass) {
 
-        String splName = classNameToSPLAttributeName(tupleClass);
-        StreamSchema schema = Type.Factory.getStreamSchema("tuple<blob "
-                + splName + ">");
-
+        //String splName = classNameToSPLAttributeName(tupleClass);
+        //StreamSchema schema = Type.Factory.getStreamSchema("tuple<blob "
+        //        + splName + ">");
+        StreamSchema schema = Schemas.JAVA_OBJECT;
+        
         return new SPLJavaObject<T>(schema, tupleClass);
     }
 
