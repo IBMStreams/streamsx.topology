@@ -1,0 +1,50 @@
+namespace com.ibm.streamsx.topology.topic ;
+
+/**
+ * Publish a stream to a topic. Allows other IBM Streams
+ * applications to subscribe to the input stream, including
+ * those written in different languages.
+ * See [namespace:com.ibm.streamsx.topology.topic] for details.
+ * @input In Stream to be published as a topic.
+ * @param topic Topic to publish stream to.
+ * @exclude
+*/
+public composite PublishJava(input In )
+{
+	param
+		expression<rstring> $topic ;
+		expression<rstring> $class ;
+	graph
+		() as ExportTopic = Export(In)
+		{
+			param
+				properties : { __spl_exportType = "topic.java", __spl_topic = $topic, __spl_class = $class } ;
+		}
+}
+
+/**
+ * Subscribe to a topic.
+ * Generates a stream that is subscribed, through
+ * IBM Streams dynamic connections, to all streams
+ * published to the same `topic` and `streamType`.
+ * See [namespace:com.ibm.streamsx.topology.topic] for details.
+ 
+ * @output Topic Subscription to `topic`.
+ * @param topic Topic to subscribe to.
+ * @param streamType Type of output stream `Topic`.
+ * @exclude
+*/
+public composite SubscribeJava(output Topic )
+{
+	param		
+		expression<rstring> $topic ;
+		expression<rstring> $class ;
+		type $streamType ;
+	graph
+		stream<$streamType> Topic = Import()
+		{
+			param
+				subscription : __spl_exportType == "topic.java" && __spl_topic == $topic && __spl_class == $class ;
+		}
+
+}

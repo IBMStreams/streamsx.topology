@@ -19,6 +19,8 @@ import java.util.logging.Logger;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.flow.declare.OperatorGraph;
+import com.ibm.streams.operator.types.Blob;
+import com.ibm.streams.operator.types.XML;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
 import com.ibm.streamsx.topology.context.StreamsContext;
@@ -40,6 +42,7 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.internal.tester.TupleCollection;
 import com.ibm.streamsx.topology.json.JSONSchemas;
+import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -419,9 +422,29 @@ public class Topology implements TopologyElement {
             TStream<T> json = (TStream<T>) SPLStreams.subscribe(this, topic, JSONSchemas.JSON).toJSON();
             return json;
         }
+        
         SPLMapping<T> mapping = Schemas.getSPLMapping(tupleTypeClass);
-        SPLStream splImport = SPLStreams.subscribe(this, topic,
-                mapping.getSchema());
+        
+        SPLStream splImport;
+        
+        // Subscribed as an SPL Stream.
+        if (String.class.equals(tupleTypeClass) ||
+                Blob.class.equals(tupleTypeClass) ||
+                 XML.class.equals(tupleTypeClass)) {
+            splImport = SPLStreams.subscribe(this, topic,
+                    mapping.getSchema());
+
+        } else {      
+            Map<String, Object> params = new HashMap<>();
+
+            params.put("topic", topic);
+            params.put("class", tupleTypeClass.getName());
+            params.put("streamType", mapping.getSchema());
+
+            splImport = SPL.invokeSource(this,
+                    "com.ibm.streamsx.topology.topic::SubscribeJava", params,
+                    mapping.getSchema());
+        }
 
         return new StreamImpl<T>(this, splImport.output(), tupleTypeClass);
     }
