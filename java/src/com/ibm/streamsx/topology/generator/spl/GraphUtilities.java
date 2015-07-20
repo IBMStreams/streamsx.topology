@@ -9,7 +9,7 @@ import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streamsx.topology.function7.Consumer;
+import com.ibm.streamsx.topology.function.Consumer;
 
 public class GraphUtilities {
     public static ArrayList<JSONObject> findStarts(JSONObject graph) {
