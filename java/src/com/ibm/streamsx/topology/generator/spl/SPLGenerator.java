@@ -14,8 +14,7 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
-import com.ibm.streamsx.topology.function7.Consumer;
-import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
+import com.ibm.streamsx.topology.function.Consumer;
 
 public class SPLGenerator {
     // Needed for composite name generation
@@ -26,10 +25,6 @@ public class SPLGenerator {
     // The final list of composites (Main composite and parallel regions), which
     // compose the graph.
     ArrayList<JSONObject> composites = new ArrayList<JSONObject>();
-
-    public String generateSPL(GraphBuilder graph) throws IOException {
-        return generateSPL(graph.complete());
-    }
 
     public String generateSPL(JSONObject graph) throws IOException {
 
