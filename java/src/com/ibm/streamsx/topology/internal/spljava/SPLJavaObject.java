@@ -17,37 +17,27 @@ import com.ibm.streams.operator.types.Blob;
  * the actual type of the Java object, the info for
  *  generic parameter of TStream<T> is not needed. 
  */
-class SPLJavaObject<T> extends SPLMapping<T> {
+class SPLJavaObject extends SPLMapping<Object> {
 
     public static final String SPL_JAVA_PREFIX = "__spl_j";
     
     public static final String SPL_JAVA_OBJECT = SPL_JAVA_PREFIX + "object";
 
-    private final Class<T> tupleClass;
-
-    static <T> SPLMapping<T> createMappping(Class<T> tupleClass) {       
-        return new SPLJavaObject<T>(Schemas.JAVA_OBJECT, tupleClass);
-    }
-
-    protected SPLJavaObject(StreamSchema schema, Class<T> tupleClass) {
-        super(schema, tupleClass);
-        this.tupleClass = tupleClass;
+    SPLJavaObject(StreamSchema schema) {
+        super(schema);
     }
 
     @Override
-    public T convertFrom(Tuple tuple) {
+    public Object convertFrom(Tuple tuple) {
         Blob blob = tuple.getBlob(0);
 
         if (blob instanceof JavaObjectBlob) {
             JavaObjectBlob jblob = (JavaObjectBlob) blob;
-            return tupleClass.cast(jblob.getObject());
+            return jblob.getObject();
         }
 
-        try {
-
-            ObjectInputStream ois = new ObjectInputStream(blob.getInputStream());
-
-            return tupleClass.cast(ois.readObject());
+        try (ObjectInputStream ois = new ObjectInputStream(blob.getInputStream())) {
+            return ois.readObject();
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
@@ -56,7 +46,7 @@ class SPLJavaObject<T> extends SPLMapping<T> {
     }
 
     @Override
-    public Tuple convertTo(T tuple) {
+    public Tuple convertTo(Object tuple) {
 
         JavaObjectBlob jblob = new JavaObjectBlob(tuple);
         return getSchema().getTuple(new Blob[] { jblob });

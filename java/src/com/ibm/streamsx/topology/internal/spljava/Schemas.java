@@ -30,20 +30,23 @@ public class Schemas {
         throw new IllegalArgumentException(tupleClass.getName());
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T> SPLMapping<T> getSPLMapping(Class<T> tupleClass) {
+    /**
+     * Return the SPL schema that will be used at runtime
+     * to hold the java object tuple.
+     */
+    public static StreamSchema getSPLMappingSchema(Class<?> tupleClass) {
 
         if (String.class.equals(tupleClass)) {
-            return (SPLMapping<T>) SPLMapping.JavaString;
+            return STRING;
         }
         if (Blob.class.equals(tupleClass)) {
-            return (SPLMapping<T>) SPLMapping.JavaBlob;
+            return BLOB;
         }
         if (XML.class.equals(tupleClass)) {
-            return (SPLMapping<T>) SPLMapping.JavaXML;
+            return XML;
         }
 
-        return SPLJavaObject.createMappping(tupleClass);
+        return JAVA_OBJECT;
     }
 
     public static SPLMapping<?> getSPLMapping(StreamSchema schema) {
@@ -52,7 +55,7 @@ public class Schemas {
             return SPLMapping.JavaString;
         }
         if (JAVA_OBJECT.equals(schema)) {
-            return new SPLJavaObject<Object>(schema, Object.class);
+            return new SPLJavaObject(schema);
         }
         if (BLOB.equals(schema)) {
             return SPLMapping.JavaBlob;

@@ -21,21 +21,14 @@ public abstract class SPLMapping<T> {
     static final XMLMapping JavaXML = new XMLMapping();
 
     private final StreamSchema schema;
-    private final Class<T> tupleClass;
 
-    protected SPLMapping(StreamSchema schema, Class<T> tupleClass) {
+    protected SPLMapping(StreamSchema schema) {
         this.schema = schema;
-        this.tupleClass = tupleClass;
     }
 
-    public final StreamSchema getSchema() {
+    StreamSchema getSchema() {
         return schema;
     }
-
-    public final Class<T> getTupleClass() {
-        return tupleClass;
-    }
-
     public abstract Tuple convertTo(T tuple);
 
     public abstract T convertFrom(Tuple tuple);
