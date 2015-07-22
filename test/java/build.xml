@@ -128,7 +128,7 @@
        <formatter type="xml"/>
        <batchtest todir="${topology.test.dir}">
           <fileset dir="${basedir}/src" 
-          	 excludes="**/samples/*Test.java,**/test/kafka/" >
+          	 excludes="**/samples/*Test.java,**/test/messaging/kafka/" >
              <include name="**/*Test.java"/>
           </fileset>
        </batchtest>
