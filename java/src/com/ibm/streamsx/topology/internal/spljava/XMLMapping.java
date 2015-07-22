@@ -15,7 +15,7 @@ class XMLMapping extends SPLMapping<XML> {
 
     // Singleton, as stateless.
     XMLMapping() {
-        super(Schemas.XML, XML.class);
+        super(Schemas.XML);
     }
 
     @Override

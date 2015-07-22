@@ -7,13 +7,17 @@ package com.ibm.streamsx.topology.internal.core;
 import static java.util.Collections.singletonMap;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
+import com.ibm.streams.operator.types.Blob;
+import com.ibm.streams.operator.types.XML;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.TopologyElement;
@@ -37,6 +41,7 @@ import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.spl.SPL;
+import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.tuple.Keyable;
 
 public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
@@ -206,10 +211,28 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             JSONStreams.toSPL(json).publish(topic);
             return;
         }
+        
+        
+        BOperatorInvocation op;
+        if (String.class.equals(getTupleClass()) ||
+                Blob.class.equals(getTupleClass()) ||
+                 XML.class.equals(getTupleClass())
+                 || this instanceof SPLStream) {
+            // Publish as a stream consumable by SPL & Java/Scala
+            op = builder().addSPLOperator("Publish",
+                    "com.ibm.streamsx.topology.topic::Publish",
+                    singletonMap("topic", topic));
+ 
+        } else {
+            // Publish as a stream consumable only by Java/Scala
+            Map<String,Object> params = new HashMap<>();
+            params.put("topic", topic);
+            params.put("class", getTupleClass().getName());
+            op = builder().addSPLOperator("Publish",
+                    "com.ibm.streamsx.topology.topic::PublishJava",
+                    params);
+        }
 
-        BOperatorInvocation op = builder().addSPLOperator("Publish",
-                "com.ibm.streamsx.topology.topic::Publish",
-                singletonMap("topic", topic));
         SourceInfo.setSourceInfo(op, SPL.class);
         this.connectTo(op, false, null);
     }

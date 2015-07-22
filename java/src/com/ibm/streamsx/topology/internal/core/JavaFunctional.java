@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.ibm.streams.operator.Operator;
+import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
@@ -24,10 +25,7 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
-import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
-import com.ibm.streamsx.topology.spl.SPLStream;
-import com.ibm.streamsx.topology.spl.SPLStreams;
 
 /**
  * Maintains the core core for building a topology of Java streams.
@@ -86,8 +84,9 @@ public class JavaFunctional {
      */
     public static <T> TStream<T> addJavaOutput(TopologyElement te,
             BOperatorInvocation bop, Class<T> tupleTypeClass) {
-        SPLMapping<T> mapping = Schemas.getSPLMapping(tupleTypeClass);
-        BOutputPort bstream = bop.addOutput(mapping.getSchema());
+        StreamSchema mappingSchema = Schemas.getSPLMappingSchema(tupleTypeClass);
+        BOutputPort bstream = bop.addOutput(mappingSchema);
+        bstream.json().put("type.native", tupleTypeClass.getName());
         addDependency(te, bop, tupleTypeClass);
         
         // If the stream is just a Java object as a blob
@@ -97,21 +96,6 @@ public class JavaFunctional {
         }
 
         return new StreamImpl<T>(te, bstream, tupleTypeClass);
-    }
-
-    public static <T> TStream<T> addSubscribeOperator(TopologyElement te,
-            String topic, Class<T> tupleTypeClass) {
-        SPLMapping<T> mapping = Schemas.getSPLMapping(tupleTypeClass);
-        @SuppressWarnings("unused")
-        SPLStream splImport = SPLStreams.subscribe(te, topic,
-                mapping.getSchema());
-        return null; // TODO
-        /*
-         * return new OutputPortStream<T>(bop, te, splImport.getPort(),
-         * tupleTypeClass); return GraphUtils.portToStream(this,
-         * splImport.getPort(), tupleTypeClass);
-         */
-
     }
 
     /**

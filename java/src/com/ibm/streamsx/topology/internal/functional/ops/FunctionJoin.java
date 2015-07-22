@@ -20,14 +20,14 @@ import com.ibm.streamsx.topology.internal.functional.window.SlidingJoin;
         @InputPortSet(cardinality = 1, windowingMode = WindowMode.Windowed),
         @InputPortSet(cardinality = 1) })
 @Icons(location16 = "opt/icons/join_16.gif", location32 = "opt/icons/join_32.gif")
-public class FunctionJoin<T, U, J> extends FunctionWindow<T> {
-    private SlidingJoin<T, U, J> joiner;
+public class FunctionJoin extends FunctionWindow {
+    private SlidingJoin<Object, Object, Object> joiner;
 
     @Override
     void createWindowListener(StreamWindow<Tuple> window)
             throws ClassNotFoundException {
-        joiner = window.isPartitioned() ? new PartitionedSlidingJoin<T, U, J>(
-                this, window) : new SlidingJoin<T, U, J>(this, window);
+        joiner = window.isPartitioned() ? new PartitionedSlidingJoin<Object, Object, Object>(
+                this, window) : new SlidingJoin<Object, Object, Object>(this, window);
     }
 
     /**

@@ -39,6 +39,12 @@ class OperatorGenerator {
 
     private static void noteAnnotations(JSONObject op, StringBuilder sb)
             throws IOException {
+        
+        sourceLocationNote(op, sb);
+        portTypesNote(op, sb);
+    }
+    
+    private static void sourceLocationNote(JSONObject op, StringBuilder sb) throws IOException {
         JSONArray ja = (JSONArray) op.get("sourcelocation");
         if (ja == null || ja.isEmpty())
             return;
@@ -50,6 +56,22 @@ class OperatorGenerator {
         String sourceInfo = jsource.serialize();
         SPLGenerator.stringLiteral(sb, sourceInfo);
         sb.append(")\n");
+    }
+    
+    private static void portTypesNote(JSONObject op, StringBuilder sb) {
+        JSONArray ja = (JSONArray) op.get("outputs");
+        if (ja == null || ja.isEmpty())
+            return;
+        for (int i = 0 ; i < ja.size(); i++) {
+            JSONObject output = (JSONObject) ja.get(i);
+            String type = (String) output.get("type.native");
+            if (type == null || type.isEmpty())
+                continue;
+            sb.append("@spl_note(id=\"__spl_nativeType_output_" + i + "\"");
+            sb.append(", text=");
+            SPLGenerator.stringLiteral(sb, type);
+            sb.append(")\n");
+        }
     }
 
     private static void parallelAnnotation(JSONObject op, StringBuilder sb) {

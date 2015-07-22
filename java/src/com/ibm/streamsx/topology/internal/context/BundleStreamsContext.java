@@ -64,7 +64,7 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         String namespace = (String) jsonApp.get("namespace");
         String name = (String) jsonApp.get("name");
 
-        InvokeSc sc = new InvokeSc(standalone, namespace, name, appDir);
+        InvokeSc sc = new InvokeSc(config, standalone, namespace, name, appDir);
         
         // Add the toolkits
         JSONObject graphConfig  = (JSONObject) jsonApp.get("config");

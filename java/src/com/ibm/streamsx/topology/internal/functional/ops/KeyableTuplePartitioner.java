@@ -10,10 +10,11 @@ import com.ibm.streamsx.topology.tuple.Keyable;
 
 @PrimitiveOperator
 @Icons(location16 = "opt/icons/functor_16.gif", location32 = "opt/icons/functor_32.gif")
-public class KeyableTuplePartitioner<T extends Keyable<?>> extends HashAdder<T> {
+public class KeyableTuplePartitioner extends HashAdder {
 
     @Override
-    int getHash(T value) {
-        return value.getKey().hashCode();
+    int getHash(Object value) {
+        Keyable<?> keyable = (Keyable<?>) value;
+        return keyable.getKey().hashCode();
     }
 }

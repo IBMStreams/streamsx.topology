@@ -14,7 +14,7 @@ import com.ibm.streams.operator.Tuple;
 class SPLTuple extends SPLMapping<Tuple> {
 
     SPLTuple(StreamSchema schema) {
-        super(schema, Tuple.class);
+        super(schema);
     }
 
     @Override

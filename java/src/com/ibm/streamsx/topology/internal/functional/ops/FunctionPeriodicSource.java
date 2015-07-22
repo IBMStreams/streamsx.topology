@@ -22,10 +22,10 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @PrimitiveOperator
 @OutputPortSet(cardinality = 1)
 @SharedLoader
-public class FunctionPeriodicSource<T> extends PollingTupleProducer implements Functional {
+public class FunctionPeriodicSource extends PollingTupleProducer implements Functional {
 
-    private Supplier<Iterable<T>> data;
-    private SPLMapping<T> mapping;
+    private Supplier<Iterable<Object>> data;
+    private SPLMapping<Object> mapping;
 
     private String functionalLogic;
     private String[] jar;
@@ -64,7 +64,7 @@ public class FunctionPeriodicSource<T> extends PollingTupleProducer implements F
     @Override
     protected void fetchTuples() throws Exception {
 
-        for (T tuple : data.get()) {
+        for (Object tuple : data.get()) {
             if (Thread.interrupted())
                 return;
             if (tuple == null)

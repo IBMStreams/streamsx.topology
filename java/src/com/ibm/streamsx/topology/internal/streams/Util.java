@@ -20,15 +20,29 @@ public class Util {
      * @throws IllegalStateException if STREAMS_INSTALL not set
      *          or not set to a Streams install directory
      */
-    public static String getStreamsInstall() throws IllegalStateException {
+    public static String getStreamsInstall() {
         if (streamsInstall==null) {
-            String si = getenv(STREAMS_INSTALL);
-            File f = new File(si, ".product");
-            if (!f.exists())
-                throw new IllegalStateException(STREAMS_INSTALL+" "+si+" is not a Streams install directory.");
-            streamsInstall = si;
+            streamsInstall = verifyStreamsInstall(getenv(STREAMS_INSTALL));
         }
         return streamsInstall;
+    }
+
+    private static String verifyStreamsInstall(String installDir) {
+        File f = new File(installDir, ".product");
+        if (!f.exists())
+            throw new IllegalStateException(STREAMS_INSTALL+" "+installDir+" is not a Streams install directory.");
+        return installDir;
+    }
+    
+    /**
+     * Get a value for Streams install directory, using the value from
+     * the config, defaulting to $STREAMS_INSTALL.
+     */
+    public static String getStreamsInstall(Map<String,Object> config, String installKey) {
+        if (config == null || !config.containsKey(installKey))
+            return getStreamsInstall();
+        
+        return verifyStreamsInstall(config.get(installKey).toString());
     }
     
     /**
@@ -37,7 +51,7 @@ public class Util {
      * @return env value
      * @throws IllegalStateException if name not set
      */
-    public static String getenv(String name) throws IllegalStateException {
+    public static String getenv(String name) {
         String s = System.getenv(name);
         if (s==null)
             throw new IllegalStateException(name+" environment variable is not set.");
@@ -63,7 +77,7 @@ public class Util {
      * @throws IllegalArgumentException if value is null or isn't instanceof requiredClass
      */
     public static Object getConfigEntry(Map<String,? extends Object> map, String key, 
-            Class<?> requiredClass) throws IllegalArgumentException {
+            Class<?> requiredClass) {
         Object val = map.get(key);
         if (val==null)
             throw new IllegalArgumentException("config item "+key+" value is null");

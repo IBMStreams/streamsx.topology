@@ -50,4 +50,11 @@ public interface ContextProperties {
      * {@code com.ibm.streams.operator.logging.TraceLevel}.
      */
     String TRACING_LEVEL = "topology.tracing";
+    
+    /**
+     * Override IBM Streams install directory for
+     * bundle compilation, defaults to $STREAMS_INSTALL.
+     * Argument is a String.
+     */
+    String COMPILE_INSTALL_DIR = "topology.install.compile";
 }

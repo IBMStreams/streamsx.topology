@@ -15,7 +15,7 @@ class StringMapping extends SPLMapping<String> {
 
     // Singleton, as stateless.
     StringMapping() {
-        super(Schemas.STRING, String.class);
+        super(Schemas.STRING);
     }
 
     @Override

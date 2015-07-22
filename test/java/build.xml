@@ -15,6 +15,9 @@
   <property name="samples.src.dir" location="../../samples/java/functional/src"/>
   <property name="samples.jar" location="../../samples/java/functional/functionalsamples.jar"/>
 
+    <property name="topology.install.compile" value="${env.STREAMS_INSTALL}"/>
+    <echo message="Streams compile install: ${topology.install.compile}"/>
+
   <path id="compile.classpath">
     <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
     <pathelement location="../../samples/java/functional/functionalsamples.jar"/>
@@ -47,7 +50,9 @@
 	   srcdir="${basedir}/src" 
 	   destdir="${classes}"
 	   classpathref="compile.classpath"/>
-    <ant dir="../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
+    <ant dir="../scala" target="all" useNativeBasedir="true" inheritAll="no">
+       <property name="topology.install.compile" value="${topology.install.compile}"/>
+    </ant>
   </target>
   <target name="jar" depends="compile">
     <jar destfile="${jarname}" basedir="${classes}"/>
@@ -101,6 +106,7 @@
   <target name="unittest.base.scala">
     <ant dir="../scala" target="unittest" useNativeBasedir="true" inheritAll="no">
      <property name="topology.test.type" value="${topology.test.type}"/>
+     <property name="topology.install.compile" value="${topology.install.compile}"/>
     </ant>
   </target>
 

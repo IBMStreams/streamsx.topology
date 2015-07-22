@@ -23,7 +23,7 @@ import com.ibm.streamsx.topology.tuple.Keyable;
 
 @InputPorts(@InputPortSet(cardinality = 1, windowingMode = WindowMode.Windowed))
 @OutputPorts(@OutputPortSet(cardinality = 1))
-public abstract class FunctionWindow<T> extends FunctionFunctor {
+public abstract class FunctionWindow extends FunctionFunctor {
 
     private Metric nPartitions;
 

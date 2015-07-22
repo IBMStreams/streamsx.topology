@@ -23,7 +23,7 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
  */
 public class ContinuousAggregatorTimeEvict<I, O> extends SlidingSetAggregator<I, O> {
 
-    public ContinuousAggregatorTimeEvict(FunctionWindow<?> op, StreamWindow<Tuple> window)
+    public ContinuousAggregatorTimeEvict(FunctionWindow op, StreamWindow<Tuple> window)
             throws ClassNotFoundException {
         super(op, window);
     }

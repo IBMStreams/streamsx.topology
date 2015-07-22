@@ -6,9 +6,7 @@ package com.ibm.streamsx.topology.internal.spljava;
 
 import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 
-import com.ibm.streams.operator.Attribute;
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.types.Blob;
 import com.ibm.streams.operator.types.XML;
 
@@ -17,6 +15,7 @@ public class Schemas {
     public static final StreamSchema STRING = getStreamSchema("tuple<rstring string>");
     public static final StreamSchema BLOB = getStreamSchema("tuple<blob binary>");
     public static final StreamSchema XML = getStreamSchema("tuple<xml document>");
+    public static final StreamSchema JAVA_OBJECT = getStreamSchema("tuple<blob " + SPLJavaObject.SPL_JAVA_OBJECT + ">");
     
 
     public StreamSchema getSPLSchema(Class<?> tupleClass) {
@@ -31,26 +30,32 @@ public class Schemas {
         throw new IllegalArgumentException(tupleClass.getName());
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T> SPLMapping<T> getSPLMapping(Class<T> tupleClass) {
+    /**
+     * Return the SPL schema that will be used at runtime
+     * to hold the java object tuple.
+     */
+    public static StreamSchema getSPLMappingSchema(Class<?> tupleClass) {
 
         if (String.class.equals(tupleClass)) {
-            return (SPLMapping<T>) SPLMapping.JavaString;
+            return STRING;
         }
         if (Blob.class.equals(tupleClass)) {
-            return (SPLMapping<T>) SPLMapping.JavaBlob;
+            return BLOB;
         }
         if (XML.class.equals(tupleClass)) {
-            return (SPLMapping<T>) SPLMapping.JavaXML;
+            return XML;
         }
 
-        return SPLJavaObject.createMappping(tupleClass);
+        return JAVA_OBJECT;
     }
 
     public static SPLMapping<?> getSPLMapping(StreamSchema schema) {
 
         if (STRING.equals(schema)) {
             return SPLMapping.JavaString;
+        }
+        if (JAVA_OBJECT.equals(schema)) {
+            return new SPLJavaObject(schema);
         }
         if (BLOB.equals(schema)) {
             return SPLMapping.JavaBlob;
@@ -59,17 +64,7 @@ public class Schemas {
             return SPLMapping.JavaXML;
         }
 
-        Attribute attr0 = schema.getAttribute(0);
-
-        if (attr0.getType().getMetaType() == Type.MetaType.BLOB) {
-            if (attr0.getName().startsWith(SPLJavaObject.SPL_JAVA_PREFIX))
-                return SPLJavaObject.getMapping(schema);
-        }
-
         return new SPLTuple(schema);
-
-        // throw new UnsupportedOperationException(
-        // "Mapping not defined:" + schema.getLanguageType());
     }
 
 }

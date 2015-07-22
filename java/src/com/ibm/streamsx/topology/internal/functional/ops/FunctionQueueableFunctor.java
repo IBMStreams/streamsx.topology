@@ -18,12 +18,12 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
  * The input port is not connected to a PE port. In this case
  * there is already a thread for the processing.
  */
-abstract class FunctionQueueableFunctor<T> extends FunctionFunctor implements StreamHandler<T> {
+abstract class FunctionQueueableFunctor extends FunctionFunctor implements StreamHandler<Object> {
     
     private int queueSize;
     
-    private SPLMapping<T> inputMapping;
-    private StreamHandler<T> handler;
+    private SPLMapping<?> inputMapping;
+    private StreamHandler<Object> handler;
     
     @Override
     public synchronized void initialize(OperatorContext context)
@@ -33,13 +33,13 @@ abstract class FunctionQueueableFunctor<T> extends FunctionFunctor implements St
         if (getQueueSize() <=0 || getInput(0).isConnectedToPEPort())
             handler = this; // not queued
         else
-            handler = new FunctionalQueue<T>(context, getQueueSize(), this);
+            handler = new FunctionalQueue<Object>(context, getQueueSize(), this);
     }
     
     @Override
     public final void process(StreamingInput<Tuple> stream, Tuple tuple)
             throws Exception {
-        T value = inputMapping.convertFrom(tuple);
+        Object value = inputMapping.convertFrom(tuple);
         handler.tuple(value);
     }
     
