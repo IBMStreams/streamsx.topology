@@ -19,9 +19,10 @@ import com.ibm.streams.operator.types.Blob;
  */
 class SPLJavaObject extends SPLMapping<Object> {
 
-    public static final String SPL_JAVA_PREFIX = "__spl_j";
-    
-    public static final String SPL_JAVA_OBJECT = SPL_JAVA_PREFIX + "object";
+    /**
+     * Attribute name for a schema with a serialized java object
+     */
+    public static final String SPL_JAVA_OBJECT = "__spl_jo";
 
     SPLJavaObject(StreamSchema schema) {
         super(schema);
