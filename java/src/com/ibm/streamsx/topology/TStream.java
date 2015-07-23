@@ -14,6 +14,7 @@ import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -89,6 +90,41 @@ public interface TStream<T> extends TopologyElement {
      * @return Filtered stream
      */
     TStream<T> filter(Predicate<T> filter);
+    
+    /**
+     * Split a stream into {@code n} streams as specified by {@code splitter}.
+     * 
+     * <P>
+     * For each tuple on the stream, {@code splitter.applyAsInt(tuple)} is called.
+     * The return value {@code r} determines the destination stream:
+     * <pre>
+     * if r < 0 the tuple is discarded
+     * else it is sent to the stream at position (r % n) in the returned array.
+     * </pre>
+     * </P>
+     * 
+     * <P>
+     * Example of round robin splitting a stream of {@code String} into 5 channels.
+     * <pre>
+     * <code>
+     * TStream&lt;String> s = ...
+     * List&lt;&lt;TStream&lt;String>> splits = s.split(5, new ToIntFunction&lt;String>() {
+     *             int i;
+     *             &#64;Override
+     *             public int applyAsInt(String t) {
+     *                 return i++;
+     *             }} );
+     * </code>
+     * </pre>
+     * 
+     * </P>
+     * @param n the number of output streams
+     * @param splitter the splitter function
+     * @return List of {@code n} streams
+     * 
+     * @throws IllegalArgumentException if {@code n <= 0}
+     */
+    List<TStream<T>> split(int n, ToIntFunction<T> splitter);
 
     /**
      * Declare a new stream that transforms each tuple from this stream into one
