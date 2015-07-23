@@ -21,6 +21,8 @@
           includes="*.gif" />
       <fileset dir="${spl.tk}/spl/relational/Aggregate"
           includes="*.gif" />
+      <fileset dir="${spl.tk}/spl/utility/Split"
+          includes="*.gif" />
    </copy>
 
    <mkdir dir="${tk}/license"/>
