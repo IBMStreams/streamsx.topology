@@ -32,7 +32,7 @@ public class FileStreams {
     public static TStream<String> directoryWatcher(TopologyElement te,
             String directory) {
 
-        SPLStream filesSpl = JavaPrimitive.invokeJavaSource(te,
+        SPLStream filesSpl = JavaPrimitive.invokeJavaPrimitiveSource(te,
                 DirectoryWatcher.class,
                 Collections.singletonMap("directory", directory),
                 Schemas.STRING);

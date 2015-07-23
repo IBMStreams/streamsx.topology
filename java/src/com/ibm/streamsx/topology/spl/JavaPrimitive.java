@@ -9,9 +9,11 @@ import java.util.Map;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.model.PrimitiveOperator;
+import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
+import com.ibm.streamsx.topology.internal.core.TSinkImpl;
 
 /**
  * Integration between Java topologies and SPL Java primitive operators.
@@ -56,8 +58,9 @@ public class JavaPrimitive {
      *            operator
      * @param params
      *            Parameters for the operator, ignored if null
+     * @return the sink element
      */
-    public static void invokeJavaPrimitiveSink(
+    public static TSink invokeJavaPrimitiveSink(
             Class<? extends Operator> opClass, SPLInput input,
             Map<String, ? extends Object> params) {
 
@@ -66,6 +69,7 @@ public class JavaPrimitive {
                 opClass, params);
         SourceInfo.setSourceInfo(sink, JavaPrimitive.class);
         SPL.connectInputToOperator(input, sink);
+        return new TSinkImpl(input.topology(), sink);
     }
 
     /**
@@ -81,7 +85,7 @@ public class JavaPrimitive {
      *            Schema of the output port.
      * @return SPLStream the represents the output of the operator.
      */
-    public static SPLStream invokeJavaSource(TopologyElement te,
+    public static SPLStream invokeJavaPrimitiveSource(TopologyElement te,
             Class<? extends Operator> opClass,
             Map<String, ? extends Object> params, StreamSchema schema) {
 

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.ibm.streams.operator.OutputTuple;
+import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.function.BiFunction;
@@ -126,10 +127,16 @@ public class ProducerConnector {
         params.put("propertiesFile", PROP_FILE_PARAM);
         addPropertiesFile();
        
-        SPL.invokeSink(
+        // Use SPL.invoke to avoid adding a compile time dependency
+        // to com.ibm.streamsx.messaging since JavaPrimitive.invoke*()
+        // lack "kind" based variants.
+        String kind = "com.ibm.streamsx.messaging.kafka::KafkaProducer";
+        String className = "com.ibm.streamsx.messaging.kafka.KafkaSink";
+        TSink sink = SPL.invokeSink(
                 "com.ibm.streamsx.messaging.kafka::KafkaProducer",
                 splStream,
                 params);
+        Util.tagOpAsJavaPrimitive(sink.operator(), kind, className);
     }
     
     private static BiFunction<Message,OutputTuple,OutputTuple> 

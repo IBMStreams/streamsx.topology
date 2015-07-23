@@ -15,6 +15,8 @@ import java.util.Properties;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
+import com.ibm.streamsx.topology.builder.BOperatorInvocation;
+import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -140,13 +142,19 @@ public class ConsumerConnector {
 
         // see streamsx.messaging issue #109
         TStream<Message> rcvdMsgs;
+        // Use SPL.invoke to avoid adding a compile time dependency
+        // to com.ibm.streamsx.messaging since JavaPrimitive.invoke*()
+        // lack "kind" based variants.
+        String kind = "com.ibm.streamsx.messaging.kafka::KafkaConsumer";
+        String className = "com.ibm.streamsx.messaging.kafka.KafkaSource";
         boolean confirmedMultiTopicConsumerWorks = false;
         if (topics.length==1 || confirmedMultiTopicConsumerWorks) {
             SPLStream rawKafka = SPL.invokeSource(
                             te,
-                            "com.ibm.streamsx.messaging.kafka::KafkaConsumer",
+                            kind,
                             params,
                             KafkaSchemas.KAFKA);
+            Util.tagOpAsJavaPrimitive(toOp(rawKafka), kind, className);
 
             rcvdMsgs = toMessageStream(rawKafka);
         }
@@ -159,9 +167,10 @@ public class ConsumerConnector {
 
                 SPLStream rawKafka = SPL.invokeSource(
                         te,
-                        "com.ibm.streamsx.messaging.kafka::KafkaConsumer",
+                        kind,
                         myParams,
                         KafkaSchemas.KAFKA);
+                Util.tagOpAsJavaPrimitive(toOp(rawKafka), kind, className);
                 
                 list.add(toMessageStream(rawKafka));
             }
@@ -170,6 +179,11 @@ public class ConsumerConnector {
             rcvdMsgs = kafka.union(new HashSet<>(list));
         }
         return rcvdMsgs;
+    }
+    
+    private BOperatorInvocation toOp(SPLStream splStream) {
+        BOutputPort oport = (BOutputPort) splStream.output();
+        return (BOperatorInvocation) oport.operator();
     }
 
     /**
