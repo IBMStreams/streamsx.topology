@@ -331,8 +331,9 @@ public interface TStream<T> extends TopologyElement {
      * 
      * @param sinker
      *            Logic to be executed against each tuple on this stream.
+     * @return the sink element
      */
-    void sink(Consumer<T> sinker);
+    TSink sink(Consumer<T> sinker);
 
     /**
      * Create a stream that is a union of this stream and {@code other} stream

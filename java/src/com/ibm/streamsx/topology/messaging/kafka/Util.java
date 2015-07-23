@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import com.ibm.streamsx.topology.TopologyElement;
+import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 
 class Util {
     
@@ -55,6 +56,18 @@ class Util {
         catch (IOException e) {
             throw new IllegalStateException("Unable to create a properties file: " + e, e);
         }
+    }
+    
+    /**
+     * This is in lieu of a "kind" based JavaPrimitive.invoke*() methods.
+     * @param splStream
+     * @param kind
+     * @param className
+     */
+    static void tagOpAsJavaPrimitive(BOperatorInvocation op, String kind, String className) {
+        op.json().put("runtime", "spl.java");
+        op.json().put("kind", kind);
+        op.json().put("kind.javaclass", className);
     }
 
 }
