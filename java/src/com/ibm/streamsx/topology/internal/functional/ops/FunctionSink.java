@@ -11,12 +11,14 @@ import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.StreamingInput;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.model.InputPortSet;
+import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 @PrimitiveOperator
 @InputPortSet(cardinality = 1)
+@OutputPortSet(cardinality = -1)
 public class FunctionSink extends FunctionFunctor {
     private Consumer<Object> sinker;
     private SPLMapping<?> mapping;
