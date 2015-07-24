@@ -292,6 +292,7 @@ public class ParallelTest extends TestTopology {
         // and in embedded mode PERuntime.getCurrentContext().getChannel()
         // returns -1.  issue#126
         // until that's addressed...
+        assumeTrue(!isEmbedded());
         assumeTrue(SC_OK);
         
         // parallel().split() is an interesting case because split()

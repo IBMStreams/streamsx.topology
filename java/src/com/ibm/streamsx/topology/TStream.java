@@ -88,6 +88,7 @@ public interface TStream<T> extends TopologyElement {
      * @param filter
      *            Filtering logic to be executed against each tuple.
      * @return Filtered stream
+     * @see #split(int, ToIntFunction)
      */
     TStream<T> filter(Predicate<T> filter);
     
