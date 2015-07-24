@@ -14,6 +14,7 @@ import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -87,8 +88,85 @@ public interface TStream<T> extends TopologyElement {
      * @param filter
      *            Filtering logic to be executed against each tuple.
      * @return Filtered stream
+     * @see #split(int, ToIntFunction)
      */
     TStream<T> filter(Predicate<T> filter);
+    
+    /**
+     * Distribute a stream's tuples among {@code n} streams (channels) 
+     * as specified by a {@code splitter}.
+     * 
+     * <P>
+     * For each tuple on the stream, {@code splitter.applyAsInt(tuple)} is called.
+     * The return value {@code r} determines the destination stream:
+     * <pre>
+     * if r < 0 the tuple is discarded
+     * else it is sent to the stream at position (r % n) in the returned array.
+     * </pre>
+     * </P>
+     *
+     * <P>
+     * Each split channel's {@code TStream} is exposed by the API. The user
+     * has full control over the each channel's processing pipeline. 
+     * Each channel's pipeline must be declared explicitly.
+     * Each channel can have different processing pipelines.  
+     * Any combination of channel pipeline result streams may be combined using
+     * {@code union()}.
+     * </P>
+     * <P>
+     * An N-channel {@code split()} is logically equivalent to a
+     * collection of N {@code filter()} invocations, each with a
+     * {@code predicate} to select the tuples for its "channel".
+     * {@code split()} is more efficient. Each tuple is analyzed only once
+     * by a single {@code splitter} instance to identify the destination channel.
+     * For example, these are logically equivalent:
+     * <pre>
+     * List&lt;TStream&lt;Foo>> channels = stream.split(2, mySplitter());
+     * 
+     * TStream&lt;Foo> channel0 = stream.filter(myPredicate("ch0")); 
+     * TStream&lt;Foo> channel1 = stream.filter(myPredicate("ch1")); 
+     * </pre>
+     * </P>
+     * <P>
+     * {@code parallel()} also distributes a stream's tuples among
+     * N-channels but it presents a different usage model.  
+     * The user specifies a single logical processing pipeline and
+     * the logical pipeline is transparently replicated for each of the channels. 
+     * The API does not provide access to the individual channel streams.
+     * {@code unparallel()} declares the end of the parallel pipeline and combines
+     * all of the channel-specific streams into a single resulting stream.
+     * </P>
+     * <P>
+     * Example of splitting a stream of tuples by their severity
+     * attribute:
+     * <pre>
+     * <code>
+     * interface MyType { String severity; ... };
+     * TStream&lt;MyType> s = ...
+     * List&lt;&lt;TStream&lt;MyType>> splits = s.split(3, new ToIntFunction&lt;MyType>() {
+     *             &#64;Override
+     *             public int applyAsInt(MyType t) {
+     *                 if(t.severity.equals("high"))
+     *                     return 0;
+     *                 else if(t.severity.equals("low"))
+     *                     return 1;
+     *                 else
+     *                     return 2;
+     *             }} );
+     * splits.get(0). ... high severity processing pipeline
+     * splits.get(1). ... low severity processing pipeline
+     * splits.get(2). ... "other" severity processing pipeline
+     * </code>
+     * </pre>
+     * </P>
+     * @param n the number of output streams
+     * @param splitter the splitter function
+     * @return List of {@code n} streams
+     * 
+     * @throws IllegalArgumentException if {@code n <= 0}
+     * @see #parallel(int, Routing)
+     */
+    List<TStream<T>> split(int n, ToIntFunction<T> splitter);
 
     /**
      * Declare a new stream that transforms each tuple from this stream into one
@@ -504,6 +582,8 @@ public interface TStream<T> extends TopologyElement {
      * partition based on the tuple's Object hashCode().
      * @return A reference to a TStream<> at the beginning of the parallel
      * region.
+     * 
+     * @see #split(int, ToIntFunction)
      */
     TStream<T> parallel(int width, Routing routing);
     

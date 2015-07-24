@@ -9,6 +9,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -21,6 +22,7 @@ import org.junit.Test;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.AllowAll;
@@ -194,6 +196,56 @@ public class StreamTest extends TestTopology {
         assertTrue("SP:" + spCount, spCount.valid());
         assertTrue("SPContents:" + spContents, spContents.valid());
     }
+    
+    @Test
+    public void testSplit() throws Exception {
+        final Topology topology = new Topology("testSplit");
+        
+        TStream<String> s1 = topology.strings("ch0", "ch1", "ch2", "omit",
+                    "another-ch2", "another-ch1", "another-ch0", "another-omit");
+
+        List<TStream<String>> splits = s1.split(3, myStringSplitter());
+
+        assertEquals("list size", 3, splits.size());
+
+        Tester tester = topology.getTester();
+        
+        List<Condition<List<String>>> contents = new ArrayList<>();
+        for(int i = 0; i < splits.size(); i++) {
+            TStream<String> ch = splits.get(i);
+            Condition<List<String>> chContents = 
+                    tester.stringContents(ch, "ch"+i, "another-ch"+i);
+            contents.add(chContents);
+        }
+
+        TStream<String> all = splits.get(0).union(
+                new HashSet<>(splits.subList(1, splits.size())));
+        Condition<Long> uCount = tester.tupleCount(all, 6);
+
+        complete(tester, uCount, 10, TimeUnit.SECONDS);
+
+        for(int i = 0; i < splits.size(); i++) {
+            assertTrue("chContents["+i+"]:" + contents.get(i), contents.get(i).valid());
+        }
+    }
+    
+    /**
+     * Partition strings based on the last character of the string.
+     * If the last character is a digit return its value as an int, else return -1.
+     * @return
+     */
+    @SuppressWarnings("serial")
+    private static ToIntFunction<String> myStringSplitter() {
+        return new ToIntFunction<String>() {
+
+            @Override
+            public int applyAsInt(String s) {
+                char ch = s.charAt(s.length() - 1);
+                return Character.digit(ch, 10);
+            }
+        };
+    }
+    
 
     @SuppressWarnings("serial")
     static Function<String, Integer> stringToInt() {

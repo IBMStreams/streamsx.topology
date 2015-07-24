@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.core;
 
 import static java.util.Collections.singletonMap;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,11 +28,13 @@ import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionFilter;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionMultiTransform;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSink;
+import com.ibm.streamsx.topology.internal.functional.ops.FunctionSplit;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionTransform;
 import com.ibm.streamsx.topology.internal.functional.ops.HashRemover;
 import com.ibm.streamsx.topology.internal.functional.ops.KeyableTuplePartitioner;
@@ -346,5 +349,29 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         BOutput toEndLowLatency = output();
         BOutput endedLowLatency = builder().endLowLatency(toEndLowLatency);
         return new StreamImpl<T>(this, endedLowLatency, getTupleClass());
+    }
+
+    @Override
+    public List<TStream<T>> split(int n, ToIntFunction<T> splitter) {
+        if (n <= 0)
+            throw new IllegalArgumentException("n");
+        
+        List<TStream<T>> l = new ArrayList<>(n);
+        
+        String opName = splitter.getClass().getSimpleName();
+        if (opName.isEmpty()) {
+            opName = getTupleClass() + "Split";         
+        }
+
+        BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
+                opName,
+                FunctionSplit.class, splitter);
+        SourceInfo.setSourceInfo(bop, StreamImpl.class);
+        connectTo(bop, true, null);
+        for (int i = 0; i < n; i++) {
+            l.add(JavaFunctional.addJavaOutput(this, bop, getTupleClass()));
+        }
+
+        return l;
     }
 }

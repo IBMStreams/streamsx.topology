@@ -7,28 +7,40 @@ package com.ibm.streamsx.topology.internal.functional.ops;
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getInputMapping;
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
 
+import java.util.List;
+
 import com.ibm.streams.operator.OperatorContext;
+import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.StreamingInput;
+import com.ibm.streams.operator.StreamingOutput;
 import com.ibm.streams.operator.Tuple;
+import com.ibm.streams.operator.model.Icons;
 import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.PrimitiveOperator;
-import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 @PrimitiveOperator
 @InputPortSet(cardinality = 1)
 @OutputPortSet(cardinality = -1)
-public class FunctionSink extends FunctionFunctor {
-    private Consumer<Object> sinker;
+@Icons(location16 = "opt/icons/split_16.gif", location32 = "opt/icons/split_32.gif")
+public class FunctionSplit extends FunctionFunctor {
+
+    private ToIntFunction<Object> splitter;
     private SPLMapping<?> mapping;
+    private int n;
+    private List<StreamingOutput<OutputTuple>> oports;
 
     @Override
-    public synchronized void initialize(OperatorContext context)
-            throws Exception {
+    public void initialize(OperatorContext context) throws Exception {
         super.initialize(context);
 
-        setLogic(sinker = getLogicObject(getFunctionalLogic()));
+        setLogic(splitter = getLogicObject(getFunctionalLogic()));
+        
+        OperatorContext ctxt = getOperatorContext();
+        oports = ctxt.getStreamingOutputs();
+        n = oports.size();
         
         mapping = getInputMapping(this, 0);
     }
@@ -37,8 +49,12 @@ public class FunctionSink extends FunctionFunctor {
     public void process(StreamingInput<Tuple> stream, Tuple tuple)
             throws Exception {
         Object value = mapping.convertFrom(tuple);
-        synchronized (sinker) {
-            sinker.accept(value);
+
+        int r;
+        synchronized (splitter) {
+            r = splitter.applyAsInt(value);
         }
+        if (r >= 0)
+            oports.get(r % n).submit(tuple);
     }
 }
