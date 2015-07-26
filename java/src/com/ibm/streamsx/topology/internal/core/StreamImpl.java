@@ -28,17 +28,18 @@ import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionFilter;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionMultiTransform;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSink;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSplit;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionTransform;
+import com.ibm.streamsx.topology.internal.functional.ops.HashAdder;
 import com.ibm.streamsx.topology.internal.functional.ops.HashRemover;
-import com.ibm.streamsx.topology.internal.functional.ops.KeyableTuplePartitioner;
-import com.ibm.streamsx.topology.internal.functional.ops.ObjectHashAdder;
+import com.ibm.streamsx.topology.internal.logic.KeyableHasher;
+import com.ibm.streamsx.topology.internal.logic.ObjectHasher;
 import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
@@ -256,13 +257,19 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         // adds it as part of the output stream.
         BOutput toBeParallelized = output();
         if (routing == TStream.Routing.PARTITIONED) {
-            BOperatorInvocation hashAdder = null;
+            // BOperatorInvocation hashAdder = null;
+            ToIntFunction<?> hasher;
             if (Keyable.class.isAssignableFrom(getTupleClass())) {
-                hashAdder = builder().addOperator(
-                        KeyableTuplePartitioner.class, null);
+                ////hashAdder = builder().addOperator(
+                //        KeyableTuplePartitioner.class, null);
+                hasher = KeyableHasher.SINGLETON;
             } else {
-                hashAdder = builder().addOperator(ObjectHashAdder.class, null);
+                hasher = ObjectHasher.SINGLETON;
             }
+            
+            BOperatorInvocation hashAdder = JavaFunctional.addFunctionalOperator(this,
+                    "HashAdder",
+                    HashAdder.class, hasher);
 
             BInputPort ip = connectTo(hashAdder, true, null);
 
