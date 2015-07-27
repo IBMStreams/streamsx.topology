@@ -38,7 +38,7 @@ import com.ibm.streamsx.topology.tuple.BeaconTuple;
 public class ParallelTest extends TestTopology {
     @Test
     public void testParallelNonPartitioned() throws Exception {
-        assumeTrue(SC_OK);
+        checkUdpSupported();
 
         Topology topology = new Topology("testParallel");
         final int count = new Random().nextInt(1000) + 37;
@@ -63,8 +63,17 @@ public class ParallelTest extends TestTopology {
         assertTrue(regionCount.valid());
     }
     
+    private void checkUdpSupported() {
+        assumeTrue(SC_OK);
+        assumeTrue(getTesterType() == StreamsContext.Type.STANDALONE_TESTER ||
+                getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+    }
+    
     @Test
     public void testParallelPartitioned() throws Exception {
+        
+        checkUdpSupported();
+               
         Topology topology = new Topology("testParallelPartition");
         final int count = new Random().nextInt(10) + 37;
 
@@ -81,8 +90,8 @@ public class ParallelTest extends TestTopology {
         Tester tester = topology.getTester();
         Condition<Long> expectedCount = tester.tupleCount(valid_count, 1);
         Condition<List<String>> validCount = tester.stringContents(valid_count, "5");
-
-         StreamsContextFactory.getStreamsContext(StreamsContext.Type.STANDALONE_TESTER).submit(topology).get();
+        
+        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
 
          assertTrue(expectedCount.valid());
          assertTrue(validCount.valid());
@@ -90,6 +99,8 @@ public class ParallelTest extends TestTopology {
     
     @Test
     public void testObjectHashPartition() throws Exception {
+        checkUdpSupported();
+        
         Topology topology = new Topology("testObjectHashPartition");
         final int count = new Random().nextInt(10) + 37;
 
@@ -106,11 +117,11 @@ public class ParallelTest extends TestTopology {
         Tester tester = topology.getTester();
         Condition<Long> expectedCount = tester.tupleCount(valid_count, 1);
         Condition<List<String>> validCount = tester.stringContents(valid_count, "5");
+        
+        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
 
-         StreamsContextFactory.getStreamsContext(StreamsContext.Type.STANDALONE_TESTER).submit(topology).get();
-
-         assertTrue(expectedCount.valid());
-         assertTrue(validCount.valid());
+        assertTrue(expectedCount.valid());
+        assertTrue(validCount.valid());
     }
     
     @SuppressWarnings("serial")
@@ -261,7 +272,6 @@ public class ParallelTest extends TestTopology {
                 if (channel == -1) {
                     channel = PERuntime.getCurrentContext().getChannel();
                 }
-                // TODO Auto-generated method stub
                 return new ChannelAndSequence(channel, Integer.parseInt(v));
             }
 
@@ -292,8 +302,7 @@ public class ParallelTest extends TestTopology {
         // and in embedded mode PERuntime.getCurrentContext().getChannel()
         // returns -1.  issue#126
         // until that's addressed...
-        assumeTrue(!isEmbedded());
-        assumeTrue(SC_OK);
+        checkUdpSupported();
         
         // parallel().split() is an interesting case because split()
         // has >1 oports.
@@ -388,4 +397,24 @@ public class ParallelTest extends TestTopology {
         };
     }
 
+    @Test
+    public void testParallelPreFanOut() throws Exception {
+        Topology topology = new Topology();
+        
+        TStream<String> strings = topology.strings("A", "B", "C", "D", "E");
+        strings.print();
+        TStream<String> stringsP = strings.parallel(3);
+        stringsP = stringsP.filter(new AllowAll<String>());
+        stringsP = stringsP.unparallel();
+        
+        Tester tester = topology.getTester();
+        
+        Condition<Long> fiveTuples = tester.tupleCount(stringsP, 5);
+        
+        Condition<List<String>> contents = tester.stringContentsUnordered(stringsP, "A", "B", "C", "D", "E");
+        
+        complete(tester, fiveTuples, 10, TimeUnit.SECONDS);
+
+        assertTrue("contents: "+contents, contents.valid());
+    }
 }

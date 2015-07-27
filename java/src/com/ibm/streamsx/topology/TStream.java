@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology;
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -187,18 +188,34 @@ public interface TStream<T> extends TopologyElement {
      *             &#64;Override
      *             public Double apply(String v) {
      *                 return Double.valueOf(v);
-     *             }}, Double.class );
+     *             }});
      * </code>
      * </pre>
      * 
      * </P>
-     * 
+     * <P>
+     * The runtime class type of the stream must be available through reflection
+     * of {@code transformer}. 
+     * </P>
+     * @param transformer
+     *            Transformation logic to be executed against each tuple.
+     * @return Stream that will contain tuples of type {@code U} transformed from this
+     *         stream's tuples.
+     */
+    <U> TStream<U> transform(Function<T, U> transformer);
+    
+    /**
+     * Declare a new stream that transforms each tuple from this stream into one
+     * (or zero) tuple of a different type {@code U}.
+     * This is identical to {@link #transform(Function)} except that the class
+     * type of the stream is explicitly passed in.
      * @param transformer
      *            Transformation logic to be executed against each tuple.
      * @param tupleTypeClass
-     *            Type {@code U} of the returned stream.
+     *      Type {@code U} of the returned stream.
      * @return Stream that will contain tuples of type {@code U} transformed from this
      *         stream's tuples.
+        
      */
     <U> TStream<U> transform(Function<T, U> transformer, Class<U> tupleTypeClass);
 
@@ -269,15 +286,22 @@ public interface TStream<T> extends TopologyElement {
      * </P>
      * 
      * @param transformer
-     *            Transformation logic to be executed against each tuple.
-     * @param tupleTypeClass
-     *            Type {@code U} of the returned stream.
+     *            Transformation logic to be executed against each tuple.     *            
+     * @return Stream that will contain tuples of type {@code U} transformed from this
+     *         stream's tuples.
+     */
+    <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer);
+    
+    /**
+     * 
+     * @param transformer Transformation logic to be executed against each tuple.
+     * @param tupleTypeClass Type {@code U} of the returned stream.
      * @return Stream that will contain tuples of type {@code U} transformed from this
      *         stream's tuples.
      */
     <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer,
             Class<U> tupleTypeClass);
-
+    
     /**
      * Sink (terminate) this stream. For each tuple {@code t} on this stream
      * {@link Consumer#accept(Object) sinker.accept(t)} will be called. This is
@@ -342,7 +366,19 @@ public interface TStream<T> extends TopologyElement {
      */
     void print();
 
+    /**
+     * Class of the tuples on this stream. WIll be the same as {@link #getTupleType()}
+     * is a {@code Class} object.
+     * @return Class of the tuple on this stream, {@code null}
+     * if {@link #getTupleType()} is not a {@code Class} object.
+     */
     Class<T> getTupleClass();
+    
+    /**
+     * Type of the tuples on this stream.
+     * @return Type of the tuples on this stream.
+     */
+    Type getTupleType();
 
     /**
      * Join this stream with window of type {@code U}. For each tuple on this

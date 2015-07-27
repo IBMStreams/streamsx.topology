@@ -4,9 +4,10 @@
  */
 package com.ibm.streamsx.topology.internal.logic;
 
-import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.UnaryOperator;
 
-public final class Throttle<T> implements Function<T, T> {
+
+public final class Throttle<T> implements UnaryOperator<T> {
     /**
      * 
      */

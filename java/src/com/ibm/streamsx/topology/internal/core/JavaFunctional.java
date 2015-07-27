@@ -9,6 +9,7 @@ import static com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor.
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -83,19 +84,20 @@ public class JavaFunctional {
      * type.
      */
     public static <T> TStream<T> addJavaOutput(TopologyElement te,
-            BOperatorInvocation bop, Class<T> tupleTypeClass) {
-        StreamSchema mappingSchema = Schemas.getSPLMappingSchema(tupleTypeClass);
+            BOperatorInvocation bop, Type tupleType) {
+        
+        StreamSchema mappingSchema = Schemas.getSPLMappingSchema(tupleType);
         BOutputPort bstream = bop.addOutput(mappingSchema);
-        bstream.json().put("type.native", tupleTypeClass.getName());
-        addDependency(te, bop, tupleTypeClass);
+        bstream.json().put("type.native", tupleType.toString()); // Java 8 should use getTypeName
+        addDependency(te, bop, tupleType);
         
         // If the stream is just a Java object as a blob
         // then don't allow them to be viewed.
-        if (!VIEWABLE_TYPES.contains(tupleTypeClass)) {
+        if (!VIEWABLE_TYPES.contains(tupleType)) {
             bop.addConfig("streamViewability", false);
         }
 
-        return new StreamImpl<T>(te, bstream, tupleTypeClass);
+        return new StreamImpl<T>(te, bstream, tupleType);
     }
 
     /**
@@ -104,10 +106,10 @@ public class JavaFunctional {
      * tuple type added.
      */
     public static BInputPort connectTo(TopologyElement te, BOutput output,
-            Class<?> tupleTypeClass, BOperatorInvocation receivingBop,
+            Type tupleType, BOperatorInvocation receivingBop,
             BInputPort input) {
 
-        addDependency(te, receivingBop, tupleTypeClass);
+        addDependency(te, receivingBop, tupleType);
         return receivingBop.inputFrom(output, input);
     }
     
@@ -131,10 +133,11 @@ public class JavaFunctional {
      * Add a dependency for the operator to a Java tuple type.
      */
     private static void addDependency(TopologyElement te,
-            BOperatorInvocation bop, Class<?> clazz) {
-        if (Tuple.class.equals(clazz))
+            BOperatorInvocation bop, Type tupleType) {
+        if (Tuple.class.equals(tupleType))
             return;
-        te.topology().getDependencyResolver().addJarDependency(bop, clazz);
+        if (tupleType instanceof Class)
+            te.topology().getDependencyResolver().addJarDependency(bop, (Class<?>) tupleType);
     }
 
     /**

@@ -59,6 +59,10 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
     public Class<T> getTupleClass() {
         return stream.getTupleClass();
     }
+    @Override
+    public java.lang.reflect.Type getTupleType() {
+        return stream.getTupleType();
+    }
 
     @Override
     public <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
