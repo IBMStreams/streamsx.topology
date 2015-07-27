@@ -144,7 +144,8 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer,
             Class<U> tupleTypeClass) {
-        Type tupleType = TypeDiscoverer.determineStreamTypeIterable(transformer, tupleTypeClass);    
+        Type tupleType = tupleTypeClass != null ? tupleTypeClass :
+                   TypeDiscoverer.determineStreamTypeIterable(Function.class, 1, transformer);    
         return _multiTransform(transformer, tupleType);
     }
     @Override

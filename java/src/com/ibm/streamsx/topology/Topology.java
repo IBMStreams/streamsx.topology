@@ -204,6 +204,22 @@ public class Topology implements TopologyElement {
         
         return source(new Constants<T>(data), tupleTypeClass);
     }
+    
+    /**
+     * Create a stream containing all the tuples in {@code data}.
+     * 
+     * @param data
+     *            List of tuples.
+     * @return Declared stream containing tuples from {@code data}.
+     */
+    public <T> TStream<T> constants(final List<T> data) {
+        if (data == null)
+            throw new NullPointerException();
+        
+        Type constantType = TypeDiscoverer.determineStreamTypeFromFunctionArg(List.class, 0, data);
+        
+        return _source(new Constants<T>(data), constantType);
+    }
 
     /**
      * Declare a new source stream that iterates over the return of
@@ -221,6 +237,21 @@ public class Topology implements TopologyElement {
     public <T> TStream<T> source(Supplier<Iterable<T>> data,
             Class<T> tupleTypeClass) {
         return _source(data, tupleTypeClass);
+    }
+    /**
+     * Declare a new source stream that iterates over the return of
+     * {@code Iterable<T> get()} from {@code data}. Once all the tuples from
+     * {@code data.get()} have been submitted on the stream, no more tuples are
+     * submitted.
+     * 
+     * @param data
+     *            Function that produces that data for the stream.
+     * @return New stream containing the tuples from the iterator returned by
+     *         {@code data.get()}.
+     */
+    public <T> TStream<T> source(Supplier<Iterable<T>> data) {
+        Type tupleType = TypeDiscoverer.determineStreamTypeIterable(Supplier.class, 0, data);
+        return _source(data, tupleType);
     }
     
     private <T> TStream<T> _source(Supplier<Iterable<T>> data,

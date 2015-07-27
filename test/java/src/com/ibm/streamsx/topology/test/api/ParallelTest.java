@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.streams.operator.OperatorContext;
@@ -398,6 +399,7 @@ public class ParallelTest extends TestTopology {
     }
 
     @Test
+    @Ignore("Issue #131")
     public void testParallelPreFanOut() throws Exception {
         Topology topology = new Topology();
         

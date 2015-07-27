@@ -27,21 +27,23 @@ public class TypeDiscoverer {
         if (tupleType != null)
             return tupleType;
         
-        ParameterizedType pt = findParameterizedType(Function.class, function);
+        return determineStreamTypeFromFunctionArg(Function.class, 1, function);
+    }
+    
+    public static Type determineStreamTypeFromFunctionArg(Class<?> objectInterface, int arg, Object function) {
+        
+        ParameterizedType pt = findParameterizedType(objectInterface, function);
         if (pt != null)  {
-            return determineClassFromArgument(pt, 1);
+            return determineClassFromArgument(pt, arg);
         }
         throw nullTupleClass();
     }
     
-    public static <T> Type determineStreamTypeIterable(Function<?,Iterable<T>> function, Type tupleType) {
-
-        if (tupleType != null)
-            return tupleType;
+    public static <T> Type determineStreamTypeIterable(Class<?> objectInterface, int arg, Object function) {
         
-        ParameterizedType pt = findParameterizedType(Function.class, function);
+        ParameterizedType pt = findParameterizedType(objectInterface, function);
         if (pt != null)  {
-            Type iterator = determineClassFromArgument(pt, 1);
+            Type iterator = determineClassFromArgument(pt, arg);
             ParameterizedType iterpt;
             if (iterator instanceof Class)
                 iterpt = findParameterizedType(Iterable.class, (Class<?>) iterator);
@@ -64,11 +66,7 @@ public class TypeDiscoverer {
         if (tupleType != null)
             return tupleType;
         
-        ParameterizedType pt = findParameterizedType(Supplier.class, function);
-        if (pt != null)  {
-            return determineClassFromArgument(pt, 0);
-        }
-        throw nullTupleClass();
+        return determineStreamTypeFromFunctionArg(Supplier.class, 0, function);
     }
     
     private static ParameterizedType findParameterizedType(Class<?> functionInterface, Object function) {

@@ -6,9 +6,9 @@ package com.ibm.streamsx.topology.test.internal;
 
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import java.lang.reflect.Type;
+import java.util.concurrent.Callable;
 
 import org.junit.Test;
 
@@ -72,12 +72,28 @@ public class TypeDiscovererTest {
             return v;
         }
     }
+    
+    public static class TwoType<R,T> implements Function<T,T>, Callable<R> {
+        @Override
+        public T apply(T v) {
+            return v;
+        }
+        public R call() { return null;}
+    }
       
     @Test(expected=IllegalArgumentException.class)
     public void testGenericFunctionClass() {
-        Type clazz = TypeDiscoverer.determineStreamType(new Identity<java.sql.Blob>(), null);
-        
-        assertNull(clazz);
+        TypeDiscoverer.determineStreamType(new Identity<java.sql.Blob>(), null);
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testanonymousGenericFunctionClass() {
+        TypeDiscoverer.determineStreamType(new Identity<java.sql.Blob>() {} , null);
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testTwoTypeFunction() {
+        TypeDiscoverer.determineStreamType(new TwoType<String, java.sql.Blob>() {} , null);
     }
     
     @Test
