@@ -71,9 +71,13 @@ public class SPLGenerator {
             String oput = (String) graph.get("outputName");
 
             iput = splBasename(iput);
-            oput = splBasename(oput);
-
-            compBuilder.append("(input " + iput + "; output " + oput + ")");
+            compBuilder.append("(input " + iput);
+            
+            if(oput != null && !oput.isEmpty()){
+                oput = splBasename(oput);
+                compBuilder.append("; output " + oput);
+            }
+              compBuilder.append(")");
         }
         compBuilder.append("\n{\n");
 
