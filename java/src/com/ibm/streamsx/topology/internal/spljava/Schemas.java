@@ -6,6 +6,8 @@ package com.ibm.streamsx.topology.internal.spljava;
 
 import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 
+import java.lang.reflect.Type;
+
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.types.Blob;
 import com.ibm.streams.operator.types.XML;
@@ -34,15 +36,15 @@ public class Schemas {
      * Return the SPL schema that will be used at runtime
      * to hold the java object tuple.
      */
-    public static StreamSchema getSPLMappingSchema(Class<?> tupleClass) {
+    public static StreamSchema getSPLMappingSchema(Type tupleType) {
 
-        if (String.class.equals(tupleClass)) {
+        if (String.class.equals(tupleType)) {
             return STRING;
         }
-        if (Blob.class.equals(tupleClass)) {
+        if (Blob.class.equals(tupleType)) {
             return BLOB;
         }
-        if (XML.class.equals(tupleClass)) {
+        if (XML.class.equals(tupleType)) {
             return XML;
         }
 

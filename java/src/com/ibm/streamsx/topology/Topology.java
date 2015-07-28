@@ -5,8 +5,10 @@
 package com.ibm.streamsx.topology;
 
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.SPL_PREFIX;
+import static com.ibm.streamsx.topology.internal.core.TypeDiscoverer.getTupleName;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,6 +34,7 @@ import com.ibm.streamsx.topology.internal.core.InternalProperties;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.StreamImpl;
+import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionPeriodicSource;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSource;
 import com.ibm.streamsx.topology.internal.logic.Constants;
@@ -201,6 +204,22 @@ public class Topology implements TopologyElement {
         
         return source(new Constants<T>(data), tupleTypeClass);
     }
+    
+    /**
+     * Create a stream containing all the tuples in {@code data}.
+     * 
+     * @param data
+     *            List of tuples.
+     * @return Declared stream containing tuples from {@code data}.
+     */
+    public <T> TStream<T> constants(final List<T> data) {
+        if (data == null)
+            throw new NullPointerException();
+        
+        Type constantType = TypeDiscoverer.determineStreamTypeFromFunctionArg(List.class, 0, data);
+        
+        return _source(new Constants<T>(data), constantType);
+    }
 
     /**
      * Declare a new source stream that iterates over the return of
@@ -217,19 +236,39 @@ public class Topology implements TopologyElement {
      */
     public <T> TStream<T> source(Supplier<Iterable<T>> data,
             Class<T> tupleTypeClass) {
-        
+        return _source(data, tupleTypeClass);
+    }
+    /**
+     * Declare a new source stream that iterates over the return of
+     * {@code Iterable<T> get()} from {@code data}. Once all the tuples from
+     * {@code data.get()} have been submitted on the stream, no more tuples are
+     * submitted.
+     * 
+     * @param data
+     *            Function that produces that data for the stream.
+     * @return New stream containing the tuples from the iterator returned by
+     *         {@code data.get()}.
+     */
+    public <T> TStream<T> source(Supplier<Iterable<T>> data) {
+        Type tupleType = TypeDiscoverer.determineStreamTypeIterable(Supplier.class, 0, data);
+        return _source(data, tupleType);
+    }
+    
+    private <T> TStream<T> _source(Supplier<Iterable<T>> data,
+            Type tupleType) {
+                
         String opName = LogicUtils.functionName(data);
         if (opName.isEmpty()) {
-            opName = tupleTypeClass.getSimpleName() + "Source";
+            opName = getTupleName(tupleType) + "Source";
         } else if (data instanceof Constants) {
-            opName = tupleTypeClass.getSimpleName() + opName;
+            opName = getTupleName(tupleType) + opName;
         }
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
                 FunctionSource.class, data);
         SourceInfo.setSourceInfo(bop, getClass());
-        return JavaFunctional.addJavaOutput(this, bop, tupleTypeClass);
+        return JavaFunctional.addJavaOutput(this, bop, tupleType);
     }
     
     /**
@@ -290,6 +329,9 @@ public class Topology implements TopologyElement {
      */
     public <T> TStream<T> periodicSource(Supplier<T> data,
             long period, TimeUnit unit, Class<T> tupleTypeClass) {
+        
+        tupleTypeClass = (Class<T>) TypeDiscoverer.determineStreamType(data, tupleTypeClass);
+        
         return periodicMultiSource(new SingleToIterableSupplier<T>(data),
                 period, unit, tupleTypeClass);
     }
@@ -308,7 +350,10 @@ public class Topology implements TopologyElement {
      */
     public <T> TStream<T> endlessSource(Supplier<T> data,
             Class<T> tupleTypeClass) {
-        return source(EndlessSupplier.supplier(data), tupleTypeClass);
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, tupleTypeClass);
+               
+        return _source(EndlessSupplier.supplier(data), tupleType);
     }
 
     /**
@@ -326,7 +371,10 @@ public class Topology implements TopologyElement {
      */
     public <T> TStream<T> endlessSourceN(Function<Long, T> data,
             Class<T> tupleTypeClass) {
-        return source(EndlessSupplier.supplierN(data), tupleTypeClass);
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, tupleTypeClass);
+        
+        return _source(EndlessSupplier.supplierN(data), tupleType);
     }
 
     /**
@@ -347,7 +395,10 @@ public class Topology implements TopologyElement {
             final long count, Class<T> tupleTypeClass) {
         if (count < 0)
             throw new IllegalArgumentException(Long.toString(count));
-        return source(LimitedSupplier.supplier(data, count), tupleTypeClass);
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, tupleTypeClass);
+        
+        return _source(LimitedSupplier.supplier(data, count), tupleType);
     }
 
     /**
@@ -369,7 +420,10 @@ public class Topology implements TopologyElement {
             final long count, Class<T> tupleTypeClass) {
         if (count < 0)
             throw new IllegalArgumentException(Long.toString(count));
-        return source(LimitedSupplier.supplierN(data, count), tupleTypeClass);
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, tupleTypeClass);
+        
+        return _source(LimitedSupplier.supplierN(data, count), tupleType);
     }
 
     /**

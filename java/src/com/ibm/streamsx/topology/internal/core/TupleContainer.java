@@ -4,24 +4,27 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import java.lang.reflect.Type;
+
 import com.ibm.streamsx.topology.TopologyElement;
 
 public abstract class TupleContainer<T> extends TopologyItem {
 
-    private final Class<T> tupleClass;
-
-    // private final Set<Stream.Policy> policies = new HashSet<Stream.Policy>();
-
-    protected TupleContainer(TopologyElement fe, Class<T> tupleClass) {
+    private final Type tupleType;
+    
+    protected TupleContainer(TopologyElement fe, Type tupleType) {
         super(fe);
-        this.tupleClass = tupleClass;
+        this.tupleType = tupleType;
     }
 
+    @SuppressWarnings("unchecked")
     public final Class<T> getTupleClass() {
-        return tupleClass;
+        if (tupleType instanceof Class)
+            return (Class<T>) tupleType;
+        return null;
     }
-
-    /*
-     * protected Set<Stream.Policy> policies() { return policies; }
-     */
+    
+    public final Type getTupleType() {
+        return tupleType;
+    }
 }

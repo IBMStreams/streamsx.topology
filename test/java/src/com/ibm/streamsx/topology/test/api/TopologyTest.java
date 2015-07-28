@@ -63,7 +63,7 @@ public class TopologyTest {
             public Iterable<String> get() {
                 // TODO Auto-generated method stub
                 return null;
-            }}, String.class);
+            }});
     }
     
     /**

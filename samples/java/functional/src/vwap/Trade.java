@@ -54,6 +54,6 @@ public class Trade extends Ticker {
                     return new Trade(tuple);
                 return null;
             }
-        }, Trade.class);
+        });
     }
 }

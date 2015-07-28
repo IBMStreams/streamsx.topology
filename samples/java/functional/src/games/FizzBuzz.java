@@ -78,7 +78,7 @@ public class FizzBuzz {
                     sb.append("!");
                 
                 return sb.toString();
-            }}, String.class);
+            }});
         
         return shouts;
     }

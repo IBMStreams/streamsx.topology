@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology;
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -98,11 +99,18 @@ public interface TWindow<T> extends TopologyElement {
             BiFunction<U, List<T>, J> joiner, Class<J> tupleClass);
 
     /**
-     * The class for tuples on this stream.
-     * 
-     * @return The class for tuples on this stream.
+     * Class of the tuples in this window. WIll be the same as {@link #getTupleType()}
+     * is a {@code Class} object.
+     * @return Class of the tuple in this window, {@code null}
+     * if {@link #getTupleType()} is not a {@code Class} object.
      */
     Class<T> getTupleClass();
+    
+    /**
+     * Type of the tuples in this window.
+     * @return Type of the tuples in this window.
+     */
+    Type getTupleType();
 
     /**
      * Get this window's stream.

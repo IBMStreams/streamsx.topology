@@ -41,6 +41,6 @@ public class Quote extends Ticker {
                     return new Quote(tuple);
                 return null;
             }
-        }, Quote.class);
+        });
     }
 }
