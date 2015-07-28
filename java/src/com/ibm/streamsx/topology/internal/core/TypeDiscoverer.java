@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.core;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -102,6 +103,8 @@ public class TypeDiscoverer {
             return argType;
         }
         if (argType instanceof ParameterizedType)
+            return argType;
+        if (argType instanceof TypeVariable)
             return argType;
         throw nullTupleClass();
     }

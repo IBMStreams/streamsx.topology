@@ -78,9 +78,9 @@ public class ParallelTest extends TestTopology {
         Topology topology = new Topology("testParallelPartition");
         final int count = new Random().nextInt(10) + 37;
 
-        TStream<KeyableBeaconTuple> kb = topology.source(
-                keyableBeacon5Counter(count), KeyableBeaconTuple.class);
-        TStream<KeyableBeaconTuple> pb = kb.parallel(5);
+        TStream<BeaconTuple> kb = topology.source(
+                keyableBeacon5Counter(count));
+        TStream<BeaconTuple> pb = kb.parallel(5);
         TStream<ChannelAndSequence> cs = pb.transform(channelSeqTransformer(),
                 ChannelAndSequence.class);
         TStream<ChannelAndSequence> joined = cs.unparallel();
@@ -106,7 +106,7 @@ public class ParallelTest extends TestTopology {
         final int count = new Random().nextInt(10) + 37;
 
         TStream<String> kb = topology.source(
-                stringTuple5Counter(count), String.class);
+                stringTuple5Counter(count));
         TStream<String> pb = kb.parallel(5, TStream.Routing.PARTITIONED);
         TStream<ChannelAndSequence> cs = pb.transform(stringTupleChannelSeqTransformer(),
                 ChannelAndSequence.class);
@@ -198,23 +198,22 @@ public class ParallelTest extends TestTopology {
     }
 
     @SuppressWarnings("serial")
-    static Supplier<Iterable<KeyableBeaconTuple>> keyableBeacon5Counter(
+    static Supplier<Iterable<BeaconTuple>> keyableBeacon5Counter(
             final int count) {
-        return new Supplier<Iterable<KeyableBeaconTuple>>() {
+        return new Supplier<Iterable<BeaconTuple>>() {
 
             @Override
-            public Iterable<KeyableBeaconTuple> get() {
-                ArrayList<KeyableBeaconTuple> ret = new ArrayList<KeyableBeaconTuple>();
+            public Iterable<BeaconTuple> get() {
+                ArrayList<BeaconTuple> ret = new ArrayList<BeaconTuple>();
                 for (int i = 0; i < count; i++) {
                     // Send 5 KeyableBeaconTuples with the same iteration count
                     // as a key. We then test that all BeaconTuples with the
                     // same
                     // key are sent to the same partition.
                     for (int j = 0; j < 5; j++) {
-                        ret.add(new KeyableBeaconTuple(new BeaconTuple(i)));
+                        ret.add(new BeaconTuple(i));
                     }
                 }
-                // TODO Auto-generated method stub
                 return ret;
             }
 
@@ -246,18 +245,17 @@ public class ParallelTest extends TestTopology {
     }
     
     @SuppressWarnings("serial")
-    static Function<KeyableBeaconTuple, ChannelAndSequence> channelSeqTransformer() {
-        return new Function<KeyableBeaconTuple, ChannelAndSequence>() {
+    static Function<BeaconTuple, ChannelAndSequence> channelSeqTransformer() {
+        return new Function<BeaconTuple, ChannelAndSequence>() {
             int channel = -1;
 
             @Override
-            public ChannelAndSequence apply(KeyableBeaconTuple v) {
+            public ChannelAndSequence apply(BeaconTuple v) {
                 if (channel == -1) {
                     channel = PERuntime.getCurrentContext().getChannel();
                 }
                 // TODO Auto-generated method stub
-                return new ChannelAndSequence(channel, (int) v.getTup()
-                        .getSequence());
+                return new ChannelAndSequence(channel, (int) v.getSequence());
             }
         };
     }

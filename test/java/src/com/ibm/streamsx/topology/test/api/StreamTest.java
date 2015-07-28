@@ -22,8 +22,8 @@ import org.junit.Test;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -101,8 +101,7 @@ public class StreamTest extends TestTopology {
                 "its fleece was white as snow");
         assertStream(topology, source);
 
-        TStream<String> words = source.multiTransform(splitWords(),
-                String.class);
+        TStream<String> words = source.multiTransform(splitWords());
         
         completeAndValidate(words, 10, "mary", "had",
                 "a", "little", "lamb", "its", "fleece", "was", "white", "as",

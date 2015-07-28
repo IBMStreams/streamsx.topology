@@ -60,7 +60,7 @@ public class XMLTupleTest extends TestTopology {
                 } catch (Exception e) {
                     return null;
                 }
-            }}, String.class);
+            }});
         return out;
     }
 }

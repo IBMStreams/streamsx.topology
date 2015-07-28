@@ -4,8 +4,14 @@
  */
 package com.ibm.streamsx.topology.test.api;
 
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.junit.Test;
 
@@ -50,4 +56,54 @@ public class CollectionTupleTest extends TestTopology {
         
         return StringStreams.toString(_listSource());     
     }
+    
+    @Test
+    public void testSet() throws Exception {
+        completeAndValidate(_testSet(), 10,  "a", "had", "lamb", "little", "mary", "as", "fleece", "its", "snow", "was", "white");
+    }
+    
+    private static TStream<String> _testSet() throws Exception {
+        TStream<List<String>> data = _listSource();
+        TStream<Set<String>> set = data.transform(new Function<List<String>,Set<String>> () {
+
+            @Override
+            public Set<String> apply(List<String> v) {
+                Set<String> set = new TreeSet<>();
+                set.addAll(v);
+                return set;
+            }});
+        
+        return CollectionStreams.flatten(set); 
+    }
+    
+    @Test
+    public void testMap() throws Exception {
+        completeAndValidate(_testMap(), 10,  "A=8", "B=32", "C=9", "D=73", "E=56");
+    }
+    
+    private static TStream<String> _testMap() throws Exception {
+        final Topology topology = new Topology();
+        
+        List<Map<String,Integer>> tuples = new ArrayList<>();
+        
+        Map<String,Integer> map = new TreeMap<>();
+        
+        map.put("A", 8);
+        map.put("B", 32);
+        tuples.add(map);
+        
+        map = new TreeMap<>();
+        map.put("C", 9);
+        map.put("D", 73);
+        map.put("E", 56);
+        tuples.add(map);
+                
+        TStream<Map<String,Integer>> data = topology.constants(tuples);
+                            
+        TStream<SimpleImmutableEntry<String, Integer>> entries = CollectionStreams.flattenMap(data);
+        
+        return StringStreams.toString(entries);
+    }
+    
+    
 }

@@ -15,8 +15,8 @@ import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.tuple.Keyable;
@@ -279,7 +279,7 @@ public interface TStream<T> extends TopologyElement {
      *             &#64;Override
      *             public Iterable<String> apply(String t) {
      *                 return Arrays.asList(t.split(" "));
-     *             }}, String.class);
+     *             }});
      * </code>
      * </pre>
      * 

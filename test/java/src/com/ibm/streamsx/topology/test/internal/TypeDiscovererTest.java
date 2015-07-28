@@ -81,17 +81,17 @@ public class TypeDiscovererTest {
         public R call() { return null;}
     }
       
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testGenericFunctionClass() {
         TypeDiscoverer.determineStreamType(new Identity<java.sql.Blob>(), null);
     }
     
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testanonymousGenericFunctionClass() {
         TypeDiscoverer.determineStreamType(new Identity<java.sql.Blob>() {} , null);
     }
     
-    @Test(expected=IllegalArgumentException.class)
+    @Test
     public void testTwoTypeFunction() {
         TypeDiscoverer.determineStreamType(new TwoType<String, java.sql.Blob>() {} , null);
     }

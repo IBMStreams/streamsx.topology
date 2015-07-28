@@ -38,7 +38,7 @@ public class BlobTupleTest extends TestTopology {
             @Override
             public String apply(Blob v) {
                 return new String(v.getData(), StandardCharsets.UTF_8);
-            }}, String.class);
+            }});
         return out;
     }
 }

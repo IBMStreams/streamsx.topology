@@ -34,10 +34,10 @@ public class AutoClosableTest extends TestTopology {
     public void testCloseIsCalled() throws Exception {
         Topology topology = new Topology();
         
-        TStream<String> stream = topology.source(new CloseSupplier(), String.class);
+        TStream<String> stream = topology.source(new CloseSupplier());
         stream = stream.filter(new ClosePredicate()) ;
         stream = stream.modify(new CloseUnary()) ;
-        stream = stream.multiTransform(new CloseMultiTransform(), String.class) ;
+        stream = stream.multiTransform(new CloseMultiTransform()) ;
         stream = stream.last().aggregate(new CloseAggregate(), String.class);
         stream.sink(new CloseConsumer());
         
