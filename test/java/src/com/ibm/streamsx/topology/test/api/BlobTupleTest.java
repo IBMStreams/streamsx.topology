@@ -27,6 +27,7 @@ public class BlobTupleTest extends TestTopology {
         TStream<Blob> source = topology.constants(Collections.singletonList(blob), Blob.class);
         assertNotNull(source);
         assertEquals(Blob.class, source.getTupleClass());
+        assertEquals(Blob.class, source.getTupleType());
         
         TStream<String> out = convertBlobToString(source);
         completeAndValidate(out, 10,  sdata);

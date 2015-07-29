@@ -47,10 +47,10 @@ public class ParallelTest extends TestTopology {
         TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
         TStream<BeaconTuple> pb = fb.parallel(5);
 
-        TStream<Integer> is = pb.transform(randomHashProducer(), Integer.class);
+        TStream<Integer> is = pb.transform(randomHashProducer());
         TStream<Integer> joined = is.unparallel();
         TStream<String> numRegions = joined.transform(
-                uniqueIdentifierMap(count), String.class);
+                uniqueIdentifierMap(count));
 
         Tester tester = topology.getTester();
         Condition<Long> expectedCount = tester.tupleCount(numRegions, 1);
@@ -81,12 +81,10 @@ public class ParallelTest extends TestTopology {
         TStream<BeaconTuple> kb = topology.source(
                 keyableBeacon5Counter(count));
         TStream<BeaconTuple> pb = kb.parallel(5);
-        TStream<ChannelAndSequence> cs = pb.transform(channelSeqTransformer(),
-                ChannelAndSequence.class);
+        TStream<ChannelAndSequence> cs = pb.transform(channelSeqTransformer());
         TStream<ChannelAndSequence> joined = cs.unparallel();
 
-        TStream<String> valid_count = joined.transform(partitionCounter(count),
-                String.class);
+        TStream<String> valid_count = joined.transform(partitionCounter(count));
 
         Tester tester = topology.getTester();
         Condition<Long> expectedCount = tester.tupleCount(valid_count, 1);
@@ -108,12 +106,10 @@ public class ParallelTest extends TestTopology {
         TStream<String> kb = topology.source(
                 stringTuple5Counter(count));
         TStream<String> pb = kb.parallel(5, TStream.Routing.PARTITIONED);
-        TStream<ChannelAndSequence> cs = pb.transform(stringTupleChannelSeqTransformer(),
-                ChannelAndSequence.class);
+        TStream<ChannelAndSequence> cs = pb.transform(stringTupleChannelSeqTransformer());
         TStream<ChannelAndSequence> joined = cs.unparallel();
 
-        TStream<String> valid_count = joined.transform(partitionCounter(count),
-                String.class);
+        TStream<String> valid_count = joined.transform(partitionCounter(count));
 
         Tester tester = topology.getTester();
         Condition<Long> expectedCount = tester.tupleCount(valid_count, 1);

@@ -7,6 +7,9 @@ package com.ibm.streamsx.topology.internal.spljava;
 import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.types.Blob;
@@ -18,6 +21,21 @@ public class Schemas {
     public static final StreamSchema BLOB = getStreamSchema("tuple<blob binary>");
     public static final StreamSchema XML = getStreamSchema("tuple<xml document>");
     public static final StreamSchema JAVA_OBJECT = getStreamSchema("tuple<blob " + SPLJavaObject.SPL_JAVA_OBJECT + ">");
+    
+    
+    private static final Set<Class<?>> DIRECT_SCHEMA_CLASSES;
+    static {
+        Set<Class<?>> directSchemaClasses = new HashSet<>();
+        directSchemaClasses.add(String.class);
+        directSchemaClasses.add(Blob.class);
+        directSchemaClasses.add(XML.class);
+        
+        DIRECT_SCHEMA_CLASSES = Collections.unmodifiableSet(directSchemaClasses);
+    }
+    
+    public static boolean usesDirectSchema(Type type) {
+        return DIRECT_SCHEMA_CLASSES.contains(type);
+    }
     
 
     public StreamSchema getSPLSchema(Class<?> tupleClass) {

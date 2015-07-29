@@ -18,8 +18,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streams.operator.types.Blob;
-import com.ibm.streams.operator.types.XML;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.TopologyElement;
@@ -44,6 +42,7 @@ import com.ibm.streamsx.topology.internal.logic.ObjectHasher;
 import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
+import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -83,7 +82,22 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 FunctionFilter.class, filter);
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
-        return JavaFunctional.addJavaOutput(this, bop, getTupleType());
+        
+       return JavaFunctional.addJavaOutput(this, bop, refineType(Predicate.class, 0, filter));
+    }
+    
+    /**
+     * Try to refine a type down to a Class without generics.
+     */
+    private Type refineType(Class<?> interfaceClass, int arg, Object object) {
+        Type tupleType = getTupleType();
+        if (!(tupleType instanceof Class)) {
+            // try and refine the type down.
+            Type type = TypeDiscoverer.determineStreamTypeFromFunctionArg(interfaceClass, arg, object);
+            if (type instanceof Class)
+                tupleType = type;
+        }
+        return tupleType;
     }
 
     @Override
@@ -138,7 +152,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public TStream<T> modify(UnaryOperator<T> modifier) {
-        return _transform(modifier, getTupleType());
+        return _transform(modifier, refineType(UnaryOperator.class, 0, modifier));
     }
 
     @Override
@@ -251,9 +265,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         
         BOperatorInvocation op;
-        if (String.class.equals(getTupleType()) ||
-                Blob.class.equals(getTupleType()) ||
-                 XML.class.equals(getTupleType())
+        if (Schemas.usesDirectSchema(getTupleType())
                  || this instanceof SPLStream) {
             // Publish as a stream consumable by SPL & Java/Scala
             op = builder().addSPLOperator("Publish",
@@ -269,7 +281,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                     "com.ibm.streamsx.topology.topic::PublishJava",
                     params);
         } else {
-            throw new IllegalStateException("A TStream with a tuple type that contains a generic type cannot be published");
+            throw new IllegalStateException("A TStream with a tuple type that contains a generic or unknown type cannot be published");
         }
 
         SourceInfo.setSourceInfo(op, SPL.class);
@@ -417,5 +429,13 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         }
 
         return l;
+    }
+    
+    @Override
+    public TStream<T> asType(Class<T> tupleClass) {
+        if (tupleClass.equals(getTupleClass()))
+            return this;
+        
+        return new StreamImpl<T>(this, output(), tupleClass);
     }
 }

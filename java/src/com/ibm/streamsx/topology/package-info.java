@@ -38,7 +38,7 @@
  *  input tuple is submitted to the new stream, otherwise the input tuple is discarded.
  * </LI>
  * <LI>
- * {@link com.ibm.streamsx.topology.TStream#transform(com.ibm.streamsx.topology.function.Function, Class)} declares that the <i>functional logic</i> will be
+ * {@link com.ibm.streamsx.topology.TStream#transform(com.ibm.streamsx.topology.function.Function)} declares that the <i>functional logic</i> will be
  *  called for each tuple and its return value will be submitted to the output stream, unless
  *  it is {@code null}, in which case no tuple will be submitted.
  * </LI>

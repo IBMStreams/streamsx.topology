@@ -143,7 +143,7 @@ public class SimpleEmbeddedTest {
         Topology topology = new Topology("test");
 
         TStream<String> hw = topology.strings("Hello", "World!", "Test!!");
-        TStream<String> hw2 = hw.transform(new AppendXform("(stream-2)"), String.class);
+        TStream<String> hw2 = hw.transform(new AppendXform("(stream-2)"));
         // make sure "marker" ops are ok: union,parallel,unparallel
         hw
             .union(hw2)

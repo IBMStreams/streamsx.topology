@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.test.streams;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -133,5 +134,17 @@ public class BeaconTest extends TestTopology {
         assertTrue(contents.toString(), contents.valid());
         
         
+    }
+    
+    @Test
+    public void testBeaconTypes() {
+        Topology t = new Topology();
+        assertEquals(BeaconTuple.class, BeaconStreams.beacon(t).getTupleClass());
+        assertEquals(BeaconTuple.class, BeaconStreams.beacon(t, 77).getTupleClass());
+        
+        assertEquals(Long.class, BeaconStreams.longBeacon(t).getTupleClass());
+        assertEquals(Long.class, BeaconStreams.longBeacon(t, 23).getTupleClass());
+        
+        assertEquals(Long.class, BeaconStreams.single(t).getTupleClass());
     }
 }

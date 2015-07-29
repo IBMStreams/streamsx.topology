@@ -88,6 +88,8 @@ public class SPLStreamsTest extends TestTopology {
         final Topology topology = new Topology("ConvertSPLStream");
         SPLStream splStream = createSPLFlowFromStream(topology, false);
         TStream<String> tupleString = splStream.toTupleString();
+        assertEquals(String.class, tupleString.getTupleClass());
+        assertEquals(String.class, tupleString.getTupleType());
         
         completeAndValidate(tupleString, 10,  "{ii=418,ss=\"325\"}",
                 "{ii=550,ss=\"457\"}", "{ii=9418,ss=\"9325\"}");

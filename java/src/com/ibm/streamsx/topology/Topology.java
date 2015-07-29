@@ -22,8 +22,6 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streams.operator.types.Blob;
-import com.ibm.streams.operator.types.XML;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
 import com.ibm.streamsx.topology.context.StreamsContext;
@@ -54,7 +52,7 @@ import com.ibm.streamsx.topology.tester.Tester;
  * A declaration of a topology of streaming data.
  * 
  * This class provides some fundamental generic methods to create source
- * streams, such as {@link #source(Supplier, Class)},
+ * streams, such as {@link #source(Supplier)},
  * {@link #subscribe(String, Class)}, {@link #strings(String...)}. <BR>
  * Utility methods in the {@code com.ibm.streamsx.topology.streams} package
  * provide specific source streams, or transformations on streams with specific
@@ -176,7 +174,7 @@ public class Topology implements TopologyElement {
      * @return Stream containing {@code tuples}.
      */
     public TStream<String> strings(String... tuples) {
-        return constants(Arrays.asList(tuples), String.class);
+        return _source(new Constants<String>(Arrays.asList(tuples)), String.class);
     }
 
     /**
@@ -186,11 +184,12 @@ public class Topology implements TopologyElement {
      * @return Stream containing {@code tuples}.
      */
     public TStream<Number> numbers(Number... tuples) {
-        return constants(Arrays.asList(tuples), Number.class);
+        return _source(new Constants<Number>(Arrays.asList(tuples)), Number.class);
     }
 
     /**
      * Create a stream containing all the tuples in {@code data}.
+     * 
      * 
      * @param data
      *            List of tuples.
@@ -202,7 +201,7 @@ public class Topology implements TopologyElement {
         if (data == null)
             throw new NullPointerException();
         
-        return source(new Constants<T>(data), tupleTypeClass);
+        return _source(new Constants<T>(data), tupleTypeClass);
     }
     
     /**
@@ -227,6 +226,8 @@ public class Topology implements TopologyElement {
      * {@code data.get()} have been submitted on the stream, no more tuples are
      * submitted.
      * 
+     * @deprecated Replaced by {@link #source(Supplier)} which does not require the {@code Class<T> argument}.
+     * 
      * @param data
      *            Function that produces that data for the stream.
      * @param tupleTypeClass
@@ -234,6 +235,7 @@ public class Topology implements TopologyElement {
      * @return New stream containing the tuples from the iterator returned by
      *         {@code data.get()}.
      */
+    @Deprecated
     public <T> TStream<T> source(Supplier<Iterable<T>> data,
             Class<T> tupleTypeClass) {
         return _source(data, tupleTypeClass);
@@ -343,11 +345,29 @@ public class Topology implements TopologyElement {
      * 
      * @param data
      *            Supplier of the tuples.
+     * @return New stream containing the tuples from calls to {@code data.get()}
+     *         .
+     */
+    public <T> TStream<T> endlessSource(Supplier<T> data) {
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, null);
+        return _source(EndlessSupplier.supplier(data), tupleType);
+    }
+    
+    /**
+     * Declare an endless source stream.
+     * {@code data.get()} will be called repeatably.
+     * Each non-null returned value will be present on the stream.
+     * 
+     * @deprecated Replaced by {@link #endlessSource(Supplier)} which does not require the {@code Class<T> argument}.
+     * @param data
+     *            Supplier of the tuples.
      * @param tupleTypeClass
      *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples from calls to {@code data.get()}
      *         .
      */
+    @Deprecated
     public <T> TStream<T> endlessSource(Supplier<T> data,
             Class<T> tupleTypeClass) {
         
@@ -355,7 +375,7 @@ public class Topology implements TopologyElement {
                
         return _source(EndlessSupplier.supplier(data), tupleType);
     }
-
+    
     /**
      * Declare an endless source stream.
      * {@code data.apply(n)} will be called repeatably, where {@code n} is the iteration number,
@@ -364,11 +384,32 @@ public class Topology implements TopologyElement {
      * 
      * @param data
      *            Supplier of the tuples.
+     * @return New stream containing the tuples from calls to
+     *         {@code data.apply(n)}.
+     */
+    public <T> TStream<T> endlessSourceN(Function<Long, T> data) {
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, null);
+        
+        return _source(EndlessSupplier.supplierN(data), tupleType);
+    }
+
+    /**
+     * Declare an endless source stream.
+     * {@code data.apply(n)} will be called repeatably, where {@code n} is the iteration number,
+     * starting at zero. Each
+     * non-null returned value will be present on the stream.
+     * 
+     * @deprecated Replaced by {@link #endlessSourceN(Function)} which does not require the {@code Class<T> argument}.
+     * 
+     * @param data
+     *            Supplier of the tuples.
      * @param tupleTypeClass
      *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples from calls to
      *         {@code data.apply(n)}.
      */
+    @Deprecated
     public <T> TStream<T> endlessSourceN(Function<Long, T> data,
             Class<T> tupleTypeClass) {
         
@@ -482,9 +523,7 @@ public class Topology implements TopologyElement {
         SPLStream splImport;
         
         // Subscribed as an SPL Stream.
-        if (String.class.equals(tupleTypeClass) ||
-                Blob.class.equals(tupleTypeClass) ||
-                 XML.class.equals(tupleTypeClass)) {
+        if (Schemas.usesDirectSchema(tupleTypeClass)) {
             splImport = SPLStreams.subscribe(this, topic,
                     mappingSchema);
 

@@ -60,7 +60,7 @@ public interface SPLStream extends TStream<Tuple>, SPLInput {
      * @return Stream containing tuples of type {@code T} transformed from this
      *         stream's SPL tuples.
      * 
-     * @see TStream#transform(Function, Class)
+     * @see TStream#transform(Function)
      */
     <T> TStream<T> convert(Function<Tuple, T> convertor, Class<T> tupleTypeClass);
 

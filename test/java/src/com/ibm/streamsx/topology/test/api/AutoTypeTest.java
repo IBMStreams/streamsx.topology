@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -18,8 +19,11 @@ import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
 /**
@@ -61,7 +65,7 @@ public class AutoTypeTest {
             @Override
             public Integer get() {
                 return 3;
-            }}, null);
+            }});
         
         assertEquals(Integer.class, ints.getTupleClass());
     }
@@ -117,7 +121,7 @@ public class AutoTypeTest {
             @Override
             public Set<Integer> get() {
                 return Collections.singleton(3);
-            }}, null);
+            }});
         
         assertNull(stream.getTupleClass());
         assertTrue(stream.getTupleType() instanceof ParameterizedType);
@@ -189,5 +193,63 @@ public class AutoTypeTest {
             }});
         
         assertEquals(Integer.class, ints.getTupleClass());
+    }
+    
+    
+    @Test
+    public void testStringConstants() throws Exception {
+        Topology t = new Topology();
+        TStream<String> strings = t.strings("a", "b", "c");
+        assertEquals(String.class, strings.getTupleClass());
+        assertEquals(String.class, strings.getTupleType());
+    }
+    
+    @Test
+    public void testStringListTyped() throws Exception {
+        Topology t = new Topology();
+        TStream<String> strings = t.constants(Collections.nCopies(10, "hello"), String.class);
+        assertEquals(String.class, strings.getTupleClass());
+        assertEquals(String.class, strings.getTupleType());
+    }
+    
+    @Test
+    public void testStringListUnTyped() throws Exception {
+        Topology t = new Topology();
+        TStream<String> strings = t.constants(Collections.nCopies(10, "hello"));
+        assertNull( strings.getTupleClass());
+        assertNotNull(strings.getTupleType());
+    }
+    
+    @Test
+    public void testStringListAutoTypedByFilter() {
+        _testStringListAutoTypedByFilter();
+    }
+    
+    private static void _testStringListAutoTypedByFilter() {
+    
+        Topology t = new Topology();
+        TStream<String> strings = t.constants(Collections.nCopies(10, "hello"));
+        strings = strings.filter(new Predicate<String>() {
+
+            @Override
+            public boolean test(String tuple) {
+                return false;
+            }});
+        assertEquals(String.class, strings.getTupleClass());
+        assertEquals(String.class, strings.getTupleType());
+    }
+   
+    // @Test
+    public void _testStringsUnion() throws Exception {
+        Topology t = new Topology();
+        TStream<String> strings0 = t.strings("a", "b", "c");
+        TStream<String> strings1 = t.constants(Collections.nCopies(10, "hello"), String.class);
+        
+        TStream<String> strings = strings0.union(strings1);
+        
+        strings = StringStreams.toString(strings);
+        strings.print();
+        
+        StreamsContextFactory.getEmbedded().submit(t).get();
     }
 }

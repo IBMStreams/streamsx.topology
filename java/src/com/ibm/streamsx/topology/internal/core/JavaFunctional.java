@@ -9,6 +9,7 @@ import static com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor.
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
@@ -138,6 +139,13 @@ public class JavaFunctional {
             return;
         if (tupleType instanceof Class)
             te.topology().getDependencyResolver().addJarDependency(bop, (Class<?>) tupleType);
+        if (tupleType instanceof ParameterizedType) {
+            
+            ParameterizedType pt = (ParameterizedType) tupleType;
+            addDependency(te, bop, pt.getRawType());
+            for (Type typeArg : pt.getActualTypeArguments())
+                addDependency(te, bop, typeArg);           
+        }
     }
 
     /**

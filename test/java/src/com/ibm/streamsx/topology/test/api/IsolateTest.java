@@ -30,8 +30,8 @@ public class IsolateTest {
 
         // Construct topology
         TStream<String> ss = topology.strings("hello");
-        TStream<String> ss1 = ss.transform(getPEId(), String.class).isolate();
-        TStream<String> ss2 = ss.isolate().transform(getPEId(), String.class)
+        TStream<String> ss1 = ss.transform(getPEId()).isolate();
+        TStream<String> ss2 = ss.isolate().transform(getPEId())
                 .isolate();
 
         Tester tester = topology.getTester();

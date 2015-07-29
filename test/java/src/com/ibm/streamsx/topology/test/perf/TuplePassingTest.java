@@ -145,7 +145,7 @@ public class TuplePassingTest extends TestTopology {
                 public String apply(String v1) {
                     return v1.replace('e', 'E');
                 }
-            }, String.class);
+            });
 
             input = input.transform(new Function<String, String>() {
 
@@ -153,7 +153,7 @@ public class TuplePassingTest extends TestTopology {
                 public String apply(String v1) {
                     return v1.replace('E', 'e');
                 }
-            }, String.class);
+            });
         }
         return input;
 
@@ -201,7 +201,7 @@ public class TuplePassingTest extends TestTopology {
                     v2.l += 9835435l;
                     return v2;
                 }
-            }, TestValue.class);
+            });
 
             input = input.transform(new Function<TestValue, TestValue>() {
 
@@ -212,7 +212,7 @@ public class TuplePassingTest extends TestTopology {
                     v2.l -= 9835435l;
                     return v2;
                 }
-            }, TestValue.class);
+            });
 
         }
         return input;

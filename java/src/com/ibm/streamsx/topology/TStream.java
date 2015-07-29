@@ -26,7 +26,7 @@ import com.ibm.streamsx.topology.tuple.Keyable;
  * connected topology of streams and functional transformations is built using
  * {@link Topology}. <BR>
  * Generic methods on this interface provide the ability to
- * {@link #filter(Predicate) filter}, {@link #transform(Function, Class)
+ * {@link #filter(Predicate) filter}, {@link #transform(Function)
  * transform} or {@link #sink(Consumer) sink} this declared stream using a
  * function. <BR>
  * Utility methods in the {@code com.ibm.streams.topology.streams} package
@@ -209,6 +209,7 @@ public interface TStream<T> extends TopologyElement {
      * (or zero) tuple of a different type {@code U}.
      * This is identical to {@link #transform(Function)} except that the class
      * type of the stream is explicitly passed in.
+     * @deprecated Replaced by {@link #transform(Function)} which does not require the {@code Class<T> argument}.
      * @param transformer
      *            Transformation logic to be executed against each tuple.
      * @param tupleTypeClass
@@ -217,6 +218,7 @@ public interface TStream<T> extends TopologyElement {
      *         stream's tuples.
         
      */
+    @Deprecated
     <U> TStream<U> transform(Function<T, U> transformer, Class<U> tupleTypeClass);
 
     /**
@@ -367,8 +369,9 @@ public interface TStream<T> extends TopologyElement {
     void print();
 
     /**
-     * Class of the tuples on this stream. WIll be the same as {@link #getTupleType()}
-     * is a {@code Class} object.
+     * Class of the tuples on this stream, if known.
+     * Will be the same as {@link #getTupleType()}
+     * if it is a {@code Class} object.
      * @return Class of the tuple on this stream, {@code null}
      * if {@link #getTupleType()} is not a {@code Class} object.
      */
@@ -712,7 +715,17 @@ public interface TStream<T> extends TopologyElement {
      * @return Stream containing all tuples on this stream. but throttled.
      */
     TStream<T> throttle(long delay, TimeUnit unit);
-
+    
+    /**
+     * Return a strongly typed reference to this stream.
+     * If this stream is already strongly typed as containing tuples
+     * of type {@code tupleClass} then {@code this} is returned.
+     * @param tupleClass Class type for the tuples.
+     * @return A stream with the same contents as this stream but strongly typed as
+     * containing tuples of type {@code tupleClass}.
+     */
+    TStream<T> asType(Class<T> tupleClass);
+    
     /**
      * Internal method.
      * <BR>

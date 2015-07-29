@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
+import com.ibm.streams.operator.PERuntime;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
@@ -21,11 +22,9 @@ import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
-import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
-import com.ibm.streams.operator.PERuntime;
 
 public class LowLatencyTest extends TestTopology {
     @Test
@@ -63,13 +62,12 @@ public class LowLatencyTest extends TestTopology {
     
     @Test
     public void threadedPortTest() throws Exception{
-        assumeTrue(SC_OK);
         Topology topology = new Topology("lowLatencyTest");
 
         // Construct topology
         TStream<String> ss = topology.strings("hello").lowLatency();
-        TStream<String> ss1 = ss.transform(getPEId(), String.class);
-        TStream<String> ss2 = ss1.transform(getPEId(), String.class).endLowLatency();
+        TStream<String> ss1 = ss.transform(getPEId());
+        TStream<String> ss2 = ss1.transform(getPEId()).endLowLatency();
         
         SPLGenerator generator = new SPLGenerator();
         JSONObject graph = topology.builder().complete();
@@ -106,7 +104,6 @@ public class LowLatencyTest extends TestTopology {
     
     @Test
     public void testLowLatencySplit() throws Exception {
-        assumeTrue(SC_OK);
         
         // lowLatency().split() is an interesting case because split()
         // has >1 oports.
@@ -138,25 +135,21 @@ public class LowLatencyTest extends TestTopology {
         
         /////////////////////////////////////
         TStream<String> all = splitChFanin.endLowLatency();
-        all.print();
 
         Tester tester = topology.getTester();
         
-        TStream<String> dupAll = all.filter(new AllowAll<String>());
-        Condition<Long> uCount = tester.tupleCount(dupAll, strs.length);
+        Condition<Long> uCount = tester.tupleCount(all, strs.length);
         
-        Condition<List<String>> contents = tester.stringContents(dupAll, "");
+        Condition<List<String>> contents = tester.stringContents(all, "");
         Condition<List<String>> s2contents = tester.stringContents(s2, "");
 
         complete(tester, uCount, 10, TimeUnit.SECONDS);
 
         Set<String> peIds = new HashSet<>();
-        for (String s : contents.getResult()) {
-            peIds.add(s);
-        }
-        for (String s : s2contents.getResult()) {
-            peIds.add(s);
-        }
+        peIds.addAll(contents.getResult());
+        peIds.addAll(s2contents.getResult());
+        
+
         assertEquals("peIds: "+peIds, 1, peIds.size() );
     }
     

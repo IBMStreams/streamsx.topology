@@ -6,10 +6,10 @@ package com.ibm.streamsx.topology.internal.core;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.function.UnaryOperator;
 
 /**
  * Methods to determine the stream Java type from the logic type passed in.
@@ -27,6 +27,9 @@ public class TypeDiscoverer {
 
         if (tupleType != null)
             return tupleType;
+        
+        if (function instanceof UnaryOperator)
+            return determineStreamTypeFromFunctionArg(UnaryOperator.class, 0, function);
         
         return determineStreamTypeFromFunctionArg(Function.class, 1, function);
     }
@@ -98,15 +101,7 @@ public class TypeDiscoverer {
     }
     
     private static Type determineClassFromArgument(ParameterizedType pt, int arg) {
-        Type argType = pt.getActualTypeArguments()[arg];
-        if (argType instanceof Class) {
-            return argType;
-        }
-        if (argType instanceof ParameterizedType)
-            return argType;
-        if (argType instanceof TypeVariable)
-            return argType;
-        throw nullTupleClass();
+        return pt.getActualTypeArguments()[arg];
     }
 
     public static String getTupleName(Type tupleType) {

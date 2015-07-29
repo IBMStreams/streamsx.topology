@@ -37,8 +37,7 @@ public class BeaconStreams {
      * @return A stream that will contain {@link BeaconTuple} instances.
      */
     public static TStream<BeaconTuple> beacon(TopologyElement te) {
-        return te.topology().endlessSourceN(new BeaconFunction(),
-                BeaconTuple.class);
+        return te.topology().endlessSourceN(new BeaconFunction());
     }
 
     /**
@@ -64,7 +63,7 @@ public class BeaconStreams {
      * @return A stream that will contain tuples of monotonically increasing {@code Long} tuples.
      */
     public static TStream<Long> longBeacon(TopologyElement te) {
-        return te.topology().endlessSourceN(new Identity<Long>(), Long.class);
+        return te.topology().endlessSourceN(new Identity<Long>()).asType(Long.class);
     }
 
     /**
@@ -78,7 +77,7 @@ public class BeaconStreams {
      */
     public static TStream<Long> longBeacon(TopologyElement te, long count) {
         return te.topology().limitedSourceN(new Identity<Long>(), count,
-                Long.class);
+                Long.class).asType(Long.class);
     }
     
     /**
