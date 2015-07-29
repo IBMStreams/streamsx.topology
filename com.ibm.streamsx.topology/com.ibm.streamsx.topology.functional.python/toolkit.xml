@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.0.0.0" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <toolkit name="com.ibm.streamsx.topology.functional.python" requiredProductVersion="2.0" version="1.0.0">
+    <description>Toolkit Description</description>
+    <uriTable>
+      <uri index="3" value="pythonFunctions/tupleFunction"/>
+      <uri index="2" value="pythonFunctions/sinkFunction"/>
+      <uri index="1" value="pythonFunctions/sourceFunction"/>
+    </uriTable>
+    <namespace name="pythonFunctions">
+      <primitiveOp language="Cpp" modelUriIndex="1" name="sourceFunction" public="true">
+        <inputPort minNumPorts="0" optional="true" windowPunctInputMode="Oblivious">
+          <windowPolicy>NonWindowed</windowPolicy>
+        </inputPort>
+        <outputPort expressionMode="Nonexistent" minNumPorts="0" optional="true" windowPunctOutputMode="Generating"/>
+      </primitiveOp>
+      <primitiveOp language="Cpp" modelUriIndex="2" name="sinkFunction" public="true">
+        <inputPort minNumPorts="0" optional="true" windowPunctInputMode="Oblivious">
+          <windowPolicy>NonWindowed</windowPolicy>
+        </inputPort>
+        <outputPort expressionMode="Nonexistent" minNumPorts="0" optional="true" windowPunctOutputMode="Generating"/>
+      </primitiveOp>
+      <primitiveOp language="Cpp" modelUriIndex="3" name="tupleFunction" public="true">
+        <inputPort minNumPorts="0" optional="true" windowPunctInputMode="Oblivious">
+          <windowPolicy>NonWindowed</windowPolicy>
+        </inputPort>
+        <outputPort expressionMode="Nonexistent" minNumPorts="0" optional="true" windowPunctOutputMode="Generating"/>
+      </primitiveOp>
+    </namespace>
+    <sabFiles>
+      <ti:include path="toolkit.xml" root="toolkitDir"/>
+      <ti:include path="impl/java/lib/**" root="toolkitDir"/>
+      <ti:include path="impl/java/bin/**" root="toolkitDir"/>
+      <ti:include path="impl/bin/**" root="toolkitDir"/>
+      <ti:include path="impl/lib/**" root="toolkitDir"/>
+      <ti:include path="impl/nl/*.dat" root="toolkitDir"/>
+      <ti:include path="etc/**" root="toolkitDir"/>
+      <ti:include path="lib/**" root="toolkitDir"/>
+      <ti:include path="nl/**" root="toolkitDir"/>
+      <ti:include path="opt/**" root="toolkitDir"/>
+    </sabFiles>
+  </toolkit>
+
+</toolkitModel>

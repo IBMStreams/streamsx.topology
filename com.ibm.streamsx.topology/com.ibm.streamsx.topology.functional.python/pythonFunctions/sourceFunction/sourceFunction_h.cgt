@@ -1,0 +1,41 @@
+/* Additional includes go here */
+#include <Python.h>
+
+#pragma SPL_NON_GENERIC_OPERATOR_HEADER_PROLOGUE
+
+class MY_OPERATOR : public MY_BASE_OPERATOR 
+{
+public:
+  // Constructor
+  MY_OPERATOR();
+
+  // Destructor
+  virtual ~MY_OPERATOR(); 
+
+  // Notify port readiness
+  void allPortsReady(); 
+
+  // Notify termination
+  void prepareToShutdown(); 
+
+  // Processing for source and threaded operators   
+  void process(uint32_t idx);
+    
+  // Tuple processing for mutating ports 
+  void process(Tuple & tuple, uint32_t port);
+    
+  // Tuple processing for non-mutating ports
+  void process(Tuple const & tuple, uint32_t port);
+
+  // Punctuation processing
+  void process(Punctuation const & punct, uint32_t port);
+
+private:
+  void simpleStringCatchErr(const char * str);
+  PyObject* sourceFunction;
+
+}; 
+
+#pragma SPL_NON_GENERIC_OPERATOR_HEADER_EPILOGUE
+
+
