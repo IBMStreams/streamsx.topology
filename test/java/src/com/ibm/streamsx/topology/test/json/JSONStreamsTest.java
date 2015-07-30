@@ -129,7 +129,7 @@ public class JSONStreamsTest extends TestTopology {
         
         final TestJSONAble value = new TestJSONAble(42,QUESTION);
         TStream<TestJSONAble> s = topology.constants(
-                Collections.singletonList(value), TestJSONAble.class);
+                Collections.singletonList(value)).asType(TestJSONAble.class);
 
         TStream<JSONObject> js = JSONStreams.toJSON(s);
         

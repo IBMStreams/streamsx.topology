@@ -89,6 +89,16 @@ public class JavaFunctional {
         
         StreamSchema mappingSchema = Schemas.getSPLMappingSchema(tupleType);
         BOutputPort bstream = bop.addOutput(mappingSchema);
+        
+        return getJavaTStream(te, bop, bstream, tupleType);
+    }
+    
+    /**
+     * Create a Java stream on top of an output port.
+     * Multiple streams can be added to an output port.
+     */
+    public static <T> TStream<T> getJavaTStream(TopologyElement te,
+            BOperatorInvocation bop, BOutputPort bstream, Type tupleType) {
         bstream.json().put("type.native", tupleType.toString()); // Java 8 should use getTypeName
         addDependency(te, bop, tupleType);
         
@@ -97,8 +107,8 @@ public class JavaFunctional {
         if (!VIEWABLE_TYPES.contains(tupleType)) {
             bop.addConfig("streamViewability", false);
         }
-
         return new StreamImpl<T>(te, bstream, tupleType);
+
     }
 
     /**

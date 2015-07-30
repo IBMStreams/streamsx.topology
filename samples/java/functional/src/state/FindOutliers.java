@@ -42,7 +42,7 @@ public class FindOutliers {
                 return rand.nextGaussian();
             }
 
-        }, 100000, Double.class);
+        }, 100000);
 
         /*
          * Filters the values based on calculating the mean and standard

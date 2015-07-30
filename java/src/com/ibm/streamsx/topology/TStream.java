@@ -301,6 +301,7 @@ public interface TStream<T> extends TopologyElement {
      * @return Stream that will contain tuples of type {@code U} transformed from this
      *         stream's tuples.
      */
+    @Deprecated
     <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer,
             Class<U> tupleTypeClass);
     
@@ -385,7 +386,7 @@ public interface TStream<T> extends TopologyElement {
 
     /**
      * Join this stream with window of type {@code U}. For each tuple on this
-     * stream, it is joined with the contents of {@code other}. Each tuple is
+     * stream, it is joined with the contents of {@code window}. Each tuple is
      * passed into {@code joiner} and the return value is submitted to the
      * returned stream. If call returns null then no tuple is submitted.
      * 
@@ -395,6 +396,42 @@ public interface TStream<T> extends TopologyElement {
      */
     <J, U> TStream<J> join(TWindow<U> window,
             BiFunction<T, List<U>, J> joiner, Class<J> tupleClass);
+    
+    /**
+     * Join this stream with window of type {@code U}. For each tuple on this
+     * stream, it is joined with the contents of {@code window}. Each tuple is
+     * passed into {@code joiner} and the return value is submitted to the
+     * returned stream. If call returns null then no tuple is submitted.
+     * 
+     * @param joiner Join function.
+     * @return A stream that is the results of joining this stream with
+     *         {@code window}.
+     */
+    <J, U> TStream<J> join(TWindow<U> window,
+            BiFunction<T, List<U>, J> joiner);
+    
+    /**
+     * Join this stream with the last tuple seen on a stream of type {@code U}.
+     * For each tuple on this
+     * stream, it is joined with the last tuple seen on {@code other}. Each tuple is
+     * passed into {@code joiner} and the return value is submitted to the
+     * returned stream. If call returns null then no tuple is submitted.
+     * <BR>
+     * This is a simplified version of
+     * <BR>
+     * {@code this.join(other.last(), new BiFunction<T,List<U>,J>() ...) }
+     * <BR>
+     * where instead the window contents are passed as a single tuple of type {@code U}
+     * rather than a list containing one tuple. If no tuple has been seen on {@code other}
+     * then {@code null} will be passed as the second argument to {@code joiner}.
+     * 
+     * @param other Stream to join with.
+     * @param joiner Join function.
+     * @return A stream that is the results of joining this stream with
+     *         {@code other}.
+     */
+    <J,U> TStream<J> joinLast(TStream<U> other,
+            BiFunction<T, U, J> joiner);
 
     /**
      * Declare a {@link TWindow} that continually represents the last {@code time} seconds
@@ -720,11 +757,11 @@ public interface TStream<T> extends TopologyElement {
      * Return a strongly typed reference to this stream.
      * If this stream is already strongly typed as containing tuples
      * of type {@code tupleClass} then {@code this} is returned.
-     * @param tupleClass Class type for the tuples.
+     * @param tupleTypeClass Class type for the tuples.
      * @return A stream with the same contents as this stream but strongly typed as
      * containing tuples of type {@code tupleClass}.
      */
-    TStream<T> asType(Class<T> tupleClass);
+    TStream<T> asType(Class<T> tupleTypeClass);
     
     /**
      * Internal method.

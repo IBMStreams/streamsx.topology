@@ -85,8 +85,7 @@ public class WindowTest extends TestTopology {
         final Topology f = new Topology("CountAggregate");
         TStream<Number> source = f.numbers(1, 2, 3, 4, 5, 6, 7);
         TWindow<Number> window = source.last(3);
-        TStream<Integer> aggregate = window.aggregate(new SumInt(),
-                Integer.class);
+        TStream<Integer> aggregate = window.aggregate(new SumInt());
         
         completeAndValidate(aggregate, 10, "1", "3", "6", "9", "12", "15", "18");
     }
@@ -95,10 +94,9 @@ public class WindowTest extends TestTopology {
     public void testKeyedAggregate() throws Exception {
 
         final Topology f = new Topology("PartitionedAggregate");
-        TStream<StockPrice> source = f.constants(Arrays.asList(PRICES),
-                StockPrice.class);
+        TStream<StockPrice> source = f.constants(Arrays.asList(PRICES)).asType(StockPrice.class);
 
-        TStream<StockPrice> aggregate = source.last(2).aggregate(new AveragePrice(), StockPrice.class);
+        TStream<StockPrice> aggregate = source.last(2).aggregate(new AveragePrice());
 
         completeAndValidate(aggregate, 10, "A:1000", "B:4004", "C:2013", "A:1005",
                 "A:1010", "B:4005", "A:1010", "C:2007", "B:4008", "C:2003",
@@ -174,9 +172,9 @@ public class WindowTest extends TestTopology {
     @Test
     public void testContinuousAggregateLastSeconds() throws Exception {
         final Topology t = new Topology();
-        TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS, String.class);
+        TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);
         
-        TStream<JSONObject> aggregate = source.last(3, TimeUnit.SECONDS).aggregate(new AggregateStrings(), JSONObject.class);
+        TStream<JSONObject> aggregate = source.last(3, TimeUnit.SECONDS).aggregate(new AggregateStrings());
         TStream<String> strings = JSONStreams.serialize(aggregate);
         
         Tester tester = t.getTester();
@@ -221,10 +219,10 @@ public class WindowTest extends TestTopology {
     @Test
     public void testPeriodicAggregateLastSeconds() throws Exception {
         final Topology t = new Topology();
-        TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS, String.class);
+        TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);
         
         TStream<JSONObject> aggregate = source.last(3, TimeUnit.SECONDS).aggregate(
-                new AggregateStrings(), 1, TimeUnit.SECONDS, JSONObject.class);
+                new AggregateStrings(), 1, TimeUnit.SECONDS);
         TStream<String> strings = JSONStreams.serialize(aggregate);
         
         Tester tester = t.getTester();

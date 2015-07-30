@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -27,33 +28,59 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
     // This is the eviction policy in SPL terms
     protected final StreamWindow.Policy policy;
     protected final long config;
-
-    public WindowDefinition(TStream<T> stream, int count) {
+    
+    private boolean partitioned;
+    
+    private WindowDefinition(TStream<T> stream, StreamWindow.Policy policy, long config) {
         super(stream);
         this.stream = stream;
-        this.policy = Policy.COUNT;
-        this.config = count;
+        this.policy = policy;
+        this.config = config;
+        setPartitioned(getTupleType());
+    }
+
+    public WindowDefinition(TStream<T> stream, int count) {
+        this(stream, Policy.COUNT, count);
     }
 
     public WindowDefinition(TStream<T> stream, long time, TimeUnit unit) {
-        super(stream);
-        this.stream = stream;
-        this.policy = Policy.TIME;
-        this.config = unit.toMillis(time);
+        this(stream, Policy.TIME, unit.toMillis(time));
     }
 
     public WindowDefinition(TStream<T> stream, TWindow<?> configWindow) {
-        super(stream);
-        this.stream = stream;
-        this.policy = ((WindowDefinition<?>) configWindow).policy;
-        this.config = ((WindowDefinition<?>) configWindow).config;
+        this(stream, ((WindowDefinition<?>) configWindow).policy, ((WindowDefinition<?>) configWindow).config);
+    }    
+    
+    private final void setPartitioned(final java.lang.reflect.Type type) {
+
+        if (type instanceof Class) {
+            if (!partitioned)
+                partitioned = Keyable.class.isAssignableFrom((Class<?>) type);
+            topology().addClassDependency((Class<?>) type);
+            return;
+        }
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) type;
+            java.lang.reflect.Type rawType = pt.getRawType();
+            if (rawType instanceof Class) {
+                if (!partitioned)
+                    partitioned = Keyable.class.isAssignableFrom((Class<?>) rawType);
+                topology().addClassDependency((Class<?>) rawType);
+                return;
+            }
+            
+        }
+    }
+    
+    @Override
+    public boolean isPartitioned() {
+        return partitioned;
     }
 
     @Override
     public TStream<T> getStream() {
         return stream;
     }
-
 
     @Override
     public Class<T> getTupleClass() {
@@ -71,17 +98,37 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
         return aggregate(aggregator, tupleClass, Policy.COUNT, 1);
     }
     @Override
+    public <A> TStream<A> aggregate(Function<List<T>, A> aggregator) {
+        
+        java.lang.reflect.Type aggregateType = TypeDiscoverer.determineStreamType(aggregator, null);
+        
+        return aggregate(aggregator, aggregateType, Policy.COUNT, 1);
+    }
+    @Override
     public <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
             long period, TimeUnit unit, Class<A> tupleClass) {
         return aggregate(aggregator, tupleClass, Policy.TIME, unit.toMillis(period));
     }
     
+    @Override
+    public <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
+            long period, TimeUnit unit) {
+        java.lang.reflect.Type aggregateType = TypeDiscoverer.determineStreamType(aggregator, null);
+        
+        return aggregate(aggregator, aggregateType, Policy.TIME, unit.toMillis(period));
+    }
+    
     private <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
-            Class<A> tupleClass, Policy triggerPolicy, Object triggerConfig) {
+            java.lang.reflect.Type aggregateType, Policy triggerPolicy, Object triggerConfig) {
+        
+        if (getTupleClass() == null && !isPartitioned()) {
+            java.lang.reflect.Type tupleType = TypeDiscoverer.determineStreamTypeNested(Function.class, 0, List.class, aggregator);
+            setPartitioned(tupleType);
+        }
         
         String opName = LogicUtils.functionName(aggregator);
         if (opName.isEmpty()) {
-            opName = getTupleClass().getSimpleName() + "Aggregate";
+            opName = TypeDiscoverer.getTupleName(getTupleType()) + "Aggregate";
         }
 
         BOperatorInvocation aggOp = JavaFunctional.addFunctionalOperator(this,
@@ -90,15 +137,16 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
 
         addInput(aggOp, triggerPolicy, triggerConfig);
 
-        return JavaFunctional.addJavaOutput(this, aggOp, tupleClass);
+        return JavaFunctional.addJavaOutput(this, aggOp, aggregateType);
     }
 
     public BInputPort addInput(BOperatorInvocation aggOp,
             StreamWindow.Policy triggerPolicy, Object triggerConfig) {
         BInputPort bi = stream.connectTo(aggOp, true, null);
+        
+        
         return bi.window(Type.SLIDING, policy, config, triggerPolicy,
-                triggerConfig, Keyable.class.isAssignableFrom(getTupleClass()));
-
+                triggerConfig, partitioned);
     }
 
     @Override
@@ -124,4 +172,28 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
         return JavaFunctional.addJavaOutput(this, joinOp, tupleClass);
 
     }
+    
+    public <J, U> TStream<J> joinInternal(TStream<U> xstream,
+            BiFunction<U, List<T>, J> joiner, java.lang.reflect.Type tupleType) {
+        
+        String opName = LogicUtils.functionName(joiner);
+        if (opName.isEmpty()) {
+            opName = getTupleClass().getSimpleName() + "Join";
+        }
+
+        BOperatorInvocation joinOp = JavaFunctional.addFunctionalOperator(this,
+                opName, FunctionJoin.class, joiner);
+        
+        SourceInfo.setSourceInfo(joinOp, WindowDefinition.class);
+               
+        @SuppressWarnings("unused")
+        BInputPort input0 = addInput(joinOp, Policy.COUNT, Integer.MAX_VALUE);
+
+        @SuppressWarnings("unused")
+        BInputPort input1 = xstream.connectTo(joinOp, true, null);
+
+        return JavaFunctional.addJavaOutput(this, joinOp, tupleType);
+
+    }
+    
 }

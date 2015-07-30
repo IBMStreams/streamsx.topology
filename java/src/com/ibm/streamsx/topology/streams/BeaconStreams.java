@@ -50,8 +50,7 @@ public class BeaconStreams {
      *         instances.
      */
     public static TStream<BeaconTuple> beacon(TopologyElement te, long count) {
-        return te.topology().limitedSourceN(new BeaconFunction(), count,
-                BeaconTuple.class);
+        return te.topology().limitedSourceN(new BeaconFunction(), count);
     }
 
     /**
@@ -76,8 +75,7 @@ public class BeaconStreams {
      * @return A stream that will contain {@code count} tuples.
      */
     public static TStream<Long> longBeacon(TopologyElement te, long count) {
-        return te.topology().limitedSourceN(new Identity<Long>(), count,
-                Long.class).asType(Long.class);
+        return te.topology().limitedSourceN(new Identity<Long>(), count).asType(Long.class);
     }
     
     /**

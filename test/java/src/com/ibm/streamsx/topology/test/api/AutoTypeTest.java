@@ -141,7 +141,7 @@ public class AutoTypeTest {
             @Override
             public BeaconTuple get() {
                 return new BeaconTuple(0);
-            }}, 8, null);
+            }}, 8);
         
         assertEquals(BeaconTuple.class, stream.getTupleClass());
     }
@@ -207,7 +207,7 @@ public class AutoTypeTest {
     @Test
     public void testStringListTyped() throws Exception {
         Topology t = new Topology();
-        TStream<String> strings = t.constants(Collections.nCopies(10, "hello"), String.class);
+        TStream<String> strings = t.constants(Collections.nCopies(10, "hello")).asType(String.class);
         assertEquals(String.class, strings.getTupleClass());
         assertEquals(String.class, strings.getTupleType());
     }

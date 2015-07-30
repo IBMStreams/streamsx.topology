@@ -24,6 +24,7 @@ import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
+import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
@@ -37,6 +38,7 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionSplit;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionTransform;
 import com.ibm.streamsx.topology.internal.functional.ops.HashAdder;
 import com.ibm.streamsx.topology.internal.functional.ops.HashRemover;
+import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
 import com.ibm.streamsx.topology.internal.logic.KeyableHasher;
 import com.ibm.streamsx.topology.internal.logic.ObjectHasher;
 import com.ibm.streamsx.topology.internal.logic.Print;
@@ -159,7 +161,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer,
             Class<U> tupleTypeClass) {
         Type tupleType = tupleTypeClass != null ? tupleTypeClass :
-                   TypeDiscoverer.determineStreamTypeIterable(Function.class, 1, transformer);    
+                   TypeDiscoverer.determineStreamTypeNested(Function.class, 1, Iterable.class, transformer);    
         return _multiTransform(transformer, tupleType);
     }
     @Override
@@ -252,6 +254,29 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             BiFunction<T, List<U>, J> joiner, Class<J> tupleClass) {
         return window.join(this, joiner, tupleClass);
     }
+    
+    @Override
+    public <J, U> TStream<J> join(TWindow<U> window,
+            BiFunction<T, List<U>, J> joiner) {
+        
+        Type tupleType = TypeDiscoverer.determineStreamTypeFromFunctionArg(BiFunction.class, 2, joiner);
+        
+        return ((WindowDefinition<U>) window).joinInternal(this, joiner, tupleType);
+    }
+    
+    @Override
+    public <J, U> TStream<J> joinLast(TStream<U> other,
+            BiFunction<T, U, J> joiner) {
+        
+        TWindow<U> window = other.last();
+        
+        Type tupleType = TypeDiscoverer.determineStreamTypeFromFunctionArg(BiFunction.class, 2, joiner);
+        
+        BiFunction<T,List<U>, J> wrapperJoiner = new FirstOfSecondParameterIterator<>(joiner);
+        
+        return ((WindowDefinition<U>) window).joinInternal(this, wrapperJoiner, tupleType);
+    }
+    
 
     @Override
     public void publish(String topic) {
@@ -431,11 +456,24 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         return l;
     }
     
+    /**
+     * Get a stream that is typed to tupleClass,
+     * adds a dependency on the type.
+     */
     @Override
     public TStream<T> asType(Class<T> tupleClass) {
         if (tupleClass.equals(getTupleClass()))
             return this;
         
-        return new StreamImpl<T>(this, output(), tupleClass);
+
+        if (output() instanceof BOutputPort) {
+            BOutputPort boutput = (BOutputPort) output();
+            BOperatorInvocation bop = (BOperatorInvocation) boutput.operator();
+        
+            return JavaFunctional.getJavaTStream(this, bop, boutput, tupleClass);
+        }
+        
+        // TODO
+        throw new UnsupportedOperationException();
     }
 }

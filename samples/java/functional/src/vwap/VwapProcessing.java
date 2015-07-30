@@ -9,7 +9,6 @@ import java.util.List;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.logic.Logic;
 
 public class VwapProcessing {
 
@@ -30,16 +29,16 @@ public class VwapProcessing {
                         }
                         return vwap == null ? null : vwap.complete();
                     }
-                }, VWapT.class);
+                });
 
-        TStream<Bargain> bargainIndex = quotes.join(vwap.last(),
-                Logic.first(new BiFunction<Quote, VWapT, Bargain>() {
+        TStream<Bargain> bargainIndex = quotes.joinLast(vwap,
+                new BiFunction<Quote, VWapT, Bargain>() {
 
                     @Override
                     public Bargain apply(Quote v1, VWapT v2) {
                         return new Bargain(v1, v2);
                     }
-                }), Bargain.class);
+                });
 
         return bargainIndex;
     }

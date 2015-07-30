@@ -84,7 +84,7 @@ public class TuplePassingTest extends TestTopology {
                 return "Better three hours too soon than a minute too late."
                         + c;
             }
-        }, n, String.class);
+        }, n);
     }
 
     public static TStream<String> emptyFilter(TStream<String> input) {
@@ -174,7 +174,7 @@ public class TuplePassingTest extends TestTopology {
 
                 return tv;
             }
-        }, n, TestValue.class);
+        }, n);
     }
 
     @SuppressWarnings("serial")

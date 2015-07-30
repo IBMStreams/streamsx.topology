@@ -38,7 +38,7 @@ public class AutoClosableTest extends TestTopology {
         stream = stream.filter(new ClosePredicate()) ;
         stream = stream.modify(new CloseUnary()) ;
         stream = stream.multiTransform(new CloseMultiTransform()) ;
-        stream = stream.last().aggregate(new CloseAggregate(), String.class);
+        stream = stream.last().aggregate(new CloseAggregate());
         stream.sink(new CloseConsumer());
         
         this.getTesterContext().submit(topology).get();

@@ -190,18 +190,19 @@ public class Topology implements TopologyElement {
     /**
      * Create a stream containing all the tuples in {@code data}.
      * 
-     * 
+     * @deprecated Replaced by {@link #constants(List)} which does not require the {@code Class<T> argument}.
      * @param data
      *            List of tuples.
      * @param tupleTypeClass
      *            Class type {@code T} of the returned stream.
      * @return Declared stream containing tuples from {@code data}.
      */
+    @Deprecated
     public <T> TStream<T> constants(final List<T> data, Class<T> tupleTypeClass) {
         if (data == null)
             throw new NullPointerException();
         
-        return _source(new Constants<T>(data), tupleTypeClass);
+        return constants(data).asType(tupleTypeClass);
     }
     
     /**
@@ -252,7 +253,7 @@ public class Topology implements TopologyElement {
      *         {@code data.get()}.
      */
     public <T> TStream<T> source(Supplier<Iterable<T>> data) {
-        Type tupleType = TypeDiscoverer.determineStreamTypeIterable(Supplier.class, 0, data);
+        Type tupleType = TypeDiscoverer.determineStreamTypeNested(Supplier.class, 0, Iterable.class, data);
         return _source(data, tupleType);
     }
     
@@ -286,20 +287,53 @@ public class Topology implements TopologyElement {
      *            Function that produces that data for the stream.
      * @param period Approximate period {code data.get()} will be called.
      * @param unit Time unit of {@code period}.
+     * @return New stream containing the tuples from the iterator returned by
+     *         {@code data.get()}.
+     */
+    public <T> TStream<T> periodicMultiSource(Supplier<Iterable<T>> data,
+            long period, TimeUnit unit) {
+        
+        Type tupleType = TypeDiscoverer.determineStreamTypeNested(Supplier.class, 0, Iterable.class, data);
+        
+        return _periodicMultiSource(data, period, unit, tupleType);
+    }
+    
+    /**
+     * Declare a new source stream that calls
+     * {@code data.get()} periodically. Each non-null value
+     * present in from the returned {@code Iterable} will
+     * appear on the returned stream. If there is no data to be
+     * sent then an empty {@code Iterable} must be returned.
+     * Thus each call to {code data.get()} will result in
+     * zero, one or N tuples on the stream.
+     * 
+     * @deprecated Replaced by {@link #periodicMultiSource(Supplier, long, TimeUnit)} which does not require the {@code Class<T> argument}.
+     * @param data
+     *            Function that produces that data for the stream.
+     * @param period Approximate period {code data.get()} will be called.
+     * @param unit Time unit of {@code period}.
      * @param tupleTypeClass
      *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples from the iterator returned by
      *         {@code data.get()}.
      */
+    @Deprecated
     public <T> TStream<T> periodicMultiSource(Supplier<Iterable<T>> data,
             long period, TimeUnit unit,
             Class<T> tupleTypeClass) {
         
+        return _periodicMultiSource(data, period, unit, tupleTypeClass);
+    }
+    
+    private <T> TStream<T> _periodicMultiSource(Supplier<Iterable<T>> data,
+            long period, TimeUnit unit,
+           Type tupleType) {
+        
         String opName = LogicUtils.functionName(data);
         if (opName.isEmpty()) {
-            opName = tupleTypeClass.getSimpleName() + "PeriodicMultiSource";
+            opName = TypeDiscoverer.getTupleName(tupleType) + "PeriodicMultiSource";
         } else if (data instanceof Constants) {
-            opName = tupleTypeClass.getSimpleName() + opName;
+            opName = TypeDiscoverer.getTupleName(tupleType) + opName;
         }
         
         double dperiod = ((double) unit.toMillis(period)) / 1000.0;
@@ -310,7 +344,7 @@ public class Topology implements TopologyElement {
                 opName,
                 FunctionPeriodicSource.class, data, params);
         SourceInfo.setSourceInfo(bop, getClass());
-        return JavaFunctional.addJavaOutput(this, bop, tupleTypeClass);
+        return JavaFunctional.addJavaOutput(this, bop, tupleType);
     }
     
     /**
@@ -324,18 +358,42 @@ public class Topology implements TopologyElement {
      *            Function that produces that data for the stream.
      * @param period Approximate period {code data.get()} will be called.
      * @param unit Time unit of {@code period}.
+     * @return New stream containing the tuples returned by
+     *         {@code data.get()}.
+     */
+    public <T> TStream<T> periodicSource(Supplier<T> data,
+            long period, TimeUnit unit) {
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, null);
+        
+        return _periodicMultiSource(new SingleToIterableSupplier<T>(data),
+                period, unit, tupleType);
+    }
+    /**
+     * Declare a new source stream that calls
+     * {@code data.get()} periodically. Each non-null value
+     * returned will appear on the returned stream.
+     * Thus each call to {code data.get()} will result in
+     * zero tuples or one tuple on the stream.
+     * 
+     * @deprecated Replaced by {@link #periodicSource(Supplier, long), TimeUnit} which does not require the {@code Class<T> argument}.
+     * @param data
+     *            Function that produces that data for the stream.
+     * @param period Approximate period {code data.get()} will be called.
+     * @param unit Time unit of {@code period}.
      * @param tupleTypeClass
      *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples returned by
      *         {@code data.get()}.
      */
+    @Deprecated
     public <T> TStream<T> periodicSource(Supplier<T> data,
             long period, TimeUnit unit, Class<T> tupleTypeClass) {
         
-        tupleTypeClass = (Class<T>) TypeDiscoverer.determineStreamType(data, tupleTypeClass);
+        Type tupleType = TypeDiscoverer.determineStreamType(data, tupleTypeClass);
         
-        return periodicMultiSource(new SingleToIterableSupplier<T>(data),
-                period, unit, tupleTypeClass);
+        return _periodicMultiSource(new SingleToIterableSupplier<T>(data),
+                period, unit, tupleType);
     }
     
     /**
@@ -427,11 +485,34 @@ public class Topology implements TopologyElement {
      *            Supplier of the tuples.
      * @param count
      *            Maximum number of tuples that will be seen on the stream.
+     * @return New stream containing the tuples from calls to {@code data.get()}
+     *         .
+     */
+    public <T> TStream<T> limitedSource(final Supplier<T> data,
+            final long count) {
+        if (count < 0)
+            throw new IllegalArgumentException(Long.toString(count));
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, null);
+        
+        return _source(LimitedSupplier.supplier(data, count), tupleType);
+    }
+    /**
+     * Declare a limited source stream, where the number of tuples is limited to
+     * {@code count}. {@code data.get()} will be called {@code count} number of
+     * times. Each non-null returned value will be present on the stream.
+     * 
+     * @deprecated Replaced by {@link #limitedSource(Supplier, long)} which does not require the {@code Class<T> argument}.
+     * @param data
+     *            Supplier of the tuples.
+     * @param count
+     *            Maximum number of tuples that will be seen on the stream.
      * @param tupleTypeClass
      *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples from calls to {@code data.get()}
      *         .
      */
+    @Deprecated
     public <T> TStream<T> limitedSource(final Supplier<T> data,
             final long count, Class<T> tupleTypeClass) {
         if (count < 0)
@@ -441,7 +522,6 @@ public class Topology implements TopologyElement {
         
         return _source(LimitedSupplier.supplier(data, count), tupleType);
     }
-
     /**
      * Declare a limited source stream, where the number of tuples is limited to
      * {@code count}. {@code data.apply(n)} will be called {@code count} number
@@ -452,11 +532,35 @@ public class Topology implements TopologyElement {
      *            Supplier of the tuples.
      * @param count
      *            Maximum number of tuples that will be seen on the stream.
+     * @return New stream containing the tuples from calls to
+     *         {@code data.apply(n)}.
+     */
+    public <T> TStream<T> limitedSourceN(final Function<Long, T> data,
+            final long count) {
+        if (count < 0)
+            throw new IllegalArgumentException(Long.toString(count));
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, null);
+        
+        return _source(LimitedSupplier.supplierN(data, count), tupleType);
+    }
+    /**
+     * Declare a limited source stream, where the number of tuples is limited to
+     * {@code count}. {@code data.apply(n)} will be called {@code count} number
+     * of times, where {@code n} is the iteration number, starting at zero. Each
+     * non-null returned value will be present on the stream.
+     * 
+     * @deprecated Replaced by {@link #limitedSourceN(Supplier, long)} which does not require the {@code Class<T> argument}.
+     * @param data
+     *            Supplier of the tuples.
+     * @param count
+     *            Maximum number of tuples that will be seen on the stream.
      * @param tupleTypeClass
      *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples from calls to
      *         {@code data.apply(n)}.
      */
+    @Deprecated
     public <T> TStream<T> limitedSourceN(final Function<Long, T> data,
             final long count, Class<T> tupleTypeClass) {
         if (count < 0)

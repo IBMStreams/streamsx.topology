@@ -64,6 +64,27 @@ public class TypeDiscoverer {
         }
         throw nullTupleClass();
     }
+    public static <T> Type determineStreamTypeNested(Class<?> objectInterface, int arg, Class<?> nestedInterface, Object function) {
+        
+        ParameterizedType pt = findParameterizedType(objectInterface, function);
+        if (pt != null)  {
+            Type iterator = determineClassFromArgument(pt, arg);
+            ParameterizedType iterpt;
+            if (iterator instanceof Class)
+                iterpt = findParameterizedType(nestedInterface, (Class<?>) iterator);
+            else if (iterator instanceof ParameterizedType)
+                iterpt = (ParameterizedType) iterator;
+            else
+                throw nullTupleClass();
+            
+            if (!nestedInterface.equals(iterpt.getRawType())) {
+                throw nullTupleClass();
+            }
+            
+            return iterpt.getActualTypeArguments()[0];
+        }
+        throw nullTupleClass();
+    }
     
     public static Type determineStreamType(Supplier<?> function, Type tupleType) {
         
