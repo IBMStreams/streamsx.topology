@@ -36,6 +36,8 @@ public class VwapProcessing {
 
                     @Override
                     public Bargain apply(Quote v1, VWapT v2) {
+                        if (v2 == null) // window is empty!
+                            return null;
                         return new Bargain(v1, v2);
                     }
                 });
