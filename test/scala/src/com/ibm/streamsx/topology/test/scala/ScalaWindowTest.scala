@@ -26,7 +26,7 @@ class ScalaWindowAPITest extends TestTopology {
 
     val emma = List(new Person("Emma", 20), new Person("George", 37), new Person("Harriet", 17), new Person("Jane", 20))
 
-    var peopleStream = topology.constants(emma, classOf[Person])
+    var peopleStream = topology.constants(emma).asType(classOf[Person])
 
     var peopleWindow = peopleStream.last(3);
 
@@ -39,8 +39,7 @@ class ScalaWindowAPITest extends TestTopology {
           oldest = person
       }
       oldest
-    },
-      classOf[Person])
+    })
 
     var strings = StringStreams.toString(oldestPerson)
 
