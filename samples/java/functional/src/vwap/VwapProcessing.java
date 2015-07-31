@@ -6,17 +6,21 @@ package vwap;
 
 import java.util.List;
 
+import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
 
 public class VwapProcessing {
 
     @SuppressWarnings("serial")
-    public static TStream<Bargain> bargains(TStream<Trade> trades,
-            TStream<Quote> quotes) {
+    public static TStream<Bargain> bargains(TKeyedStream<Trade,String> trades,
+            TKeyedStream<Quote,String> quotes) {
+        
+        TWindow<Trade,String> tradesWindow = trades.last(4);
 
-        TStream<VWapT> vwap = trades.last(4).aggregate(
+        TKeyedStream<VWapT,String> vwap = tradesWindow.aggregate(
                 new Function<List<Trade>, VWapT>() {
 
                     @Override
@@ -29,7 +33,7 @@ public class VwapProcessing {
                         }
                         return vwap == null ? null : vwap.complete();
                     }
-                });
+                }).key(VWapT::getTicker);
 
         TStream<Bargain> bargainIndex = quotes.joinLast(vwap,
                 new BiFunction<Quote, VWapT, Bargain>() {

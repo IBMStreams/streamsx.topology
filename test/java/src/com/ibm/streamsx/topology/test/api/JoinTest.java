@@ -26,7 +26,7 @@ public class JoinTest extends TestTopology {
         final Topology t = new Topology();
         TStream<String> strings = t.strings("a", "b", "c", "d", "e");
         
-        TWindow<String> window = strings.last(3);
+        TWindow<String,?> window = strings.last(3);
         
         TStream<Number> main = t.numbers(0,134,76);
         main = main.throttle(1, TimeUnit.SECONDS);
@@ -42,7 +42,7 @@ public class JoinTest extends TestTopology {
         final Topology t = new Topology();
         TStream<String> strings = t.strings();
         
-        TWindow<String> window = strings.last(3);
+        TWindow<String,?> window = strings.last(3);
         
         TStream<Number> main = t.numbers(0,134,76);
         main = main.throttle(1, TimeUnit.SECONDS);
@@ -53,7 +53,7 @@ public class JoinTest extends TestTopology {
         completeAndValidate(asString, 12, "[empty-134]", "[empty-76]");
     }
     
-    private static TStream<List<String>> _jointest(TStream<Number> main, TWindow<String> window) {
+    private static TStream<List<String>> _jointest(TStream<Number> main, TWindow<String,?> window) {
         
         return main.join(window, new BiFunction<Number, List<String>, List<String>>() {
 

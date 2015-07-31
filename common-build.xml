@@ -33,4 +33,14 @@
     <pathelement location="${tk.opt}/apache-mina-2.0.2/dist/mina-core-2.0.2.jar" />
     <path refid="httpclient.classpath" />
   </path>
+
+  <target name="checkJava8">
+      <condition property="isJava8">
+          <or>
+            <equals arg1="${ant.java.version}" arg2="1.8"/>
+            <equals arg1="${ant.java.version}" arg2="1.9"/>
+          </or>
+      </condition>
+  </target>
+
 </project>

@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
+import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.TopologyElement;
@@ -230,51 +231,51 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
-    public TWindow<T> last(int count) {
-        return new WindowDefinition<T>(this, count);
+    public TWindow<T,?> last(int count) {
+        return new WindowDefinition<T,Object>(this, count);
     }
 
     @Override
-    public TWindow<T> window(TWindow<?> window) {
-        return new WindowDefinition<T>(this, window);
+    public TWindow<T,?> window(TWindow<?,?> window) {
+        return new WindowDefinition<T,Object>(this, window);
     }
 
     @Override
-    public TWindow<T> last(long time, TimeUnit unit) {
-        return new WindowDefinition<T>(this, time, unit);
+    public TWindow<T,?> last(long time, TimeUnit unit) {
+        return new WindowDefinition<T,Object>(this, time, unit);
     }
 
     @Override
-    public TWindow<T> last() {
+    public TWindow<T,?> last() {
         return last(1);
     }
 
     @Override
-    public <J, U> TStream<J> join(TWindow<U> window,
+    public <J, U> TStream<J> join(TWindow<U,?> window,
             BiFunction<T, List<U>, J> joiner, Class<J> tupleClass) {
         return window.join(this, joiner, tupleClass);
     }
     
     @Override
-    public <J, U> TStream<J> join(TWindow<U> window,
+    public <J, U> TStream<J> join(TWindow<U,?> window,
             BiFunction<T, List<U>, J> joiner) {
         
         Type tupleType = TypeDiscoverer.determineStreamTypeFromFunctionArg(BiFunction.class, 2, joiner);
         
-        return ((WindowDefinition<U>) window).joinInternal(this, joiner, tupleType);
+        return ((WindowDefinition<U,?>) window).joinInternal(this, joiner, tupleType);
     }
     
     @Override
     public <J, U> TStream<J> joinLast(TStream<U> other,
             BiFunction<T, U, J> joiner) {
         
-        TWindow<U> window = other.last();
+        TWindow<U,?> window = other.last();
         
         Type tupleType = TypeDiscoverer.determineStreamTypeFromFunctionArg(BiFunction.class, 2, joiner);
         
         BiFunction<T,List<U>, J> wrapperJoiner = new FirstOfSecondParameterIterator<>(joiner);
         
-        return ((WindowDefinition<U>) window).joinInternal(this, wrapperJoiner, tupleType);
+        return ((WindowDefinition<U,?>) window).joinInternal(this, wrapperJoiner, tupleType);
     }
     
 
@@ -475,5 +476,13 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         // TODO
         throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public <K> TKeyedStream<T, K> key(Function<T, K> keyGetter) {
+        if (keyGetter == null)
+            throw new NullPointerException();
+        return new KeyedStreamImpl<T, K>(this, output,
+                refineType(Function.class, 0, keyGetter), keyGetter);
     }
 }

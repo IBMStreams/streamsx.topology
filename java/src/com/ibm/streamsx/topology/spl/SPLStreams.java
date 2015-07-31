@@ -199,7 +199,7 @@ public class SPLStreams {
      *            Count trigger policy value
      * @return SPL window with that will trigger every {@code count} tuples.
      */
-    public static SPLWindow triggerCount(TWindow<Tuple> window, int count) {
+    public static SPLWindow triggerCount(TWindow<Tuple,?> window, int count) {
         return new SPLWindowImpl(window, count);
     }
 
@@ -215,7 +215,7 @@ public class SPLStreams {
      * @return SPL window with that will trigger periodically according to
      *         {@code time}.
      */
-    public static SPLWindow triggerTime(TWindow<Tuple> window, long time,
+    public static SPLWindow triggerTime(TWindow<Tuple,?> window, long time,
             TimeUnit unit) {
         return new SPLWindowImpl(window, time, unit);
     }

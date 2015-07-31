@@ -21,9 +21,18 @@
     <path refid="compile.classpath"/>
   </path>
 
+  <target name="checkJava8">
+      <condition property="isJava8">
+          <or>
+            <equals arg1="${ant.java.version}" arg2="1.8"/>
+            <equals arg1="${ant.java.version}" arg2="1.9"/>
+          </or>
+      </condition>
+  </target>
+
   <target name="all" depends="jar"/>
 
-  <target name="init">
+ <target name="init" depends="checkJava8">
     <mkdir dir="${classes}"/>
   </target>
 
@@ -33,10 +42,24 @@
 	   destdir="${classes}"
 	   classpathref="compile.classpath"
 	   includeantruntime="no"
+	   excludes="vwap/**"
 	   />
     <ant dir="../../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
-  <target name="jar" depends="compile">
+
+  <target name="compile8" depends="compile" if="isJava8">
+    <javac debug="true" 
+	   srcdir="${basedir}/src" 
+	   destdir="${classes}"
+	   classpathref="compile.classpath"
+	   includeantruntime="no"
+	   source="8"
+	   target="8"
+	   includes="vwap/**"
+	   />
+  </target>
+
+  <target name="jar" depends="compile, compile8">
     <jar destfile="${jarname}" basedir="${classes}"/>
   </target>
 

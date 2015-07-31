@@ -102,35 +102,35 @@ public class RestServer {
      * @return null (future will be the path to the tuples)
      */
     @SuppressWarnings("unchecked")
-    public String viewer(TWindow<?> window, String context,
+    public String viewer(TWindow<?,?> window, String context,
             String name) {
         
         if (window.getStream() instanceof SPLStream)
-            return viewerSpl((TWindow<Tuple>) window, context, name);
+            return viewerSpl((TWindow<Tuple,?>) window, context, name);
 
         if (String.class.equals(window.getTupleClass())) {
-            return viewerString((TWindow<String>) window, context, name);
+            return viewerString((TWindow<String,?>) window, context, name);
         }
         
         if (JSONObject.class.equals(window.getTupleClass())) {
-            return viewerJSON((TWindow<JSONObject>) window, context, name);
+            return viewerJSON((TWindow<JSONObject,?>) window, context, name);
         }
         if (JSONAble.class.isAssignableFrom(window.getTupleClass())) {
-            return viewerJSONable((TWindow<? extends JSONAble>) window, context, name);
+            return viewerJSONable((TWindow<? extends JSONAble,?>) window, context, name);
         }
 
         throw new IllegalArgumentException("Stream type not yet supported!:"
                 + window.getTupleClass());
     }
     
-    private String viewerJSON(TWindow<JSONObject> window,
+    private String viewerJSON(TWindow<JSONObject,?> window,
             String context, String name) {
         
         SPLStream splStream = JSONStreams.toSPL(window.getStream());
 
         return viewerSpl(splStream.window(window), context, name);
     }
-    private String viewerJSONable(TWindow<? extends JSONAble> window,
+    private String viewerJSONable(TWindow<? extends JSONAble,?> window,
             String context, String name) {
         
         TStream<JSONObject> jsonStream = JSONStreams.toJSON(window.getStream());
@@ -140,7 +140,7 @@ public class RestServer {
         return viewerSpl(splStream.window(window), context, name);
     }
     
-    private String viewerString(TWindow<String> window,
+    private String viewerString(TWindow<String,?> window,
             String context, String name) {
 
         SPLStream splStream = SPLStreams.stringToSPLStream(window.getStream());
@@ -148,7 +148,7 @@ public class RestServer {
         return viewerSpl(splStream.window(window), context, name);
     }
 
-    private String viewerSpl(TWindow<Tuple> window, String context, String name) {
+    private String viewerSpl(TWindow<Tuple,?> window, String context, String name) {
 
         assert window.getStream() instanceof SPLStream;
         SPLWindow splWindow = SPLStreams.triggerCount(window, 1);

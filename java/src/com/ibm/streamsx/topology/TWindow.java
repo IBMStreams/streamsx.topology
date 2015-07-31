@@ -33,7 +33,7 @@ import com.ibm.streamsx.topology.tuple.Keyable;
  * @see TStream#last(int)
  * @see TStream#last(long, java.util.concurrent.TimeUnit)
  */
-public interface TWindow<T> extends TopologyElement {
+public interface TWindow<T,K> extends TopologyElement {
 
     /**
      * Declares a stream that containing tuples that represent an aggregation of
@@ -166,7 +166,7 @@ public interface TWindow<T> extends TopologyElement {
      * @param keyGetter Function that returns the key to partition the window on.
      * @return New window that is partitioned by {@code keyGetter}.
      */
-    TWindow<T> partition(Function<T,?> keyGetter);
+    <U> TWindow<T,U> key(Function<T,U> keyGetter);
     
     /**
      * Is the window partitioned

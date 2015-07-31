@@ -394,7 +394,7 @@ public interface TStream<T> extends TopologyElement {
      * @return A stream that is the results of joining this stream with
      *         {@code window}.
      */
-    <J, U> TStream<J> join(TWindow<U> window,
+    <J, U> TStream<J> join(TWindow<U,?> window,
             BiFunction<T, List<U>, J> joiner, Class<J> tupleClass);
     
     /**
@@ -407,7 +407,7 @@ public interface TStream<T> extends TopologyElement {
      * @return A stream that is the results of joining this stream with
      *         {@code window}.
      */
-    <J, U> TStream<J> join(TWindow<U> window,
+    <J, U> TStream<J> join(TWindow<U,?> window,
             BiFunction<T, List<U>, J> joiner);
     
     /**
@@ -448,7 +448,7 @@ public interface TStream<T> extends TopologyElement {
      * @param unit Unit for {@code time}
      * @return Window on this stream for the last {@code time} seconds.
      */
-    TWindow<T> last(long time, TimeUnit unit);
+    TWindow<T,?> last(long time, TimeUnit unit);
 
     /**
      * Declare a {@link TWindow} that continually represents the last {@code count} tuples
@@ -465,7 +465,7 @@ public interface TStream<T> extends TopologyElement {
      * @param count Tuple size of the window
      * @return Window on this stream for the last {@code count} tuples.
      */
-    TWindow<T> last(int count);
+    TWindow<T,?> last(int count);
 
     /**
      * Declare a {@link TWindow} that continually represents the last tuple on this stream.
@@ -477,7 +477,7 @@ public interface TStream<T> extends TopologyElement {
      * 
      * @return Window on this stream for the last tuple.
      */
-    TWindow<T> last();
+    TWindow<T,?> last();
 
     /**
      * Declare a {@link TWindow} on this stream that has the same configuration
@@ -490,7 +490,7 @@ public interface TStream<T> extends TopologyElement {
      * @param configWindow
      *            Window to copy the configuration from.
      */
-    TWindow<T> window(TWindow<?> configWindow);
+    TWindow<T,?> window(TWindow<?,?> configWindow);
 
     /**
      * Publish tuples from this stream to allow other applications to consume
@@ -762,6 +762,8 @@ public interface TStream<T> extends TopologyElement {
      * containing tuples of type {@code tupleClass}.
      */
     TStream<T> asType(Class<T> tupleTypeClass);
+    
+    <K> TKeyedStream<T,K> key(Function<T,K> keyGetter);
     
     /**
      * Internal method.

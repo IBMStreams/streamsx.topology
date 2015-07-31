@@ -58,7 +58,7 @@ public class WindowTest extends TestTopology {
         }
     }
 
-    public static void assertWindow(Topology f, TWindow<?> window) {
+    public static void assertWindow(Topology f, TWindow<?,?> window) {
         TopologyTest.assertFlowElement(f, window);
     }
 
@@ -66,7 +66,7 @@ public class WindowTest extends TestTopology {
     public void testBasicCount() throws Exception {
         final Topology f = new Topology("CountWindow");
         TStream<String> source = f.strings("a", "b", "c");
-        TWindow<String> window = source.last(10);
+        TWindow<String,?> window = source.last(10);
         assertNotNull(window);
         assertWindow(f, window);
     }
@@ -75,7 +75,7 @@ public class WindowTest extends TestTopology {
     public void testBasicTime() throws Exception {
         final Topology f = new Topology("TimeWindow");
         TStream<String> source = f.strings("a", "b", "c");
-        TWindow<String> window = source.last(10, TimeUnit.SECONDS);
+        TWindow<String,?> window = source.last(10, TimeUnit.SECONDS);
         assertNotNull(window);
         assertWindow(f, window);
     }
@@ -84,7 +84,7 @@ public class WindowTest extends TestTopology {
     public void testCountAggregate() throws Exception {
         final Topology f = new Topology("CountAggregate");
         TStream<Number> source = f.numbers(1, 2, 3, 4, 5, 6, 7);
-        TWindow<Number> window = source.last(3);
+        TWindow<Number,?> window = source.last(3);
         TStream<Integer> aggregate = window.aggregate(new SumInt());
         
         completeAndValidate(aggregate, 10, "1", "3", "6", "9", "12", "15", "18");
@@ -105,7 +105,7 @@ public class WindowTest extends TestTopology {
         final Topology f = new Topology("PartitionedAggregate");
         TStream<StockPrice> source = f.constants(Arrays.asList(PRICES)).asType(StockPrice.class);
 
-        TStream<StockPrice> aggregate = source.last(2).partition(new Function<StockPrice,String>() {
+        TStream<StockPrice> aggregate = source.last(2).key(new Function<StockPrice,String>() {
 
             private static final long serialVersionUID = 1L;
 

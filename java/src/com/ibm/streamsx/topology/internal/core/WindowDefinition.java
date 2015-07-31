@@ -25,7 +25,7 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionJoin;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 
-public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
+public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> {
 
     private final TStream<T> stream;
     // This is the eviction policy in SPL terms
@@ -50,8 +50,8 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
         this(stream, Policy.TIME, unit.toMillis(time), null);
     }
 
-    public WindowDefinition(TStream<T> stream, TWindow<?> configWindow) {
-        this(stream, ((WindowDefinition<?>) configWindow).policy, ((WindowDefinition<?>) configWindow).config, null);
+    public WindowDefinition(TStream<T> stream, TWindow<?,?> configWindow) {
+        this(stream, ((WindowDefinition<?,?>) configWindow).policy, ((WindowDefinition<?,?>) configWindow).config, null);
     }
     
     private final void setPartitioned(final java.lang.reflect.Type type) {
@@ -203,9 +203,9 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
     }
     
     @Override
-    public TWindow<T> partition(Function<T, ?> keyGetter) {
+    public <U> TWindow<T,U> key(Function<T, U> keyGetter) {
         if (keyGetter == null)
             throw new NullPointerException();
-        return new WindowDefinition<T>(stream, policy, config, keyGetter);
+        return new WindowDefinition<T,U>(stream, policy, config, keyGetter);
     }
 }
