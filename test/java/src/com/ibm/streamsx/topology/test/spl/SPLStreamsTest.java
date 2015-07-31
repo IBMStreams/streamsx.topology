@@ -165,7 +165,7 @@ public class SPLStreamsTest extends TestTopology {
                         is.n = Integer.valueOf(v1) + 93;
                         return is;
                     }
-                }, IntAndString.class);
+                });
 
         StreamSchema schema = Type.Factory
                 .getStreamSchema("tuple<int32 ii, rstring ss>");

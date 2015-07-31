@@ -38,5 +38,4 @@ class SPLWindowImpl extends WindowDefinition<Tuple> implements SPLWindow {
         inputPort.window(StreamWindow.Type.SLIDING, policy, config,
                 triggerPolicy, triggerConfig, false);
     }
-
 }
