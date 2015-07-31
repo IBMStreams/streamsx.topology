@@ -162,6 +162,13 @@ public interface TWindow<T> extends TopologyElement {
     TStream<T> getStream();
     
     /**
+     * Create a partitioned window with the same criteria as this window.
+     * @param keyGetter Function that returns the key to partition the window on.
+     * @return New window that is partitioned by {@code keyGetter}.
+     */
+    TWindow<T> partition(Function<T,?> keyGetter);
+    
+    /**
      * Is the window partitioned
      * @return {@code true} if the window is partitioned, {@code false} if it is not partitioned.
      */

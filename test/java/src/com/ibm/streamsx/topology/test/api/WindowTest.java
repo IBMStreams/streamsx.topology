@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.test.api;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +25,6 @@ import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
-import com.ibm.streamsx.topology.tuple.Keyable;
 
 public class WindowTest extends TestTopology {
 
@@ -92,16 +92,29 @@ public class WindowTest extends TestTopology {
 
     @Test
     public void testKeyedAggregate() throws Exception {
-
-        final Topology f = new Topology("PartitionedAggregate");
-        TStream<StockPrice> source = f.constants(Arrays.asList(PRICES)).asType(StockPrice.class);
-
-        TStream<StockPrice> aggregate = source.last(2).aggregate(new AveragePrice());
-
+        TStream<StockPrice> aggregate = _testKeyedAggregate();
+        
         completeAndValidate(aggregate, 10, "A:1000", "B:4004", "C:2013", "A:1005",
                 "A:1010", "B:4005", "A:1010", "C:2007", "B:4008", "C:2003",
                 "A:1015", "B:4010", "B:4009", "B:4008", "A:1021", "C:2005",
                 "C:2018", "A:1024");
+    }
+    
+    private static TStream<StockPrice> _testKeyedAggregate() throws Exception {
+
+        final Topology f = new Topology("PartitionedAggregate");
+        TStream<StockPrice> source = f.constants(Arrays.asList(PRICES)).asType(StockPrice.class);
+
+        TStream<StockPrice> aggregate = source.last(2).partition(new Function<StockPrice,String>() {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public String apply(StockPrice v) {
+                return v.getKey();
+            }}).aggregate(new AveragePrice());
+        
+        return aggregate;
     }
 
     static final StockPrice[] PRICES = { new StockPrice("A", 1000),
@@ -117,9 +130,10 @@ public class WindowTest extends TestTopology {
 
     };
 
-    @SuppressWarnings("serial")
-    public static class StockPrice implements Keyable<String> {
+    public static class StockPrice implements Serializable {
 
+        private static final long serialVersionUID = 1L;
+        
         private final String ticker;
         private final int price;
 
@@ -128,7 +142,6 @@ public class WindowTest extends TestTopology {
             this.price = price;
         }
 
-        @Override
         public String getKey() {
             return ticker;
         }

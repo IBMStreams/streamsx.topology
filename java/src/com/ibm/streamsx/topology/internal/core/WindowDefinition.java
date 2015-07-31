@@ -5,7 +5,9 @@
 package com.ibm.streamsx.topology.internal.core;
 
 import java.lang.reflect.ParameterizedType;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.streams.operator.window.StreamWindow;
@@ -17,10 +19,11 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionAggregate;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionJoin;
+import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
-import com.ibm.streamsx.topology.tuple.Keyable;
 
 public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
 
@@ -28,34 +31,32 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
     // This is the eviction policy in SPL terms
     protected final StreamWindow.Policy policy;
     protected final long config;
+        
+    private final Function<T,?> keyGetter;
     
-    private boolean partitioned;
-    
-    private WindowDefinition(TStream<T> stream, StreamWindow.Policy policy, long config) {
+    private WindowDefinition(TStream<T> stream, StreamWindow.Policy policy, long config, Function<T,?> keyGetter) {
         super(stream);
         this.stream = stream;
         this.policy = policy;
         this.config = config;
-        setPartitioned(getTupleType());
+        this.keyGetter = keyGetter;
     }
 
     public WindowDefinition(TStream<T> stream, int count) {
-        this(stream, Policy.COUNT, count);
+        this(stream, Policy.COUNT, count, null);
     }
 
     public WindowDefinition(TStream<T> stream, long time, TimeUnit unit) {
-        this(stream, Policy.TIME, unit.toMillis(time));
+        this(stream, Policy.TIME, unit.toMillis(time), null);
     }
 
     public WindowDefinition(TStream<T> stream, TWindow<?> configWindow) {
-        this(stream, ((WindowDefinition<?>) configWindow).policy, ((WindowDefinition<?>) configWindow).config);
-    }    
+        this(stream, ((WindowDefinition<?>) configWindow).policy, ((WindowDefinition<?>) configWindow).config, null);
+    }
     
     private final void setPartitioned(final java.lang.reflect.Type type) {
 
         if (type instanceof Class) {
-            if (!partitioned)
-                partitioned = Keyable.class.isAssignableFrom((Class<?>) type);
             topology().addClassDependency((Class<?>) type);
             return;
         }
@@ -63,18 +64,15 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
             ParameterizedType pt = (ParameterizedType) type;
             java.lang.reflect.Type rawType = pt.getRawType();
             if (rawType instanceof Class) {
-                if (!partitioned)
-                    partitioned = Keyable.class.isAssignableFrom((Class<?>) rawType);
                 topology().addClassDependency((Class<?>) rawType);
                 return;
-            }
-            
+            }    
         }
     }
     
     @Override
     public boolean isPartitioned() {
-        return partitioned;
+        return keyGetter != null;
     }
 
     @Override
@@ -131,13 +129,21 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
             opName = TypeDiscoverer.getTupleName(getTupleType()) + "Aggregate";
         }
 
+        
         BOperatorInvocation aggOp = JavaFunctional.addFunctionalOperator(this,
-                opName, FunctionAggregate.class, aggregator);
+                opName, FunctionAggregate.class, aggregator, getOperatorParams());
         SourceInfo.setSourceInfo(aggOp, WindowDefinition.class);
 
         addInput(aggOp, triggerPolicy, triggerConfig);
 
         return JavaFunctional.addJavaOutput(this, aggOp, aggregateType);
+    }
+    
+    private Map<String,Object> getOperatorParams() {
+        Map<String,Object> params = new HashMap<>();
+        if (isPartitioned())
+            params.put(FunctionWindow.KEY_GETTER_PARAM, ObjectUtils.serializeLogic(keyGetter));
+        return params;
     }
 
     public BInputPort addInput(BOperatorInvocation aggOp,
@@ -146,7 +152,7 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
         
         
         return bi.window(Type.SLIDING, policy, config, triggerPolicy,
-                triggerConfig, partitioned);
+                triggerConfig, isPartitioned());
     }
 
     @Override
@@ -159,7 +165,7 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
         }
 
         BOperatorInvocation joinOp = JavaFunctional.addFunctionalOperator(this,
-                opName, FunctionJoin.class, joiner);
+                opName, FunctionJoin.class, joiner, getOperatorParams());
         
         SourceInfo.setSourceInfo(joinOp, WindowDefinition.class);
                
@@ -182,7 +188,7 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
         }
 
         BOperatorInvocation joinOp = JavaFunctional.addFunctionalOperator(this,
-                opName, FunctionJoin.class, joiner);
+                opName, FunctionJoin.class, joiner, getOperatorParams());
         
         SourceInfo.setSourceInfo(joinOp, WindowDefinition.class);
                
@@ -196,4 +202,10 @@ public class WindowDefinition<T> extends TopologyItem implements TWindow<T> {
 
     }
     
+    @Override
+    public TWindow<T> partition(Function<T, ?> keyGetter) {
+        if (keyGetter == null)
+            throw new NullPointerException();
+        return new WindowDefinition<T>(stream, policy, config, keyGetter);
+    }
 }
