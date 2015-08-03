@@ -91,23 +91,13 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         return stream.getTupleType();
     }
 
-    @Override
-    public <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
-            Class<A> tupleClass) {
-        
-        return aggregate(aggregator, tupleClass, Policy.COUNT, 1);
-    }
+
     @Override
     public <A> TStream<A> aggregate(Function<List<T>, A> aggregator) {
         
         java.lang.reflect.Type aggregateType = TypeDiscoverer.determineStreamType(aggregator, null);
         
         return aggregate(aggregator, aggregateType, Policy.COUNT, 1);
-    }
-    @Override
-    public <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
-            long period, TimeUnit unit, Class<A> tupleClass) {
-        return aggregate(aggregator, tupleClass, Policy.TIME, unit.toMillis(period));
     }
     
     @Override
@@ -155,30 +145,6 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         
         return bi.window(Type.SLIDING, policy, config, triggerPolicy,
                 triggerConfig, isKeyed());
-    }
-
-    @Override
-    public <J, U> TStream<J> join(TStream<U> xstream,
-            BiFunction<U, List<T>, J> joiner, Class<J> tupleClass) {
-        
-        String opName = LogicUtils.functionName(joiner);
-        if (opName.isEmpty()) {
-            opName = getTupleClass().getSimpleName() + "Join";
-        }
-
-        BOperatorInvocation joinOp = JavaFunctional.addFunctionalOperator(this,
-                opName, FunctionJoin.class, joiner, getOperatorParams());
-        
-        SourceInfo.setSourceInfo(joinOp, WindowDefinition.class);
-               
-        @SuppressWarnings("unused")
-        BInputPort input0 = addInput(joinOp, Policy.COUNT, Integer.MAX_VALUE);
-
-        @SuppressWarnings("unused")
-        BInputPort input1 = xstream.connectTo(joinOp, true, null);
-
-        return JavaFunctional.addJavaOutput(this, joinOp, tupleClass);
-
     }
     
     public <J, U> TStream<J> joinInternal(TStream<U> xstream,

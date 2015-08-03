@@ -382,19 +382,6 @@ public interface TStream<T> extends TopologyElement {
      * @return Type of the tuples on this stream.
      */
     Type getTupleType();
-
-    /**
-     * Join this stream with window of type {@code U}. For each tuple on this
-     * stream, it is joined with the contents of {@code window}. Each tuple is
-     * passed into {@code joiner} and the return value is submitted to the
-     * returned stream. If call returns null then no tuple is submitted.
-     * 
-     * @param joiner
-     * @return A stream that is the results of joining this stream with
-     *         {@code window}.
-     */
-    <J, U> TStream<J> join(TWindow<U,?> window,
-            BiFunction<T, List<U>, J> joiner, Class<J> tupleClass);
     
     /**
      * Join this stream with window of type {@code U}. For each tuple on this

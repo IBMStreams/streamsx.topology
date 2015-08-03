@@ -248,12 +248,6 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public TWindow<T,?> last() {
         return last(1);
     }
-
-    @Override
-    public <J, U> TStream<J> join(TWindow<U,?> window,
-            BiFunction<T, List<U>, J> joiner, Class<J> tupleClass) {
-        return window.join(this, joiner, tupleClass);
-    }
     
     @Override
     public <J, U> TStream<J> join(TWindow<U,?> window,

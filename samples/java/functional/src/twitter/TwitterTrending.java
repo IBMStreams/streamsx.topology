@@ -117,7 +117,7 @@ public class TwitterTrending {
                         return tre.getTopTen();
                     }
 
-                }, ListContainer.class);
+                });
 
         hashTagMap.print();
 
