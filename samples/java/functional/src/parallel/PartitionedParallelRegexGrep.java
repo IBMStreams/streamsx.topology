@@ -62,7 +62,7 @@ public class PartitionedParallelRegexGrep {
 
         // Begin parallel region
         TStream<String> parallelLines = lines
-                .parallel(5, TStream.Routing.PARTITIONED);
+                .parallel(5, TStream.Routing.HASH_PARTITIONED);
         TStream<String> ParallelFiltered = parallelLines
                 .filter(new Predicate<String>() {
 

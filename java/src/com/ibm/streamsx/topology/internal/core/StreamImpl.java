@@ -40,7 +40,6 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionTransform;
 import com.ibm.streamsx.topology.internal.functional.ops.HashAdder;
 import com.ibm.streamsx.topology.internal.functional.ops.HashRemover;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
-import com.ibm.streamsx.topology.internal.logic.KeyableHasher;
 import com.ibm.streamsx.topology.internal.logic.ObjectHasher;
 import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
@@ -50,7 +49,6 @@ import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.logic.Identity;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
-import com.ibm.streamsx.topology.tuple.Keyable;
 
 public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
@@ -323,23 +321,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                             + " than or equal to 1.");
         }
 
-        // If the type being passed through the Stream is keyable, partition
-        // based on
-        // the key value of the type. This is accomplished by an operator called
-        // KeyableTuplePartitioner which takes the hash value of the type's key
-        // and
-        // adds it as part of the output stream.
         BOutput toBeParallelized = output();
-        if (routing == TStream.Routing.PARTITIONED) {
-            // BOperatorInvocation hashAdder = null;
-            ToIntFunction<?> hasher;
-            if (Keyable.class.isAssignableFrom(getTupleClass())) {
-                ////hashAdder = builder().addOperator(
-                //        KeyableTuplePartitioner.class, null);
-                hasher = KeyableHasher.SINGLETON;
-            } else {
-                hasher = ObjectHasher.SINGLETON;
-            }
+        boolean needHashRemover = false;
+        if (routing == TStream.Routing.HASH_PARTITIONED || routing == TStream.Routing.KEY_PARTITIONED) {
+
+            final ToIntFunction<?> hasher = parallelHasher(routing);
             
             BOperatorInvocation hashAdder = JavaFunctional.addFunctionalOperator(this,
                     "HashAdder",
@@ -350,10 +336,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             StreamSchema hashSchema = ip.port().getStreamSchema()
                     .extend("int32", "__spl_hash");
             toBeParallelized = hashAdder.addOutput(hashSchema);
+            needHashRemover = true;
         }
 
         BOutput parallelOutput = builder().parallel(toBeParallelized, width);
-        if (routing == TStream.Routing.PARTITIONED) {
+        if (needHashRemover) {
             parallelOutput.json().put("partitioned", true);
             // Add hash remover
             StreamImpl<T> parallelStream = new StreamImpl<T>(this,
@@ -367,13 +354,17 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         return new StreamImpl<T>(this, parallelOutput, getTupleType());
     }
+    
+    ToIntFunction<?> parallelHasher(TStream.Routing routing) {
+        if (routing == TStream.Routing.HASH_PARTITIONED)
+            return ObjectHasher.SINGLETON;
+        
+        throw new IllegalArgumentException("Routing not supported for this stream:" + routing);
+    }
 
+    
     public TStream<T> parallel(int width) {
-        if (Keyable.class.isAssignableFrom(getTupleClass())) {
-            return parallel(width, TStream.Routing.PARTITIONED);
-        } else {
-            return parallel(width, TStream.Routing.ROUND_ROBIN);
-        }
+        return parallel(width, TStream.Routing.ROUND_ROBIN);
     }
     
 

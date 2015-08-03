@@ -11,7 +11,9 @@ import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
+import com.ibm.streamsx.topology.internal.logic.KeyFunctionHasher;
 
 class KeyedStreamImpl<T,K> extends StreamImpl<T> implements TKeyedStream<T, K> {
 
@@ -99,6 +101,25 @@ class KeyedStreamImpl<T,K> extends StreamImpl<T> implements TKeyedStream<T, K> {
     @Override
     public TWindow<T, K> window(TWindow<?, ?> window) {
         return super.window(window).key(getKeyFunction());
+    }
+    
+    @Override
+    public TKeyedStream<T,K> parallel(int width) {
+        return parallel(width, Routing.KEY_PARTITIONED);
+    }
+    
+    @Override
+    public TKeyedStream<T,K> parallel(int width,
+            com.ibm.streamsx.topology.TStream.Routing routing) {
+        return _key(super.parallel(width, routing));
+    }
+    
+    @Override
+    ToIntFunction<?> parallelHasher(
+            com.ibm.streamsx.topology.TStream.Routing routing) {
+        if (routing == Routing.KEY_PARTITIONED)
+            return new KeyFunctionHasher<T,K>(getKeyFunction());
+        return super.parallelHasher(routing);
     }
        
     /*

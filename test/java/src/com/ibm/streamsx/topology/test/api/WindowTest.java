@@ -153,7 +153,7 @@ public class WindowTest extends TestTopology {
             @Override
             public String apply(StockPrice v) {
                 return v.getKey();
-            }});
+            }});        
 
         TStream<StockPrice> aggregate = source.last(2).aggregate(new AveragePrice());
         

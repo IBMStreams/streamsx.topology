@@ -19,7 +19,6 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.spl.SPLStream;
-import com.ibm.streamsx.topology.tuple.Keyable;
 
 /**
  * A {@code TStream} is a declaration of a continuous sequence of tuples. A
@@ -49,19 +48,19 @@ public interface TStream<T> extends TopologyElement {
 	    * distribution is maintained.
 	    */
 	    ROUND_ROBIN, 
+	    
 	    /**
 	     * Tuples will be consistently routed to the same channel based upon 
-	     * their value.
-	     * <br>
-	     * If the tuple implements the {@link Keyable} interface, then the tuple
-	     * is routed to a parallel channel according to the 
-	     * {@code hashCode()} of the object returned by {@link Keyable#getKey()}. 
-	     * <BR>
-	     * If the tuple does not 
-	     * implement the {@link Keyable} interface, then the tuple is routed to a parallel 
-	     * channel according to the {@code hashCode()} of the tuple object itself.
+	     * their key. The stream being parallelized must be a {@link TKeyedStream}.
 	     */
-	    PARTITIONED};
+	    KEY_PARTITIONED,
+	    
+	    /**
+	     * Tuples will be consistently routed to the same channel based upon 
+             * their {@code hashCode()}.
+	     */
+	    HASH_PARTITIONED	    
+	};
 	
     /**
      * Declare a new stream that filters tuples from this stream. Each tuple
@@ -535,32 +534,38 @@ public interface TStream<T> extends TopologyElement {
 
     /**
      * Parallelizes the stream into {@code width} parallel channels. If the 
-     * tuple implements {@link Keyable}, the parallel channels are partitioned.
+     * stream is an instance of {@link TKeyedStream} the parallel channels are partitioned
+     * so that each tuple with the same {@link TKeyedStream#getKeyFunction() key} will be sent to the same channel.
      * Otherwise, the parallel channels are not partitioned, and tuples are routed
      * in a round-robin fashion.
-     * <br><br>
-     * See the documentation for {@link #parallel(int, Routing)} for more
-     * information.
+     * <br>
+     * See {@link #parallel(int, Routing)} for more information.
      * @param width
      *            The degree of parallelism in the parallel region.
      * @return A reference to a stream for which subsequent operations will be
-     *         part of the parallel region.
+     *         executed in parallel using {@code width} channels.
      */
     TStream<T> parallel(int width);
     
     
     /**
      * Parallelizes the stream into {@code width} parallel channels. Tuples are routed 
-     * to the parallel channels based on the {@link Routing} parameter. If {@code ROUND_ROBIN}
-     * is specified, the tuples are routed to parallel channels such that an 
-     * even distribution is maintained. If {@code PARTITIONED} is specified and 
-     * the tuple implements the {@link Keyable} interface, then the tuple is 
-     * routed to a parallel channel according to the {@code hashCode()} of the 
-     * object returned by {@code getKey()}. If {@code PARTITIONED} is specified
-     * and the tuple does not implement the {@link Keyable} interface, then the 
+     * to the parallel channels based on the {@link Routing} parameter.
+     * <BR>
+     * If {@link Routing#ROUND_ROBIN}
+     * is specified the tuples are routed to parallel channels such that an 
+     * even distribution is maintained.
+     * <BR>
+     * If {@link Routing#HASH_PARTITIONED} is specified then the 
      * {@code hashCode()} of the tuple is used to route the tuple to a corresponding 
-     * channel. 
-     * <br><br>
+     * channel, so that all tuples with the same hash code are sent to the same channel.
+     * <BR>
+     * If {@link Routing#HASH_PARTITIONED} is specified and 
+     * the stream is a {@link TKeyedStream} then each tuple is 
+     * routed to a parallel channel according to the {@code hashCode()} of the 
+     * object returned by its {@link TKeyedStream#getKeyFunction() key function},
+     * so that all tuples with the same key are sent to the same channel.
+     * <br>
      * Given the following code:
      * 
      * <pre>
@@ -662,9 +667,7 @@ public interface TStream<T> extends TopologyElement {
      * 
      * @param width The degree of parallelism. see {@link #parallel(int width)}
      * for more details.
-     * @param routing A TStream enum: ROUND_ROBIN or PARTITIONED. If PARTITIONED
-     * is specified, and the tuple doesn't implement Keyable, it will 
-     * partition based on the tuple's Object hashCode().
+     * @param routing Defines how tuples will be routed channels.
      * @return A reference to a TStream<> at the beginning of the parallel
      * region.
      * 
@@ -674,14 +677,13 @@ public interface TStream<T> extends TopologyElement {
     
     /**
      * unparallel() merges the parallel channels of a parallelized stream.
-     * returns a Stream&lt;T> for which subsequent operations will not be
+     * returns a stream for which subsequent operations will not be
      * performed in parallel. Additionally, it merges any partitions which may
      * have been present in the parallel channels. <br>
      * <br>
      * For additional documentation, see {@link TStream#parallel(int)}
      * 
-     * @return A Stream&lt;T> for which subsequent operations are no longer
-     * parallelized.
+     * @return A stream for which subsequent operations are no longer parallelized.
      */
     TStream<T> unparallel();
 

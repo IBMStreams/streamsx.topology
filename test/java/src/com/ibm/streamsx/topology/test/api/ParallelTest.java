@@ -78,8 +78,8 @@ public class ParallelTest extends TestTopology {
         Topology topology = new Topology("testParallelPartition");
         final int count = new Random().nextInt(10) + 37;
 
-        TStream<BeaconTuple> kb = topology.source(
-                keyableBeacon5Counter(count));
+        TStream<BeaconTuple> kb = keyBeacon(topology.source(
+                keyableBeacon5Counter(count)));
         TStream<BeaconTuple> pb = kb.parallel(5);
         TStream<ChannelAndSequence> cs = pb.transform(channelSeqTransformer());
         TStream<ChannelAndSequence> joined = cs.unparallel();
@@ -96,6 +96,18 @@ public class ParallelTest extends TestTopology {
          assertTrue(validCount.valid());
     }
     
+    static TStream<BeaconTuple> keyBeacon(TStream<BeaconTuple> beacon) {
+        
+        return beacon.key(new Function<BeaconTuple,Long>() {
+           private static final long serialVersionUID = 1L;
+
+            @Override
+            public Long apply(BeaconTuple v) {
+                return v.getSequence();
+            }});
+        
+    }
+    
     @Test
     public void testObjectHashPartition() throws Exception {
         checkUdpSupported();
@@ -105,7 +117,7 @@ public class ParallelTest extends TestTopology {
 
         TStream<String> kb = topology.source(
                 stringTuple5Counter(count));
-        TStream<String> pb = kb.parallel(5, TStream.Routing.PARTITIONED);
+        TStream<String> pb = kb.parallel(5, TStream.Routing.HASH_PARTITIONED);
         TStream<ChannelAndSequence> cs = pb.transform(stringTupleChannelSeqTransformer());
         TStream<ChannelAndSequence> joined = cs.unparallel();
 

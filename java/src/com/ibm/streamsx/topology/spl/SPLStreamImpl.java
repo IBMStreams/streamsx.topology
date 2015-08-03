@@ -91,7 +91,7 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     @Override
     public TStream<Tuple> parallel(int width,
             com.ibm.streamsx.topology.TStream.Routing routing) {
-        if(routing == TStream.Routing.PARTITIONED){
+        if(routing != TStream.Routing.ROUND_ROBIN){
             throw new IllegalArgumentException("Partitioning is not currently "
                     + "supported with SPLStreams.");
         }

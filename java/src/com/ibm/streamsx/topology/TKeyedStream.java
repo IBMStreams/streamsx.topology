@@ -103,5 +103,18 @@ public interface TKeyedStream<T,K> extends TStream<T> {
      * {@inheritDoc}
      */
     @Override
+    TKeyedStream<T,K> parallel(int width);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    TKeyedStream<T,K> parallel(int width,
+            com.ibm.streamsx.topology.TStream.Routing routing);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     TKeyedStream<T,K> unparallel();
 }
