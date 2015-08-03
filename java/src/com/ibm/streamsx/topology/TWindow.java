@@ -22,7 +22,7 @@ import com.ibm.streamsx.topology.function.Function;
  * <P>
  * Typically windows are keyed which means the window's configuration
  * is independently maintained for each key seen on the stream.
- * For example with a window created using {@link #last(int) last(3)}
+ * For example with a window created using {@link TStream#last(int) last(3)}
  * then each key has its own window containing the last
  * three tuples with the same key.
  * <BR>
@@ -119,12 +119,12 @@ public interface TWindow<T,K> extends TopologyElement {
      * 
      * @see TKeyedStream
      * 
-     * @param <K> Type of the key.
+     * @param <U> Type of the key.
      */
     <U> TWindow<T,U> key(Function<T,U> keyFunction);
     
     /**
-     * Return a keyed widnow that contains the same tuples as this window. 
+     * Return a keyed window that contains the same tuples as this window. 
      * The key of each tuple is the tuple itself.
      * @return Keyed window containing tuples from this window.
      * 

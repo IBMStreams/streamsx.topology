@@ -376,7 +376,7 @@ public class Topology implements TopologyElement {
      * Thus each call to {code data.get()} will result in
      * zero tuples or one tuple on the stream.
      * 
-     * @deprecated Replaced by {@link #periodicSource(Supplier, long), TimeUnit} which does not require the {@code Class<T> argument}.
+     * @deprecated Replaced by {@link #periodicSource(Supplier, long, TimeUnit)} which does not require the {@code Class<T> argument}.
      * @param data
      *            Function that produces that data for the stream.
      * @param period Approximate period {code data.get()} will be called.
@@ -550,7 +550,7 @@ public class Topology implements TopologyElement {
      * of times, where {@code n} is the iteration number, starting at zero. Each
      * non-null returned value will be present on the stream.
      * 
-     * @deprecated Replaced by {@link #limitedSourceN(Supplier, long)} which does not require the {@code Class<T> argument}.
+     * @deprecated Replaced by {@link #limitedSourceN(Function, long)} which does not require the {@code Class<T> argument}.
      * @param data
      *            Supplier of the tuples.
      * @param count
