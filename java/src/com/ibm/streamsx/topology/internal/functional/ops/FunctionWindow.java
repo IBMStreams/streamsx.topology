@@ -27,7 +27,7 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @OutputPorts(@OutputPortSet(cardinality = 1))
 public abstract class FunctionWindow extends FunctionFunctor {
     
-    public static final String KEY_GETTER_PARAM = "keyGetter";
+    public static final String WINDOW_KEY_GETTER_PARAM = "keyGetter";
     
     private String keyGetter;
 
@@ -69,6 +69,9 @@ public abstract class FunctionWindow extends FunctionFunctor {
         return keyGetter;
     }
 
+    /**
+     * Key getter for the window.
+     */
     @Parameter(optional=true)
     public void setKeyGetter(String keyGetter) {
         this.keyGetter = keyGetter;

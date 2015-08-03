@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.tuple.Keyable;
 
 /**
  * Declares a window of tuples for a {@link TStream}. Logically a {@code Window}
@@ -20,18 +19,26 @@ import com.ibm.streamsx.topology.tuple.Keyable;
  * stream {@code s}, while
  * {@link TStream#last(long, java.util.concurrent.TimeUnit) s.last(5,
  * TimeUnit.SECONDS)} is a window that always contains all tuples present in the
- * {@code s} in the last five seconds.. <BR>
- * When {@code T} implements {@link Keyable} then the window is partitioned,
- * using the value of {@link Keyable#getKey()}, this means each partition
- * independently maintains the declared window contents for its key.
+ * {@code s} in the last five seconds.
+ * <P>
+ * Typically windows are keyed which means the window's configuration
+ * is independently maintained for each key seen on the stream.
+ * For example with a window created using {@link #last(int) last(3)}
+ * then each key has its own window containing the last
+ * three tuples with the same key.
+ * <BR>
+ * A window is keyed if it is created from a {@link TKeyedStream} 
+ * or using {@link #key(Function)} or {@link #key()} on another window.
  * 
  * @param <T>
  *            Tuple type, any instance of {@code T} at runtime must be
  *            serializable.
+ * @param <K> Key type.
  * 
  * @see TStream#last()
  * @see TStream#last(int)
  * @see TStream#last(long, java.util.concurrent.TimeUnit)
+ * @see TStream#window(TWindow)
  */
 public interface TWindow<T,K> extends TopologyElement {
 
@@ -162,15 +169,42 @@ public interface TWindow<T,K> extends TopologyElement {
     TStream<T> getStream();
     
     /**
-     * Create a partitioned window with the same criteria as this window.
-     * @param keyGetter Function that returns the key to partition the window on.
-     * @return New window that is partitioned by {@code keyGetter}.
+     * Return a keyed window that contains the same tuples as this window. 
+     * A keyed window is a window where each tuple has an inherent
+     * key, defined by {@code keyFunction}.
+     * <P> 
+     * All tuples that have the same key will
+     * be processed as an independent window. For example,
+     * with a window created using {@link TStream#last(int) last(3)}
+     * then each key has its own window containing the last
+     * three tuples with the same key.
+     * </P>
+     * @param keyFunction Function that gets the key from a tuple.
+     * The key function must be stateless.
+     * @return Keyed window containing tuples from this window.
+     * 
+     * @see TKeyedStream
+     * 
+     * @param <K> Type of the key.
      */
-    <U> TWindow<T,U> key(Function<T,U> keyGetter);
+    <U> TWindow<T,U> key(Function<T,U> keyFunction);
     
     /**
-     * Is the window partitioned
-     * @return {@code true} if the window is partitioned, {@code false} if it is not partitioned.
+     * Return a keyed widnow that contains the same tuples as this window. 
+     * The key of each tuple is the tuple itself.
+     * @return Keyed window containing tuples from this window.
+     * 
+     * @see #key(Function)
      */
-    boolean isPartitioned();
+    TWindow<T,T> key();
+    
+    /**
+     * Is the window keyed.
+     * @return {@code true} if the window is keyed, {@code false} if it is not keyed.
+     * 
+     * @see #key(Function)
+     * @see #key()
+     * @see TKeyedStream
+     */
+    boolean isKeyed();
 }

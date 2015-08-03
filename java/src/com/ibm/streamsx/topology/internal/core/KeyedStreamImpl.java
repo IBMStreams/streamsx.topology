@@ -8,6 +8,7 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOutput;
+import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.UnaryOperator;
@@ -19,10 +20,27 @@ class KeyedStreamImpl<T,K> extends StreamImpl<T> implements TKeyedStream<T, K> {
     KeyedStreamImpl(TopologyElement te, BOutput output, Type tupleType, Function<T,K> keyGetter) {
         super(te, output, tupleType);
         this.keyGetter = keyGetter;
+        
+        if (output instanceof BOutputPort) {
+            BOutputPort port = (BOutputPort) output;
+
+            JavaFunctional.addDependency(te, port.operator(), tupleType);
+
+            Type keyType = TypeDiscoverer.determineStreamTypeFromFunctionArg(
+                    Function.class, 1, keyGetter);
+
+            JavaFunctional.addDependency(te, port.operator(), keyType);
+        }
     }
     
-    public Function<T, K> getKeyGetter() {
+    @Override
+    public Function<T, K> getKeyFunction() {
         return keyGetter;
+    }
+    
+    @Override
+    public boolean isKeyed() {
+        return true;
     }
     
     /*
@@ -31,22 +49,22 @@ class KeyedStreamImpl<T,K> extends StreamImpl<T> implements TKeyedStream<T, K> {
 
     @Override
     public TWindow<T, K> last() {
-        return super.last().key(getKeyGetter());
+        return super.last().key(getKeyFunction());
     }
     @Override
     public TWindow<T, K> last(int count) {
-        return super.last(count).key(getKeyGetter());
+        return super.last(count).key(getKeyFunction());
     }
     @Override
     public TWindow<T, K> last(long time, TimeUnit unit) {
-        return super.last(time, unit).key(getKeyGetter());
+        return super.last(time, unit).key(getKeyFunction());
     }
     
     /*
      * Override stream methods to return a keyed window.
      */
     private TKeyedStream<T,K> _key(TStream<T> stream) {
-        return stream.key(getKeyGetter());
+        return stream.key(getKeyFunction());
     }
     
     @Override
@@ -80,7 +98,7 @@ class KeyedStreamImpl<T,K> extends StreamImpl<T> implements TKeyedStream<T, K> {
    
     @Override
     public TWindow<T, K> window(TWindow<?, ?> window) {
-        return super.window(window).key(getKeyGetter());
+        return super.window(window).key(getKeyFunction());
     }
        
     /*

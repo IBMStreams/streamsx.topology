@@ -439,14 +439,14 @@ public interface TStream<T> extends TopologyElement {
      * If no tuples have been seen on the stream in the last {@code time} seconds
      * then the window will be empty.
      * <BR>
-     * When {@code T} implements {@link Keyable} then the window is partitioned
-     * using the value of {@link Keyable#getKey()}. In this case that means each
-     * partition independently maintains the last {@code time} seconds of tuples
-     * for that key.
+     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
+     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
+     * In this case that means each partition independently maintains the last {@code time}
+     * seconds of tuples for each key seen on this stream.
      * 
      * @param time Time size of the window
      * @param unit Unit for {@code time}
-     * @return Window on this stream for the last {@code time} seconds.
+     * @return Window on this stream representing the last {@code time} seconds.
      */
     TWindow<T,?> last(long time, TimeUnit unit);
 
@@ -457,13 +457,15 @@ public interface TStream<T> extends TopologyElement {
      * which will be less than {@code count}. If no tuples have been
      * seen on the stream then the window will be empty.
      * <BR>
-     * When {@code T} implements {@link Keyable} then the window is partitioned
-     * using the value of {@link Keyable#getKey()}. In this case that means each
-     * partition independently maintains the last {@code count} tuples for that
-     * key.
+     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
+     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
+     * In this case that means each partition independently maintains the last {@code count} tuples for each
+     * key seen on this stream.
+     * Otherwise the window has a single partition that always contains the
+     * last {@code count} tuples seen on this stream.
      * 
      * @param count Tuple size of the window
-     * @return Window on this stream for the last {@code count} tuples.
+     * @return Window on this stream representing the last {@code count} tuples.
      */
     TWindow<T,?> last(int count);
 
@@ -471,24 +473,31 @@ public interface TStream<T> extends TopologyElement {
      * Declare a {@link TWindow} that continually represents the last tuple on this stream.
      * If no tuples have been seen on the stream then the window will be empty.
      * <BR>
-     * When {@code T} implements {@link Keyable} then the window is partitioned
-     * using the value of {@link Keyable#getKey()}. In this case that means each
-     * partition independently maintains the last tuple for that key.
+     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
+     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
+     * In this case that means each partition independently maintains the last tuple for
+     * each key seen on this stream.
+     * Otherwise the window has a single partition that always contains the last tuple seen
+     * on this stream.
      * 
-     * @return Window on this stream for the last tuple.
+     * @return Window on this stream representing the last tuple.
      */
     TWindow<T,?> last();
 
     /**
      * Declare a {@link TWindow} on this stream that has the same configuration
-     * as another window..
-     * 
-     * When {@code T} implements {@link Keyable} then the window is partitioned
-     * using the value of {@link Keyable#getKey()}. In this case that means each
-     * partition independently maintains the list of tuples for that key.
+     * as another window.
+     * <BR>
+     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
+     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
+     * In this case that means each partition independently maintains the configured
+     * list of tuples for each key seen on this stream.
+     * Otherwise the window has a single partition that contains the 
+     * configured list of tuples for this stream.
      * 
      * @param configWindow
      *            Window to copy the configuration from.
+     * @return Window on this stream with the same configuration as {@code configWindow}.
      */
     TWindow<T,?> window(TWindow<?,?> configWindow);
 
@@ -763,7 +772,58 @@ public interface TStream<T> extends TopologyElement {
      */
     TStream<T> asType(Class<T> tupleTypeClass);
     
-    <K> TKeyedStream<T,K> key(Function<T,K> keyGetter);
+    /**
+     * Return a keyed stream that contains the same tuples as this stream. 
+     * A keyed stream is a stream where each tuple has an inherent
+     * key, defined by {@code keyFunction}.
+     * <P> 
+     * A keyed stream provides control over the behavior of
+     * tuples with {@link #parallel(int) parallel streams} and
+     * {@link TWindow windows}.
+     * <BR>
+     * With parallel streams all tuples that have the same key
+     * will be processed by the same channel.
+     * <BR>
+     * With windows all tuples that have the same key will
+     * be processed as an independent window. For example,
+     * with a window created using {@link #last(int) last(3)}
+     * then each key has its own window containing the last
+     * three tuples with the same key.
+     * </P>
+     * @param keyFunction Function that gets the key from a tuple.
+     * The key function must be stateless.
+     * @return Keyed stream containing tuples from this stream.
+     * 
+     * @see TKeyedStream
+     * @see TWindow
+     * 
+     * @param <K> Type of the key.
+     */
+    <K> TKeyedStream<T,K> key(Function<T,K> keyFunction);
+    
+    /**
+     * Return a keyed stream that contains the same tuples as this stream. 
+     * The key of each tuple is the tuple itself.
+     * <BR>
+     * For example, a {@code TStream<String> strings} may be keyed using
+     * {@code strings.key()} and thus when made {@link #parallel(int) parallel}
+     * all {@code String} objects with the same value will be sent to the
+     * same channel.
+     * @return Keyed stream containing tuples from this stream.
+     * 
+     * @see #key(Function)
+     */
+    TKeyedStream<T,T> key();
+    
+    /**
+     * Is this stream keyed.
+     * If this stream is keyed, then it is an instance of {@link TKeyedStream}.
+     * @return {@code true} if this stream is keyed, {@code false} otherwise.
+     * 
+     * @see #key(Function)
+     * @see #key()
+     */
+    boolean isKeyed();
     
     /**
      * Internal method.

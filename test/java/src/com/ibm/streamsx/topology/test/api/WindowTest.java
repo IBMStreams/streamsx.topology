@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.Topology;
@@ -129,6 +130,35 @@ public class WindowTest extends TestTopology {
             new StockPrice("A", 1026),
 
     };
+    
+    // Aggregate from a keyed stream.
+    @Test
+    public void testKeyedStreamAggregate() throws Exception {
+        TStream<StockPrice> aggregate = _testStreamKeyedAggregate();
+        
+        completeAndValidate(aggregate, 10, "A:1000", "B:4004", "C:2013", "A:1005",
+                "A:1010", "B:4005", "A:1010", "C:2007", "B:4008", "C:2003",
+                "A:1015", "B:4010", "B:4009", "B:4008", "A:1021", "C:2005",
+                "C:2018", "A:1024");
+    }
+    
+    private static TStream<StockPrice> _testStreamKeyedAggregate() throws Exception {
+
+        final Topology f = new Topology("KeyedStreamAggregate");
+
+        TKeyedStream<StockPrice,String> source = f.constants(Arrays.asList(PRICES)).key(new Function<StockPrice,String>() {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public String apply(StockPrice v) {
+                return v.getKey();
+            }});
+
+        TStream<StockPrice> aggregate = source.last(2).aggregate(new AveragePrice());
+        
+        return aggregate;
+    }
 
     public static class StockPrice implements Serializable {
 

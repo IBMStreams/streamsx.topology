@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindow.Policy;
 import com.ibm.streams.operator.window.StreamWindow.Type;
+import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.builder.BInputPort;
@@ -24,6 +25,7 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionAggregate;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionJoin;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
+import com.ibm.streamsx.topology.logic.Identity;
 
 public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> {
 
@@ -71,7 +73,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     }
     
     @Override
-    public boolean isPartitioned() {
+    public boolean isKeyed() {
         return keyGetter != null;
     }
 
@@ -119,7 +121,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     private <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
             java.lang.reflect.Type aggregateType, Policy triggerPolicy, Object triggerConfig) {
         
-        if (getTupleClass() == null && !isPartitioned()) {
+        if (getTupleClass() == null && !isKeyed()) {
             java.lang.reflect.Type tupleType = TypeDiscoverer.determineStreamTypeNested(Function.class, 0, List.class, aggregator);
             setPartitioned(tupleType);
         }
@@ -141,8 +143,8 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     
     private Map<String,Object> getOperatorParams() {
         Map<String,Object> params = new HashMap<>();
-        if (isPartitioned())
-            params.put(FunctionWindow.KEY_GETTER_PARAM, ObjectUtils.serializeLogic(keyGetter));
+        if (isKeyed())
+            params.put(FunctionWindow.WINDOW_KEY_GETTER_PARAM, ObjectUtils.serializeLogic(keyGetter));
         return params;
     }
 
@@ -152,7 +154,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         
         
         return bi.window(Type.SLIDING, policy, config, triggerPolicy,
-                triggerConfig, isPartitioned());
+                triggerConfig, isKeyed());
     }
 
     @Override
@@ -186,9 +188,16 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         if (opName.isEmpty()) {
             opName = getTupleClass().getSimpleName() + "Join";
         }
+        
+        Map<String, Object> params = getOperatorParams();
+        if (isKeyed() && xstream instanceof TKeyedStream) {
+            @SuppressWarnings("unchecked")
+            KeyedStreamImpl<T,?> kstream = (KeyedStreamImpl<T, ?>) xstream;
+            params.put(FunctionJoin.JOIN_KEY_GETTER_PARAM, ObjectUtils.serializeLogic(kstream.getKeyFunction()));
+        }
 
         BOperatorInvocation joinOp = JavaFunctional.addFunctionalOperator(this,
-                opName, FunctionJoin.class, joiner, getOperatorParams());
+                opName, FunctionJoin.class, joiner, params);
         
         SourceInfo.setSourceInfo(joinOp, WindowDefinition.class);
                
@@ -207,5 +216,9 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         if (keyGetter == null)
             throw new NullPointerException();
         return new WindowDefinition<T,U>(stream, policy, config, keyGetter);
+    }
+    @Override
+    public TWindow<T, T> key() {
+         return key(new Identity<T>());
     }
 }

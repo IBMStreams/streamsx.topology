@@ -4,14 +4,18 @@
  */
 package com.ibm.streamsx.topology.internal.functional.ops;
 
+import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
+
 import com.ibm.streams.operator.StreamingInput;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.model.Icons;
 import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.InputPortSet.WindowMode;
 import com.ibm.streams.operator.model.InputPorts;
+import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streams.operator.window.StreamWindow;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.functional.window.PartitionedSlidingJoin;
 import com.ibm.streamsx.topology.internal.functional.window.SlidingJoin;
 
@@ -21,13 +25,22 @@ import com.ibm.streamsx.topology.internal.functional.window.SlidingJoin;
         @InputPortSet(cardinality = 1) })
 @Icons(location16 = "opt/icons/join_16.gif", location32 = "opt/icons/join_32.gif")
 public class FunctionJoin extends FunctionWindow {
+    public static final String JOIN_KEY_GETTER_PARAM = "joinKeyGetter";
+    
     private SlidingJoin<Object, Object, Object> joiner;
+    
+    private String joinKeyGetter;
 
     @Override
     void createWindowListener(StreamWindow<Tuple> window)
             throws ClassNotFoundException {
-        joiner = window.isPartitioned() ? new PartitionedSlidingJoin<Object, Object, Object>(
-                this, window) : new SlidingJoin<Object, Object, Object>(this, window);
+        if (window.isPartitioned()) {
+            Function<Object,Object> functionKeyGetter = getLogicObject(getKeyGetter());
+            joiner = new PartitionedSlidingJoin<Object, Object, Object>(
+                    this, window, functionKeyGetter);
+        } else {
+            joiner = new SlidingJoin<Object, Object, Object>(this, window);
+        }
     }
 
     /**
@@ -40,5 +53,14 @@ public class FunctionJoin extends FunctionWindow {
 
         if (stream.getPortNumber() == 1)
             joiner.port1Join(splTuple);
+    }
+
+    public String getJoinKeyGetter() {
+        return joinKeyGetter;
+    }
+
+    @Parameter(optional=true)
+    public void setJoinKeyGetter(String joinKeyGetter) {
+        this.joinKeyGetter = joinKeyGetter;
     }
 }

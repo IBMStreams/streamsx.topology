@@ -11,10 +11,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
+import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 
@@ -129,6 +132,103 @@ public class JoinTest extends TestTopology {
                 tuple.add(v2 + "-" + v1.toString());
                 
                 return tuple;
+            }
+        });        
+    }
+    
+    @Test
+    public void testKeyedJoin() throws Exception {
+        final Topology t = new Topology();
+        TKeyedStream<String,String> strings = t.strings("a", "b", "c", "a", "a", "c").key();
+        
+        TKeyedStream<String,String> main = delayedList(t, "a", "b", "c", "d").key();
+        
+        TStream<Integer> joined = _testKeyedJoin(main, strings.last(3));
+        TStream<String> asString = StringStreams.toString(joined);
+        
+        completeAndValidate(asString, 25, "3", "1", "2", "0");
+    }
+    
+    private static TStream<String> delayedList(Topology t, String ...strings) {
+        
+        final ArrayList<String> data = new ArrayList<>();
+        for (String s : strings)
+            data.add(s);
+        return t.source(new Supplier<Iterable<String>>() {
+
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Iterable<String> get() {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    return null;
+                }
+                
+                return data ;
+            }});
+    }
+    
+    private static TStream<Integer> _testKeyedJoin(TKeyedStream<String,String> main, TWindow<String,String> window) {
+        
+        return main.join(window, new BiFunction<String, List<String>, Integer>() {
+
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Integer apply(String v1, List<String> v2) {
+                for (String wt : v2)
+                    if (!v1.equals(wt))
+                        return -1;
+                return v2.size();
+            }
+        });        
+    }
+    
+    @Test
+    public void testKeyedJoinLast() throws Exception {
+        final Topology t = new Topology();
+        TKeyedStream<String,String> strings = firstChar(t.strings("a1", "b1", "c1", "a2", "a3", "c2"));
+        
+        TKeyedStream<String,String> main = delayedList(t, "a", "b", "c", "d").key();
+        
+        TStream<String> joined = _testKeyedJoinLast(main, strings);
+        TStream<String> asString = StringStreams.toString(joined);
+        
+        completeAndValidate(asString, 25, "a3", "b1", "c2", "empty");
+    }
+    
+    private static TKeyedStream<String,String> firstChar(TStream<String> strings) {
+        return strings.key(new Function<String,String>() {
+
+            @Override
+            public String apply(String v) {
+                return v.substring(0, 1);
+            }});
+    }
+
+    private static TStream<String> _testKeyedJoinLast(TKeyedStream<String,String> main, TKeyedStream<String,String> strings) {
+        
+        return main.joinLast(strings, new BiFunction<String, String, String>() {
+
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public String apply(String v1, String v2) {
+                if (v2 == null)
+                    return "empty";
+                
+                return v2;
             }
         });        
     }

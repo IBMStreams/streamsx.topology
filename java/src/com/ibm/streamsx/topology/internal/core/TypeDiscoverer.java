@@ -40,7 +40,7 @@ public class TypeDiscoverer {
         if (pt != null)  {
             return pt.getActualTypeArguments()[arg];
         }
-        throw nullTupleClass();
+        return null;
     }
     
     public static <T> Type determineStreamTypeNested(Class<?> objectInterface, int arg, Class<?> nestedInterface, Object function) {

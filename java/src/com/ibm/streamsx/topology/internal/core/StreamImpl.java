@@ -47,6 +47,7 @@ import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
+import com.ibm.streamsx.topology.logic.Identity;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.tuple.Keyable;
@@ -484,5 +485,15 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             throw new NullPointerException();
         return new KeyedStreamImpl<T, K>(this, output,
                 refineType(Function.class, 0, keyGetter), keyGetter);
+    }
+    
+    @Override
+    public TKeyedStream<T, T> key() {
+        return key(new Identity<T>());
+    }
+    
+    @Override
+    public boolean isKeyed() {
+        return false;
     }
 }

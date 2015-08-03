@@ -12,15 +12,15 @@ import com.ibm.streams.operator.StreamSchema;
 
 public class BOutputPort extends BOutput {
 
-    private final BOperator op;
+    private final BOperatorInvocation op;
     private final OutputPortDeclaration port;
 
-    BOutputPort(BOperator op, OutputPortDeclaration port) {
+    BOutputPort(BOperatorInvocation op, OutputPortDeclaration port) {
         this.op = op;
         this.port = port;
     }
 
-    public BOperator operator() {
+    public BOperatorInvocation operator() {
         return op;
     }
 

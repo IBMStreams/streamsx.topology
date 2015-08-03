@@ -143,7 +143,7 @@ public class JavaFunctional {
     /**
      * Add a dependency for the operator to a Java tuple type.
      */
-    private static void addDependency(TopologyElement te,
+    public static void addDependency(TopologyElement te,
             BOperatorInvocation bop, Type tupleType) {
         if (Tuple.class.equals(tupleType))
             return;
