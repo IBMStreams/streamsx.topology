@@ -57,7 +57,7 @@ TStream&lt;String> filtered = s.filter(new Predicate&lt;String>() {
 </code>
 </pre>
 {@link com.ibm.streamsx.topology.TStream#filter s.filter()} is passed an instance of
-{@link com.ibm.streamsx.topology.function7.Predicate}, and sets up a filter
+{@link com.ibm.streamsx.topology.function.Predicate}, and sets up a filter
 where the output stream {@code filtered} will only contain tuples from the
 input stream {@code s} if the method {@code test()} returns {@code true}.
 This implementation of {@code Predicate}, provided as an anonymous class,

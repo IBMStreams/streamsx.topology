@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.logic;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
@@ -21,11 +22,14 @@ public final class Constants<T> implements Supplier<Iterable<T>> {
         List<T> copiedData;
         
         if (data.isEmpty())
-            copiedData = data;
-        if (data instanceof ArrayList || data instanceof LinkedList
+            copiedData = Collections.emptyList();
+        else if (data instanceof ArrayList || data instanceof LinkedList
                 || data instanceof Stack || data instanceof Vector)
             copiedData = data;
         else {
+            // Copy the data in case the list is not serializable.
+            // and to ensure the contents are in the stream in
+            // case it is a "smart" list.
             copiedData = new ArrayList<>(data.size());
             copiedData.addAll(data);
         }      
