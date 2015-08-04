@@ -119,6 +119,16 @@
      <java classname="games.FizzBuzz" classpathref="run.classpath" fork="yes"/>
   </target>
 
+  <!-- Run the trending example, assuming there is a set of text files with
+       tweets in csv format in $HOME/tweets
+  -->
+  <target name="run.twitter.trending">
+     <java classname="twitter.TwitterTrending" classpathref="run.classpath" fork="yes">
+     <arg value="EMBEDDED"/>
+     <arg value="${user.home}/tweets"/>
+     </java>
+  </target>
+
   <target name="doc">
        <mkdir dir="javadoc"/>
        <javadoc destdir="javadoc" classpathref="compile.classpath"

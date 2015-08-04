@@ -37,8 +37,8 @@ import com.ibm.streamsx.topology.function.Function;
  * This may be executed as (from the {@code samples/java/functional directory} )
  * as:
  * <UL>
- * <LI>{@code ant run.helloworld} - Using Apache Ant, this will run in embedded
- * mode.</LI>
+ * <LI>{@code ant run.twitter.trending} - Using Apache Ant, this will run in embedded
+ * mode and assumes tweets are in CSV files in {@code $HOME/tweets}.</LI>
  * <LI>
  * {@code java -jar funcsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.TwitterTrending CONTEXT_TYPE DIRECTORY}
  * <i>CONTEXT_TYPE</i> - Run directly from the command line with a specific
@@ -53,7 +53,7 @@ import com.ibm.streamsx.topology.function.Function;
  * <LI>{@code TOOLKIT} - Create an IBM Streams application toolkit.</LI>
  * </UL>
  * and <i>DIRECTORY</i> is the location of a directory that contains one or more
- * text files containing lines of tweets.
+ * text files containing lines of tweets.:
  * </LI>
  * <LI>
  * An application execution within your IDE once you set the class path to include the correct jars.</LI>
