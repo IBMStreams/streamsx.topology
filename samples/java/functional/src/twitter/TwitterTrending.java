@@ -105,11 +105,11 @@ public class TwitterTrending {
                 });
 
         // Extract the most frequent hashtags
-        TStream<ListContainer> hashTagMap = hashtags.last(40000).aggregate(
-                new Function<List<String>, ListContainer>() {
+        TStream<List<HashTagCount>> hashTagMap = hashtags.last(40000).aggregate(
+                new Function<List<String>, List<HashTagCount>>() {
 
                     @Override
-                    public ListContainer apply(List<String> v1) {
+                    public List<HashTagCount> apply(List<String> v1) {
                         Trender tre = new Trender();
                         for (String s_iter : v1) {
                             tre.add(s_iter);
