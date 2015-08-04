@@ -113,11 +113,9 @@ class ScalaAPITest extends TestTopology {
       var peopleStream = topology.constants(emma).asType(classOf[Person])
       
       var splitStream = peopleStream.split(2, (p : Person) => p.age);
-      
-      val toStringFunc = (p : Person) => p.toString()
-      
-      var channel0 : TStream[String] = splitStream(0).transform(toStringFunc)
-      var channel1 : TStream[String] = splitStream(1).transform(toStringFunc)
+            
+      var channel0 : TStream[String] = StringStreams.toString(splitStream(0))
+      var channel1 : TStream[String] = StringStreams.toString(splitStream(1))
       
       var channel1Condition = topology.getTester().stringContents(channel1, "George is 37", "Harriet is 17")
       
