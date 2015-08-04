@@ -26,6 +26,9 @@ public final class Constants<T> implements Supplier<Iterable<T>> {
                 || data instanceof Stack || data instanceof Vector)
             copiedData = data;
         else {
+            // Copy the data in case the list is not serializable.
+            // and to ensure the contents are in the stream in
+            // case it is a "smart" list.
             copiedData = new ArrayList<>(data.size());
             copiedData.addAll(data);
         }      
