@@ -455,8 +455,10 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 FunctionSplit.class, splitter);
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
+        
+        Type outputType = refineType(ToIntFunction.class, 0, splitter);
         for (int i = 0; i < n; i++) {
-            TStream<T> splitOutput = JavaFunctional.addJavaOutput(this, bop, getTupleType());
+            TStream<T> splitOutput = JavaFunctional.addJavaOutput(this, bop, outputType);
             l.add(splitOutput);
         }
 

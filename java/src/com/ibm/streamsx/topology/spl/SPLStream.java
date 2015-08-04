@@ -111,6 +111,12 @@ public interface SPLStream extends TStream<Tuple>, SPLInput {
      * {@inheritDoc}
      */
     @Override
+    SPLStream isolate();
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     SPLStream modify(UnaryOperator<Tuple> modifier);
     
     /**

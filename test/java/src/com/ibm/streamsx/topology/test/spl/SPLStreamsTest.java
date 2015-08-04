@@ -242,6 +242,13 @@ public class SPLStreamsTest extends TestTopology {
         assertSPLStream(splStreamB, TEST_SCHEMA);
         assertNotSame(splStreamA, splStreamB);
         
+        splStreamB = splStreamB.filter(new AllowAll<Tuple>());
+
+        splStreamA = splStreamB.isolate();
+        assertSPLStream(splStreamA, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+
+        
 
     }
     
