@@ -145,6 +145,7 @@ public class BOperatorInvocation extends BOperator {
             for (String vs : sa)
                 a.add(vs);
             jsonValue = a;
+            op.setStringParameter(name, sa);
         } else if (value instanceof Attribute) {
             Attribute attr = (Attribute) value;
             jsonValue = attr.getName();
