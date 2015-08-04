@@ -4,6 +4,9 @@
  */
 package com.ibm.streamsx.topology.spl;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import com.ibm.streams.operator.Operator;
@@ -21,8 +24,8 @@ public class JavaPrimitive {
 
     /**
      * Create an SPLStream from the invocation of an SPL Java primitive
-     * operator. The Java class {@code opClass} must be annotated with
-     * PrimitiveOperator.
+     * operator with a single input port & output port.
+     * The Java class {@code opClass} must be annotated with {@code PrimitiveOperator}.
      * 
      * @param opClass
      *            Class of the operator to be invoked.
@@ -31,6 +34,8 @@ public class JavaPrimitive {
      *            operator
      * @param outputSchema
      *            SPL schema of the operator's only output port.
+     * @param params
+     *            Parameters for the SPL Java Primitive operator, ignored if {@code null}.
      * @return SPLStream the represents the output of the operator.
      */
     public static SPLStream invokeJavaPrimitive(
@@ -45,6 +50,55 @@ public class JavaPrimitive {
 
         return new SPLStreamImpl(input, op.addOutput(outputSchema));
     }
+    
+    /**
+     * Invoke an SPL Java primitive operator with an arbitrary number
+     * of input and output ports.
+     * <BR>
+     * Each input stream or window in {@code inputs} results in
+     * a input port for the operator with the input port index
+     * matching the position of the input in {@code inputs}.
+     * If {@code inputs} is {@code null} or empty then the operator will not
+     * have any input ports.
+     * <BR>
+     * Each SPL schema in {@code outputSchemas} an output port
+     * for the operator with the output port index
+     * matching the position of the schema in {@code outputSchemas}.
+     * If {@code outputSchemas} is {@code null} or empty then the operator will not
+     * have any output ports.
+     * 
+     * @param te Reference to Topology the operator will be in.
+     * @param opClass Class of the operator to be invoked.
+     * @param inputs Input streams to be connected to the operator. May be {@code null} if no input  streams are required.
+     * @param outputSchemas Schemas of the output streams. May be {@code null} if no output streams are required.
+     * @param params
+     *            Parameters for the SPL Java Primitive operator, ignored if {@code null}.
+     * @return List of {@code SPLStream} instances that represent the outputs of the operator.
+     */
+    public static List<SPLStream> invokeJavaPrimitive(
+            TopologyElement te,
+            Class<? extends Operator> opClass,
+            List<SPLInput> inputs, List<StreamSchema> outputSchemas, Map<String, ? extends Object> params) {
+        
+        BOperatorInvocation op = te.builder().addOperator(
+                getInvocationName(opClass),
+                opClass, params);
+        SourceInfo.setSourceInfo(op, JavaPrimitive.class);
+        
+        if (inputs != null && !inputs.isEmpty()) {
+            for (SPLInput input : inputs)
+                SPL.connectInputToOperator(input, op);
+        }
+        
+        if (outputSchemas == null || outputSchemas.isEmpty())
+            return Collections.emptyList();
+        
+        List<SPLStream> streams = new ArrayList<>(outputSchemas.size());
+        for (StreamSchema outputSchema : outputSchemas)
+            streams.add(new SPLStreamImpl(te, op.addOutput(outputSchema)));
+            
+        return streams;
+    }
 
     /**
      * Invocation of a Java primitive operator that consumes a Stream.
@@ -55,7 +109,7 @@ public class JavaPrimitive {
      *            Stream that will be connected to the only input port of the
      *            operator
      * @param params
-     *            Parameters for the operator, ignored if null
+     *            Parameters for the SPL Java Primitive operator, ignored if {@code null}.
      */
     public static void invokeJavaPrimitiveSink(
             Class<? extends Operator> opClass, SPLInput input,
@@ -71,19 +125,42 @@ public class JavaPrimitive {
     /**
      * Invocation of a Java primitive source operator to produce a SPL Stream.
      * 
+     * @deprecated Replaced by {@link #invokeJavaPrimitveSource(TopologyElement, Class, Map, StreamSchema)}.
+     * 
      * @param te
      *            Reference to Topology the operator will be in.
      * @param opClass
      *            Class of the operator to be invoked.
      * @param params
-     *            Parameters for the SPL Java operator.
+     *            Parameters for the SPL Java Primitive operator.
      * @param schema
      *            Schema of the output port.
      * @return SPLStream the represents the output of the operator.
      */
+    @Deprecated
     public static SPLStream invokeJavaSource(TopologyElement te,
             Class<? extends Operator> opClass,
             Map<String, ? extends Object> params, StreamSchema schema) {
+      
+        return invokeJavaPrimitiveSource(te, opClass, schema, params);
+    }
+    
+    /**
+     * Invocation of a Java primitive source operator to produce a SPL Stream.
+     * 
+     * @param te
+     *            Reference to Topology the operator will be in.
+     * @param opClass
+     *            Class of the operator to be invoked.
+     * @param schema
+     *            Schema of the output port.
+     * @param params
+     *            Parameters for the SPL Java Primitive operator, ignored if {@code null}.
+     * @return SPLStream the represents the output of the operator.
+     */
+    public static SPLStream invokeJavaPrimitiveSource(TopologyElement te,
+            Class<? extends Operator> opClass,
+            StreamSchema schema, Map<String, ? extends Object> params) {
 
         
         BOperatorInvocation source = te.builder().addOperator(
@@ -92,6 +169,8 @@ public class JavaPrimitive {
         SourceInfo.setSourceInfo(source, JavaPrimitive.class);
         return new SPLStreamImpl(te, source.addOutput(schema));
     }
+    
+    
     
     private static String getInvocationName(Class<? extends Operator> opClass) {
         PrimitiveOperator po = opClass.getAnnotation(PrimitiveOperator.class);
