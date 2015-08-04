@@ -4,11 +4,15 @@
  */
 package com.ibm.streamsx.topology.spl;
 
+import java.util.concurrent.TimeUnit;
+
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.UnaryOperator;
 
 /**
  * A {@code SPLStream} is a declaration of a continuous sequence of tuples with
@@ -84,4 +88,59 @@ public interface SPLStream extends TStream<Tuple>, SPLInput {
      * @see SPLStreams#stringToSPLStream(TStream)
      */
     TStream<String> toStringStream();
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream endLowLatency();
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream filter(Predicate<Tuple> filter);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream lowLatency();
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream modify(UnaryOperator<Tuple> modifier);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream sample(double fraction);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream throttle(long delay, TimeUnit unit);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream parallel(int width);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream parallel(int width,
+            com.ibm.streamsx.topology.TStream.Routing routing);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream unparallel();
 }

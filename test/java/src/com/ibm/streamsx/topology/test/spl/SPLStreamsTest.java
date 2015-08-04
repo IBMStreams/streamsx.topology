@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.test.spl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.Serializable;
@@ -18,12 +19,14 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.Type;
 import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.TStream.Routing;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
+import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -183,7 +186,68 @@ public class SPLStreamsTest extends TestTopology {
                     }
                 }, schema);
 
-        assertEquals(schema, splStream.getSchema());
+        assertSPLStream(splStream, schema);
         return splStream;
+    }
+    
+    @Test
+    public void testMaintainSPLStream() {
+        Topology t = new Topology();
+        
+        SPLStream splStreamA = testTupleStream(t);
+        assertSPLStream(splStreamA, TEST_SCHEMA);
+        
+        
+        SPLStream splStreamB = splStreamA.filter(new AllowAll<Tuple>());
+        assertSPLStream(splStreamB, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamA = splStreamB.sample(1.0);
+        assertSPLStream(splStreamA, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamB = splStreamA.throttle(1, TimeUnit.MICROSECONDS);
+        assertSPLStream(splStreamB, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamA = splStreamB.lowLatency();
+        assertSPLStream(splStreamA, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamA = splStreamA.filter(new AllowAll<Tuple>());
+        
+        splStreamB = splStreamA.endLowLatency();
+        assertSPLStream(splStreamB, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamA = splStreamB.parallel(3);
+        assertSPLStream(splStreamA, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamA = splStreamA.filter(new AllowAll<Tuple>());
+        
+        splStreamB = splStreamA.unparallel();
+        assertSPLStream(splStreamB, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamB = splStreamB.filter(new AllowAll<Tuple>());
+        
+        splStreamA = splStreamB.parallel(2, Routing.ROUND_ROBIN);
+        assertSPLStream(splStreamA, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamA = splStreamA.filter(new AllowAll<Tuple>());
+        
+        splStreamB = splStreamA.unparallel();
+        assertSPLStream(splStreamB, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+
+    }
+    
+    static void assertSPLStream(SPLStream splStream, StreamSchema schema) {
+        assertEquals(schema, splStream.getSchema());
+        assertEquals(Tuple.class, splStream.getTupleClass());
+        assertEquals(Tuple.class, splStream.getTupleType());
     }
 }
