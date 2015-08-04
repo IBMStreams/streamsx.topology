@@ -33,7 +33,7 @@ object FizzBuzzScala {
                 else
                    shout + "!"
            }
-       }  , classOf[String]);
+       });
 
    shouts.print();
 

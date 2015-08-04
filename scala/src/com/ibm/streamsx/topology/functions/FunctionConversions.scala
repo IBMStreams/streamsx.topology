@@ -12,6 +12,7 @@ import com.ibm.streamsx.topology.function.Supplier
 import com.ibm.streamsx.topology.function.UnaryOperator
 import com.ibm.streamsx.topology.function.Predicate
 import com.ibm.streamsx.topology.function.Function
+import com.ibm.streamsx.topology.function.ToIntFunction
 
 import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 
@@ -40,6 +41,10 @@ object FunctionConversions {
   }
   implicit def toUnaryOperator[T](f: (T) => T) = new UnaryOperator[T] with WrapperFunction {
       def apply(v: T) = f(v)
+      def getWrappedFunction() = f
+  }
+  implicit def toToIntFunction[T](f: (T) => Int) = new ToIntFunction[T] with WrapperFunction {
+      def applyAsInt(v: T) = f(v)
       def getWrappedFunction() = f
   }
 }

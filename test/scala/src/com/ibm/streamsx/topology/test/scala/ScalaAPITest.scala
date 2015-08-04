@@ -9,6 +9,7 @@ import com.ibm.streamsx.topology.TStream
 import com.ibm.streamsx.topology.streams.StringStreams
 
 import com.ibm.streamsx.topology.test.TestTopology
+import org.junit.Assert._
 import org.junit.Test;
 
 import scala.collection.JavaConversions._
@@ -17,7 +18,7 @@ import scala.collection.JavaConverters._
 
 import com.ibm.streamsx.topology.functions.FunctionConversions._
 
-class ScalaAPITest extends TestTopology  {
+class ScalaAPITest extends TestTopology {
   
   /**
    * Test a topology in Scala with String constants.
@@ -102,4 +103,26 @@ class ScalaAPITest extends TestTopology  {
                 "a", "little", "lamb", "its", "fleece", "was", "white", "as",
                 "snow");
     }
+        
+  @Test
+  def testScalaSplit() {
+      val topology = new Topology("testScalaSplit")  
+      
+      val emma = List(new Person("Emma", 20), new Person("George", 37), new Person("Harriet", 17), new Person("Jane", 20))
+      
+      var peopleStream = topology.constants(emma).asType(classOf[Person])
+      
+      var splitStream = peopleStream.split(2, (p : Person) => p.age);
+      
+      val toStringFunc = (p : Person) => p.toString()
+      
+      var channel0 : TStream[String] = splitStream(0).transform(toStringFunc)
+      var channel1 : TStream[String] = splitStream(1).transform(toStringFunc)
+      
+      var channel1Condition = topology.getTester().stringContents(channel1, "George is 37", "Harriet is 17")
+      
+     completeAndValidate(channel0, 10, "Emma is 20", "Jane is 20")
+
+     assertTrue(channel1Condition.getResult().toString(), channel1Condition.valid());
+  }
 }
