@@ -125,7 +125,7 @@ public class JavaPrimitive {
     /**
      * Invocation of a Java primitive source operator to produce a SPL Stream.
      * 
-     * @deprecated Replaced by {@link #invokeJavaPrimitveSource(TopologyElement, Class, Map, StreamSchema)}.
+     * @deprecated Replaced by {@link #invokeJavaPrimitiveSource(TopologyElement, Class, StreamSchema, Map)}.
      * 
      * @param te
      *            Reference to Topology the operator will be in.
