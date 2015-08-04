@@ -67,6 +67,11 @@ public class JavaObjectBlob implements Blob {
             serializeObject();
         return buf.put(data);
     }
+    
+    @Override
+    public String toString() {
+        return object.toString();
+    }
 
     /************************/
 
