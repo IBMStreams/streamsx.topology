@@ -19,14 +19,13 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.spl.SPLStream;
-import com.ibm.streamsx.topology.tuple.Keyable;
 
 /**
  * A {@code TStream} is a declaration of a continuous sequence of tuples. A
  * connected topology of streams and functional transformations is built using
  * {@link Topology}. <BR>
  * Generic methods on this interface provide the ability to
- * {@link #filter(Predicate) filter}, {@link #transform(Function, Class)
+ * {@link #filter(Predicate) filter}, {@link #transform(Function)
  * transform} or {@link #sink(Consumer) sink} this declared stream using a
  * function. <BR>
  * Utility methods in the {@code com.ibm.streams.topology.streams} package
@@ -49,19 +48,19 @@ public interface TStream<T> extends TopologyElement {
 	    * distribution is maintained.
 	    */
 	    ROUND_ROBIN, 
+	    
 	    /**
 	     * Tuples will be consistently routed to the same channel based upon 
-	     * their value.
-	     * <br>
-	     * If the tuple implements the {@link Keyable} interface, then the tuple
-	     * is routed to a parallel channel according to the 
-	     * {@code hashCode()} of the object returned by {@link Keyable#getKey()}. 
-	     * <BR>
-	     * If the tuple does not 
-	     * implement the {@link Keyable} interface, then the tuple is routed to a parallel 
-	     * channel according to the {@code hashCode()} of the tuple object itself.
+	     * their key. The stream being parallelized must be a {@link TKeyedStream}.
 	     */
-	    PARTITIONED};
+	    KEY_PARTITIONED,
+	    
+	    /**
+	     * Tuples will be consistently routed to the same channel based upon 
+             * their {@code hashCode()}.
+	     */
+	    HASH_PARTITIONED	    
+	};
 	
     /**
      * Declare a new stream that filters tuples from this stream. Each tuple
@@ -209,6 +208,7 @@ public interface TStream<T> extends TopologyElement {
      * (or zero) tuple of a different type {@code U}.
      * This is identical to {@link #transform(Function)} except that the class
      * type of the stream is explicitly passed in.
+     * @deprecated Replaced by {@link #transform(Function)} which does not require the {@code Class<T> argument}.
      * @param transformer
      *            Transformation logic to be executed against each tuple.
      * @param tupleTypeClass
@@ -217,6 +217,7 @@ public interface TStream<T> extends TopologyElement {
      *         stream's tuples.
         
      */
+    @Deprecated
     <U> TStream<U> transform(Function<T, U> transformer, Class<U> tupleTypeClass);
 
     /**
@@ -299,6 +300,7 @@ public interface TStream<T> extends TopologyElement {
      * @return Stream that will contain tuples of type {@code U} transformed from this
      *         stream's tuples.
      */
+    @Deprecated
     <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer,
             Class<U> tupleTypeClass);
     
@@ -367,8 +369,9 @@ public interface TStream<T> extends TopologyElement {
     void print();
 
     /**
-     * Class of the tuples on this stream. WIll be the same as {@link #getTupleType()}
-     * is a {@code Class} object.
+     * Class of the tuples on this stream, if known.
+     * Will be the same as {@link #getTupleType()}
+     * if it is a {@code Class} object.
      * @return Class of the tuple on this stream, {@code null}
      * if {@link #getTupleType()} is not a {@code Class} object.
      */
@@ -379,19 +382,42 @@ public interface TStream<T> extends TopologyElement {
      * @return Type of the tuples on this stream.
      */
     Type getTupleType();
-
+    
     /**
      * Join this stream with window of type {@code U}. For each tuple on this
-     * stream, it is joined with the contents of {@code other}. Each tuple is
+     * stream, it is joined with the contents of {@code window}. Each tuple is
      * passed into {@code joiner} and the return value is submitted to the
      * returned stream. If call returns null then no tuple is submitted.
      * 
-     * @param joiner
+     * @param joiner Join function.
      * @return A stream that is the results of joining this stream with
      *         {@code window}.
      */
-    <J, U> TStream<J> join(TWindow<U> window,
-            BiFunction<T, List<U>, J> joiner, Class<J> tupleClass);
+    <J, U> TStream<J> join(TWindow<U,?> window,
+            BiFunction<T, List<U>, J> joiner);
+    
+    /**
+     * Join this stream with the last tuple seen on a stream of type {@code U}.
+     * For each tuple on this
+     * stream, it is joined with the last tuple seen on {@code other}. Each tuple is
+     * passed into {@code joiner} and the return value is submitted to the
+     * returned stream. If call returns null then no tuple is submitted.
+     * <BR>
+     * This is a simplified version of
+     * <BR>
+     * {@code this.join(other.last(), new BiFunction<T,List<U>,J>() ...) }
+     * <BR>
+     * where instead the window contents are passed as a single tuple of type {@code U}
+     * rather than a list containing one tuple. If no tuple has been seen on {@code other}
+     * then {@code null} will be passed as the second argument to {@code joiner}.
+     * 
+     * @param other Stream to join with.
+     * @param joiner Join function.
+     * @return A stream that is the results of joining this stream with
+     *         {@code other}.
+     */
+    <J,U> TStream<J> joinLast(TStream<U> other,
+            BiFunction<T, U, J> joiner);
 
     /**
      * Declare a {@link TWindow} that continually represents the last {@code time} seconds
@@ -399,16 +425,16 @@ public interface TStream<T> extends TopologyElement {
      * If no tuples have been seen on the stream in the last {@code time} seconds
      * then the window will be empty.
      * <BR>
-     * When {@code T} implements {@link Keyable} then the window is partitioned
-     * using the value of {@link Keyable#getKey()}. In this case that means each
-     * partition independently maintains the last {@code time} seconds of tuples
-     * for that key.
+     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
+     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
+     * In this case that means each partition independently maintains the last {@code time}
+     * seconds of tuples for each key seen on this stream.
      * 
      * @param time Time size of the window
      * @param unit Unit for {@code time}
-     * @return Window on this stream for the last {@code time} seconds.
+     * @return Window on this stream representing the last {@code time} seconds.
      */
-    TWindow<T> last(long time, TimeUnit unit);
+    TWindow<T,?> last(long time, TimeUnit unit);
 
     /**
      * Declare a {@link TWindow} that continually represents the last {@code count} tuples
@@ -417,40 +443,49 @@ public interface TStream<T> extends TopologyElement {
      * which will be less than {@code count}. If no tuples have been
      * seen on the stream then the window will be empty.
      * <BR>
-     * When {@code T} implements {@link Keyable} then the window is partitioned
-     * using the value of {@link Keyable#getKey()}. In this case that means each
-     * partition independently maintains the last {@code count} tuples for that
-     * key.
+     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
+     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
+     * In this case that means each partition independently maintains the last {@code count} tuples for each
+     * key seen on this stream.
+     * Otherwise the window has a single partition that always contains the
+     * last {@code count} tuples seen on this stream.
      * 
      * @param count Tuple size of the window
-     * @return Window on this stream for the last {@code count} tuples.
+     * @return Window on this stream representing the last {@code count} tuples.
      */
-    TWindow<T> last(int count);
+    TWindow<T,?> last(int count);
 
     /**
      * Declare a {@link TWindow} that continually represents the last tuple on this stream.
      * If no tuples have been seen on the stream then the window will be empty.
      * <BR>
-     * When {@code T} implements {@link Keyable} then the window is partitioned
-     * using the value of {@link Keyable#getKey()}. In this case that means each
-     * partition independently maintains the last tuple for that key.
+     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
+     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
+     * In this case that means each partition independently maintains the last tuple for
+     * each key seen on this stream.
+     * Otherwise the window has a single partition that always contains the last tuple seen
+     * on this stream.
      * 
-     * @return Window on this stream for the last tuple.
+     * @return Window on this stream representing the last tuple.
      */
-    TWindow<T> last();
+    TWindow<T,?> last();
 
     /**
      * Declare a {@link TWindow} on this stream that has the same configuration
-     * as another window..
-     * 
-     * When {@code T} implements {@link Keyable} then the window is partitioned
-     * using the value of {@link Keyable#getKey()}. In this case that means each
-     * partition independently maintains the list of tuples for that key.
+     * as another window.
+     * <BR>
+     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
+     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
+     * In this case that means each partition independently maintains the configured
+     * list of tuples for each key seen on this stream.
+     * Otherwise the window has a single partition that contains the 
+     * configured list of tuples for this stream.
      * 
      * @param configWindow
      *            Window to copy the configuration from.
+     * @return Window on this stream with the same configuration as {@code configWindow}.
      */
-    TWindow<T> window(TWindow<?> configWindow);
+    TWindow<T,?> window(TWindow<?,?> configWindow);
 
     /**
      * Publish tuples from this stream to allow other applications to consume
@@ -486,32 +521,38 @@ public interface TStream<T> extends TopologyElement {
 
     /**
      * Parallelizes the stream into {@code width} parallel channels. If the 
-     * tuple implements {@link Keyable}, the parallel channels are partitioned.
+     * stream is an instance of {@link TKeyedStream} the parallel channels are partitioned
+     * so that each tuple with the same {@link TKeyedStream#getKeyFunction() key} will be sent to the same channel.
      * Otherwise, the parallel channels are not partitioned, and tuples are routed
      * in a round-robin fashion.
-     * <br><br>
-     * See the documentation for {@link #parallel(int, Routing)} for more
-     * information.
+     * <br>
+     * See {@link #parallel(int, Routing)} for more information.
      * @param width
      *            The degree of parallelism in the parallel region.
      * @return A reference to a stream for which subsequent operations will be
-     *         part of the parallel region.
+     *         executed in parallel using {@code width} channels.
      */
     TStream<T> parallel(int width);
     
     
     /**
      * Parallelizes the stream into {@code width} parallel channels. Tuples are routed 
-     * to the parallel channels based on the {@link Routing} parameter. If {@code ROUND_ROBIN}
-     * is specified, the tuples are routed to parallel channels such that an 
-     * even distribution is maintained. If {@code PARTITIONED} is specified and 
-     * the tuple implements the {@link Keyable} interface, then the tuple is 
-     * routed to a parallel channel according to the {@code hashCode()} of the 
-     * object returned by {@code getKey()}. If {@code PARTITIONED} is specified
-     * and the tuple does not implement the {@link Keyable} interface, then the 
+     * to the parallel channels based on the {@link Routing} parameter.
+     * <BR>
+     * If {@link Routing#ROUND_ROBIN}
+     * is specified the tuples are routed to parallel channels such that an 
+     * even distribution is maintained.
+     * <BR>
+     * If {@link Routing#HASH_PARTITIONED} is specified then the 
      * {@code hashCode()} of the tuple is used to route the tuple to a corresponding 
-     * channel. 
-     * <br><br>
+     * channel, so that all tuples with the same hash code are sent to the same channel.
+     * <BR>
+     * If {@link Routing#HASH_PARTITIONED} is specified and 
+     * the stream is a {@link TKeyedStream} then each tuple is 
+     * routed to a parallel channel according to the {@code hashCode()} of the 
+     * object returned by its {@link TKeyedStream#getKeyFunction() key function},
+     * so that all tuples with the same key are sent to the same channel.
+     * <br>
      * Given the following code:
      * 
      * <pre>
@@ -613,9 +654,7 @@ public interface TStream<T> extends TopologyElement {
      * 
      * @param width The degree of parallelism. see {@link #parallel(int width)}
      * for more details.
-     * @param routing A TStream enum: ROUND_ROBIN or PARTITIONED. If PARTITIONED
-     * is specified, and the tuple doesn't implement Keyable, it will 
-     * partition based on the tuple's Object hashCode().
+     * @param routing Defines how tuples will be routed channels.
      * @return A reference to a TStream<> at the beginning of the parallel
      * region.
      * 
@@ -625,14 +664,13 @@ public interface TStream<T> extends TopologyElement {
     
     /**
      * unparallel() merges the parallel channels of a parallelized stream.
-     * returns a Stream&lt;T> for which subsequent operations will not be
+     * returns a stream for which subsequent operations will not be
      * performed in parallel. Additionally, it merges any partitions which may
      * have been present in the parallel channels. <br>
      * <br>
      * For additional documentation, see {@link TStream#parallel(int)}
      * 
-     * @return A Stream&lt;T> for which subsequent operations are no longer
-     * parallelized.
+     * @return A stream for which subsequent operations are no longer parallelized.
      */
     TStream<T> unparallel();
 
@@ -712,7 +750,70 @@ public interface TStream<T> extends TopologyElement {
      * @return Stream containing all tuples on this stream. but throttled.
      */
     TStream<T> throttle(long delay, TimeUnit unit);
-
+    
+    /**
+     * Return a strongly typed reference to this stream.
+     * If this stream is already strongly typed as containing tuples
+     * of type {@code tupleClass} then {@code this} is returned.
+     * @param tupleTypeClass Class type for the tuples.
+     * @return A stream with the same contents as this stream but strongly typed as
+     * containing tuples of type {@code tupleClass}.
+     */
+    TStream<T> asType(Class<T> tupleTypeClass);
+    
+    /**
+     * Return a keyed stream that contains the same tuples as this stream. 
+     * A keyed stream is a stream where each tuple has an inherent
+     * key, defined by {@code keyFunction}.
+     * <P> 
+     * A keyed stream provides control over the behavior of
+     * tuples with {@link #parallel(int) parallel streams} and
+     * {@link TWindow windows}.
+     * <BR>
+     * With parallel streams all tuples that have the same key
+     * will be processed by the same channel.
+     * <BR>
+     * With windows all tuples that have the same key will
+     * be processed as an independent window. For example,
+     * with a window created using {@link #last(int) last(3)}
+     * then each key has its own window containing the last
+     * three tuples with the same key.
+     * </P>
+     * @param keyFunction Function that gets the key from a tuple.
+     * The key function must be stateless.
+     * @return Keyed stream containing tuples from this stream.
+     * 
+     * @see TKeyedStream
+     * @see TWindow
+     * 
+     * @param <K> Type of the key.
+     */
+    <K> TKeyedStream<T,K> key(Function<T,K> keyFunction);
+    
+    /**
+     * Return a keyed stream that contains the same tuples as this stream. 
+     * The key of each tuple is the tuple itself.
+     * <BR>
+     * For example, a {@code TStream<String> strings} may be keyed using
+     * {@code strings.key()} and thus when made {@link #parallel(int) parallel}
+     * all {@code String} objects with the same value will be sent to the
+     * same channel.
+     * @return Keyed stream containing tuples from this stream.
+     * 
+     * @see #key(Function)
+     */
+    TKeyedStream<T,T> key();
+    
+    /**
+     * Is this stream keyed.
+     * If this stream is keyed, then it is an instance of {@link TKeyedStream}.
+     * @return {@code true} if this stream is keyed, {@code false} otherwise.
+     * 
+     * @see #key(Function)
+     * @see #key()
+     */
+    boolean isKeyed();
+    
     /**
      * Internal method.
      * <BR>

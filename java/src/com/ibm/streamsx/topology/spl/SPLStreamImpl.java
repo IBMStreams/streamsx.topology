@@ -41,8 +41,7 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     public TStream<JSONObject> toJSON() {
         return transform(
                 JSONSchemas.JSON.equals(getSchema()) ?
-                        new JsonString2JSON() : new Tuple2JSON(),
-                        JSONObject.class);
+                        new JsonString2JSON() : new Tuple2JSON());
     }
 
     public static class Tuple2JSON implements Function<Tuple, JSONObject> {
@@ -78,7 +77,7 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
 
     @Override
     public TStream<String> toTupleString() {
-        return transform(new TupleToString(getSchema()), String.class);
+        return transform(new TupleToString(getSchema()));
     }
 
     @Override
@@ -92,7 +91,7 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     @Override
     public TStream<Tuple> parallel(int width,
             com.ibm.streamsx.topology.TStream.Routing routing) {
-        if(routing == TStream.Routing.PARTITIONED){
+        if(routing != TStream.Routing.ROUND_ROBIN){
             throw new IllegalArgumentException("Partitioning is not currently "
                     + "supported with SPLStreams.");
         }

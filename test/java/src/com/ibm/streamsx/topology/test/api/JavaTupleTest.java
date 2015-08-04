@@ -62,7 +62,7 @@ public class JavaTupleTest extends TestTopology {
     	nas.add(new NAŇÃ("three"));
     	
         final Topology topology = new Topology();
-        TStream<NAŇÃ> source = topology.constants(nas, NAŇÃ.class);
+        TStream<NAŇÃ> source = topology.constants(nas).asType(NAŇÃ.class);
             
         completeAndValidate(source, 10,  "one-NAŇÃ", "two-NAŇÃ", "three-NAŇÃ");
     }
@@ -86,8 +86,8 @@ public class JavaTupleTest extends TestTopology {
   	
         final Topology topology = new Topology();
         @SuppressWarnings("unused")
-        TStream<NAŇÃ> sourceNAŇÃ = topology.constants(nas, NAŇÃ.class);
-        TStream<NAÃÃ> sourceNAÃÃ = topology.constants(naas, NAÃÃ.class);
+        TStream<NAŇÃ> sourceNAŇÃ = topology.constants(nas).asType(NAŇÃ.class);
+        TStream<NAÃÃ> sourceNAÃÃ = topology.constants(naas).asType(NAÃÃ.class);
             
         completeAndValidate(sourceNAÃÃ, 10,  "one-NAÃÃ", "two-NAÃÃ", "three-NAÃÃ");
     }

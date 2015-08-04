@@ -6,18 +6,20 @@ package com.ibm.streamsx.topology.internal.functional.window;
 
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.window.StreamWindow;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
-import com.ibm.streamsx.topology.tuple.Keyable;
 
 public class PartitionedSlidingJoin<T, U, J> extends SlidingJoin<T, U, J> {
 
+    private final Function<Object,Object> functionKeyGetter;
     public PartitionedSlidingJoin(FunctionWindow op,
-            StreamWindow<Tuple> window) throws ClassNotFoundException {
+            StreamWindow<Tuple> window, Function<Object,Object> functionKeyGetter) throws ClassNotFoundException {
         super(op, window);
+        this.functionKeyGetter = functionKeyGetter;
     }
 
     @Override
     protected Object getPort1PartitionKey(T tTuple) {
-        return ((Keyable<?>) tTuple).getKey();
+        return functionKeyGetter.apply(tTuple);
     }
 }

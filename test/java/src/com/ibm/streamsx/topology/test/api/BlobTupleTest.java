@@ -24,9 +24,10 @@ public class BlobTupleTest extends TestTopology {
         String sdata = "YY" + BlobTupleTest.class.getName();
         byte[] data = sdata.getBytes(StandardCharsets.UTF_8);
         Blob blob = ValueFactory.newBlob(data, 0, data.length);
-        TStream<Blob> source = topology.constants(Collections.singletonList(blob), Blob.class);
+        TStream<Blob> source = topology.constants(Collections.singletonList(blob)).asType(Blob.class);
         assertNotNull(source);
         assertEquals(Blob.class, source.getTupleClass());
+        assertEquals(Blob.class, source.getTupleType());
         
         TStream<String> out = convertBlobToString(source);
         completeAndValidate(out, 10,  sdata);

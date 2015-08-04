@@ -203,8 +203,10 @@ public class TupleCollection implements Tester {
             @Override
             public List<String> getResult() {
                 List<String> strings = new ArrayList<>(tuples.getTupleCount());
-                for (Tuple tuple : tuples.getTuples()) {
-                    strings.add(tuple.getString(0));
+                synchronized (tuples.getTuples()) {
+                    for (Tuple tuple : tuples.getTuples()) {
+                        strings.add(tuple.getString(0));
+                    }
                 }
                 return strings;
             }
@@ -250,10 +252,12 @@ public class TupleCollection implements Tester {
                 if (tuples.getTupleCount() != values.length)
                     return false;
 
-                List<Tuple> sc = tuples.getTuples();
-                for (int i = 0; i < values.length; i++) {
-                    if (!sc.get(i).equals(values[i]))
-                        return false;
+                synchronized (tuples) {
+                    List<Tuple> sc = tuples.getTuples();
+                    for (int i = 0; i < values.length; i++) {
+                        if (!sc.get(i).equals(values[i]))
+                            return false;
+                    }
                 }
                 return true;
             }
@@ -282,22 +286,20 @@ public class TupleCollection implements Tester {
             @Override
             public List<String> getResult() {
                 List<String> strings = new ArrayList<>(tuples.getTupleCount());
-                for (Tuple tuple : tuples.getTuples()) {
-                    strings.add(tuple.getString(0));
+                synchronized (tuples.getTuples()) {
+                    for (Tuple tuple : tuples.getTuples()) {
+                        strings.add(tuple.getString(0));
+                    }
                 }
                 return strings;
             }
 
             @Override
             public boolean valid() {
-                if (tuples.getTupleCount() != sortedValues.size())
+
+                List<String> strings =  getResult();
+                if (strings.size() != sortedValues.size())
                     return false;
-
-                List<String> strings = new ArrayList<>(sortedValues.size());
-
-                for (Tuple tuple : tuples.getTuples()) {
-                    strings.add(tuple.getString(0));
-                }
                 Collections.sort(strings);
                 return sortedValues.equals(strings);
             }

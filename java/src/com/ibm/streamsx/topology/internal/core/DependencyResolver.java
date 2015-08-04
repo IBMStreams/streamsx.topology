@@ -98,6 +98,8 @@ public class DependencyResolver {
     
     public void addClassDependency(Class<?> clazz){
         CodeSource source = clazz.getProtectionDomain().getCodeSource();
+        if (source == null)
+            return;
         Path absolutePath=null;
         try {
             absolutePath = Paths.get(source.getLocation().toURI()).toAbsolutePath();

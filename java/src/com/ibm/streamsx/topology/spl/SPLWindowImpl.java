@@ -9,18 +9,18 @@ import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.internal.core.WindowDefinition;
 
-class SPLWindowImpl extends WindowDefinition<Tuple> implements SPLWindow {
+class SPLWindowImpl extends WindowDefinition<Tuple,Object> implements SPLWindow {
 
     private final StreamWindow.Policy triggerPolicy;
     private final long triggerConfig;
 
-    SPLWindowImpl(TWindow<Tuple> window, int count) {
+    SPLWindowImpl(TWindow<Tuple,?> window, int count) {
         super(window.getStream(), window);
         this.triggerPolicy = Policy.COUNT;
         this.triggerConfig = count;
     }
 
-    SPLWindowImpl(TWindow<Tuple> window, long time, TimeUnit unit) {
+    SPLWindowImpl(TWindow<Tuple,?> window, long time, TimeUnit unit) {
         super(window.getStream(), window);
         this.triggerPolicy = Policy.TIME;
         this.triggerConfig = unit.toMillis(time);
@@ -38,5 +38,4 @@ class SPLWindowImpl extends WindowDefinition<Tuple> implements SPLWindow {
         inputPort.window(StreamWindow.Type.SLIDING, policy, config,
                 triggerPolicy, triggerConfig, false);
     }
-
 }

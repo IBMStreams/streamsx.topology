@@ -102,7 +102,7 @@ public class TwitterTrending {
                         return this;
                     }
 
-                }, String.class);
+                });
 
         // Extract the most frequent hashtags
         TStream<ListContainer> hashTagMap = hashtags.last(40000).aggregate(
@@ -117,7 +117,7 @@ public class TwitterTrending {
                         return tre.getTopTen();
                     }
 
-                }, ListContainer.class);
+                });
 
         hashTagMap.print();
 

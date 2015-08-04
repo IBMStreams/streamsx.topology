@@ -81,7 +81,7 @@ public class StringStreams {
             public String apply(T tuple) {
                 return tuple.toString();
             }
-        }, String.class);
+        });
         
         return toString;
     }

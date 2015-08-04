@@ -7,9 +7,8 @@ package vwap;
 import java.io.Serializable;
 
 import com.ibm.streams.operator.Tuple;
-import com.ibm.streamsx.topology.tuple.Keyable;
 
-public abstract class Ticker implements Keyable<String>, Serializable {
+public abstract class Ticker implements Serializable {
 
     /**
      * 
@@ -27,11 +26,6 @@ public abstract class Ticker implements Keyable<String>, Serializable {
 
     Ticker(Ticker ticker) {
         this.ticker = ticker.getTicker();
-    }
-
-    @Override
-    public String getKey() {
-        return getTicker();
     }
 
     public String getTicker() {

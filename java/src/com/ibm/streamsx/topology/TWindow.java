@@ -8,9 +8,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.tuple.Keyable;
 
 /**
  * Declares a window of tuples for a {@link TStream}. Logically a {@code Window}
@@ -20,20 +18,28 @@ import com.ibm.streamsx.topology.tuple.Keyable;
  * stream {@code s}, while
  * {@link TStream#last(long, java.util.concurrent.TimeUnit) s.last(5,
  * TimeUnit.SECONDS)} is a window that always contains all tuples present in the
- * {@code s} in the last five seconds.. <BR>
- * When {@code T} implements {@link Keyable} then the window is partitioned,
- * using the value of {@link Keyable#getKey()}, this means each partition
- * independently maintains the declared window contents for its key.
+ * {@code s} in the last five seconds.
+ * <P>
+ * Typically windows are keyed which means the window's configuration
+ * is independently maintained for each key seen on the stream.
+ * For example with a window created using {@link TStream#last(int) last(3)}
+ * then each key has its own window containing the last
+ * three tuples with the same key.
+ * <BR>
+ * A window is keyed if it is created from a {@link TKeyedStream} 
+ * or using {@link #key(Function)} or {@link #key()} on another window.
  * 
  * @param <T>
  *            Tuple type, any instance of {@code T} at runtime must be
  *            serializable.
+ * @param <K> Key type.
  * 
  * @see TStream#last()
  * @see TStream#last(int)
  * @see TStream#last(long, java.util.concurrent.TimeUnit)
+ * @see TStream#window(TWindow)
  */
-public interface TWindow<T> extends TopologyElement {
+public interface TWindow<T,K> extends TopologyElement {
 
     /**
      * Declares a stream that containing tuples that represent an aggregation of
@@ -49,12 +55,9 @@ public interface TWindow<T> extends TopologyElement {
      * 
      * @param aggregator
      *            Logic to aggregation the complete window contents.
-     * @param tupleClass
-     *            Class of the tuples in the returned stream.
      * @return A stream that contains the latest aggregations of this window.
      */
-    <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
-            Class<A> tupleClass);
+    <A> TStream<A> aggregate(Function<List<T>, A> aggregator);
 
     /**
      * Declares a stream that containing tuples that represent an aggregation of
@@ -73,30 +76,10 @@ public interface TWindow<T> extends TopologyElement {
      *            Approximately how often to perform the aggregation.
      * @param unit
      *            Time unit for {@code period}.
-     * @param tupleClass
-     *            Class of the tuples in the returned stream.
      * @return A stream that contains the latest aggregations of this window.
      */
     <A> TStream<A> aggregate(Function<List<T>, A> aggregator, long period,
-            TimeUnit unit, Class<A> tupleClass);
-
-    /**
-     * Join this window to a stream. This method is identical to calling
-     * {@link TStream#join(TWindow, BiFunction, Class) stream.join(this, joiner,
-     * tupleClass)}.
-     * 
-     * @param stream
-     *            Stream to join with.
-     * @param joiner
-     *            logic processing the join.
-     * @param tupleClass
-     *            Tuple type for the returned stream.
-     * @return Stream containing the results of the join.
-     * 
-     * @see TStream#join(TWindow, BiFunction, Class)
-     */
-    <J, U> TStream<J> join(TStream<U> stream,
-            BiFunction<U, List<T>, J> joiner, Class<J> tupleClass);
+            TimeUnit unit);
 
     /**
      * Class of the tuples in this window. WIll be the same as {@link #getTupleType()}
@@ -118,4 +101,44 @@ public interface TWindow<T> extends TopologyElement {
      * @return This window's stream.
      */
     TStream<T> getStream();
+    
+    /**
+     * Return a keyed window that contains the same tuples as this window. 
+     * A keyed window is a window where each tuple has an inherent
+     * key, defined by {@code keyFunction}.
+     * <P> 
+     * All tuples that have the same key will
+     * be processed as an independent window. For example,
+     * with a window created using {@link TStream#last(int) last(3)}
+     * then each key has its own window containing the last
+     * three tuples with the same key.
+     * </P>
+     * @param keyFunction Function that gets the key from a tuple.
+     * The key function must be stateless.
+     * @return Keyed window containing tuples from this window.
+     * 
+     * @see TKeyedStream
+     * 
+     * @param <U> Type of the key.
+     */
+    <U> TWindow<T,U> key(Function<T,U> keyFunction);
+    
+    /**
+     * Return a keyed window that contains the same tuples as this window. 
+     * The key of each tuple is the tuple itself.
+     * @return Keyed window containing tuples from this window.
+     * 
+     * @see #key(Function)
+     */
+    TWindow<T,T> key();
+    
+    /**
+     * Is the window keyed.
+     * @return {@code true} if the window is keyed, {@code false} if it is not keyed.
+     * 
+     * @see #key(Function)
+     * @see #key()
+     * @see TKeyedStream
+     */
+    boolean isKeyed();
 }

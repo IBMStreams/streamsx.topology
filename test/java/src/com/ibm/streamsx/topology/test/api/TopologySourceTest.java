@@ -26,8 +26,7 @@ public class TopologySourceTest extends TestTopology {
     public void testLimitedSource() throws Exception {
         Topology topology = new Topology("testLimitedSource");
 
-        TStream<String> ts = topology.limitedSource(new SupplierSource(), 4,
-                String.class);
+        TStream<String> ts = topology.limitedSource(new SupplierSource(), 4);
 
         Condition<List<String>> c = topology.getTester().stringContents(ts, "A0", "A1", "A2",
                 "A3");
@@ -51,8 +50,7 @@ public class TopologySourceTest extends TestTopology {
     public void testLimitedSourceN() throws Exception {
         Topology topology = new Topology("testLimitedSourceN");
 
-        TStream<String> ts = topology.limitedSourceN(new FunctionalSource(), 3,
-                String.class);
+        TStream<String> ts = topology.limitedSourceN(new FunctionalSource(), 3);
 
         Condition<List<String>> c = topology.getTester().stringContents(ts, "B3", "B4", "B5");
 
@@ -74,7 +72,7 @@ public class TopologySourceTest extends TestTopology {
     public void testPeriodicSource() throws Exception {
         Topology topology = new Topology();
 
-        TStream<Long> timestamps = topology.periodicSource(new PeriodicSourceTester(), 500, TimeUnit.MILLISECONDS, Long.class);
+        TStream<Long> timestamps = topology.periodicSource(new PeriodicSourceTester(), 500, TimeUnit.MILLISECONDS);
         TStream<String> st = StringStreams.toString(timestamps);
         
         Condition<Long> c = topology.getTester().atLeastTupleCount(st, 20);
@@ -113,7 +111,7 @@ public class TopologySourceTest extends TestTopology {
         Topology topology = new Topology();
 
         TStream<String> ms = topology.periodicMultiSource(new PeriodicMultiSourceTester(),
-                500, TimeUnit.MILLISECONDS, String.class);
+                500, TimeUnit.MILLISECONDS);
         
         Condition<Long> ending = topology.getTester().atLeastTupleCount(ms, 60);
         Condition<List<String>> tuples = topology.getTester().stringContents(ms, "notused");

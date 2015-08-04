@@ -8,6 +8,8 @@ package com.ibm.streamsx.topology.test.internal;
 import static org.junit.Assert.assertEquals;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.junit.Test;
@@ -103,18 +105,21 @@ public class TypeDiscovererTest {
         assertEquals(String.class, clazz);
     }
  
-    /*
+    
     @Test
     public void testList() {
-        ArrayList<Runnable> alr = new ArrayList<>();
-        List<Runnable> lr = alr;
-        _testList(lr, Runnable.class);
+               
+        RunnableList alr =  new RunnableList();
+        _testList(alr, Runnable.class);
+    }
+    
+    public static class RunnableList extends ArrayList<Runnable> implements List<Runnable> {
+        
     }
     
     public static <R> void _testList(List<R> list, Class<R> listClass) {
-        Class<R> clazz = TypeDiscoverer.determineStreamType(list, null);
+        Type clazz = TypeDiscoverer.determineStreamTypeFromFunctionArg(List.class, 0, list);
         
         assertEquals(listClass, clazz);        
     }
-    */
 }

@@ -31,7 +31,7 @@ public class VMArgTest extends TestTopology {
         final String propertyValue = "abcdef832124";
         final String vmArg = "-D" + propertyName + "=" + propertyValue;
         
-        TStream<String> source = topology.limitedSource(new ReadProperty(propertyName), 1, String.class);
+        TStream<String> source = topology.limitedSource(new ReadProperty(propertyName), 1);
 
         final Map<String,Object> config = getConfig();
         @SuppressWarnings("unchecked")

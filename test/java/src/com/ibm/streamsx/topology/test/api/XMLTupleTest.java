@@ -33,7 +33,7 @@ public class XMLTupleTest extends TestTopology {
         String sdata = "<book><title>Dracula</title><author>Bram Stoker</author></book>";
         byte[] data = sdata.getBytes(StandardCharsets.UTF_8);
         XML xml = ValueFactory.newXML(new ByteArrayInputStream(data));
-        TStream<XML> source = topology.constants(Collections.singletonList(xml), XML.class);
+        TStream<XML> source = topology.constants(Collections.singletonList(xml)).asType(XML.class);
         assertNotNull(source);
         assertEquals(XML.class, source.getTupleClass());
         

@@ -7,12 +7,11 @@ package vwap;
 import java.math.BigDecimal;
 
 import com.ibm.streams.operator.Tuple;
-import com.ibm.streamsx.topology.TStream;
-import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.spl.SPLStream;
 
 public class Trade extends Ticker {
-
+    
     /**
      * 
      */
@@ -43,17 +42,22 @@ public class Trade extends Ticker {
         return "TRADE: " + getTicker() + " price=" + price + " volume="
                 + volume;
     }
+    
+    /**
+     * Convert a trade SPL tuple to a Trade object.
+     */
+    public static Trade convertToTrade(Tuple tuple) {
+        if ("Trade".equals(tuple.getString("ttype")))
+            return new Trade(tuple);
+        return null;
 
-    public static TStream<Trade> getTrades(SPLStream tradeQuotes) {
-        return tradeQuotes.transform(new Function<Tuple, Trade>() {
-            private static final long serialVersionUID = 1L;
+    }
 
-            @Override
-            public Trade apply(Tuple tuple) {
-                if ("Trade".equals(tuple.getString("ttype")))
-                    return new Trade(tuple);
-                return null;
-            }
-        });
+    /**
+     * Get the stream of trades from the SPL stream.
+     * The stream is keyed by the ticker symbol.
+     */
+    public static TKeyedStream<Trade,String> getTrades(SPLStream tradeQuotes) {
+        return tradeQuotes.transform(Trade::convertToTrade).key(Trade::getTicker);
     }
 }

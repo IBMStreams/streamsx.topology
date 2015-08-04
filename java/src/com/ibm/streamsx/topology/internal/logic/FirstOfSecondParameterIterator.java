@@ -20,7 +20,7 @@ public class FirstOfSecondParameterIterator<T, U, R> implements
     @Override
     public R apply(T t, List<U> us) {
         if (us.isEmpty())
-            return null;
+            return logic.apply(t, null);
         
         return logic.apply(t, us.get(0));
     }

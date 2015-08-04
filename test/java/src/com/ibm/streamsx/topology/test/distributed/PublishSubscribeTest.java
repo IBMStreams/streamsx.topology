@@ -110,7 +110,7 @@ public class PublishSubscribeTest extends TestTopology {
             @Override
             public Blob apply(String v) {
                 return ValueFactory.newBlob(v.getBytes(StandardCharsets.UTF_8));
-            }}, Blob.class);
+            }});
         
         blobs.publish("/testPublishBlob");
         
@@ -121,7 +121,7 @@ public class PublishSubscribeTest extends TestTopology {
             @Override
             public String apply(Blob v) {
                 return new String(v.getData(), StandardCharsets.UTF_8);
-            }}, String.class);      
+            }});      
 
         return strings;
     }
@@ -149,7 +149,7 @@ public class PublishSubscribeTest extends TestTopology {
                 } catch (IOException e) {
                     return null;
                 }
-            }}, XML.class);
+            }});
         
         xml.publish("/testPublishXML");
         
@@ -168,7 +168,7 @@ public class PublishSubscribeTest extends TestTopology {
                     return null;
                 }
                 return new String(data, 0, read, StandardCharsets.UTF_8);
-            }}, String.class);      
+            }});      
 
         return strings;
     }
@@ -192,7 +192,7 @@ public class PublishSubscribeTest extends TestTopology {
             @Override
             public SimpleString apply(String v) {
                 return new SimpleString(v);
-            }}, SimpleString.class);
+            }});
         
         objects.publish("/testPublishJavaObject");
         
@@ -217,7 +217,7 @@ public class PublishSubscribeTest extends TestTopology {
         ints.add(new SimpleInt(1));
         ints.add(new SimpleInt(2));
         ints.add(new SimpleInt(3));
-        TStream<SimpleInt> sints = t.constants(ints, SimpleInt.class);
+        TStream<SimpleInt> sints = t.constants(ints).asType(SimpleInt.class);
         sints = sints.modify(new Delay<SimpleInt>());
         sints.publish("/testPublishJavaObjects");
         
@@ -229,7 +229,7 @@ public class PublishSubscribeTest extends TestTopology {
             @Override
             public SimpleString apply(String v) {
                 return new SimpleString(v);
-            }}, SimpleString.class);
+            }}).asType(SimpleString.class);
         
         objects.publish("/testPublishJavaObjects");
                 

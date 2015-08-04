@@ -9,6 +9,7 @@ import static com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor.
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
@@ -88,6 +89,16 @@ public class JavaFunctional {
         
         StreamSchema mappingSchema = Schemas.getSPLMappingSchema(tupleType);
         BOutputPort bstream = bop.addOutput(mappingSchema);
+        
+        return getJavaTStream(te, bop, bstream, tupleType);
+    }
+    
+    /**
+     * Create a Java stream on top of an output port.
+     * Multiple streams can be added to an output port.
+     */
+    public static <T> TStream<T> getJavaTStream(TopologyElement te,
+            BOperatorInvocation bop, BOutputPort bstream, Type tupleType) {
         bstream.json().put("type.native", tupleType.toString()); // Java 8 should use getTypeName
         addDependency(te, bop, tupleType);
         
@@ -96,8 +107,8 @@ public class JavaFunctional {
         if (!VIEWABLE_TYPES.contains(tupleType)) {
             bop.addConfig("streamViewability", false);
         }
-
         return new StreamImpl<T>(te, bstream, tupleType);
+
     }
 
     /**
@@ -132,12 +143,19 @@ public class JavaFunctional {
     /**
      * Add a dependency for the operator to a Java tuple type.
      */
-    private static void addDependency(TopologyElement te,
+    public static void addDependency(TopologyElement te,
             BOperatorInvocation bop, Type tupleType) {
         if (Tuple.class.equals(tupleType))
             return;
         if (tupleType instanceof Class)
             te.topology().getDependencyResolver().addJarDependency(bop, (Class<?>) tupleType);
+        if (tupleType instanceof ParameterizedType) {
+            
+            ParameterizedType pt = (ParameterizedType) tupleType;
+            addDependency(te, bop, pt.getRawType());
+            for (Type typeArg : pt.getActualTypeArguments())
+                addDependency(te, bop, typeArg);           
+        }
     }
 
     /**

@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.test.api;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +16,7 @@ import org.junit.Test;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.Topology;
@@ -24,7 +26,6 @@ import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
-import com.ibm.streamsx.topology.tuple.Keyable;
 
 public class WindowTest extends TestTopology {
 
@@ -58,7 +59,7 @@ public class WindowTest extends TestTopology {
         }
     }
 
-    public static void assertWindow(Topology f, TWindow<?> window) {
+    public static void assertWindow(Topology f, TWindow<?,?> window) {
         TopologyTest.assertFlowElement(f, window);
     }
 
@@ -66,7 +67,7 @@ public class WindowTest extends TestTopology {
     public void testBasicCount() throws Exception {
         final Topology f = new Topology("CountWindow");
         TStream<String> source = f.strings("a", "b", "c");
-        TWindow<String> window = source.last(10);
+        TWindow<String,?> window = source.last(10);
         assertNotNull(window);
         assertWindow(f, window);
     }
@@ -75,7 +76,7 @@ public class WindowTest extends TestTopology {
     public void testBasicTime() throws Exception {
         final Topology f = new Topology("TimeWindow");
         TStream<String> source = f.strings("a", "b", "c");
-        TWindow<String> window = source.last(10, TimeUnit.SECONDS);
+        TWindow<String,?> window = source.last(10, TimeUnit.SECONDS);
         assertNotNull(window);
         assertWindow(f, window);
     }
@@ -84,26 +85,37 @@ public class WindowTest extends TestTopology {
     public void testCountAggregate() throws Exception {
         final Topology f = new Topology("CountAggregate");
         TStream<Number> source = f.numbers(1, 2, 3, 4, 5, 6, 7);
-        TWindow<Number> window = source.last(3);
-        TStream<Integer> aggregate = window.aggregate(new SumInt(),
-                Integer.class);
+        TWindow<Number,?> window = source.last(3);
+        TStream<Integer> aggregate = window.aggregate(new SumInt());
         
         completeAndValidate(aggregate, 10, "1", "3", "6", "9", "12", "15", "18");
     }
 
     @Test
     public void testKeyedAggregate() throws Exception {
-
-        final Topology f = new Topology("PartitionedAggregate");
-        TStream<StockPrice> source = f.constants(Arrays.asList(PRICES),
-                StockPrice.class);
-
-        TStream<StockPrice> aggregate = source.last(2).aggregate(new AveragePrice(), StockPrice.class);
-
+        TStream<StockPrice> aggregate = _testKeyedAggregate();
+        
         completeAndValidate(aggregate, 10, "A:1000", "B:4004", "C:2013", "A:1005",
                 "A:1010", "B:4005", "A:1010", "C:2007", "B:4008", "C:2003",
                 "A:1015", "B:4010", "B:4009", "B:4008", "A:1021", "C:2005",
                 "C:2018", "A:1024");
+    }
+    
+    private static TStream<StockPrice> _testKeyedAggregate() throws Exception {
+
+        final Topology f = new Topology("PartitionedAggregate");
+        TStream<StockPrice> source = f.constants(Arrays.asList(PRICES)).asType(StockPrice.class);
+
+        TStream<StockPrice> aggregate = source.last(2).key(new Function<StockPrice,String>() {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public String apply(StockPrice v) {
+                return v.getKey();
+            }}).aggregate(new AveragePrice());
+        
+        return aggregate;
     }
 
     static final StockPrice[] PRICES = { new StockPrice("A", 1000),
@@ -118,10 +130,40 @@ public class WindowTest extends TestTopology {
             new StockPrice("A", 1026),
 
     };
+    
+    // Aggregate from a keyed stream.
+    @Test
+    public void testKeyedStreamAggregate() throws Exception {
+        TStream<StockPrice> aggregate = _testStreamKeyedAggregate();
+        
+        completeAndValidate(aggregate, 10, "A:1000", "B:4004", "C:2013", "A:1005",
+                "A:1010", "B:4005", "A:1010", "C:2007", "B:4008", "C:2003",
+                "A:1015", "B:4010", "B:4009", "B:4008", "A:1021", "C:2005",
+                "C:2018", "A:1024");
+    }
+    
+    private static TStream<StockPrice> _testStreamKeyedAggregate() throws Exception {
 
-    @SuppressWarnings("serial")
-    public static class StockPrice implements Keyable<String> {
+        final Topology f = new Topology("KeyedStreamAggregate");
 
+        TKeyedStream<StockPrice,String> source = f.constants(Arrays.asList(PRICES)).key(new Function<StockPrice,String>() {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public String apply(StockPrice v) {
+                return v.getKey();
+            }});        
+
+        TStream<StockPrice> aggregate = source.last(2).aggregate(new AveragePrice());
+        
+        return aggregate;
+    }
+
+    public static class StockPrice implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+        
         private final String ticker;
         private final int price;
 
@@ -130,7 +172,6 @@ public class WindowTest extends TestTopology {
             this.price = price;
         }
 
-        @Override
         public String getKey() {
             return ticker;
         }
@@ -174,9 +215,9 @@ public class WindowTest extends TestTopology {
     @Test
     public void testContinuousAggregateLastSeconds() throws Exception {
         final Topology t = new Topology();
-        TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS, String.class);
+        TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);
         
-        TStream<JSONObject> aggregate = source.last(3, TimeUnit.SECONDS).aggregate(new AggregateStrings(), JSONObject.class);
+        TStream<JSONObject> aggregate = source.last(3, TimeUnit.SECONDS).aggregate(new AggregateStrings());
         TStream<String> strings = JSONStreams.serialize(aggregate);
         
         Tester tester = t.getTester();
@@ -221,10 +262,10 @@ public class WindowTest extends TestTopology {
     @Test
     public void testPeriodicAggregateLastSeconds() throws Exception {
         final Topology t = new Topology();
-        TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS, String.class);
+        TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);
         
         TStream<JSONObject> aggregate = source.last(3, TimeUnit.SECONDS).aggregate(
-                new AggregateStrings(), 1, TimeUnit.SECONDS, JSONObject.class);
+                new AggregateStrings(), 1, TimeUnit.SECONDS);
         TStream<String> strings = JSONStreams.serialize(aggregate);
         
         Tester tester = t.getTester();
