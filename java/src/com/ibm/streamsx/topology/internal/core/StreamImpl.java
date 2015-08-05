@@ -85,7 +85,14 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
         
-       return JavaFunctional.addJavaOutput(this, bop, refineType(Predicate.class, 0, filter));
+       return addMatchingOutput(bop, refineType(Predicate.class, 0, filter));
+    }
+    
+    protected TStream<T> addMatchingOutput(BOperatorInvocation bop, Type tupleType) {
+        return JavaFunctional.addJavaOutput(this, bop, tupleType);
+    }
+    protected TStream<T> addMatchingStream(BOutput output) {
+        return new StreamImpl<T>(this, output, getTupleType());
     }
     
     /**
@@ -133,10 +140,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 
         String opName = transformer.getClass().getSimpleName();
         if (opName.isEmpty()) {
-            if (transformer instanceof UnaryOperator)               
-                opName = getTupleName() + "Modify";
-            else
-                opName = TypeDiscoverer.getTupleName(tupleType) + "Transform" +
+            opName = TypeDiscoverer.getTupleName(tupleType) + "Transform" +
                         getTupleName();                
         }
 
@@ -150,11 +154,28 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         return JavaFunctional.addJavaOutput(this, bop, tupleType);
     }
     
+    private TStream<T> _modify(UnaryOperator<T> transformer, Type tupleType) {
+        
+        String opName = transformer.getClass().getSimpleName();
+        if (opName.isEmpty()) {
+            opName = getTupleName() + "Modify";
+        }
+
+        BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
+                opName,
+                FunctionTransform.class, transformer);
+        SourceInfo.setSourceInfo(bop, StreamImpl.class);
+        BInputPort inputPort = connectTo(bop, true, null);
+        // By default add a queue
+        inputPort.addQueue(true);
+        return this.addMatchingOutput(bop, tupleType);
+    }
+    
 
 
     @Override
     public TStream<T> modify(UnaryOperator<T> modifier) {
-        return _transform(modifier, refineType(UnaryOperator.class, 0, modifier));
+        return _modify(modifier, refineType(UnaryOperator.class, 0, modifier));
     }
 
     @Override
@@ -224,7 +245,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public TStream<T> sample(final double fraction) {
-        if (fraction <= 0.0 || fraction >= 1.0)
+        if (fraction < 0.0 || fraction > 1.0)
             throw new IllegalArgumentException();
         return filter(new RandomSample<T>(fraction));
     }
@@ -346,7 +367,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                     .remove("__spl_hash"));
         }
 
-        return new StreamImpl<T>(this, parallelOutput, getTupleType());
+        return addMatchingStream(parallelOutput);
     }
     
     ToIntFunction<?> parallelHasher(TStream.Routing routing) {
@@ -365,8 +386,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public TStream<T> unparallel() {
 
         // TODO - error checking!
-        return new StreamImpl<T>(this, builder().unparallel(output()),
-                getTupleType());
+        return addMatchingStream(builder().unparallel(output()));
     }
 
     @Override
@@ -400,21 +420,21 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public TStream<T> isolate() {
         BOutput toBeIsolated = output();
         BOutput isolatedOutput = builder().isolate(toBeIsolated); 
-        return new StreamImpl<T>(this, isolatedOutput, getTupleType());
+        return addMatchingStream(isolatedOutput);
     }
     
     @Override
     public TStream<T> lowLatency() {
         BOutput toBeLowLatency = output();
         BOutput lowLatencyOutput = builder().lowLatency(toBeLowLatency);
-        return new StreamImpl<T>(this, lowLatencyOutput, getTupleType());
+        return addMatchingStream(lowLatencyOutput);
     }
 
     @Override
     public TStream<T> endLowLatency() {
         BOutput toEndLowLatency = output();
         BOutput endedLowLatency = builder().endLowLatency(toEndLowLatency);
-        return new StreamImpl<T>(this, endedLowLatency, getTupleType());
+        return addMatchingStream(endedLowLatency);
 
     }
 
@@ -435,8 +455,10 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 FunctionSplit.class, splitter);
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
+        
+        Type outputType = refineType(ToIntFunction.class, 0, splitter);
         for (int i = 0; i < n; i++) {
-            TStream<T> splitOutput = JavaFunctional.addJavaOutput(this, bop, getTupleType());
+            TStream<T> splitOutput = JavaFunctional.addJavaOutput(this, bop, outputType);
             l.add(splitOutput);
         }
 

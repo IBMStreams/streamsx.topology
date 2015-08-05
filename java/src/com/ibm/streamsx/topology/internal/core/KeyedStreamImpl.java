@@ -97,6 +97,10 @@ class KeyedStreamImpl<T,K> extends StreamImpl<T> implements TKeyedStream<T, K> {
     public TKeyedStream<T,K> unparallel() {
         return _key(super.unparallel());
     } 
+    @Override
+    public TKeyedStream<T,K> isolate() {
+        return _key(super.isolate());
+    }
    
     @Override
     public TWindow<T, K> window(TWindow<?, ?> window) {

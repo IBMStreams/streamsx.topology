@@ -6,6 +6,8 @@ package com.ibm.streamsx.topology.spl;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.lang.reflect.Type;
+import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
@@ -14,8 +16,11 @@ import com.ibm.streams.operator.encoding.CharacterEncoding;
 import com.ibm.streams.operator.encoding.EncodingFactory;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
-import com.ibm.streamsx.topology.builder.BOutputPort;
+import com.ibm.streamsx.topology.builder.BOperatorInvocation;
+import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.internal.core.StreamImpl;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.json.JSONSchemas;
@@ -23,7 +28,7 @@ import com.ibm.streamsx.topology.json.JSONStreams.DeserializeJSON;
 
 class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
 
-    public SPLStreamImpl(TopologyElement te, BOutputPort stream) {
+    public SPLStreamImpl(TopologyElement te, BOutput stream) {
         super(te, stream, Tuple.class);
     }
 
@@ -89,13 +94,64 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     }
     
     @Override
-    public TStream<Tuple> parallel(int width,
+    public SPLStream filter(Predicate<Tuple> filter) {
+        return asSPL(super.filter(filter));       
+    }
+    @Override
+    public SPLStream isolate() {
+        return asSPL(super.isolate());
+    }
+    @Override
+    public SPLStream modify(UnaryOperator<Tuple> modifier) {
+        return asSPL(super.modify(modifier));
+    }
+    @Override
+    public SPLStream sample(double fraction) {
+        return asSPL(super.sample(fraction));
+    }
+    @Override
+    public SPLStream throttle(long delay, TimeUnit unit) {
+        return asSPL(super.throttle(delay, unit));
+    }
+    @Override
+    public SPLStream lowLatency() {
+        return asSPL(super.lowLatency());
+    }
+    @Override
+    public SPLStream endLowLatency() {
+        return asSPL(super.endLowLatency());
+    }
+       
+    private SPLStream asSPL(TStream<Tuple> tupleStream) {
+        // must have been created from addMatchingOutput or addMatchingStream
+        return (SPLStream) tupleStream;
+    }
+    
+    protected SPLStream addMatchingOutput(BOperatorInvocation bop, Type tupleType) {
+        return new SPLStreamImpl(this, bop.addOutput(getSchema())); 
+    }
+    protected SPLStream addMatchingStream(BOutput output) {
+        return new SPLStreamImpl(this, output);
+    }
+    
+    @Override
+    public SPLStream parallel(int width) {
+        return asSPL(super.parallel(width));
+    }
+    
+    @Override
+    public SPLStream parallel(int width,
             com.ibm.streamsx.topology.TStream.Routing routing) {
         if(routing != TStream.Routing.ROUND_ROBIN){
             throw new IllegalArgumentException("Partitioning is not currently "
                     + "supported with SPLStreams.");
         }
-        return super.parallel(width, routing);
+        return asSPL(super.parallel(width, routing));
+    }
+    
+    @Override
+    public SPLStream unparallel() {
+        return asSPL(super.unparallel());
     }
 
     public static class TupleToString implements Function<Tuple, String> {
