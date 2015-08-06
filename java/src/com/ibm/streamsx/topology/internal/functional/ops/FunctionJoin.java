@@ -33,7 +33,7 @@ public class FunctionJoin extends FunctionWindow {
 
     @Override
     void createWindowListener(StreamWindow<Tuple> window)
-            throws ClassNotFoundException {
+            throws Exception {
         if (window.isPartitioned()) {
             Function<Object,Object> functionKeyGetter = getLogicObject(getKeyGetter());
             joiner = new PartitionedSlidingJoin<Object, Object, Object>(
@@ -41,6 +41,7 @@ public class FunctionJoin extends FunctionWindow {
         } else {
             joiner = new SlidingJoin<Object, Object, Object>(this, window);
         }
+        setLogic(joiner);
     }
 
     /**

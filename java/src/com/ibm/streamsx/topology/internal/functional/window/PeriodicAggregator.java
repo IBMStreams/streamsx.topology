@@ -22,7 +22,7 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
 public class PeriodicAggregator<I, O> extends SlidingSetAggregator<I, O> {
 
     public PeriodicAggregator(FunctionWindow op, StreamWindow<Tuple> window)
-            throws ClassNotFoundException {
+            throws Exception {
         super(op, window);
     }
 

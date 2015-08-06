@@ -31,7 +31,7 @@ public class SlidingJoin<T, U, J> extends SlidingSet<U, J> {
     protected SPLMapping<T> input1Mapping;
 
     public SlidingJoin(FunctionWindow op, StreamWindow<Tuple> window)
-            throws ClassNotFoundException {
+            throws Exception {
         super(op, window);
         joiner = getLogicObject(op.getFunctionalLogic());
         op.setLogic(joiner);

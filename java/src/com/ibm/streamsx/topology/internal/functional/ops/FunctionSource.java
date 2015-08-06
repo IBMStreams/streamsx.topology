@@ -42,6 +42,7 @@ public class FunctionSource extends ProcessTupleProducer implements Functional {
         data = getLogicObject(getFunctionalLogic());
         output = getOutput(0);
         mapping = getOutputMapping(this, 0);
+        FunctionFunctor.initializeLogic(context, data);
     }
 
     public String getFunctionalLogic() {
