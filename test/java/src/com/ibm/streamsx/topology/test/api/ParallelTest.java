@@ -26,6 +26,8 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.FunctionContext;
+import com.ibm.streamsx.topology.function.Initializable;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
@@ -253,16 +255,21 @@ public class ParallelTest extends TestTopology {
     }
     
     @SuppressWarnings("serial")
+    static abstract class ChannelGetter<F,R> implements Function<F,R>, Initializable {
+        int channel = -1;
+        
+        @Override
+        public void initialize(FunctionContext functionContext)
+                throws Exception {
+            channel = functionContext.getChannel();         
+        }
+    }
+    
+    @SuppressWarnings("serial")
     static Function<BeaconTuple, ChannelAndSequence> channelSeqTransformer() {
-        return new Function<BeaconTuple, ChannelAndSequence>() {
-            int channel = -1;
-
+        return new ChannelGetter<BeaconTuple, ChannelAndSequence>() {
             @Override
             public ChannelAndSequence apply(BeaconTuple v) {
-                if (channel == -1) {
-                    channel = PERuntime.getCurrentContext().getChannel();
-                }
-                // TODO Auto-generated method stub
                 return new ChannelAndSequence(channel, (int) v.getSequence());
             }
         };
@@ -270,15 +277,9 @@ public class ParallelTest extends TestTopology {
     
     @SuppressWarnings("serial")
     static Function<String, ChannelAndSequence> stringTupleChannelSeqTransformer() {
-        return new Function<String, ChannelAndSequence>() {
-            int channel = -1;
-
+        return new ChannelGetter<String, ChannelAndSequence>() {
             @Override
             public ChannelAndSequence apply(String v) {
-               
-                if (channel == -1) {
-                    channel = PERuntime.getCurrentContext().getChannel();
-                }
                 return new ChannelAndSequence(channel, Integer.parseInt(v));
             }
 
@@ -287,15 +288,9 @@ public class ParallelTest extends TestTopology {
 
     @SuppressWarnings("serial")
     static Function<BeaconTuple, Integer> randomHashProducer() {
-        return new Function<BeaconTuple, Integer>() {
-            int channel = -1;
-
+        return new ChannelGetter<BeaconTuple, Integer>() {
             @Override
             public Integer apply(BeaconTuple v) {
-                if (channel == -1) {
-                    channel = PERuntime.getCurrentContext().getChannel();
-                }
-                // TODO Auto-generated method stub
                 return channel;
             }
 
