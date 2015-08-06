@@ -377,13 +377,18 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         throw new IllegalArgumentException("Routing not supported for this stream:" + routing);
     }
 
-    
+    @Override
     public TStream<T> parallel(int width) {
         return parallel(width, TStream.Routing.ROUND_ROBIN);
     }
     
-
+    @Override
     public TStream<T> unparallel() {
+        return endParallel();
+    }
+
+    @Override
+    public TStream<T> endParallel() {
 
         // TODO - error checking!
         return addMatchingStream(builder().unparallel(output()));

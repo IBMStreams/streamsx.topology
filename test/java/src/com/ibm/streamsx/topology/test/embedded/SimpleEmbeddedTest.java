@@ -150,7 +150,7 @@ public class SimpleEmbeddedTest {
             .parallel(2)
                 .filter(nilFilter)
                 .filter(nilFilter)
-            .unparallel()
+            .endParallel()
         .print();
 
         StreamsContext<?> sc = StreamsContextFactory

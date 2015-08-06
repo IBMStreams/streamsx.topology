@@ -179,7 +179,7 @@ public class StreamTest extends TestTopology {
 
         final Topology topology = new Topology("EmbeddedParallel");
         TStream<Number> s1 = topology.numbers(1, 2, 3, 94, 5, 6).parallel(6)
-                .filter(new AllowAll<Number>()).unparallel();
+                .filter(new AllowAll<Number>()).endParallel();
 
         TStream<String> sp = StringStreams.toString(s1);
 

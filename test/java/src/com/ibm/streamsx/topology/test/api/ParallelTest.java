@@ -50,7 +50,7 @@ public class ParallelTest extends TestTopology {
         TStream<BeaconTuple> pb = fb.parallel(5);
 
         TStream<Integer> is = pb.transform(randomHashProducer());
-        TStream<Integer> joined = is.unparallel();
+        TStream<Integer> joined = is.endParallel();
         TStream<String> numRegions = joined.transform(
                 uniqueIdentifierMap(count));
 
@@ -84,7 +84,7 @@ public class ParallelTest extends TestTopology {
                 keyableBeacon5Counter(count)));
         TStream<BeaconTuple> pb = kb.parallel(5);
         TStream<ChannelAndSequence> cs = pb.transform(channelSeqTransformer());
-        TStream<ChannelAndSequence> joined = cs.unparallel();
+        TStream<ChannelAndSequence> joined = cs.endParallel();
 
         TStream<String> valid_count = joined.transform(partitionCounter(count));
 
@@ -121,7 +121,7 @@ public class ParallelTest extends TestTopology {
                 stringTuple5Counter(count));
         TStream<String> pb = kb.parallel(5, TStream.Routing.HASH_PARTITIONED);
         TStream<ChannelAndSequence> cs = pb.transform(stringTupleChannelSeqTransformer());
-        TStream<ChannelAndSequence> joined = cs.unparallel();
+        TStream<ChannelAndSequence> joined = cs.endParallel();
 
         TStream<String> valid_count = joined.transform(partitionCounter(count));
 
@@ -351,11 +351,11 @@ public class ParallelTest extends TestTopology {
         TStream<String> splitChFanin = splitChResults.get(0).union(
                         new HashSet<>(splitChResults.subList(1, splitChResults.size())));
         
-        // workaround: avoid union().unparallel() bug  issue#127
+        // workaround: avoid union().endParallel() bug  issue#127
         splitChFanin = splitChFanin.filter(new AllowAll<String>());
 
         /////////////////////////////////////
-        TStream<String> all = splitChFanin.unparallel();
+        TStream<String> all = splitChFanin.endParallel();
         all.print();
 
         Tester tester = topology.getTester();
@@ -408,7 +408,7 @@ public class ParallelTest extends TestTopology {
         strings.print();
         TStream<String> stringsP = strings.parallel(3);
         stringsP = stringsP.filter(new AllowAll<String>());
-        stringsP = stringsP.unparallel();
+        stringsP = stringsP.endParallel();
         
         Tester tester = topology.getTester();
         

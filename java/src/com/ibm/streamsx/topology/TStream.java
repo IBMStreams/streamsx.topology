@@ -525,11 +525,15 @@ public interface TStream<T> extends TopologyElement {
      * so that each tuple with the same {@link TKeyedStream#getKeyFunction() key} will be sent to the same channel.
      * Otherwise, the parallel channels are not partitioned, and tuples are routed
      * in a round-robin fashion.
+     * <BR>
+     * Subsequent transformations on the returned stream will be executed
+     * {@code width} channels until {@link #endParallel()} is called or
+     * the stream terminates.
      * <br>
      * See {@link #parallel(int, Routing)} for more information.
      * @param width
      *            The degree of parallelism in the parallel region.
-     * @return A reference to a stream for which subsequent operations will be
+     * @return A reference to a stream for which subsequent transformations will be
      *         executed in parallel using {@code width} channels.
      */
     TStream<T> parallel(int width);
@@ -560,7 +564,7 @@ public interface TStream<T> extends TopologyElement {
      * TStream&lt;String> myStream = ...;
      * TStream&lt;String> parallel_start = myStream.parallel(3, TStream.Routing.ROUND_ROBIN);
      * TStream&lt;String> in_parallel = parallel_start.filter(...).transform(...);
-     * TStream&lt;String> joined_parallel_streams = in_parallel.unparallel();
+     * TStream&lt;String> joined_parallel_streams = in_parallel.endParallel();
      * </code>
      * </pre>
      * 
@@ -582,7 +586,7 @@ public interface TStream<T> extends TopologyElement {
      * case) operate independently from one another. <br>
      * <br>
      * parallel() will only parallelize the stream operations performed <b>after</b>
-     * the call to parallel() and before the call to unparallel().
+     * the call to parallel() and before the call to endParallel().
      * 
      * In the above example, the parallel() was invoked on {@code myStream}, so
      * its subsequent functions, filter() and transform(), were parallelized. <br>
@@ -599,12 +603,12 @@ public interface TStream<T> extends TopologyElement {
      * {@code myParallelStream} will be printed to output in parallel. In other
      * words, a parallel sink is created by calling {@link #parallel(int)} and 
      * creating a sink operation (such as {@link TStream#sink(Consumer)}). <b>
-     * It is not necessary to invoke {@link #unparallel()} on parallel sinks.</b>
+     * It is not necessary to invoke {@link #endParallel()} on parallel sinks.</b>
      * <br><br>
      * Limitations of parallel() are as follows: <br>
      * Nested parallelism is not currently supported. A call to parallel()
      * should never be made immediately after another call to parallel() without
-     * having an unparallel() in between. <br>
+     * having an endParallel() in between. <br>
      * <br>
      * Parallel() should not be invoked immediately after another call to
      * parallel(). The following is invalid:
@@ -617,22 +621,22 @@ public interface TStream<T> extends TopologyElement {
      * </code>
      * 
      * There must be at least one stream function between a parallel() and
-     * unparallel() invocation. The following is invalid:
+     * endParallel() invocation. The following is invalid:
      * 
      * <pre>
      * <code>
-     * myStream.parallel(2).unparallel();
+     * myStream.parallel(2).endParallel();
      * </pre>
      * 
      * </code>
      * 
-     * Every call to unparallel() must have a call to parallel preceding it. The
+     * Every call to endParallel() must have a call to parallel preceding it. The
      * following is invalid:
      * 
      * <pre>
      * <code>
      * Stream<String> myStream = topology.strings("a","b","c");
-     * myStream.unparallel();
+     * myStream.endParallel();
      * </pre>
      * 
      * </code>
@@ -663,15 +667,20 @@ public interface TStream<T> extends TopologyElement {
     TStream<T> parallel(int width, Routing routing);
     
     /**
-     * unparallel() merges the parallel channels of a parallelized stream.
-     * returns a stream for which subsequent operations will not be
-     * performed in parallel. Additionally, it merges any partitions which may
-     * have been present in the parallel channels. <br>
-     * <br>
-     * For additional documentation, see {@link TStream#parallel(int)}
+     * Ends a parallel region by merging the channels into a single stream.
      * 
-     * @return A stream for which subsequent operations are no longer parallelized.
+     * @return A stream for which subsequent transformations are no longer parallelized.
+     * @see #parallel(int)
+     * @see #parallel(int, Routing)
      */
+    TStream<T> endParallel();
+    
+    /**
+     * Ends a parallel region by merging the channels into a single stream.
+     * @deprecated Replaced by {@link #endParallel()}.
+     * @return A stream for which subsequent transformations are no longer parallelized.
+     */
+    @Deprecated
     TStream<T> unparallel();
 
     /**

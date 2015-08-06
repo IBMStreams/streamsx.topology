@@ -150,8 +150,8 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     }
     
     @Override
-    public SPLStream unparallel() {
-        return asSPL(super.unparallel());
+    public SPLStream endParallel() {
+        return asSPL(super.endParallel());
     }
 
     public static class TupleToString implements Function<Tuple, String> {

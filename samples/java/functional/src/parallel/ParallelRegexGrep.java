@@ -83,9 +83,9 @@ public class ParallelRegexGrep {
                     }
                 });
 
-        // Join the results of each parallel filter into one stream, effectively
+        // Join the results of each parallel filter into one stream,
         // merging the parallel streams back into one stream.
-        TStream<String> filtered_condensed = filtered_parallel.unparallel();
+        TStream<String> filtered_condensed = filtered_parallel.endParallel();
 
         // Print the combined results
         filtered_condensed.print();

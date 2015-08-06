@@ -226,7 +226,7 @@ public class SPLStreamsTest extends TestTopology {
         
         splStreamA = splStreamA.filter(new AllowAll<Tuple>());
         
-        splStreamB = splStreamA.unparallel();
+        splStreamB = splStreamA.endParallel();
         assertSPLStream(splStreamB, TEST_SCHEMA);
         assertNotSame(splStreamA, splStreamB);
         
@@ -238,7 +238,7 @@ public class SPLStreamsTest extends TestTopology {
         
         splStreamA = splStreamA.filter(new AllowAll<Tuple>());
         
-        splStreamB = splStreamA.unparallel();
+        splStreamB = splStreamA.endParallel();
         assertSPLStream(splStreamB, TEST_SCHEMA);
         assertNotSame(splStreamA, splStreamB);
         
