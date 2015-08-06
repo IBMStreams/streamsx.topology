@@ -252,10 +252,9 @@ public class KafkaStreamsTest extends TestTopology {
         msgs.add(new Vals(mgen.create(topic, "Msg with an empty key"), "", null));
         msgs.add(new Vals("", mgen.create(topic, null, "Msg with an empty msg (this is the key)"), null));
         
-        TStream<Vals> valsToPublish = top.constants(msgs, Vals.class);
+        TStream<Vals> valsToPublish = top.constants(msgs);
         
-        TStream<Message> msgsToPublish = valsToPublish.transform(
-                                msgFromValsFunc(null), Message.class);
+        TStream<Message> msgsToPublish = valsToPublish.transform(msgFromValsFunc(null));
         
         producer.publish(msgsToPublish, topic);
         
@@ -264,8 +263,7 @@ public class KafkaStreamsTest extends TestTopology {
         // for validation...
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        TStream<String> rcvdAsString = rcvdMsgs.transform(
-                                            msgToJSONStringFunc(), String.class);
+        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
         List<Message> expectedAsMessage = mapList(msgs,
                                             msgFromValsFunc(topic));
         expectedAsMessage = modifyList(expectedAsMessage, adjustKey());
@@ -294,10 +292,9 @@ public class KafkaStreamsTest extends TestTopology {
         msgs.add(new Vals(mgen.create(topic, "Hello"), null, null));
         msgs.add(new Vals(mgen.create(topic, "key1", "Are you there?"), "key1", null));
         
-        TStream<Vals> valsToPublish = top.constants(msgs, Vals.class);
+        TStream<Vals> valsToPublish = top.constants(msgs);
         
-        TStream<Message> msgsToPublish = valsToPublish.transform(
-                                msgFromValsFunc(topic), Message.class);
+        TStream<Message> msgsToPublish = valsToPublish.transform(msgFromValsFunc(topic));
         
         producer.publish(msgsToPublish);
         
@@ -306,8 +303,7 @@ public class KafkaStreamsTest extends TestTopology {
         // for validation...
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        TStream<String> rcvdAsString = rcvdMsgs.transform(
-                                            msgToJSONStringFunc(), String.class);
+        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
         List<Message> expectedAsMessage = mapList(msgs,
                                             msgFromValsFunc(topic));
         List<String> expectedAsString = mapList(expectedAsMessage,
@@ -335,7 +331,7 @@ public class KafkaStreamsTest extends TestTopology {
         msgs.add(new SimpleMessage(mgen.create(topic, "Hello")));
         msgs.add(new SimpleMessage(mgen.create(topic, "key1", "Are you there?"), "key1"));
         
-        TStream<Message> msgsToPublish = top.constants(msgs, Message.class);
+        TStream<Message> msgsToPublish = top.constants(msgs);
         
         producer.publish(msgsToPublish, topic);
         
@@ -344,8 +340,7 @@ public class KafkaStreamsTest extends TestTopology {
         // for validation...
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        TStream<String> rcvdAsString = rcvdMsgs.transform(
-                                            msgToJSONStringFunc(), String.class);
+        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
         msgs = modifyList(msgs, setTopic(topic));
         List<String> expectedAsString = mapList(msgs,
                                             msgToJSONStringFunc());
@@ -372,7 +367,7 @@ public class KafkaStreamsTest extends TestTopology {
         msgs.add(new MyMsgSubtype(mgen.create(topic, "Hello")));
         msgs.add(new MyMsgSubtype(mgen.create(topic, "key1", "Are you there?"), "key1"));
         
-        TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs, MyMsgSubtype.class);
+        TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs);
         
         producer.publish(msgsToPublish, topic);
         
@@ -381,8 +376,7 @@ public class KafkaStreamsTest extends TestTopology {
         // for validation...
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        TStream<String> rcvdAsString = rcvdMsgs.transform(
-                                            msgToJSONStringFunc(), String.class);
+        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
         List<String> expectedAsString = mapList(msgs,
                                             subtypeMsgToJSONStringFunc(topic));
 
@@ -408,7 +402,7 @@ public class KafkaStreamsTest extends TestTopology {
         msgs.add(new MyMsgSubtype(mgen.create(topic, "Hello"), null, topic));
         msgs.add(new MyMsgSubtype(mgen.create(topic, "key1", "Are you there?"), "key1", topic));
         
-        TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs, MyMsgSubtype.class);
+        TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs);
         
         producer.publish(msgsToPublish);
         
@@ -417,8 +411,7 @@ public class KafkaStreamsTest extends TestTopology {
         // for validation...
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        TStream<String> rcvdAsString = rcvdMsgs.transform(
-                                            msgToJSONStringFunc(), String.class);
+        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
         List<String> expectedAsString = mapList(msgs,
                                             subtypeMsgToJSONStringFunc(null));
 
@@ -453,7 +446,7 @@ public class KafkaStreamsTest extends TestTopology {
         List<Message> msgs = new ArrayList<>(topic1Msgs);
         msgs.addAll(topic2Msgs);
         
-        TStream<Message> msgsToPublish = top.constants(msgs, Message.class);
+        TStream<Message> msgsToPublish = top.constants(msgs);
         
         producer.publish(msgsToPublish);
         
@@ -465,8 +458,7 @@ public class KafkaStreamsTest extends TestTopology {
         TStream<Message> rcvdMsgs = rcvdTopic1Msgs.union(rcvdTopic2Msgs);
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        TStream<String> rcvdAsString = rcvdMsgs.transform(
-                                            msgToJSONStringFunc(), String.class);
+        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
         List<String> expectedAsString = mapList(msgs,
                                             msgToJSONStringFunc());
                                             
@@ -501,10 +493,10 @@ public class KafkaStreamsTest extends TestTopology {
         List<Message> msgs = new ArrayList<>(topic1Msgs);
         msgs.addAll(topic2Msgs);
         
-        TStream<Message> topic1MsgsToPublish = top.constants(topic1Msgs, Message.class);
+        TStream<Message> topic1MsgsToPublish = top.constants(topic1Msgs);
         producer.publish(topic1MsgsToPublish);
         
-        TStream<Message> topic2MsgsToPublish = top.constants(topic2Msgs, Message.class);
+        TStream<Message> topic2MsgsToPublish = top.constants(topic2Msgs);
         producer.publish(topic2MsgsToPublish);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topics);
@@ -512,8 +504,7 @@ public class KafkaStreamsTest extends TestTopology {
         // for validation...
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        TStream<String> rcvdAsString = rcvdMsgs.transform(
-                                            msgToJSONStringFunc(), String.class);
+        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
         List<String> expectedAsString = mapList(msgs,
                                             msgToJSONStringFunc());
 
