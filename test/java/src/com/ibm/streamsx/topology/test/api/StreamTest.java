@@ -124,6 +124,10 @@ public class StreamTest extends TestTopology {
         final Topology topology = new Topology("Union");
         TStream<String> s1 = topology.strings("A1", "B1", "C1", "D1");
         TStream<String> s2 = topology.strings("A2", "B2", "C2", "D2");
+        List<String> l3 = new ArrayList<>();
+        l3.add("A3");
+        l3.add("B3");
+        TStream<String> s3 = topology.constants(l3);
 
         assertNotSame(s1, s2);
 
@@ -131,14 +135,16 @@ public class StreamTest extends TestTopology {
 
         assertNotSame(su, s1);
         assertNotSame(su, s2);
+        
+        su = su.union(s3);       
 
         // TODO - testing doesn't work against union streams in embedded.
         su = su.filter(new AllowAll<String>());
 
         Tester tester = topology.getTester();
 
-        Condition<Long> suCount = tester.tupleCount(su, 8);
-        Condition<List<String>> suContents = tester.stringContentsUnordered(su, "A1", "B1", "C1", "D1", "A2", "B2", "C2", "D2");
+        Condition<Long> suCount = tester.tupleCount(su, 10);
+        Condition<List<String>> suContents = tester.stringContentsUnordered(su, "A1", "B1", "C1", "D1", "A2", "B2", "C2", "D2", "A3", "B3");
 
         assertTrue(complete(tester, suCount, 10, TimeUnit.SECONDS));
 

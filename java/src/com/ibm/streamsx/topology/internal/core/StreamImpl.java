@@ -221,21 +221,47 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         if (others.isEmpty())
             return this;
         Set<BOutput> outputs = new HashSet<>();
+        
+        
+        StreamSchema schema = output().schema();
+        Type tupleType = getTupleType();
+        boolean needSchemaFix = false;
 
         // Unwrap all streams so that we do not add the same stream twice
         // in multiple unions or explicitly and in a union.
         for (TStream<T> s : others) {
-            StreamImpl<T> si = (StreamImpl<T>) s;
-            outputs.add(si.output());
+                       
+            // Schemas can be different as the schema
+            // defaults to the generic java object if
+            // the type cannot be determined even if
+            // it is a type that uses a special schema,
+            // E..g TStream<String>.
+            if (!schema.equals(s.output().schema())) {
+                if (s.getTupleClass() != null) {
+                    // This stream has the specific schema!
+                    schema = output.schema();
+                    assert getTupleClass() == null;
+                    tupleType = s.getTupleClass();
+                    needSchemaFix = true;
+                } else {
+                    assert getTupleClass() != null;
+                    
+                    s = s.asType(getTupleClass());
+                    
+                    assert s.output().schema().equals(schema);
+                }
+            }
+            
+            outputs.add(s.output());
         }
 
         outputs.add(output());
         if (outputs.size() == 1)
             return this;
-
+        
         BOutput unionOutput = builder().addUnion(outputs);
 
-        return new StreamImpl<T>(this, unionOutput, getTupleType());
+        return new StreamImpl<T>(this, unionOutput, tupleType);
     }
 
     @Override
@@ -479,6 +505,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         if (tupleClass.equals(getTupleClass()))
             return this;
         
+        // Is a schema change needed?
+        if (Schemas.usesDirectSchema(tupleClass) &&
+                !Schemas.getSPLMappingSchema(tupleClass).equals(output().schema())) {
+            return fixDirectSchema(tupleClass);
+        }
 
         if (output() instanceof BOutputPort) {
             BOutputPort boutput = (BOutputPort) output();
@@ -489,6 +520,15 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         // TODO
         throw new UnsupportedOperationException();
+    }
+    
+    private TStream<T> fixDirectSchema(Class<T> tupleClass) {
+        BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
+                "SchemaFix",
+                FunctionTransform.class, new Identity<T>());
+        SourceInfo.setSourceInfo(bop, StreamImpl.class);
+        connectTo(bop, true, null);
+        return JavaFunctional.addJavaOutput(this, bop, tupleClass);
     }
     
     @Override
