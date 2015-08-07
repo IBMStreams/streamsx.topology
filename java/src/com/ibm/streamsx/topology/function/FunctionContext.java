@@ -72,7 +72,7 @@ public interface FunctionContext {
      * <P>
      * Any uncaught exception thrown by the {@code Runnable} passed
      * to the {@code ThreadFactory.newThread(Runnable)} will cause
-     * the processing element containing the operator to terminate.
+     * the processing element containing the function to terminate.
      * </P>
      * <P>
      * The ThreadFactory will be shutdown when the processing element is to be shutdown.
@@ -117,7 +117,7 @@ public interface FunctionContext {
      * invocation on the function instance.
      * <P>
      * Functions use this method to add class libraries specific
-     * to the invocation
+     * to the invocation in
      * a consistent manner. An example is defining the jar files that
      * contain the JDBC driver to be used by the application.
      * <P>
@@ -131,7 +131,7 @@ public interface FunctionContext {
      * If a file path ends with {@code /* } then it is assumed to
      * be a directory and all jar files in the directory
      * with the extension {@code .jar} or {@code .JAR} are
-     * added to the operator's class loader.
+     * added to the function class loader.
      * </P>
      * 
      * @param libraries String representations of URLs and file paths to be
