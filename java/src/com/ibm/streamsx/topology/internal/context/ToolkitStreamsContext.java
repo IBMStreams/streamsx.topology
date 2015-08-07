@@ -90,16 +90,6 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         SPLGenerator generator = new  SPLGenerator();
         createNamespaceFile(json, config, "spl", generator.generateSPL(json));
         createNamespaceFile(json, config, "json", json.serialize());
-
-        /*
-         * File f = new File((File) config.get(ContextProperties.TOOLKIT_DIR),
-         * namespace + "/" + name + ".spl"); PrintWriter splFile = new
-         * PrintWriter(f, "UTF-8"); //
-         * splFile.print(app.splgraph().toSPLString());
-         * splFile.print(SPLGenerator.generateSPL(app.builder()));
-         * splFile.flush(); splFile.close();
-         */
-
     }
 
     private void createNamespaceFile(JSONObject json,

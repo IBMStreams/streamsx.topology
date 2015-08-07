@@ -11,8 +11,8 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.function.Consumer;
 
-public class GraphUtilities {
-    public static ArrayList<JSONObject> findStarts(JSONObject graph) {
+class GraphUtilities {
+    static ArrayList<JSONObject> findStarts(JSONObject graph) {
         ArrayList<JSONObject> starts = new ArrayList<JSONObject>();
         JSONArray ops = (JSONArray) graph.get("operators");
         for (int k = 0; k < ops.size(); k++) {
@@ -29,7 +29,7 @@ public class GraphUtilities {
         return starts;
     }
 
-    public static ArrayList<JSONObject> findOperatorByKind(String opKind,
+    static ArrayList<JSONObject> findOperatorByKind(String opKind,
             JSONObject graph) {
         ArrayList<JSONObject> kindOperators = new ArrayList<JSONObject>();
         JSONArray ops = (JSONArray) graph.get("operators");
@@ -54,7 +54,7 @@ public class GraphUtilities {
      * @param graph The graph JSONObject in which {@code visitOp} resides.
      * @return A list of all operators immediately downstream from {@code visitOp}
      */
-    public static ArrayList<JSONObject> getDownstream(JSONObject visitOp,
+    static ArrayList<JSONObject> getDownstream(JSONObject visitOp,
             JSONObject graph) {
         ArrayList<JSONObject> uniqueChildren = new ArrayList<JSONObject>();
         HashSet<JSONObject> children = new HashSet<JSONObject>();
@@ -101,7 +101,7 @@ public class GraphUtilities {
      * @param graph The graph JSONObject in which {@code visitOp} resides.
      * @return A list of all operators immediately upstream from {@code visitOp}
      */
-    public static List<JSONObject> getUpstream(JSONObject visitOp,
+    static List<JSONObject> getUpstream(JSONObject visitOp,
             JSONObject graph) {
         List<JSONObject> uniqueParents = new ArrayList<>();
         Set<JSONObject> parents = new HashSet<>();
@@ -136,7 +136,7 @@ public class GraphUtilities {
         return uniqueParents;
     }
 
-    public static void removeOperators(List<JSONObject> operators,
+    static void removeOperators(List<JSONObject> operators,
             JSONObject graph) {
         for (JSONObject iso : operators) {
 
@@ -237,7 +237,7 @@ public class GraphUtilities {
 
     // Visits every node in the region defined by the boundaries, and applies
     // to it the consumer's accept() method.
-    public static void visitOnce(List<JSONObject> starts,
+    static void visitOnce(List<JSONObject> starts,
             List<String> boundaries, JSONObject graph,
             Consumer<JSONObject> consumer) {
         Set<JSONObject> visited = new HashSet<JSONObject>();
@@ -259,7 +259,7 @@ public class GraphUtilities {
         }
     }
 
-    public static void getUnvisitedAdjacentNodes(
+    static void getUnvisitedAdjacentNodes(
             Collection<JSONObject> visited, Collection<JSONObject> unvisited,
             JSONObject op, JSONObject graph, List<String> boundaries) {
         
