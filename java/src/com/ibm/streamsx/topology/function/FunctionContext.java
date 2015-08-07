@@ -1,10 +1,12 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015  
+ */
 package com.ibm.streamsx.topology.function;
 
 import java.net.MalformedURLException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
-
-import com.ibm.streams.operator.ProcessingElement;
 
 /**
  * Context for a function executing in a IBM Streams application.
@@ -12,10 +14,10 @@ import com.ibm.streams.operator.ProcessingElement;
 public interface FunctionContext {
     
     /**
-     * Get the processing element hosting a function 
-     * @return ProcessingElement hosting a function.
+     * Get the container hosting a function 
+     * @return Container hosting a function.
      */
-    ProcessingElement getPE();
+    FunctionContainer getContainer();
     
     /**
      * Return a scheduler to execute background tasks. Functions should utilize

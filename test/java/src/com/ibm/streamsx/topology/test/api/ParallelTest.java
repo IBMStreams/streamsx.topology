@@ -479,7 +479,7 @@ public class ParallelTest extends TestTopology {
         public Map<Integer, BigInteger> apply(String v) {
             return Collections.singletonMap(
                     functionContext.getChannel(),
-                    functionContext.getPE().getPEId());
+                    functionContext.getContainer().getId());
         }
 
         @Override
