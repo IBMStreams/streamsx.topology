@@ -1,5 +1,6 @@
 package com.ibm.streamsx.topology.test.api;
 
+import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
@@ -18,7 +19,6 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
@@ -34,8 +34,8 @@ public class LowLatencyTest extends TestTopology {
 
         // Construct topology
         TStream<String> ss = topology.strings("hello");
-        TStream<String> ss1 = ss.transform(getPEId(), String.class).lowLatency();
-        TStream<String> ss2 = ss1.transform(getPEId(), String.class).endLowLatency();
+        TStream<String> ss1 = ss.transform(getContainerId(), String.class).lowLatency();
+        TStream<String> ss2 = ss1.transform(getContainerId(), String.class).endLowLatency();
         ss2.print();
         
         StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT).submit(topology).get();
@@ -48,13 +48,13 @@ public class LowLatencyTest extends TestTopology {
 
         // Construct topology
         TStream<String> ss = topology.strings("hello")
-                .transform(getPEId(), String.class).transform(getPEId(), String.class);
+                .transform(getContainerId(), String.class).transform(getContainerId(), String.class);
         
-        TStream<String> ss1 = ss.transform(getPEId(), String.class).lowLatency();
-        TStream<String> ss2 = ss1.transform(getPEId(), String.class).
-                transform(getPEId(), String.class).endLowLatency().transform(getPEId(), String.class);
-        TStream<String> ss3 = ss2.transform(getPEId(), String.class).lowLatency();
-        ss3.transform(getPEId(), String.class).transform(getPEId(), String.class)
+        TStream<String> ss1 = ss.transform(getContainerId(), String.class).lowLatency();
+        TStream<String> ss2 = ss1.transform(getContainerId(), String.class).
+                transform(getContainerId(), String.class).endLowLatency().transform(getContainerId(), String.class);
+        TStream<String> ss3 = ss2.transform(getContainerId(), String.class).lowLatency();
+        ss3.transform(getContainerId(), String.class).transform(getContainerId(), String.class)
             .endLowLatency().print();
         
         StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT).submit(topology).get();
@@ -66,8 +66,8 @@ public class LowLatencyTest extends TestTopology {
 
         // Construct topology
         TStream<String> ss = topology.strings("hello").lowLatency();
-        TStream<String> ss1 = ss.transform(getPEId());
-        TStream<String> ss2 = ss1.transform(getPEId()).endLowLatency();
+        TStream<String> ss1 = ss.transform(getContainerId());
+        TStream<String> ss2 = ss1.transform(getContainerId()).endLowLatency();
         
         SPLGenerator generator = new SPLGenerator();
         JSONObject graph = topology.builder().complete();
@@ -87,19 +87,6 @@ public class LowLatencyTest extends TestTopology {
                 throw new IllegalStateException("Transform operator expecting threaded port; none found.");
             }
         }
-    }
-    
-
-    
-    @SuppressWarnings("serial")
-    private static Function<String, String> getPEId(){
-        return new Function<String, String>(){
-            @Override
-            public String apply(String v) {
-                return PERuntime.getPE().getPEId().toString();
-            }
-
-        };
     }
     
     @Test

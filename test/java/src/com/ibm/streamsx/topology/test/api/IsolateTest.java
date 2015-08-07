@@ -10,29 +10,30 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
-import com.ibm.streams.operator.PERuntime;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.FunctionContext;
+import com.ibm.streamsx.topology.function.Initializable;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 public class IsolateTest extends TestTopology {
-    
+
     @Test
     public void simpleIsolationTest() throws Exception {
         assumeTrue(SC_OK);
-        assumeTrue(StreamsContext.Type.DISTRIBUTED_TESTER.equals(getTesterType()));
+        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
         
         Topology topology = new Topology("isolationTest");
 
         // Construct topology
         TStream<String> ss = topology.strings("hello");
-        TStream<String> ss1 = ss.transform(getPEId()).isolate();
-        TStream<String> ss2 = ss.isolate().transform(getPEId())
+        TStream<String> ss1 = ss.transform(getContainerId()).isolate();
+        TStream<String> ss2 = ss.isolate().transform(getContainerId())
                 .isolate();
 
         Tester tester = topology.getTester();
@@ -79,16 +80,16 @@ public class IsolateTest extends TestTopology {
 
         TStream<String> ss = topology.strings("hello", "world");
         TStream<String> ss0 = ss.isolate();
-        TStream<String> ss1 = ss0.transform(getPEId());
-        ss1.isolate().transform(getPEId())
-                .transform(getPEId()).print();
+        TStream<String> ss1 = ss0.transform(getContainerId());
+        ss1.isolate().transform(getContainerId())
+                .transform(getContainerId()).print();
 
-        TStream<String> ss3 = ss.transform(getPEId()).isolate();
-        TStream<String> ss4 = ss3.transform(getPEId()).isolate();
-        TStream<String> ss5 = ss4.transform(getPEId()).isolate();
-        ss5.transform(getPEId()).print();
+        TStream<String> ss3 = ss.transform(getContainerId()).isolate();
+        TStream<String> ss4 = ss3.transform(getContainerId()).isolate();
+        TStream<String> ss5 = ss4.transform(getContainerId()).isolate();
+        ss5.transform(getContainerId()).print();
 
-        TStream<String> ss7 = ss3.transform(getPEId());
+        TStream<String> ss7 = ss3.transform(getContainerId());
 
         StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT)
                 .submit(topology).get();
@@ -108,16 +109,16 @@ public class IsolateTest extends TestTopology {
 
         TStream<String> ss = topology.strings("hello", "world");
         TStream<String> ss0 = ss.isolate();
-        TStream<String> ss1 = ss0.transform(getPEId());
-        ss1.isolate().transform(getPEId())
-                .transform(getPEId()).print();
+        TStream<String> ss1 = ss0.transform(getContainerId());
+        ss1.isolate().transform(getContainerId())
+                .transform(getContainerId()).print();
 
-        TStream<String> ss3 = ss.transform(getPEId()).isolate();
-        TStream<String> ss4 = ss3.transform(getPEId()).isolate();
-        TStream<String> ss5 = ss4.transform(getPEId()).isolate();
-        ss5.transform(getPEId()).print();
+        TStream<String> ss3 = ss.transform(getContainerId()).isolate();
+        TStream<String> ss4 = ss3.transform(getContainerId()).isolate();
+        TStream<String> ss5 = ss4.transform(getContainerId()).isolate();
+        ss5.transform(getContainerId()).print();
 
-        TStream<String> ss7 = ss3.transform(getPEId());
+        TStream<String> ss7 = ss3.transform(getContainerId());
 
         // Unions a stream with its parent.
         ss7.union(ss4).print();
@@ -131,12 +132,12 @@ public class IsolateTest extends TestTopology {
         Topology topology = new Topology("isolationTest");
 
         TStream<String> ss = topology.strings("hello", "world");
-        ss.transform(getPEId()).isolate()
-                .transform(getPEId());
+        ss.transform(getContainerId()).isolate()
+                .transform(getContainerId());
         
         // Create island subgraph
         TStream<String> ss2 = topology.strings("hello", "world");
-        ss2.transform(getPEId()).print();
+        ss2.transform(getContainerId()).print();
         
         StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT)
         .submit(topology).get();
@@ -176,13 +177,25 @@ public class IsolateTest extends TestTopology {
         // assertTrue(expectedContent.valid());
     }
 
+
+    public static Function<String, String> getContainerId() {
+        return new GetContainerId();
+    }
+    
     @SuppressWarnings("serial")
-    private static Function<String, String> getPEId() {
-        return new Function<String, String>() {
-            @Override
-            public String apply(String v) {
-                return PERuntime.getPE().getPEId().toString();
-            }
-        };
+    public static final class GetContainerId implements
+            Function<String, String> , Initializable {
+        
+        private String id;
+        @Override
+        public String apply(String v) {
+            return id;
+        }
+
+        @Override
+        public void initialize(FunctionContext functionContext)
+                throws Exception {
+            id = functionContext.getContainer().getId().toString();
+        }
     }
 }
