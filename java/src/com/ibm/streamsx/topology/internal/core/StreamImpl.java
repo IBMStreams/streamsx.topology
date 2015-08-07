@@ -216,20 +216,25 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         return union(Collections.singleton(other));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public TStream<T> union(Set<TStream<T>> others) {
         if (others.isEmpty())
             return this;
-        Set<BOutput> outputs = new HashSet<>();
-        
+                
+        List<TStream<T>> sourceStreams = new ArrayList<>();
+        sourceStreams.addAll(others);
+        sourceStreams.add(this);
         
         StreamSchema schema = output().schema();
         Type tupleType = getTupleType();
-        boolean needSchemaFix = false;
 
         // Unwrap all streams so that we do not add the same stream twice
         // in multiple unions or explicitly and in a union.
-        for (TStream<T> s : others) {
+        Set<BOutput> outputs = new HashSet<>();
+        for (int i = 0; i < sourceStreams.size(); i++) {
+            
+            TStream<T> s = sourceStreams.get(i);
                        
             // Schemas can be different as the schema
             // defaults to the generic java object if
@@ -238,26 +243,30 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             // E..g TStream<String>.
             if (!schema.equals(s.output().schema())) {
                 if (s.getTupleClass() != null) {
-                    // This stream has the specific schema!
-                    schema = output.schema();
+                    // This stream has the direct schema!
+                    schema = s.output().schema();
                     assert getTupleClass() == null;
                     tupleType = s.getTupleClass();
-                    needSchemaFix = true;
-                } else {
-                    assert getTupleClass() != null;
-                    
-                    s = s.asType(getTupleClass());
-                    
+                    if (i != 0) {
+                        // Didn't discover it first
+                        // reset to go through the list
+                        // again. Note this assumes there
+                        // are just two options for the schema
+                        // generic or direct
+                        i = -1; // to get back to 0.
+                        outputs.clear();
+                        continue;
+                    }
+                } else {     
+                    assert tupleType instanceof Class;
+                    s = s.asType((Class<T>) tupleType);                 
                     assert s.output().schema().equals(schema);
+                    sourceStreams.set(i, s);
                 }
             }
             
             outputs.add(s.output());
         }
-
-        outputs.add(output());
-        if (outputs.size() == 1)
-            return this;
         
         BOutput unionOutput = builder().addUnion(outputs);
 

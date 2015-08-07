@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -128,6 +129,11 @@ public class StreamTest extends TestTopology {
         l3.add("A3");
         l3.add("B3");
         TStream<String> s3 = topology.constants(l3);
+        
+        List<String> l4 = new ArrayList<>();
+        l4.add("A4");
+        l4.add("B4");
+        TStream<String> s4 = topology.constants(l4);
 
         assertNotSame(s1, s2);
 
@@ -136,21 +142,33 @@ public class StreamTest extends TestTopology {
         assertNotSame(su, s1);
         assertNotSame(su, s2);
         
-        su = su.union(s3);       
-
+        // Merge with two different schema types
+        // but the primary has the correct direct type.
+        su = su.union(s3);   
+        assertEquals(String.class, su.getTupleClass());
+        assertEquals(String.class, su.getTupleType());
+        
+        // Merge with two different schema types
+        // but the primary has the generic type
+        assertNull(s4.getTupleClass());
+        su = s4.union(su);
+        assertEquals(String.class, su.getTupleClass());
+        assertEquals(String.class, su.getTupleType());
+        
         // TODO - testing doesn't work against union streams in embedded.
         su = su.filter(new AllowAll<String>());
 
         Tester tester = topology.getTester();
 
-        Condition<Long> suCount = tester.tupleCount(su, 10);
-        Condition<List<String>> suContents = tester.stringContentsUnordered(su, "A1", "B1", "C1", "D1", "A2", "B2", "C2", "D2", "A3", "B3");
+        Condition<Long> suCount = tester.tupleCount(su, 12);
+        Condition<List<String>> suContents = tester.stringContentsUnordered(su, "A1", "B1", "C1", "D1", "A2", "B2", "C2", "D2", "A3", "B3", "A4", "B4");
 
-        assertTrue(complete(tester, suCount, 10, TimeUnit.SECONDS));
+        //assertTrue(complete(tester, suCount, 10, TimeUnit.SECONDS));
+        complete(tester, suCount, 10, TimeUnit.SECONDS);
 
-
-        assertTrue("SU:" + suCount, suCount.valid());
         assertTrue("SU:" + suContents, suContents.valid());
+        assertTrue("SU:" + suCount, suCount.valid());
+
     }
 
     @Test
