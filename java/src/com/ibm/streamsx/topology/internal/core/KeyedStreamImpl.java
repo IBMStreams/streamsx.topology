@@ -94,8 +94,8 @@ class KeyedStreamImpl<T,K> extends StreamImpl<T> implements TKeyedStream<T, K> {
         return _key(super.throttle(delay, unit));
     }
     @Override
-    public TKeyedStream<T,K> unparallel() {
-        return _key(super.unparallel());
+    public TKeyedStream<T,K> endParallel() {
+        return _key(super.endParallel());
     } 
     @Override
     public TKeyedStream<T,K> isolate() {

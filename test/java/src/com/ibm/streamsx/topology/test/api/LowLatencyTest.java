@@ -96,7 +96,7 @@ public class LowLatencyTest extends TestTopology {
         return new Function<String, String>(){
             @Override
             public String apply(String v) {
-                return PERuntime.getCurrentContext().getPE().getPEId().toString();
+                return PERuntime.getPE().getPEId().toString();
             }
 
         };
@@ -159,7 +159,7 @@ public class LowLatencyTest extends TestTopology {
 
             @Override
             public String apply(String v) {
-                return PERuntime.getCurrentContext().getPE().getPEId().toString();
+                return PERuntime.getPE().getPEId().toString();
             }
         }; 
     }

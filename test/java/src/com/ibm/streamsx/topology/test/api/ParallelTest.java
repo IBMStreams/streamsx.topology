@@ -26,6 +26,8 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.FunctionContext;
+import com.ibm.streamsx.topology.function.Initializable;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
@@ -48,7 +50,7 @@ public class ParallelTest extends TestTopology {
         TStream<BeaconTuple> pb = fb.parallel(5);
 
         TStream<Integer> is = pb.transform(randomHashProducer());
-        TStream<Integer> joined = is.unparallel();
+        TStream<Integer> joined = is.endParallel();
         TStream<String> numRegions = joined.transform(
                 uniqueIdentifierMap(count));
 
@@ -82,7 +84,7 @@ public class ParallelTest extends TestTopology {
                 keyableBeacon5Counter(count)));
         TStream<BeaconTuple> pb = kb.parallel(5);
         TStream<ChannelAndSequence> cs = pb.transform(channelSeqTransformer());
-        TStream<ChannelAndSequence> joined = cs.unparallel();
+        TStream<ChannelAndSequence> joined = cs.endParallel();
 
         TStream<String> valid_count = joined.transform(partitionCounter(count));
 
@@ -119,7 +121,7 @@ public class ParallelTest extends TestTopology {
                 stringTuple5Counter(count));
         TStream<String> pb = kb.parallel(5, TStream.Routing.HASH_PARTITIONED);
         TStream<ChannelAndSequence> cs = pb.transform(stringTupleChannelSeqTransformer());
-        TStream<ChannelAndSequence> joined = cs.unparallel();
+        TStream<ChannelAndSequence> joined = cs.endParallel();
 
         TStream<String> valid_count = joined.transform(partitionCounter(count));
 
@@ -253,16 +255,21 @@ public class ParallelTest extends TestTopology {
     }
     
     @SuppressWarnings("serial")
+    static abstract class ChannelGetter<F,R> implements Function<F,R>, Initializable {
+        int channel = -1;
+        
+        @Override
+        public void initialize(FunctionContext functionContext)
+                throws Exception {
+            channel = functionContext.getChannel();         
+        }
+    }
+    
+    @SuppressWarnings("serial")
     static Function<BeaconTuple, ChannelAndSequence> channelSeqTransformer() {
-        return new Function<BeaconTuple, ChannelAndSequence>() {
-            int channel = -1;
-
+        return new ChannelGetter<BeaconTuple, ChannelAndSequence>() {
             @Override
             public ChannelAndSequence apply(BeaconTuple v) {
-                if (channel == -1) {
-                    channel = PERuntime.getCurrentContext().getChannel();
-                }
-                // TODO Auto-generated method stub
                 return new ChannelAndSequence(channel, (int) v.getSequence());
             }
         };
@@ -270,15 +277,9 @@ public class ParallelTest extends TestTopology {
     
     @SuppressWarnings("serial")
     static Function<String, ChannelAndSequence> stringTupleChannelSeqTransformer() {
-        return new Function<String, ChannelAndSequence>() {
-            int channel = -1;
-
+        return new ChannelGetter<String, ChannelAndSequence>() {
             @Override
             public ChannelAndSequence apply(String v) {
-               
-                if (channel == -1) {
-                    channel = PERuntime.getCurrentContext().getChannel();
-                }
                 return new ChannelAndSequence(channel, Integer.parseInt(v));
             }
 
@@ -287,15 +288,9 @@ public class ParallelTest extends TestTopology {
 
     @SuppressWarnings("serial")
     static Function<BeaconTuple, Integer> randomHashProducer() {
-        return new Function<BeaconTuple, Integer>() {
-            int channel = -1;
-
+        return new ChannelGetter<BeaconTuple, Integer>() {
             @Override
             public Integer apply(BeaconTuple v) {
-                if (channel == -1) {
-                    channel = PERuntime.getCurrentContext().getChannel();
-                }
-                // TODO Auto-generated method stub
                 return channel;
             }
 
@@ -356,11 +351,11 @@ public class ParallelTest extends TestTopology {
         TStream<String> splitChFanin = splitChResults.get(0).union(
                         new HashSet<>(splitChResults.subList(1, splitChResults.size())));
         
-        // workaround: avoid union().unparallel() bug  issue#127
+        // workaround: avoid union().endParallel() bug  issue#127
         splitChFanin = splitChFanin.filter(new AllowAll<String>());
 
         /////////////////////////////////////
-        TStream<String> all = splitChFanin.unparallel();
+        TStream<String> all = splitChFanin.endParallel();
         all.print();
 
         Tester tester = topology.getTester();
@@ -413,7 +408,7 @@ public class ParallelTest extends TestTopology {
         strings.print();
         TStream<String> stringsP = strings.parallel(3);
         stringsP = stringsP.filter(new AllowAll<String>());
-        stringsP = stringsP.unparallel();
+        stringsP = stringsP.endParallel();
         
         Tester tester = topology.getTester();
         

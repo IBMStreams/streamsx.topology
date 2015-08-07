@@ -11,6 +11,7 @@ import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.logging.TraceLevel;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.SharedLoader;
+import com.ibm.streamsx.topology.function.Initializable;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 
 /**
@@ -65,8 +66,15 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
         super.shutdown();
     }
     
-    public void setLogic(Object logicInstance) {
+    public void setLogic(Object logicInstance) throws Exception {
         this.logicInstance = logicInstance;
+        initializeLogic(getOperatorContext(), logicInstance);
+    }
+    
+    static void initializeLogic(OperatorContext context, Object logicInstance) throws Exception {
+        if (logicInstance instanceof Initializable) {
+            ((Initializable) logicInstance).initialize(new FunctionOperatorContext(context));
+        }
     }
     
     /**

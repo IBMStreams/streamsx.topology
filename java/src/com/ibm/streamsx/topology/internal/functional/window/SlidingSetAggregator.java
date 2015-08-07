@@ -30,7 +30,7 @@ public abstract class SlidingSetAggregator<I, O> extends SlidingSet<I, O> {
     private Function<List<I>, O> aggregator;
 
     public SlidingSetAggregator(FunctionWindow op, StreamWindow<Tuple> window)
-            throws ClassNotFoundException {
+            throws Exception {
         super(op, window);
         aggregator = getLogicObject(op.getFunctionalLogic());
         op.setLogic(aggregator);

@@ -18,7 +18,7 @@ import com.ibm.streamsx.topology.internal.functional.window.PeriodicAggregator;
 public class FunctionAggregate<T, A> extends FunctionWindow {
     @Override
     void createWindowListener(StreamWindow<Tuple> window)
-            throws ClassNotFoundException {
+            throws Exception {
         
         if (window.getTriggerPolicy() == Policy.TIME)
             new PeriodicAggregator<T,A>(this, window);

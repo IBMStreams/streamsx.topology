@@ -116,7 +116,7 @@ public interface TKeyedStream<T,K> extends TStream<T> {
      * {@inheritDoc}
      */
     @Override
-    TKeyedStream<T,K> unparallel();
+    TKeyedStream<T,K> endParallel();
   
     /**
      * {@inheritDoc}

@@ -41,6 +41,8 @@ public class FunctionPeriodicSource extends PollingTupleProducer implements Func
         data = getLogicObject(getFunctionalLogic());
         output = getOutput(0);
         mapping = getOutputMapping(this, 0);
+        
+        FunctionFunctor.initializeLogic(context, data);
     }
 
     public String getFunctionalLogic() {

@@ -63,7 +63,7 @@ public abstract class FunctionWindow extends FunctionFunctor {
     }
 
     abstract void createWindowListener(StreamWindow<Tuple> window)
-            throws ClassNotFoundException;
+            throws Exception;
 
     public String getKeyGetter() {
         return keyGetter;

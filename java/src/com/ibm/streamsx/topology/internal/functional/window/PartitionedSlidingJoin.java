@@ -13,7 +13,7 @@ public class PartitionedSlidingJoin<T, U, J> extends SlidingJoin<T, U, J> {
 
     private final Function<Object,Object> functionKeyGetter;
     public PartitionedSlidingJoin(FunctionWindow op,
-            StreamWindow<Tuple> window, Function<Object,Object> functionKeyGetter) throws ClassNotFoundException {
+            StreamWindow<Tuple> window, Function<Object,Object> functionKeyGetter) throws Exception {
         super(op, window);
         this.functionKeyGetter = functionKeyGetter;
     }

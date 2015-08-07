@@ -20,6 +20,12 @@
  * is not what is required.
  * <P>
  * If the implementation of the functional class implements
+ * {@link com.ibm.streamsx.topology.function.Initializable}
+ * then {@link com.ibm.streamsx.topology.function.Initializable#initialize(FunctionContext)}
+ * will be called when the processing element containing the function starts or restarts.
+ * </P> 
+ * <P>
+ * If the implementation of the functional class implements
  * {@code java.lang.AutoCloseable} then the {@code close()}
  * method will be called when the application terminates.
  * </P>

@@ -95,7 +95,7 @@ public class PartitionedParallelRegexGrep {
         // Combine the results of each parallel filter into one stream, ending
         // the parallel region.
         TStream<String> filtered_condensed = ParallelFiltered
-                .unparallel();
+                .endParallel();
 
         // Print the combined results
         filtered_condensed.print();
