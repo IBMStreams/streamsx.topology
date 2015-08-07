@@ -9,22 +9,31 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.FunctionContainer;
+import com.ibm.streamsx.topology.function.FunctionContext;
+import com.ibm.streamsx.topology.function.Initializable;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.ToIntFunction;
+import com.ibm.streamsx.topology.streams.BeaconStreams;
+import com.ibm.streamsx.topology.streams.CollectionStreams;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -313,5 +322,67 @@ public class StreamTest extends TestTopology {
                 return Arrays.asList(v1.split(" "));
             }
         };
+    }
+    
+    
+    @Test
+    public void testFunctionContextNonDistributed() throws Exception {
+        
+        assumeTrue(getTesterType() != Type.DISTRIBUTED_TESTER);
+        
+        Topology t = new Topology();
+        TStream<Map<String, Object>> values = BeaconStreams.single(t).transform(new ExtractFunctionContext());
+        TStream<String> strings = StringStreams.toString(CollectionStreams.flattenMap(values));
+                
+        Tester tester = t.getTester();
+        
+        Condition<Long> spCount = tester.tupleCount(strings, 7);
+        Condition<List<String>> spContents = tester.stringContents(strings, 
+                "channel=-1",
+                "domainId=" + System.getProperty("user.name"),
+                "id=0",
+                "instanceId=" + System.getProperty("user.name"),
+                "jobId=0",
+                "maxChannels=0",
+                "relaunchCount=0"
+                );
+
+        complete(tester, spCount, 60, TimeUnit.SECONDS);
+
+        // assertTrue("SU:" + suContents, suContents.valid());
+        assertTrue("SP:" + spCount, spCount.valid());
+        assertTrue("SPContents:" + spContents, spContents.valid());
+    }
+    
+    public static class ExtractFunctionContext
+         implements Function<Long,Map<String,Object>>, Initializable {
+        private static final long serialVersionUID = 1L;
+        private FunctionContext functionContext;
+        
+        @Override
+        public Map<String, Object> apply(Long v) {
+            Map<String,Object> values = new TreeMap<>();
+            
+            values.put("channel", functionContext.getChannel());
+            values.put("maxChannels", functionContext.getMaxChannels());
+            
+            FunctionContainer container = functionContext.getContainer();
+            values.put("id", container.getId());
+            values.put("jobId", container.getJobId());
+            values.put("relaunchCount", container.getRelaunchCount());
+            
+            values.put("domainId", container.getDomainId());
+            values.put("instanceId", container.getInstanceId());
+            
+            return values;
+        }
+        
+        @Override
+        public void initialize(FunctionContext functionContext)
+                throws Exception {
+            this.functionContext = functionContext;
+            
+        }
+        
     }
 }
