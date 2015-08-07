@@ -52,11 +52,9 @@ public interface FunctionContext {
      * </P>
      * 
      * @return Scheduler service that can be used by the function.
-     * @see ExecutorService#awaitTermination(long, java.util.concurrent.TimeUnit)
-     * @see ExecutorService#shutdown()
-     * @see ExecutorService#shutdownNow()
-     * @see Future
-     * @see java.util.concurrent.ScheduledThreadPoolExecutor
+     * @see "java.util.concurrent.ExecutorService"
+     * @see "java.util.concurrent.Future"
+     * @see "java.util.concurrent.ScheduledThreadPoolExecutor"
      */
     ScheduledExecutorService getScheduledExecutorService();
     
