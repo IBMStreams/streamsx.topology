@@ -221,10 +221,17 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public TStream<T> union(Set<TStream<T>> others) {
         if (others.isEmpty())
             return this;
+        
+        Set<TStream<T>> allStreams = new HashSet<>();
+        allStreams.addAll(others);
+        allStreams.add(this);
+        // Check we don't have just a single stream.
+        if (allStreams.size() == 1)
+            return this;
+        
                 
         List<TStream<T>> sourceStreams = new ArrayList<>();
-        sourceStreams.addAll(others);
-        sourceStreams.add(this);
+        sourceStreams.addAll(allStreams);
         
         StreamSchema schema = output().schema();
         Type tupleType = getTupleType();
