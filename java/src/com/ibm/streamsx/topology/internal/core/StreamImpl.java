@@ -395,7 +395,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             toBeParallelized = hashAdder.addOutput(hashSchema);
             needHashRemover = true;
         }
-
+        
+        // Isolate to ensure that parallel regions run in
+        // their own PE, so can take advantage of distributed.
+        toBeParallelized = builder().isolate(toBeParallelized);
+        
         BOutput parallelOutput = builder().parallel(toBeParallelized, width);
         if (needHashRemover) {
             parallelOutput.json().put("partitioned", true);
@@ -433,7 +437,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public TStream<T> endParallel() {
 
         // TODO - error checking!
-        return addMatchingStream(builder().unparallel(output()));
+        
+        // Isolate the parallel region.
+        BOutput end = builder().isolate(output());
+        
+        return addMatchingStream(builder().unparallel(end));
     }
 
     @Override

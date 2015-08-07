@@ -8,12 +8,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
@@ -420,4 +423,73 @@ public class ParallelTest extends TestTopology {
 
         assertTrue("contents: "+contents, contents.valid());
     }
+    
+    @Test
+    public void testParallelIsolate() throws Exception {
+        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+      
+        Topology topology = new Topology();
+        
+        TStream<String> strings = topology.strings("A", "B", "C", "D", "E", "F", "G", "H", "I");
+        TStream<String> stringsP = strings.parallel(3);
+        TStream<Map<Integer,BigInteger>> channelPe = stringsP.transform(new ChannelAndPEid());
+        channelPe = channelPe.endParallel();
+        
+        TStream<String> result =  channelPe.transform(new CheckSeparatePE());
+        
+        Tester tester = topology.getTester();
+        
+        Condition<Long> singleResult = tester.tupleCount(result, 1);
+        
+        Condition<List<String>> contents = tester.stringContents(result, "true");
+        
+        complete(tester, singleResult, 10, TimeUnit.SECONDS);
+
+        assertTrue("contents: "+contents, contents.valid());
+    }
+    
+    public static class CheckSeparatePE implements Function<Map<Integer,BigInteger>, String> {
+        
+        private static final long serialVersionUID = 1L;
+        private final Map<Integer, BigInteger> seen = new HashMap<>();
+        private boolean ok;
+
+        @Override
+        public String apply(Map<Integer, BigInteger> v) {
+            seen.putAll(v);
+            if (ok || seen.size() != 3)
+                return null;
+            
+            Set<BigInteger> pes = new HashSet<>();
+            pes.addAll(seen.values());
+            if (pes.size() != 3)
+                return Boolean.FALSE.toString();
+            
+            ok = true;
+            return Boolean.TRUE.toString();
+        }
+        
+    }
+    
+    public static class ChannelAndPEid implements Function<String,Map<Integer,BigInteger>>, Initializable {
+        private static final long serialVersionUID = 1L;
+        private FunctionContext functionContext;
+
+        @Override
+        public Map<Integer, BigInteger> apply(String v) {
+            return Collections.singletonMap(
+                    functionContext.getChannel(),
+                    functionContext.getPE().getPEId());
+        }
+
+        @Override
+        public void initialize(FunctionContext functionContext)
+                throws Exception {
+            
+            this.functionContext = functionContext; 
+        }
+        
+    }
+    
+    
 }
