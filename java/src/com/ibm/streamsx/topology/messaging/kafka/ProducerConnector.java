@@ -133,7 +133,7 @@ public class ProducerConnector {
         String kind = "com.ibm.streamsx.messaging.kafka::KafkaProducer";
         String className = "com.ibm.streamsx.messaging.kafka.KafkaSink";
         TSink sink = SPL.invokeSink(
-                "com.ibm.streamsx.messaging.kafka::KafkaProducer",
+                kind,
                 splStream,
                 params);
         Util.tagOpAsJavaPrimitive(sink.operator(), kind, className);
