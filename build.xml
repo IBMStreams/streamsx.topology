@@ -62,7 +62,7 @@
        <javadoc destdir="${tk}/doc/javadoc" classpathref="javadoc.classpath"
           Overview="java/src/overview.html"
           Windowtitle="Java Application API for InfoSphere Streams"
-          Footer="streamsx.topology 0.8 beta @ IBMStreams GitHub"
+          Footer="streamsx.topology 0.9 beta @ IBMStreams GitHub"
           failonwarning="yes"
           >
             <fileset dir="java/src">
@@ -77,7 +77,7 @@
       <tstamp/>
       <property name="release.dir" location="${release.base}" />
       <mkdir dir="${release.dir}" />
-      <property name="releasefilename" value="${release.dir}/streamsx.topology-v0.8-${DSTAMP}-${TSTAMP}.tgz"/>
+      <property name="releasefilename" value="${release.dir}/streamsx.topology-v0.9-${DSTAMP}-${TSTAMP}.tgz"/>
       <tar compression="gzip" longfile="gnu" destfile="${releasefilename}"
          basedir="${basedir}"
          includes="com.ibm.streamsx.topology/** samples/**"
