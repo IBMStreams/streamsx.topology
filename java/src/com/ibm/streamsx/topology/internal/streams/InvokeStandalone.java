@@ -73,12 +73,6 @@ public class InvokeStandalone {
         Process standaloneProcess = pb.start();
 
         return new ProcessFuture(standaloneProcess);
-
-        /*
-         * int rc = standaloneProcess.waitFor();
-         * trace.info("Standalone application completed: return code=" + rc); if
-         * (rc != 0) throw new Exception("Standalone application failed!");
-         */
     }
 
     private static class ProcessFuture implements Future<Integer> {
@@ -121,6 +115,7 @@ public class InvokeStandalone {
             if (isDone)
                 return rc;
             rc = process.waitFor();
+            trace.info("Standalone application completed: return code=" + rc);
             notifyAll();
             return rc;
         }
