@@ -116,6 +116,12 @@ public class BInputPort extends BInput {
      * @param functional True if this is for a functional operator.
      */
     public void addQueue(boolean functional) {
+        /* TODO - investigate
+         * Disable queuing for now, seeing a hang when
+         * using Java 8 and Streams 4.0.1 plus need
+         * to investigate performance impact more.
+         * 
+
         JSONObject queue = new JSONObject();
         queue.put("functional", functional);
         json().put("queue", queue);
@@ -129,5 +135,6 @@ public class BInputPort extends BInput {
             value.put("value", 100);
             params.put("queueSize", value);
         }
+        */
     }
 }
