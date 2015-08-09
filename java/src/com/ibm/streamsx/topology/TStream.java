@@ -551,7 +551,7 @@ public interface TStream<T> extends TopologyElement {
      * {@code hashCode()} of the tuple is used to route the tuple to a corresponding 
      * channel, so that all tuples with the same hash code are sent to the same channel.
      * <BR>
-     * If {@link Routing#HASH_PARTITIONED} is specified and 
+     * If {@link Routing#KEY_PARTITIONED} is specified and 
      * the stream is a {@link TKeyedStream} then each tuple is 
      * routed to a parallel channel according to the {@code hashCode()} of the 
      * object returned by its {@link TKeyedStream#getKeyFunction() key function},

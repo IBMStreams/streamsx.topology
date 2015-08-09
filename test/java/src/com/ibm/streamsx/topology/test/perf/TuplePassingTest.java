@@ -54,7 +54,7 @@ public class TuplePassingTest extends TestTopology {
 
         System.err.println("String-Standalone");
         addTimer(stringWorkload(stringSource(t, 1000000), 5));
-        StreamsContextFactory.getStreamsContext(Type.STANDALONE).submit(t);
+        StreamsContextFactory.getStreamsContext(Type.STANDALONE).submit(t).get();
     }
 
     @Test
