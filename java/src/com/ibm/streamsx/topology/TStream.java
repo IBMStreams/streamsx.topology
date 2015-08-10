@@ -379,7 +379,10 @@ public interface TStream<T> extends TopologyElement {
     
     /**
      * Type of the tuples on this stream.
-     * @return Type of the tuples on this stream.
+     * Can be null if no type knowledge can be determined.
+     * 
+     * @return Type of the tuples on this stream,
+     *     {@code null} if no type knowledge could be determined
      */
     Type getTupleType();
     
