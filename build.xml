@@ -52,7 +52,7 @@
 
   <target name="release" depends="clean,all,doc,create_release_bundle"/>
 
-  <target name="doc">
+  <target name="doc" depends="checkJava8">
        <mkdir dir="${tk}/doc"/>
        <ant dir="samples/java/functional" target="doc"/>
        <mkdir dir="${tk}/doc/samples/javadoc"/>
@@ -64,6 +64,7 @@
           Windowtitle="Java Application API for InfoSphere Streams"
           Footer="streamsx.topology 0.9 beta @ IBMStreams GitHub"
           failonwarning="yes"
+          additionalparam="${disableJavadocLint}"
           >
             <fileset dir="java/src">
                <include name="com/ibm/streamsx/topology/**"/>
