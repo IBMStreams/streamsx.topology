@@ -55,21 +55,20 @@ public class KafkaStreamsTest extends TestTopology {
      * to verify behavior.  It's born out of a need to assist in
      * making the tests resilient and/or debugging failures from
      * potentially (a) the test code, (b) the Java Application API,
-     * (c) the underlying SPL adapter ops, (d) Kafka?
+     * and (c) the underlying SPL adapter ops.
      * 
      * N.B. Consumer behavior, the ability to receive msgs, is highly
      * dependent on the consumer's Kafka groupId.  i.e., if there's
      * a residual instance of a consumer for the same groupId,
      * or if Kafka/Zookeeper thinks there is, then a new instance
      * of a consumer for the same groupId won't receive any msgs.
-     * 
-     * I don't believe there's anything the Java Application API can do
-     * to induce Kafka/zk group info to get out of sync (have a stale/old,
-     * possibly non-existent, consumer for a groupId) but that case has
-     * occurred and when it does any subsequent tests using that groupId fail
-     * to receive msgs and the test fails.
-     * Hence the tests use a new groupId for each execution to make them
-     * more resilient.
+     *
+     * If these tests are run {@code StreamsContext.Type.STANDALONE},
+     * due to com.ibm.streamsx.messaging 
+     * <a href="https://github.com/IBMStreams/streamsx.messaging/issues/117">issue#117</a>,
+     * such orphaned @{code standalone} processes are created.  Hence
+     * the tests generated group ids to avoid being influenced by previous
+     * tests.
      * 
      * To see the status of a topic/groupId:
      * <pre>
@@ -495,16 +494,14 @@ public class KafkaStreamsTest extends TestTopology {
         setupDebug();
         completeAndValidate(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
-    /*
-     * Disabled for now.  This test, the underlying functionality,
-     * fails consistently.
-     * 
-     * For standalone and distributed it seems to consistently get 0 topic1 msgs.
-     */
-    //@Test
+    @Test
     public void testMultiTopicProducer() throws Exception {
         
         checkAssumes();
+        
+        // streamsx.messaging issue#118 prevents successful execution
+        // For standalone it seems to consistently get 0 topic1 msgs.
+        assumeTrue(getTesterType() != StreamsContext.Type.STANDALONE_TESTER);
         
         Topology top = new Topology("testMultiTopicProducer");
         MsgGenerator mgen = new MsgGenerator(top.getName());
@@ -601,24 +598,21 @@ public class KafkaStreamsTest extends TestTopology {
       ctxt.submit(top, getConfig()).get();
     }
     
-    /*
-     * Disabled for now.  This test, the underlying functionality,
-     * fails consistently.
-     * 
-     * For standalone, it seems to consistently get 0 topic1 msgs
-     * and surprisingly reports the topic2 msgs twice:
-     * [junit] [18:23:18.758] Using Kafka consumer group.id kafkaStreamsTestGroupId_testMultiTopicConsumer_181805.464
-     * [junit] {topic=testTopic2, key=mykey1, message=[18:23:18.758.2 testMultiTopicConsumer] [topic=testTopic2,key=null] Hello}
-     * [junit] {topic=testTopic2, key=mykey2, message=[18:23:18.758.3 testMultiTopicConsumer] [topic=testTopic2,key=null] Are you there?}
-     * [junit] {topic=testTopic2, key=mykey1, message=[18:23:18.758.2 testMultiTopicConsumer] [topic=testTopic2,key=null] Hello}
-     * [junit] {topic=testTopic2, key=mykey2, message=[18:23:18.758.3 testMultiTopicConsumer] [topic=testTopic2,key=null] Are you there?}
-     *
-     * For distributed it gets 0 topic1 and just the normal two topic2 msgs.
-     */
-    //@Test
+    @Test
     public void testMultiTopicConsumer() throws Exception {
         
         checkAssumes();
+        
+        // streamsx.messaging issue#118 prevents successful execution
+        // It seems to consistently get 0 topic1 msgs
+        // and surprisingly reports the topic2 msgs twice (though
+        // this duplication behavior may be a different issue).
+        // [junit] [18:23:18.758] Using Kafka consumer group.id kafkaStreamsTestGroupId_testMultiTopicConsumer_181805.464
+        // [junit] {topic=testTopic2, key=mykey1, message=[18:23:18.758.2 testMultiTopicConsumer] [topic=testTopic2,key=null] Hello}
+        // [junit] {topic=testTopic2, key=mykey2, message=[18:23:18.758.3 testMultiTopicConsumer] [topic=testTopic2,key=null] Are you there?}
+        // [junit] {topic=testTopic2, key=mykey1, message=[18:23:18.758.2 testMultiTopicConsumer] [topic=testTopic2,key=null] Hello}
+        // [junit] {topic=testTopic2, key=mykey2, message=[18:23:18.758.3 testMultiTopicConsumer] [topic=testTopic2,key=null] Are you there?}
+        assumeTrue(getTesterType() != StreamsContext.Type.STANDALONE_TESTER);
         
         Topology top = new Topology("testMultiTopicConsumer");
         MsgGenerator mgen = new MsgGenerator(top.getName());

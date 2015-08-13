@@ -106,6 +106,20 @@ public class ProducerConnector {
      * <p>
      * The messages added to Kafka include a topic, message and key.
      * If {@link Message#getKey()} is null, an empty key value is published.
+     * 
+     * <p>
+     * N.B. there seem to be some issues with the underlying 
+     * com.ibm.streamsx.messaging library - e.g.,
+     * <a href="https://github.com/IBMStreams/streamsx.messaging/issues/118">issue#118</a>.
+     * If your application is experiencing odd Kafka behavior
+     * try isolating the producer from its feeding streams.
+     * e.g.,
+     * <pre>
+     * ProducerConnector pc = ...
+     * TStream<Message> s = ...
+     * pc.publish(s.isolate(), ...);
+     * </pre> 
+     * 
      * @param stream the stream to publish
      * @param topic topic to publish to.  May be null.
      * 
