@@ -11,15 +11,15 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
 
 public class PartitionedSlidingJoin<T, U, J> extends SlidingJoin<T, U, J> {
 
-    private final Function<Object,Object> functionKeyGetter;
+    private final Function<Object,Object> joinKeyGetter;
     public PartitionedSlidingJoin(FunctionWindow op,
-            StreamWindow<Tuple> window, Function<Object,Object> functionKeyGetter) throws Exception {
+            StreamWindow<Tuple> window, Function<Object,Object> joinKeyGetter) throws Exception {
         super(op, window);
-        this.functionKeyGetter = functionKeyGetter;
+        this.joinKeyGetter = joinKeyGetter;
     }
 
     @Override
     protected Object getPort1PartitionKey(T tTuple) {
-        return functionKeyGetter.apply(tTuple);
+        return joinKeyGetter.apply(tTuple);
     }
 }
