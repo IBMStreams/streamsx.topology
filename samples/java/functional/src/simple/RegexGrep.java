@@ -36,7 +36,7 @@ import com.ibm.streamsx.topology.function.Predicate;
  * as:
  * <UL>
  * <LI>
- * {@code java -jar funcsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.RegexGrep} <i>CONTEXT_TYPE</i>
+ * {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.RegexGrep} <i>CONTEXT_TYPE</i>
  * {@code $HOME/books .*Queen.*England.*}
  * - Run directly from the command line with a specific
  * {@code StreamsContext} where <i>CONTEXT_TYPE</i> is one of:

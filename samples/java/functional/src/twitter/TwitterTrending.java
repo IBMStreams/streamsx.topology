@@ -40,7 +40,7 @@ import com.ibm.streamsx.topology.function.Function;
  * <LI>{@code ant run.twitter.trending} - Using Apache Ant, this will run in embedded
  * mode and assumes tweets are in CSV files in {@code $HOME/tweets}.</LI>
  * <LI>
- * {@code java -jar funcsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.TwitterTrending CONTEXT_TYPE DIRECTORY}
+ * {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar twitter.TwitterTrending CONTEXT_TYPE DIRECTORY}
  * <i>CONTEXT_TYPE</i> - Run directly from the command line with a specific
  * {@code StreamsContext} where <i>CONTEXT_TYPE</i> is one of:
  * <UL>

@@ -30,7 +30,7 @@ import com.ibm.streamsx.topology.function.Predicate;
 * <LI>{@code ant run.filterecho} - Using Apache Ant, this will run in embedded
 * mode.</LI>
 * <LI>
-* {@code java -jar funcsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.FilterEcho}
+* {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.FilterEcho "d print this" "omit this"}
 * - Run directly from the command line in embedded mode.
 * <LI>
 * An application execution within your IDE once you set the class path to include the correct jars.</LI>
