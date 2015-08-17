@@ -65,7 +65,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * <LI>{@code ant run.kafka.distributed} - Using Apache Ant, this will run in distributed mode.</li>
  * <LI>{@code ant run.kafka} - Using Apache Ant, this will run in standalone mode.</li>
  * <LI>
- * {@code java -cp functionalsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar kafka.KafkaSample} <i>[CONTEXT_TYPE]</i>
+ * {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar kafka.KafkaSample} <i>[CONTEXT_TYPE]</i>
  * - Run directly from the command line with a specific
  * {@code StreamsContext} where <i>CONTEXT_TYPE</i> is one of:
  * </LI>
