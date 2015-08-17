@@ -134,6 +134,21 @@
      </java>
   </target>
 
+  <target name="run.kafka">
+    <java classname="kafka.KafkaSample" classpathref="run.classpath" fork="yes">
+      <arg value="STANDALONE"/>
+    </java>
+  </target>
+
+  <target name="run.kafka.distributed">
+    <fail unless="env.STREAMS_DOMAIN_ID" message="STREAMS_DOMAIN_ID not set."/>
+    <fail unless="env.STREAMS_INSTANCE_ID" message="STREAMS_INSTANCE_ID not set."/>
+    <echo message="Job will be submitted to Streams instance ${env.STREAMS_INSTANCE_ID} in domain ${env.STREAMS_DOMAIN_ID}" />
+    <java classname="kafka.KafkaSample" classpathref="run.classpath" fork="yes">
+      <arg value="DISTRIBUTED"/>
+    </java>
+  </target>
+
   <target name="doc">
        <mkdir dir="javadoc"/>
        <javadoc destdir="javadoc" classpathref="compile.classpath"
