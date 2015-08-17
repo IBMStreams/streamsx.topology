@@ -13,11 +13,13 @@ import java.util.Map;
 import java.util.Set;
 
 import com.ibm.streams.operator.StreamSchema;
+import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
+import com.ibm.streamsx.topology.internal.core.TSinkImpl;
 
 /**
  * Integration between Java topologies and SPL operator invocations. If the SPL
@@ -86,11 +88,12 @@ public class SPL {
      *            operator
      * @param params
      *            Parameters for the SPL operator, ignored if it is null.
+     * @return the sink element
      */
-    public static void invokeSink(String kind, SPLInput input,
+    public static TSink invokeSink(String kind, SPLInput input,
             Map<String, ? extends Object> params) {
 
-        invokeSink(opNameFromKind(kind), kind, input, params);
+        return invokeSink(opNameFromKind(kind), kind, input, params);
     }
 
     /**
@@ -105,14 +108,16 @@ public class SPL {
      *            operator
      * @param params
      *            Parameters for the SPL operator, ignored if it is null.
+     * @return the sink element
      */
-    public static void invokeSink(String name, String kind, SPLInput input,
+    public static TSink invokeSink(String name, String kind, SPLInput input,
             Map<String, ? extends Object> params) {
 
         BOperatorInvocation op = input.builder().addSPLOperator(name, kind,
                 params);
         SourceInfo.setSourceInfo(op, SPL.class);
         SPL.connectInputToOperator(input, op);
+        return new TSinkImpl(input.topology(), op);
     }
     
     private static String opNameFromKind(String kind) {

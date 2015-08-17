@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streamsx.topology.TKeyedStream;
+import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.TopologyElement;
@@ -110,7 +111,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
-    public void sink(Consumer<T> sinker) {
+    public TSink sink(Consumer<T> sinker) {
         
         String opName = sinker.getClass().getSimpleName();
         if (opName.isEmpty()) {
@@ -121,6 +122,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 opName, FunctionSink.class, sinker);
         SourceInfo.setSourceInfo(sink, StreamImpl.class);
         connectTo(sink, true, null);
+        return new TSinkImpl(this, sink);
     }
 
     @Override

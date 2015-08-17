@@ -163,11 +163,23 @@
    </jacoco:coverage>
    </target>
 
+  <target name="unittest.kafka.standalone">
+     <property name="topology.test.type" value="STANDALONE_TESTER"/>
+     <antcall target="unittest.kafka"/>
+  </target>
+
   <target name="unittest.kafka">
      <echo message="See com.ibm.streamsx.topology.test.messaging.kafka.package-info.java for required configuration information."/>
      <property name="topology.test.type" value="DISTRIBUTED_TESTER"/>
+     <property name="topology.test.showoutput" value="yes"/>
      <property name="topology.test.include.name" value="**/kafka/*Test.java"/>
      <antcall target="unittest.simple"/>
+  	 <if>
+  	 	<equals arg1="${topology.test.type}" arg2="STANDALONE_TESTER" />
+  	    <then>
+  	      <echo message="REMEMBER TO LOCATE AND TERMINATE orphaned standalone processes."/>
+  	    </then>
+  	 </if>
      <fail message="Unittests failed" if="topology.tests.failed"/>
   </target>
 

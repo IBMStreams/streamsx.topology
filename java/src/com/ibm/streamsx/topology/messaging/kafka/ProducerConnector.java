@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.ibm.streams.operator.OutputTuple;
+import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.function.BiFunction;
@@ -105,6 +106,20 @@ public class ProducerConnector {
      * <p>
      * The messages added to Kafka include a topic, message and key.
      * If {@link Message#getKey()} is null, an empty key value is published.
+     * 
+     * <p>
+     * N.B. there seem to be some issues with the underlying 
+     * com.ibm.streamsx.messaging library - e.g.,
+     * <a href="https://github.com/IBMStreams/streamsx.messaging/issues/118">issue#118</a>.
+     * If your application is experiencing odd Kafka behavior
+     * try isolating the producer from its feeding streams.
+     * e.g.,
+     * <pre>
+     * ProducerConnector pc = ...
+     * TStream<Message> s = ...
+     * pc.publish(s.isolate(), ...);
+     * </pre> 
+     * 
      * @param stream the stream to publish
      * @param topic topic to publish to.  May be null.
      * 
@@ -126,10 +141,16 @@ public class ProducerConnector {
         params.put("propertiesFile", PROP_FILE_PARAM);
         addPropertiesFile();
        
-        SPL.invokeSink(
-                "com.ibm.streamsx.messaging.kafka::KafkaProducer",
+        // Use SPL.invoke to avoid adding a compile time dependency
+        // to com.ibm.streamsx.messaging since JavaPrimitive.invoke*()
+        // lack "kind" based variants.
+        String kind = "com.ibm.streamsx.messaging.kafka::KafkaProducer";
+        String className = "com.ibm.streamsx.messaging.kafka.KafkaSink";
+        TSink sink = SPL.invokeSink(
+                kind,
                 splStream,
                 params);
+        Util.tagOpAsJavaPrimitive(sink.operator(), kind, className);
     }
     
     private static BiFunction<Message,OutputTuple,OutputTuple> 
