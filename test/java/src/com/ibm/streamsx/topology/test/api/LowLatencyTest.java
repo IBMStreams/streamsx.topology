@@ -34,8 +34,8 @@ public class LowLatencyTest extends TestTopology {
 
         // Construct topology
         TStream<String> ss = topology.strings("hello");
-        TStream<String> ss1 = ss.transform(getContainerId(), String.class).lowLatency();
-        TStream<String> ss2 = ss1.transform(getContainerId(), String.class).endLowLatency();
+        TStream<String> ss1 = ss.transform(getContainerId()).lowLatency();
+        TStream<String> ss2 = ss1.transform(getContainerId()).endLowLatency();
         ss2.print();
         
         StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT).submit(topology).get();
@@ -48,13 +48,13 @@ public class LowLatencyTest extends TestTopology {
 
         // Construct topology
         TStream<String> ss = topology.strings("hello")
-                .transform(getContainerId(), String.class).transform(getContainerId(), String.class);
+                .transform(getContainerId()).transform(getContainerId());
         
-        TStream<String> ss1 = ss.transform(getContainerId(), String.class).lowLatency();
-        TStream<String> ss2 = ss1.transform(getContainerId(), String.class).
-                transform(getContainerId(), String.class).endLowLatency().transform(getContainerId(), String.class);
-        TStream<String> ss3 = ss2.transform(getContainerId(), String.class).lowLatency();
-        ss3.transform(getContainerId(), String.class).transform(getContainerId(), String.class)
+        TStream<String> ss1 = ss.transform(getContainerId()).lowLatency();
+        TStream<String> ss2 = ss1.transform(getContainerId()).
+                transform(getContainerId()).endLowLatency().transform(getContainerId());
+        TStream<String> ss3 = ss2.transform(getContainerId()).lowLatency();
+        ss3.transform(getContainerId()).transform(getContainerId())
             .endLowLatency().print();
         
         StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT).submit(topology).get();
