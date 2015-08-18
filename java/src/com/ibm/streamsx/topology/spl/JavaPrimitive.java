@@ -124,29 +124,6 @@ public class JavaPrimitive {
         SPL.connectInputToOperator(input, sink);
         return new TSinkImpl(input.topology(), sink);
     }
-
-    /**
-     * Invocation of a Java primitive source operator to produce a SPL Stream.
-     * 
-     * @deprecated Replaced by {@link #invokeJavaPrimitiveSource(TopologyElement, Class, StreamSchema, Map)}.
-     * 
-     * @param te
-     *            Reference to Topology the operator will be in.
-     * @param opClass
-     *            Class of the operator to be invoked.
-     * @param params
-     *            Parameters for the SPL Java Primitive operator.
-     * @param schema
-     *            Schema of the output port.
-     * @return SPLStream the represents the output of the operator.
-     */
-    @Deprecated
-    public static SPLStream invokeJavaSource(TopologyElement te,
-            Class<? extends Operator> opClass,
-            Map<String, ? extends Object> params, StreamSchema schema) {
-      
-        return invokeJavaPrimitiveSource(te, opClass, schema, params);
-    }
     
     /**
      * Invocation of a Java primitive source operator to produce a SPL Stream.

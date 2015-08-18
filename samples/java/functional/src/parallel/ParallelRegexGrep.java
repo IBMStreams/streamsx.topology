@@ -50,7 +50,7 @@ public class ParallelRegexGrep {
                         return v1;
                     }
 
-                }, String.class);
+                });
 
         // Parallelize the Stream.
         // Since there are 5 channels of the stream, the approximate number of
