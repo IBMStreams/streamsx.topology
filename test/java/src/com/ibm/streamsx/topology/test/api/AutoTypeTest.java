@@ -243,7 +243,7 @@ public class AutoTypeTest {
     public void _testStringsUnion() throws Exception {
         Topology t = new Topology();
         TStream<String> strings0 = t.strings("a", "b", "c");
-        TStream<String> strings1 = t.constants(Collections.nCopies(10, "hello"), String.class);
+        TStream<String> strings1 = t.constants(Collections.nCopies(10, "hello"));
         
         TStream<String> strings = strings0.union(strings1);
         

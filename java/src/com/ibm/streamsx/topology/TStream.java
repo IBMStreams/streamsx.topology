@@ -293,16 +293,6 @@ public interface TStream<T> extends TopologyElement {
      */
     <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer);
     
-    /**
-     * 
-     * @param transformer Transformation logic to be executed against each tuple.
-     * @param tupleTypeClass Type {@code U} of the returned stream.
-     * @return Stream that will contain tuples of type {@code U} transformed from this
-     *         stream's tuples.
-     */
-    @Deprecated
-    <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer,
-            Class<U> tupleTypeClass);
     
     /**
      * Sink (terminate) this stream. For each tuple {@code t} on this stream
@@ -678,14 +668,6 @@ public interface TStream<T> extends TopologyElement {
      * @see #parallel(int, Routing)
      */
     TStream<T> endParallel();
-    
-    /**
-     * Ends a parallel region by merging the channels into a single stream.
-     * @deprecated Replaced by {@link #endParallel()}.
-     * @return A stream for which subsequent transformations are no longer parallelized.
-     */
-    @Deprecated
-    TStream<T> unparallel();
 
     /**
      * Return a stream that is a random sample of this stream.
