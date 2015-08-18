@@ -26,7 +26,7 @@ import com.ibm.streamsx.topology.context.StreamsContextFactory;
  * <LI>{@code ant run.helloworld} - Using Apache Ant, this will run in embedded
  * mode.</LI>
  * <LI>
- * {@code java -jar funcsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.HelloWorld}
+ * {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.HelloWorld}
  * - Run directly from the command line in embedded mode.
  * <LI>
  * {@code java -jar funcsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.HelloWorld}

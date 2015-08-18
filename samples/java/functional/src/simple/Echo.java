@@ -29,7 +29,7 @@ import com.ibm.streamsx.topology.context.StreamsContextFactory;
 * <LI>{@code ant run.echo} - Using Apache Ant, this will run in embedded
 * mode.</LI>
 * <LI>
-* {@code java -jar funcsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.Echo}
+* {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.Echo text to echo}
 * - Run directly from the command line in embedded mode.
 * <LI>
 * An application execution within your IDE once you set the class path to include the correct jars.</LI>
