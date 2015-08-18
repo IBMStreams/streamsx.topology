@@ -181,16 +181,10 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
-    public <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer,
-            Class<U> tupleTypeClass) {
-        Type tupleType = tupleTypeClass != null ? tupleTypeClass :
-                   TypeDiscoverer.determineStreamTypeNested(Function.class, 1, Iterable.class, transformer);    
-        return _multiTransform(transformer, tupleType);
-    }
-    @Override
     public <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer) {
         
-        return multiTransform(transformer, null);
+        return _multiTransform(transformer,
+                TypeDiscoverer.determineStreamTypeNested(Function.class, 1, Iterable.class, transformer));
     }
     
     private <U> TStream<U> _multiTransform(Function<T, Iterable<U>> transformer, Type tupleType) {
@@ -428,11 +422,6 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> parallel(int width) {
         return parallel(width, TStream.Routing.ROUND_ROBIN);
-    }
-    
-    @Override
-    public TStream<T> unparallel() {
-        return endParallel();
     }
 
     @Override
