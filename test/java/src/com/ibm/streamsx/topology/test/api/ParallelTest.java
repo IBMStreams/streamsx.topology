@@ -31,6 +31,7 @@ import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Initializable;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
@@ -425,6 +426,28 @@ public class ParallelTest extends TestTopology {
     }
     
     @Test
+    public void testUnionUnparallel() throws Exception {
+        Topology topology = new Topology();
+        
+        TStream<String> strings = topology.strings("A", "B", "C", "D", "E");
+        TStream<String> stringsP = strings.parallel(3);
+        TStream<String> stringsP_AB = stringsP.filter(allowAB());
+        TStream<String> stringsP_CDE = stringsP.filter(allowCDE());
+        
+        stringsP = stringsP_AB.union(stringsP_CDE).endParallel();
+        
+        Tester tester = topology.getTester();
+        
+        Condition<Long> fiveTuples = tester.tupleCount(stringsP, 5);
+        
+        Condition<List<String>> contents = tester.stringContentsUnordered(stringsP, "A", "B", "C", "D", "E");
+        
+        complete(tester, fiveTuples, 10, TimeUnit.SECONDS);
+
+        assertTrue("contents: "+contents, contents.valid());
+    }
+    
+    @Test
     public void testParallelIsolate() throws Exception {
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
       
@@ -446,6 +469,34 @@ public class ParallelTest extends TestTopology {
         complete(tester, singleResult, 10, TimeUnit.SECONDS);
 
         assertTrue("contents: "+contents, contents.valid());
+    }
+    
+    @SuppressWarnings("serial")
+    public static Predicate<String> allowAB(){
+        return new Predicate<String>() {
+            
+            @Override
+            public boolean test(String tuple) {
+                if(tuple.equals("A") || tuple.equals("B")){
+                    return true;
+                }
+                return false;
+            }
+        };
+    }
+    
+    @SuppressWarnings("serial")
+    public static Predicate<String> allowCDE(){
+        return new Predicate<String>() {
+            
+            @Override
+            public boolean test(String tuple) {
+                if(tuple.equals("C") || tuple.equals("D") || tuple.equals("E")){
+                    return true;
+                }
+                return false;
+            }
+        };
     }
     
     public static class CheckSeparatePE implements Function<Map<Integer,BigInteger>, String> {

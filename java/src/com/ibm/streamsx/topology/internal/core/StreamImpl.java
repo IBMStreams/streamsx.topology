@@ -27,6 +27,7 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
+import com.ibm.streamsx.topology.builder.BUnionOutput;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
@@ -419,12 +420,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public TStream<T> endParallel() {
-
-        // TODO - error checking!
-        
-        // Isolate the parallel region.
-        BOutput end = builder().isolate(output());
-        
+        BOutput end = output();
+        if(end instanceof BUnionOutput){
+            end = builder().addPassThroughOperator(end);
+        }
+        end = builder().isolate(end);
         return addMatchingStream(builder().unparallel(end));
     }
 

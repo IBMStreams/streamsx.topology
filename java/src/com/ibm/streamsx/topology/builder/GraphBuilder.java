@@ -145,6 +145,14 @@ public class GraphBuilder extends BJSONObject {
         // Create the output port.
         return op.addOutput(input.port().getStreamSchema());
     }
+    
+    public BOutput addPassThroughOperator(BOutput output) {
+        BOperatorInvocation op = addOperator(PassThrough.class, null);
+        // Create the input port that consumes the output
+        BInputPort input = op.inputFrom(output, null);
+        // Create the output port.
+        return op.addOutput(input.port().getStreamSchema());
+    }
 
     public BOperator addVirtualMarkerOperator(String kind) {
         final BMarkerOperator op = new BMarkerOperator(this, kind);

@@ -229,29 +229,50 @@ public class SPLGenerator {
                 JSONObject parallelEnd = separateIntoComposites(parallelStarts,
                         subComp, graph);
 
-                // The name of the input port of the composite should be the
-                // name of the input port of the first child operator. For now,
-                // we're assuming that all start operators in a parallel region
-                // all read from the same upstream port.
-                subComp.put("inputName",
-                        ((JSONArray) ((JSONObject) ((JSONArray) parallelStarts
-                                .get(0).get("inputs")).get(0))
-                                .get("connections")).get(0));
+                // Set all relevant input port connections to the input port
+                // name of the parallel composite
+                String parallelStartOutputPortName = (String)(output.get("name"));
+                subComp.put("inputName", "parallelInput");
+                for(JSONObject start : parallelStarts){
+                    JSONArray inputs = (JSONArray) start.get("inputs");
+                    for(Object inputObj : inputs){
+                        JSONObject input = (JSONObject)inputObj;
+                        JSONArray connections = (JSONArray) input.get("connections");
+                        for(int i = 0; i < connections.size(); i++){
+                            if(((String)connections.get(i)).equals(parallelStartOutputPortName)){
+                                connections.set(i, "parallelInput");
+                            }
+                        }
+                    }
+                }
 
-                // If the parallel region ended by invoking unparallel,
-                // the output port of the invocation of the composite operator
-                // should be the same as the output port of the $unparallel
-                // operator
                 if (parallelEnd != null) {
                     ArrayList<JSONObject> children = GraphUtilities
                             .getDownstream(parallelEnd, graph);
                     unvisited.addAll(children);
                     compOperator.put("outputs", parallelEnd.get("outputs"));
-                    subComp.put("outputName",
-                            ((JSONArray) ((JSONObject) ((JSONArray) parallelEnd
-                                    .get("inputs")).get(0)).get("connections"))
-                                    .get(0));
+                    subComp.put("outputName", "parallelOutput");
+
+                 // Set all relevant output port names to the output port of the
+                    // parallel composite.
+                    JSONObject paraEndIn = (JSONObject)((JSONArray)parallelEnd.get("inputs")).get(0);
+                    String parallelEndInputPortName = (String)(paraEndIn.get("name"));
+                    List<JSONObject> parallelOutParents = GraphUtilities.getUpstream(parallelEnd, graph);
+                    for(JSONObject end : parallelOutParents){
+                        JSONArray parallelOutputs = (JSONArray) end.get("outputs");
+                        for(Object outputObj : parallelOutputs){
+                            JSONObject paraOutput = (JSONObject)outputObj;
+                            JSONArray connections = (JSONArray) paraOutput.get("connections");
+                            for(int i = 0; i < connections.size(); i++){
+                                if(((String)connections.get(i)).equals(parallelEndInputPortName)){
+                                    paraOutput.put("name", "parallelOutput");
+                                }
+                            }
+                        }
+                    }
+
                 }
+
 
                 // Add comp operator to the list of physical operators
                 visited.add(compOperator);
