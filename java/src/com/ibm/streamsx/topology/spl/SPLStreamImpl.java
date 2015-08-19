@@ -75,9 +75,8 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     }
 
     @Override
-    public <T> TStream<T> convert(Function<Tuple, T> convertor,
-            Class<T> tupleTypeClass) {
-        return transform(convertor, tupleTypeClass);
+    public <T> TStream<T> convert(Function<Tuple, T> convertor) {
+        return transform(convertor);
     }
 
     @Override

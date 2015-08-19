@@ -202,23 +202,6 @@ public interface TStream<T> extends TopologyElement {
      *         stream's tuples.
      */
     <U> TStream<U> transform(Function<T, U> transformer);
-    
-    /**
-     * Declare a new stream that transforms each tuple from this stream into one
-     * (or zero) tuple of a different type {@code U}.
-     * This is identical to {@link #transform(Function)} except that the class
-     * type of the stream is explicitly passed in.
-     * @deprecated Replaced by {@link #transform(Function)} which does not require the {@code Class<T> argument}.
-     * @param transformer
-     *            Transformation logic to be executed against each tuple.
-     * @param tupleTypeClass
-     *      Type {@code U} of the returned stream.
-     * @return Stream that will contain tuples of type {@code U} transformed from this
-     *         stream's tuples.
-        
-     */
-    @Deprecated
-    <U> TStream<U> transform(Function<T, U> transformer, Class<U> tupleTypeClass);
 
     /**
      * Declare a new stream that modifies each tuple from this stream into one
