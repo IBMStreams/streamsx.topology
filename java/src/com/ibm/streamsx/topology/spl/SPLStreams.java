@@ -92,8 +92,7 @@ public class SPLStreams {
      *            Schema of returned stream.
      * @return Stream containing the converted tuples.
      * 
-     * @see SPLStream#convert(com.ibm.streamsx.topology.function.Function,
-     *      Class)
+     * @see SPLStream#convert(com.ibm.streamsx.topology.function.Function)
      */
     public static <T> SPLStream convertStream(TStream<T> stream,
             BiFunction<T, OutputTuple, OutputTuple> converter,
@@ -137,7 +136,7 @@ public class SPLStreams {
             public String apply(Tuple tuple) {
                 return tuple.getString(0);
             }
-        }, String.class);
+        });
     }
     
     /**
@@ -166,7 +165,7 @@ public class SPLStreams {
             public String apply(Tuple tuple) {
                 return tuple.getString(attributeIndex);
             }
-        }, String.class);
+        });
     }
 
     /**

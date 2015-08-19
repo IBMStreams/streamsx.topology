@@ -242,7 +242,7 @@ public class ConsumerConnector {
                 // assume an empty string meant null.
                 return (s==null || s.isEmpty()) ? null : s;
             }
-        }, Message.class);
+        });
     }
 
 }

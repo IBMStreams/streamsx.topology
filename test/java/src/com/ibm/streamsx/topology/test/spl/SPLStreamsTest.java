@@ -150,7 +150,7 @@ public class SPLStreamsTest extends TestTopology {
                 ias.s = v1.getString("ss");
                 return ias;
             }
-        }, IntAndString.class);
+        });
     }
 
     @SuppressWarnings("serial")

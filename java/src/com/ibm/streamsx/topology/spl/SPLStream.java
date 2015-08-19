@@ -55,18 +55,16 @@ public interface SPLStream extends TStream<Tuple>, SPLInput {
 
     /**
      * Convert SPL tuples into Java objects. This call is equivalent to
-     * {@code transform(converter, tupleTypeClass)}.
+     * {@code transform(converter)}.
      * 
      * @param convertor
      *            Function to convert
-     * @param tupleTypeClass
-     *            Type {@code T} of the returned stream.
      * @return Stream containing tuples of type {@code T} transformed from this
      *         stream's SPL tuples.
      * 
      * @see TStream#transform(Function)
      */
-    <T> TStream<T> convert(Function<Tuple, T> convertor, Class<T> tupleTypeClass);
+    <T> TStream<T> convert(Function<Tuple, T> convertor);
 
     /**
      * Create a stream that converts each input tuple on this stream to its SPL
