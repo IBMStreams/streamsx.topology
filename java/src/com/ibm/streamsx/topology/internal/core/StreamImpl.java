@@ -28,6 +28,7 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.builder.BUnionOutput;
+import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
@@ -338,7 +339,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         BOperatorInvocation op;
         if (Schemas.usesDirectSchema(getTupleType())
-                 || this instanceof SPLStream) {
+                 || ((TStream<T>) this) instanceof SPLStream) {
             // Publish as a stream consumable by SPL & Java/Scala
             op = builder().addSPLOperator("Publish",
                     "com.ibm.streamsx.topology.topic::Publish",
@@ -556,4 +557,25 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public boolean isKeyed() {
         return false;
     }
+
+    @Override
+    public TStream<T> fuse(Placeable<?>... elements) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public TStream<T> addResourceTags(String... tags) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Set<String> getResourceTags() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
+    /* Placement control */
+    
 }
