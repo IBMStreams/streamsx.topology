@@ -185,6 +185,20 @@
      <echo >REMEMBER TO LOCATE AND TERMINATE orphaned standalone processes.</echo>
   </target>
 
+  <target name="unittest.mqtt.standalone">
+     <property name="topology.test.type" value="STANDALONE_TESTER"/>
+     <antcall target="unittest.mqtt"/>
+  </target>
+
+  <target name="unittest.mqtt">
+     <echo message="See com.ibm.streamsx.topology.test.messaging.mqtt.package-info.java for required configuration information."/>
+     <property name="topology.test.type" value="DISTRIBUTED_TESTER"/>
+     <property name="topology.test.showoutput" value="yes"/>
+     <property name="topology.test.include.name" value="**/mqtt/*Test.java"/>
+     <antcall target="unittest.simple"/>
+     <fail message="Unittests failed" if="topology.tests.failed"/>
+  </target>
+
   <target name="unittest.simple" depends="jar">
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
