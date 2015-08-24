@@ -322,7 +322,19 @@ class OperatorGenerator {
     static void parameterValue(JSONObject param, StringBuilder sb) {
         Object value = param.get("value");
         Object type = param.get("type");
-        if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
+        if ("submissionParameter".equals(type)) {
+            JSONObject jo = (JSONObject) value;
+            String splType = (String) jo.get("splType");
+            String name = SPLGenerator.stringLiteral((String) jo.get("name"));
+            String defaultValue = (String) jo.get("defaultValue");
+            if (defaultValue == null)
+                sb.append(String.format("(%s) getSubmissionTimeValue(%s)", splType, name));
+            else {
+                defaultValue = SPLGenerator.stringLiteral(defaultValue);
+                sb.append(String.format("(%s) getSubmissionTimeValue(%s, %s)", splType, name, defaultValue));
+            }
+            return;
+        } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
             SPLGenerator.stringLiteral(sb, value.toString());
             return;
         } else if (value instanceof JSONArray) {

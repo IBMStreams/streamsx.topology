@@ -62,6 +62,10 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         for (String key : config.keySet()) {
             Object value = config.get(key);
             
+            if (key.equals(ContextProperties.SUBMISSION_PARAMS)) {
+                // value causes issues below and no need to add this to json
+                continue;
+            }
             if (JSONObject.isValidObject(value)) {
                 graphConfig.put(key, value);
                 continue;

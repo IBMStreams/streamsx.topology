@@ -57,4 +57,14 @@ public interface ContextProperties {
      * Argument is a String.
      */
     String COMPILE_INSTALL_DIR = "topology.install.compile";
+    
+    /**
+     * Submission parameters to be supplied to the topology when
+     * submitted for {@code DISTRIBUTED}, {@code STANDALONE}
+     * or {@code ANALYTIC_SERVICE} execution.
+     * <p>
+     * The property value is a {@code Map<String,String>} where the key
+     * is the parameter name and the value is the parameter value.
+     */
+    String SUBMISSION_PARAMS = "topology.submissionParams";
 }

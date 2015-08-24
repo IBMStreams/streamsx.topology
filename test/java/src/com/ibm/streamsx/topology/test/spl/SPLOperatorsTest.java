@@ -8,6 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +22,10 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.Type;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
+import com.ibm.streamsx.topology.spl.SubmissionParameter;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -119,6 +122,201 @@ public class SPLOperatorsTest extends TestTopology {
         assertEquals(i16, tuple.getShort("i16"));
         assertEquals(i32, tuple.getInt("i32"));
         assertEquals(i64, tuple.getLong("i64"));
+        assertEquals(f32, tuple.getFloat("f32"), 0.001);
+        assertEquals(f64, tuple.getDouble("f64"), 0.001);
+    }
+
+    @Test
+    public void testSubmissionParameterDefault() throws Exception {
         
+        // Invokes an SPL operator so cannot run in embedded.       
+        assumeSPLOk();   
+        
+        Topology topology = new Topology("testSubmissionParameterDefault"); 
+        
+        StreamSchema schema = Type.Factory.getStreamSchema(
+                "tuple<"
+                + "rstring r"
+// not supported by TypeLiteralTester
+//                + ", ustring u"
+//                + ", boolean b"
+                + ", int8 i8, int16 i16, int32 i32, int64 i64"
+// not supported by TypeLiteralTester
+//                + ", uint8 ui8, uint16 ui16, uint32 ui32, uint64 ui64"
+                + ", float32 f32, float64 f64"
+                + " >");
+        
+        Map<String,Object> params = new HashMap<>();
+        
+        Random rand = new Random();
+
+        String r = "test \"Submission Parameters\"" + rand.nextInt();
+        addParamDefault("r", "rstring", r, params);
+//        String u = "test \"Submission Parameters\"" + rand.nextInt();
+//        addParamDefault("u", "ustring", u, params, submissionParams);
+
+//      boolean bool = rand.nextBoolean();
+//      addParamDefault("b", "boolean", bool, params, submissionParams);
+      
+        
+        byte i8 = (byte) rand.nextInt();
+        short i16 = (short) rand.nextInt(); 
+        int i32 = rand.nextInt();
+        long i64 = rand.nextLong(); 
+        addParamDefault("i8", "int8", i8+"", params);
+        addParamDefault("i16", "int16", i16+"", params);
+        addParamDefault("i32", "int32", i32+"", params);
+        addParamDefault("i64", "int64", i64+"", params);
+        
+//        byte ui8 = (byte) rand.nextInt();
+//        short ui16 = (short) rand.nextInt(); 
+//        int ui32 = rand.nextInt();
+//        long ui64 = rand.nextLong(); 
+//        addParamDefault("ui8", "uint8", ui8+"", params);
+//        addParamDefault("ui16", "uint16", ui16+"", params);
+//        addParamDefault("ui32", "uint32", ui32+"", params);
+//        addParamDefault("ui64", "uint64", ui64+"", params);
+        
+        float f32 = rand.nextFloat();
+        double f64 = rand.nextDouble();
+        addParamDefault("f32", "float32", f32+"", params);
+        addParamDefault("f64", "float64", f64+"", params);
+        
+        SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtk"));
+        SPLStream paramTuple = SPL.invokeSource(topology, "testgen::TypeLiteralTester", params, schema);
+
+        Tester tester = topology.getTester();
+        
+        Condition<Long> expectedCount = tester.tupleCount(paramTuple, 1);
+        MostRecent<Tuple> mr = tester.splHandler(paramTuple, new MostRecent<Tuple>());
+
+        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.toString(), expectedCount.valid());
+        Tuple tuple = mr.getMostRecentTuple();
+        
+//        assertEquals(bool, tuple.getBoolean("bool"));
+        assertEquals(r, tuple.getString("r"));
+//        assertEquals(u, tuple.getString("u"));
+        
+        assertEquals(i8, tuple.getByte("i8"));
+        assertEquals(i16, tuple.getShort("i16"));
+        assertEquals(i32, tuple.getInt("i32"));
+        assertEquals(i64, tuple.getLong("i64"));
+        
+//        assertEquals(ui8, tuple.getByte("ui8"));
+//        assertEquals(ui16, tuple.getShort("ui16"));
+//        assertEquals(ui32, tuple.getInt("ui32"));
+//        assertEquals(ui64, tuple.getLong("ui64"));
+
+        assertEquals("f32="+f32, f32, tuple.getFloat("f32"), 0.001);
+        assertEquals("f64="+f64, f64, tuple.getDouble("f64"), 0.001);
+    }
+
+    @Test
+    public void testSubmissionParameter() throws Exception {
+        
+        // Invokes an SPL operator so cannot run in embedded.       
+        assumeSPLOk();   
+        
+        Topology topology = new Topology("testSubmissionParameter"); 
+        
+        StreamSchema schema = Type.Factory.getStreamSchema(
+                "tuple<"
+                + "rstring r"
+// not supported by TypeLiteralTester
+//                + ", ustring u"
+//                + ", boolean b"
+                + ", int8 i8, int16 i16, int32 i32, int64 i64"
+// not supported by TypeLiteralTester
+//                + ", uint8 ui8, uint16 ui16, uint32 ui32, uint64 ui64"
+                + ", float32 f32, float64 f64"
+                + " >");
+        
+        Map<String,Object> params = new HashMap<>();
+        
+        Map<String,String> submitParams = new HashMap<>();
+        
+        Random rand = new Random();
+
+        String r = "test \"Submission Parameters\"" + rand.nextInt();
+        addParam("r", "rstring", r, params, submitParams);
+//        String u = "test \"Submission Parameters\"" + rand.nextInt();
+//        addParam("u", "ustring", u, params, submitParams);
+
+//      boolean bool = rand.nextBoolean();
+//      addParam("b", "boolean", bool, params, submitParams);
+      
+        
+        byte i8 = (byte) rand.nextInt();
+        short i16 = (short) rand.nextInt(); 
+        int i32 = rand.nextInt();
+        long i64 = rand.nextLong(); 
+        addParam("i8", "int8", i8, params, submitParams);
+        addParam("i16", "int16", i16, params, submitParams);
+        addParam("i32", "int32", i32, params, submitParams);
+        addParam("i64", "int64", i64, params, submitParams);
+        
+//        byte ui8 = (byte) rand.nextInt();
+//        short ui16 = (short) rand.nextInt(); 
+//        int ui32 = rand.nextInt();
+//        long ui64 = rand.nextLong(); 
+//        addParam("ui8", "uint8", ui8, params, submitParams);
+//        addParam("ui16", "uint16", ui16, params, submitParams);
+//        addParam("ui32", "uint32", ui32, params, submitParams);
+//        addParam("ui64", "uint64", ui64, params, submitParams);
+        
+        float f32 = rand.nextFloat();
+        double f64 = rand.nextDouble();
+        addParam("f32", "float32", f32, params, submitParams);
+        addParam("f64", "float64", f64, params, submitParams);
+        
+        getConfig().put(ContextProperties.SUBMISSION_PARAMS, submitParams);
+   
+        SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtk"));
+        SPLStream paramTuple = SPL.invokeSource(topology, "testgen::TypeLiteralTester", params, schema);
+
+        Tester tester = topology.getTester();
+        
+        Condition<Long> expectedCount = tester.tupleCount(paramTuple, 1);
+        MostRecent<Tuple> mr = tester.splHandler(paramTuple, new MostRecent<Tuple>());
+
+        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.toString(), expectedCount.valid());
+        Tuple tuple = mr.getMostRecentTuple();
+        
+//        assertEquals(bool, tuple.getBoolean("bool"));
+        assertEquals(r, tuple.getString("r"));
+//        assertEquals(u, tuple.getString("u"));
+        
+        assertEquals(i8, tuple.getByte("i8"));
+        assertEquals(i16, tuple.getShort("i16"));
+        assertEquals(i32, tuple.getInt("i32"));
+        assertEquals(i64, tuple.getLong("i64"));
+        
+//        assertEquals(ui8, tuple.getByte("ui8"));
+//        assertEquals(ui16, tuple.getShort("ui16"));
+//        assertEquals(ui32, tuple.getInt("ui32"));
+//        assertEquals(ui64, tuple.getLong("ui64"));
+
+        assertEquals("f32="+f32, f32, tuple.getFloat("f32"), 0.001);
+        assertEquals("f64="+f64, f64, tuple.getDouble("f64"), 0.001);
+    }
+
+    static void addParamDefault(String name, String splType, String defaultVal, Map<String,Object> params)
+    {
+        String spName = name + ".param";
+        SubmissionParameter sp = new SubmissionParameter(spName, splType, defaultVal);
+        params.put(name, sp);
+    }
+
+    static void addParam(String name, String splType, Object val, Map<String,Object> params,
+            Map<String,String> submitParams)
+    {
+        String spName = name + ".param";
+        SubmissionParameter sp = new SubmissionParameter(spName, splType);
+        params.put(name, sp);
+        submitParams.put(spName, val.toString());
     }
 }

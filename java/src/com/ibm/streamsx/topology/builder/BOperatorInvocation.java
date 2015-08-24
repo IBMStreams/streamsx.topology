@@ -154,7 +154,9 @@ public class BOperatorInvocation extends BOperator {
             jsonValue = attr.getName();
             jsonType = "attribute";
             op.setAttributeParameter(name, attr.getName());
-            
+        } else if (value instanceof BSubmissionParameter) {
+            jsonValue = ((BSubmissionParameter) value).toJson();
+            jsonType = "submissionParameter";
         } else {
             throw new IllegalArgumentException("Type for parameter " + name + " is not supported:" +  value.getClass());
         }

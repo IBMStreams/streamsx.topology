@@ -64,6 +64,13 @@ public class InvokeStandalone {
                 tls = "5";
             commands.add(tls);
         }
+        if (config.containsKey(ContextProperties.SUBMISSION_PARAMS)) {
+            @SuppressWarnings("unchecked")
+            Map<String,String> params = (Map<String,String>) config.get(ContextProperties.SUBMISSION_PARAMS); 
+            for(Map.Entry<String,String> e :  params.entrySet()) {
+                commands.add(e.getKey()+"="+e.getValue());
+            }
+        }
 
         trace.info("Invoking standalone application");
         trace.info(Util.concatenate(commands));

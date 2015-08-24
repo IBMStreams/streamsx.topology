@@ -362,6 +362,13 @@ public class SPLGenerator {
         return getSPLCompatibleName(basename(name));
     }
 
+    
+    static String stringLiteral(String value) {
+        StringBuilder sb = new StringBuilder();
+        stringLiteral(sb, value);
+        return sb.toString();
+    }
+
     static void stringLiteral(StringBuilder sb, String value) {
         sb.append('"');
 
