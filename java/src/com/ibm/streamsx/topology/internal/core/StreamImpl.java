@@ -557,25 +557,33 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public boolean isKeyed() {
         return false;
     }
+    
+    /* Placement control */
+    private PlacementInfo placement;
+    
+    private PlacementInfo getPlacementInfo() {
+        if (placement == null)
+            placement = PlacementInfo.getPlacementInfo(this);
+        return placement;
+    }
 
     @Override
     public TStream<T> fuse(Placeable<?>... elements) {
-        // TODO Auto-generated method stub
-        return null;
+        getPlacementInfo().fuse(this, elements);
+        return this;
     }
 
     @Override
     public TStream<T> addResourceTags(String... tags) {
-        // TODO Auto-generated method stub
-        return null;
+        getPlacementInfo() .addResourceTags(this, tags);
+        return this;              
     }
 
     @Override
     public Set<String> getResourceTags() {
-        // TODO Auto-generated method stub
-        return null;
+        return getPlacementInfo() .getResourceTags(this);
     }
     
-    /* Placement control */
+
     
 }

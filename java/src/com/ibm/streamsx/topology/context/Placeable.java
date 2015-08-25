@@ -1,4 +1,8 @@
-package com.ibm.streamsx.topology.context;
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015  
+*/
+ package com.ibm.streamsx.topology.context;
 
 import java.util.Set;
 
