@@ -272,8 +272,8 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
-    public void print() {
-        sink(new Print<T>());
+    public TSink print() {
+        return sink(new Print<T>());
     }
 
     @Override
@@ -575,7 +575,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public TStream<T> addResourceTags(String... tags) {
-        getPlacementInfo() .addResourceTags(this, tags);
+        getPlacementInfo().addResourceTags(this, tags);
         return this;              
     }
 
@@ -583,7 +583,4 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public Set<String> getResourceTags() {
         return getPlacementInfo() .getResourceTags(this);
     }
-    
-
-    
 }

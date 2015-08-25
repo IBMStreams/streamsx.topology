@@ -15,6 +15,7 @@ import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.Placeable;
 
 /**
  * Tests to verify Placeable
@@ -23,9 +24,20 @@ import com.ibm.streamsx.topology.Topology;
 public class PlaceableTest {  
 
     @Test
-    public void testSimpleTags() {
+    public void testSimpleTagsStream() {
         Topology t = new Topology();        
         TStream<String> s = t.strings("3");
+        testSimpleTags(s);
+    }
+    
+    @Test
+    public void testSimpleTagsSink() {
+        Topology t = new Topology();        
+        TStream<String> s = t.strings("3");
+        testSimpleTags(s.print());
+    }
+    
+    private void testSimpleTags(Placeable<?> s) {
         
         assertTrue(s.getResourceTags().isEmpty());
         
@@ -55,10 +67,30 @@ public class PlaceableTest {
     }
     
     @Test
-    public void testTagThenFuse() {
+    public void testTagThenFuseStream() {
         Topology t = new Topology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
+        testTagThenFuse(s1, s2);
+    }
+    
+    @Test
+    public void testTagThenFuseSink() {
+        Topology t = new Topology();        
+        TStream<String> s1 = t.strings("3");
+        TStream<String> s2 = t.strings("3");
+        testTagThenFuse(s1.print(), s2.print());
+    }
+    
+    @Test
+    public void testTagThenFuseStreamSink() {
+        Topology t = new Topology();        
+        TStream<String> s1 = t.strings("3");
+        TStream<String> s2 = t.strings("3");
+        testTagThenFuse(s1, s2.print());
+    }
+    
+    private void testTagThenFuse(Placeable<?> s1, Placeable<?> s2) {
 
         assertTrue(s1.getResourceTags().isEmpty());
         assertTrue(s2.getResourceTags().isEmpty());
@@ -83,10 +115,28 @@ public class PlaceableTest {
     }
     
     @Test
-    public void testTagBothThenFuse() {
+    public void testTagBothThenFuseStream() {
         Topology t = new Topology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
+        testTagBothThenFuse(s1, s2);
+    }
+    @Test
+    public void testTagBothThenFuseSink() {
+        Topology t = new Topology();        
+        TStream<String> s1 = t.strings("3");
+        TStream<String> s2 = t.strings("3");
+        testTagBothThenFuse(s1.print(), s2.print());
+    }
+    @Test
+    public void testTagBothThenFuseSinkStream() {
+        Topology t = new Topology();        
+        TStream<String> s1 = t.strings("3");
+        TStream<String> s2 = t.strings("3");
+        testTagBothThenFuse(s1.print(), s2);
+    }
+    
+    private void testTagBothThenFuse(Placeable<?> s1, Placeable<?> s2)  {
 
         assertTrue(s1.getResourceTags().isEmpty());
         assertTrue(s2.getResourceTags().isEmpty());
@@ -104,10 +154,28 @@ public class PlaceableTest {
     }
 
     @Test
-    public void testFuseThenTag() {
+    public void testFuseThenTagStream() {
         Topology t = new Topology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
+        testFuseThenTag(s1, s2);
+    }
+    @Test
+    public void testFuseThenTagSink() {
+        Topology t = new Topology();        
+        TStream<String> s1 = t.strings("3");
+        TStream<String> s2 = t.strings("3");
+        testFuseThenTag(s1.print(), s2.print());
+    }
+    @Test
+    public void testFuseThenTagStreamSink() {
+        Topology t = new Topology();        
+        TStream<String> s1 = t.strings("3");
+        TStream<String> s2 = t.strings("3");
+        testFuseThenTag(s1, s2.print());
+    }
+    
+    private void testFuseThenTag(Placeable<?> s1, Placeable<?> s2) {
         
         assertTrue(s1.getResourceTags().isEmpty());
         assertTrue(s2.getResourceTags().isEmpty());

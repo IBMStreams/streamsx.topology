@@ -341,7 +341,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * Print each tuple on {@code System.out}. For each tuple {@code t} on this
      * stream {@code System.out.println(t.toString())} will be called.
      */
-    void print();
+    TSink print();
 
     /**
      * Class of the tuples on this stream, if known.

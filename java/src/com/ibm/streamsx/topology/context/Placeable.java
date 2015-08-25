@@ -37,7 +37,7 @@ public interface Placeable<T extends Placeable<T>> extends TopologyElement {
      * Add required resource tags for this topology element for distributed submission.
      * This topology element and any it has been {@link #fuse(Placeable...) fused}
      * with will execute on a resource (host) that has all the tags returned by
-     * {@link #getHostTags()}.
+     * {@link #getResourceTags()}.
      * 
      * @param tags Tags to be required at runtime.
      * @return this
