@@ -15,7 +15,8 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
  * Topology submission behavior when a submission parameter lacking a default
  * value has been declared but a value is not supplied at submission time 
  * is defined by the underlying topology execution runtime.  Submission fails
- * for contexts {@code DISTRIBUTED}, {@code STANDALONE}, or {@ANALYTIC_SERVICE}.
+ * for contexts {@code DISTRIBUTED}, {@code STANDALONE},
+ * or {@code ANALYTIC_SERVICE}.
  * <p>
  * TODO - also for TStream.parallel(new SubmissionParameter(...)) ?
  * <p>
