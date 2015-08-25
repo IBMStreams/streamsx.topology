@@ -8,7 +8,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -306,17 +305,15 @@ public class SPLOperatorsTest extends TestTopology {
 
     static void addParamDefault(String name, String splType, String defaultVal, Map<String,Object> params)
     {
-        String spName = name + ".param";
-        SubmissionParameter sp = new SubmissionParameter(spName, splType, defaultVal);
+        SubmissionParameter sp = new SubmissionParameter(name, splType, defaultVal);
         params.put(name, sp);
     }
 
     static void addParam(String name, String splType, Object val, Map<String,Object> params,
             Map<String,String> submitParams)
     {
-        String spName = name + ".param";
-        SubmissionParameter sp = new SubmissionParameter(spName, splType);
+        SubmissionParameter sp = new SubmissionParameter(name, splType);
         params.put(name, sp);
-        submitParams.put(spName, val.toString());
+        submitParams.put(name, val.toString());
     }
 }

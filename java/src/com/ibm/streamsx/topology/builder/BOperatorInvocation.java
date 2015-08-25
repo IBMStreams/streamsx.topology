@@ -21,6 +21,7 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.tuple.JSONAble;
 
 // Union(A,B)
 //   OpC(A,B)
@@ -154,9 +155,10 @@ public class BOperatorInvocation extends BOperator {
             jsonValue = attr.getName();
             jsonType = "attribute";
             op.setAttributeParameter(name, attr.getName());
-        } else if (value instanceof BSubmissionParameter) {
-            jsonValue = ((BSubmissionParameter) value).toJson();
-            jsonType = "submissionParameter";
+        } else if (value instanceof JSONAble) {
+            JSONObject jo = ((JSONAble) value).toJSON();
+            jsonType = (String) jo.get("jsonType");
+            jsonValue = (JSONObject) jo.get("jsonValue");
         } else {
             throw new IllegalArgumentException("Type for parameter " + name + " is not supported:" +  value.getClass());
         }
