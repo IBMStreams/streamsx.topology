@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.context;
 
+import com.ibm.streamsx.topology.spl.SubmissionParameter;
+
 /**
  * Properties that can be specified when submitting the topology to a context.
  * @see StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)
@@ -63,8 +65,10 @@ public interface ContextProperties {
      * submitted for {@code DISTRIBUTED}, {@code STANDALONE}
      * or {@code ANALYTIC_SERVICE} execution.
      * <p>
-     * The property value is a {@code Map<String,String>} where the key
+     * The property value is a {@code Map<String,Object>} where the key
      * is the parameter name and the value is the parameter value.
+     * 
+     * See {@link SubmissionParameter}
      */
     String SUBMISSION_PARAMS = "topology.submissionParams";
 }

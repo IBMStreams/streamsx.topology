@@ -99,10 +99,10 @@ public class InvokeSubmit {
         }
         if (config.containsKey(ContextProperties.SUBMISSION_PARAMS)) {
             @SuppressWarnings("unchecked")
-            Map<String,String> params = (Map<String,String>) config.get(ContextProperties.SUBMISSION_PARAMS); 
-            for(Map.Entry<String,String> e :  params.entrySet()) {
+            Map<String,Object> params = (Map<String,Object>) config.get(ContextProperties.SUBMISSION_PARAMS); 
+            for(Map.Entry<String,Object> e :  params.entrySet()) {
                 commands.add("-P");
-                commands.add(e.getKey()+"="+e.getValue());
+                commands.add(e.getKey()+"="+e.getValue().toString());
             }
         }
         commands.add(bundle.getAbsolutePath());

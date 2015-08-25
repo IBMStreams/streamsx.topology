@@ -150,36 +150,40 @@ public class SPLOperatorsTest extends TestTopology {
         Random rand = new Random();
 
         String r = "test \"Submission Parameters\"" + rand.nextInt();
-        addParamDefault("r", "rstring", r, params);
+        addParamDefault("r", r, params);
 //        String u = "test \"Submission Parameters\"" + rand.nextInt();
-//        addParamDefault("u", "ustring", u, params, submissionParams);
+//        addParamDefault("u", u, params);
 
-//      boolean bool = rand.nextBoolean();
-//      addParamDefault("b", "boolean", bool, params, submissionParams);
+//        boolean bool = rand.nextBoolean();
+//        addParamDefault("b", bool, params);
       
         
         byte i8 = (byte) rand.nextInt();
         short i16 = (short) rand.nextInt(); 
         int i32 = rand.nextInt();
         long i64 = rand.nextLong(); 
-        addParamDefault("i8", "int8", i8+"", params);
-        addParamDefault("i16", "int16", i16+"", params);
-        addParamDefault("i32", "int32", i32+"", params);
-        addParamDefault("i64", "int64", i64+"", params);
+        addParamDefault("i8", i8, params);
+        addParamDefault("i16", i16, params);
+        addParamDefault("i32", i32, params);
+        addParamDefault("i64", i64, params);
         
 //        byte ui8 = (byte) rand.nextInt();
 //        short ui16 = (short) rand.nextInt(); 
 //        int ui32 = rand.nextInt();
 //        long ui64 = rand.nextLong(); 
-//        addParamDefault("ui8", "uint8", ui8+"", params);
-//        addParamDefault("ui16", "uint16", ui16+"", params);
-//        addParamDefault("ui32", "uint32", ui32+"", params);
-//        addParamDefault("ui64", "uint64", ui64+"", params);
+//        ui8 = -1;
+//        ui16 = -1;
+//        ui32 = -1;
+//        ui64 = -1;   
+//        addUnsignedParamDefault("ui8", ui8, params);
+//        addUnsignedParamDefault("ui16", ui16, params);
+//        addUnsignedParamDefault("ui32", ui32, params);
+//        addUnsignedParamDefault("ui64", ui64, params);
         
         float f32 = rand.nextFloat();
         double f64 = rand.nextDouble();
-        addParamDefault("f32", "float32", f32+"", params);
-        addParamDefault("f64", "float64", f64+"", params);
+        addParamDefault("f32", f32, params);
+        addParamDefault("f64", f64, params);
         
         SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtk"));
         SPLStream paramTuple = SPL.invokeSource(topology, "testgen::TypeLiteralTester", params, schema);
@@ -234,41 +238,45 @@ public class SPLOperatorsTest extends TestTopology {
         
         Map<String,Object> params = new HashMap<>();
         
-        Map<String,String> submitParams = new HashMap<>();
+        Map<String,Object> submitParams = new HashMap<>();
         
         Random rand = new Random();
 
         String r = "test \"Submission Parameters\"" + rand.nextInt();
-        addParam("r", "rstring", r, params, submitParams);
+        addParam("r", String.class, r, params, submitParams);
 //        String u = "test \"Submission Parameters\"" + rand.nextInt();
-//        addParam("u", "ustring", u, params, submitParams);
+//        addParam("u", String.class, u, params, submitParams);
 
 //      boolean bool = rand.nextBoolean();
-//      addParam("b", "boolean", bool, params, submitParams);
+//      addParam("b", Boolean.class, bool, params, submitParams);
       
         
         byte i8 = (byte) rand.nextInt();
         short i16 = (short) rand.nextInt(); 
         int i32 = rand.nextInt();
         long i64 = rand.nextLong(); 
-        addParam("i8", "int8", i8, params, submitParams);
-        addParam("i16", "int16", i16, params, submitParams);
-        addParam("i32", "int32", i32, params, submitParams);
-        addParam("i64", "int64", i64, params, submitParams);
+        addParam("i8", Byte.class, i8, params, submitParams);
+        addParam("i16", Short.class, i16, params, submitParams);
+        addParam("i32", Integer.class, i32, params, submitParams);
+        addParam("i64", Long.class, i64, params, submitParams);
         
 //        byte ui8 = (byte) rand.nextInt();
 //        short ui16 = (short) rand.nextInt(); 
 //        int ui32 = rand.nextInt();
-//        long ui64 = rand.nextLong(); 
-//        addParam("ui8", "uint8", ui8, params, submitParams);
-//        addParam("ui16", "uint16", ui16, params, submitParams);
-//        addParam("ui32", "uint32", ui32, params, submitParams);
-//        addParam("ui64", "uint64", ui64, params, submitParams);
+//        long ui64 = rand.nextLong();
+//        ui8 = -1;
+//        ui16 = -1;
+//        ui32 = -1;
+//        ui64 = -1;   
+//        addUnsignedParam("ui8", Byte.class, i8, params, submitParams);
+//        addUnsignedParam("ui16", Short.class, i16, params, submitParams);
+//        addUnsignedParam("ui32", Integer.class, i32, params, submitParams);
+//        addUnsignedParam("ui64", Long.class, i64, params, submitParams);
         
         float f32 = rand.nextFloat();
         double f64 = rand.nextDouble();
-        addParam("f32", "float32", f32, params, submitParams);
-        addParam("f64", "float64", f64, params, submitParams);
+        addParam("f32", Float.class, f32, params, submitParams);
+        addParam("f64", Double.class, f64, params, submitParams);
         
         getConfig().put(ContextProperties.SUBMISSION_PARAMS, submitParams);
    
@@ -303,17 +311,31 @@ public class SPLOperatorsTest extends TestTopology {
         assertEquals("f64="+f64, f64, tuple.getDouble("f64"), 0.001);
     }
 
-    static void addParamDefault(String name, String splType, String defaultVal, Map<String,Object> params)
+    static <T> void addParamDefault(String name, T defaultVal, Map<String,Object> params)
     {
-        SubmissionParameter sp = new SubmissionParameter(name, splType, defaultVal);
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, defaultVal);
         params.put(name, sp);
     }
 
-    static void addParam(String name, String splType, Object val, Map<String,Object> params,
-            Map<String,String> submitParams)
+    static <T> void addUnsignedParamDefault(String name, T defaultVal, Map<String,Object> params)
     {
-        SubmissionParameter sp = new SubmissionParameter(name, splType);
+        SubmissionParameter<T> sp = SubmissionParameter.newUnsigned(name, defaultVal);
         params.put(name, sp);
-        submitParams.put(name, val.toString());
+    }
+
+    static <T> void addParam(String name, Class<T> valueClass, Object submitVal, Map<String,Object> params,
+            Map<String,Object> submitParams)
+    {
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, valueClass);
+        params.put(name, sp);
+        submitParams.put(name, submitVal);
+    }
+
+    static <T> void addUnsignedParam(String name, Class<T> valueClass, Object submitVal, Map<String,Object> params,
+            Map<String,Object> submitParams)
+    {
+        SubmissionParameter<T> sp = SubmissionParameter.newUnsigned(name, valueClass);
+        params.put(name, sp);
+        submitParams.put(name, submitVal);
     }
 }

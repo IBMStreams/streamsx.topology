@@ -272,9 +272,9 @@ public class AnalyticsServiceStreamsContext extends
         else if (ContextProperties.SUBMISSION_PARAMS.equals(key)) {
             JSONObject jo = new JSONObject();
             @SuppressWarnings("unchecked")
-            Map<String,String> m = (Map<String,String>) value;
-            for(Map.Entry<String,String> e :  m.entrySet()) {
-                jo.put(e.getKey(), e.getValue());
+            Map<String,Object> m = (Map<String,Object>) value;
+            for(Map.Entry<String,Object> e :  m.entrySet()) {
+                jo.put(e.getKey(), e.getValue().toString());
             }
             value = jo;
         }

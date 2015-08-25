@@ -7,7 +7,10 @@ package com.ibm.streamsx.topology.generator.spl;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
 
 import java.io.IOException;
+import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
@@ -20,6 +23,17 @@ import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.ContextProperties;
 
 class OperatorGenerator {
+    private static final Map<String,String> javaToSPL = new HashMap<>();
+    static {
+        javaToSPL.put("java.lang.Boolean", "boolean");
+        javaToSPL.put("java.lang.String", "rstring");
+        javaToSPL.put("java.lang.Byte", "int8");
+        javaToSPL.put("java.lang.Short", "int16");
+        javaToSPL.put("java.lang.Integer", "int32");
+        javaToSPL.put("java.lang.Long", "int64");
+        javaToSPL.put("java.lang.Float", "float32");
+        javaToSPL.put("java.lang.Double", "float64");
+    }
 
     static String generate(JSONObject graphConfig, JSONObject op)
             throws IOException {
@@ -324,13 +338,17 @@ class OperatorGenerator {
         Object type = param.get("type");
         if ("submissionParameter".equals(type)) {
             JSONObject jo = (JSONObject) value;
-            String splType = (String) jo.get("splType");
             String name = SPLGenerator.stringLiteral((String) jo.get("name"));
-            String defaultValue = (String) jo.get("defaultValue");
+            String valueClassName = (String) jo.get("valueClassName");
+            boolean isUnsigned = (Boolean) jo.get("isUnsigned");
+            String splType = toSPLType(valueClassName, isUnsigned);
+            Object defaultValue = jo.get("defaultValue");
             if (defaultValue == null)
                 sb.append(String.format("(%s) getSubmissionTimeValue(%s)", splType, name));
             else {
-                defaultValue = SPLGenerator.stringLiteral(defaultValue);
+                if (isUnsigned)
+                    defaultValue = toUnsignedString(defaultValue);
+                defaultValue = SPLGenerator.stringLiteral(defaultValue.toString());
                 sb.append(String.format("(%s) getSubmissionTimeValue(%s, %s)", splType, name, defaultValue));
             }
             return;
@@ -352,6 +370,50 @@ class OperatorGenerator {
         }
 
         sb.append(value);
+    }
+    
+    private static String toUnsignedString(Object integerValue) {
+// java8 impl
+//        if (integerValue instanceof Long)
+//            return Long.toUnsignedString((Long) integerValue);
+//        
+//        Integer i;
+//        if (integerValue instanceof Byte)
+//            i = Byte.toUnsignedInt((Byte) integerValue);
+//        else if (integerValue instanceof Short)
+//            i = Short.toUnsignedInt((Short) integerValue);
+//        else if (integerValue instanceof Integer)
+//            i = (Integer) integerValue;
+//        else
+//            throw new IllegalArgumentException("Illegal type for unsigned " + integerValue.getClass());
+//        return Integer.toUnsignedString(i);
+
+        if (integerValue instanceof Long) {
+            String hex = Long.toHexString((Long)integerValue);
+            hex = "00" + hex;  // don't start w/ff
+            BigInteger bi = new BigInteger(hex, 16);
+            return bi.toString();
+        }
+
+        long l;
+        if (integerValue instanceof Byte)
+            l = ((Byte) integerValue) & 0x00ff;
+        else if (integerValue instanceof Short)
+            l = ((Short) integerValue) & 0x00ffff;
+        else if (integerValue instanceof Integer)
+            l = ((Integer) integerValue) & 0x00ffffffffL;
+        else
+            throw new IllegalArgumentException("Illegal type for unsigned " + integerValue.getClass());
+        return Long.toString(l);
+    }
+    
+    private static String toSPLType(String className, boolean isUnsigned) {
+        String splType = javaToSPL.get(className);
+        if (splType == null)
+            throw new IllegalArgumentException("Unhandled className "+className);
+        if (isUnsigned)
+            splType = "u" + splType;
+        return splType;
     }
 
     static void configClause(JSONObject graphConfig, JSONObject op,

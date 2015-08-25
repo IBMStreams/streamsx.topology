@@ -66,9 +66,9 @@ public class InvokeStandalone {
         }
         if (config.containsKey(ContextProperties.SUBMISSION_PARAMS)) {
             @SuppressWarnings("unchecked")
-            Map<String,String> params = (Map<String,String>) config.get(ContextProperties.SUBMISSION_PARAMS); 
-            for(Map.Entry<String,String> e :  params.entrySet()) {
-                commands.add(e.getKey()+"="+e.getValue());
+            Map<String,Object> params = (Map<String,Object>) config.get(ContextProperties.SUBMISSION_PARAMS); 
+            for(Map.Entry<String,Object> e :  params.entrySet()) {
+                commands.add(e.getKey()+"="+e.getValue().toString());
             }
         }
 
