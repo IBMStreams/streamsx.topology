@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.ibm.streams.operator.StreamSchema;
+import com.ibm.streamsx.topology.SubmissionParameter;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
@@ -41,6 +42,7 @@ public class SPL {
      *            SPL schema of the operator's only output port.
      * @param params
      *            Parameters for the SPL operator, ignored if it is null.
+     *            A parameter value may be a {@link SubmissionParameter}.
      * @return SPLStream the represents the output of the operator.
      */
     public static SPLStream invokeOperator(String kind, SPLInput input,
@@ -88,6 +90,7 @@ public class SPL {
      *            operator
      * @param params
      *            Parameters for the SPL operator, ignored if it is null.
+     *            A parameter value may be a {@link SubmissionParameter}.
      * @return the sink element
      */
     public static TSink invokeSink(String kind, SPLInput input,
@@ -108,6 +111,7 @@ public class SPL {
      *            operator
      * @param params
      *            Parameters for the SPL operator, ignored if it is null.
+     *            A parameter value may be a {@link SubmissionParameter}.
      * @return the sink element
      */
     public static TSink invokeSink(String name, String kind, SPLInput input,
@@ -138,6 +142,7 @@ public class SPL {
      *            SPL kind of the operator to be invoked.
      * @param params
      *            Parameters for the SPL operator.
+     *            A parameter value may be a {@link SubmissionParameter}.
      * @param schema
      *            Schema of the output port.
      * @return SPLStream the represents the output of the operator.

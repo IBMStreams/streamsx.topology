@@ -1,4 +1,4 @@
-package com.ibm.streamsx.topology.spl;
+package com.ibm.streamsx.topology;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
@@ -18,9 +18,7 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
  * for contexts {@code DISTRIBUTED}, {@code STANDALONE},
  * or {@code ANALYTIC_SERVICE}.
  * <p>
- * TODO - also for TStream.parallel(new SubmissionParameter(...)) ?
- * <p>
- * Usage as an SPL operator parameter value specification.  
+ * Use as an SPL operator parameter value specification.  
  * <pre>{@code
  * Map<String,Object> params = ...
  * 
@@ -53,19 +51,23 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
  * </table>
  * 
  * @see ContextProperties#SUBMISSION_PARAMS
+ * @see Parameter
  */
 public class SubmissionParameter<T> implements JSONAble {
     private final String name;
     private final Class<T> valueClass;
-    private final Object defaultValue;
+    private final T defaultValue;
     private boolean isUnsigned;
 
     /*
      * A submission time parameter specification.
      * @param name submission parameter name
      * @param valueClass class object for {@code T}
+     * @throws IllegalArgumentException if {@code name} is null or empty
      */
     public SubmissionParameter(String name, Class<T> valueClass) {
+        if (name == null || name.trim().isEmpty())
+            throw new IllegalArgumentException("name");
         this.name = name;
         this.valueClass = valueClass;
         this.defaultValue = null;
@@ -75,10 +77,13 @@ public class SubmissionParameter<T> implements JSONAble {
      * A submission time parameter specification.
      * @param name submission parameter name
      * @param defaultValue default value if parameter isn't specified.
+     * @throws IllegalArgumentException if {@code name} is null or empty
      * @throws IllegalArgumentException if {@code defaultValue} is null
      */
     @SuppressWarnings("unchecked")
     public SubmissionParameter(String name, T defaultValue) {
+        if (name == null || name.trim().isEmpty())
+            throw new IllegalArgumentException("name");
         if (defaultValue == null)
             throw new IllegalArgumentException("defaultValue");
         this.name = name;
@@ -91,6 +96,7 @@ public class SubmissionParameter<T> implements JSONAble {
      * @param name submission parameter name
      * @param valueClass class object for {@code T}
      * @return SubmissionParameter for unsigned integral type
+     * @throws IllegalArgumentException if {@code name} is null or empty
      * @throws IllegalArgumentException if {@code T} is not Byte, Short, Integer or Long
      */
     public static <T> SubmissionParameter<T> newUnsigned(String name, Class<T> valueClass) {
@@ -109,6 +115,7 @@ public class SubmissionParameter<T> implements JSONAble {
      * @param name submission parameter name
      * @param defaultValue default value if parameter isn't specified.
      * @return SubmissionParameter for unsigned integral type
+     * @throws IllegalArgumentException if {@code name} is null or empty
      * @throws IllegalArgumentException if {@code defaultValue} is null
      * @throws IllegalArgumentException if {@code T} is not Byte, Short, Integer or Long
      */
@@ -123,6 +130,18 @@ public class SubmissionParameter<T> implements JSONAble {
         SubmissionParameter<T> p = new SubmissionParameter<T>(name, defaultValue);
         p.isUnsigned = true;
         return p;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public T getDefaultValue() {
+        return defaultValue;
+    }
+    
+    public boolean getIsUnsigned() {
+        return isUnsigned;
     }
 
     @Override
@@ -140,4 +159,8 @@ public class SubmissionParameter<T> implements JSONAble {
         return jo;
     }
 
+    @Override
+    public String toString() {
+        return toJSON().toString();
+    }
 }

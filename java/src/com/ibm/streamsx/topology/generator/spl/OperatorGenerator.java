@@ -93,8 +93,18 @@ class OperatorGenerator {
     private static void parallelAnnotation(JSONObject op, StringBuilder sb) {
         Boolean parallel = (Boolean) op.get("parallelOperator");
         if (parallel != null && parallel) {
-            sb.append("@parallel(width="
-                    + Integer.toString((int) op.get("width")));
+            sb.append("@parallel(width=");
+            Object width = op.get("width");
+            if (width instanceof Integer)
+                sb.append(Integer.toString((int) width));
+            else {
+                JSONObject jo = (JSONObject) width;
+                String jsonType = (String) jo.get("jsonType");
+                if ("submissionParameter".equals(jsonType))
+                    addSubmissionParam((JSONObject) jo.get("jsonValue"), sb);
+                else
+                    throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
+            }
             Boolean partitioned = (Boolean) op.get("partitioned");
             if (partitioned != null && partitioned) {
                 String parallelInputPortName = (String) op
@@ -337,20 +347,7 @@ class OperatorGenerator {
         Object value = param.get("value");
         Object type = param.get("type");
         if ("submissionParameter".equals(type)) {
-            JSONObject jo = (JSONObject) value;
-            String name = SPLGenerator.stringLiteral((String) jo.get("name"));
-            String valueClassName = (String) jo.get("valueClassName");
-            boolean isUnsigned = (Boolean) jo.get("isUnsigned");
-            String splType = toSPLType(valueClassName, isUnsigned);
-            Object defaultValue = jo.get("defaultValue");
-            if (defaultValue == null)
-                sb.append(String.format("(%s) getSubmissionTimeValue(%s)", splType, name));
-            else {
-                if (isUnsigned)
-                    defaultValue = toUnsignedString(defaultValue);
-                defaultValue = SPLGenerator.stringLiteral(defaultValue.toString());
-                sb.append(String.format("(%s) getSubmissionTimeValue(%s, %s)", splType, name, defaultValue));
-            }
+            addSubmissionParam((JSONObject) value, sb);
             return;
         } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
             SPLGenerator.stringLiteral(sb, value.toString());
@@ -370,6 +367,22 @@ class OperatorGenerator {
         }
 
         sb.append(value);
+    }
+    
+    private static void addSubmissionParam(JSONObject jo, StringBuilder sb) {
+        String name = SPLGenerator.stringLiteral((String) jo.get("name"));
+        String valueClassName = (String) jo.get("valueClassName");
+        boolean isUnsigned = (Boolean) jo.get("isUnsigned");
+        String splType = toSPLType(valueClassName, isUnsigned);
+        Object defaultValue = jo.get("defaultValue");
+        if (defaultValue == null)
+            sb.append(String.format("(%s) getSubmissionTimeValue(%s)", splType, name));
+        else {
+            if (isUnsigned)
+                defaultValue = toUnsignedString(defaultValue);
+            defaultValue = SPLGenerator.stringLiteral(defaultValue.toString());
+            sb.append(String.format("(%s) getSubmissionTimeValue(%s, %s)", splType, name, defaultValue));
+        }
     }
     
     private static String toUnsignedString(Object integerValue) {

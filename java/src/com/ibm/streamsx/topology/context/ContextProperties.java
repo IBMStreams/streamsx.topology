@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.context;
 
-import com.ibm.streamsx.topology.spl.SubmissionParameter;
+import com.ibm.streamsx.topology.SubmissionParameter;
 
 /**
  * Properties that can be specified when submitting the topology to a context.

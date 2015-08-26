@@ -17,6 +17,7 @@ import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.Parameter;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 
@@ -109,8 +110,15 @@ public class GraphBuilder extends BJSONObject {
      * so that we can run this graph locally with a single thread.
      */
     public BOutput parallel(BOutput parallelize, int width) {
-    	BOutput parallelOutput = addPassThroughMarker(parallelize, BVirtualMarker.PARALLEL, true);
-    	parallelOutput.json().put("width", width);
+        return parallel(parallelize, new Parameter<Integer>(width));
+    }
+    
+    public BOutput parallel(BOutput parallelize, Parameter<Integer> width) {
+        BOutput parallelOutput = addPassThroughMarker(parallelize, BVirtualMarker.PARALLEL, true);
+        if (width.value != null)
+            parallelOutput.json().put("width", width.value);
+        else
+            parallelOutput.json().put("width", width.sp.toJSON());
         return parallelOutput;
     }
 

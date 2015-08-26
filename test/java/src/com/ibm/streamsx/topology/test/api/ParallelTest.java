@@ -24,8 +24,11 @@ import org.junit.Test;
 
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.PERuntime;
+import com.ibm.streamsx.topology.Parameter;
+import com.ibm.streamsx.topology.SubmissionParameter;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
@@ -61,6 +64,71 @@ public class ParallelTest extends TestTopology {
         Tester tester = topology.getTester();
         Condition<Long> expectedCount = tester.tupleCount(numRegions, 1);
         Condition<List<String>> regionCount = tester.stringContents(numRegions, "5");
+
+        StreamsContextFactory
+                .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
+                .submit(topology).get();
+
+        assertTrue(expectedCount.valid());
+        assertTrue(regionCount.valid());
+    }
+
+    @Test
+    public void testParallelSubmissionParam() throws Exception {
+        checkUdpSupported();
+
+        Topology topology = new Topology("testParallelSubmissionParam");
+        final int count = new Random().nextInt(1000) + 37;
+        String submissionWidthName = "width";
+        Integer submissionWidth = 5;
+
+        TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
+        TStream<BeaconTuple> pb = fb.parallel(
+                new Parameter<Integer>(
+                        new SubmissionParameter<Integer>(submissionWidthName, Integer.class)));
+
+        TStream<Integer> is = pb.transform(randomHashProducer());
+        TStream<Integer> joined = is.endParallel();
+        TStream<String> numRegions = joined.transform(
+                uniqueIdentifierMap(count));
+
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(numRegions, 1);
+        Condition<List<String>> regionCount = tester.stringContents(numRegions, submissionWidth.toString());
+
+        Map<String,Object> params = new HashMap<>();
+        params.put(submissionWidthName, submissionWidth);
+        getConfig().put(ContextProperties.SUBMISSION_PARAMS, params);
+        StreamsContextFactory
+                .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
+                .submit(topology, getConfig()).get();
+
+        assertTrue(expectedCount.valid());
+        assertTrue(regionCount.valid());
+    }
+
+    @Test
+    public void testParallelSubmissionParamDefault() throws Exception {
+        checkUdpSupported();
+
+        Topology topology = new Topology("testParallelSubmissionParamDefault");
+        final int count = new Random().nextInt(1000) + 37;
+        String submissionWidthName = "width";
+        Integer submissionWidth = 5;
+
+        TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
+        TStream<BeaconTuple> pb = fb.parallel(
+                new Parameter<Integer>(
+                        new SubmissionParameter<Integer>(submissionWidthName, submissionWidth)));
+
+        TStream<Integer> is = pb.transform(randomHashProducer());
+        TStream<Integer> joined = is.endParallel();
+        TStream<String> numRegions = joined.transform(
+                uniqueIdentifierMap(count));
+
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(numRegions, 1);
+        Condition<List<String>> regionCount = tester.stringContents(numRegions, submissionWidth.toString());
 
         StreamsContextFactory
                 .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
