@@ -7,7 +7,7 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 /**
- * A {@link Value<T>} whose actual value at runtime is defined
+ * A {@link Value} whose actual value at runtime is defined
  * at topology submission time either
  * via {@link StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)}
  * and {@link ContextProperties#SUBMISSION_PARAMS}, or when submitting a topology
@@ -53,7 +53,6 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
  * </table>
  * 
  * @see ContextProperties#SUBMISSION_PARAMS
- * @see Value
  */
 public class SubmissionParameter<T> extends Value<T> implements JSONAble {
     private final String name;
