@@ -18,7 +18,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streamsx.topology.Parameter;
+import com.ibm.streamsx.topology.SubmissionParameter;
+import com.ibm.streamsx.topology.Value;
 import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
@@ -364,17 +365,18 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
     
     public TStream<T> parallel(int width, Routing routing) {
-        return parallel(new Parameter<Integer>(width), routing);
+        return parallel(new Value<Integer>(width), routing);
     }
     
     @Override
-    public TStream<T> parallel(Parameter<Integer> width,
+    public TStream<T> parallel(Value<Integer> width,
             com.ibm.streamsx.topology.TStream.Routing routing) {
 
         if (width == null)
             throw new IllegalArgumentException("width");
-        Integer widthVal = width.value != null
-                ? width.value : width.sp.getDefaultValue();
+        Integer widthVal = width.getValue() != null
+                ? width.getValue()
+                : ((SubmissionParameter<Integer>)width).getDefaultValue();
         if (widthVal != null && widthVal <= 0)
                 throw new IllegalStateException(
                         "The parallel width must be greater than or equal to 1.");
@@ -430,7 +432,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
-    public TStream<T> parallel(Parameter<Integer> width) {
+    public TStream<T> parallel(Value<Integer> width) {
         return parallel(width, TStream.Routing.ROUND_ROBIN);
     }
 

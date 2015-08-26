@@ -7,18 +7,20 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 /**
- * A specification for a value that is defined at topology submission time either
+ * A {@link Value<T>} whose actual value at runtime is defined
+ * at topology submission time either
  * via {@link StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)}
  * and {@link ContextProperties#SUBMISSION_PARAMS}, or when submitting a topology
- * via other execution runtime native mechanisms such as {@code streamtool}.
+ * via other execution runtime native mechanisms such as 
+ * IBM Streams {@code streamtool}.
  * <p>
- * Topology submission behavior when a submission parameter lacking a default
- * value has been declared but a value is not supplied at submission time 
- * is defined by the underlying topology execution runtime.  Submission fails
- * for contexts {@code DISTRIBUTED}, {@code STANDALONE},
+ * Topology submission behavior when a {@code SubmissionParameter} 
+ * lacking a default value is used but a value is not supplied at
+ * submission time is defined by the underlying topology execution runtime.
+ * Submission fails for contexts {@code DISTRIBUTED}, {@code STANDALONE},
  * or {@code ANALYTIC_SERVICE}.
  * <p>
- * Use as an SPL operator parameter value specification.  
+ * Use as an SPL operator parameter value specification:
  * <pre>{@code
  * Map<String,Object> params = ...
  * 
@@ -51,16 +53,16 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
  * </table>
  * 
  * @see ContextProperties#SUBMISSION_PARAMS
- * @see Parameter
+ * @see Value
  */
-public class SubmissionParameter<T> implements JSONAble {
+public class SubmissionParameter<T> extends Value<T> implements JSONAble {
     private final String name;
     private final Class<T> valueClass;
     private final T defaultValue;
     private boolean isAltType;
 
     /*
-     * A submission time parameter specification.
+     * A submission time parameter {@code Value} specification.
      * @param name submission parameter name
      * @param valueClass class object for {@code T}
      * @throws IllegalArgumentException if {@code name} is null or empty
@@ -74,7 +76,7 @@ public class SubmissionParameter<T> implements JSONAble {
     }
 
     /**
-     * A submission time parameter specification.
+     * A submission time parameter {@code Value} specification.
      * @param name submission parameter name
      * @param defaultValue default value if parameter isn't specified.
      * @throws IllegalArgumentException if {@code name} is null or empty
@@ -92,7 +94,7 @@ public class SubmissionParameter<T> implements JSONAble {
     }
     
     /**
-     * Create a SubmissionParameter for an unsigned integer type.
+     * Create a SubmissionParameter {@code Value} for an unsigned integer type.
      * @param name submission parameter name
      * @param valueClass class object for {@code T}
      * @return SubmissionParameter for unsigned integral type
@@ -111,7 +113,7 @@ public class SubmissionParameter<T> implements JSONAble {
     }
 
     /**
-     * Create a SubmissionParameter for an unsigned integer type.
+     * Create a SubmissionParameter {@code Value} for an unsigned integer type.
      * @param name submission parameter name
      * @param defaultValue default value if parameter isn't specified.
      * @return SubmissionParameter for unsigned integral type
@@ -133,7 +135,7 @@ public class SubmissionParameter<T> implements JSONAble {
     }
 
     /**
-     * Create a SubmissionParameter for an SPL ustring type.
+     * Create a SubmissionParameter {@code Value} for an SPL ustring type.
      * @param name submission parameter name
      * @param defaultValue default value if parameter isn't specified. May be null.
      * @return SubmissionParameter for unsigned integral type

@@ -519,13 +519,13 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     /**
      * Parallelizes the stream into {@code width} parallel channels.
      * Same as {@link #parallel(int)} except the {@code width} is specified
-     * with a {@link Parameter}.
+     * with a {@link Value}.
      * @param width
      *            The degree of parallelism in the parallel region.
      * @return A reference to a stream for which subsequent transformations will be
      *         executed in parallel using {@code width} channels.
      */
-    TStream<T> parallel(Parameter<Integer> width);
+    TStream<T> parallel(Value<Integer> width);
     
     /**
      * Parallelizes the stream into {@code width} parallel channels. Tuples are routed 
@@ -657,7 +657,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     /**
      * Parallelizes the stream into {@code width} parallel channels.
      * Same as {@link #parallel(int,Routing)} except the {@code width} is specified
-     * with a {@link Parameter}.
+     * with a {@link Value}.
      * @param width The degree of parallelism. see {@link #parallel(int width)}
      * for more details.
      * @param routing Defines how tuples will be routed channels.
@@ -665,7 +665,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * region.
      * @throws IllegalArgumentException if {@code width} is null
      */
-    TStream<T> parallel(Parameter<Integer> width, Routing routing);
+    TStream<T> parallel(Value<Integer> width, Routing routing);
     
     /**
      * Ends a parallel region by merging the channels into a single stream.
