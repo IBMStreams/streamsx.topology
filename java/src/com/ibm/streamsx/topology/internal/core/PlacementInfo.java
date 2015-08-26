@@ -86,8 +86,6 @@ class PlacementInfo {
                 fusedResourceTags.addAll(elementResourceTags);
             }            
             resourceTags.put(element, fusedResourceTags);
-            
-            updateFusingJSON(element, null);
         }
         return true;
     }
