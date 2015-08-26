@@ -1,12 +1,20 @@
 namespace testgen;
 
 type Types = rstring r,
+             boolean b,
              int8 i8, int16 i16, int32 i32, int64 i64,
+             float32 f32, float64 f64;
+             
+type Types2 = rstring r, ustring u,
+             boolean b,
+             int8 i8, int16 i16, int32 i32, int64 i64,
+             uint8 ui8, uint16 ui16, uint32 ui32, uint64 ui64,
              float32 f32, float64 f64;
 
 public composite TypeLiteralTester(output Out) {
     param
         expression<rstring> $r;
+        expression<boolean> $b;
         expression<int8> $i8;
         expression<int16> $i16;
         expression<int32> $i32;
@@ -16,6 +24,32 @@ public composite TypeLiteralTester(output Out) {
     graph
     stream<Types> Out = Custom() {
       logic onProcess:
-        submit({r=$r,i8=$i8,i16=$i16,i32=$i32,i64=$i64,f32=$f32,f64=$f64},Out);
+        submit({r=$r,b=$b,i8=$i8,i16=$i16,i32=$i32,i64=$i64,f32=$f32,f64=$f64},Out);
+    }
+}
+
+public composite TypeLiteralTester2(output Out) {
+    param
+        expression<rstring> $r;
+        expression<ustring> $u;
+        expression<boolean> $b;
+        expression<int8> $i8;
+        expression<int16> $i16;
+        expression<int32> $i32;
+        expression<int64> $i64;
+        expression<uint8> $ui8;
+        expression<uint16> $ui16;
+        expression<uint32> $ui32;
+        expression<uint64> $ui64;
+        expression<float32> $f32;
+        expression<float64> $f64;
+    graph
+    stream<Types2> Out = Custom() {
+      logic onProcess:
+        submit({r=$r,u=$u,
+                b=$b,
+                i8=$i8,i16=$i16,i32=$i32,i64=$i64,
+                ui8=$ui8,ui16=$ui16,ui32=$ui32,ui64=$ui64,
+                f32=$f32,f64=$f64},Out);
     }
 }

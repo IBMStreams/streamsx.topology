@@ -372,13 +372,13 @@ class OperatorGenerator {
     private static void addSubmissionParam(JSONObject jo, StringBuilder sb) {
         String name = SPLGenerator.stringLiteral((String) jo.get("name"));
         String valueClassName = (String) jo.get("valueClassName");
-        boolean isUnsigned = (Boolean) jo.get("isUnsigned");
-        String splType = toSPLType(valueClassName, isUnsigned);
+        boolean isAltType = (Boolean) jo.get("isAltType");
+        String splType = toSPLType(valueClassName, isAltType);
         Object defaultValue = jo.get("defaultValue");
         if (defaultValue == null)
             sb.append(String.format("(%s) getSubmissionTimeValue(%s)", splType, name));
         else {
-            if (isUnsigned)
+            if (splType.startsWith("uint"))
                 defaultValue = toUnsignedString(defaultValue);
             defaultValue = SPLGenerator.stringLiteral(defaultValue.toString());
             sb.append(String.format("(%s) getSubmissionTimeValue(%s, %s)", splType, name, defaultValue));
@@ -403,7 +403,7 @@ class OperatorGenerator {
 
         if (integerValue instanceof Long) {
             String hex = Long.toHexString((Long)integerValue);
-            hex = "00" + hex;  // don't start w/ff
+            hex = "00" + hex;  // don't sign extend
             BigInteger bi = new BigInteger(hex, 16);
             return bi.toString();
         }
@@ -420,12 +420,16 @@ class OperatorGenerator {
         return Long.toString(l);
     }
     
-    private static String toSPLType(String className, boolean isUnsigned) {
+    private static String toSPLType(String className, boolean isAltType) {
         String splType = javaToSPL.get(className);
         if (splType == null)
             throw new IllegalArgumentException("Unhandled className "+className);
-        if (isUnsigned)
-            splType = "u" + splType;
+        if (isAltType) {
+            if (splType.equals("rstring"))
+                splType = "ustring";
+            else
+                splType = "u" + splType; // unsigned
+        }
         return splType;
     }
 

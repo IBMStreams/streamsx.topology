@@ -67,6 +67,10 @@ public interface ContextProperties {
      * <p>
      * The property value is a {@code Map<String,Object>} where the key
      * is the parameter name and the value is the parameter value.
+     * <p>
+     * It's the caller's responsibility to ensure that the values
+     * of unsigned integer types are not negative, as can happen with
+     * Integer.toString(). See Java8 {@code Integer.toUnsignedString()}.
      * 
      * See {@link SubmissionParameter}
      */

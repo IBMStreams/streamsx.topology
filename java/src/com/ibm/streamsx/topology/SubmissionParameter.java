@@ -39,13 +39,13 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
  * <p>
  * Mapping of {@code T} to SPL types:
  * <table>
- * <tr><td>Java</td><td>SPL</td></tr>
- * <tr><td>String</td><td>rstring</td></tr>
+ * <tr><td>Java type</td><td>SPL type</td><td>Alternate SPL type</td></tr>
+ * <tr><td>String</td><td>rstring</td><td>ustring</td></tr>
  * <tr><td>Boolean</td><td>boolean</td></tr>
- * <tr><td>Byte</td><td>int8, uint8</td></tr>
- * <tr><td>Short</td><td>int16, uint16</td></tr>
- * <tr><td>Integer</td><td>int32, uint32</td></tr>
- * <tr><td>Long</td><td>int64, uint64</td></tr>
+ * <tr><td>Byte</td><td>int8</td><td>uint8</td></tr>
+ * <tr><td>Short</td><td>int16</td><td>uint16</td></tr>
+ * <tr><td>Integer</td><td>int32</td><td>uint32</td></tr>
+ * <tr><td>Long</td><td>int64</td><td>uint64</td></tr>
  * <tr><td>Float</td><td>float32</td></tr>
  * <tr><td>Double</td><td>float64</td></tr>
  * </table>
@@ -57,7 +57,7 @@ public class SubmissionParameter<T> implements JSONAble {
     private final String name;
     private final Class<T> valueClass;
     private final T defaultValue;
-    private boolean isUnsigned;
+    private boolean isAltType;
 
     /*
      * A submission time parameter specification.
@@ -101,12 +101,12 @@ public class SubmissionParameter<T> implements JSONAble {
      */
     public static <T> SubmissionParameter<T> newUnsigned(String name, Class<T> valueClass) {
         if (valueClass != Byte.class
-            || valueClass != Short.class
-            || valueClass != Integer.class
-            || valueClass != Long.class)
-            throw new IllegalArgumentException("valueClass");
+            && valueClass != Short.class
+            && valueClass != Integer.class
+            && valueClass != Long.class)
+            throw new IllegalArgumentException("valueClass " + valueClass);
         SubmissionParameter<T> p = new SubmissionParameter<T>(name, valueClass);
-        p.isUnsigned = true;
+        p.isAltType = true;
         return p;
     }
 
@@ -126,9 +126,26 @@ public class SubmissionParameter<T> implements JSONAble {
                 || defaultValue instanceof Short
                 || defaultValue instanceof Integer
                 || defaultValue instanceof Long))
-            throw new IllegalArgumentException("defaultValue");
+            throw new IllegalArgumentException("defaultValue class " + defaultValue.getClass());
         SubmissionParameter<T> p = new SubmissionParameter<T>(name, defaultValue);
-        p.isUnsigned = true;
+        p.isAltType = true;
+        return p;
+    }
+
+    /**
+     * Create a SubmissionParameter for an SPL ustring type.
+     * @param name submission parameter name
+     * @param defaultValue default value if parameter isn't specified. May be null.
+     * @return SubmissionParameter for unsigned integral type
+     * @throws IllegalArgumentException if {@code name} is null or empty
+     */
+    public static SubmissionParameter<String> newUstring(String name, String defaultValue) {
+        SubmissionParameter<String> p;
+        if (defaultValue != null)
+            p = new SubmissionParameter<String>(name, defaultValue);
+        else
+            p = new SubmissionParameter<String>(name, String.class);
+        p.isAltType = true;
         return p;
     }
     
@@ -140,8 +157,8 @@ public class SubmissionParameter<T> implements JSONAble {
         return defaultValue;
     }
     
-    public boolean getIsUnsigned() {
-        return isUnsigned;
+    public boolean getIsAltType() {
+        return isAltType;
     }
 
     @Override
@@ -155,7 +172,7 @@ public class SubmissionParameter<T> implements JSONAble {
         jv.put("name", name);
         jv.put("valueClassName", valueClass.getCanonicalName());
         jv.put("defaultValue", defaultValue);
-        jv.put("isUnsigned", isUnsigned);
+        jv.put("isAltType", isAltType);
         return jo;
     }
 
