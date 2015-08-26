@@ -12,8 +12,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
+import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.context.Placeable;
 
 /**
@@ -23,6 +25,7 @@ class PlacementInfo {
     
     private static final Map<Topology, WeakReference<PlacementInfo>> placements = new WeakHashMap<>();
     
+    private int nextFuseId;
     private final Map<Placeable<?>, String> fusingIds = new HashMap<>();
     private final Map<Placeable<?>, Set<String>> resourceTags = new HashMap<>();
       
@@ -41,7 +44,15 @@ class PlacementInfo {
         return pi;
     }
     
-    void fuse(Placeable<?> first, Placeable<?> ... toFuse) {
+    /**
+     * Fuse a number of placeables.
+     * If fusing occurs then the fusing id
+     * is set as "id" the "fusing" JSON object in
+     * the operator's config.
+     * 
+     */
+    
+    boolean fuse(Placeable<?> first, Placeable<?> ... toFuse) {
         
         Set<Placeable<?>> elements = new HashSet<>();
         elements.add(first);
@@ -52,7 +63,7 @@ class PlacementInfo {
         }
         
         if (elements.size() < 2)
-            return;
+            return false;
         
         String fusingId = null;
         for (Placeable<?> element : elements) {
@@ -62,7 +73,7 @@ class PlacementInfo {
             }
         }
         if (fusingId == null) {
-            fusingId = "__jaa_fuse" + fusingIds.size();
+            fusingId = "__jaa_fuse" + nextFuseId++;
         }
         
         Set<String> fusedResourceTags = new HashSet<>();
@@ -75,7 +86,10 @@ class PlacementInfo {
                 fusedResourceTags.addAll(elementResourceTags);
             }            
             resourceTags.put(element, fusedResourceTags);
-        } 
+            
+            updateFusingJSON(element, null);
+        }
+        return true;
     }
     
     synchronized Set<String> getResourceTags(Placeable<?> element) {
@@ -95,4 +109,14 @@ class PlacementInfo {
         for (String tag : tags)
             elementResourceTags.add(tag);       
     } 
+    
+    void updateFusingJSON(Placeable<?> element, BOperator operator) {
+        
+        JSONObject fusing = (JSONObject) operator.getConfig("fusing");
+        if (fusing == null) {
+            fusing = new JSONObject();
+            operator.addConfig("fusing", fusing);
+        }
+        fusing.put("id", fusingIds.get(element));
+    }
 }

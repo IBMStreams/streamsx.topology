@@ -38,7 +38,8 @@ public class TSinkImpl extends TopologyItem implements TSink {
 
     @Override
     public TSink fuse(Placeable<?>... elements) {
-        getPlacementInfo().fuse(this, elements);
+        if (getPlacementInfo().fuse(this, elements))
+            getPlacementInfo().updateFusingJSON(this, operator());
         return this;
     }
 

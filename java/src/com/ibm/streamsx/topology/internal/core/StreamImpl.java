@@ -569,7 +569,13 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public TStream<T> fuse(Placeable<?>... elements) {
-        getPlacementInfo().fuse(this, elements);
+        if (getPlacementInfo().fuse(this, elements)) {
+            if (output() instanceof BOutputPort) {
+                BOutputPort bop = (BOutputPort) output;
+                getPlacementInfo().updateFusingJSON(this, bop.operator());
+            }
+        }
+            
         return this;
     }
 
