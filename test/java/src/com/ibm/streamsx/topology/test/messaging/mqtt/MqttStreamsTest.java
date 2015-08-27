@@ -12,9 +12,10 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
@@ -149,15 +150,15 @@ public class MqttStreamsTest extends TestTopology {
         }
     }
     
-    private Properties createConsumerConfig(String clientId) {
-        Properties props = new Properties();
+    private Map<String,Object> createConsumerConfig(String clientId) {
+        Map<String,Object> props = new HashMap<>();
         props.put("serverURI", getServerURI());
         props.put("clientID", clientId);
         return props;
     }
     
-    private Properties createProducerConfig(String clientId) {
-        Properties props = new Properties();
+    private Map<String,Object> createProducerConfig(String clientId) {
+        Map<String,Object> props = new HashMap<>();
         props.put("serverURI", getServerURI());
         props.put("clientID", clientId);
         return props;
@@ -258,20 +259,20 @@ public class MqttStreamsTest extends TestTopology {
         
         // Test more config properties to be sure we don't blow up
         
-        Properties producerConfig = createProducerConfig(pubClientId);
-        producerConfig.put("defaultQOS", "1");
-        producerConfig.put("keepAliveInterval", "10");
-        producerConfig.put("commandTimeoutMsec", "20000");
-        producerConfig.put("reconnectDelayMsec", "4000");
+        Map<String,Object> producerConfig = createProducerConfig(pubClientId);
+        producerConfig.put("defaultQOS", 1);
+        producerConfig.put("keepAliveInterval", 10);
+        producerConfig.put("commandTimeoutMsec", 20000L);
+        producerConfig.put("reconnectDelayMsec", 4000L);
         producerConfig.put("reconnectionBound", "10");
-        producerConfig.put("retain", "false");
+        producerConfig.put("retain", false);
         
-        Properties consumerConfig = createConsumerConfig(subClientId);
-        consumerConfig.put("defaultQOS", "1");
-        consumerConfig.put("keepAliveInterval", "20");
-        consumerConfig.put("commandTimeoutMsec", "30000");
-        consumerConfig.put("reconnectDelayMsec", "5000");
-        consumerConfig.put("receiveBufferSize", "10");
+        Map<String,Object>  consumerConfig = createConsumerConfig(subClientId);
+        consumerConfig.put("defaultQOS", 1);
+        consumerConfig.put("keepAliveInterval", 20);
+        consumerConfig.put("commandTimeoutMsec", 30000L);
+        consumerConfig.put("reconnectDelayMsec", 5000L);
+        consumerConfig.put("receiveBufferSize", 10);
         consumerConfig.put("reconnectionBound", "20");
    
         ProducerConnector producer = new ProducerConnector(top, producerConfig);

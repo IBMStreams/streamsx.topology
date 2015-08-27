@@ -7,7 +7,6 @@ package com.ibm.streamsx.topology.messaging.mqtt;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streamsx.topology.TSink;
@@ -45,7 +44,7 @@ import com.ibm.streamsx.topology.tuple.Message;
 public class ProducerConnector {
     @SuppressWarnings("unused")
     private final TopologyElement te;
-    private final Map<String,String> config;
+    private final Map<String,Object> config;
     private int sinkOpCnt;
     
     private static final Map<String, ParamHandler> paramHandlers = new HashMap<>();
@@ -66,16 +65,17 @@ public class ProducerConnector {
      *
      * @param config MQTTProducer configuration information.
      */
-    public ProducerConnector(TopologyElement te, Properties config) {
+    public ProducerConnector(TopologyElement te, Map<String,Object> config) {
         this.te = te;
-        this.config = Util.toMap(config);
+        this.config = new HashMap<>();
+        this.config.putAll(config);
     }
     
     /**
      * Get the connector's producer configuration information.
      * @return the unmodifiable configuration 
      */
-    public Map<String,String> getConfig() {
+    public Map<String,Object> getConfig() {
         return Collections.unmodifiableMap(config);
     }
 

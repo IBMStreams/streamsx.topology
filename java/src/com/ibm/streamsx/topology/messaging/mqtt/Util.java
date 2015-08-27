@@ -28,9 +28,11 @@ class Util {
         paramHandlers.put("keyStorePassword", new ParamHandler("keyStorePassword"));
         paramHandlers.put("trustStore", new ParamHandler("trustStore"));
         paramHandlers.put("trustStorePassword", new ParamHandler("trustStorePassword"));
+        // defaultOQS: see consumer and producer for different definitions
     }
 
     static class ParamHandler {
+        @SuppressWarnings("unused")
         private Class<?> paramType;
         private final String paramName;
         ParamHandler(String paramName) {
@@ -45,19 +47,8 @@ class Util {
             return paramName;
         }
         /** SPL op parameter value */
-        Object getValue(String value) {
-            if (paramType == String.class)
-                return value;
-            if (paramType == Boolean.class)
-                return Boolean.valueOf(value);
-            if (paramType == Integer.class)
-                return Integer.valueOf(value);
-            if (paramType == Long.class)
-                return Long.valueOf(value);
-            if (paramType == Float.class)
-                return Float.valueOf(value);
-            if (paramType == Double.class)
-                return Double.valueOf(value);
+        Object getValue(Object value) {
+            // we now require the caller to pass in the correct type.
             return value;
         }
     }
@@ -70,41 +61,21 @@ class Util {
         return map;
     }
     
-    static Map<String,Object> configToSplParams(Map<String,String> config,
+    static Map<String,Object> configToSplParams(Map<String,Object> config,
             Map<String,ParamHandler> overrideHandlers) {
         if (overrideHandlers == null)
             overrideHandlers = Collections.emptyMap();
         Map<String,Object> params = new HashMap<>();
-        for (Map.Entry<String,String> e : config.entrySet()) {
+        for (Map.Entry<String,Object> e : config.entrySet()) {
             ParamHandler ph = overrideHandlers.get(e.getKey());
             if (ph == null)
                 ph = paramHandlers.get(e.getKey());
-            if (ph != null) {
+            if (ph != null)
                 params.put(ph.getName(), ph.getValue(e.getValue()));
-            }
-            else {
-                // guess the param type for the unrecognized param
-                String val = e.getValue();
-                Object valObj = null;
-                if (valObj == null) {
-                    try {valObj = Integer.valueOf(val);} catch (Exception exc) {}
-                }
-                if (valObj == null && val != null
-                    && (val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false"))) {
-                    valObj = Boolean.valueOf(val);
-                }
-                if (valObj == null) {
-                    valObj = val;
-                }
-                params.put(e.getKey(), valObj);
-            }
+            else
+                params.put(e.getKey(), e.getValue());
         }
         return params;
-    }
-    
-    static Map<String,String> consumerConfigToParams(Map<String,String> config) {
-        // until we have to map config propnames / values to the SPL op...
-        return new HashMap<>(config);
     }
     
     static String toCsv(List<?> list) {

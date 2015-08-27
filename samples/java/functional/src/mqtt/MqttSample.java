@@ -8,7 +8,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.Future;
 
 import com.ibm.streamsx.topology.TStream;
@@ -140,15 +139,15 @@ public class MqttSample {
         }
     }
     
-    private Properties createConsumerConfig(String clientId) {
-        Properties props = new Properties();
+    private Map<String,Object> createConsumerConfig(String clientId) {
+        Map<String,Object> props = new HashMap<>();
         props.put("serverURI", SERVER_URI);
         props.put("clientID", clientId);
         return props;
     }
     
-    private Properties createProducerConfig(String clientId) {
-        Properties props = new Properties();
+    private Map<String,Object> createProducerConfig(String clientId) {
+        Map<String,Object> props = new HashMap<>();
         props.put("serverURI", SERVER_URI);
         props.put("clientID", clientId);
         return props;

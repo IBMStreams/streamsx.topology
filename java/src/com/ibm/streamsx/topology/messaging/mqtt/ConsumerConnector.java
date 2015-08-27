@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
@@ -38,7 +37,13 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * ConsumerConnector cc = new ConsumerConnector(top, consumerConfig);
  * TStream<Message> rcvdMsgs = cc.subscribe("myTopic");
  * }</pre>
- * <br/>TODO submission parameter support
+ * <br/>TODO submission parameter support - any of the configuration properties
+ * values may be specified as a submission time parameter via TBD
+ * <pre>@{code
+ *     Map<String,Object> config = ...
+ *     config.put("serverURI", top.getSubmissionParamter("url", String.class));
+ *     ConsumerConnector cc = new ConsumerConnector(top, config);
+ * }</pre> 
  * <br/>TODO dynamic SPL operator configuration support: subscription, serverURI... ?
  * <br/>TODO SPL operator error oport support?
  * <p>
@@ -46,54 +51,57 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * {@code ProducerConnector} configurations unless stated otherwise.
  * <p>
  * <ul>
- * <li>{@code serverURI} - Required. URI to the MQTT server, either
+ * <li>{@code serverURI} - Required String. URI to the MQTT server, either
  *      {@code tcp://<hostid>[:<port>]}
  *      or {@code ssl://<hostid>[:<port>]}. 
  *      The port defaults to 1883 for "tcp:" and 8883 for "ssl:" URIs.
  *      </li>
- * <li>{@code clientID} - Optional. A unique identifier for a connection
+ * <li>{@code clientID} - Optional String. A unique identifier for a connection
  *      to the MQTT server. By default a unique client ID is automatically
  *      generated for each connection.</li>
- * <li>{@code keepAliveInterval} - Optional.  Automatically generate a MQTT
+ * <li>{@code keepAliveInterval} - Optional Integer.  Automatically generate a MQTT
  *      ping message to the server if a message or ping hasn't been
  *      sent or received in the last keelAliveInterval seconds.  
  *      Enables the client to detect if the server is no longer available
  *      without having to wait for the TCP/IP timeout.  
  *      A value of 0 disables keepalive processing.
  *      The default is 60.</li>
- * <li>{@code commandTimeoutMsec} - Optional. The maximum time in milliseconds
+ * <li>{@code commandTimeoutMsec} - Optional Long. The maximum time in milliseconds
  *      to wait for a MQTT connect or publish action to complete.
  *      A value of 0 causes the client to wait indefinitely.
  *      The default is 0.</li>
- * <li>{@code reconnectDelayMsec} - Optional. The time in milliseconds before
+ * <li>{@code reconnectDelayMsec} - Optional Long. The time in milliseconds before
  *      attempting to reconnect to the server following a connection failure.
  *      The default is 60000.</li>
- * <li>{@code userName} - Optional.  The identifier to use when authenticating
+ * <li>{@code userName} - Optional String.  The identifier to use when authenticating
  *      with server that is configured to require that form of authentication.</li>
- * <li>{@code password} - Optional.  The identifier to use when authenticating
+ * <li>{@code password} - Optional String.  The identifier to use when authenticating
  *      with server that is configured to require that form of authentication.</li>
- * <li>{@code trustStore} - Optional. The pathname to a file containing the
+ * <li>{@code trustStore} - Optional String. The pathname to a file containing the
  *      public certificate of trusted MQTT servers.  If a relative path
  *      is specified, the path is relative to the application directory.
  *      Required when connecting to a MQTT server with an 
  *      {@code ssl:/... serverURI}.</li>
- * <li>{@code trustStorePassword} - Required when {@code trustStore} is used.
+ * <li>{@code trustStorePassword} - Required String when {@code trustStore} is used.
  *      The password needed to access the encrypted trustStore file.</li>
- * <li>{@code keyStore} - Optional. The pathname to a file containing the
+ * <li>{@code keyStore} - Optional String. The pathname to a file containing the
  *      MQTT client's public private key certificates.
  *      If a relative path is specified, the path is relative to the
  *      application directory. 
  *      Required when an MQTT server is configured to use
  *      SSL client authentication.</li>
- * <li>{@code keyStorePassword} - Required when {@code keyStore} is used.
+ * <li>{@code keyStorePassword} - Required String when {@code keyStore} is used.
  *      The password needed to access the encrypted keyStore file.</li>
- * <li>{@code receiveBufferSize} - [consumer] Optional. The size, in number
+ * <li>{@code receiveBufferSize} - [consumer] Optional Integer. The size, in number
  *      of messages, of the consumer's internal receive buffer.  Received
  *      messages are added to the buffer prior to being converted to a
  *      stream tuple. The receiver blocks when the buffer is full.
  *      The default is 50.</li>
- * <li>{@code retain} - [producer] Optional. Indicates if messages should be
+ * <li>{@code retain} - [producer] Optional Boolean. Indicates if messages should be
  *      retained on the MQTT server.  Default is false.</li>
+ * <li>{@code defaultQOS} - Optional Integer. The default
+ *      MQTT quality of service used for message handling.
+ *      The default is 0.</li>
  * </ul>
  * 
  * @see <a href="http://mqtt.org">http://mqtt.org</a>
@@ -102,7 +110,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  */
 public class ConsumerConnector {
     private final TopologyElement te;
-    private final Map<String,String> config;
+    private final Map<String,Object> config;
     private int sourceOpCnt;
     
     private static final Map<String, ParamHandler> paramHandlers = new HashMap<>();
@@ -154,16 +162,17 @@ public class ConsumerConnector {
      * @param te {@link TopologyElement} 
      * @param config consumer configuration information.
      */
-    public ConsumerConnector(TopologyElement te, Properties config) {
+    public ConsumerConnector(TopologyElement te, Map<String, Object> config) {
         this.te = te;
-        this.config = Util.toMap(config);
+        this.config = new HashMap<>();
+        this.config.putAll(config);
     }
     
     /**
      * Get the connector's configuration information.
      * @return the unmodifiable configuration 
      */
-    public Map<String,String> getConfig() {
+    public Map<String,Object> getConfig() {
         return Collections.unmodifiableMap(config);
     }
     
@@ -187,12 +196,12 @@ public class ConsumerConnector {
     {
         if (topics==null || topics.length==0)
             throw new IllegalArgumentException("topics");
-        String qos = config.get("defaultQOS");
+        Integer qos = (Integer) config.get("defaultQOS");
         if (qos == null)
-            qos = "0";
+            qos = 0;
         List<Subscription> topicSubs = new ArrayList<>();
         for (String topic : topics) {
-            topicSubs.add( new Subscription(topic, Integer.valueOf(qos)) );
+            topicSubs.add( new Subscription(topic, qos) );
         }
         return subscribe(topicSubs.toArray(new Subscription[topicSubs.size()]));
     }
@@ -278,7 +287,7 @@ public class ConsumerConnector {
                                     null, // key
                                     tuple.getString("topic"));
             }
-        }, Message.class);
+        });
     }
 
 }
