@@ -22,8 +22,7 @@ class PEPlacement {
     private void assignColocations(JSONObject isolate, List<JSONObject> starts,
             JSONObject graph) {
 
-        final String colocationTag = "Colocation"
-                + Integer.toString(colocationCount++);
+        final String colocationTag = newColocationTag();
 
         List<String> boundaries = new ArrayList<>();
         boundaries.add("$Isolate$");
@@ -121,8 +120,7 @@ class PEPlacement {
         List<JSONObject> starts = GraphUtilities.findStarts(graph);   
         
         for(JSONObject start : starts){
-            final String colocationTag = "Colocation"
-                    + Integer.toString(colocationCount++);
+            final String colocationTag = newColocationTag();
             
             String regionTag = (String) start.get("colocationTag");
             if (regionTag != null && !regionTag.isEmpty()) {
@@ -157,6 +155,10 @@ class PEPlacement {
                         }
                     });           
         }
+    }
+    
+    private String newColocationTag() {
+        return "_jaa_colocate" + colocationCount++;
     }
 
     private static void assertNotIsolated(Collection<JSONObject> jsos) {
