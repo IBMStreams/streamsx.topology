@@ -83,29 +83,22 @@ public class GraphBuilder extends BJSONObject {
        }
        return name;
    }
-
-    public static String UNION = "$Union$";
-    public static String PARALLEL = "$Parallel$";
-    public static String UNPARALLEL = "$Unparallel$";
-    public static String LOW_LATENCY = "$LowLatency$";
-    public static String END_LOW_LATENCY = "$EndLowLatency$";
-    public static String ISOLATE = "$Isolate$";
     
     public BOutput lowLatency(BOutput parent){
-        BOutput lowLatencyOutput = addPassThroughMarker(parent, LOW_LATENCY, true);
+        BOutput lowLatencyOutput = addPassThroughMarker(parent, BVirtualMarker.LOW_LATENCY, true);
         return lowLatencyOutput;
     }
     
     public BOutput endLowLatency(BOutput parent){
-        return addPassThroughMarker(parent, END_LOW_LATENCY, false);
+        return addPassThroughMarker(parent, BVirtualMarker.END_LOW_LATENCY, false);
     }
     
     public BOutput isolate(BOutput parent){
-        return addPassThroughMarker(parent, ISOLATE, false);
+        return addPassThroughMarker(parent, BVirtualMarker.ISOLATE, false);
     }
 
     public BOutput addUnion(Set<BOutput> outputs) {
-        BOperator op = addVirtualMarkerOperator(UNION);
+        BOperator op = addVirtualMarkerOperator(BVirtualMarker.UNION);
         return new BUnionOutput(op, outputs);
     }
 
@@ -114,7 +107,7 @@ public class GraphBuilder extends BJSONObject {
      * so that we can run this graph locally with a single thread.
      */
     public BOutput parallel(BOutput parallelize, int width) {
-    	BOutput parallelOutput = addPassThroughMarker(parallelize, PARALLEL, true);
+    	BOutput parallelOutput = addPassThroughMarker(parallelize, BVirtualMarker.PARALLEL, true);
     	parallelOutput.json().put("width", width);
         return parallelOutput;
     }
@@ -124,18 +117,18 @@ public class GraphBuilder extends BJSONObject {
      * so that we can run this graph locally with a single thread.
      */
     public BOutput unparallel(BOutput parallelize) {
-        return addPassThroughMarker(parallelize, UNPARALLEL, false);
+        return addPassThroughMarker(parallelize, BVirtualMarker.END_PARALLEL, false);
     }
 
-    public BOutput addPassThroughMarker(BOutput output, String kind,
+    public BOutput addPassThroughMarker(BOutput output, BVirtualMarker virtualMarker,
             boolean createRegion) {
         BOperatorInvocation op = addOperator(PassThrough.class, null);
         op.json().put("marker", true);
-        op.json().put("kind", kind);
+        op.json().put("kind", virtualMarker.kind());
 
         if (createRegion) {
             final String regionName = op.op().getName();
-            regionMarkers.put(regionName, kind);
+            regionMarkers.put(regionName, virtualMarker.kind());
             op.addRegion(regionName);
         }
 
@@ -154,7 +147,7 @@ public class GraphBuilder extends BJSONObject {
         return op.addOutput(input.port().getStreamSchema());
     }
 
-    public BOperator addVirtualMarkerOperator(String kind) {
+    public BOperator addVirtualMarkerOperator(BVirtualMarker kind) {
         final BMarkerOperator op = new BMarkerOperator(this, kind);
         ops.add(op);
         return op;

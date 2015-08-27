@@ -7,7 +7,7 @@ package com.ibm.streamsx.topology.generator.spl;
 import java.util.List;
 
 import com.ibm.json.java.JSONObject;
-import com.ibm.streamsx.topology.builder.GraphBuilder;
+import com.ibm.streamsx.topology.builder.BVirtualMarker;
 
 /**
  * Preprocessor modifies the passed in JSON to perform
@@ -35,7 +35,7 @@ class Preprocessor {
     }
        
     private void removeUnionOperators(){
-        List<JSONObject> unionOps = GraphUtilities.findOperatorByKind(GraphBuilder.UNION, graph);
+        List<JSONObject> unionOps = GraphUtilities.findOperatorByKind(BVirtualMarker.UNION, graph);
         GraphUtilities.removeOperators(unionOps, graph);
     }
 }

@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
 
 class GraphUtilities {
@@ -29,14 +30,13 @@ class GraphUtilities {
         return starts;
     }
 
-    static ArrayList<JSONObject> findOperatorByKind(String opKind,
+    static ArrayList<JSONObject> findOperatorByKind(BVirtualMarker virtualMarker,
             JSONObject graph) {
         ArrayList<JSONObject> kindOperators = new ArrayList<JSONObject>();
         JSONArray ops = (JSONArray) graph.get("operators");
         for (int k = 0; k < ops.size(); k++) {
             JSONObject op = (JSONObject) (ops.get(k));
-            String kind = (String) op.get("kind");
-            if (kind != null && kind.equals(opKind)) {
+            if (virtualMarker.isThis((String) op.get("kind"))) {
                 kindOperators.add(op);
             }
         }
@@ -238,7 +238,7 @@ class GraphUtilities {
     // Visits every node in the region defined by the boundaries, and applies
     // to it the consumer's accept() method.
     static void visitOnce(List<JSONObject> starts,
-            List<String> boundaries, JSONObject graph,
+            Set<BVirtualMarker> boundaries, JSONObject graph,
             Consumer<JSONObject> consumer) {
         Set<JSONObject> visited = new HashSet<JSONObject>();
         List<JSONObject> unvisited = new ArrayList<JSONObject>();
@@ -261,7 +261,7 @@ class GraphUtilities {
 
     static void getUnvisitedAdjacentNodes(
             Collection<JSONObject> visited, Collection<JSONObject> unvisited,
-            JSONObject op, JSONObject graph, List<String> boundaries) {
+            JSONObject op, JSONObject graph, Set<BVirtualMarker> boundaries) {
         
         List<JSONObject> parents = GraphUtilities.getUpstream(op, graph);
         List<JSONObject> children = GraphUtilities.getDownstream(op, graph);
@@ -317,13 +317,13 @@ class GraphUtilities {
         }
     }
 
-    private static boolean equalsAny(List<String> boundaries, String opKind) {
+    private static boolean equalsAny(Set<BVirtualMarker> boundaries, String opKind) {
         if(boundaries == null){
             return false;
         }
         
-        for (String boundary : boundaries) {
-            if (boundary.equals(opKind))
+        for (BVirtualMarker boundary : boundaries) {
+            if (boundary.isThis(opKind))
                 return true;
         }
         return false;

@@ -563,7 +563,8 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     @Override
     public boolean isPlaceable() {
-        // TODO Auto-generated method stub
+        if (output() instanceof BOutputPort)
+        System.out.println(((BOutputPort) output()).operator().json());
         return output() instanceof BOutputPort;
     }
     

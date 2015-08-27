@@ -211,6 +211,8 @@ public class PlaceableTest {
         TStream<String> s2 = t.strings("3");
         TStream<String> snf = t.strings("3");
         
+        assertTrue(s1.isPlaceable());
+        
         assertSame(s1.fuse(s2), s1);
                 
                 
@@ -225,6 +227,7 @@ public class PlaceableTest {
         TStream<String> s3 = t.strings("3");
         TStream<String> s4 = t.strings("3");
         TSink s5 = s4.print();
+        assertTrue(s5.isPlaceable());
         
         assertSame(s3.fuse(s4, s5), s3);
         assertEquals(getFusingId(s3), getFusingId(s4));
@@ -238,6 +241,18 @@ public class PlaceableTest {
         s1.fuse(s6);
         assertEquals(getFusingId(s1), getFusingId(s6));
     }
+    
+    @Test
+    public void testNonplaceable() {
+        Topology t = new Topology();
+        TStream<String> s1 = t.strings("3");
+        TStream<String> s2 = t.strings("3");
+        
+        assertFalse(s1.union(s2).isPlaceable());
+        // assertFalse(s1.isolate().isPlaceable());
+    }
+
+    
     
     private static String getFusingId(TStream<?> s) {
         BOperator bop  =  ((BOutputPort) s.output()).operator();
