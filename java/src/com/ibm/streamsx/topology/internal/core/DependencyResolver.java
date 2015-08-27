@@ -16,6 +16,7 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.CodeSource;
@@ -27,8 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
-
-import org.apache.commons.io.FileUtils;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
@@ -290,11 +289,52 @@ public class DependencyResolver {
                         StandardCopyOption.REPLACE_EXISTING);
             }
             else if (absFile.isDirectory()) {
-                FileUtils.copyDirectoryToDirectory(absFile, dstDir);
+                copyDirectoryToDirectory(absFile, dstDir);
             }
         } catch (IOException e) {
             throw new IOException("Error copying file dependency "+ a.absPath + ": " + e, e);
         }
+    }
+    
+    /**
+     * Copy srcDir tree to a directory of the same name in dstDir.
+     * The destination directory is created if necessary.
+     * @param srcDir
+     * @param dstDir
+     */
+    private static void copyDirectoryToDirectory(File srcDir, File dstDir)
+            throws IOException {
+        String dirname = srcDir.getName();
+        dstDir = new File(dstDir, dirname);
+        copyDirectory(srcDir, dstDir);
+    }
+
+    /**
+     * Copy srcDir's children, recursively, to dstDir.  dstDir is created
+     * if necessary.  Any existing children in dstDir are overwritten.
+     * @param srcDir
+     * @param dstDir
+     */
+    private static void copyDirectory(File srcDir, File dstDir) throws IOException {
+        final Path targetPath = dstDir.toPath();
+        final Path sourcePath = srcDir.toPath();
+        Files.walkFileTree(sourcePath, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(final Path dir,
+                    final BasicFileAttributes attrs) throws IOException {
+                Files.createDirectories(targetPath.resolve(sourcePath
+                        .relativize(dir)));
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(final Path file,
+                    final BasicFileAttributes attrs) throws IOException {
+                Files.copy(file,
+                        targetPath.resolve(sourcePath.relativize(file)));
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
     
     /**
