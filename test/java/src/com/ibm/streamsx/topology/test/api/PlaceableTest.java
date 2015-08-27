@@ -249,7 +249,11 @@ public class PlaceableTest {
         TStream<String> s2 = t.strings("3");
         
         assertFalse(s1.union(s2).isPlaceable());
-        // assertFalse(s1.isolate().isPlaceable());
+        assertFalse(s1.isolate().isPlaceable());
+        
+        TStream<String> sp = s1.parallel(3);
+        assertFalse(sp.isPlaceable());
+        assertFalse(sp.endParallel().isPlaceable());
     }
 
     

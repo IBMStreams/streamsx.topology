@@ -28,6 +28,7 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.builder.BUnionOutput;
+import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
@@ -563,9 +564,12 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     @Override
     public boolean isPlaceable() {
-        if (output() instanceof BOutputPort)
-        System.out.println(((BOutputPort) output()).operator().json());
-        return output() instanceof BOutputPort;
+        if (output() instanceof BOutputPort) {
+            BOutputPort port = (BOutputPort) output();
+            return !BVirtualMarker.isVirtualMarker(
+                    (String) port.operator().json().get("kind"));
+        }
+        return false;
     }
     
     @Override
