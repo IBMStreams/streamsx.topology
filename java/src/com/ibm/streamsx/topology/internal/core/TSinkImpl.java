@@ -30,6 +30,11 @@ public class TSinkImpl extends TopologyItem implements TSink {
     /* Placement control */
     private PlacementInfo placement;
     
+    @Override
+    public boolean isPlaceable() {
+        return true;
+    }
+    
     private PlacementInfo getPlacementInfo() {
         if (placement == null)
             placement = PlacementInfo.getPlacementInfo(this);
@@ -38,8 +43,7 @@ public class TSinkImpl extends TopologyItem implements TSink {
 
     @Override
     public TSink fuse(Placeable<?>... elements) {
-        if (getPlacementInfo().fuse(this, elements))
-            getPlacementInfo().updateFusingJSON(this, operator());
+        getPlacementInfo().fuse(this, elements);
         return this;
     }
 

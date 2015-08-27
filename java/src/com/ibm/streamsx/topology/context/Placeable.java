@@ -7,6 +7,7 @@
 import java.util.Set;
 
 import com.ibm.streamsx.topology.TopologyElement;
+import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 
 /**
  * Placement directives for a topology element when executing
@@ -21,6 +22,8 @@ import com.ibm.streamsx.topology.TopologyElement;
  */
 public interface Placeable<T extends Placeable<T>> extends TopologyElement {
     
+    boolean isPlaceable();
+    
     /**
      * Fuse this container with other topology elements so that
      * at runtime they all execute within the same operating system process.
@@ -31,7 +34,7 @@ public interface Placeable<T extends Placeable<T>> extends TopologyElement {
      * 
      * @return this
      */
-    public T fuse(Placeable<?> ... elements);
+    T fuse(Placeable<?> ... elements);
     
     /**
      * Add required resource tags for this topology element for distributed submission.
@@ -42,7 +45,7 @@ public interface Placeable<T extends Placeable<T>> extends TopologyElement {
      * @param tags Tags to be required at runtime.
      * @return this
      */
-    public T addResourceTags(String ... tags);
+    T addResourceTags(String ... tags);
     
     /**
      * Get the set of resource tags this element requires.
@@ -51,5 +54,7 @@ public interface Placeable<T extends Placeable<T>> extends TopologyElement {
      * of all {@link #addResourceTags(String...) resource tags added} to each fused element.
      * @return Read-only set of host tags this element requires.
      */
-    public Set<String> getResourceTags();
+    Set<String> getResourceTags();
+    
+    BOperatorInvocation operator(); 
 }

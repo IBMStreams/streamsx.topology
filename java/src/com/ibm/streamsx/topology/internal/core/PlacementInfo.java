@@ -15,7 +15,6 @@ import java.util.WeakHashMap;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
-import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.context.Placeable;
 
 /**
@@ -57,9 +56,13 @@ class PlacementInfo {
         Set<Placeable<?>> elements = new HashSet<>();
         elements.add(first);
         for (Placeable<?> element : toFuse) {
-            elements.add(element);
+            if (!element.isPlaceable())
+                throw new IllegalArgumentException();
+            
             if (!first.topology().equals(element.topology()) )
                 throw new IllegalArgumentException();
+            
+            elements.add(element);
         }
         
         if (elements.size() < 2)
@@ -86,6 +89,8 @@ class PlacementInfo {
                 fusedResourceTags.addAll(elementResourceTags);
             }            
             resourceTags.put(element, fusedResourceTags);
+            
+            updateFusingJSON(element);
         }
         return true;
     }
@@ -108,12 +113,12 @@ class PlacementInfo {
             elementResourceTags.add(tag);       
     } 
     
-    void updateFusingJSON(Placeable<?> element, BOperator operator) {
+    private void updateFusingJSON(Placeable<?> element) {
         
-        JSONObject fusing = (JSONObject) operator.getConfig("fusing");
+        JSONObject fusing = (JSONObject) element.operator().getConfig("fusing");
         if (fusing == null) {
             fusing = new JSONObject();
-            operator.addConfig("fusing", fusing);
+            element.operator().addConfig("fusing", fusing);
         }
         fusing.put("id", fusingIds.get(element));
     }

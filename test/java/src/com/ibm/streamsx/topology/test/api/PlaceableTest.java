@@ -5,6 +5,10 @@
 package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
@@ -13,9 +17,14 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.builder.BOperator;
+import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.context.Placeable;
+import com.ibm.streamsx.topology.streams.StringStreams;
 
 /**
  * Tests to verify Placeable
@@ -184,8 +193,8 @@ public class PlaceableTest {
         assertTrue(s1.getResourceTags().isEmpty());
         assertTrue(s2.getResourceTags().isEmpty());
         
-        s1.addResourceTags("ingest");
-        s2.addResourceTags("database");
+        assertSame(s1.addResourceTags("ingest"), s1);
+        assertSame(s2.addResourceTags("database"), s2);
      
         Set<String> expected = new HashSet<>();
         expected.add("ingest");
@@ -194,4 +203,55 @@ public class PlaceableTest {
         assertEquals(expected, s1.getResourceTags());
         assertEquals(s1.getResourceTags(), s2.getResourceTags()); 
     }
+    
+    @Test
+    public void testFusing() {
+        Topology t = new Topology();        
+        TStream<String> s1 = t.strings("3");
+        TStream<String> s2 = t.strings("3");
+        TStream<String> snf = t.strings("3");
+        
+        assertSame(s1.fuse(s2), s1);
+                
+                
+        String id1 = getFusingId(s1);
+        String id2 = getFusingId(s2);
+        
+        assertNotNull(id1);
+        assertFalse(id1.isEmpty());
+        
+        assertEquals(id1, id2);
+        
+        TStream<String> s3 = t.strings("3");
+        TStream<String> s4 = t.strings("3");
+        TSink s5 = s4.print();
+        
+        assertSame(s3.fuse(s4, s5), s3);
+        assertEquals(getFusingId(s3), getFusingId(s4));
+        assertEquals(getFusingId(s3), getFusingId(s5.operator()));
+        
+        assertFalse(getFusingId(s1).equals(getFusingId(s3)));
+        
+        assertNull(getFusingId(snf));
+        
+        TStream<String> s6 = StringStreams.toString(s4);
+        s1.fuse(s6);
+        assertEquals(getFusingId(s1), getFusingId(s6));
+    }
+    
+    private static String getFusingId(TStream<?> s) {
+        BOperator bop  =  ((BOutputPort) s.output()).operator();
+        return getFusingId(bop);
+    }
+    
+    private static String getFusingId(BOperator bop) {
+        JSONObject fusing = ((JSONObject) bop.getConfig("fusing"));
+        if (fusing == null)
+            return null;
+        Object ido = fusing.get("id");
+        if (ido == null)
+            return null;
+        return ido.toString();
+    }
+    
 }

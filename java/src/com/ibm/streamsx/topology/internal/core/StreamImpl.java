@@ -561,6 +561,19 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     /* Placement control */
     private PlacementInfo placement;
     
+    @Override
+    public boolean isPlaceable() {
+        // TODO Auto-generated method stub
+        return output() instanceof BOutputPort;
+    }
+    
+    @Override
+    public BOperatorInvocation operator() {
+        if (isPlaceable())
+            return ((BOutputPort) output()).operator();
+        throw new IllegalStateException();
+    }
+    
     private PlacementInfo getPlacementInfo() {
         if (placement == null)
             placement = PlacementInfo.getPlacementInfo(this);
@@ -569,12 +582,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public TStream<T> fuse(Placeable<?>... elements) {
-        if (getPlacementInfo().fuse(this, elements)) {
-            if (output() instanceof BOutputPort) {
-                BOutputPort bop = (BOutputPort) output;
-                getPlacementInfo().updateFusingJSON(this, bop.operator());
-            }
-        }
+        getPlacementInfo().fuse(this, elements);
             
         return this;
     }
