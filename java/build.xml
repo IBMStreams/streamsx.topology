@@ -36,6 +36,9 @@
   <manifestclasspath property="jar.classpath" jarfile="${jar}">
      <classpath>
        <path refid="tk.classpath"/>
+       <fileset dir="${tk.opt}/slf4j-1.7.5">
+          <include name="*.jar"/>
+       </fileset>
      </classpath>
   </manifestclasspath>
     <jar destfile="${jar}">
