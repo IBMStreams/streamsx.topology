@@ -13,6 +13,7 @@ import java.util.Set;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.function.Consumer;
 
 class PEPlacement {
@@ -22,17 +23,17 @@ class PEPlacement {
     
     private void setColocation(JSONObject op, String colocationId) {
        
-        JSONObject placement = JOperator.createJSONConfig(op, JOperator.CONFIG_PLACEMENT);
+        JSONObject placement = JOperatorConfig.createJSONItem(op, JOperatorConfig.PLACEMENT);
 
         // If the region has already been assigned a colocation
         // tag, simply
         // return.
-        String id = (String) placement.get("colocation");
+        String id = (String) placement.get(JOperator.PLACEMENT_COLOCATE_TEMP);
         if (id != null && !id.isEmpty()) {
             return;
         }
         
-        placement.put("colocation", colocationId);
+        placement.put(JOperator.PLACEMENT_COLOCATE_TEMP, colocationId);
     }
     
     @SuppressWarnings("serial")
@@ -123,7 +124,9 @@ class PEPlacement {
         for(JSONObject start : starts){
             final String colocationTag = newColocationTag();
             
-            String regionTag = (String) start.get("colocationTag");
+            JSONObject placement = JOperatorConfig.getJSONItem(start, JOperatorConfig.PLACEMENT);
+                     
+            String regionTag = (String) placement.get(JOperator.PLACEMENT_COLOCATE);         
             if (regionTag != null && !regionTag.isEmpty()) {
                 continue;
             }

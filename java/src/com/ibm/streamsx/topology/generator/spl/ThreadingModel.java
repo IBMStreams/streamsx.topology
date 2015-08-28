@@ -10,6 +10,7 @@ import java.util.List;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.function.Consumer;
 
 class ThreadingModel {
@@ -64,12 +65,12 @@ class ThreadingModel {
                 // See if operator has different colocation tag than any of 
                 // its parents.
 
-                String colocTag = (String) JOperator.getJSONConfig(op,
-                        JOperator.PLACEMENT_COLOCATE).get(JOperator.PLACEMENT_COLOCATE);
+                String colocTag = (String) JOperatorConfig.getJSONItem(op,
+                        JOperatorConfig.PLACEMENT).get(JOperator.PLACEMENT_COLOCATE);
 
                 List<JSONObject> parents = GraphUtilities.getUpstream(op, graph);
                 for(JSONObject parent : parents){
-                    JSONObject parentPlacement = JOperator.getJSONConfig(op, JOperator.PLACEMENT_COLOCATE);
+                    JSONObject parentPlacement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
                     String parentColocTag = null;
                     if (parentPlacement != null)
                         parentColocTag = (String) parentPlacement.get(JOperator.PLACEMENT_COLOCATE);
@@ -97,7 +98,7 @@ class ThreadingModel {
                 // Add to SPL operator config if necessary
                 if(!functional && 
                         !(differentColocationThanParent || regionTagExists)){
-                    JSONObject newQueue =JOperator.createJSONConfig(op, "queue");
+                    JSONObject newQueue =JOperatorConfig.createJSONItem(op, "queue");
                     newQueue.put("queueSize", new Integer(100));
                     newQueue.put("inputPortName", input.get("name").toString());
                     newQueue.put("congestionPolicy", "Sys.Wait");

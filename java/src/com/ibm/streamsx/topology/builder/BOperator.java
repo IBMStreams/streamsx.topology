@@ -9,7 +9,7 @@ import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
 
 /**
  * JSON representation.
@@ -62,7 +62,7 @@ public class BOperator extends BJSONObject {
      * @param value
      */
     public void addConfig(String key, Object value) {       
-        JOperator.addConfig(json(), key, value);    
+        JOperatorConfig.addItem(json(), key, value);    
     }
     
     /**
@@ -71,7 +71,7 @@ public class BOperator extends BJSONObject {
      * @return The configured value, or null if it has not been set.
      */
     public Object getConfigItem(String key) {
-        return JOperator.getConfigItem(json(), key);
+        return JOperatorConfig.getItem(json(), key);
     }
 
     @Override

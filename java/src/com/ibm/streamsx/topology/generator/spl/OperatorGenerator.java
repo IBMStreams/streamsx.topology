@@ -16,6 +16,7 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindow.Type;
 import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.ContextProperties;
 
 class OperatorGenerator {
@@ -345,12 +346,12 @@ class OperatorGenerator {
         if (!JOperator.hasConfig(op))
             return;
 
-        Boolean streamViewability = JOperator.getBooleanConfig(op, "streamViewability");
+        Boolean streamViewability = JOperatorConfig.getBooleanItem(op, "streamViewability");
         String colocationTag = null;
-        JSONObject placement = JOperator.getJSONConfig(op, JOperator.CONFIG_PLACEMENT);
+        JSONObject placement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
         if (placement != null)
-              colocationTag = (String) placement.get("colocation");
-        JSONObject queue = JOperator.getJSONConfig(op, "queue");
+              colocationTag = (String) placement.get(JOperator.PLACEMENT_COLOCATE);
+        JSONObject queue = JOperatorConfig.getJSONItem(op, "queue");
         
         if (streamViewability != null
                 || (colocationTag != null && !colocationTag.isEmpty())
