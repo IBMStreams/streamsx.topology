@@ -124,7 +124,7 @@ class PEPlacement {
         for(JSONObject start : starts){
             final String colocationTag = newColocationTag();
             
-            JSONObject placement = JOperatorConfig.getJSONItem(start, JOperatorConfig.PLACEMENT);
+            JSONObject placement = JOperatorConfig.createJSONItem(start, JOperatorConfig.PLACEMENT);
                      
             String regionTag = (String) placement.get(JOperator.PLACEMENT_COLOCATE);         
             if (regionTag != null && !regionTag.isEmpty()) {
