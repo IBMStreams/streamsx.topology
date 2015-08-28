@@ -28,6 +28,8 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.builder.BUnionOutput;
+import com.ibm.streamsx.topology.builder.BVirtualMarker;
+import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
@@ -271,8 +273,8 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
-    public void print() {
-        sink(new Print<T>());
+    public TSink print() {
+        return sink(new Print<T>());
     }
 
     @Override
@@ -338,7 +340,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         BOperatorInvocation op;
         if (Schemas.usesDirectSchema(getTupleType())
-                 || this instanceof SPLStream) {
+                 || ((TStream<T>) this) instanceof SPLStream) {
             // Publish as a stream consumable by SPL & Java/Scala
             op = builder().addSPLOperator("Publish",
                     "com.ibm.streamsx.topology.topic::Publish",
@@ -555,5 +557,49 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public boolean isKeyed() {
         return false;
+    }
+    
+    /* Placement control */
+    private PlacementInfo placement;
+    
+    @Override
+    public boolean isPlaceable() {
+        if (output() instanceof BOutputPort) {
+            BOutputPort port = (BOutputPort) output();
+            return !BVirtualMarker.isVirtualMarker(
+                    (String) port.operator().json().get("kind"));
+        }
+        return false;
+    }
+    
+    @Override
+    public BOperatorInvocation operator() {
+        if (isPlaceable())
+            return ((BOutputPort) output()).operator();
+        throw new IllegalStateException();
+    }
+    
+    private PlacementInfo getPlacementInfo() {
+        if (placement == null)
+            placement = PlacementInfo.getPlacementInfo(this);
+        return placement;
+    }
+
+    @Override
+    public TStream<T> fuse(Placeable<?>... elements) {
+        getPlacementInfo().fuse(this, elements);
+            
+        return this;
+    }
+
+    @Override
+    public TStream<T> addResourceTags(String... tags) {
+        getPlacementInfo().addResourceTags(this, tags);
+        return this;              
+    }
+
+    @Override
+    public Set<String> getResourceTags() {
+        return getPlacementInfo() .getResourceTags(this);
     }
 }

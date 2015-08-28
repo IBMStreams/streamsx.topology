@@ -12,6 +12,7 @@ import java.util.List;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
+import com.ibm.streamsx.topology.builder.BVirtualMarker;
 
 public class SPLGenerator {
     // Needed for composite name generation
@@ -303,12 +304,11 @@ public class SPLGenerator {
 
 
     private boolean isParallelEnd(JSONObject visitOp) {
-        return visitOp.get("kind").equals("$Unparallel$");
+        return BVirtualMarker.END_PARALLEL.isThis((String) visitOp.get("kind"));
     }
 
     private boolean isParallelStart(JSONObject visitOp) {
-        // TODO Auto-generated method stub
-        return visitOp.get("kind").equals("$Parallel$");
+        return BVirtualMarker.PARALLEL.isThis((String) visitOp.get("kind"));
     }
 
     /**

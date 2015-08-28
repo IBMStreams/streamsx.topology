@@ -68,6 +68,18 @@ public class BOperator extends BJSONObject {
         
         config.put(key, value);     
     }
+    
+    /**
+     * Get an existing configuration value.
+     * @param key Key of the value.
+     * @return The configured value, or null if it has not been set.
+     */
+    public Object getConfig(String key) {
+        JSONObject config = (JSONObject) json().get("config");
+        if (config == null)
+            return null;
+        return config.get(key);
+    }
 
     @Override
     public JSONObject complete() {
