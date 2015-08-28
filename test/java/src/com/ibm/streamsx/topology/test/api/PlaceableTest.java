@@ -23,6 +23,7 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOutputPort;
+import com.ibm.streamsx.topology.builder.json.JOperator;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.streams.StringStreams;
 
@@ -264,10 +265,10 @@ public class PlaceableTest {
     }
     
     private static String getColocate(BOperator bop) {
-        JSONObject fusing = ((JSONObject) bop.getConfig("placement"));
+        JSONObject fusing = JOperator.getJSONConfig(bop.json(), JOperator.CONFIG_PLACEMENT);
         if (fusing == null)
             return null;
-        Object ido = fusing.get("colocate");
+        Object ido = fusing.get(JOperator.PLACEMENT_COLOCATE_TEMP);
         if (ido == null)
             return null;
         return ido.toString();

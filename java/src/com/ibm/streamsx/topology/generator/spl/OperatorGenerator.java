@@ -15,6 +15,7 @@ import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindow.Type;
+import com.ibm.streamsx.topology.builder.json.JOperator;
 import com.ibm.streamsx.topology.context.ContextProperties;
 
 class OperatorGenerator {
@@ -341,13 +342,16 @@ class OperatorGenerator {
 
     static void configClause(JSONObject graphConfig, JSONObject op,
             StringBuilder sb) {
-        JSONObject config = (JSONObject) op.get("config");
-        if (config == null || config.isEmpty())
+        if (!JOperator.hasConfig(op))
             return;
 
-        Boolean streamViewability = (Boolean) config.get("streamViewability");
-        String colocationTag = (String) config.get("colocationTag");
-        JSONObject queue = (JSONObject) config.get("queue");
+        Boolean streamViewability = JOperator.getBooleanConfig(op, "streamViewability");
+        String colocationTag = null;
+        JSONObject placement = JOperator.getJSONConfig(op, JOperator.CONFIG_PLACEMENT);
+        if (placement != null)
+              colocationTag = (String) placement.get("colocation");
+        JSONObject queue = JOperator.getJSONConfig(op, "queue");
+        
         if (streamViewability != null
                 || (colocationTag != null && !colocationTag.isEmpty())
                 || (queue != null && !queue.isEmpty())

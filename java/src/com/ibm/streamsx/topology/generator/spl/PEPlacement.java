@@ -11,14 +11,29 @@ import java.util.List;
 import java.util.Set;
 
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
+import com.ibm.streamsx.topology.builder.json.JOperator;
 import com.ibm.streamsx.topology.function.Consumer;
 
 class PEPlacement {
     
     private int colocationCount;
     private int lowLatencyRegionCount;
+    
+    private void setColocation(JSONObject op, String colocationId) {
+       
+        JSONObject placement = JOperator.createJSONConfig(op, JOperator.CONFIG_PLACEMENT);
+
+        // If the region has already been assigned a colocation
+        // tag, simply
+        // return.
+        String id = (String) placement.get("colocation");
+        if (id != null && !id.isEmpty()) {
+            return;
+        }
+        
+        placement.put("colocation", colocationId);
+    }
     
     @SuppressWarnings("serial")
     private void assignColocations(JSONObject isolate, List<JSONObject> starts,
@@ -33,21 +48,7 @@ class PEPlacement {
 
                     @Override
                     public void accept(JSONObject op) {
-                        JSONObject config = (JSONObject) op.get("config");
-                        if (config == null || config.isEmpty()) {
-                            config = new OrderedJSONObject();
-                            op.put("config", config);
-                        }
-
-                        // If the region has already been assigned a colocation
-                        // tag, simply
-                        // return.
-                        String regionTag = (String) config.get("colocationTag");
-                        if (regionTag != null && !regionTag.isEmpty()) {
-                            return;
-                        }
-                        
-                        config.put("colocationTag", colocationTag);
+                        setColocation(op, colocationTag);
                     }
 
                 });
@@ -136,21 +137,7 @@ class PEPlacement {
                     new Consumer<JSONObject>() {
                         @Override
                         public void accept(JSONObject op) {
-                            JSONObject config = (JSONObject) op.get("config");
-                            if (config == null || config.isEmpty()) {
-                                config = new OrderedJSONObject();
-                                op.put("config", config);
-                            }
-
-                            // If the region has already been assigned a colocation
-                            // tag, simply
-                            // return.
-                            String regionTag = (String) config.get("colocationTag");
-                            if (regionTag != null && !regionTag.isEmpty()) {
-                                return;
-                            }
-                            
-                            config.put("colocationTag", colocationTag);
+                            setColocation(op, colocationTag);
                         }
                     });           
         }

@@ -12,6 +12,7 @@ import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
+import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.operator.Operator;
@@ -39,7 +40,7 @@ public class GraphBuilder extends BJSONObject {
 
     private final List<BOperator> ops = new ArrayList<>();
     
-    private final JSONObject config = new JSONObject();
+    private final JSONObject config = new OrderedJSONObject();
 
     public GraphBuilder(String namespace, String name) {
         super();

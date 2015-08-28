@@ -15,6 +15,7 @@ import java.util.WeakHashMap;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
+import com.ibm.streamsx.topology.builder.json.JOperator;
 import com.ibm.streamsx.topology.context.Placeable;
 
 /**
@@ -22,10 +23,6 @@ import com.ibm.streamsx.topology.context.Placeable;
  */
 class PlacementInfo {
     
-    /**
-     * Placement attribute name in the config object.
-     */
-    static final String PLACEMENT = "placement";
     /**
      * User requested colocate attribute name in placement.
      */
@@ -123,12 +120,7 @@ class PlacementInfo {
     } 
     
     private void updateFusingJSON(Placeable<?> element) {
-        
-        JSONObject fusing = (JSONObject) element.operator().getConfig(PLACEMENT);
-        if (fusing == null) {
-            fusing = new JSONObject();
-            element.operator().addConfig(PLACEMENT, fusing);
-        }
-        fusing.put(COLOCATE, fusingIds.get(element));
+        JSONObject fusing = JOperator.createJSONConfig(element.operator().json(), JOperator.CONFIG_PLACEMENT);
+        fusing.put(JOperator.PLACEMENT_COLOCATE_TEMP, fusingIds.get(element));
     }
 }
