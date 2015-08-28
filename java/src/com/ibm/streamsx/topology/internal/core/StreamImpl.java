@@ -586,7 +586,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
-    public TStream<T> fuse(Placeable<?>... elements) {
+    public TStream<T> colocate(Placeable<?>... elements) {
         getPlacementInfo().fuse(this, elements);
             
         return this;

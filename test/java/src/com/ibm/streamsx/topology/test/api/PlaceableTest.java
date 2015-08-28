@@ -105,7 +105,7 @@ public class PlaceableTest {
         assertTrue(s2.getResourceTags().isEmpty());
         
         s1.addResourceTags("ingest");
-        s1.fuse(s2);
+        s1.colocate(s2);
         assertEquals(Collections.singleton("ingest"), s1.getResourceTags());
         assertEquals(s1.getResourceTags(), s2.getResourceTags());  
         
@@ -152,7 +152,7 @@ public class PlaceableTest {
         
         s1.addResourceTags("ingest");
         s2.addResourceTags("database");
-        s1.fuse(s2);
+        s1.colocate(s2);
         
         Set<String> expected = new HashSet<>();
         expected.add("ingest");
@@ -189,7 +189,7 @@ public class PlaceableTest {
         assertTrue(s1.getResourceTags().isEmpty());
         assertTrue(s2.getResourceTags().isEmpty());
 
-        s1.fuse(s2);
+        s1.colocate(s2);
         assertTrue(s1.getResourceTags().isEmpty());
         assertTrue(s2.getResourceTags().isEmpty());
         
@@ -213,7 +213,7 @@ public class PlaceableTest {
         
         assertTrue(s1.isPlaceable());
         
-        assertSame(s1.fuse(s2), s1);
+        assertSame(s1.colocate(s2), s1);
                 
                 
         String id1 = getFusingId(s1);
@@ -229,7 +229,7 @@ public class PlaceableTest {
         TSink s5 = s4.print();
         assertTrue(s5.isPlaceable());
         
-        assertSame(s3.fuse(s4, s5), s3);
+        assertSame(s3.colocate(s4, s5), s3);
         assertEquals(getFusingId(s3), getFusingId(s4));
         assertEquals(getFusingId(s3), getColocate(s5.operator()));
         
@@ -238,7 +238,7 @@ public class PlaceableTest {
         assertNull(getFusingId(snf));
         
         TStream<String> s6 = StringStreams.toString(s4);
-        s1.fuse(s6);
+        s1.colocate(s6);
         assertEquals(getFusingId(s1), getFusingId(s6));
     }
     
