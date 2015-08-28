@@ -231,7 +231,7 @@ public class PlaceableTest {
         
         assertSame(s3.fuse(s4, s5), s3);
         assertEquals(getFusingId(s3), getFusingId(s4));
-        assertEquals(getFusingId(s3), getFusingId(s5.operator()));
+        assertEquals(getFusingId(s3), getColocate(s5.operator()));
         
         assertFalse(getFusingId(s1).equals(getFusingId(s3)));
         
@@ -260,14 +260,14 @@ public class PlaceableTest {
     
     private static String getFusingId(TStream<?> s) {
         BOperator bop  =  ((BOutputPort) s.output()).operator();
-        return getFusingId(bop);
+        return getColocate(bop);
     }
     
-    private static String getFusingId(BOperator bop) {
-        JSONObject fusing = ((JSONObject) bop.getConfig("fusing"));
+    private static String getColocate(BOperator bop) {
+        JSONObject fusing = ((JSONObject) bop.getConfig("placement"));
         if (fusing == null)
             return null;
-        Object ido = fusing.get("id");
+        Object ido = fusing.get("colocate");
         if (ido == null)
             return null;
         return ido.toString();

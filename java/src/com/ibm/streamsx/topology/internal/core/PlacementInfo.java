@@ -22,6 +22,15 @@ import com.ibm.streamsx.topology.context.Placeable;
  */
 class PlacementInfo {
     
+    /**
+     * Placement attribute name in the config object.
+     */
+    static final String PLACEMENT = "placement";
+    /**
+     * User requested colocate attribute name in placement.
+     */
+    static final String COLOCATE = "colocate";
+
     private static final Map<Topology, WeakReference<PlacementInfo>> placements = new WeakHashMap<>();
     
     private int nextFuseId;
@@ -46,7 +55,7 @@ class PlacementInfo {
     /**
      * Fuse a number of placeables.
      * If fusing occurs then the fusing id
-     * is set as "id" the "fusing" JSON object in
+     * is set as "colocate" the "placement" JSON object in
      * the operator's config.
      * 
      */
@@ -115,11 +124,11 @@ class PlacementInfo {
     
     private void updateFusingJSON(Placeable<?> element) {
         
-        JSONObject fusing = (JSONObject) element.operator().getConfig("fusing");
+        JSONObject fusing = (JSONObject) element.operator().getConfig(PLACEMENT);
         if (fusing == null) {
             fusing = new JSONObject();
-            element.operator().addConfig("fusing", fusing);
+            element.operator().addConfig(PLACEMENT, fusing);
         }
-        fusing.put("id", fusingIds.get(element));
+        fusing.put(COLOCATE, fusingIds.get(element));
     }
 }
