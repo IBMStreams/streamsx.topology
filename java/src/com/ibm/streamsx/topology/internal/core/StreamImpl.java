@@ -18,8 +18,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streamsx.topology.SubmissionParameter;
-import com.ibm.streamsx.topology.Value;
 import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
@@ -36,6 +34,7 @@ import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionFilter;
@@ -364,18 +363,21 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         this.connectTo(op, false, null);
     }
     
-    public TStream<T> parallel(int width, Routing routing) {
-        return parallel(new Value<Integer>(width), routing);
+    public TStream<T> parallel(final int width, Routing routing) {
+        @SuppressWarnings("serial")
+        Supplier<Integer> supplier = new Supplier<Integer>() {
+            @Override
+            public Integer get() { return width; }};
+        return parallel(supplier, routing);
     }
     
     @Override
-    public TStream<T> parallel(Value<Integer> width,
-            com.ibm.streamsx.topology.TStream.Routing routing) {
+    public TStream<T> parallel(Supplier<Integer> width, Routing routing) {
 
         if (width == null)
             throw new IllegalArgumentException("width");
-        Integer widthVal = width.getValue() != null
-                ? width.getValue()
+        Integer widthVal = width.get() != null
+                ? width.get()
                 : ((SubmissionParameter<Integer>)width).getDefaultValue();
         if (widthVal != null && widthVal <= 0)
                 throw new IllegalStateException(
@@ -432,7 +434,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
-    public TStream<T> parallel(Value<Integer> width) {
+    public TStream<T> parallel(Supplier<Integer> width) {
         return parallel(width, TStream.Routing.ROUND_ROBIN);
     }
 

@@ -17,8 +17,8 @@ import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streamsx.topology.builder.json.JOperator;
-import com.ibm.streamsx.topology.Value;
 import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
@@ -110,14 +110,10 @@ public class GraphBuilder extends BJSONObject {
      * Add a marker operator, that is actually a PassThrough in OperatorGraph,
      * so that we can run this graph locally with a single thread.
      */
-    public BOutput parallel(BOutput parallelize, int width) {
-        return parallel(parallelize, new Value<Integer>(width));
-    }
-    
-    public BOutput parallel(BOutput parallelize, Value<Integer> width) {
+    public BOutput parallel(BOutput parallelize, Supplier<Integer> width) {
         BOutput parallelOutput = addPassThroughMarker(parallelize, BVirtualMarker.PARALLEL, true);
-        if (width.getValue() != null)
-            parallelOutput.json().put("width", width.getValue());
+        if (width.get() != null)
+            parallelOutput.json().put("width", width.get());
         else
             parallelOutput.json().put("width", ((JSONAble) width).toJSON());
         return parallelOutput;

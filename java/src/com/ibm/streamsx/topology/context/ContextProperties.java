@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.context;
 
-import com.ibm.streamsx.topology.SubmissionParameter;
+import com.ibm.streamsx.topology.Topology;
 
 /**
  * Properties that can be specified when submitting the topology to a context.
@@ -68,11 +68,21 @@ public interface ContextProperties {
      * The property value is a {@code Map<String,Object>} where the key
      * is the parameter name and the value is the parameter value.
      * <p>
-     * It's the caller's responsibility to ensure that the values
-     * of unsigned integer types are not negative, as can happen with
-     * Integer.toString(). See Java8 {@code Integer.toUnsignedString()}.
+     * e.g.,
+     * <pre>{@code
+     * Supplier<Integer> topology.getSubmissionParameter("p1", 5);
+     * ...
      * 
-     * See {@link SubmissionParameter}
+     * ContextProperties config = new HashMap<>();
+     * Map<String,Object> params = new HashMap<>();
+     * params.put("p1", 10);
+     * config.put(SUBMISSION_PARAMS, params);
+     * 
+     * ... StreamsContextFactory.getStreamsContext(DISTRIBUTED)
+     *              .submit(topology, config);
+     * }</pre>
+     * 
+     * See {@link Topology#getSubmissionParameter(String, Class)}
      */
     String SUBMISSION_PARAMS = "topology.submissionParams";
 }

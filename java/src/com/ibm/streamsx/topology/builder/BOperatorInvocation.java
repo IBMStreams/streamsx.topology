@@ -21,6 +21,11 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.spl.UString;
+import com.ibm.streamsx.topology.spl.Unsigned.UnsignedByte;
+import com.ibm.streamsx.topology.spl.Unsigned.UnsignedInteger;
+import com.ibm.streamsx.topology.spl.Unsigned.UnsignedLong;
+import com.ibm.streamsx.topology.spl.Unsigned.UnsignedShort;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 // Union(A,B)
@@ -117,6 +122,29 @@ public class BOperatorInvocation extends BOperator {
         String jsonType = null;
 
         // Set the value in the OperatorInvocation.
+        
+        if (value instanceof UString) {
+            value = ((UString) value).value();
+            jsonValue = value;
+            jsonType = "ustring";
+        } else if (value instanceof UnsignedByte) {
+            value = ((UnsignedByte) value).value();
+            jsonValue = value;
+            jsonType = "unsigned";
+        } else if (value instanceof UnsignedShort) {
+            value = ((UnsignedShort) value).value();
+            jsonValue = value;
+            jsonType = "unsigned";
+        } else if (value instanceof UnsignedInteger) {
+            value = ((UnsignedInteger) value).value();
+            jsonValue = value;
+            jsonType = "unsigned";
+        } else if (value instanceof UnsignedLong) {
+            value = ((UnsignedLong) value).value();
+            jsonValue = value;
+            jsonType = "unsigned";
+        }
+        
         if (value instanceof String) {
             op.setStringParameter(name, (String) value);
         } else if (value instanceof Byte) {
@@ -157,8 +185,8 @@ public class BOperatorInvocation extends BOperator {
             op.setAttributeParameter(name, attr.getName());
         } else if (value instanceof JSONAble) {
             JSONObject jo = ((JSONAble) value).toJSON();
-            jsonType = (String) jo.get("jsonType");
-            jsonValue = (JSONObject) jo.get("jsonValue");
+            jsonType = (String) jo.get("type");
+            jsonValue = (JSONObject) jo.get("value");
         } else {
             throw new IllegalArgumentException("Type for parameter " + name + " is not supported:" +  value.getClass());
         }

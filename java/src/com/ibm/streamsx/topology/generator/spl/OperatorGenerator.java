@@ -7,7 +7,6 @@ package com.ibm.streamsx.topology.generator.spl;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -99,9 +98,9 @@ class OperatorGenerator {
                 sb.append(Integer.toString((int) width));
             else {
                 JSONObject jo = (JSONObject) width;
-                String jsonType = (String) jo.get("jsonType");
+                String jsonType = (String) jo.get("type");
                 if ("submissionParameter".equals(jsonType))
-                    addSubmissionParam((JSONObject) jo.get("jsonValue"), sb);
+                    addSubmissionParam((JSONObject) jo.get("value"), sb);
                 else
                     throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
             }
@@ -350,6 +349,8 @@ class OperatorGenerator {
             addSubmissionParam((JSONObject) value, sb);
             return;
         } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
+            if ("ustring".equals(type))
+                sb.append("(ustring)");
             SPLGenerator.stringLiteral(sb, value.toString());
             return;
         } else if (value instanceof JSONArray) {
@@ -362,7 +363,7 @@ class OperatorGenerator {
             }
             return;
         } else if (value instanceof Number) {
-            SPLGenerator.numberLiteral(sb, (Number) value);
+            SPLGenerator.numberLiteral(sb, (Number) value, "unsigned".equals(type));
             return;
         }
 
@@ -372,63 +373,28 @@ class OperatorGenerator {
     private static void addSubmissionParam(JSONObject jo, StringBuilder sb) {
         String name = SPLGenerator.stringLiteral((String) jo.get("name"));
         String valueClassName = (String) jo.get("valueClassName");
-        boolean isAltType = (Boolean) jo.get("isAltType");
-        String splType = toSPLType(valueClassName, isAltType);
+        String typeModifier = (String) jo.get("typeModifier");
+        String splType = toSPLType(valueClassName, typeModifier);
         Object defaultValue = jo.get("defaultValue");
         if (defaultValue == null)
             sb.append(String.format("(%s) getSubmissionTimeValue(%s)", splType, name));
         else {
             if (splType.startsWith("uint"))
-                defaultValue = toUnsignedString(defaultValue);
+                defaultValue = SPLGenerator.unsignedString(defaultValue);
             defaultValue = SPLGenerator.stringLiteral(defaultValue.toString());
             sb.append(String.format("(%s) getSubmissionTimeValue(%s, %s)", splType, name, defaultValue));
         }
     }
     
-    private static String toUnsignedString(Object integerValue) {
-// java8 impl
-//        if (integerValue instanceof Long)
-//            return Long.toUnsignedString((Long) integerValue);
-//        
-//        Integer i;
-//        if (integerValue instanceof Byte)
-//            i = Byte.toUnsignedInt((Byte) integerValue);
-//        else if (integerValue instanceof Short)
-//            i = Short.toUnsignedInt((Short) integerValue);
-//        else if (integerValue instanceof Integer)
-//            i = (Integer) integerValue;
-//        else
-//            throw new IllegalArgumentException("Illegal type for unsigned " + integerValue.getClass());
-//        return Integer.toUnsignedString(i);
-
-        if (integerValue instanceof Long) {
-            String hex = Long.toHexString((Long)integerValue);
-            hex = "00" + hex;  // don't sign extend
-            BigInteger bi = new BigInteger(hex, 16);
-            return bi.toString();
-        }
-
-        long l;
-        if (integerValue instanceof Byte)
-            l = ((Byte) integerValue) & 0x00ff;
-        else if (integerValue instanceof Short)
-            l = ((Short) integerValue) & 0x00ffff;
-        else if (integerValue instanceof Integer)
-            l = ((Integer) integerValue) & 0x00ffffffffL;
-        else
-            throw new IllegalArgumentException("Illegal type for unsigned " + integerValue.getClass());
-        return Long.toString(l);
-    }
-    
-    private static String toSPLType(String className, boolean isAltType) {
+    private static String toSPLType(String className, String modifier) {
         String splType = javaToSPL.get(className);
         if (splType == null)
             throw new IllegalArgumentException("Unhandled className "+className);
-        if (isAltType) {
-            if (splType.equals("rstring"))
+        if (modifier != null) {
+            if ("ustring".equals(modifier))
                 splType = "ustring";
-            else
-                splType = "u" + splType; // unsigned
+            else if ("unsigned".equals(modifier))
+                splType = "u" + splType;
         }
         return splType;
     }

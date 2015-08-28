@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -388,20 +389,69 @@ public class SPLGenerator {
 
     /**
      * Append the value with the correct SPL suffix. Integer & Double do not
-     * require a suffix.
+     * require a suffix
      */
-    static void numberLiteral(StringBuilder sb, Number value) {
-        sb.append(value);
+    static void numberLiteral(StringBuilder sb, Number value, boolean isUnsignedInt) {
+        Object val = value;
+        String suffix = "";
 
         if (value instanceof Byte)
-            sb.append('b');
+            suffix = "b";
         else if (value instanceof Short)
-            sb.append('h');
-        else if (value instanceof Long)
-            sb.append('l');
+            suffix = "h";
+        else if (value instanceof Integer) {
+            if (isUnsignedInt)
+                suffix = "w";  // word, meaning 32 bits
+        } else if (value instanceof Long)
+            suffix = "l";
         else if (value instanceof Float)
-            sb.append("w"); // word, meaning 32 bits
+            suffix = "w"; // word, meaning 32 bits
 
+        if (isUnsignedInt) {
+            val = unsignedString(value);
+            suffix = "u" + suffix;
+        }
+
+        sb.append(val);
+        sb.append(suffix);
+    }
+    
+    /**
+     * Get the string value of an "unsigned" Byte, Short, Integer or Long.
+     */
+    public static String unsignedString(Object integerValue) {
+// java8 impl
+//        if (integerValue instanceof Long)
+//            return Long.toUnsignedString((Long) integerValue);
+//        
+//        Integer i;
+//        if (integerValue instanceof Byte)
+//            i = Byte.toUnsignedInt((Byte) integerValue);
+//        else if (integerValue instanceof Short)
+//            i = Short.toUnsignedInt((Short) integerValue);
+//        else if (integerValue instanceof Integer)
+//            i = (Integer) integerValue;
+//        else
+//            throw new IllegalArgumentException("Illegal type for unsigned " + integerValue.getClass());
+//        return Integer.toUnsignedString(i);
+
+        if (integerValue instanceof Long) {
+            String hex = Long.toHexString((Long)integerValue);
+            hex = "00" + hex;  // don't sign extend
+            BigInteger bi = new BigInteger(hex, 16);
+            return bi.toString();
+        }
+
+        long l;
+        if (integerValue instanceof Byte)
+            l = ((Byte) integerValue) & 0x00ff;
+        else if (integerValue instanceof Short)
+            l = ((Short) integerValue) & 0x00ffff;
+        else if (integerValue instanceof Integer)
+            l = ((Integer) integerValue) & 0x00ffffffffL;
+        else
+            throw new IllegalArgumentException("Illegal type for unsigned " + integerValue.getClass());
+        return Long.toString(l);
     }
 
     static JSONObject getGraphConfig(JSONObject graph) {

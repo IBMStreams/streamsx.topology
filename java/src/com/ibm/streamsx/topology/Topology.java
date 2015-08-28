@@ -32,6 +32,7 @@ import com.ibm.streamsx.topology.internal.core.InternalProperties;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.StreamImpl;
+import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionPeriodicSource;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSource;
@@ -698,4 +699,60 @@ public class Topology implements TopologyElement {
 
         return names;
     }
+
+    /*
+     * Get a submission parameter supplier without a default value.
+     * <p>
+     * A submission parameter is a handle for a {@code T} whose actual value
+     * is not defined until topology execution time.
+     * <p>
+     * The returned Supplier's {@code get()} returns null.
+     * <p>
+     * Submission parameters may be used for values in various
+     * cases such as {@code TStream.parallel()} width specifications.
+     * e.g.,
+     * <pre>{@code
+     * TStream<Foo> s = ...
+     * s.parallel(top.getSubmissionParameter(..., 5) ... // default width of 5
+     * s.parallel(top.getSubmissionParameter(..., Integer.class) ...
+     * }</pre>
+     * <p>
+     * Submission parameters may be used in Java Primitive Operator and
+     * SPL Operator parameter specifications.
+     * <p>
+     * A submission parameter has an assigned name.  The name is used
+     * to supply an actual value at topology execution time
+     * via {@link StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)}
+     * and {@link ContextProperties#SUBMISSION_PARAMS}, or when submitting
+     * a topology for execution via other execution runtime native mechanisms
+     * such as IBM Streams {@code streamtool}.
+     * At topology execution time a submission parameters are specified 
+     * <p>
+     * Topology submission behavior when a submission parameter 
+     * lacking a default value is used and a value is not provided at
+     * submission time is defined by the underlying topology execution runtime.
+     * Submission fails for contexts {@code DISTRIBUTED}, {@code STANDALONE},
+     * or {@code ANALYTIC_SERVICE}.
+     *
+     * @param name submission parameter name
+     * @param valueClass class object for {@code T}
+     * @throws IllegalArgumentException if {@code name} is null or empty
+     */
+    public <T> Supplier<T> getSubmissionParameter(String name, Class<T> valueClass) {
+        return new SubmissionParameter<T>(name, valueClass);
+    }
+
+    /**
+     * Get a submission time parameter specification with a default value.
+     * See {@link #getSubmissionParameter(String, Class)} for a description
+     * of submission parameters.
+     * @param name submission parameter name
+     * @param defaultValue default value if parameter isn't specified.
+     * @throws IllegalArgumentException if {@code name} is null or empty
+     * @throws IllegalArgumentException if {@code defaultValue} is null
+     */
+    public <T> Supplier<T> getSubmissionParameter(String name, T defaultValue) {
+        return new SubmissionParameter<T>(name, defaultValue);
+    }
+
 }

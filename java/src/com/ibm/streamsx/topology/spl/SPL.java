@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streamsx.topology.SubmissionParameter;
 import com.ibm.streamsx.topology.TSink;
+import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
@@ -26,6 +26,31 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
  * Integration between Java topologies and SPL operator invocations. If the SPL
  * operator to be invoked is an SPL Java primitive operator then the methods of
  * {@link JavaPrimitive} should be used.
+ * <p>
+ * Use {@link UString} or {@link Unsigned} class instances to pass
+ * SPL operator parameters of the corresponding type.
+ * For example:
+ * <pre>{@code
+ * Map<String,Object> params = ...
+ * params.put("aUStringParam", new UString(...));
+ * params.put("aUShortParam", new UnsignedShort(13));
+ * ... = SPLPrimitive.invokeOperator(..., params);
+ * }</pre>
+ * <p>
+ * In addition to the usual Java types used for operator parameter values,
+ * a {@code Supplier<T>} parameter value may be specified.
+ * Submission time parameters are passed in this manner.
+ * See {@link Topology#getSubmissionParameter(String, Class)}.
+ * For example:
+ * <pre>{@code
+ * Map<String,Object> params = ...
+ * params.put("aLongParam", topology.getSubmissionParameter(..., Long.class);
+ * params.put("aShortParam", topology.getSubmissionParameter(..., (Short)13);
+ * params.put("aULongParam", topology.getSubmissionParameter(..., UnsignedLong.class);
+ * params.put("aUShortParam", topology.getSubmissionParameter(..., new UnsignedShort(13));
+ * params.put("aUStringParam", topology.getSubmissionParameter(..., new UString(...));
+ * ... = SPLPrimitive.invokeOperator(..., params);
+ * }</pre>
  */
 public class SPL {
 
@@ -42,7 +67,6 @@ public class SPL {
      *            SPL schema of the operator's only output port.
      * @param params
      *            Parameters for the SPL operator, ignored if it is null.
-     *            A parameter value may be a {@link SubmissionParameter}.
      * @return SPLStream the represents the output of the operator.
      */
     public static SPLStream invokeOperator(String kind, SPLInput input,
@@ -90,7 +114,6 @@ public class SPL {
      *            operator
      * @param params
      *            Parameters for the SPL operator, ignored if it is null.
-     *            A parameter value may be a {@link SubmissionParameter}.
      * @return the sink element
      */
     public static TSink invokeSink(String kind, SPLInput input,
@@ -111,7 +134,6 @@ public class SPL {
      *            operator
      * @param params
      *            Parameters for the SPL operator, ignored if it is null.
-     *            A parameter value may be a {@link SubmissionParameter}.
      * @return the sink element
      */
     public static TSink invokeSink(String name, String kind, SPLInput input,
@@ -142,7 +164,6 @@ public class SPL {
      *            SPL kind of the operator to be invoked.
      * @param params
      *            Parameters for the SPL operator.
-     *            A parameter value may be a {@link SubmissionParameter}.
      * @param schema
      *            Schema of the output port.
      * @return SPLStream the represents the output of the operator.

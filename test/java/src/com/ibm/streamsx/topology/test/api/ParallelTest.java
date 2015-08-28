@@ -24,8 +24,6 @@ import org.junit.Test;
 
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.PERuntime;
-import com.ibm.streamsx.topology.Value;
-import com.ibm.streamsx.topology.SubmissionParameter;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
@@ -74,16 +72,25 @@ public class ParallelTest extends TestTopology {
     }
 
     @Test
-    public void testParallelWidthValue() throws Exception {
+    public void testParallelWidthSupplier() throws Exception {
         checkUdpSupported();
 
         Topology topology = new Topology("testParallelWidthValue");
         final int count = new Random().nextInt(1000) + 37;
         String submissionWidthName = "width";
-        Integer submissionWidth = 5;
+        final Integer submissionWidth = 5;
+        
+        @SuppressWarnings("serial")
+        Supplier<Integer> supplier = new Supplier<Integer>() {
+            
+            @Override
+            public Integer get() {
+                return submissionWidth;
+            }
+        };
 
         TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
-        TStream<BeaconTuple> pb = fb.parallel(new Value<Integer>(submissionWidth));
+        TStream<BeaconTuple> pb = fb.parallel(supplier);
 
         TStream<Integer> is = pb.transform(randomHashProducer());
         TStream<Integer> joined = is.endParallel();
@@ -116,7 +123,7 @@ public class ParallelTest extends TestTopology {
 
         TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
         TStream<BeaconTuple> pb = fb.parallel(
-                new SubmissionParameter<Integer>(submissionWidthName, Integer.class));
+                topology.getSubmissionParameter(submissionWidthName, Integer.class));
 
         TStream<Integer> is = pb.transform(randomHashProducer());
         TStream<Integer> joined = is.endParallel();
@@ -149,7 +156,7 @@ public class ParallelTest extends TestTopology {
 
         TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
         TStream<BeaconTuple> pb = fb.parallel(
-                new SubmissionParameter<Integer>(submissionWidthName, submissionWidth));
+                topology.getSubmissionParameter(submissionWidthName, submissionWidth));
 
         TStream<Integer> is = pb.transform(randomHashProducer());
         TStream<Integer> joined = is.endParallel();

@@ -13,6 +13,7 @@ import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.TSink;
+import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
@@ -20,7 +21,18 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
 
 /**
  * Integration between Java topologies and SPL Java primitive operators.
- * 
+ * <p>
+ * In addition to the usual Java types used for operator parameter values,
+ * a {@code Supplier<T>} parameter value may be specified.
+ * Submission time parameters are passed in this manner.
+ * See {@link Topology#getSubmissionParameter(String, Class)}.
+ * For example:
+ * <pre>{@code
+ * Map<String,Object> params = ...
+ * params.put("aLongParam", topology.getSubmissionParameter(..., Long.class);
+ * params.put("aShortParam", topology.getSubmissionParameter(..., (Short)13);
+ * ... = JavaPrimitive.invokeJavaPrimitive(..., params);
+ * }</pre>
  */
 public class JavaPrimitive {
 
