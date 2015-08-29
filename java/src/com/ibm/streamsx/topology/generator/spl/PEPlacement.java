@@ -28,12 +28,12 @@ class PEPlacement {
         // If the region has already been assigned a colocation
         // tag, simply
         // return.
-        String id = (String) placement.get(JOperator.PLACEMENT_COLOCATE_TEMP);
+        String id = (String) placement.get(JOperator.PLACEMENT_COLOCATE);
         if (id != null && !id.isEmpty()) {
             return;
         }
         
-        placement.put(JOperator.PLACEMENT_COLOCATE_TEMP, colocationId);
+        placement.put(JOperator.PLACEMENT_COLOCATE, colocationId);
     }
     
     @SuppressWarnings("serial")
