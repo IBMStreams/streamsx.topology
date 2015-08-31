@@ -10,10 +10,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
@@ -25,14 +28,19 @@ import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.builder.json.JOperator;
 import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.Placeable;
+import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.streams.StringStreams;
+import com.ibm.streamsx.topology.test.AllowAll;
+import com.ibm.streamsx.topology.test.TestTopology;
+import com.ibm.streamsx.topology.tester.Condition;
 
 /**
  * Tests to verify Placeable
  *
  */
-public class PlaceableTest {  
+public class PlaceableTest extends TestTopology {  
 
     @Test
     public void testSimpleTagsStream() {
@@ -271,6 +279,43 @@ public class PlaceableTest {
         if (ido == null)
             return null;
         return ido.toString();
+    }
+    
+    /**
+     * Test with a distributed execution with explicit
+     * colocation of two functions end up on the same container.
+     */
+    @Test
+    public void testSimpleDistributed() throws Exception {
+        assumeTrue(SC_OK);
+        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+        
+        Topology t = new Topology();
+        
+        TStream<String> sa = t.strings("a");
+        TStream<String> sb = t.strings("b");
+        
+        sa = sa.transform(IsolateTest.getContainerId());
+        sb = sb.transform(IsolateTest.getContainerId());
+        
+        sa.colocate(sb);
+                
+        sa = sa.isolate().filter(new AllowAll<String>());
+        sb = sb.isolate().filter(new AllowAll<String>());
+        
+        sa = sa.union(sb);
+        
+        getConfig().put(ContextProperties.KEEP_ARTIFACTS, Boolean.TRUE);
+        
+        Condition<List<String>> pes = t.getTester().stringContents(sa, "");
+        
+        Condition<Long> tc = t.getTester().tupleCount(sa, 2);
+        
+        complete(t.getTester(), tc, 10, TimeUnit.SECONDS);
+        
+        Set<String> singlePe = new HashSet<>(pes.getResult());
+     
+        assertTrue(pes.getResult().toString(), singlePe.size() == 1);
     }
     
 }

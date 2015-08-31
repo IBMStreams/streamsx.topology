@@ -9,6 +9,27 @@ import com.ibm.json.java.OrderedJSONObject;
  */
 public class JOperator {
     
+    /**
+     * Runtime used to execute the operator.
+     */
+    public static final String RUNTIME = "runtime";
+    
+    /**
+     * Language for the operator within its {@link #RUNTIME}.
+     */
+    public static final String LANGUAGE = "language";
+    
+    public static final String RUNTIME_FUNCTIONAL = "functional";
+    public static final String RUNTIME_SPL = "spl";
+    
+    public static final String LANGUAGE_JAVA = "java";
+    public static final String LANGUAGE_CPP = "cpp";
+    public static final String LANGUAGE_PYTHON = "python";
+    public static final Object LANGUAGE_SPL = "spl";
+      
+    /**
+     * JSON attribute for operator configuration.
+     */
     public static final String CONFIG = "config"; 
     
     /**
@@ -20,6 +41,8 @@ public class JOperator {
      * Attribute for an explicit colocation identifier.
      */
     public static final Object PLACEMENT_EXPLICIT_COLOCATE_ID = "explicitColocate";
+
+
     
     /**
      * Get the config object, returning null if it has not been created.

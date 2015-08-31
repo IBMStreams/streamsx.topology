@@ -277,7 +277,8 @@ class OperatorGenerator {
 
         // VMArgs only apply to Java SPL operators.
         if (hasVMArgs) {
-            if (!"spl.java".equals(op.get("runtime")))
+
+            if (!JOperator.LANGUAGE_JAVA.equals(op.get(JOperator.LANGUAGE)))
                 hasVMArgs = false;
         }
 
@@ -349,8 +350,12 @@ class OperatorGenerator {
         Boolean streamViewability = JOperatorConfig.getBooleanItem(op, "streamViewability");
         String colocationTag = null;
         JSONObject placement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
-        if (placement != null)
-              colocationTag = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
+        if (placement != null) {
+            // Explicit placement takes precedence.
+            colocationTag = (String) placement.get(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID);
+            if (colocationTag == null)
+                colocationTag = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
+        }
         JSONObject queue = JOperatorConfig.getJSONItem(op, "queue");
         
         if (streamViewability != null

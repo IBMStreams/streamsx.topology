@@ -20,6 +20,7 @@ import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
+import com.ibm.streamsx.topology.builder.json.JOperator;
 
 // Union(A,B)
 //   OpC(A,B)
@@ -56,7 +57,8 @@ public class BOperatorInvocation extends BOperator {
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put("runtime", "spl.java");
+            json().put(JOperator.RUNTIME, JOperator.RUNTIME_SPL);
+            json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_JAVA);
             json().put("kind", getKind(opClass));
             json().put("kind.javaclass", opClass.getCanonicalName());
         }
@@ -77,7 +79,8 @@ public class BOperatorInvocation extends BOperator {
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put("runtime", "spl.java");
+            json().put(JOperator.RUNTIME, JOperator.RUNTIME_SPL);
+            json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_JAVA);
             json().put("kind", getKind(opClass));
             json().put("kind.javaclass", opClass.getCanonicalName());
         }
