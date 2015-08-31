@@ -350,7 +350,7 @@ class OperatorGenerator {
         String colocationTag = null;
         JSONObject placement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
         if (placement != null)
-              colocationTag = (String) placement.get(JOperator.PLACEMENT_COLOCATE);
+              colocationTag = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
         JSONObject queue = JOperatorConfig.getJSONItem(op, "queue");
         
         if (streamViewability != null

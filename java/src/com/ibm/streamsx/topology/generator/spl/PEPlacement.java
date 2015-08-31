@@ -28,12 +28,12 @@ class PEPlacement {
         // If the region has already been assigned a colocation
         // tag, simply
         // return.
-        String id = (String) placement.get(JOperator.PLACEMENT_COLOCATE);
+        String id = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
         if (id != null && !id.isEmpty()) {
             return;
         }
         
-        placement.put(JOperator.PLACEMENT_COLOCATE, colocationId);
+        placement.put(JOperator.PLACEMENT_ISOLATE_REGION_ID, colocationId);
     }
     
     @SuppressWarnings("serial")
@@ -126,7 +126,7 @@ class PEPlacement {
             
             JSONObject placement = JOperatorConfig.createJSONItem(start, JOperatorConfig.PLACEMENT);
                      
-            String regionTag = (String) placement.get(JOperator.PLACEMENT_COLOCATE);         
+            String regionTag = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);         
             if (regionTag != null && !regionTag.isEmpty()) {
                 continue;
             }

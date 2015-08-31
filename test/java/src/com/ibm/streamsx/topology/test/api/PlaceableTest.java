@@ -267,7 +267,7 @@ public class PlaceableTest {
         JSONObject fusing = JOperatorConfig.getJSONItem(bop.json(), JOperatorConfig.PLACEMENT);
         if (fusing == null)
             return null;
-        Object ido = fusing.get(JOperator.PLACEMENT_COLOCATE_TEMP);
+        Object ido = fusing.get(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID);
         if (ido == null)
             return null;
         return ido.toString();

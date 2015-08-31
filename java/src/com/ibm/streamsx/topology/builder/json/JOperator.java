@@ -10,10 +10,16 @@ import com.ibm.json.java.OrderedJSONObject;
 public class JOperator {
     
     public static final String CONFIG = "config"; 
-        
-    public static final String PLACEMENT_COLOCATE = "colocate";
+    
+    /**
+     * Attribute for isolation region identifier.
+     */
+    public static final String PLACEMENT_ISOLATE_REGION_ID = "isolateRegion";
 
-    public static final Object PLACEMENT_COLOCATE_TEMP = "colocate_TEMP";
+    /**
+     * Attribute for an explicit colocation identifier.
+     */
+    public static final Object PLACEMENT_EXPLICIT_COLOCATE_ID = "explicitColocate";
     
     /**
      * Get the config object, returning null if it has not been created.

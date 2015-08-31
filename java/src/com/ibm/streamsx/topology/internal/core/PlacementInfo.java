@@ -117,6 +117,6 @@ class PlacementInfo {
     
     private void updateFusingJSON(Placeable<?> element) {
         JSONObject fusing = JOperatorConfig.createJSONItem(element.operator().json(), JOperatorConfig.PLACEMENT);
-        fusing.put(JOperator.PLACEMENT_COLOCATE_TEMP, fusingIds.get(element));
+        fusing.put(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID, fusingIds.get(element));
     }
 }

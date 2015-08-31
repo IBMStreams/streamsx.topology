@@ -66,14 +66,14 @@ class ThreadingModel {
                 // its parents.
 
                 String colocTag = (String) JOperatorConfig.getJSONItem(op,
-                        JOperatorConfig.PLACEMENT).get(JOperator.PLACEMENT_COLOCATE);
+                        JOperatorConfig.PLACEMENT).get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
 
                 List<JSONObject> parents = GraphUtilities.getUpstream(op, graph);
                 for(JSONObject parent : parents){
                     JSONObject parentPlacement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
                     String parentColocTag = null;
                     if (parentPlacement != null)
-                        parentColocTag = (String) parentPlacement.get(JOperator.PLACEMENT_COLOCATE);
+                        parentColocTag = (String) parentPlacement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
                     // Test whether colocation tags are different. If they are,
                     // don't insert a threaded port.
                     if(!colocTag.equals(parentColocTag)){
