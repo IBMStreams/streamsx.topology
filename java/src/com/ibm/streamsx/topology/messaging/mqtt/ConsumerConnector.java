@@ -73,10 +73,11 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * <li>{@code reconnectDelayMsec} - Optional Long. The time in milliseconds before
  *      attempting to reconnect to the server following a connection failure.
  *      The default is 60000.</li>
- * <li>{@code userName} - Optional String.  The identifier to use when authenticating
+ * <li>{@code userID} - Optional String.  The identifier to use when authenticating
  *      with server that is configured to require that form of authentication.</li>
  * <li>{@code password} - Optional String.  The identifier to use when authenticating
- *      with server that is configured to require that form of authentication.</li>
+ *      with server that is configured to require that form of authentication.
+ *      {@code userID} must be specified when {@code password} is specified.</li>
  * <li>{@code trustStore} - Optional String. The pathname to a file containing the
  *      public certificate of trusted MQTT servers.  If a relative path
  *      is specified, the path is relative to the application directory.

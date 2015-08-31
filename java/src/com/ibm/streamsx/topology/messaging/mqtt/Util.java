@@ -22,7 +22,7 @@ class Util {
         paramHandlers.put("reconnectDelayMsec", new ParamHandler("period", Long.class));
         paramHandlers.put("receiveBufferSize", new ParamHandler("messageQueueSize", Integer.class));
         paramHandlers.put("retain", new ParamHandler("retain", Boolean.class));
-        paramHandlers.put("userName", new ParamHandler("userName"));
+        paramHandlers.put("userID", new ParamHandler("userID"));
         paramHandlers.put("password", new ParamHandler("password"));
         paramHandlers.put("keyStore", new ParamHandler("keyStore"));
         paramHandlers.put("keyStorePassword", new ParamHandler("keyStorePassword"));

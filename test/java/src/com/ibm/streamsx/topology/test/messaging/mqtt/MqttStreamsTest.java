@@ -8,6 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import java.io.File;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,6 +25,8 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -254,8 +257,6 @@ public class MqttStreamsTest extends TestTopology {
         String pubClientId = newPubClientId(top.getName());
         String topic = getMqttTopics()[0];
         List<Message> msgs = createMsgs(mgen, null/*topic*/);
-        List<String> expectedAsString = mapList(modifyList(msgs, setTopic(topic)),
-                                                msgToJSONStringFunc());
         
         // Test more config properties to be sure we don't blow up
         
@@ -264,8 +265,14 @@ public class MqttStreamsTest extends TestTopology {
         producerConfig.put("keepAliveInterval", 10);
         producerConfig.put("commandTimeoutMsec", 20000L);
         producerConfig.put("reconnectDelayMsec", 4000L);
-        producerConfig.put("reconnectionBound", "10");
+        producerConfig.put("reconnectionBound", 10);
         producerConfig.put("retain", false);
+        producerConfig.put("userID", System.getProperty("user.name"));
+        producerConfig.put("password", "foobar");
+        producerConfig.put("trustStore", "/tmp/no-such-trustStore");
+        producerConfig.put("trustStorePassword", "woohoo");
+        producerConfig.put("keyStore", "/tmp/no-such-keyStore");
+        producerConfig.put("keyStorePassword", "woohoo");
         
         Map<String,Object>  consumerConfig = createConsumerConfig(subClientId);
         consumerConfig.put("defaultQOS", 1);
@@ -273,7 +280,13 @@ public class MqttStreamsTest extends TestTopology {
         consumerConfig.put("commandTimeoutMsec", 30000L);
         consumerConfig.put("reconnectDelayMsec", 5000L);
         consumerConfig.put("receiveBufferSize", 10);
-        consumerConfig.put("reconnectionBound", "20");
+        consumerConfig.put("reconnectionBound", 20);
+        producerConfig.put("userID", System.getProperty("user.name"));
+        producerConfig.put("password", "foobar");
+        producerConfig.put("trustStore", "/tmp/no-such-trustStore");
+        producerConfig.put("trustStorePassword", "woohoo");
+        producerConfig.put("keyStore", "/tmp/no-such-keyStore");
+        producerConfig.put("keyStorePassword", "woohoo");
    
         ProducerConnector producer = new ProducerConnector(top, producerConfig);
         ConsumerConnector consumer = new ConsumerConnector(top, consumerConfig);
@@ -287,10 +300,15 @@ public class MqttStreamsTest extends TestTopology {
 
         // for validation...
         rcvdMsgs.print();
-        rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
 
-        completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        // bundle construction fails for unrecognized or incorrectly typed SPL op params
+        File actBundle = (File) StreamsContextFactory
+                .getStreamsContext(StreamsContext.Type.BUNDLE)
+                .submit(top, getConfig())
+                .get(15, TimeUnit.SECONDS);
+        System.out.println("bundle " + actBundle.getAbsolutePath());
+        assertTrue(actBundle != null);
+        actBundle.delete();
     }
     
     @Test
