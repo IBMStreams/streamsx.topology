@@ -666,19 +666,25 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     TStream<T> sample(double fraction);
     
     /**
-     * Return a TStream that runs in a separate process from the calling TStream.
+     * Return a stream whose immediate subsequent processing will execute
+     * in a separate operating system process from this stream's processing.
+     * <BR>
      * For the following Topology:
      * <pre><code>
-     * ---transform1---.isolate()---transform2---transform3---.isolate()--sink
+     * -->transform1-->.isolate()-->transform2-->transform3-->.isolate()-->sink
      * </code></pre>
-     * 
-     * Three separate processes will be created -- one process will contain transform1 and
-     * transform1, another will contain both transform2 and transform3, and the
-     * last will contain the sink.
-     * <br><br>
+     * It is guaranteed that:
+     * <UL>
+     * <LI>{@code transform1} and {@code transform2} will execute in separate processes.</LI>
+     * <LI>{@code transform3} and {@code sink} will execute in separate processes. </LI>
+     * </UL>
+     * If multiple transformations ({@code t1, t2, t3}) are applied to a stream returned from {@code isolate()}
+     * then it is guaranteed that each of them will execute in a separate operating
+     * system process to this stream, but no guarantees are made about where {@code t1, t2, t3}
+     * are placed in relationship to each other.
+     * <br>
      * Only applies for distributed contexts.
-     * @return A TStream that runs in a separate process from the calling
-     * TStream.
+     * @return A stream that runs in a separate process from this stream.
      */
     TStream<T> isolate();
     

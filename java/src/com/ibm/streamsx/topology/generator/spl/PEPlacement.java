@@ -11,20 +11,35 @@ import java.util.List;
 import java.util.Set;
 
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
+import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.function.Consumer;
 
 class PEPlacement {
     
-    private int colocationCount;
+    private int isolateRegionCount;
     private int lowLatencyRegionCount;
     
+    private void setIsolateRegionId(JSONObject op, String isolationRegionId) {
+       
+        JSONObject placement = JOperatorConfig.createJSONItem(op, JOperatorConfig.PLACEMENT);
+
+        // If the region has already been assigned a PLACEMENT_ISOLATE_REGION_ID
+        // tag, simply return.
+        String id = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
+        if (id != null && !id.isEmpty()) {
+            return;
+        }
+        
+        placement.put(JOperator.PLACEMENT_ISOLATE_REGION_ID, isolationRegionId);
+    }
+    
     @SuppressWarnings("serial")
-    private void assignColocations(JSONObject isolate, List<JSONObject> starts,
+    private void assignIsolateRegionIds(JSONObject isolate, List<JSONObject> starts,
             JSONObject graph) {
 
-        final String colocationTag = newColocationTag();
+        final String isolationRegionId = newIsolateRegionId();
 
         Set<BVirtualMarker> boundaries = EnumSet.of(BVirtualMarker.ISOLATE);
 
@@ -33,21 +48,7 @@ class PEPlacement {
 
                     @Override
                     public void accept(JSONObject op) {
-                        JSONObject config = (JSONObject) op.get("config");
-                        if (config == null || config.isEmpty()) {
-                            config = new OrderedJSONObject();
-                            op.put("config", config);
-                        }
-
-                        // If the region has already been assigned a colocation
-                        // tag, simply
-                        // return.
-                        String regionTag = (String) config.get("colocationTag");
-                        if (regionTag != null && !regionTag.isEmpty()) {
-                            return;
-                        }
-                        
-                        config.put("colocationTag", colocationTag);
+                        setIsolateRegionId(op, isolationRegionId);
                     }
 
                 });
@@ -105,9 +106,9 @@ class PEPlacement {
 
         // Assign isolation regions their partition colocations
         for (JSONObject isolate : isolateOperators) {
-            assignColocations(isolate,
+            assignIsolateRegionIds(isolate,
                     GraphUtilities.getUpstream(isolate, graph), graph);
-            assignColocations(isolate,
+            assignIsolateRegionIds(isolate,
                     GraphUtilities.getDownstream(isolate, graph), graph);
         }
  
@@ -120,9 +121,11 @@ class PEPlacement {
         List<JSONObject> starts = GraphUtilities.findStarts(graph);   
         
         for(JSONObject start : starts){
-            final String colocationTag = newColocationTag();
+            final String colocationTag = newIsolateRegionId();
             
-            String regionTag = (String) start.get("colocationTag");
+            JSONObject placement = JOperatorConfig.createJSONItem(start, JOperatorConfig.PLACEMENT);
+                     
+            String regionTag = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);         
             if (regionTag != null && !regionTag.isEmpty()) {
                 continue;
             }
@@ -136,28 +139,14 @@ class PEPlacement {
                     new Consumer<JSONObject>() {
                         @Override
                         public void accept(JSONObject op) {
-                            JSONObject config = (JSONObject) op.get("config");
-                            if (config == null || config.isEmpty()) {
-                                config = new OrderedJSONObject();
-                                op.put("config", config);
-                            }
-
-                            // If the region has already been assigned a colocation
-                            // tag, simply
-                            // return.
-                            String regionTag = (String) config.get("colocationTag");
-                            if (regionTag != null && !regionTag.isEmpty()) {
-                                return;
-                            }
-                            
-                            config.put("colocationTag", colocationTag);
+                            setIsolateRegionId(op, colocationTag);
                         }
                     });           
         }
     }
     
-    private String newColocationTag() {
-        return "_jaa_colocate" + colocationCount++;
+    private String newIsolateRegionId() {
+        return "__jaa_isolateId" + isolateRegionCount++;
     }
 
     private static void assertNotIsolated(Collection<JSONObject> jsos) {

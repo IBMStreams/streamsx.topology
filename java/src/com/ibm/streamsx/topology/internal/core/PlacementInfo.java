@@ -12,16 +12,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
+import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.Placeable;
 
 /**
  * Manages fusing of Placeables. 
  */
 class PlacementInfo {
-    
+
     private static final Map<Topology, WeakReference<PlacementInfo>> placements = new WeakHashMap<>();
     
     private int nextFuseId;
@@ -46,12 +49,12 @@ class PlacementInfo {
     /**
      * Fuse a number of placeables.
      * If fusing occurs then the fusing id
-     * is set as "id" the "fusing" JSON object in
+     * is set as "colocate" the "placement" JSON object in
      * the operator's config.
      * 
      */
     
-    boolean fuse(Placeable<?> first, Placeable<?> ... toFuse) {
+    boolean colocate(Placeable<?> first, Placeable<?> ... toFuse) {
         
         Set<Placeable<?>> elements = new HashSet<>();
         elements.add(first);
@@ -76,7 +79,7 @@ class PlacementInfo {
             }
         }
         if (fusingId == null) {
-            fusingId = "__jaa_fuse" + nextFuseId++;
+            fusingId = "__jaa_colocate" + nextFuseId++;
         }
         
         Set<String> fusedResourceTags = new HashSet<>();
@@ -90,7 +93,12 @@ class PlacementInfo {
             }            
             resourceTags.put(element, fusedResourceTags);
             
-            updateFusingJSON(element);
+            
+        }
+        
+        // And finally update all the JSON info
+        for (Placeable<?> element : elements) {
+             updatePlacementJSON(element);
         }
         return true;
     }
@@ -110,16 +118,23 @@ class PlacementInfo {
             resourceTags.put(element, elementResourceTags);
         }
         for (String tag : tags)
-            elementResourceTags.add(tag);       
+            elementResourceTags.add(tag);
+        
+        updatePlacementJSON(element);
     } 
     
-    private void updateFusingJSON(Placeable<?> element) {
+    /**
+     * Update an element's placement configuration.
+     */
+    private void updatePlacementJSON(Placeable<?> element) {
+        JSONObject placement = JOperatorConfig.createJSONItem(element.operator().json(), JOperatorConfig.PLACEMENT);
+        placement.put(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID, fusingIds.get(element));
         
-        JSONObject fusing = (JSONObject) element.operator().getConfig("fusing");
-        if (fusing == null) {
-            fusing = new JSONObject();
-            element.operator().addConfig("fusing", fusing);
-        }
-        fusing.put("id", fusingIds.get(element));
+        Set<String> elementResourceTags = resourceTags.get(element);
+        if (elementResourceTags != null && !elementResourceTags.isEmpty()) {
+            JSONArray listOfTags = new JSONArray();
+            listOfTags.addAll(elementResourceTags);    
+            placement.put(JOperator.PLACEMENT_RESOURCE_TAGS, listOfTags);    
+        } 
     }
 }

@@ -22,23 +22,31 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
  */
 public interface Placeable<T extends Placeable<T>> extends TopologyElement {
     
+    /**
+     * Can this element have placement directives applied to it.
+     * @return {@code true} if placement directives can be assigned, {@code false} if it can not.
+     */
     boolean isPlaceable();
     
     /**
-     * Fuse this container with other topology elements so that
+     * Colocate this element with other topology elements so that
      * at runtime they all execute within the same operating system process.
-     * At runtime the process will require a resource that has been tagged with
-     * all the {@link #addResourceTags(String...) resource tags added} to each fused element.
+     * {@code elements} may contain any {@code Placeable} within
+     * the same topology, there is no requirement
+     * that the element is connected (by a stream) directly or indirectly
+     * to this element.
      * 
-     * @param elements Elements to fuse with this container.
+     * @param elements Elements to colocate with this container.
      * 
      * @return this
+     * 
+     * @throws IllegalStateExeception Any element including {@code this} returns {@code false} for {@link #isPlaceable()}.
      */
-    T fuse(Placeable<?> ... elements);
+    T colocate(Placeable<?> ... elements);
     
     /**
      * Add required resource tags for this topology element for distributed submission.
-     * This topology element and any it has been {@link #fuse(Placeable...) fused}
+     * This topology element and any it has been {@link #colocate(Placeable...) colocated}
      * with will execute on a resource (host) that has all the tags returned by
      * {@link #getResourceTags()}.
      * 
@@ -49,9 +57,9 @@ public interface Placeable<T extends Placeable<T>> extends TopologyElement {
     
     /**
      * Get the set of resource tags this element requires.
-     * If this topology element has been {@link #fuse(Placeable...) fused}
+     * If this topology element has been {@link #colocate(Placeable...) colocated}
      * with other topology elements then the returned set is the union
-     * of all {@link #addResourceTags(String...) resource tags added} to each fused element.
+     * of all {@link #addResourceTags(String...) resource tags added} to each colocated element.
      * @return Read-only set of host tags this element requires.
      */
     Set<String> getResourceTags();

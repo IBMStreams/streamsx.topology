@@ -9,7 +9,8 @@ import java.util.List;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
+import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.function.Consumer;
 
 class ThreadingModel {
@@ -63,14 +64,16 @@ class ThreadingModel {
                 
                 // See if operator has different colocation tag than any of 
                 // its parents.
-                String colocTag = null;
-                JSONObject config = (JSONObject) op.get("config");
-                colocTag = (String) config.get("colocationTag");
+
+                String colocTag = (String) JOperatorConfig.getJSONItem(op,
+                        JOperatorConfig.PLACEMENT).get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
 
                 List<JSONObject> parents = GraphUtilities.getUpstream(op, graph);
                 for(JSONObject parent : parents){
-                    JSONObject parentConfig = (JSONObject)parent.get("config");
-                    String parentColocTag  = (String) parentConfig.get("colocationTag");
+                    JSONObject parentPlacement = JOperatorConfig.getJSONItem(parent, JOperatorConfig.PLACEMENT);
+                    String parentColocTag = null;
+                    if (parentPlacement != null)
+                        parentColocTag = (String) parentPlacement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
                     // Test whether colocation tags are different. If they are,
                     // don't insert a threaded port.
                     if(!colocTag.equals(parentColocTag)){
@@ -95,11 +98,10 @@ class ThreadingModel {
                 // Add to SPL operator config if necessary
                 if(!functional && 
                         !(differentColocationThanParent || regionTagExists)){
-                    JSONObject newQueue = new OrderedJSONObject();
+                    JSONObject newQueue =JOperatorConfig.createJSONItem(op, "queue");
                     newQueue.put("queueSize", new Integer(100));
                     newQueue.put("inputPortName", input.get("name").toString());
                     newQueue.put("congestionPolicy", "Sys.Wait");
-                    config.put("queue", newQueue);
                 }          
            }
 

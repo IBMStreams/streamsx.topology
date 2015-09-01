@@ -12,9 +12,11 @@ import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
+import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.operator.Operator;
+import com.ibm.streamsx.topology.builder.json.JOperator;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 
@@ -39,7 +41,7 @@ public class GraphBuilder extends BJSONObject {
 
     private final List<BOperator> ops = new ArrayList<>();
     
-    private final JSONObject config = new JSONObject();
+    private final JSONObject config = new OrderedJSONObject();
 
     public GraphBuilder(String namespace, String name) {
         super();
@@ -157,7 +159,10 @@ public class GraphBuilder extends BJSONObject {
             Map<String, ? extends Object> params) {
         final BOperatorInvocation op = new BOperatorInvocation(this, params);
         op.json().put("kind", kind);
-        op.json().put("runtime", "spl.cpp");
+
+        json().put(JOperator.RUNTIME, JOperator.RUNTIME_SPL);
+        json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_SPL);
+
         ops.add(op);
         return op;
     }
@@ -166,7 +171,10 @@ public class GraphBuilder extends BJSONObject {
         name = userSuppliedName(name);
         final BOperatorInvocation op = new BOperatorInvocation(this, name, params);
         op.json().put("kind", kind);
-        op.json().put("runtime", "spl.cpp");
+        
+        json().put(JOperator.RUNTIME, JOperator.RUNTIME_SPL);
+        json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_SPL);
+        
         ops.add(op);
         return op;
     }
@@ -177,18 +185,20 @@ public class GraphBuilder extends BJSONObject {
      */
     public void checkSupportsEmbeddedMode() throws IllegalStateException {
         for (BOperator op : ops) {
+            if (BVirtualMarker.isVirtualMarker((String) op.json().get("kind")))
+                continue;
+            
             // note: runtime==null for markers
-            String runtime = (String) op.json().get("runtime");
-            if (!"spl.java".equals(runtime)) {
-                Boolean marker = (Boolean) op.json().get("marker");
-                if (marker==null || !marker) {
+            String runtime = (String) op.json().get(JOperator.RUNTIME);
+            String language = (String) op.json().get(JOperator.LANGUAGE);
+            
+            if (!JOperator.RUNTIME_SPL.equals(runtime) || !JOperator.LANGUAGE_JAVA.equals(language)) {
                     String namespace = (String) json().get("namespace");
                     String name = (String) json().get("name");
                     throw new IllegalStateException(
                             "Topology '"+namespace+"."+name+"'"
                             + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
-                            + " the topology contains non-Java operators.");
-                }
+                            + " the topology contains non-Java operator:" + op.json().get("kind"));
             }
         }
     }

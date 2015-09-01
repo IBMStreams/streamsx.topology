@@ -17,6 +17,7 @@ import java.util.Properties;
 
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
+import com.ibm.streamsx.topology.builder.json.JOperator;
 
 class Util {
     
@@ -65,7 +66,8 @@ class Util {
      * @param className
      */
     static void tagOpAsJavaPrimitive(BOperatorInvocation op, String kind, String className) {
-        op.json().put("runtime", "spl.java");
+        op.json().put(JOperator.RUNTIME, JOperator.RUNTIME_SPL);
+        op.json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_JAVA);
         op.json().put("kind", kind);
         op.json().put("kind.javaclass", className);
     }

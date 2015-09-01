@@ -15,6 +15,8 @@ import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindow.Type;
+import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.ContextProperties;
 
 class OperatorGenerator {
@@ -275,7 +277,8 @@ class OperatorGenerator {
 
         // VMArgs only apply to Java SPL operators.
         if (hasVMArgs) {
-            if (!"spl.java".equals(op.get("runtime")))
+
+            if (!JOperator.LANGUAGE_JAVA.equals(op.get(JOperator.LANGUAGE)))
                 hasVMArgs = false;
         }
 
@@ -341,13 +344,20 @@ class OperatorGenerator {
 
     static void configClause(JSONObject graphConfig, JSONObject op,
             StringBuilder sb) {
-        JSONObject config = (JSONObject) op.get("config");
-        if (config == null || config.isEmpty())
+        if (!JOperator.hasConfig(op))
             return;
 
-        Boolean streamViewability = (Boolean) config.get("streamViewability");
-        String colocationTag = (String) config.get("colocationTag");
-        JSONObject queue = (JSONObject) config.get("queue");
+        Boolean streamViewability = JOperatorConfig.getBooleanItem(op, "streamViewability");
+        String colocationTag = null;
+        JSONObject placement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
+        if (placement != null) {
+            // Explicit placement takes precedence.
+            colocationTag = (String) placement.get(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID);
+            if (colocationTag == null)
+                colocationTag = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
+        }
+        JSONObject queue = JOperatorConfig.getJSONItem(op, "queue");
+        
         if (streamViewability != null
                 || (colocationTag != null && !colocationTag.isEmpty())
                 || (queue != null && !queue.isEmpty())

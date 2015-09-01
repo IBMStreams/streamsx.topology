@@ -10,27 +10,38 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
+import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOutputPort;
+import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.Placeable;
+import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.streams.StringStreams;
+import com.ibm.streamsx.topology.test.AllowAll;
+import com.ibm.streamsx.topology.test.TestTopology;
+import com.ibm.streamsx.topology.tester.Condition;
 
 /**
  * Tests to verify Placeable
  *
  */
-public class PlaceableTest {  
+public class PlaceableTest extends TestTopology {  
 
     @Test
     public void testSimpleTagsStream() {
@@ -105,7 +116,7 @@ public class PlaceableTest {
         assertTrue(s2.getResourceTags().isEmpty());
         
         s1.addResourceTags("ingest");
-        s1.fuse(s2);
+        s1.colocate(s2);
         assertEquals(Collections.singleton("ingest"), s1.getResourceTags());
         assertEquals(s1.getResourceTags(), s2.getResourceTags());  
         
@@ -152,7 +163,7 @@ public class PlaceableTest {
         
         s1.addResourceTags("ingest");
         s2.addResourceTags("database");
-        s1.fuse(s2);
+        s1.colocate(s2);
         
         Set<String> expected = new HashSet<>();
         expected.add("ingest");
@@ -189,7 +200,7 @@ public class PlaceableTest {
         assertTrue(s1.getResourceTags().isEmpty());
         assertTrue(s2.getResourceTags().isEmpty());
 
-        s1.fuse(s2);
+        s1.colocate(s2);
         assertTrue(s1.getResourceTags().isEmpty());
         assertTrue(s2.getResourceTags().isEmpty());
         
@@ -213,7 +224,7 @@ public class PlaceableTest {
         
         assertTrue(s1.isPlaceable());
         
-        assertSame(s1.fuse(s2), s1);
+        assertSame(s1.colocate(s2), s1);
                 
                 
         String id1 = getFusingId(s1);
@@ -229,16 +240,16 @@ public class PlaceableTest {
         TSink s5 = s4.print();
         assertTrue(s5.isPlaceable());
         
-        assertSame(s3.fuse(s4, s5), s3);
+        assertSame(s3.colocate(s4, s5), s3);
         assertEquals(getFusingId(s3), getFusingId(s4));
-        assertEquals(getFusingId(s3), getFusingId(s5.operator()));
+        assertEquals(getFusingId(s3), getColocate(s5.operator()));
         
         assertFalse(getFusingId(s1).equals(getFusingId(s3)));
         
         assertNull(getFusingId(snf));
         
         TStream<String> s6 = StringStreams.toString(s4);
-        s1.fuse(s6);
+        s1.colocate(s6);
         assertEquals(getFusingId(s1), getFusingId(s6));
     }
     
@@ -255,22 +266,125 @@ public class PlaceableTest {
         assertFalse(sp.isPlaceable());
         assertFalse(sp.endParallel().isPlaceable());
     }
-
-    
     
     private static String getFusingId(TStream<?> s) {
         BOperator bop  =  ((BOutputPort) s.output()).operator();
-        return getFusingId(bop);
+        return getColocate(bop);
     }
     
-    private static String getFusingId(BOperator bop) {
-        JSONObject fusing = ((JSONObject) bop.getConfig("fusing"));
-        if (fusing == null)
+    private static String getColocate(BOperator bop) {
+        JSONObject placement = JOperatorConfig.getJSONItem(bop.json(), JOperatorConfig.PLACEMENT);
+        if (placement == null)
             return null;
-        Object ido = fusing.get("id");
+        Object ido = placement.get(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID);
         if (ido == null)
             return null;
         return ido.toString();
+    }
+    
+    private static Set<String> getResourceTags(TStream<?> s) {
+        BOperator bop  =  ((BOutputPort) s.output()).operator();
+        return getResourceTags(bop);
+    }
+    
+    private static Set<String> getResourceTags(BOperator bop) {
+        JSONObject placement = JOperatorConfig.getJSONItem(bop.json(), JOperatorConfig.PLACEMENT);
+        if (placement == null)
+            return null;
+        JSONArray jat = (JSONArray) placement.get(JOperator.PLACEMENT_RESOURCE_TAGS);
+        if (jat == null)
+            return null;
+        
+        Set<String> tags = new HashSet<>();
+        
+        for (Object rt : jat)
+            tags.add(rt.toString());
+        
+        return tags;
+    }
+    
+    @Test
+    public void testTags() {
+        Topology t = new Topology();        
+        TStream<String> s1 = t.strings("3");
+        TStream<String> s2 = t.strings("3");
+        TStream<String> s3 = t.strings("3");
+        
+        s1.addResourceTags();
+        assertNull(getResourceTags(s1));
+        
+        s2.addResourceTags("A", "B");
+        Set<String> s2s = getResourceTags(s2);
+        assertEquals(2, s2s.size());
+        assertTrue(s2s.contains("A"));
+        assertTrue(s2s.contains("B"));
+        
+        
+        s3.addResourceTags("C", "D", "E");
+        Set<String> s3s = getResourceTags(s3);
+        assertEquals(3, s3s.size());
+        assertTrue(s3s.contains("C"));
+        assertTrue(s3s.contains("D"));
+        assertTrue(s3s.contains("E"));
+        
+        s2s = getResourceTags(s2);
+        assertEquals(2, s2s.size());
+        assertTrue(s2s.contains("A"));
+        assertTrue(s2s.contains("B"));
+
+        s2.addResourceTags("X", "Y");
+        s2s = getResourceTags(s2);
+        assertEquals(4, s2s.size());
+        assertTrue(s2s.contains("A"));
+        assertTrue(s2s.contains("B"));
+        assertTrue(s2s.contains("X"));
+        assertTrue(s2s.contains("Y"));
+        
+        // Colocating means the s1 will inherit
+        // s3 resource tags
+        s1.colocate(s3);
+        Set<String> s1s = getResourceTags(s1);
+        assertEquals(3, s1s.size());
+        assertTrue(s1s.contains("C"));
+        assertTrue(s1s.contains("D"));
+        assertTrue(s1s.contains("E"));       
+    }
+    
+    /**
+     * Test with a distributed execution with explicit
+     * colocation of two functions end up on the same container.
+     */
+    @Test
+    public void testSimpleDistributedColocate() throws Exception {
+        assumeTrue(SC_OK);
+        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+        
+        Topology t = new Topology();
+        
+        TStream<String> sa = t.strings("a");
+        TStream<String> sb = t.strings("b");
+        
+        sa = sa.transform(IsolateTest.getContainerId());
+        sb = sb.transform(IsolateTest.getContainerId());
+        
+        sa.colocate(sb);
+                
+        sa = sa.isolate().filter(new AllowAll<String>());
+        sb = sb.isolate().filter(new AllowAll<String>());
+        
+        sa = sa.union(sb);
+        
+        getConfig().put(ContextProperties.KEEP_ARTIFACTS, Boolean.TRUE);
+        
+        Condition<List<String>> pes = t.getTester().stringContents(sa, "");
+        
+        Condition<Long> tc = t.getTester().tupleCount(sa, 2);
+        
+        complete(t.getTester(), tc, 10, TimeUnit.SECONDS);
+        
+        Set<String> singlePe = new HashSet<>(pes.getResult());
+     
+        assertTrue(pes.getResult().toString(), singlePe.size() == 1);
     }
     
 }
