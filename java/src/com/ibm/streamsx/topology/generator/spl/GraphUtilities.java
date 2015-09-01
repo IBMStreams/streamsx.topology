@@ -1,5 +1,6 @@
 package com.ibm.streamsx.topology.generator.spl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -135,6 +136,38 @@ class GraphUtilities {
         uniqueParents.addAll(parents);
         return uniqueParents;
     }
+    
+    /**
+     * Copies operator, giving it a new name. Also renames input/output ports,
+     * and clears the input/output connections array.
+     * @param op
+     * @param name
+     */
+    static JSONObject copyOperatorNewName(JSONObject op, String name){
+        JSONObject op_new=null;
+        try {
+            op_new = JSONObject.parse(op.serialize());
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        op_new.put("name", name);
+        @SuppressWarnings("unchecked")
+        Collection<JSONObject> inputs = (Collection<JSONObject>)op_new.get("inputs");
+        @SuppressWarnings("unchecked")
+        Collection<JSONObject> outputs = (Collection<JSONObject>)op_new.get("outputs");
+        for(JSONObject input : inputs){
+            input.put("name", name + "_IN" + Integer.toString((int) input.get("index")));
+            JSONArray conns = (JSONArray) input.get("connections");
+            conns.clear();
+        }
+        for(JSONObject output : outputs){
+            output.put("name", name + "_OUT" + Integer.toString((int) output.get("index")));
+            JSONArray conns = (JSONArray) output.get("connections");
+            conns.clear();
+        }
+        return op_new;
+    }
 
     static void removeOperators(List<JSONObject> operators,
             JSONObject graph) {
@@ -181,7 +214,7 @@ class GraphUtilities {
             List<JSONArray> parentConnections = new ArrayList<>();
 
             // Get names of children's input ports that are connected to the
-            // $Isolate$ operator;
+            // operator;
             for (JSONObject child : operatorChildren) {
                 JSONArray inputs = (JSONArray) child.get("inputs");
                 for (Object inputObj : inputs) {
@@ -327,5 +360,79 @@ class GraphUtilities {
                 return true;
         }
         return false;
+    }
+
+    static String getInputPortName(JSONObject op, int index) {
+        JSONArray inputs = (JSONArray) op.get("inputs");
+        JSONObject input = (JSONObject) inputs.get(index);
+        return (String) input.get("name");
     }    
+    
+    static String getOutputPortName(JSONObject op, int index) {
+        JSONArray outputs = (JSONArray) op.get("outputs");
+        JSONObject output = (JSONObject) outputs.get(index);
+        return (String) output.get("name");
+    }  
+    
+    static void addBefore(JSONObject op, JSONObject addOp, JSONObject graph){
+        List<JSONObject> parents = getUpstream(op, graph);
+        for(JSONObject parent : (Collection<JSONObject>)parents){
+            addBetween(parent, op, addOp);
+        }       
+    }
+    
+    static void addBetween(JSONObject parent, JSONObject child, JSONObject op){
+        List<JSONObject> parentList = new ArrayList<>();
+        List<JSONObject> childList = new ArrayList<>();
+        parentList.add(parent);
+        childList.add(child);
+        
+        addBetween(parentList, childList, op);     
+    }
+    
+    static void addBetween(List<JSONObject> parents, List<JSONObject> children, JSONObject op){
+        for(JSONObject parent : parents){
+            for(JSONObject child : children){              
+                JSONArray outputs = (JSONArray) parent.get("outputs");
+                JSONArray inputs = (JSONArray) child.get("inputs");
+                for(JSONObject output : (Collection<JSONObject>)outputs){
+                    for(JSONObject input : (Collection<JSONObject>)inputs){
+                        insertOperatorBetweenPorts(input, output, op);
+                    }
+                }              
+            }
+        }
+    }
+    
+    static void insertOperatorBetweenPorts(JSONObject input, JSONObject output, JSONObject op){
+        String oportName = (String) output.get("name");
+        String iportName = (String) input.get("name");
+        
+        JSONObject opInput = (JSONObject) ((JSONArray)op.get("inputs")).get(0);
+        JSONObject opOutput = (JSONObject) ((JSONArray)op.get("outputs")).get(0);
+        
+        String opIportName = (String) opInput.get("name");
+        String opOportName = (String) opOutput.get("name");
+        
+        // Attach op in inputs and outputs
+        JSONArray opInputConns = (JSONArray) opInput.get("connections");
+        JSONArray opOutputConns = (JSONArray) opOutput.get("connections");
+        opInputConns.add(oportName);
+        opOutputConns.add(iportName);
+        
+        JSONArray outputConns = (JSONArray) output.get("connections");
+        JSONArray inputConns = (JSONArray) input.get("connections");
+        
+        for(String conn : (Collection<String>)outputConns){
+            if(conn.equals(iportName)){
+                outputConns.set(outputConns.indexOf(conn), opIportName);
+            }
+        }
+        
+        for(String conn : (Collection<String>)inputConns){
+            if(conn.equals(oportName)){
+                inputConns.set(inputConns.indexOf(conn), opOportName);
+            }
+        }
+    }
 }
