@@ -32,6 +32,13 @@ import com.ibm.streamsx.topology.spl.SPLStream;
  * Utility methods in the {@code com.ibm.streams.topology.streams} package
  * provide specific source streams, or transformations on streams with specific
  * types.
+ * <P>
+ * {@code TStream} implements {@link Placeable} to allow placement
+ * directives against the processing that produced this stream.
+ * For example, calling a {@code Placeable} method on the stream
+ * returned from {@link #filter(Predicate)} will apply to the
+ * container that is executing the {@code Predicate} passed into {@code filter()}.
+ * </P>
  * 
  * @param <T>
  *            Tuple type, any instance of {@code T} at runtime must be

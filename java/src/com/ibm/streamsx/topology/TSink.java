@@ -10,6 +10,15 @@ import com.ibm.streamsx.topology.context.Placeable;
 /**
  * A handle to the {@code sink} of a {@code TStream}.
  * 
+ * <P>
+ * {@code TSink} implements {@link Placeable} to allow placement
+ * directives against its {@link TStream#sink(com.ibm.streamsx.topology.function.Consumer) sink()}
+ * processing.
+ * Calling a {@code Placeable} method on {@code this}
+ * will apply to the container that is executing the {@code Consumer}
+ * passed into {@code sink()}.
+ * </P>
+ * 
  * @see TStream#sink(com.ibm.streamsx.topology.function.Consumer)
  */
 public interface TSink extends TopologyElement, Placeable<TSink> {
