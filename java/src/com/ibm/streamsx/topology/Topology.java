@@ -705,7 +705,7 @@ public class Topology implements TopologyElement {
      * Create a submission parameter without a default value.
      * <p>
      * A submission parameter is a handle for a {@code T} whose actual value
-     * is not defined until topology execution time.
+     * is not defined until topology submission time.
      * <p>
      * A submission parameter has a {@code name}.  The name must be unique
      * within the topology.
@@ -716,15 +716,17 @@ public class Topology implements TopologyElement {
      * cases such as {@code TStream.parallel()} width specifications.
      * e.g.,
      * <pre>{@code
-     * TStream<Foo> s = ...
-     * s.parallel(top.createSubmissionParameter(..., 5) ... // default width of 5
-     * s.parallel(top.createSubmissionParameter(..., Integer.class) ...
+     * Supplier<Integer> width = topology.createSubmissionParameter("width", 1);
+     * TStream<String> myStream = ...;
+     * TStream<String> parallel_start = myStream.parallel(width);
+     * TStream<String> in_parallel = parallel_start.filter(...).transform(...);
+     * TStream<String> joined_parallel_streams = in_parallel.endParallel();
      * }</pre>
      * <p>
      * Submission parameters may be used in Java Primitive Operator and
      * SPL Operator parameter specifications.
      * <p>
-     * The name is used to supply an actual value at topology execution time
+     * The name is used to supply an actual value at topology submission time
      * via {@link StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)}
      * and {@link ContextProperties#SUBMISSION_PARAMS}, or when submitting
      * a topology for execution via other execution runtime native mechanisms
