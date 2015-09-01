@@ -362,21 +362,66 @@ class OperatorGenerator {
         if (!JOperator.hasConfig(op))
             return;
 
+        boolean needsConfigSection = false;
+        
         Boolean streamViewability = JOperatorConfig.getBooleanItem(op, "streamViewability");
+        needsConfigSection = streamViewability != null;
+        
         String colocationTag = null;
+        String hostPool = null;
+        boolean needsPlacement = false;
         JSONObject placement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
         if (placement != null) {
             // Explicit placement takes precedence.
             colocationTag = (String) placement.get(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID);
             if (colocationTag == null)
                 colocationTag = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
+            
+            if (colocationTag != null && colocationTag.isEmpty())
+                colocationTag = null;
+            
+            Set<String> uniqueResourceTags = new HashSet<>();
+
+            JSONArray resourceTags = (JSONArray) placement.get(JOperator.PLACEMENT_RESOURCE_TAGS);
+            if (resourceTags != null && resourceTags.isEmpty())
+                resourceTags = null;
+            
+            if (resourceTags != null) {
+                for (Object rto : resourceTags) {
+                    String rt = rto.toString();
+                    if (!rt.isEmpty())
+                        uniqueResourceTags.add(rt);                  
+                }
+            }
+            
+            needsPlacement = colocationTag != null || !uniqueResourceTags.isEmpty();
+                      
+            if (needsPlacement)
+                needsConfigSection = true;
+            
+            if (!uniqueResourceTags.isEmpty()) {
+                JSONArray hostPools = (JSONArray) graphConfig.get("hostPools");
+                if (hostPools == null) {
+                    graphConfig.put("__spl_hostPools", hostPools = new JSONArray());
+                }
+                                
+                JSONObject hostPoolTags = new JSONObject();
+                hostPoolTags.put("name", hostPool = "__jaaHostPool" + hostPools.size());
+                JSONArray rta = new JSONArray();
+                rta.addAll(uniqueResourceTags);
+                hostPoolTags.put("resourceTags", rta);
+                hostPools.add(hostPoolTags);               
+            }
+            
+            // TODO - enable host pools
+            hostPool = null;
         }
-        JSONObject queue = JOperatorConfig.getJSONItem(op, "queue");
         
-        if (streamViewability != null
-                || (colocationTag != null && !colocationTag.isEmpty())
-                || (queue != null && !queue.isEmpty())
-                ) {
+        JSONObject queue = JOperatorConfig.getJSONItem(op, "queue");
+        if (!needsConfigSection)
+            needsConfigSection = queue != null && !queue.isEmpty();
+        
+        if (needsConfigSection) {
             sb.append("  config\n");
         }
         if (streamViewability != null) {
@@ -385,11 +430,28 @@ class OperatorGenerator {
             sb.append(";\n");
         }
 
-        if (colocationTag != null && !colocationTag.isEmpty()) {
-            sb.append("    placement: partitionColocation(\"");
-            sb.append(colocationTag);
-            sb.append("\");\n");
+        if (needsPlacement) {
+            sb.append("    placement: \n");
         }
+        if (colocationTag != null) {
+            
+            
+            sb.append("      partitionColocation(");
+            SPLGenerator.stringLiteral(sb, colocationTag);
+            sb.append(")\n");
+        }
+        if (hostPool != null) {
+            if (colocationTag != null)
+                sb.append(",");
+            sb.append("      host(");
+            sb.append(hostPool);
+            sb.append(")\n");
+        }
+        if (needsPlacement) {
+            sb.append("    ;\n");
+        }
+        
+        
         if(queue != null && !queue.isEmpty()){
             sb.append("    threadedPort: queue(");
             sb.append((String)queue.get("inputPortName") + ", ");

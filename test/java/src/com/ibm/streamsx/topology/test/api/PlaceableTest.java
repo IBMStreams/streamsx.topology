@@ -387,4 +387,27 @@ public class PlaceableTest extends TestTopology {
         assertTrue(pes.getResult().toString(), singlePe.size() == 1);
     }
     
+    /**
+     * Test with a distributed execution with explicit
+     * colocation of two functions end up on the same container.
+     */
+    @Test
+    public void testSimpleDistributedHostTags() throws Exception {
+        assumeTrue(SC_OK);
+        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+        
+        Topology t = new Topology();
+        
+        TStream<String> sa = t.strings("a");
+        
+        sa.addResourceTags("app");
+                
+        getConfig().put(ContextProperties.KEEP_ARTIFACTS, Boolean.TRUE);
+        
+        Condition<List<String>> aout = t.getTester().stringContents(sa, "a");
+        
+        complete(t.getTester(), aout, 10, TimeUnit.SECONDS);
+        assertTrue(aout.getResult().toString(), aout.valid());
+    }
+    
 }
