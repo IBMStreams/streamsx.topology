@@ -126,6 +126,28 @@ public class ParallelTest extends TestTopology {
                 topology.getSubmissionParameter(submissionWidthName, Integer.class));
 
         TStream<Integer> is = pb.transform(randomHashProducer());
+        // TODO - try / test submission param within a parallel region
+        // once one or the other unrelated bugs are cleared up:
+        // issue#173 SPL source op in a parallel region
+        // issue#164 NPE in SPLStreams.convertStream()
+//        {
+//            getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+//            // use a submission param within a parallel region
+//            Map<String,Object> splParams = new HashMap<>();
+//            splParams.put("iterations", topology.getSubmissionParameter("beaconIterations", UnsignedInteger.class));
+//            // issue#173 thwarts using invokeSource
+//            SPLStream splStream = SPL.invokeSource(is, "Beacon", splParams, SPLSchemas.STRING);
+//            //
+//            // instead trying a non-source op runs into issue#164        
+//            StreamSchema schema = getStreamSchema("tuple<int32 i>");
+//            SPLStream splStream = SPLStreams.convertStream(is, cvtMsgFunc(), schema);
+//            File tmpFile = File.createTempFile("parallelTest", null);
+//            tmpFile.deleteOnExit();
+//            splParams.put("file", tmpFile.getAbsolutePath());
+//            splParams.put("append", true);
+//            splParams.put("flush", topology.getSubmissionParameter("sinkFlush", new UnsignedInteger(1)));
+//            SPL.invokeSink("FileSink", splStream, splParams);
+//        }
         TStream<Integer> joined = is.endParallel();
         TStream<String> numRegions = joined.transform(
                 uniqueIdentifierMap(count));
@@ -144,6 +166,20 @@ public class ParallelTest extends TestTopology {
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
     }
+    
+//    private static BiFunction<Integer,OutputTuple,OutputTuple> cvtMsgFunc()
+//    {
+//        return new BiFunction<Integer,OutputTuple,OutputTuple>() {
+//            private static final long serialVersionUID = 1L;
+//
+//            @Override
+//            public OutputTuple apply(Integer v1, OutputTuple v2) {
+//                v2.setInt("i", v1);
+//                return v2;
+//            }
+//        };
+//    }
+
 
     @Test
     public void testParallelSubmissionParamDefault() throws Exception {

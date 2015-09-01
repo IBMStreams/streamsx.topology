@@ -133,6 +133,7 @@ public class SPLOperatorsTest extends TestTopology {
         Condition<Long> expectedCount = tester.tupleCount(paramTuple, 1);
         MostRecent<Tuple> mr = tester.splHandler(paramTuple, new MostRecent<Tuple>());
 
+        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         complete(tester, expectedCount, 10, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.toString(), expectedCount.valid());

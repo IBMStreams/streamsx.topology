@@ -706,6 +706,9 @@ public class Topology implements TopologyElement {
      * A submission parameter is a handle for a {@code T} whose actual value
      * is not defined until topology execution time.
      * <p>
+     * A submission parameter has a {@code name}.  The name must be unique
+     * within the topology.
+     * <p>
      * The returned Supplier's {@code get()} returns null.
      * <p>
      * Submission parameters may be used for values in various
@@ -720,13 +723,11 @@ public class Topology implements TopologyElement {
      * Submission parameters may be used in Java Primitive Operator and
      * SPL Operator parameter specifications.
      * <p>
-     * A submission parameter has an assigned name.  The name is used
-     * to supply an actual value at topology execution time
+     * The name is used to supply an actual value at topology execution time
      * via {@link StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)}
      * and {@link ContextProperties#SUBMISSION_PARAMS}, or when submitting
      * a topology for execution via other execution runtime native mechanisms
      * such as IBM Streams {@code streamtool}.
-     * At topology execution time a submission parameters are specified 
      * <p>
      * Topology submission behavior when a submission parameter 
      * lacking a default value is used and a value is not provided at
@@ -737,9 +738,12 @@ public class Topology implements TopologyElement {
      * @param name submission parameter name
      * @param valueClass class object for {@code T}
      * @throws IllegalArgumentException if {@code name} is null or empty
+     * @throws IllegalArgumentException if {@code name} has already been defined.
      */
     public <T> Supplier<T> getSubmissionParameter(String name, Class<T> valueClass) {
-        return new SubmissionParameter<T>(name, valueClass);
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, valueClass); 
+        builder().addSubmissionParameter(name, sp);
+        return sp;
     }
 
     /**
@@ -750,9 +754,12 @@ public class Topology implements TopologyElement {
      * @param defaultValue default value if parameter isn't specified.
      * @throws IllegalArgumentException if {@code name} is null or empty
      * @throws IllegalArgumentException if {@code defaultValue} is null
+     * @throws IllegalArgumentException if {@code name} has already been defined.
      */
     public <T> Supplier<T> getSubmissionParameter(String name, T defaultValue) {
-        return new SubmissionParameter<T>(name, defaultValue);
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, defaultValue);
+        builder().addSubmissionParameter(name, sp);
+        return sp;
     }
 
 }

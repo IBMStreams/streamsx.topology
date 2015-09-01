@@ -45,6 +45,9 @@ public class GraphBuilder extends BJSONObject {
     
     private final JSONObject config = new OrderedJSONObject();
 
+    private final JSONObject params = new OrderedJSONObject();
+    private final JSONObject spParams = new JSONObject();
+    
     public GraphBuilder(String namespace, String name) {
         super();
 
@@ -52,6 +55,7 @@ public class GraphBuilder extends BJSONObject {
         json().put("name", name);
         json().put("public", true);
         json().put("config", config);
+        json().put("parameters", params);
     }
 
    public BOperatorInvocation addOperator(Class<? extends Operator> opClass,
@@ -241,4 +245,12 @@ public class GraphBuilder extends BJSONObject {
     public List<BOperator> getOps() {
         return ops;
     }
+
+    public void addSubmissionParameter(String name, JSONAble jsonable) {
+        if (spParams.containsKey(name))
+            throw new IllegalArgumentException("name is already defined");
+        spParams.put(name, jsonable.toJSON());
+        params.put("__jaa_stv_"+name, jsonable.toJSON());
+    }
+
 }

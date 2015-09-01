@@ -31,6 +31,8 @@ public class SPLGenerator {
         JSONObject comp = new OrderedJSONObject();
         comp.put("name", graph.get("name"));
         comp.put("public", true);
+        comp.put("parameters", graph.get("parameters"));
+        comp.put("__spl_mainComposite", true);
 
         ArrayList<JSONObject> starts = GraphUtilities.findStarts(graph);
         separateIntoComposites(starts, comp, graph);
@@ -82,11 +84,39 @@ public class SPLGenerator {
               compBuilder.append(")");
         }
         compBuilder.append("\n{\n");
+        
+        generateCompParams(graph, compBuilder);
 
         compBuilder.append("graph\n");
         operators(graphConfig, graph, compBuilder);
 
         compBuilder.append("}\n");
+    }
+    
+    private void generateCompParams(JSONObject graph, StringBuilder sb) {
+        JSONObject jparams = (JSONObject) graph.get("parameters");
+        if (jparams != null && jparams.size() > 0) {
+            Boolean isMainComposite = (Boolean) graph.get("__spl_mainComposite");
+            if (isMainComposite == null)
+                isMainComposite = false;
+            sb.append("param\n");
+            for (Object on : jparams.keySet()) {
+                String name = (String) on;
+                JSONObject param = (JSONObject) jparams.get(name);
+                Object type = param.get("type");
+                Object value = param.get("value");
+                if ("submissionParameter".equals(type)) {
+                    sb.append("  ");
+                    if (isMainComposite)
+                        SubmissionTimeValue.generateMainDef((JSONObject)value, sb);
+                    else
+                        SubmissionTimeValue.generateInnerDef((JSONObject)value, sb);
+                    sb.append(";\n");
+                }
+                else
+                    throw new IllegalArgumentException("Unhandled param name=" + name + " jo=" + param);
+            }
+        }
     }
 
     void operators(JSONObject graphConfig, JSONObject graph, StringBuilder sb)
@@ -294,6 +324,7 @@ public class SPLGenerator {
         compOps.addAll(visited);
 
         comp.put("operators", compOps);
+        SubmissionTimeValue.addJsonParamDefs(comp);
         composites.add(comp);
 
         // If one of the operators in the composite was the $unparallel operator

@@ -7,9 +7,7 @@ package com.ibm.streamsx.topology.generator.spl;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
@@ -22,17 +20,6 @@ import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.ContextProperties;
 
 class OperatorGenerator {
-    private static final Map<String,String> javaToSPL = new HashMap<>();
-    static {
-        javaToSPL.put("java.lang.Boolean", "boolean");
-        javaToSPL.put("java.lang.String", "rstring");
-        javaToSPL.put("java.lang.Byte", "int8");
-        javaToSPL.put("java.lang.Short", "int16");
-        javaToSPL.put("java.lang.Integer", "int32");
-        javaToSPL.put("java.lang.Long", "int64");
-        javaToSPL.put("java.lang.Float", "float32");
-        javaToSPL.put("java.lang.Double", "float64");
-    }
 
     static String generate(JSONObject graphConfig, JSONObject op)
             throws IOException {
@@ -100,7 +87,7 @@ class OperatorGenerator {
                 JSONObject jo = (JSONObject) width;
                 String jsonType = (String) jo.get("type");
                 if ("submissionParameter".equals(jsonType))
-                    addSubmissionParam((JSONObject) jo.get("value"), sb);
+                    SubmissionTimeValue.generateRef((JSONObject) jo.get("value"), sb);
                 else
                     throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
             }
@@ -346,7 +333,7 @@ class OperatorGenerator {
         Object value = param.get("value");
         Object type = param.get("type");
         if ("submissionParameter".equals(type)) {
-            addSubmissionParam((JSONObject) value, sb);
+            SubmissionTimeValue.generateRef((JSONObject) value, sb);
             return;
         } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
             if ("ustring".equals(type))
@@ -368,35 +355,6 @@ class OperatorGenerator {
         }
 
         sb.append(value);
-    }
-    
-    private static void addSubmissionParam(JSONObject jo, StringBuilder sb) {
-        String name = SPLGenerator.stringLiteral((String) jo.get("name"));
-        String valueClassName = (String) jo.get("valueClassName");
-        String typeModifier = (String) jo.get("typeModifier");
-        String splType = toSPLType(valueClassName, typeModifier);
-        Object defaultValue = jo.get("defaultValue");
-        if (defaultValue == null)
-            sb.append(String.format("(%s) getSubmissionTimeValue(%s)", splType, name));
-        else {
-            if (splType.startsWith("uint"))
-                defaultValue = SPLGenerator.unsignedString(defaultValue);
-            defaultValue = SPLGenerator.stringLiteral(defaultValue.toString());
-            sb.append(String.format("(%s) getSubmissionTimeValue(%s, %s)", splType, name, defaultValue));
-        }
-    }
-    
-    private static String toSPLType(String className, String modifier) {
-        String splType = javaToSPL.get(className);
-        if (splType == null)
-            throw new IllegalArgumentException("Unhandled className "+className);
-        if (modifier != null) {
-            if ("ustring".equals(modifier))
-                splType = "ustring";
-            else if ("unsigned".equals(modifier))
-                splType = "u" + splType;
-        }
-        return splType;
     }
 
     static void configClause(JSONObject graphConfig, JSONObject op,
