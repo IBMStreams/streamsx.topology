@@ -117,8 +117,10 @@ class PlacementInfo {
             elementResourceTags = new HashSet<>();
             resourceTags.put(element, elementResourceTags);
         }
-        for (String tag : tags)
-            elementResourceTags.add(tag);
+        for (String tag : tags) {
+            if (!tag.isEmpty())
+                elementResourceTags.add(tag);
+        }
         
         updatePlacementJSON(element);
     } 
