@@ -79,8 +79,18 @@ class OperatorGenerator {
     private static void parallelAnnotation(JSONObject op, StringBuilder sb) {
         Boolean parallel = (Boolean) op.get("parallelOperator");
         if (parallel != null && parallel) {
-            sb.append("@parallel(width="
-                    + Integer.toString((int) op.get("width")));
+            sb.append("@parallel(width=");
+            Object width = op.get("width");
+            if (width instanceof Integer)
+                sb.append(Integer.toString((int) width));
+            else {
+                JSONObject jo = (JSONObject) width;
+                String jsonType = (String) jo.get("type");
+                if ("submissionParameter".equals(jsonType))
+                    SubmissionTimeValue.generateRef((JSONObject) jo.get("value"), sb);
+                else
+                    throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
+            }
             Boolean partitioned = (Boolean) op.get("partitioned");
             if (partitioned != null && partitioned) {
                 String parallelInputPortName = (String) op
@@ -322,7 +332,12 @@ class OperatorGenerator {
     static void parameterValue(JSONObject param, StringBuilder sb) {
         Object value = param.get("value");
         Object type = param.get("type");
-        if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
+        if ("submissionParameter".equals(type)) {
+            SubmissionTimeValue.generateRef((JSONObject) value, sb);
+            return;
+        } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
+            if ("ustring".equals(type))
+                sb.append("(ustring)");
             SPLGenerator.stringLiteral(sb, value.toString());
             return;
         } else if (value instanceof JSONArray) {
@@ -335,7 +350,7 @@ class OperatorGenerator {
             }
             return;
         } else if (value instanceof Number) {
-            SPLGenerator.numberLiteral(sb, (Number) value);
+            SPLGenerator.numberLiteral(sb, (Number) value, "unsigned".equals(type));
             return;
         }
 

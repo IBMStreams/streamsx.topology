@@ -18,7 +18,9 @@ import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streamsx.topology.builder.json.JOperator;
 import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
+import com.ibm.streamsx.topology.tuple.JSONAble;
 
 /**
  * Low-level graph builder. GraphBuilder provides a layer on top of
@@ -43,6 +45,9 @@ public class GraphBuilder extends BJSONObject {
     
     private final JSONObject config = new OrderedJSONObject();
 
+    private final JSONObject params = new OrderedJSONObject();
+    private final JSONObject spParams = new JSONObject();
+    
     public GraphBuilder(String namespace, String name) {
         super();
 
@@ -50,6 +55,7 @@ public class GraphBuilder extends BJSONObject {
         json().put("name", name);
         json().put("public", true);
         json().put("config", config);
+        json().put("parameters", params);
     }
 
    public BOperatorInvocation addOperator(Class<? extends Operator> opClass,
@@ -108,9 +114,12 @@ public class GraphBuilder extends BJSONObject {
      * Add a marker operator, that is actually a PassThrough in OperatorGraph,
      * so that we can run this graph locally with a single thread.
      */
-    public BOutput parallel(BOutput parallelize, int width) {
-    	BOutput parallelOutput = addPassThroughMarker(parallelize, BVirtualMarker.PARALLEL, true);
-    	parallelOutput.json().put("width", width);
+    public BOutput parallel(BOutput parallelize, Supplier<Integer> width) {
+        BOutput parallelOutput = addPassThroughMarker(parallelize, BVirtualMarker.PARALLEL, true);
+        if (width.get() != null)
+            parallelOutput.json().put("width", width.get());
+        else
+            parallelOutput.json().put("width", ((JSONAble) width).toJSON());
         return parallelOutput;
     }
 
@@ -236,4 +245,12 @@ public class GraphBuilder extends BJSONObject {
     public List<BOperator> getOps() {
         return ops;
     }
+
+    public void createSubmissionParameter(String name, JSONAble jsonable) {
+        if (spParams.containsKey(name))
+            throw new IllegalArgumentException("name is already defined");
+        spParams.put(name, jsonable.toJSON());
+        params.put("__jaa_stv_"+name, jsonable.toJSON());
+    }
+
 }

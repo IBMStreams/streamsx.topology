@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URLEncoder;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
@@ -241,6 +242,7 @@ public class AnalyticsServiceStreamsContext extends
         addSubmitValue(submitConfig, config, JobProperties.NAME, "jobName");
         addSubmitValue(submitConfig, config, JobProperties.GROUP, "jobGroup");
         addSubmitValue(submitConfig, config, JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION, "overrideResourceLoadProtection");
+        addSubmitValue(submitConfig, config, ContextProperties.SUBMISSION_PARAMS, "submissionParameters");
         
         JSONObject submitConfigConfig = new JSONObject();
         addSubmitValue(submitConfigConfig, config, JobProperties.DATA_DIRECTORY, "data-directory");
@@ -267,6 +269,15 @@ public class AnalyticsServiceStreamsContext extends
         // Streams REST service requires a String value
         if (JobProperties.PRELOAD_APPLICATION_BUNDLES.equals(key))
             value = value.toString();
+        else if (ContextProperties.SUBMISSION_PARAMS.equals(key)) {
+            JSONObject jo = new JSONObject();
+            @SuppressWarnings("unchecked")
+            Map<String,Object> m = (Map<String,Object>) value;
+            for(Map.Entry<String,Object> e :  m.entrySet()) {
+                jo.put(e.getKey(), e.getValue().toString());
+            }
+            value = jo;
+        }
         
         json.put(jsonKey, value);
     }

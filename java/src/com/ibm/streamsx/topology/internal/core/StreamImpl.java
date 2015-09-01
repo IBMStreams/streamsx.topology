@@ -34,6 +34,7 @@ import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionFilter;
@@ -362,13 +363,25 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         this.connectTo(op, false, null);
     }
     
-    public TStream<T> parallel(int width, Routing routing) {
+    public TStream<T> parallel(final int width, Routing routing) {
+        @SuppressWarnings("serial")
+        Supplier<Integer> supplier = new Supplier<Integer>() {
+            @Override
+            public Integer get() { return width; }};
+        return parallel(supplier, routing);
+    }
+    
+    @Override
+    public TStream<T> parallel(Supplier<Integer> width, Routing routing) {
 
-        if (width <= 0) {
-            throw new IllegalStateException(
-                    "The parallel width must be greater"
-                            + " than or equal to 1.");
-        }
+        if (width == null)
+            throw new IllegalArgumentException("width");
+        Integer widthVal = width.get() != null
+                ? width.get()
+                : ((SubmissionParameter<Integer>)width).getDefaultValue();
+        if (widthVal != null && widthVal <= 0)
+                throw new IllegalStateException(
+                        "The parallel width must be greater than or equal to 1.");
 
         BOutput toBeParallelized = output();
         boolean needHashRemover = false;
@@ -417,6 +430,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public TStream<T> parallel(int width) {
+        return parallel(width, TStream.Routing.ROUND_ROBIN);
+    }
+
+    @Override
+    public TStream<T> parallel(Supplier<Integer> width) {
         return parallel(width, TStream.Routing.ROUND_ROBIN);
     }
 

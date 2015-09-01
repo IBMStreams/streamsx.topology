@@ -14,6 +14,7 @@ import java.util.Set;
 
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streamsx.topology.TSink;
+import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
@@ -25,6 +26,31 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
  * Integration between Java topologies and SPL operator invocations. If the SPL
  * operator to be invoked is an SPL Java primitive operator then the methods of
  * {@link JavaPrimitive} should be used.
+ * <p>
+ * Use {@link UString} or {@link Unsigned} class instances to pass
+ * SPL operator parameters of the corresponding type.
+ * For example:
+ * <pre>{@code
+ * Map<String,Object> params = ...
+ * params.put("aUStringParam", new UString(...));
+ * params.put("aUShortParam", new UnsignedShort(13));
+ * ... = SPLPrimitive.invokeOperator(..., params);
+ * }</pre>
+ * <p>
+ * In addition to the usual Java types used for operator parameter values,
+ * a {@code Supplier<T>} parameter value may be specified.
+ * Submission time parameters are passed in this manner.
+ * See {@link Topology#createSubmissionParameter(String, Class)}.
+ * For example:
+ * <pre>{@code
+ * Map<String,Object> params = ...
+ * params.put("aLongParam", topology.createSubmissionParameter(..., Long.class);
+ * params.put("aShortParam", topology.createSubmissionParameter(..., (Short)13);
+ * params.put("aULongParam", topology.createSubmissionParameter(..., UnsignedLong.class);
+ * params.put("aUShortParam", topology.createSubmissionParameter(..., new UnsignedShort(13));
+ * params.put("aUStringParam", topology.createSubmissionParameter(..., new UString(...));
+ * ... = SPLPrimitive.invokeOperator(..., params);
+ * }</pre>
  */
 public class SPL {
 

@@ -97,6 +97,14 @@ public class InvokeSubmit {
             commands.add("--config");
             commands.add("data-directory="+value);
         }
+        if (config.containsKey(ContextProperties.SUBMISSION_PARAMS)) {
+            @SuppressWarnings("unchecked")
+            Map<String,Object> params = (Map<String,Object>) config.get(ContextProperties.SUBMISSION_PARAMS); 
+            for(Map.Entry<String,Object> e :  params.entrySet()) {
+                commands.add("-P");
+                commands.add(e.getKey()+"="+e.getValue().toString());
+            }
+        }
         commands.add(bundle.getAbsolutePath());
 
         trace.info("Invoking streamtool submitjob " + bundle.getAbsolutePath());

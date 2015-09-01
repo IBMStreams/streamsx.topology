@@ -17,6 +17,7 @@ import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -516,6 +517,18 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      */
     TStream<T> parallel(int width);
     
+    /**
+     * Parallelizes the stream into {@code width} parallel channels.
+     * Same as {@link #parallel(int)} except the {@code width} is
+     * specified with a {@code Supplier<Integer>} such as one created
+     * by {@link Topology#createSubmissionParameter(String, Class)}.
+     * 
+     * @param width
+     *            The degree of parallelism in the parallel region.
+     * @return A reference to a stream for which subsequent transformations will be
+     *         executed in parallel using {@code width} channels.
+     */
+    TStream<T> parallel(Supplier<Integer> width);
     
     /**
      * Parallelizes the stream into {@code width} parallel channels. Tuples are routed 
@@ -643,6 +656,21 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @see #split(int, ToIntFunction)
      */
     TStream<T> parallel(int width, Routing routing);
+    
+    /**
+     * Parallelizes the stream into {@code width} parallel channels.
+     * Same as {@link #parallel(int,Routing)} except the {@code width} is
+     * specified with a {@code Supplier<Integer>} such as one created
+     * by {@link Topology#createSubmissionParameter(String, Class)}.
+     * 
+     * @param width The degree of parallelism. see {@link #parallel(int width)}
+     * for more details.
+     * @param routing Defines how tuples will be routed channels.
+     * @return A reference to a TStream<> at the beginning of the parallel
+     * region.
+     * @throws IllegalArgumentException if {@code width} is null
+     */
+    TStream<T> parallel(Supplier<Integer> width, Routing routing);
     
     /**
      * Ends a parallel region by merging the channels into a single stream.
