@@ -42,6 +42,11 @@ public class JOperator {
      */
     public static final Object PLACEMENT_EXPLICIT_COLOCATE_ID = "explicitColocate";
 
+    /**
+     * Attribute for an resource tags, a list of tags.
+     */
+    public static final Object PLACEMENT_RESOURCE_TAGS = "resourceTags";
+
 
     
     /**

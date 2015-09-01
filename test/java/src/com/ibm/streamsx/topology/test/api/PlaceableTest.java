@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
+import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
@@ -272,13 +273,81 @@ public class PlaceableTest extends TestTopology {
     }
     
     private static String getColocate(BOperator bop) {
-        JSONObject fusing = JOperatorConfig.getJSONItem(bop.json(), JOperatorConfig.PLACEMENT);
-        if (fusing == null)
+        JSONObject placement = JOperatorConfig.getJSONItem(bop.json(), JOperatorConfig.PLACEMENT);
+        if (placement == null)
             return null;
-        Object ido = fusing.get(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID);
+        Object ido = placement.get(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID);
         if (ido == null)
             return null;
         return ido.toString();
+    }
+    
+    private static Set<String> getResourceTags(TStream<?> s) {
+        BOperator bop  =  ((BOutputPort) s.output()).operator();
+        return getResourceTags(bop);
+    }
+    
+    private static Set<String> getResourceTags(BOperator bop) {
+        JSONObject placement = JOperatorConfig.getJSONItem(bop.json(), JOperatorConfig.PLACEMENT);
+        if (placement == null)
+            return null;
+        JSONArray jat = (JSONArray) placement.get(JOperator.PLACEMENT_RESOURCE_TAGS);
+        if (jat == null)
+            return null;
+        
+        Set<String> tags = new HashSet<>();
+        
+        for (Object rt : jat)
+            tags.add(rt.toString());
+        
+        return tags;
+    }
+    
+    @Test
+    public void testTags() {
+        Topology t = new Topology();        
+        TStream<String> s1 = t.strings("3");
+        TStream<String> s2 = t.strings("3");
+        TStream<String> s3 = t.strings("3");
+        
+        s1.addResourceTags();
+        assertNull(getResourceTags(s1));
+        
+        s2.addResourceTags("A", "B");
+        Set<String> s2s = getResourceTags(s2);
+        assertEquals(2, s2s.size());
+        assertTrue(s2s.contains("A"));
+        assertTrue(s2s.contains("B"));
+        
+        
+        s3.addResourceTags("C", "D", "E");
+        Set<String> s3s = getResourceTags(s3);
+        assertEquals(3, s3s.size());
+        assertTrue(s3s.contains("C"));
+        assertTrue(s3s.contains("D"));
+        assertTrue(s3s.contains("E"));
+        
+        s2s = getResourceTags(s2);
+        assertEquals(2, s2s.size());
+        assertTrue(s2s.contains("A"));
+        assertTrue(s2s.contains("B"));
+
+        s2.addResourceTags("X", "Y");
+        s2s = getResourceTags(s2);
+        assertEquals(4, s2s.size());
+        assertTrue(s2s.contains("A"));
+        assertTrue(s2s.contains("B"));
+        assertTrue(s2s.contains("X"));
+        assertTrue(s2s.contains("Y"));
+        
+        // Colocating means the s1 will inherit
+        // s3 resource tags
+        s1.colocate(s3);
+        Set<String> s1s = getResourceTags(s1);
+        assertEquals(3, s1s.size());
+        assertTrue(s1s.contains("C"));
+        assertTrue(s1s.contains("D"));
+        assertTrue(s1s.contains("E"));       
     }
     
     /**
@@ -286,7 +355,7 @@ public class PlaceableTest extends TestTopology {
      * colocation of two functions end up on the same container.
      */
     @Test
-    public void testSimpleDistributed() throws Exception {
+    public void testSimpleDistributedColocate() throws Exception {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
         

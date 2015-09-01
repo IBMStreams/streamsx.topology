@@ -70,7 +70,7 @@ class ThreadingModel {
 
                 List<JSONObject> parents = GraphUtilities.getUpstream(op, graph);
                 for(JSONObject parent : parents){
-                    JSONObject parentPlacement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
+                    JSONObject parentPlacement = JOperatorConfig.getJSONItem(parent, JOperatorConfig.PLACEMENT);
                     String parentColocTag = null;
                     if (parentPlacement != null)
                         parentColocTag = (String) parentPlacement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);

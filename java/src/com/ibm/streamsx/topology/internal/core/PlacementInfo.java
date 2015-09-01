@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
@@ -53,7 +54,7 @@ class PlacementInfo {
      * 
      */
     
-    boolean fuse(Placeable<?> first, Placeable<?> ... toFuse) {
+    boolean colocate(Placeable<?> first, Placeable<?> ... toFuse) {
         
         Set<Placeable<?>> elements = new HashSet<>();
         elements.add(first);
@@ -78,7 +79,7 @@ class PlacementInfo {
             }
         }
         if (fusingId == null) {
-            fusingId = "__jaa_fuse" + nextFuseId++;
+            fusingId = "__jaa_colocate" + nextFuseId++;
         }
         
         Set<String> fusedResourceTags = new HashSet<>();
@@ -92,7 +93,12 @@ class PlacementInfo {
             }            
             resourceTags.put(element, fusedResourceTags);
             
-            updateFusingJSON(element);
+            
+        }
+        
+        // And finally update all the JSON info
+        for (Placeable<?> element : elements) {
+             updatePlacementJSON(element);
         }
         return true;
     }
@@ -112,11 +118,23 @@ class PlacementInfo {
             resourceTags.put(element, elementResourceTags);
         }
         for (String tag : tags)
-            elementResourceTags.add(tag);       
+            elementResourceTags.add(tag);
+        
+        updatePlacementJSON(element);
     } 
     
-    private void updateFusingJSON(Placeable<?> element) {
-        JSONObject fusing = JOperatorConfig.createJSONItem(element.operator().json(), JOperatorConfig.PLACEMENT);
-        fusing.put(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID, fusingIds.get(element));
+    /**
+     * Update an element's placement configuration.
+     */
+    private void updatePlacementJSON(Placeable<?> element) {
+        JSONObject placement = JOperatorConfig.createJSONItem(element.operator().json(), JOperatorConfig.PLACEMENT);
+        placement.put(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID, fusingIds.get(element));
+        
+        Set<String> elementResourceTags = resourceTags.get(element);
+        if (elementResourceTags != null && !elementResourceTags.isEmpty()) {
+            JSONArray listOfTags = new JSONArray();
+            listOfTags.addAll(elementResourceTags);    
+            placement.put(JOperator.PLACEMENT_RESOURCE_TAGS, listOfTags);    
+        } 
     }
 }
