@@ -21,6 +21,7 @@ import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
+import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionConvertToSPL;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 
@@ -100,7 +101,7 @@ public class SPLStreams {
         
         String opName = converter.getClass().getSimpleName();
         if (opName.isEmpty()) {
-            opName = "SPLConvert" + stream.getTupleClass().getSimpleName();
+            opName = "SPLConvert" +  TypeDiscoverer.getTupleName(stream.getTupleType());
         }
 
         BOperatorInvocation convOp = JavaFunctional.addFunctionalOperator(

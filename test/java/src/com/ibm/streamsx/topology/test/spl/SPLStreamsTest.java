@@ -9,6 +9,9 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -96,6 +99,35 @@ public class SPLStreamsTest extends TestTopology {
         
         completeAndValidate(tupleString, 10,  "{ii=418,ss=\"325\"}",
                 "{ii=550,ss=\"457\"}", "{ii=9418,ss=\"9325\"}");
+    }
+    
+
+    @Test
+    public void testParameterizedConversionToSPL() throws Exception {
+        final Topology topology = new Topology();
+        List<List<String>> data = new ArrayList<>();
+        data.add(Collections.singletonList("fix"));
+        data.add(Arrays.asList(new String[] {"bug", "164"}));
+        TStream<List<String>> s = topology.constants(data);
+        
+        TStream<String> tupleString = convertListToSPL(s).toTupleString();
+        
+        completeAndValidate(tupleString, 10,  "{lrs=[\"fix\"]}",
+                "{lrs=[\"bug\",\"164\"]}");
+    }
+    
+    @SuppressWarnings("serial")
+    private static SPLStream convertListToSPL(TStream<List<String>> s) {
+        
+        return SPLStreams.convertStream(s, new BiFunction<List<String>, OutputTuple, OutputTuple>() {
+
+            @Override
+            public OutputTuple apply(List<String> v1, OutputTuple v2) {
+                v2.setList("lrs", v1);
+                return v2;
+            }
+        }, Type.Factory.getStreamSchema("tuple<list<ustring> lrs>"));
+
     }
 
     @Test
