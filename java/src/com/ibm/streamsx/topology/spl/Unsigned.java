@@ -11,8 +11,8 @@ import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
  * int uint = 0xFFFFFFFE;  // 65534 => -2
  * Map<String,Object> params = new HashMap<>();
  * params.put("aUint32OpParam", new UnsignedInteger(uint));
- * params.put("aUint32OpParam", topology.getSubmissionParameter(..., new UnsignedInteger(uint));
- * params.put("aUint32OpParam", topology.getSubmissionParameter(..., UnsignedInteger.class);
+ * params.put("aUint32OpParam", topology.createSubmissionParameter(..., new UnsignedInteger(uint));
+ * params.put("aUint32OpParam", topology.createSubmissionParameter(..., UnsignedInteger.class);
  * ...
  * ... = SPL.invokeOperator(..., params);
  * 
@@ -28,7 +28,7 @@ import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 public class Unsigned {
     
     // This isn't a parameterized type as that won't suffice for
-    // use with Topology.getSubmissionParameter(String,Class).
+    // use with Topology.createSubmissionParameter(String,Class).
     
     private Unsigned() {
     }

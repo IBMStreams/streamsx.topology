@@ -9,8 +9,8 @@ package com.ibm.streamsx.topology.spl;
  * String str = ...;
  * Map<String,Object> params = ...
  * params.put("aUstringOpParam", new UString(str));
- * params.put("aUstringOpParam", topology.getSubmissionParameter(..., new UString(str));
- * params.put("aUstringOpParam", topology.getSubmissionParameter(..., UString.class);
+ * params.put("aUstringOpParam", topology.createSubmissionParameter(..., new UString(str));
+ * params.put("aUstringOpParam", topology.createSubmissionParameter(..., UString.class);
  * ... = SPL.invokeOperator(..., params);
  * 
  * // to specify an SPL ustring parameter's submission time value

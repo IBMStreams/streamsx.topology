@@ -25,12 +25,12 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
  * In addition to the usual Java types used for operator parameter values,
  * a {@code Supplier<T>} parameter value may be specified.
  * Submission time parameters are passed in this manner.
- * See {@link Topology#getSubmissionParameter(String, Class)}.
+ * See {@link Topology#createSubmissionParameter(String, Class)}.
  * For example:
  * <pre>{@code
  * Map<String,Object> params = ...
- * params.put("aLongParam", topology.getSubmissionParameter(..., Long.class);
- * params.put("aShortParam", topology.getSubmissionParameter(..., (Short)13);
+ * params.put("aLongParam", topology.createSubmissionParameter(..., Long.class);
+ * params.put("aShortParam", topology.createSubmissionParameter(..., (Short)13);
  * ... = JavaPrimitive.invokeJavaPrimitive(..., params);
  * }</pre>
  */

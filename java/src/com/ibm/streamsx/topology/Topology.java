@@ -701,7 +701,7 @@ public class Topology implements TopologyElement {
     }
 
     /*
-     * Get a submission parameter supplier without a default value.
+     * Create a submission parameter supplier without a default value.
      * <p>
      * A submission parameter is a handle for a {@code T} whose actual value
      * is not defined until topology execution time.
@@ -716,8 +716,8 @@ public class Topology implements TopologyElement {
      * e.g.,
      * <pre>{@code
      * TStream<Foo> s = ...
-     * s.parallel(top.getSubmissionParameter(..., 5) ... // default width of 5
-     * s.parallel(top.getSubmissionParameter(..., Integer.class) ...
+     * s.parallel(top.createSubmissionParameter(..., 5) ... // default width of 5
+     * s.parallel(top.createSubmissionParameter(..., Integer.class) ...
      * }</pre>
      * <p>
      * Submission parameters may be used in Java Primitive Operator and
@@ -740,15 +740,15 @@ public class Topology implements TopologyElement {
      * @throws IllegalArgumentException if {@code name} is null or empty
      * @throws IllegalArgumentException if {@code name} has already been defined.
      */
-    public <T> Supplier<T> getSubmissionParameter(String name, Class<T> valueClass) {
+    public <T> Supplier<T> createSubmissionParameter(String name, Class<T> valueClass) {
         SubmissionParameter<T> sp = new SubmissionParameter<T>(name, valueClass); 
-        builder().addSubmissionParameter(name, sp);
+        builder().createSubmissionParameter(name, sp);
         return sp;
     }
 
     /**
-     * Get a submission time parameter specification with a default value.
-     * See {@link #getSubmissionParameter(String, Class)} for a description
+     * Create a submission time parameter specification with a default value.
+     * See {@link #createSubmissionParameter(String, Class)} for a description
      * of submission parameters.
      * @param name submission parameter name
      * @param defaultValue default value if parameter isn't specified.
@@ -756,9 +756,9 @@ public class Topology implements TopologyElement {
      * @throws IllegalArgumentException if {@code defaultValue} is null
      * @throws IllegalArgumentException if {@code name} has already been defined.
      */
-    public <T> Supplier<T> getSubmissionParameter(String name, T defaultValue) {
+    public <T> Supplier<T> createSubmissionParameter(String name, T defaultValue) {
         SubmissionParameter<T> sp = new SubmissionParameter<T>(name, defaultValue);
-        builder().addSubmissionParameter(name, sp);
+        builder().createSubmissionParameter(name, sp);
         return sp;
     }
 

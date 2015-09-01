@@ -246,7 +246,7 @@ public class GraphBuilder extends BJSONObject {
         return ops;
     }
 
-    public void addSubmissionParameter(String name, JSONAble jsonable) {
+    public void createSubmissionParameter(String name, JSONAble jsonable) {
         if (spParams.containsKey(name))
             throw new IllegalArgumentException("name is already defined");
         spParams.put(name, jsonable.toJSON());

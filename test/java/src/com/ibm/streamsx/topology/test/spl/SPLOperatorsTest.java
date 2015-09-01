@@ -184,7 +184,7 @@ public class SPLOperatorsTest extends TestTopology {
         // Test operator parameters with submission time values with defaults
         testOpParams("testSubmissionParamsWithDefault", new OpParamAdder() {
             void put(String opParamName, Object opParamValue) {
-                Supplier<?> sp = top.getSubmissionParameter(opParamName, opParamValue);
+                Supplier<?> sp = top.createSubmissionParameter(opParamName, opParamValue);
                 params.put(opParamName, sp);
             }
         });
@@ -195,7 +195,7 @@ public class SPLOperatorsTest extends TestTopology {
         // Test operator parameters with submission time values without defaults
         testOpParams("testSubmissionParamsNoDefault", new OpParamAdder() {
             void put(String opParamName, Object opParamValue) {
-                Supplier<?> sp = top.getSubmissionParameter(opParamName,
+                Supplier<?> sp = top.createSubmissionParameter(opParamName,
                                         (Class<?>)opParamValue.getClass());
                 params.put(opParamName, sp);
                 

@@ -521,7 +521,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * Parallelizes the stream into {@code width} parallel channels.
      * Same as {@link #parallel(int)} except the {@code width} is
      * specified with a {@code Supplier<Integer>} such as one created
-     * by {@link Topology#getSubmissionParameter(String, Class)}.
+     * by {@link Topology#createSubmissionParameter(String, Class)}.
      * 
      * @param width
      *            The degree of parallelism in the parallel region.
@@ -661,7 +661,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * Parallelizes the stream into {@code width} parallel channels.
      * Same as {@link #parallel(int,Routing)} except the {@code width} is
      * specified with a {@code Supplier<Integer>} such as one created
-     * by {@link Topology#getSubmissionParameter(String, Class)}.
+     * by {@link Topology#createSubmissionParameter(String, Class)}.
      * 
      * @param width The degree of parallelism. see {@link #parallel(int width)}
      * for more details.

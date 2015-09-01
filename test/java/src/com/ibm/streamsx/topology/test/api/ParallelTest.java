@@ -123,7 +123,7 @@ public class ParallelTest extends TestTopology {
 
         TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
         TStream<BeaconTuple> pb = fb.parallel(
-                topology.getSubmissionParameter(submissionWidthName, Integer.class));
+                topology.createSubmissionParameter(submissionWidthName, Integer.class));
 
         TStream<Integer> is = pb.transform(randomHashProducer());
         // TODO - try / test submission param within a parallel region
@@ -134,7 +134,7 @@ public class ParallelTest extends TestTopology {
 //            getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
 //            // use a submission param within a parallel region
 //            Map<String,Object> splParams = new HashMap<>();
-//            splParams.put("iterations", topology.getSubmissionParameter("beaconIterations", UnsignedInteger.class));
+//            splParams.put("iterations", topology.createSubmissionParameter("beaconIterations", UnsignedInteger.class));
 //            // issue#173 thwarts using invokeSource
 //            SPLStream splStream = SPL.invokeSource(is, "Beacon", splParams, SPLSchemas.STRING);
 //            //
@@ -145,7 +145,7 @@ public class ParallelTest extends TestTopology {
 //            tmpFile.deleteOnExit();
 //            splParams.put("file", tmpFile.getAbsolutePath());
 //            splParams.put("append", true);
-//            splParams.put("flush", topology.getSubmissionParameter("sinkFlush", new UnsignedInteger(1)));
+//            splParams.put("flush", topology.createSubmissionParameter("sinkFlush", new UnsignedInteger(1)));
 //            SPL.invokeSink("FileSink", splStream, splParams);
 //        }
         TStream<Integer> joined = is.endParallel();
@@ -192,7 +192,7 @@ public class ParallelTest extends TestTopology {
 
         TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
         TStream<BeaconTuple> pb = fb.parallel(
-                topology.getSubmissionParameter(submissionWidthName, submissionWidth));
+                topology.createSubmissionParameter(submissionWidthName, submissionWidth));
 
         TStream<Integer> is = pb.transform(randomHashProducer());
         TStream<Integer> joined = is.endParallel();

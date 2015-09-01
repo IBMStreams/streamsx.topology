@@ -70,7 +70,7 @@ public interface ContextProperties {
      * <p>
      * e.g.,
      * <pre>{@code
-     * Supplier<Integer> topology.getSubmissionParameter("p1", 5);
+     * Supplier<Integer> topology.createSubmissionParameter("p1", 5);
      * ...
      * 
      * ContextProperties config = new HashMap<>();
@@ -82,7 +82,7 @@ public interface ContextProperties {
      *              .submit(topology, config);
      * }</pre>
      * 
-     * See {@link Topology#getSubmissionParameter(String, Class)}
+     * See {@link Topology#createSubmissionParameter(String, Class)}
      */
     String SUBMISSION_PARAMS = "topology.submissionParams";
 }
