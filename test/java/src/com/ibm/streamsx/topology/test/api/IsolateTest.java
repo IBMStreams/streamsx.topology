@@ -195,7 +195,7 @@ public class IsolateTest extends TestTopology {
         @Override
         public void initialize(FunctionContext functionContext)
                 throws Exception {
-            id = functionContext.getContainer().getId().toString();
+            id = functionContext.getContainer().getId();
         }
     }
 }

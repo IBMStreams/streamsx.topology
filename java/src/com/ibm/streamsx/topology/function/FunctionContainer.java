@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.function;
 
-import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -16,11 +15,10 @@ public interface FunctionContainer {
      * Get the runtime identifier for this container's running job.
      * In distributed mode the identifier will be job identifier of
      * the submitted application.
-     * When not in distributed mode the identifier is
-     * {@code BigInteger.ZERO}.
+     * When not in distributed mode the identifier is {@code 0}.
      * @return The job identifier for the current application.
      */
-    BigInteger getJobId();
+    String getJobId();
     
     /**
      * Return the name of this job.
@@ -32,11 +30,10 @@ public interface FunctionContainer {
      * Get the runtime identifier for this container.
      * In distributed mode the identifier will be processing
      * element (PE) identifier of the process executing the function.
-     * When not in distributed mode the identifier is
-     * {@code BigInteger.ZERO}.
+     * When not in distributed mode the identifier is {@code 0}.
      * @return The identifier for this container.
      */
-    public BigInteger getId();
+    public String getId();
     
     /**
      * Return the IBM Streams domain identifier for this container.
