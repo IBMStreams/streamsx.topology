@@ -54,6 +54,85 @@ import com.ibm.streamsx.topology.tester.Tester;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
 public class ParallelTest extends TestTopology {
+
+    @Test
+    public void testCatsCradle() throws Exception {
+	checkUdpSupported();
+	Topology topology = new Topology("testCat");
+	TStream<String> out = topology.strings("hello").parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel()
+	    .parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
+
+	Tester tester = topology.getTester();
+	Condition<Long> expectedCount = tester.tupleCount(out, 1);
+        Condition<List<String>> hello = tester.stringContents(out, "hello");
+
+	StreamsContextFactory
+	    .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
+	    .submit(topology).get();
+
+	assertTrue(expectedCount.valid());
+        assertTrue(hello.valid());
+    }
+
+    @Test
+    public void testCatsCradleUnionUnparallel() throws Exception {
+	checkUdpSupported();
+	Topology topology = new Topology("testCat");
+	TStream<String> out_0 = topology.strings("hello").parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
+	TStream<String> out_1 = topology.strings("hello").parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
+	TStream<String> out_3 = out_0.union(out_1).parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
+
+	Tester tester = topology.getTester();
+	Condition<Long> expectedCount = tester.tupleCount(out_3, 2);
+        Condition<List<String>> hello = tester.stringContents(out_3, "hello", "hello");
+
+	StreamsContextFactory
+	    .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
+	    .submit(topology).get();
+
+	assertTrue(expectedCount.valid());
+        assertTrue(hello.valid());
+    }
+
+    @Test
+    public void testCatsCradleUnionNonUnparallel() throws Exception {
+	checkUdpSupported();
+	Topology topology = new Topology("testCat");
+	TStream<String> out = topology.strings("hello").parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
+	TStream<String> out2 = topology.strings("hello");
+	TStream<String> out3 = out.union(out2).parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
+	Tester tester = topology.getTester();
+	Condition<Long> expectedCount = tester.tupleCount(out3, 2);
+        Condition<List<String>> hello = tester.stringContents(out3, "hello", "hello");
+
+	StreamsContextFactory
+	    .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
+	    .submit(topology).get();
+
+	assertTrue(expectedCount.valid());
+        assertTrue(hello.valid());
+    }
+
+    @Test
+    public void testCatsCradleNonParallelChild() throws Exception {
+	checkUdpSupported();
+	Topology topology = new Topology("testCat");
+	TStream<String> out = topology.strings("hello").parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
+	out.print();
+	TStream<String> out_2 = out.parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
+
+	Tester tester = topology.getTester();
+	Condition<Long> expectedCount = tester.tupleCount(out, 1);
+        Condition<List<String>> hello = tester.stringContents(out, "hello");
+
+	StreamsContextFactory
+	    .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
+	    .submit(topology).get();
+
+	assertTrue(expectedCount.valid());
+        assertTrue(hello.valid());
+    }
+
     @Test
     public void testParallelNonPartitioned() throws Exception {
         checkUdpSupported();
@@ -664,6 +743,16 @@ public class ParallelTest extends TestTopology {
         assertTrue("contents: "+contents, contents.valid());
     }
     
+    @SuppressWarnings("serial")
+    public static Predicate<String> nopStringFilter(){
+	return new Predicate<String>(){
+	    @Override
+	    public boolean test(String tuple){
+		return true;
+	    }
+	};
+    }
+
     @SuppressWarnings("serial")
     public static Predicate<String> allowAB(){
         return new Predicate<String>() {

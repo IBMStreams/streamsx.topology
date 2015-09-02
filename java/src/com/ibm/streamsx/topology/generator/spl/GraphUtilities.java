@@ -10,6 +10,7 @@ import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
+import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
 
@@ -144,6 +145,13 @@ class GraphUtilities {
      * @param name
      */
     static JSONObject copyOperatorNewName(JSONObject op, String name){
+	try{
+	    op = OrderedJSONObject.parse(op.serialize());
+	}
+	catch(Exception e){
+	    e.printStackTrace();
+	    System.exit(-1);
+	}
         JSONObject op_new=null;
         try {
             op_new = JSONObject.parse(op.serialize());
@@ -157,16 +165,22 @@ class GraphUtilities {
         @SuppressWarnings("unchecked")
         Collection<JSONObject> outputs = (Collection<JSONObject>)op_new.get("outputs");
         for(JSONObject input : inputs){
-            input.put("name", name + "_IN" + Integer.toString((int) input.get("index")));
+            input.put("name", name + "_IN" + input.get("index").toString());
             JSONArray conns = (JSONArray) input.get("connections");
             conns.clear();
         }
         for(JSONObject output : outputs){
-            output.put("name", name + "_OUT" + Integer.toString((int) output.get("index")));
+            output.put("name", name + "_OUT" + output.get("index").toString());
             JSONArray conns = (JSONArray) output.get("connections");
             conns.clear();
         }
         return op_new;
+    }
+
+    static void removeOperator(JSONObject op, JSONObject graph){
+	List<JSONObject> opList = new ArrayList<>();
+	opList.add(op);
+	removeOperators(opList, graph);
     }
 
     static void removeOperators(List<JSONObject> operators,
