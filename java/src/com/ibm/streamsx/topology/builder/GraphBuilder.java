@@ -19,6 +19,7 @@ import com.ibm.streams.operator.Operator;
 import com.ibm.streamsx.topology.builder.json.JOperator;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
@@ -250,7 +251,7 @@ public class GraphBuilder extends BJSONObject {
         if (spParams.containsKey(name))
             throw new IllegalArgumentException("name is already defined");
         spParams.put(name, jsonable.toJSON());
-        params.put("__jaa_stv_"+name, jsonable.toJSON());
+        params.put(SubmissionTimeValue.mkOpParamName(name), jsonable.toJSON());
     }
 
 }

@@ -8,6 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,12 +23,16 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.streams.operator.OperatorContext;
+import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.PERuntime;
+import com.ibm.streams.operator.StreamSchema;
+import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Initializable;
@@ -35,6 +40,10 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
+import com.ibm.streamsx.topology.spl.SPL;
+import com.ibm.streamsx.topology.spl.SPLStream;
+import com.ibm.streamsx.topology.spl.SPLStreams;
+import com.ibm.streamsx.topology.spl.Unsigned;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -125,28 +134,6 @@ public class ParallelTest extends TestTopology {
                 topology.createSubmissionParameter(submissionWidthName, Integer.class));
 
         TStream<Integer> is = pb.transform(randomHashProducer());
-        // TODO - try / test submission param within a parallel region
-        // once one or the other unrelated bugs are cleared up:
-        // issue#173 SPL source op in a parallel region
-        // issue#164 NPE in SPLStreams.convertStream()
-//        {
-//            getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
-//            // use a submission param within a parallel region
-//            Map<String,Object> splParams = new HashMap<>();
-//            splParams.put("iterations", topology.createSubmissionParameter("beaconIterations", UnsignedInteger.class));
-//            // issue#173 thwarts using invokeSource
-//            SPLStream splStream = SPL.invokeSource(is, "Beacon", splParams, SPLSchemas.STRING);
-//            //
-//            // instead trying a non-source op runs into issue#164        
-//            StreamSchema schema = getStreamSchema("tuple<int32 i>");
-//            SPLStream splStream = SPLStreams.convertStream(is, cvtMsgFunc(), schema);
-//            File tmpFile = File.createTempFile("parallelTest", null);
-//            tmpFile.deleteOnExit();
-//            splParams.put("file", tmpFile.getAbsolutePath());
-//            splParams.put("append", true);
-//            splParams.put("flush", topology.createSubmissionParameter("sinkFlush", new UnsignedInteger(1)));
-//            SPL.invokeSink("FileSink", splStream, splParams);
-//        }
         TStream<Integer> joined = is.endParallel();
         TStream<String> numRegions = joined.transform(
                 uniqueIdentifierMap(count));
@@ -165,19 +152,83 @@ public class ParallelTest extends TestTopology {
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
     }
+
+    @Test
+    public void testParallelSubmissionParamInner() throws Exception {
+        checkUdpSupported();
+
+        Topology topology = new Topology("testParallelSubmissionParamInner");
+        final int count = new Random().nextInt(1000) + 37;
+        String submissionWidthName = "width";
+        Integer submissionWidth = 5;
+        String submissionAppendName = "append";
+        boolean submissionAppend = true;
+        String submissionFlushName = "flush";
+        Integer submissionFlush = 1;
+        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+
+        TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
+        TStream<BeaconTuple> pb = fb.parallel(
+                topology.createSubmissionParameter(submissionWidthName, Integer.class));
+
+        TStream<Integer> is = pb.transform(randomHashProducer());
+        
+        // submission param use within a parallel region
+        StreamSchema schema = getStreamSchema("tuple<int32 i>");
+        SPLStream splStream = SPLStreams.convertStream(is, cvtMsgFunc(), schema);
+        File tmpFile = File.createTempFile("parallelTest", null);
+        tmpFile.deleteOnExit();
+        Map<String,Object> splParams = new HashMap<>();
+        splParams.put("file", tmpFile.getAbsolutePath());
+        splParams.put("append", topology.createSubmissionParameter(submissionAppendName, submissionAppend));
+        splParams.put("flush", topology.createSubmissionParameter(submissionFlushName, Unsigned.UnsignedInteger.class));
+        SPL.invokeSink("spl.adapter::FileSink", splStream, splParams);
+
+        // avoid another parallel impl limitation noted in issue#173
+        is = is.filter(passthru());
+        
+        TStream<Integer> joined = is.endParallel();
+        TStream<String> numRegions = joined.transform(
+                uniqueIdentifierMap(count));
+
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(numRegions, 1);
+        Condition<List<String>> regionCount = tester.stringContents(numRegions, submissionWidth.toString());
+
+        Map<String,Object> params = new HashMap<>();
+        params.put(submissionWidthName, submissionWidth);
+        params.put(submissionFlushName, submissionFlush);
+        getConfig().put(ContextProperties.SUBMISSION_PARAMS, params);
+        StreamsContextFactory
+                .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
+                .submit(topology, getConfig()).get();
+
+        assertTrue(expectedCount.valid());
+        assertTrue(regionCount.valid());
+    }
     
-//    private static BiFunction<Integer,OutputTuple,OutputTuple> cvtMsgFunc()
-//    {
-//        return new BiFunction<Integer,OutputTuple,OutputTuple>() {
-//            private static final long serialVersionUID = 1L;
-//
-//            @Override
-//            public OutputTuple apply(Integer v1, OutputTuple v2) {
-//                v2.setInt("i", v1);
-//                return v2;
-//            }
-//        };
-//    }
+    @SuppressWarnings("serial")
+    private static Predicate<Integer> passthru() {
+        return new Predicate<Integer>() {
+            @Override
+            public boolean test(Integer tuple) {
+                return true;
+            }
+        };
+    }
+    
+    private static BiFunction<Integer,OutputTuple,OutputTuple> cvtMsgFunc()
+    {
+        return new BiFunction<Integer,OutputTuple,OutputTuple>() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public OutputTuple apply(Integer v1, OutputTuple v2) {
+                v2.setInt("i", v1);
+                return v2;
+            }
+        };
+    }
 
 
     @Test

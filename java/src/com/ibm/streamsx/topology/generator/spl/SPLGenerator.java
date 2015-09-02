@@ -299,6 +299,7 @@ public class SPLGenerator {
                 // to populate the parallel composite.
                 JSONObject parallelEnd = separateIntoComposites(parallelStarts,
                         subComp, graph);
+                SubmissionTimeValue.addJsonInstanceParams(compOperator, subComp);
 
                 // Set all relevant input port connections to the input port
                 // name of the parallel composite
