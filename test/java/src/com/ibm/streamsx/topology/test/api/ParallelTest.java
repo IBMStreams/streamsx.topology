@@ -8,7 +8,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -596,7 +595,7 @@ public class ParallelTest extends TestTopology {
         
         TStream<String> strings = topology.strings("A", "B", "C", "D", "E", "F", "G", "H", "I");
         TStream<String> stringsP = strings.parallel(3);
-        TStream<Map<Integer,BigInteger>> channelPe = stringsP.transform(new ChannelAndPEid());
+        TStream<Map<Integer,String>> channelPe = stringsP.transform(new ChannelAndPEid());
         channelPe = channelPe.endParallel();
         
         TStream<String> result =  channelPe.transform(new CheckSeparatePE());
@@ -640,19 +639,19 @@ public class ParallelTest extends TestTopology {
         };
     }
     
-    public static class CheckSeparatePE implements Function<Map<Integer,BigInteger>, String> {
+    public static class CheckSeparatePE implements Function<Map<Integer,String>, String> {
         
         private static final long serialVersionUID = 1L;
-        private final Map<Integer, BigInteger> seen = new HashMap<>();
+        private final Map<Integer, String> seen = new HashMap<>();
         private boolean ok;
 
         @Override
-        public String apply(Map<Integer, BigInteger> v) {
+        public String apply(Map<Integer, String> v) {
             seen.putAll(v);
             if (ok || seen.size() != 3)
                 return null;
             
-            Set<BigInteger> pes = new HashSet<>();
+            Set<String> pes = new HashSet<>();
             pes.addAll(seen.values());
             if (pes.size() != 3)
                 return Boolean.FALSE.toString();
@@ -663,12 +662,12 @@ public class ParallelTest extends TestTopology {
         
     }
     
-    public static class ChannelAndPEid implements Function<String,Map<Integer,BigInteger>>, Initializable {
+    public static class ChannelAndPEid implements Function<String,Map<Integer,String>>, Initializable {
         private static final long serialVersionUID = 1L;
         private FunctionContext functionContext;
 
         @Override
-        public Map<Integer, BigInteger> apply(String v) {
+        public Map<Integer, String> apply(String v) {
             return Collections.singletonMap(
                     functionContext.getChannel(),
                     functionContext.getContainer().getId());

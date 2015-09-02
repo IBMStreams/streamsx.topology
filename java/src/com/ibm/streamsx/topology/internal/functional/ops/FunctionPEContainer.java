@@ -1,6 +1,5 @@
 package com.ibm.streamsx.topology.internal.functional.ops;
 
-import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -16,13 +15,13 @@ class FunctionPEContainer implements FunctionContainer {
     }
 
     @Override
-    public BigInteger getJobId() {
-        return pe.getJobId();
+    public String getJobId() {
+        return pe.getJobId().toString();
     }
 
     @Override
-    public BigInteger getId() {
-        return pe.getPEId();
+    public String getId() {
+        return pe.getPEId().toString();
     }
 
     @Override
