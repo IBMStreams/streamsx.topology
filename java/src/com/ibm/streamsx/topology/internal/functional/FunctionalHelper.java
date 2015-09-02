@@ -49,6 +49,5 @@ public class FunctionalHelper {
         }
 
         operator.getOperatorContext().addClassLibraries(urls);
-
     }
 }

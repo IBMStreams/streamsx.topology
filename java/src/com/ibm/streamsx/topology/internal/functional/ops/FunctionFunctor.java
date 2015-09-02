@@ -8,14 +8,11 @@ import java.util.logging.Logger;
 
 import com.ibm.streams.operator.AbstractOperator;
 import com.ibm.streams.operator.OperatorContext;
-import com.ibm.streams.operator.logging.TraceLevel;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streamsx.topology.function.FunctionContext;
-import com.ibm.streamsx.topology.function.Initializable;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
-import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 
 /**
  * 
@@ -78,52 +75,9 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
     }
     
     public <T> FunctionalHandler<T> createLogicHandler() throws Exception {
-        FunctionalHandler<T> handler = new FunctionalHandler<T>(getFunctionContext(), getFunctionalLogic());
+        FunctionalHandler<T> handler = FunctionalOpUtils.createFunctionHandler(
+                getOperatorContext(), getFunctionContext(), getFunctionalLogic());
         this.logicHandler = handler;
         return handler;
-    }
-    
-    /*
-    
-    public void setLogicHandler(FunctionalHandler<?> logicHandler) throws Exception {
-        this.logicHandler = logicHandler;
-    } 
-    */
-    
-    static void initializeLogic(OperatorContext context, Object logicInstance) throws Exception {
-        for (;;) {
-            if (logicInstance instanceof Initializable) {
-                ((Initializable) logicInstance).initialize(new FunctionOperatorContext(context));
-            }
-            if (logicInstance instanceof WrapperFunction) {
-                logicInstance = ((WrapperFunction) logicInstance).getWrappedFunction();
-            } else {
-                break;
-            }
-        }
-    }
-    
-    /**
-     * If logicInstance implements AutoCloseable
-     * then shut it down by calling it close() method.
-     */
-    static void closeLogic(Object logicInstance) {
-        for (;;) {
-            if (logicInstance instanceof AutoCloseable) {
-                try {
-                    synchronized (logicInstance) {
-                        ((AutoCloseable) logicInstance).close();
-                    }
-                } catch (Exception e) {
-                    trace.log(TraceLevel.ERROR, "Exception " + e.getMessage()
-                            + " closing function instance:" + logicInstance, e);
-                }
-            }
-            if (logicInstance instanceof WrapperFunction) {
-                logicInstance = ((WrapperFunction) logicInstance).getWrappedFunction();
-            } else {
-                break;
-            }
-        }       
     }
 }

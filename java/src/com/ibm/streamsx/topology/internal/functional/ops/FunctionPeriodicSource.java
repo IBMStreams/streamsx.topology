@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.internal.functional.ops;
 
-import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getOutputMapping;
 
 import com.ibm.streams.operator.OperatorContext;
@@ -15,7 +14,9 @@ import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streams.operator.samples.patterns.PollingTupleProducer;
+import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
@@ -24,12 +25,14 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @SharedLoader
 public class FunctionPeriodicSource extends PollingTupleProducer implements Functional {
 
-    private Supplier<Iterable<Object>> data;
+    private FunctionalHandler<Supplier<Iterable<Object>>> dataHandler;
     private SPLMapping<Object> mapping;
 
     private String functionalLogic;
     private String[] jar;
     private StreamingOutput<OutputTuple> output;
+    
+    private FunctionContext functionContext;
 
     @Override
     public synchronized void initialize(OperatorContext context)
@@ -37,12 +40,17 @@ public class FunctionPeriodicSource extends PollingTupleProducer implements Func
         super.initialize(context);
 
         FunctionalHelper.addLibraries(this, getJar());
-
-        data = getLogicObject(getFunctionalLogic());
+        functionContext = new FunctionOperatorContext(context);
+        
         output = getOutput(0);
         mapping = getOutputMapping(this, 0);
         
-        FunctionFunctor.initializeLogic(context, data);
+        dataHandler = FunctionalOpUtils.createFunctionHandler(
+                getOperatorContext(), getFunctionContext(), getFunctionalLogic());
+    }
+    
+    FunctionContext getFunctionContext() {
+        return functionContext;
     }
 
     public String getFunctionalLogic() {
@@ -66,7 +74,7 @@ public class FunctionPeriodicSource extends PollingTupleProducer implements Func
     @Override
     protected void fetchTuples() throws Exception {
 
-        for (Object tuple : data.get()) {
+        for (Object tuple : dataHandler.getLogic().get()) {
             if (Thread.interrupted())
                 return;
             if (tuple == null)
@@ -77,7 +85,7 @@ public class FunctionPeriodicSource extends PollingTupleProducer implements Func
     
     @Override
     public void shutdown() throws Exception {
-        FunctionFunctor.closeLogic(data);
+        dataHandler.close();
         super.shutdown();
     }
 }
