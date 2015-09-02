@@ -11,7 +11,9 @@ import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.logging.TraceLevel;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.SharedLoader;
+import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Initializable;
+import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 
@@ -30,11 +32,13 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
     private String functionalLogic;
     private String[] jar;
     
+    private FunctionContext functionContext;
+    
     /**
      * Logic (function) used by this operator,
      * will be closed upon shutdown.
      */
-    private Object logicInstance;
+    private FunctionalHandler<?> logicHandler;
 
     public final String getFunctionalLogic() {
         return functionalLogic;
@@ -59,18 +63,32 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
             throws Exception {
         super.initialize(context);
         FunctionalHelper.addLibraries(this, getJar());
+        functionContext = new FunctionOperatorContext(context);
+    }
+    
+    FunctionContext getFunctionContext() {
+        return functionContext;
     }
     
     @Override
-    public void shutdown() throws Exception {
-        closeLogic(logicInstance);
+    public synchronized void shutdown() throws Exception {
+        if (logicHandler != null)
+            logicHandler.close();
         super.shutdown();
     }
     
-    public void setLogic(Object logicInstance) throws Exception {
-        this.logicInstance = logicInstance;
-        initializeLogic(getOperatorContext(), logicInstance);
+    public <T> FunctionalHandler<T> createLogicHandler() throws Exception {
+        FunctionalHandler<T> handler = new FunctionalHandler<T>(getFunctionContext(), getFunctionalLogic());
+        this.logicHandler = handler;
+        return handler;
     }
+    
+    /*
+    
+    public void setLogicHandler(FunctionalHandler<?> logicHandler) throws Exception {
+        this.logicHandler = logicHandler;
+    } 
+    */
     
     static void initializeLogic(OperatorContext context, Object logicInstance) throws Exception {
         for (;;) {

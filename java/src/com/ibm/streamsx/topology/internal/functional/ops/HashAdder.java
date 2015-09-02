@@ -41,7 +41,7 @@ public class HashAdder extends FunctionFunctor {
             throws Exception {
         super.initialize(context);
         
-        setLogic(hasher = getLogicObject(getFunctionalLogic()));
+        hasher = getLogicObject(getFunctionalLogic());
 
         output = getOutput(0);
         mapping = getInputMapping(this, 0);
@@ -54,9 +54,7 @@ public class HashAdder extends FunctionFunctor {
         Object value = mapping.convertFrom(tuple);
         OutputTuple ot = output.newTuple();
         ot.setObject(0, tuple.getObject(0));
-        synchronized (hasher) {
-            ot.setInt(1, hasher.applyAsInt(value));
-        }
+        ot.setInt(1, hasher.applyAsInt(value));
         output.submit(ot);
     }
 }

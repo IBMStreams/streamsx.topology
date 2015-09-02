@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.internal.functional.ops;
 
-import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getOutputMapping;
 
 import com.ibm.streams.operator.OperatorContext;
@@ -16,6 +15,7 @@ import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 @PrimitiveOperator
@@ -24,7 +24,7 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @Icons(location16 = "opt/icons/functor_16.gif", location32 = "opt/icons/functor_32.gif")
 public class FunctionMultiTransform extends FunctionQueueableFunctor {
 
-    private Function<Object, Iterable<Object>> transform;
+    private FunctionalHandler<Function<Object, Iterable<Object>>> transformHandler;
     private SPLMapping<Object> outputMapping;
     private StreamingOutput<OutputTuple> output;
 
@@ -33,7 +33,7 @@ public class FunctionMultiTransform extends FunctionQueueableFunctor {
             throws Exception {
         super.initialize(context);
 
-        setLogic(transform = getLogicObject(getFunctionalLogic()));
+        transformHandler = createLogicHandler();
         output = getOutput(0);
         outputMapping = getOutputMapping(this, 0);
     }
@@ -41,6 +41,8 @@ public class FunctionMultiTransform extends FunctionQueueableFunctor {
     @Override
     public void tuple(Object tuple)
             throws Exception {
+        
+        final Function<Object, Iterable<Object>> transform = transformHandler.getLogic();
         Iterable<Object> modValues;
         synchronized (transform) {
             modValues = transform.apply(tuple);

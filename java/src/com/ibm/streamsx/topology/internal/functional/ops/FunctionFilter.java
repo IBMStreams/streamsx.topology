@@ -5,7 +5,6 @@
 package com.ibm.streamsx.topology.internal.functional.ops;
 
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getInputMapping;
-import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
 
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.OutputTuple;
@@ -17,6 +16,7 @@ import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 @PrimitiveOperator
@@ -25,7 +25,7 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @Icons(location16 = "opt/icons/filter_16.gif", location32 = "opt/icons/filter_32.gif")
 public class FunctionFilter extends FunctionFunctor {
 
-    private Predicate<Object> filter;
+    private FunctionalHandler<Predicate<Object>> filterHandler;
     private SPLMapping<?> mapping;
     private StreamingOutput<OutputTuple> passed;
 
@@ -33,7 +33,7 @@ public class FunctionFilter extends FunctionFunctor {
     public void initialize(OperatorContext context) throws Exception {
         super.initialize(context);
 
-        setLogic(filter = getLogicObject(getFunctionalLogic()));
+        filterHandler = createLogicHandler();
         
         passed = getOutput(0);
         mapping = getInputMapping(this, 0);
@@ -44,6 +44,7 @@ public class FunctionFilter extends FunctionFunctor {
             throws Exception {
         Object value = mapping.convertFrom(tuple);
 
+        final Predicate<Object> filter = filterHandler.getLogic();
         boolean submitTuple;
         synchronized (filter) {
             submitTuple = filter.test(value);

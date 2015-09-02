@@ -6,12 +6,15 @@ package com.ibm.streamsx.topology.internal.functional;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.util.logging.Logger;
 
 import com.ibm.streams.operator.AbstractOperator;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 
 public class FunctionalHelper {
+    
+    static final Logger trace = Logger.getLogger("com.ibm.streamsx.topology.functional");
 
     @SuppressWarnings("unchecked")
     public static <T> SPLMapping<T> getInputMapping(AbstractOperator operator,

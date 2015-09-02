@@ -5,7 +5,6 @@
 package com.ibm.streamsx.topology.internal.functional.ops;
 
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getInputMapping;
-import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
 
 import java.util.List;
 
@@ -19,6 +18,7 @@ import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.ToIntFunction;
+import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 @PrimitiveOperator
@@ -27,7 +27,7 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @Icons(location16 = "opt/icons/split_16.gif", location32 = "opt/icons/split_32.gif")
 public class FunctionSplit extends FunctionFunctor {
 
-    private ToIntFunction<Object> splitter;
+    private FunctionalHandler<ToIntFunction<Object>> splitterHandler;
     private SPLMapping<?> mapping;
     private int n;
     private List<StreamingOutput<OutputTuple>> oports;
@@ -36,7 +36,7 @@ public class FunctionSplit extends FunctionFunctor {
     public void initialize(OperatorContext context) throws Exception {
         super.initialize(context);
 
-        setLogic(splitter = getLogicObject(getFunctionalLogic()));
+        splitterHandler = createLogicHandler();
         
         OperatorContext ctxt = getOperatorContext();
         oports = ctxt.getStreamingOutputs();
@@ -50,6 +50,8 @@ public class FunctionSplit extends FunctionFunctor {
             throws Exception {
         Object value = mapping.convertFrom(tuple);
 
+        
+        final ToIntFunction<Object> splitter = splitterHandler.getLogic();
         int r;
         synchronized (splitter) {
             r = splitter.applyAsInt(value);
