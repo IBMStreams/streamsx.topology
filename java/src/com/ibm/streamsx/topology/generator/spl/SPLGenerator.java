@@ -89,6 +89,8 @@ public class SPLGenerator {
 
         compBuilder.append("graph\n");
         operators(graphConfig, graph, compBuilder);
+        
+        generateCompConfig(graph, graphConfig, compBuilder);
 
         compBuilder.append("}\n");
     }
@@ -116,6 +118,43 @@ public class SPLGenerator {
                 else
                     throw new IllegalArgumentException("Unhandled param name=" + name + " jo=" + param);
             }
+        }
+    }
+    
+    private void generateCompConfig(JSONObject graph, JSONObject graphConfig, StringBuilder sb) {
+        Boolean isMainComposite = (Boolean) graph.get("__spl_mainComposite");
+        if (isMainComposite != null && isMainComposite) {
+            generateMainCompConfig(graphConfig, sb);
+        }
+    }
+    
+    private void generateMainCompConfig(JSONObject graphConfig, StringBuilder sb) {
+        JSONArray hostPools = (JSONArray) graphConfig.get("__spl_hostPools");
+        System.out.println("__spl_hostPools:" + hostPools);
+        if (hostPools != null && !hostPools.isEmpty()) {
+            boolean seenOne = false;
+            for (Object hpo : hostPools) {
+                if (!seenOne) {
+                    sb.append("  config hostPool:\n");
+                    seenOne = true;
+                } else {
+                    sb.append(",");
+                }
+                JSONObject hp = (JSONObject) hpo;
+                String name = (String) hp.get("name");
+                JSONArray resourceTags = (JSONArray) hp.get("resourceTags");
+                
+                sb.append("    ");
+                sb.append(name);
+                sb.append("=createPool({tags=[");
+                for (int i = 0; i < resourceTags.size(); i++) {
+                    if (i != 0)
+                        sb.append(",");
+                    stringLiteral(sb, resourceTags.get(i).toString());
+                }
+                sb.append("]}, Sys.Shared)");
+            }
+            sb.append(";\n");
         }
     }
 

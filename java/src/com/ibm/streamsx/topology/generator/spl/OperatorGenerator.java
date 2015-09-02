@@ -400,21 +400,8 @@ class OperatorGenerator {
                 needsConfigSection = true;
             
             if (!uniqueResourceTags.isEmpty()) {
-                JSONArray hostPools = (JSONArray) graphConfig.get("hostPools");
-                if (hostPools == null) {
-                    graphConfig.put("__spl_hostPools", hostPools = new JSONArray());
-                }
-                                
-                JSONObject hostPoolTags = new JSONObject();
-                hostPoolTags.put("name", hostPool = "__jaaHostPool" + hostPools.size());
-                JSONArray rta = new JSONArray();
-                rta.addAll(uniqueResourceTags);
-                hostPoolTags.put("resourceTags", rta);
-                hostPools.add(hostPoolTags);               
+                hostPool = getHostPoolName(graphConfig, uniqueResourceTags);         
             }
-            
-            // TODO - enable host pools
-            hostPool = null;
         }
         
         JSONObject queue = JOperatorConfig.getJSONItem(op, "queue");
@@ -461,5 +448,37 @@ class OperatorGenerator {
         }
       
         
+    }
+    
+    /**
+     * Gets or creates a host pool at the graphConfig level
+     * corresponding to the unique set of tags.
+     */
+    @SuppressWarnings("unchecked")
+    private static String getHostPoolName(JSONObject graphConfig, Set<String> uniqueResourceTags) {
+        String hostPool = null;
+        JSONArray hostPools = (JSONArray) graphConfig.get("__spl_hostPools");
+        if (hostPools == null) {
+            graphConfig.put("__spl_hostPools", hostPools = new JSONArray());
+        }
+        
+        // Look for a host pool matching this one
+        for (Object hpo : hostPools) {
+            JSONObject hostPoolDef = (JSONObject) hpo;
+            JSONArray rta = (JSONArray) hostPoolDef.get("resourceTags");
+            Set<Object> poolResourceTags = new HashSet<>();
+            poolResourceTags.addAll(rta);
+            if (uniqueResourceTags.equals(poolResourceTags)) {
+                return hostPoolDef.get("name").toString();
+            }
+        }
+                        
+        JSONObject hostPoolDef = new JSONObject();
+        hostPoolDef.put("name", hostPool = "__jaaHostPool" + hostPools.size());
+        JSONArray rta = new JSONArray();
+        rta.addAll(uniqueResourceTags);
+        hostPoolDef.put("resourceTags", rta);
+        hostPools.add(hostPoolDef);  
+        return hostPool;
     }
 }
