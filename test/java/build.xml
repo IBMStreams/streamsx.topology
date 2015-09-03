@@ -174,13 +174,15 @@
      <property name="topology.test.showoutput" value="yes"/>
      <property name="topology.test.include.name" value="**/kafka/*Test.java"/>
      <antcall target="unittest.simple"/>
-  	 <if>
-  	 	<equals arg1="${topology.test.type}" arg2="STANDALONE_TESTER" />
-  	    <then>
-  	      <echo message="REMEMBER TO LOCATE AND TERMINATE orphaned standalone processes."/>
-  	    </then>
-  	 </if>
+  	 <condition property="topology.test.isStandalone">
+        <equals arg1="${topology.test.type}" arg2="STANDALONE_TESTER" />
+  	 </condition>
+  	 <antcall target="-warnOrphanedStandalone"/>
      <fail message="Unittests failed" if="topology.tests.failed"/>
+  </target>
+	
+  <target name="-warnOrphanedStandalone" if="topology.test.isStandalone">
+     <echo >REMEMBER TO LOCATE AND TERMINATE orphaned standalone processes.</echo>
   </target>
 
   <target name="unittest.simple" depends="jar">

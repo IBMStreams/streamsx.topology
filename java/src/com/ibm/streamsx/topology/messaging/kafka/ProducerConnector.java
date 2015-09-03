@@ -91,10 +91,11 @@ public class ProducerConnector {
      * {@link Message#getTopic()}.
      * Same as {@code produce(stream, null)}.
      * @param stream the stream to publish
+     * @return the sink element
      */
-    public void publish(TStream<? extends Message> stream)
+    public TSink publish(TStream<? extends Message> stream)
     {
-        publish(stream, null/*topic*/);
+        return publish(stream, null/*topic*/);
     }
 
     /**
@@ -122,12 +123,15 @@ public class ProducerConnector {
      * 
      * @param stream the stream to publish
      * @param topic topic to publish to.  May be null.
+     * @return the sink element
      * 
      * @throws IllegalArgumentException if an empty {@code topic} is specified.
      */
-    public void publish(TStream<? extends Message> stream, String topic) {
+    public TSink publish(TStream<? extends Message> stream, String topic) {
         if (topic!=null && topic.isEmpty())
             throw new IllegalArgumentException("topic");
+        
+        stream = stream.lowLatency();
         
         @SuppressWarnings("unchecked")
         SPLStream splStream = SPLStreams.convertStream((TStream<Message>)stream,
@@ -151,6 +155,7 @@ public class ProducerConnector {
                 splStream,
                 params);
         Util.tagOpAsJavaPrimitive(sink.operator(), kind, className);
+        return sink;
     }
     
     private static BiFunction<Message,OutputTuple,OutputTuple> 
