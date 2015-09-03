@@ -56,7 +56,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
      * The WrappedValue parameter value object is
      * <pre><code>
      * object {
-     *   type : "wrappedValue"
+     *   type : "__spl_wrappedValue"
      *   value : object {
      *     value : any. non-null.
      *     typeModifier : optional null, "utf16", "unsigned"
@@ -72,7 +72,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
     @SuppressWarnings("unchecked")
     public SubmissionParameter(String name, JSONObject wrappedValue, boolean withDefault) {
         String type = (String) wrappedValue.get("type");
-        if (!"wrappedValue".equals(type))
+        if (!"__spl_wrappedValue".equals(type))
             throw new IllegalArgumentException("defaultValue");
         JSONObject value = (JSONObject) wrappedValue.get("value");
         this.name = name;

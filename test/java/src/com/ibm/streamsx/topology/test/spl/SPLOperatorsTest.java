@@ -79,6 +79,7 @@ public class SPLOperatorsTest extends TestTopology {
         
         Topology topology = new Topology(testName); 
         opParamAdder.init(topology, getConfig());
+        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         StreamSchema schema = Type.Factory.getStreamSchema(
                 "tuple<"

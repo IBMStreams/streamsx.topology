@@ -31,7 +31,7 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
  * operator to be invoked is an SPL Java primitive operator then the methods of
  * {@link JavaPrimitive} should be used.
  * <p>
- * When necessary use {@link #createParamValue(Object, MetaType)
+ * When necessary use {@code createParamValue(T, MetaType)}
  * to create parameter values for SPL types.
  * For example:
  * <pre>{@code
@@ -46,7 +46,7 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
  * In addition to the usual Java types used for operator parameter values,
  * a {@code Supplier<T>} parameter value may be specified.
  * Submission time parameters are passed in this manner.
- * See {@link #createSubmissionParameter(Topology, String, Object, boolean).
+ * See {@link #createSubmissionParameter(Topology, String, Object, boolean)}.
  * For example:
  * <pre>{@code
  * Map<String,Object> params = ...
@@ -62,15 +62,15 @@ public class SPL {
     
     /**
      * Create a SPL parameter value wrapper object for the 
-     * specified SPL (@code MetaType}.
+     * specified SPL {@code MetaType}.
      * <p>
      * Use of this is required to construct a SPL operator parameter value
      * whose SPL type is not implied from simple Java type.  e.g.,
      * a {@code String} value is interpreted as a SPL {@code rstring},
      * and {@code Byte,Short,Integer,Long} are interpreted as SPL signed integers.
      * Hence, this must be used for SPL {@code ustring} and unsigned integers.
-     * @param value
-     * @param metaType
+     * @param value the value to wrap
+     * @param metaType the SPL meta type
      * @return the wrapper object
      * @throws IllegalArgumentException if value is null or it's class is
      *     not appropriate for {@code metaType}
@@ -106,7 +106,7 @@ public class SPL {
      * <p>
      * Use of this is required to construct a submission parameter for
      * a SPL operator parameter whose SPL type requires the use of
-     * {@link #createParamValue(Object, MetaType)}.
+     * {@code createParamValue(Object, MetaType)}.
      * <p>
      * See {@link Topology#createSubmissionParameter(String, Class)} for
      * general information about submission parameters.

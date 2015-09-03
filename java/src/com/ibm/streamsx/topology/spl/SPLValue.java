@@ -95,7 +95,7 @@ class SPLValue<T> {
     // throws if jo not produced by toJSON()
     public static SPLValue<?> fromJSON(JSONObject jo) {
         String type = (String) jo.get("type");
-        if (!"wrappedValue".equals(type))
+        if (!"__spl_wrappedValue".equals(type))
             throw new IllegalArgumentException("jo");
         @SuppressWarnings({ "rawtypes", "unchecked" })
         SPLValue<?> splValue = new SPLValue(getWrappedValue(jo), getMetaType(jo));
@@ -131,7 +131,7 @@ class SPLValue<T> {
          * The WrappedValue parameter value object is
          * <pre><code>
          * object {
-         *   type : "wrappedValue"
+         *   type : "__spl_wrappedValue"
          *   value : object {
          *     value : any. non-null.
          *     typeModifier : optional null, "utf16", "unsigned"
@@ -140,7 +140,7 @@ class SPLValue<T> {
          * </code></pre>
          */
         JSONObject jo = new OrderedJSONObject();
-        jo.put("type", "wrappedValue");
+        jo.put("type", "__spl_wrappedValue");
         JSONObject jval = new OrderedJSONObject();
         jo.put("value", jval);
         if (info.typeModifier != null)
