@@ -3,6 +3,7 @@ package com.ibm.streamsx.topology.generator.spl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -145,19 +146,11 @@ class GraphUtilities {
      * @param name
      */
     static JSONObject copyOperatorNewName(JSONObject op, String name){
-	try{
-	    op = OrderedJSONObject.parse(op.serialize());
-	}
-	catch(Exception e){
-	    e.printStackTrace();
-	    System.exit(-1);
-	}
         JSONObject op_new=null;
         try {
             op_new = JSONObject.parse(op.serialize());
         } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(-1);
+            throw new RuntimeException("Error copying operator " + (String)op.get("name"), e);
         }
         op_new.put("name", name);
         @SuppressWarnings("unchecked")
@@ -178,9 +171,7 @@ class GraphUtilities {
     }
 
     static void removeOperator(JSONObject op, JSONObject graph){
-	List<JSONObject> opList = new ArrayList<>();
-	opList.add(op);
-	removeOperators(opList, graph);
+        removeOperators(Collections.singletonList(op), graph);
     }
 
     static void removeOperators(List<JSONObject> operators,

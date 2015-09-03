@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
@@ -56,80 +57,105 @@ import com.ibm.streamsx.topology.tuple.BeaconTuple;
 public class ParallelTest extends TestTopology {
 
     @Test
-    public void testCatsCradle() throws Exception {
-	checkUdpSupported();
-	Topology topology = new Topology("testCat");
-	TStream<String> out = topology.strings("hello").parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel()
-	    .parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
+    public void testAdjacentParallel() throws Exception {
+        checkUdpSupported();
+        List<String> strings = getListOfUniqueStrings(200);
+        String[] stringArray = strings.toArray(new String[strings.size()]);
+        Topology topology = new Topology("testAdj");
+        TStream<String> out0 = topology.strings()
+                .parallel(5, TStream.Routing.HASH_PARTITIONED)
+                .transform(randomStringProducer()).endParallel();
+        TStream<String> out2 = out0.parallel(5, TStream.Routing.HASH_PARTITIONED)
+                .transform(randomStringProducer()).endParallel();
 
-	Tester tester = topology.getTester();
-	Condition<Long> expectedCount = tester.tupleCount(out, 1);
-        Condition<List<String>> hello = tester.stringContents(out, "hello");
+        TStream<String> numRegions0 = out0.transform(uniqueStringCounter(200));
+        TStream<String> numRegions2 = out2.transform(uniqueStringCounter(200));
+        
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(out0, 200);
+        Condition<Long> expectedCount2 = tester.tupleCount(out2, 200);
+        Condition<List<String>> validNumRegions0 = tester.stringContents(numRegions0, "5");
+        Condition<List<String>> validNumRegions2 = tester.stringContents(numRegions2, "5");
 
-	StreamsContextFactory
-	    .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
-	    .submit(topology).get();
+        complete(tester, expectedCount2, 10, TimeUnit.SECONDS);
 
-	assertTrue(expectedCount.valid());
-        assertTrue(hello.valid());
+        assertTrue(expectedCount.valid());
+        assertTrue(validNumRegions0.valid());
+        assertTrue(validNumRegions2.valid());
     }
 
     @Test
     public void testCatsCradleUnionUnparallel() throws Exception {
-	checkUdpSupported();
-	Topology topology = new Topology("testCat");
-	TStream<String> out_0 = topology.strings("hello").parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
-	TStream<String> out_1 = topology.strings("hello").parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
-	TStream<String> out_3 = out_0.union(out_1).parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
+        checkUdpSupported();
+        Topology topology = new Topology("testCat");
+        TStream<String> out_0 = topology.strings("hello")
+                .parallel(5, TStream.Routing.HASH_PARTITIONED)
+                .filter(nopStringFilter()).endParallel();
+        TStream<String> out_1 = topology.strings("hello")
+                .parallel(5, TStream.Routing.HASH_PARTITIONED)
+                .filter(nopStringFilter()).endParallel();
+        TStream<String> out_3 = out_0.union(out_1)
+                .parallel(5, TStream.Routing.HASH_PARTITIONED)
+                .filter(nopStringFilter()).endParallel();
 
-	Tester tester = topology.getTester();
-	Condition<Long> expectedCount = tester.tupleCount(out_3, 2);
-        Condition<List<String>> hello = tester.stringContents(out_3, "hello", "hello");
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(out_3, 2);
+        Condition<List<String>> hello = tester.stringContents(out_3, "hello",
+                "hello");
 
-	StreamsContextFactory
-	    .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
-	    .submit(topology).get();
+        StreamsContextFactory
+                .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
+                .submit(topology).get();
 
-	assertTrue(expectedCount.valid());
+        assertTrue(expectedCount.valid());
         assertTrue(hello.valid());
     }
 
     @Test
     public void testCatsCradleUnionNonUnparallel() throws Exception {
-	checkUdpSupported();
-	Topology topology = new Topology("testCat");
-	TStream<String> out = topology.strings("hello").parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
-	TStream<String> out2 = topology.strings("hello");
-	TStream<String> out3 = out.union(out2).parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
-	Tester tester = topology.getTester();
-	Condition<Long> expectedCount = tester.tupleCount(out3, 2);
-        Condition<List<String>> hello = tester.stringContents(out3, "hello", "hello");
+        checkUdpSupported();
+        Topology topology = new Topology("testCat");
+        TStream<String> out = topology.strings("hello")
+                .parallel(5, TStream.Routing.HASH_PARTITIONED)
+                .filter(nopStringFilter()).endParallel();
+        TStream<String> out2 = topology.strings("hello");
+        TStream<String> out3 = out.union(out2)
+                .parallel(5, TStream.Routing.HASH_PARTITIONED)
+                .filter(nopStringFilter()).endParallel();
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(out3, 2);
+        Condition<List<String>> hello = tester.stringContents(out3, "hello",
+                "hello");
 
-	StreamsContextFactory
-	    .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
-	    .submit(topology).get();
+        StreamsContextFactory
+                .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
+                .submit(topology).get();
 
-	assertTrue(expectedCount.valid());
+        assertTrue(expectedCount.valid());
         assertTrue(hello.valid());
     }
 
     @Test
     public void testCatsCradleNonParallelChild() throws Exception {
-	checkUdpSupported();
-	Topology topology = new Topology("testCat");
-	TStream<String> out = topology.strings("hello").parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
-	out.print();
-	TStream<String> out_2 = out.parallel(5, TStream.Routing.HASH_PARTITIONED).filter(nopStringFilter()).endParallel();
+        checkUdpSupported();
+        Topology topology = new Topology("testCat");
+        TStream<String> out = topology.strings("hello")
+                .parallel(5, TStream.Routing.HASH_PARTITIONED)
+                .filter(nopStringFilter()).endParallel();
+        out.print();
+        TStream<String> out_2 = out
+                .parallel(5, TStream.Routing.HASH_PARTITIONED)
+                .filter(nopStringFilter()).endParallel();
 
-	Tester tester = topology.getTester();
-	Condition<Long> expectedCount = tester.tupleCount(out, 1);
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(out, 1);
         Condition<List<String>> hello = tester.stringContents(out, "hello");
 
-	StreamsContextFactory
-	    .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
-	    .submit(topology).get();
+        StreamsContextFactory
+                .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
+                .submit(topology).get();
 
-	assertTrue(expectedCount.valid());
+        assertTrue(expectedCount.valid());
         assertTrue(hello.valid());
     }
 
@@ -822,6 +848,44 @@ public class ParallelTest extends TestTopology {
             this.functionContext = functionContext; 
         }
         
+    }
+    
+    public static List<String> getListOfUniqueStrings(int num){
+        List<String> l = new ArrayList<>();
+        for(int i = 0; i < num; i++){
+            l.add(Integer.toString(i));
+        }
+        return l;
+    }
+    
+    @SuppressWarnings("serial")
+    public static Function<String, String> randomStringProducer(){
+        return new Function<String, String>(){
+            String uuid = null;
+            @Override
+            public String apply(String v) {
+                if(uuid == null){
+                    uuid = UUID.randomUUID().toString();
+                }
+                return uuid;
+            }
+            
+        };
+    }
+    
+    @SuppressWarnings("serial")
+    public static Function<String, String> uniqueStringCounter(final int count){
+        return new Function<String, String>(){
+            Set<String> uniqueStrings = new HashSet<>();
+            @Override
+            public String apply(String v) {
+                uniqueStrings.add(v);
+                if(uniqueStrings.size() == count){
+                    return Integer.toString(uniqueStrings.size());
+                }
+            }
+            
+        };
     }
     
     
