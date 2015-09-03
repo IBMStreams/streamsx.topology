@@ -95,7 +95,7 @@ public class SPLOperatorsTest extends TestTopology {
         String r = "test\"Lit\nerals\\n" + rand.nextInt();
         opParamAdder.put("r", r);
         String u = "test\"Lit\nerals\\n" + rand.nextInt();
-        opParamAdder.put("u", SPL.createParamValue(u, MetaType.USTRING));
+        opParamAdder.put("u", SPL.createValue(u, MetaType.USTRING));
 
         boolean b = rand.nextBoolean();
         opParamAdder.put("b", b);
@@ -113,10 +113,10 @@ public class SPLOperatorsTest extends TestTopology {
         short ui16 = (short) 0xFFFE;  // 65534 => -2 
         int ui32 = 0xFFFFFFFD;        // 4294967293 => -3
         long ui64 = 0xFFFFFFFFFFFFFFFCL; // 18446744073709551612 => -4
-        opParamAdder.put("ui8", SPL.createParamValue(ui8, MetaType.UINT8));
-        opParamAdder.put("ui16", SPL.createParamValue(ui16, MetaType.UINT16));
-        opParamAdder.put("ui32", SPL.createParamValue(ui32, MetaType.UINT32)); 
-        opParamAdder.put("ui64", SPL.createParamValue(ui64, MetaType.UINT64)); 
+        opParamAdder.put("ui8", SPL.createValue(ui8, MetaType.UINT8));
+        opParamAdder.put("ui16", SPL.createValue(ui16, MetaType.UINT16));
+        opParamAdder.put("ui32", SPL.createValue(ui32, MetaType.UINT32)); 
+        opParamAdder.put("ui64", SPL.createValue(ui64, MetaType.UINT64)); 
         
         float f32 = rand.nextFloat();
         double f64 = rand.nextDouble();

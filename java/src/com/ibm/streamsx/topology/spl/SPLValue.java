@@ -16,7 +16,7 @@ import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 /**
  * An implementation private wrapper for values of any SPL type. 
  * <p>
- * See {@link SPL#createParamValue(Object, MetaType)
+ * See {@link SPL#createValue(Object, MetaType)
  *
  * @param <T> the SPLValue's type
  */

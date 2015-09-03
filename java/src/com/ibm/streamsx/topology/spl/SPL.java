@@ -31,15 +31,15 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
  * operator to be invoked is an SPL Java primitive operator then the methods of
  * {@link JavaPrimitive} should be used.
  * <p>
- * When necessary use {@code createParamValue(T, MetaType)}
+ * When necessary use {@code createValue(T, MetaType)}
  * to create parameter values for SPL types.
  * For example:
  * <pre>{@code
  * Map<String,Object> params = ...
  * params.put("aInt32", 13);
- * params.put("aUInt32", SPL.createParamValue(13, MetaType.UINT32));
+ * params.put("aUInt32", SPL.createValue(13, MetaType.UINT32));
  * params.put("aRString", "some string value");
- * params.put("aUString", SPL.createParamValue("some ustring value", MetaType.USTRING));
+ * params.put("aUString", SPL.createValue("some ustring value", MetaType.USTRING));
  * ... = SPLPrimitive.invokeOperator(..., params);
  * }</pre>
  * <p>
@@ -51,10 +51,10 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
  * <pre>{@code
  * Map<String,Object> params = ...
  * params.put("aInt32", topology.createSubmissionParameter("int32Param", 13);
- * params.put("aUInt32", SPL.createSubmissionParameter(topology, "uint32Param", SPL.createParamValue(13, MetaType.UINT32), true);
+ * params.put("aUInt32", SPL.createSubmissionParameter(topology, "uint32Param", SPL.createValue(13, MetaType.UINT32), true);
  * params.put("aRString", topology.createSubmissionParameter("rstrParam", "some string value");
- * params.put("aUString", SPL.createSubmissionParameter(topology, "ustrParam", SPL.createParamValue("some ustring value", MetaType.USTRING), true);
- * params.put("aUInt8", SPL.createSubmissionParameter(topology, "uint8Param", SPL.createParamValue((byte)13, MetaType.UINT8), true);
+ * params.put("aUString", SPL.createSubmissionParameter(topology, "ustrParam", SPL.createValue("some ustring value", MetaType.USTRING), true);
+ * params.put("aUInt8", SPL.createSubmissionParameter(topology, "uint8Param", SPL.createValue((byte)13, MetaType.UINT8), true);
  * ... = SPLPrimitive.invokeOperator(..., params);
  * }</pre>
  */
@@ -76,7 +76,7 @@ public class SPL {
      *     not appropriate for {@code metaType}
      * @see #paramValueToString(Object)
      */
-    public static <T> Object createParamValue(T value, MetaType metaType) {
+    public static <T> Object createValue(T value, MetaType metaType) {
         return new SPLValue<T>(value, metaType).toJSON();
     }
     
@@ -85,16 +85,16 @@ public class SPL {
             SPLValue<?> splValue = SPLValue.fromJSON((JSONObject) paramValue);
             return splValue;
         }            
-        throw new IllegalArgumentException("param is not from createParamValue()");
+        throw new IllegalArgumentException("param is not from createValue()");
     }
 
     /**
-     * Convert a value from {@code createParamValue()} to a string
+     * Convert a value from {@code createValue()} to a string
      * appropriate for the wrapped value.
      * @param paramValue the parameter value  
      * @return the string
      * @throws IllegalArgumentException if {@code paramValue} is not a
-     *      value from {@code createParamValue()}.
+     *      value from {@code createValue()}.
      */
     public static Object paramValueToString(Object paramValue) {
         SPLValue<?> splValue = createSPLValue(paramValue);
@@ -106,20 +106,20 @@ public class SPL {
      * <p>
      * Use of this is required to construct a submission parameter for
      * a SPL operator parameter whose SPL type requires the use of
-     * {@code createParamValue(Object, MetaType)}.
+     * {@code createValue(Object, MetaType)}.
      * <p>
      * See {@link Topology#createSubmissionParameter(String, Class)} for
      * general information about submission parameters.
      * 
      * @param top the topology
      * @param name the submission parameter name
-     * @param paramValue a value from {@code createParamValue()}
+     * @param paramValue a value from {@code createValue()}
      * @param withDefault true to create a submission parameter with
      *      a default value, false to create one without a default value
      *      When false, the paramValue's wrapped value's value in ignored. 
      * @return the {@code Supplier<T>} for the submission parameter
      * @throws IllegalArgumentException if {@code paramValue} is not a
-     *      value from {@code createParamValue()}.
+     *      value from {@code createValue()}.
      */
     public static <T> Supplier<T> createSubmissionParameter(Topology top,
             String name, Object paramValue, boolean withDefault) {

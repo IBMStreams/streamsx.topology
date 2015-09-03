@@ -183,7 +183,7 @@ public class ParallelTest extends TestTopology {
         Map<String,Object> splParams = new HashMap<>();
         splParams.put("file", tmpFile.getAbsolutePath());
         splParams.put("append", topology.createSubmissionParameter(submissionAppendName, submissionAppend));
-        splParams.put("flush", SPL.createSubmissionParameter(topology, submissionFlushName, SPL.createParamValue(0, Type.MetaType.UINT32), false));
+        splParams.put("flush", SPL.createSubmissionParameter(topology, submissionFlushName, SPL.createValue(0, Type.MetaType.UINT32), false));
         SPL.invokeSink("spl.adapter::FileSink", splStream, splParams);
 
         // avoid another parallel impl limitation noted in issue#173
