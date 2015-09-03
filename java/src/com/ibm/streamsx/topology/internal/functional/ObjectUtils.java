@@ -98,6 +98,9 @@ public class ObjectUtils {
                    if (Modifier.isStatic(field.getModifiers()))
                        continue;
                    
+                   if (Modifier.isTransient(field.getModifiers()))
+                       continue;
+                   
                    if (!Modifier.isFinal(field.getModifiers()))
                        return false;
                    
