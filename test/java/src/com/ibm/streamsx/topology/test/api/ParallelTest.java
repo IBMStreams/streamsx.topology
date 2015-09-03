@@ -26,7 +26,10 @@ import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.PERuntime;
 import com.ibm.streams.operator.StreamSchema;
+import com.ibm.streams.operator.Type;
+
 import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
+
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
@@ -43,7 +46,6 @@ import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
-import com.ibm.streamsx.topology.spl.Unsigned;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -181,7 +183,7 @@ public class ParallelTest extends TestTopology {
         Map<String,Object> splParams = new HashMap<>();
         splParams.put("file", tmpFile.getAbsolutePath());
         splParams.put("append", topology.createSubmissionParameter(submissionAppendName, submissionAppend));
-        splParams.put("flush", topology.createSubmissionParameter(submissionFlushName, Unsigned.UnsignedInteger.class));
+        splParams.put("flush", SPL.createSubmissionParameter(topology, submissionFlushName, SPL.createParamValue(0, Type.MetaType.UINT32), false));
         SPL.invokeSink("spl.adapter::FileSink", splStream, splParams);
 
         // avoid another parallel impl limitation noted in issue#173

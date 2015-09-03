@@ -21,11 +21,6 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.builder.json.JOperator;
-import com.ibm.streamsx.topology.spl.UString;
-import com.ibm.streamsx.topology.spl.Unsigned.UnsignedByte;
-import com.ibm.streamsx.topology.spl.Unsigned.UnsignedInteger;
-import com.ibm.streamsx.topology.spl.Unsigned.UnsignedLong;
-import com.ibm.streamsx.topology.spl.Unsigned.UnsignedShort;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 // Union(A,B)
@@ -123,28 +118,40 @@ public class BOperatorInvocation extends BOperator {
 
         // Set the value in the OperatorInvocation.
         
-        if (value instanceof UString) {
-            value = ((UString) value).value();
-            jsonValue = value;
-            jsonType = "ustring";
-        } else if (value instanceof UnsignedByte) {
-            value = ((UnsignedByte) value).value();
-            jsonValue = value;
-            jsonType = "unsigned";
-        } else if (value instanceof UnsignedShort) {
-            value = ((UnsignedShort) value).value();
-            jsonValue = value;
-            jsonType = "unsigned";
-        } else if (value instanceof UnsignedInteger) {
-            value = ((UnsignedInteger) value).value();
-            jsonValue = value;
-            jsonType = "unsigned";
-        } else if (value instanceof UnsignedLong) {
-            value = ((UnsignedLong) value).value();
-            jsonValue = value;
-            jsonType = "unsigned";
+        if (value instanceof JSONAble) {
+            value = ((JSONAble)value).toJSON();
         }
-        
+        if (value instanceof JSONObject) {
+            JSONObject jo = ((JSONObject) value);
+            if (jo.get("type") == null || jo.get("value") == null)
+                throw new IllegalArgumentException("Illegal JSONObject " + jo);
+            String type = (String) jo.get("type");
+            Object val = (JSONObject) jo.get("value");
+            if ("wrappedValue".equals(type)) {
+                /*
+                 * The WrappedValue parameter value object is
+                 * <pre><code>
+                 * object {
+                 *   type : "wrappedValue"
+                 *   value : object {
+                 *     value : any. non-null.
+                 *     typeModifier : optional null, "utf16", "unsigned"
+                 *   }
+                 * }
+                 * </code></pre>
+                 */
+                // unwrap and fall through to handling for the wrapped value
+                JSONObject splValue = (JSONObject) val;
+                value = splValue.get("value");
+                jsonValue = value;
+                jsonType = (String) splValue.get("typeModifier");
+                // fall through to handle jsonValue as usual 
+            }
+            else {
+                // other kinds of JSONObject handled below
+            }
+        }
+                
         if (value instanceof String) {
             op.setStringParameter(name, (String) value);
         } else if (value instanceof Byte) {
@@ -183,8 +190,8 @@ public class BOperatorInvocation extends BOperator {
             jsonValue = attr.getName();
             jsonType = "attribute";
             op.setAttributeParameter(name, attr.getName());
-        } else if (value instanceof JSONAble) {
-            JSONObject jo = ((JSONAble) value).toJSON();
+        } else if (value instanceof JSONObject) {
+            JSONObject jo = (JSONObject) value;
             jsonType = (String) jo.get("type");
             jsonValue = (JSONObject) jo.get("value");
         } else {

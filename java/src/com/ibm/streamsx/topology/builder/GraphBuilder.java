@@ -247,11 +247,30 @@ public class GraphBuilder extends BJSONObject {
         return ops;
     }
 
-    public void createSubmissionParameter(String name, JSONAble jsonable) {
+    /**
+     * Create a submission parameter.
+     * <p>  
+     * The SubmissionParameter parameter value json is: 
+     * <pre><code>
+     * object {
+     *   type : "submissionParameter"
+     *   value : object {
+     *     name : string. submission parameter name
+     *     valueClassName : string. a java type
+     *     typeModifier : optional string to modify interpretation of
+     *                      valueClassName.  "utf16", "unsigned", null 
+     *     defaultValue : any. an instance of valueClassName. may be null.
+     *   }
+     * }
+     * </code></pre>
+     * @param name the submission parameter name
+     * @param jo the SubmissionParameter parameter value object
+     */
+    public void createSubmissionParameter(String name, JSONObject jo) {
         if (spParams.containsKey(name))
             throw new IllegalArgumentException("name is already defined");
-        spParams.put(name, jsonable.toJSON());
-        params.put(SubmissionTimeValue.mkOpParamName(name), jsonable.toJSON());
+        spParams.put(name, jo);
+        params.put(SubmissionTimeValue.mkOpParamName(name), jo);
     }
 
 }

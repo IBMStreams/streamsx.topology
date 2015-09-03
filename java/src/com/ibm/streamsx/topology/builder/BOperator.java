@@ -20,7 +20,7 @@ import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
  * output ports (see BStream) inputs: Array in input ports type: connections:
  * array of connection names as strings
  * 
- * Parameter value: Value of parameter.
+ * Parameter value: SPLValue of parameter.
  */
 
 public class BOperator extends BJSONObject {

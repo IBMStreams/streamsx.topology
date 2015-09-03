@@ -336,7 +336,7 @@ class OperatorGenerator {
             SubmissionTimeValue.generateRef((JSONObject) value, sb);
             return;
         } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
-            if ("ustring".equals(type))
+            if ("utf16".equals(type))
                 sb.append("(ustring)");
             SPLGenerator.stringLiteral(sb, value.toString());
             return;

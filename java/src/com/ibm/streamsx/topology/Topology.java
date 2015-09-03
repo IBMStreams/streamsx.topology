@@ -740,12 +740,13 @@ public class Topology implements TopologyElement {
      *
      * @param name submission parameter name
      * @param valueClass class object for {@code T}
+     * @return the {@code Supplier<T>} for the submission parameter
      * @throws IllegalArgumentException if {@code name} is null, empty,
      *  or has already been defined. 
      */
     public <T> Supplier<T> createSubmissionParameter(String name, Class<T> valueClass) {
         SubmissionParameter<T> sp = new SubmissionParameter<T>(name, valueClass); 
-        builder().createSubmissionParameter(name, sp);
+        builder().createSubmissionParameter(name, sp.toJSON());
         return sp;
     }
 
@@ -756,13 +757,14 @@ public class Topology implements TopologyElement {
      * of submission parameters.
      * @param name submission parameter name
      * @param defaultValue default value if parameter isn't specified.
+     * @return the {@code Supplier<T>} for the submission parameter
      * @throws IllegalArgumentException if {@code name} is null, empty,
      *  or has already been defined. 
      * @throws IllegalArgumentException if {@code defaultValue} is null
      */
     public <T> Supplier<T> createSubmissionParameter(String name, T defaultValue) {
         SubmissionParameter<T> sp = new SubmissionParameter<T>(name, defaultValue);
-        builder().createSubmissionParameter(name, sp);
+        builder().createSubmissionParameter(name, sp.toJSON());
         return sp;
     }
 

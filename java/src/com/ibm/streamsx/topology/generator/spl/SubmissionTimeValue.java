@@ -184,7 +184,7 @@ public class SubmissionTimeValue {
         if (splType == null)
             throw new IllegalArgumentException("Unhandled className "+className);
         if (modifier != null) {
-            if ("ustring".equals(modifier))
+            if ("utf16".equals(modifier))
                 splType = "ustring";
             else if ("unsigned".equals(modifier))
                 splType = "u" + splType;

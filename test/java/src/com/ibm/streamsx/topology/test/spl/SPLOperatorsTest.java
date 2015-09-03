@@ -16,20 +16,17 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
+import com.ibm.json.java.JSONObject;
 import com.ibm.streams.flow.handlers.MostRecent;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.Type;
+import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
-import com.ibm.streamsx.topology.spl.UString;
-import com.ibm.streamsx.topology.spl.Unsigned.UnsignedByte;
-import com.ibm.streamsx.topology.spl.Unsigned.UnsignedInteger;
-import com.ibm.streamsx.topology.spl.Unsigned.UnsignedLong;
-import com.ibm.streamsx.topology.spl.Unsigned.UnsignedShort;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -97,7 +94,7 @@ public class SPLOperatorsTest extends TestTopology {
         String r = "test\"Lit\nerals\\n" + rand.nextInt();
         opParamAdder.put("r", r);
         String u = "test\"Lit\nerals\\n" + rand.nextInt();
-        opParamAdder.put("u", new UString(u));
+        opParamAdder.put("u", SPL.createParamValue(u, MetaType.USTRING));
 
         boolean b = rand.nextBoolean();
         opParamAdder.put("b", b);
@@ -115,10 +112,10 @@ public class SPLOperatorsTest extends TestTopology {
         short ui16 = (short) 0xFFFE;  // 65534 => -2 
         int ui32 = 0xFFFFFFFD;        // 4294967293 => -3
         long ui64 = 0xFFFFFFFFFFFFFFFCL; // 18446744073709551612 => -4
-        opParamAdder.put("ui8", new UnsignedByte(ui8));
-        opParamAdder.put("ui16", new UnsignedShort(ui16));
-        opParamAdder.put("ui32", new UnsignedInteger(ui32)); 
-        opParamAdder.put("ui64", new UnsignedLong(ui64)); 
+        opParamAdder.put("ui8", SPL.createParamValue(ui8, MetaType.UINT8));
+        opParamAdder.put("ui16", SPL.createParamValue(ui16, MetaType.UINT16));
+        opParamAdder.put("ui32", SPL.createParamValue(ui32, MetaType.UINT32)); 
+        opParamAdder.put("ui64", SPL.createParamValue(ui64, MetaType.UINT64)); 
         
         float f32 = rand.nextFloat();
         double f64 = rand.nextDouble();
@@ -184,19 +181,27 @@ public class SPLOperatorsTest extends TestTopology {
         // Test operator parameters with submission time values with defaults
         testOpParams("testSubmissionParamsWithDefault", new OpParamAdder() {
             void put(String opParamName, Object opParamValue) {
-                Supplier<?> sp = top.createSubmissionParameter(opParamName, opParamValue);
+                Supplier<?> sp;
+                if (!(opParamValue instanceof JSONObject))
+                    sp = top.createSubmissionParameter(opParamName, opParamValue);
+                else
+                    sp = SPL.createSubmissionParameter(top, opParamName, opParamValue, true);
                 params.put(opParamName, sp);
             }
         });
     }
 
     @Test
-    public void testSubmissionParamsNoDefault() throws Exception {
+    public void testSubmissionParamsWithoutDefault() throws Exception {
         // Test operator parameters with submission time values without defaults
-        testOpParams("testSubmissionParamsNoDefault", new OpParamAdder() {
+        testOpParams("testSubmissionParamsWithoutDefault", new OpParamAdder() {
             void put(String opParamName, Object opParamValue) {
-                Supplier<?> sp = top.createSubmissionParameter(opParamName,
-                                        (Class<?>)opParamValue.getClass());
+                Supplier<?> sp;
+                if (!(opParamValue instanceof JSONObject))
+                    sp = top.createSubmissionParameter(opParamName,
+                            (Class<?>)opParamValue.getClass());
+                else
+                    sp = SPL.createSubmissionParameter(top, opParamName, opParamValue, false);
                 params.put(opParamName, sp);
                 
                 @SuppressWarnings("unchecked")
@@ -205,7 +210,10 @@ public class SPLOperatorsTest extends TestTopology {
                     submitParams = new HashMap<>();
                     config.put(ContextProperties.SUBMISSION_PARAMS, submitParams);
                 }
-                submitParams.put(opParamName, opParamValue);
+                if (!(opParamValue instanceof JSONObject))
+                    submitParams.put(opParamName, opParamValue);
+                else
+                    submitParams.put(opParamName, SPL.paramValueToString(opParamValue));
             }
         });
     }
