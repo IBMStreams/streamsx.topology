@@ -52,7 +52,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
     /**
      * A submission time parameter specification with or without a default value.
      * <p>
-     * The defaultValue is a WrappedValue parameter value object.
+     * The wrappedValue parameter is a WrappedValue parameter value object.
      * The WrappedValue parameter value object is
      * <pre><code>
      * object {
@@ -64,17 +64,17 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
      * }
      * </code></pre>
      * @param name
-     * @param defaultValue JSONObject
+     * @param wrappedValue JSONObject
      * @param withDefault true create a submission parameter with a default value,
      *        false for one without a default value.
      *        When false, the wrapped value's value is ignored.
      */
     @SuppressWarnings("unchecked")
-    public SubmissionParameter(String name, JSONObject defaultValue, boolean withDefault) {
-        String type = (String) defaultValue.get("type");
+    public SubmissionParameter(String name, JSONObject wrappedValue, boolean withDefault) {
+        String type = (String) wrappedValue.get("type");
         if (!"wrappedValue".equals(type))
             throw new IllegalArgumentException("defaultValue");
-        JSONObject value = (JSONObject) defaultValue.get("value");
+        JSONObject value = (JSONObject) wrappedValue.get("value");
         this.name = name;
         this.defaultValue = withDefault ? (T) value.get("value") : null;
         this.valueClassName = value.get("value").getClass().getCanonicalName();
@@ -96,6 +96,8 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
 
     @Override
     public JSONObject toJSON() {
+        // meet the requirements of BOperatorInvocation.setParameter()
+        // and OperatorGenerator.parameterValue()
         /*
          * The SubmissionParameter parameter value json is: 
          * <pre><code>

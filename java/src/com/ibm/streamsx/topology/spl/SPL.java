@@ -31,8 +31,8 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
  * operator to be invoked is an SPL Java primitive operator then the methods of
  * {@link JavaPrimitive} should be used.
  * <p>
- * Use {@link #createParamValue(Object, MetaType) to create parameter
- * values for SPL types lacking a direct mapping to an unambiguous Java type.
+ * When necessary use {@link #createParamValue(Object, MetaType)
+ * to create parameter values for SPL types.
  * For example:
  * <pre>{@code
  * Map<String,Object> params = ...

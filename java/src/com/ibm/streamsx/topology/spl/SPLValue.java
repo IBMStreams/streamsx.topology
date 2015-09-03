@@ -126,6 +126,7 @@ class SPLValue<T> {
     }
     
     public JSONObject toJSON() {
+        // meet the requirements of BOperatorInvocation.setParameter()
         /*
          * The WrappedValue parameter value object is
          * <pre><code>
