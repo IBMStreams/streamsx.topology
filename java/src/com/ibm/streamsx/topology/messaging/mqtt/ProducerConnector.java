@@ -90,10 +90,11 @@ public class ProducerConnector {
      * <p>
      * Same as {@code produce(stream, null, -1)}.
      * @param stream the stream to publish
+     * @return the sink element
      */
-    public void publish(TStream<? extends Message> stream)
+    public TSink publish(TStream<? extends Message> stream)
     {
-        publish(stream, null/*topic*/, -1/*qos*/);
+        return publish(stream, null/*topic*/, -1/*qos*/);
     }
 
     /**
@@ -106,9 +107,10 @@ public class ProducerConnector {
      * <p>
      * Same as {@code produce(stream, topic, -1)}.
      * @param stream the stream to publish
+     * @return the sink element
      */
-    public void publish(TStream<? extends Message> stream, String topic) {
-        publish(stream, topic, -1);
+    public TSink  publish(TStream<? extends Message> stream, String topic) {
+        return publish(stream, topic, -1);
     }
     
     /**
@@ -127,13 +129,16 @@ public class ProducerConnector {
      * @param stream the stream to publish
      * @param topic topic to publish to.  May be null.
      * @param qos quality of service. -1 to use {@code defaultQOS}.
+     * @return the sink element
      * 
      * @throws IllegalArgumentException if an empty {@code topic} is specified.
      * @throws IllegalArgumentException if {@code qos<-1 || qos>2}.
      */
-    public void publish(TStream<? extends Message> stream, String topic, int qos) {
+    public TSink publish(TStream<? extends Message> stream, String topic, int qos) {
         if (topic!=null && topic.isEmpty())
             throw new IllegalArgumentException("topic");
+        
+        stream = stream.lowLatency();
         
         @SuppressWarnings("unchecked")
         SPLStream splStream = SPLStreams.convertStream((TStream<Message>)stream,
@@ -166,6 +171,7 @@ public class ProducerConnector {
                 splStream,
                 params);
         Util.tagOpAsJavaPrimitive(sink.operator(), kind, className);
+        return sink;
     }
     
     private static BiFunction<Message,OutputTuple,OutputTuple> 

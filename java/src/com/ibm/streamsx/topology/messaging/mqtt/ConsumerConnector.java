@@ -260,7 +260,10 @@ public class ConsumerConnector {
                         params,
                         MqttSchemas.MQTT);
         Util.tagOpAsJavaPrimitive(toOp(rawMqtt), kind, className);
-        return toMessageStream(rawMqtt);
+        
+        TStream<Message> rcvdMsgs = toMessageStream(rawMqtt);
+        // TODO post rebase - rcvdMsgs.colocate(rawMqtt);
+        return rcvdMsgs;
     }
     
     private BOperatorInvocation toOp(SPLStream splStream) {

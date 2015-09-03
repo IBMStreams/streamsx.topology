@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
 import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
@@ -232,7 +233,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(initialDelayFunc(PUB_DELAY_MSEC));
         
-        producer.publish(msgsToPublish, topic, qos);
+        TSink sink = producer.publish(msgsToPublish, topic, qos);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(new Subscription(topic, qos));
 
@@ -244,6 +245,7 @@ public class MqttStreamsTest extends TestTopology {
         List<String> expectedAsString = mapList(msgs, msgToJSONStringFunc());
 
         completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        assertTrue(sink != null);
     }
     
     @Test
@@ -294,7 +296,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(initialDelayFunc(PUB_DELAY_MSEC));
 
-        producer.publish(msgsToPublish, topic);
+        TSink sink = producer.publish(msgsToPublish, topic);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
@@ -309,6 +311,7 @@ public class MqttStreamsTest extends TestTopology {
         System.out.println("bundle " + actBundle.getAbsolutePath());
         assertTrue(actBundle != null);
         actBundle.delete();
+        assertTrue(sink != null);
     }
     
     @Test
@@ -333,7 +336,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(initialDelayFunc(PUB_DELAY_MSEC));
 
-        producer.publish(msgsToPublish, topic);
+        TSink sink = producer.publish(msgsToPublish, topic);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
@@ -343,6 +346,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
 
         completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        assertTrue(sink != null);
     }
     
     @Test
@@ -366,7 +370,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(initialDelayFunc(PUB_DELAY_MSEC));
         
-        producer.publish(msgsToPublish);
+        TSink sink = producer.publish(msgsToPublish);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
@@ -376,6 +380,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
 
         completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        assertTrue(sink != null);
     }
     
     @Test
@@ -400,7 +405,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(initialDelayFunc(PUB_DELAY_MSEC));
         
-        producer.publish(msgsToPublish, topic);
+        TSink sink = producer.publish(msgsToPublish, topic);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
@@ -410,6 +415,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
 
         completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        assertTrue(sink != null);
     }
     
     @Test
@@ -436,7 +442,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs).asType(MyMsgSubtype.class)
                 .modify(myMsgInitialDelayFunc(PUB_DELAY_MSEC));
         
-        producer.publish(msgsToPublish, topic);
+        TSink sink = producer.publish(msgsToPublish, topic);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
@@ -446,6 +452,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
 
         completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        assertTrue(sink != null);
     }
     
     @Test
@@ -472,7 +479,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs).asType(MyMsgSubtype.class)
                 .modify(myMsgInitialDelayFunc(PUB_DELAY_MSEC));
         
-        producer.publish(msgsToPublish);
+        TSink sink = producer.publish(msgsToPublish);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
@@ -482,6 +489,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
 
         completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        assertTrue(sink != null);
     }
     
     @Test
@@ -510,7 +518,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(initialDelayFunc(PUB_DELAY_MSEC));
         
-        producer.publish(msgsToPublish);
+        TSink sink = producer.publish(msgsToPublish);
         
         TStream<Message> rcvdTopic1Msgs = consumer.subscribe(topic1);
         TStream<Message> rcvdTopic2Msgs = consumer.subscribe(topic2);
@@ -523,6 +531,7 @@ public class MqttStreamsTest extends TestTopology {
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
                                             
         completeAndValidateUnordered(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        assertTrue(sink != null);
     }
     
     @Test
@@ -554,8 +563,8 @@ public class MqttStreamsTest extends TestTopology {
         TStream<Message> topic2MsgsToPublish = top.constants(topic2Msgs)
                 .modify(initialDelayFunc(PUB_DELAY_MSEC));
 
-        producer.publish(topic1MsgsToPublish);
-        producer.publish(topic2MsgsToPublish);
+        TSink sink1 = producer.publish(topic1MsgsToPublish);
+        TSink sink2 = producer.publish(topic2MsgsToPublish);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic1, topic2);
         
@@ -565,6 +574,9 @@ public class MqttStreamsTest extends TestTopology {
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
 
         completeAndValidateUnordered(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        assertTrue(sink1 != null);
+        assertTrue(sink2 != null);
+        assertTrue("sink1 != sink2", sink1 != sink2);
     }
     
     // would be nice if Tester provided this too
