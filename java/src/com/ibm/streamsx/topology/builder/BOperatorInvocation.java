@@ -127,12 +127,12 @@ public class BOperatorInvocation extends BOperator {
                 throw new IllegalArgumentException("Illegal JSONObject " + jo);
             String type = (String) jo.get("type");
             Object val = (JSONObject) jo.get("value");
-            if ("__spl_wrappedValue".equals(type)) {
+            if ("__spl_value".equals(type)) {
                 /*
-                 * The WrappedValue parameter value object is
+                 * The Value object is
                  * <pre><code>
                  * object {
-                 *   type : "__spl_wrappedValue"
+                 *   type : "__spl_value"
                  *   value : object {
                  *     value : any. non-null.
                  *     typeModifier : optional null, "utf16", "unsigned"

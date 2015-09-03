@@ -52,11 +52,11 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
     /**
      * A submission time parameter specification with or without a default value.
      * <p>
-     * The wrappedValue parameter is a WrappedValue parameter value object.
-     * The WrappedValue parameter value object is
+     * The {@code jvalue} parameter must be a Value object.
+     * The Value object is
      * <pre><code>
      * object {
-     *   type : "__spl_wrappedValue"
+     *   type : "__spl_value"
      *   value : object {
      *     value : any. non-null.
      *     typeModifier : optional null, "utf16", "unsigned"
@@ -64,17 +64,17 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
      * }
      * </code></pre>
      * @param name
-     * @param wrappedValue JSONObject
+     * @param jvalue JSONObject
      * @param withDefault true create a submission parameter with a default value,
      *        false for one without a default value.
      *        When false, the wrapped value's value is ignored.
      */
     @SuppressWarnings("unchecked")
-    public SubmissionParameter(String name, JSONObject wrappedValue, boolean withDefault) {
-        String type = (String) wrappedValue.get("type");
-        if (!"__spl_wrappedValue".equals(type))
+    public SubmissionParameter(String name, JSONObject jvalue, boolean withDefault) {
+        String type = (String) jvalue.get("type");
+        if (!"__spl_value".equals(type))
             throw new IllegalArgumentException("defaultValue");
-        JSONObject value = (JSONObject) wrappedValue.get("value");
+        JSONObject value = (JSONObject) jvalue.get("value");
         this.name = name;
         this.defaultValue = withDefault ? (T) value.get("value") : null;
         this.valueClassName = value.get("value").getClass().getCanonicalName();

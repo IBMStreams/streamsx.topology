@@ -72,7 +72,7 @@ public class SPL {
      * @param value the value to wrap
      * @param metaType the SPL meta type
      * @return the wrapper object
-     * @throws IllegalArgumentException if value is null or it's class is
+     * @throws IllegalArgumentException if value is null or its class is
      *     not appropriate for {@code metaType}
      * @see #paramValueToString(Object)
      */
