@@ -5,7 +5,6 @@
 package com.ibm.streamsx.topology.internal.functional.window;
 
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getInputMapping;
-import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -14,6 +13,7 @@ import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindowEvent;
 import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
@@ -27,14 +27,13 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
  */
 public class SlidingJoin<T, U, J> extends SlidingSet<U, J> {
 
-    private BiFunction<T, List<U>, J> joiner;
+    private FunctionalHandler<BiFunction<T, List<U>, J>> joinerHandler;
     protected SPLMapping<T> input1Mapping;
 
     public SlidingJoin(FunctionWindow op, StreamWindow<Tuple> window)
             throws Exception {
         super(op, window);
-        joiner = getLogicObject(op.getFunctionalLogic());
-        op.setLogic(joiner);
+        joinerHandler = op.createLogicHandler();
         input1Mapping = getInputMapping(op, 1);
     }
 
@@ -48,6 +47,7 @@ public class SlidingJoin<T, U, J> extends SlidingSet<U, J> {
     }
 
     public void port1Join(Tuple splTuple) throws Exception {
+        final BiFunction<T, List<U>, J> joiner = joinerHandler.getLogic();
         J jTuple;
         synchronized (this) {
             T tTuple = input1Mapping.convertFrom(splTuple);

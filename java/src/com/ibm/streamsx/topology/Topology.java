@@ -638,6 +638,55 @@ public class Topology implements TopologyElement {
 
         return tester;
     }
+    
+    /**
+     * Checkpoint the state of the graph periodically.
+     * Each stateful element in the topology
+     * checkpoints its state periodically according to
+     * {@code period} and {@code unit}. Every element persists
+     * its state autonomously, asynchronously with processing
+     * its streams.
+     * <BR>
+     * Upon a failure of an element's container the element
+     * will restart in a new container using its last
+     * checkpointed state. If no state is available, due
+     * to a failure before the first checkpoint, then the
+     * element reverts to its initial state.
+     * <P>
+     * For stream processing elements defined by Java functions
+     * (such as {@link #source(Supplier)} and
+     * {@link TStream#transform(Function)}) the state is the
+     * serialized form of the object representing the function.
+     * Synchronization is applied to ensure that checkpointed state of
+     * the object does not include inconsistencies due to ongoing stream processing.
+     * <BR>
+     * If the function object is immutable then no checkpointing occurs for that element.
+     * A function object is taken as mutable if any of these conditions are true:
+     * <UL>
+     * <LI>It contains at least one non-transient, non-final instance field.</LI>
+     * <LI>A final instance field is a reference to a mutable object.
+     * Note that identification of what is a immutable object may be limited and
+     * so in some cases function objects may be checkpointed even though
+     * they are immutable. 
+     * </LI>
+     * </UL>
+     * Otherwise the function object is taken as immutable.
+     * </P>
+     * <P>
+     * Checkpointing is only supported is distributed contexts.
+     * </P>
+     * 
+     * @param period Approximate period for checkpointing.
+     * @param unit Time unit of {@code period}.
+     */
+    public void checkpointPeriod(long period, TimeUnit unit) {
+        JSONObject checkpoint = new JSONObject();
+        checkpoint.put("mode", "periodic");
+        checkpoint.put("period", period);
+        checkpoint.put("unit", unit.name());
+        
+        builder().getConfig().put("checkpoint", checkpoint);
+    }
 
     /**
      * Internal use only.

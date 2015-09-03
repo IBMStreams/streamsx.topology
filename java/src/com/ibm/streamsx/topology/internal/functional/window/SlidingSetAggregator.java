@@ -4,14 +4,13 @@
  */
 package com.ibm.streamsx.topology.internal.functional.window;
 
-import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
-
 import java.util.LinkedList;
 import java.util.List;
 
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
 
 /**
@@ -27,17 +26,17 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
  */
 public abstract class SlidingSetAggregator<I, O> extends SlidingSet<I, O> {
 
-    private Function<List<I>, O> aggregator;
+    private FunctionalHandler<Function<List<I>, O>> aggregatorHandler;
 
     public SlidingSetAggregator(FunctionWindow op, StreamWindow<Tuple> window)
             throws Exception {
         super(op, window);
-        aggregator = getLogicObject(op.getFunctionalLogic());
-        op.setLogic(aggregator);
+        aggregatorHandler = op.createLogicHandler();
     }
 
     protected void aggregate(Object partition, LinkedList<I> tuples)
             throws Exception {
+        final Function<List<I>, O> aggregator = aggregatorHandler.getLogic();
         O aggregation = aggregator.apply(tuples);
         if (aggregation != null) {
             Tuple splTuple = outputMapping.convertTo(aggregation);

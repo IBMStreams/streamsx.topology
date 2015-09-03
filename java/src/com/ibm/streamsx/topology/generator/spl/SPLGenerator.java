@@ -14,6 +14,7 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
+import com.ibm.streamsx.topology.builder.json.JGraph;
 
 public class SPLGenerator {
     // Needed for composite name generation
@@ -525,10 +526,6 @@ public class SPLGenerator {
     }
 
     static JSONObject getGraphConfig(JSONObject graph) {
-        JSONObject config = (JSONObject) graph.get("config");
-        if (config == null)
-            config = new JSONObject();
-        return config;
-
+        return JGraph.createConfig(graph);
     }
 }

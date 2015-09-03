@@ -41,7 +41,6 @@ public class FunctionJoin extends FunctionWindow {
         } else {
             joiner = new SlidingJoin<Object, Object, Object>(this, window);
         }
-        setLogic(joiner);
     }
 
     /**

@@ -8,12 +8,11 @@ import java.util.logging.Logger;
 
 import com.ibm.streams.operator.AbstractOperator;
 import com.ibm.streams.operator.OperatorContext;
-import com.ibm.streams.operator.logging.TraceLevel;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.SharedLoader;
-import com.ibm.streamsx.topology.function.Initializable;
+import com.ibm.streamsx.topology.function.FunctionContext;
+import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
-import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 
 /**
  * 
@@ -30,11 +29,13 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
     private String functionalLogic;
     private String[] jar;
     
+    private FunctionContext functionContext;
+    
     /**
      * Logic (function) used by this operator,
      * will be closed upon shutdown.
      */
-    private Object logicInstance;
+    private FunctionalHandler<?> logicHandler;
 
     public final String getFunctionalLogic() {
         return functionalLogic;
@@ -59,53 +60,24 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
             throws Exception {
         super.initialize(context);
         FunctionalHelper.addLibraries(this, getJar());
+        functionContext = new FunctionOperatorContext(context);
+    }
+    
+    FunctionContext getFunctionContext() {
+        return functionContext;
     }
     
     @Override
-    public void shutdown() throws Exception {
-        closeLogic(logicInstance);
+    public synchronized void shutdown() throws Exception {
+        if (logicHandler != null)
+            logicHandler.close();
         super.shutdown();
     }
     
-    public void setLogic(Object logicInstance) throws Exception {
-        this.logicInstance = logicInstance;
-        initializeLogic(getOperatorContext(), logicInstance);
-    }
-    
-    static void initializeLogic(OperatorContext context, Object logicInstance) throws Exception {
-        for (;;) {
-            if (logicInstance instanceof Initializable) {
-                ((Initializable) logicInstance).initialize(new FunctionOperatorContext(context));
-            }
-            if (logicInstance instanceof WrapperFunction) {
-                logicInstance = ((WrapperFunction) logicInstance).getWrappedFunction();
-            } else {
-                break;
-            }
-        }
-    }
-    
-    /**
-     * If logicInstance implements AutoCloseable
-     * then shut it down by calling it close() method.
-     */
-    static void closeLogic(Object logicInstance) {
-        for (;;) {
-            if (logicInstance instanceof AutoCloseable) {
-                try {
-                    synchronized (logicInstance) {
-                        ((AutoCloseable) logicInstance).close();
-                    }
-                } catch (Exception e) {
-                    trace.log(TraceLevel.ERROR, "Exception " + e.getMessage()
-                            + " closing function instance:" + logicInstance, e);
-                }
-            }
-            if (logicInstance instanceof WrapperFunction) {
-                logicInstance = ((WrapperFunction) logicInstance).getWrappedFunction();
-            } else {
-                break;
-            }
-        }       
+    public <T> FunctionalHandler<T> createLogicHandler() throws Exception {
+        FunctionalHandler<T> handler = FunctionalOpUtils.createFunctionHandler(
+                getOperatorContext(), getFunctionContext(), getFunctionalLogic());
+        this.logicHandler = handler;
+        return handler;
     }
 }
