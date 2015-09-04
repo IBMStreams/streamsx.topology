@@ -300,6 +300,7 @@ public class SPLGenerator {
                 // to populate the parallel composite.
                 JSONObject parallelEnd = separateIntoComposites(parallelStarts,
                         subComp, graph);
+                SubmissionTimeValue.addJsonInstanceParams(compOperator, subComp);
 
                 // Set all relevant input port connections to the input port
                 // name of the parallel composite
@@ -462,9 +463,10 @@ public class SPLGenerator {
      * Append the value with the correct SPL suffix. Integer & Double do not
      * require a suffix
      */
-    static void numberLiteral(StringBuilder sb, Number value, boolean isUnsignedInt) {
+    static void numberLiteral(StringBuilder sb, Number value, Object type) {
         Object val = value;
         String suffix = "";
+        boolean isUnsignedInt = isUnsignedInt(type); 
 
         if (value instanceof Byte)
             suffix = "b";
@@ -485,6 +487,13 @@ public class SPLGenerator {
 
         sb.append(val);
         sb.append(suffix);
+    }
+    
+    private static boolean isUnsignedInt(Object type) {
+        return "uint8".equals(type)
+                || "uint16".equals(type)
+                || "uint32".equals(type)
+                || "uint64".equals(type);
     }
     
     /**

@@ -350,7 +350,7 @@ class OperatorGenerator {
             }
             return;
         } else if (value instanceof Number) {
-            SPLGenerator.numberLiteral(sb, (Number) value, "unsigned".equals(type));
+            SPLGenerator.numberLiteral(sb, (Number) value, type);
             return;
         }
 

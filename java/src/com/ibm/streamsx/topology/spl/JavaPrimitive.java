@@ -29,8 +29,8 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
  * For example:
  * <pre>{@code
  * Map<String,Object> params = ...
- * params.put("aLongParam", topology.createSubmissionParameter(..., Long.class);
- * params.put("aShortParam", topology.createSubmissionParameter(..., (Short)13);
+ * params.put("aLong", topology.createSubmissionParameter(..., Long.class);
+ * params.put("aShort", topology.createSubmissionParameter(..., (short)13);
  * ... = JavaPrimitive.invokeJavaPrimitive(..., params);
  * }</pre>
  */

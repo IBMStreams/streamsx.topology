@@ -21,11 +21,6 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.builder.json.JOperator;
-import com.ibm.streamsx.topology.spl.UString;
-import com.ibm.streamsx.topology.spl.Unsigned.UnsignedByte;
-import com.ibm.streamsx.topology.spl.Unsigned.UnsignedInteger;
-import com.ibm.streamsx.topology.spl.Unsigned.UnsignedLong;
-import com.ibm.streamsx.topology.spl.Unsigned.UnsignedShort;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 // Union(A,B)
@@ -123,28 +118,47 @@ public class BOperatorInvocation extends BOperator {
 
         // Set the value in the OperatorInvocation.
         
-        if (value instanceof UString) {
-            value = ((UString) value).value();
-            jsonValue = value;
-            jsonType = "ustring";
-        } else if (value instanceof UnsignedByte) {
-            value = ((UnsignedByte) value).value();
-            jsonValue = value;
-            jsonType = "unsigned";
-        } else if (value instanceof UnsignedShort) {
-            value = ((UnsignedShort) value).value();
-            jsonValue = value;
-            jsonType = "unsigned";
-        } else if (value instanceof UnsignedInteger) {
-            value = ((UnsignedInteger) value).value();
-            jsonValue = value;
-            jsonType = "unsigned";
-        } else if (value instanceof UnsignedLong) {
-            value = ((UnsignedLong) value).value();
-            jsonValue = value;
-            jsonType = "unsigned";
+        if (value instanceof JSONAble) {
+            value = ((JSONAble)value).toJSON();
         }
-        
+        if (value instanceof JSONObject) {
+            JSONObject jo = ((JSONObject) value);
+            if (jo.get("type") == null || jo.get("value") == null)
+                throw new IllegalArgumentException("Illegal JSONObject " + jo);
+            String type = (String) jo.get("type");
+            Object val = (JSONObject) jo.get("value");
+            if ("__spl_value".equals(type)) {
+                /*
+                 * The Value object is
+                 * <pre><code>
+                 * object {
+                 *   type : "__spl_value"
+                 *   value : object {
+                 *     value : any. non-null. type appropriate for metaType
+                 *     metaType : com.ibm.streams.operator.Type.MetaType string
+                 *   }
+                 * }
+                 * </code></pre>
+                 */
+                // unwrap and fall through to handling for the wrapped value
+                JSONObject splValue = (JSONObject) val;
+                value = splValue.get("value");
+                jsonValue = value;
+                String metaType = (String) splValue.get("metaType");
+                if ("ustring".equals(metaType)
+                        || "uint8".equals(metaType)
+                        || "uint16".equals(metaType)
+                        || "uint32".equals(metaType)
+                        || "uint64".equals(metaType)) {
+                    jsonType = metaType;
+                }
+                // fall through to handle jsonValue as usual 
+            }
+            else {
+                // other kinds of JSONObject handled below
+            }
+        }
+                
         if (value instanceof String) {
             op.setStringParameter(name, (String) value);
         } else if (value instanceof Byte) {
@@ -183,8 +197,8 @@ public class BOperatorInvocation extends BOperator {
             jsonValue = attr.getName();
             jsonType = "attribute";
             op.setAttributeParameter(name, attr.getName());
-        } else if (value instanceof JSONAble) {
-            JSONObject jo = ((JSONAble) value).toJSON();
+        } else if (value instanceof JSONObject) {
+            JSONObject jo = (JSONObject) value;
             jsonType = (String) jo.get("type");
             jsonValue = (JSONObject) jo.get("value");
         } else {

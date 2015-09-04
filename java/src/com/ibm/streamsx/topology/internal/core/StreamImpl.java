@@ -363,12 +363,15 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         this.connectTo(op, false, null);
     }
     
-    public TStream<T> parallel(final int width, Routing routing) {
-        @SuppressWarnings("serial")
-        Supplier<Integer> supplier = new Supplier<Integer>() {
+    public TStream<T> parallel(int width, Routing routing) {
+        return parallel(valueSupplier(width), routing);
+    }
+    
+    private static <T> Supplier<T> valueSupplier(final T value) {
+        return new Supplier<T>() {
+            private static final long serialVersionUID = 1L;
             @Override
-            public Integer get() { return width; }};
-        return parallel(supplier, routing);
+            public T get() { return value; }};
     }
     
     @Override
@@ -376,12 +379,17 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         if (width == null)
             throw new IllegalArgumentException("width");
-        Integer widthVal = width.get() != null
-                ? width.get()
-                : ((SubmissionParameter<Integer>)width).getDefaultValue();
+        Integer widthVal;
+        if (width.get() != null)
+            widthVal = width.get();
+        else if (width instanceof SubmissionParameter<?>)
+            widthVal = ((SubmissionParameter<Integer>)width).getDefaultValue();
+        else
+            throw new IllegalArgumentException(
+                    "Illegal width Supplier: width.get() returns null.");
         if (widthVal != null && widthVal <= 0)
-                throw new IllegalStateException(
-                        "The parallel width must be greater than or equal to 1.");
+            throw new IllegalArgumentException(
+                    "The parallel width must be greater than or equal to 1.");
 
         BOutput toBeParallelized = output();
         boolean needHashRemover = false;

@@ -19,6 +19,7 @@ import com.ibm.streams.operator.Operator;
 import com.ibm.streamsx.topology.builder.json.JOperator;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
@@ -246,11 +247,28 @@ public class GraphBuilder extends BJSONObject {
         return ops;
     }
 
-    public void createSubmissionParameter(String name, JSONAble jsonable) {
+    /**
+     * Create a submission parameter.
+     * <p>  
+     * The SubmissionParameter parameter value json is: 
+     * <pre><code>
+     * object {
+     *   type : "submissionParameter"
+     *   value : object {
+     *     name : string. submission parameter name
+     *     metaType : com.ibm.streams.operator.Type.MetaType string
+     *     defaultValue : any. may be null. type appropriate for metaType
+     *   }
+     * }
+     * </code></pre>
+     * @param name the submission parameter name
+     * @param jo the SubmissionParameter parameter value object
+     */
+    public void createSubmissionParameter(String name, JSONObject jo) {
         if (spParams.containsKey(name))
             throw new IllegalArgumentException("name is already defined");
-        spParams.put(name, jsonable.toJSON());
-        params.put("__jaa_stv_"+name, jsonable.toJSON());
+        spParams.put(name, jo);
+        params.put(SubmissionTimeValue.mkOpParamName(name), jo);
     }
 
 }
