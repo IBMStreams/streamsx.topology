@@ -170,7 +170,7 @@ public class GraphBuilder extends BJSONObject {
         final BOperatorInvocation op = new BOperatorInvocation(this, params);
         op.json().put("kind", kind);
 
-        json().put(JOperator.RUNTIME, JOperator.RUNTIME_SPL);
+        json().put(JOperator.MODEL, JOperator.MODEL_SPL);
         json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_SPL);
 
         ops.add(op);
@@ -182,7 +182,7 @@ public class GraphBuilder extends BJSONObject {
         final BOperatorInvocation op = new BOperatorInvocation(this, name, params);
         op.json().put("kind", kind);
         
-        json().put(JOperator.RUNTIME, JOperator.RUNTIME_SPL);
+        json().put(JOperator.MODEL, JOperator.MODEL_SPL);
         json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_SPL);
         
         ops.add(op);
@@ -199,10 +199,10 @@ public class GraphBuilder extends BJSONObject {
                 continue;
             
             // note: runtime==null for markers
-            String runtime = (String) op.json().get(JOperator.RUNTIME);
+            String runtime = (String) op.json().get(JOperator.MODEL);
             String language = (String) op.json().get(JOperator.LANGUAGE);
             
-            if (!JOperator.RUNTIME_SPL.equals(runtime) || !JOperator.LANGUAGE_JAVA.equals(language)) {
+            if (!JOperator.MODEL_SPL.equals(runtime) || !JOperator.LANGUAGE_JAVA.equals(language)) {
                     String namespace = (String) json().get("namespace");
                     String name = (String) json().get("name");
                     throw new IllegalStateException(

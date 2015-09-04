@@ -66,7 +66,7 @@ class Util {
      * @param className
      */
     static void tagOpAsJavaPrimitive(BOperatorInvocation op, String kind, String className) {
-        op.json().put(JOperator.RUNTIME, JOperator.RUNTIME_SPL);
+        op.json().put(JOperator.MODEL, JOperator.MODEL_SPL);
         op.json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_JAVA);
         op.json().put("kind", kind);
         op.json().put("kind.javaclass", className);
