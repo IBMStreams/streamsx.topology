@@ -11,6 +11,7 @@
  * <ul>
  * <li>the broker is accessible on {@code tcp://localhost:1883}
  *  and {@code ssl://localhost:8883}</li>
+ * <li>broker configured for no authentication</li>
  * </ul>
  * 
  * <p>See the {@link com.ibm.streamsx.topology.test.messaging.mqtt.MqttStreamsTest MqttStreamsTest}

@@ -262,7 +262,7 @@ public class ConsumerConnector {
         SPL.tagOpAsJavaPrimitive(toOp(rawMqtt), kind, className);
         
         TStream<Message> rcvdMsgs = toMessageStream(rawMqtt);
-        // TODO post rebase - rcvdMsgs.colocate(rawMqtt);
+        rcvdMsgs.colocate(rawMqtt);
         return rcvdMsgs;
     }
     

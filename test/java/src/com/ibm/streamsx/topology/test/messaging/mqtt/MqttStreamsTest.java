@@ -50,6 +50,21 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  *     topic(s) to use. Defaults to "testTopic1,testTopic2".</li>
  * <li>{@code com.ibm.streamsx.topology.test.messaging.mqtt.serverURI} the
  *      MQTT broker serverURL. Defaults to "tcp:://localhost:1883".</li>
+ * <li>{@code com.ibm.streamsx.topology.test.messaging.mqtt.authMode} the
+ *      authentication mode: null, "password", "ssl", "sslClientAuth".
+ *      Default is null - no authentication.</li>
+ * <li>{@code com.ibm.streamsx.topology.test.messaging.mqtt.userID}
+ *      userID for authMode=password</li>
+ * <li>{@code com.ibm.streamsx.topology.test.messaging.mqtt.password}
+ *      password for authMode=password</li>
+ * <li>{@code com.ibm.streamsx.topology.test.messaging.mqtt.trustStore}
+ *      trustStore pathname for authMode=ssl,sslClientAuth.</li>
+ * <li>{@code com.ibm.streamsx.topology.test.messaging.mqtt.trustStorePassword}
+ *      trustStore password for authMode=ssl,sslClientAuth.</li>
+ * <li>{@code com.ibm.streamsx.topology.test.messaging.mqtt.keyStore}
+ *      keyStore pathname for authMode=sslClientAuth.</li>
+ * <li>{@code com.ibm.streamsx.topology.test.messaging.mqtt.keyStorePassword}
+ *      keyStore password for authMode=sslClientAuth.</li>
  * </ul>
  */
 public class MqttStreamsTest extends TestTopology {
@@ -122,7 +137,35 @@ public class MqttStreamsTest extends TestTopology {
     private String getServerURI() {
         return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.serverURI", "tcp://localhost:1883");
     }
-    
+
+    private String getAuthMode() {
+        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.authMode", "");
+    }
+
+    private String getUserID() {
+        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.userID");
+    }
+
+    private String getPassword() {
+        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.password");
+    }
+
+    private String getTrustStore() {
+        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.trustStore");
+    }
+
+    private String getTrustStorePassword() {
+        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.trustStorePassword");
+    }
+
+    private String getKeyStore() {
+        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.keyStore");
+    }
+
+    private String getKeyStorePassword() {
+        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.keyStorePassword");
+    }
+   
     private static class MsgId {
         private int seq;
         private String uniq;
@@ -158,6 +201,7 @@ public class MqttStreamsTest extends TestTopology {
         Map<String,Object> props = new HashMap<>();
         props.put("serverURI", getServerURI());
         props.put("clientID", clientId);
+        setAuthInfo(props);
         return props;
     }
     
@@ -165,9 +209,25 @@ public class MqttStreamsTest extends TestTopology {
         Map<String,Object> props = new HashMap<>();
         props.put("serverURI", getServerURI());
         props.put("clientID", clientId);
+        setAuthInfo(props);
         return props;
     }
     
+    private void setAuthInfo(Map<String,Object> props) {
+        if ("password".equals(getAuthMode())) {
+            props.put("userID", getUserID());
+            props.put("password", getPassword());
+        }
+        else if (getAuthMode().startsWith("ssl")) {
+            props.put("trustStore", getTrustStore());
+            props.put("trustStorePassword", getTrustStorePassword());
+            if ("sslClientAuth".equals(getAuthMode())) {
+                props.put("keyStore", getKeyStore());
+                props.put("keyStorePassword", getKeyStorePassword());
+            }
+        }
+    }
+
     private void checkAssumes() {
         // Embedded and MQTTConnector implementation leveraging 
         // SPL MQTTSink,Source ops don't mix.
