@@ -356,7 +356,7 @@ public class MqttStreamsTest extends TestTopology {
         
         checkAssumes();
         setupDebug();
-        Topology top = new Topology("testConfigParams");
+        Topology top = new Topology("testConfigParamsSubmissionParam");
         MsgGenerator mgen = new MsgGenerator(top.getName());
         String subClientId = newSubClientId(top.getName());
         String pubClientId = newPubClientId(top.getName());
