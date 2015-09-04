@@ -131,15 +131,27 @@ public class SPL {
      */
     public static SPLStream invokeOperator(String kind, SPLInput input,
             StreamSchema outputSchema, Map<String, ? extends Object> params) {
-
-        BOperatorInvocation op = input.builder().addSPLOperator(
-                opNameFromKind(kind), kind, params);
-        SourceInfo.setSourceInfo(op, SPL.class);
-        SPL.connectInputToOperator(input, op);
-        BOutputPort stream = op.addOutput(outputSchema);
-        return new SPLStreamImpl(input, stream);
+        
+        return invokeOperator(opNameFromKind(kind), kind, input,
+                outputSchema, params);
     }
 
+    /**
+     * Create an SPLStream from the invocation of an SPL operator
+     * that consumes a stream.
+     * 
+     * @param name Name for the operator invocation.
+     * @param kind
+     *            SPL kind of the operator to be invoked.
+     * @param input
+     *            Stream that will be connected to the only input port of the
+     *            operator
+     * @param outputSchema
+     *            SPL schema of the operator's only output port.
+     * @param params
+     *            Parameters for the SPL operator, ignored if it is null.
+     * @return SPLStream the represents the output of the operator.
+     */
     public static SPLStream invokeOperator(String name, String kind,
             SPLInput input,
             StreamSchema outputSchema, Map<String, ? extends Object> params) {
@@ -239,8 +251,12 @@ public class SPL {
         return new SPLStreamImpl(te, stream);
     }
 
-
-    
+    /**
+     * Add a dependency on an SPL toolkit.
+     * @param te Element within the topology.
+     * @param toolkitRoot Root directory of the toolkit.
+     * @throws IOException {@code toolkitRoot} is not a valid path.
+     */
     public static void addToolkit(TopologyElement te, File toolkitRoot) throws IOException {
         @SuppressWarnings("unchecked")
         Set<String> tks = (Set<String>) te.topology().getConfig().get(TK_DIRS);
