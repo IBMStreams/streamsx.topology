@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import com.ibm.streamsx.topology.builder.BOperatorInvocation;
-
 class Util {
     private static final Map<String, ParamHandler> paramHandlers = new HashMap<>();
     static  {
@@ -86,18 +84,6 @@ class Util {
             sb.append(o.toString());
         }
         return sb.toString();
-    }
-    
-    /**
-     * This is in lieu of a "kind" based JavaPrimitive.invoke*() methods.
-     * @param splStream
-     * @param kind
-     * @param className
-     */
-    static void tagOpAsJavaPrimitive(BOperatorInvocation op, String kind, String className) {
-        op.json().put("runtime", "spl.java");
-        op.json().put("kind", kind);
-        op.json().put("kind.javaclass", className);
     }
 
 }

@@ -170,7 +170,7 @@ public class ProducerConnector {
                 kind,
                 splStream,
                 params);
-        Util.tagOpAsJavaPrimitive(sink.operator(), kind, className);
+        SPL.tagOpAsJavaPrimitive(sink.operator(), kind, className);
         return sink;
     }
     
