@@ -32,14 +32,13 @@ import com.ibm.streamsx.topology.function.Predicate;
  * This demonstrates Java functional programming using an anonymous class.
  * <P>
  * <BR>
- * This may be executed as (from the {@code samples/java/functional directory} )
- * as:
+ * This may be executed from the {@code samples/java/functional} directory as:
  * <UL>
  * <LI>
- * {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.RegexGrep} <i>CONTEXT_TYPE</i>
- * {@code $HOME/books .*Queen.*England.*}
- * - Run directly from the command line with a specific
- * {@code StreamsContext} where <i>CONTEXT_TYPE</i> is one of:
+ * {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar
+ *   simple.RegexGrep CONTEXT_TYPE $HOME/books ".*Queen.*England.*"
+ * } - Run directly from the command line.
+ * <i>CONTEXT_TYPE</i> is one of:
  * <UL>
  * <LI>{@code DISTRIBUTED} - Run as an IBM Streams distributed
  * application.</LI>

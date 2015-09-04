@@ -14,8 +14,8 @@ import com.ibm.streamsx.topology.function.Predicate;
 * simple topology that echos its command line arguments to standard output.
 * <BR>
 * The application implements the typical pattern of code that declares a
-* topology followed by submission of the topology to a Streams context (@code
-* com.ibm.streamsx.topology.context.StreamsContext}.
+* topology followed by submission of the topology to a Streams context
+* {@code com.ibm.streamsx.topology.context.StreamsContext}.
 * <BR>
 * This demonstrates use of Java functional logic to filter the tuples.
 * An in-line anonymous class implements the filtering logic, in this
@@ -24,14 +24,14 @@ import com.ibm.streamsx.topology.function.Predicate;
 * This topology is always executed in embedded mode,
 * within this JVM.
 * <BR>
-* This may be executed as (from the {@code samples/java/functional directory} )
-* as:
+* This may be executed from the {@code samples/java/functional} directory as:
 * <UL>
 * <LI>{@code ant run.filterecho} - Using Apache Ant, this will run in embedded
 * mode.</LI>
 * <LI>
-* {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.FilterEcho "d print this" "omit this"}
-* - Run directly from the command line in embedded mode.
+* {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar
+*  simple.FilterEcho "d print this" "omit this"
+* } - Run directly from the command line in embedded mode.
 * <LI>
 * An application execution within your IDE once you set the class path to include the correct jars.</LI>
 * </UL>

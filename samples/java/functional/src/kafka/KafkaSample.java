@@ -59,28 +59,25 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * See the Apache Kafka link above for information about setting up a Kafka
  * cluster and creating a topic.
  * <p>
- * This may be executed as (from the {@code samples/java/functional directory} )
- * as:
+ * This may be executed from the {@code samples/java/functional} directory as:
  * <UL>
  * <LI>{@code ant run.kafka.distributed} - Using Apache Ant, this will run in distributed mode.</li>
  * <LI>{@code ant run.kafka} - Using Apache Ant, this will run in standalone mode.</li>
  * <LI>
- * {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar kafka.KafkaSample} <i>[CONTEXT_TYPE]</i>
- * - Run directly from the command line with a specific
- * {@code StreamsContext} where <i>CONTEXT_TYPE</i> is one of:
+ * {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar
+ *  kafka.KafkaSample CONTEXT_TYPE
+ * } - Run directly from the command line.
  * </LI>
+ * <i>CONTEXT_TYPE</i> is one of:
  * <UL>
- * <LI>{@code DISTRIBUTED} - Run as an IBM Streams distributed
- * application.</LI>
- * <LI>{@code STANDALONE} - Run as an IBM Streams standalone
- * application.</LI>
+ * <LI>{@code DISTRIBUTED} - Run as an IBM Streams distributed application.</LI>
+ * <LI>{@code STANDALONE} - Run as an IBM Streams standalone application.</LI>
  * <LI>{@code BUNDLE} - Create an IBM Streams application bundle.</LI>
  * <LI>{@code TOOLKIT} - Create an IBM Streams application toolkit.</LI>
  * </UL>
  * <LI>
  * An application execution within your IDE once you set the class path to include the correct jars.</LI>
  * </UL>
-
  */
 public class KafkaSample {
     private static final String ZOOKEEPER_CONNECT = "localhost:2181";    

@@ -69,13 +69,23 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  */
 public class MqttStreamsTest extends TestTopology {
     
+    private static final String PROP_PREFIX = "com.ibm.streamsx.topology.test.messaging.mqtt.";
     private static final int SEC_TIMEOUT = 30;
     private static final int PUB_DELAY_MSEC = 5*1000;
     private final String BASE_CLIENT_ID = "mqttStreamsTestCientId";
     private static final String uniq = simpleTS();
-    private boolean captureArtifacts = true;//false;
+    private boolean captureArtifacts = false;
     private boolean setAppTracingLevel = false;
     private java.util.logging.Level appTracingLevel = java.util.logging.Level.FINE;
+    private static final Map<String,String> authInfo = new HashMap<>();
+    static {
+        initAuthInfo("userID");
+        initAuthInfo("password");
+        initAuthInfo("trustStore");
+        initAuthInfo("trustStorePassword");
+        initAuthInfo("keyStore");
+        initAuthInfo("keyStorePassword");
+    }
     
     private void setupDebug() {
         if (captureArtifacts)
@@ -137,34 +147,6 @@ public class MqttStreamsTest extends TestTopology {
     private String getServerURI() {
         return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.serverURI", "tcp://localhost:1883");
     }
-
-    private String getAuthMode() {
-        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.authMode", "");
-    }
-
-    private String getUserID() {
-        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.userID");
-    }
-
-    private String getPassword() {
-        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.password");
-    }
-
-    private String getTrustStore() {
-        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.trustStore");
-    }
-
-    private String getTrustStorePassword() {
-        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.trustStorePassword");
-    }
-
-    private String getKeyStore() {
-        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.keyStore");
-    }
-
-    private String getKeyStorePassword() {
-        return System.getProperty("com.ibm.streamsx.topology.test.messaging.mqtt.keyStorePassword");
-    }
    
     private static class MsgId {
         private int seq;
@@ -201,7 +183,7 @@ public class MqttStreamsTest extends TestTopology {
         Map<String,Object> props = new HashMap<>();
         props.put("serverURI", getServerURI());
         props.put("clientID", clientId);
-        setAuthInfo(props);
+        props.putAll(authInfo);
         return props;
     }
     
@@ -209,22 +191,17 @@ public class MqttStreamsTest extends TestTopology {
         Map<String,Object> props = new HashMap<>();
         props.put("serverURI", getServerURI());
         props.put("clientID", clientId);
-        setAuthInfo(props);
+        props.putAll(authInfo);
         return props;
     }
     
-    private void setAuthInfo(Map<String,Object> props) {
-        if ("password".equals(getAuthMode())) {
-            props.put("userID", getUserID());
-            props.put("password", getPassword());
-        }
-        else if (getAuthMode().startsWith("ssl")) {
-            props.put("trustStore", getTrustStore());
-            props.put("trustStorePassword", getTrustStorePassword());
-            if ("sslClientAuth".equals(getAuthMode())) {
-                props.put("keyStore", getKeyStore());
-                props.put("keyStorePassword", getKeyStorePassword());
-            }
+    private static void initAuthInfo(String item) {
+        String val = System.getProperty(PROP_PREFIX + item);
+        if (val != null) {
+            authInfo.put(item, val);
+            if (item.toLowerCase().contains("password"))
+                val = "*****";
+            System.out.println("Using "+item+"="+val);
         }
     }
 
@@ -236,7 +213,7 @@ public class MqttStreamsTest extends TestTopology {
         assumeTrue(SC_OK);
     }
     
-    @Test
+    //@Test
     public void testSubscriptionClass() throws Exception {
         Subscription s;
 
@@ -272,7 +249,7 @@ public class MqttStreamsTest extends TestTopology {
         }
     }
     
-    @Test
+    //@Test
     public void testExplicitTopicAndQos() throws Exception {
         
         checkAssumes();
@@ -343,12 +320,12 @@ public class MqttStreamsTest extends TestTopology {
         consumerConfig.put("reconnectDelayMsec", 5000L);
         consumerConfig.put("receiveBufferSize", 10);
         consumerConfig.put("reconnectionBound", 20);
-        producerConfig.put("userID", System.getProperty("user.name"));
-        producerConfig.put("password", "foobar");
-        producerConfig.put("trustStore", "/tmp/no-such-trustStore");
-        producerConfig.put("trustStorePassword", "woohoo");
-        producerConfig.put("keyStore", "/tmp/no-such-keyStore");
-        producerConfig.put("keyStorePassword", "woohoo");
+        consumerConfig.put("userID", System.getProperty("user.name"));
+        consumerConfig.put("password", "foobar");
+        consumerConfig.put("trustStore", "/tmp/no-such-trustStore");
+        consumerConfig.put("trustStorePassword", "woohoo");
+        consumerConfig.put("keyStore", "/tmp/no-such-keyStore");
+        consumerConfig.put("keyStorePassword", "woohoo");
    
         ProducerConnector producer = new ProducerConnector(top, producerConfig);
         ConsumerConnector consumer = new ConsumerConnector(top, consumerConfig);
@@ -375,6 +352,67 @@ public class MqttStreamsTest extends TestTopology {
     }
     
     @Test
+    public void testConfigParamsSubmissionParam() throws Exception {
+        
+        checkAssumes();
+        setupDebug();
+        Topology top = new Topology("testConfigParams");
+        MsgGenerator mgen = new MsgGenerator(top.getName());
+        String subClientId = newSubClientId(top.getName());
+        String pubClientId = newPubClientId(top.getName());
+        String topic = getMqttTopics()[0];
+        List<Message> msgs = createMsgs(mgen, null/*topic*/);
+        
+        // Test more config properties to be sure we don't blow up
+        
+        Supplier<String> userID = top.createSubmissionParameter("userID", String.class);
+        Supplier<String> password = top.createSubmissionParameter("password", String.class);
+        Supplier<String> trustStore = top.createSubmissionParameter("trustStore", String.class);
+        Supplier<String> trustStorePassword = top.createSubmissionParameter("trustStorePassword", String.class);
+        Supplier<String> keyStore = top.createSubmissionParameter("keyStore", String.class);
+        Supplier<String> keyStorePassword = top.createSubmissionParameter("keyStorePassword", String.class);
+        
+        Map<String,Object> producerConfig = createProducerConfig(pubClientId);
+        producerConfig.put("userID", userID);
+        producerConfig.put("password", password);
+        producerConfig.put("trustStore", trustStore);
+        producerConfig.put("trustStorePassword", trustStorePassword);
+        producerConfig.put("keyStore", keyStore);
+        producerConfig.put("keyStorePassword", keyStorePassword);
+        
+        Map<String,Object>  consumerConfig = createConsumerConfig(subClientId);
+        consumerConfig.put("userID", userID);
+        consumerConfig.put("password", password);
+        consumerConfig.put("trustStore", trustStore);
+        consumerConfig.put("trustStorePassword", trustStorePassword);
+        consumerConfig.put("keyStore", keyStore);
+        consumerConfig.put("keyStorePassword", keyStorePassword);
+   
+        ProducerConnector producer = new ProducerConnector(top, producerConfig);
+        ConsumerConnector consumer = new ConsumerConnector(top, consumerConfig);
+        
+        TStream<Message> msgsToPublish = top.constants(msgs)
+                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+
+        TSink sink = producer.publish(msgsToPublish, topic);
+        
+        TStream<Message> rcvdMsgs = consumer.subscribe(topic);
+
+        // for validation...
+        rcvdMsgs.print();
+
+        // bundle construction fails for unrecognized or incorrectly typed SPL op params
+        File actBundle = (File) StreamsContextFactory
+                .getStreamsContext(StreamsContext.Type.BUNDLE)
+                .submit(top, getConfig())
+                .get(15, TimeUnit.SECONDS);
+        System.out.println("bundle " + actBundle.getAbsolutePath());
+        assertTrue(actBundle != null);
+        actBundle.delete();
+        assertTrue(sink != null);
+    }
+    
+    //@Test
     public void testExplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -409,7 +447,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testImplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -443,7 +481,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testMsgImplProducer() throws Exception {
         
         checkAssumes();
@@ -478,7 +516,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testSubtypeExplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -515,7 +553,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testSubtypeImplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -552,7 +590,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testMultiTopicProducer() throws Exception {
         
         checkAssumes();
@@ -594,7 +632,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testMultiTopicConsumer() throws Exception {
         
         checkAssumes();

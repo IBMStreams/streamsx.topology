@@ -20,20 +20,21 @@ import com.ibm.streamsx.topology.streams.StringStreams;
  * it and output matching lines.
  * <BR>
  * The application implements the typical pattern of code that declares a
- * topology followed by submission of the topology to a Streams context {@code
- * com.ibm.streamsx.topology.context.StreamsContext}.
+ * topology followed by submission of the topology to a Streams context
+ * {@code com.ibm.streamsx.topology.context.StreamsContext}.
  * <BR>
  * This demonstrates the a continuous application and use of
  * utility classes that produce streams.
  * <P>
  * <BR>
- * This may be executed as (from the {@code samples/java/functional directory} )
- * as:
+ * This may be executed from the {@code samples/java/functional} directory as:
  * <UL>
  * <LI>
- * {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.Grep} <i>CONTEXT_TYPE</i> {@code $HOME/books Elizabeth}
- * - Run directly from the command line with a specific
- * {@code StreamsContext} where <i>CONTEXT_TYPE</i> is one of:
+ * {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar
+ *    simple.Grep CONTEXT_TYPE $HOME/books Elizabeth
+ * } - Run directly from the command line.
+ * </LI>
+ * <i>CONTEXT_TYPE</i> is one of:
  * <UL>
  * <LI>{@code DISTRIBUTED} - Run as an IBM InfoSphere Streams distributed
  * application.</LI>
