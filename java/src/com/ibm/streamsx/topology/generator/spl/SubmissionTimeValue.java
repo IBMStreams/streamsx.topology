@@ -6,6 +6,7 @@ import java.util.Map;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
+import com.ibm.streams.operator.Type.MetaType;
 
 /**
  * A Submission Time Value is the SPL realization of a "Submission Parameter".
@@ -127,9 +128,8 @@ public class SubmissionTimeValue {
     static void generateMainDef(JSONObject spval, StringBuilder sb) {
         String splName = "$" + mkOpParamName((String)spval.get("name"));
         String name = SPLGenerator.stringLiteral((String) spval.get("name"));
-        String valueClassName = (String) spval.get("valueClassName");
-        String typeModifier = (String) spval.get("typeModifier");
-        String splType = toSPLType(valueClassName, typeModifier);
+        String metaType = (String) spval.get("metaType");
+        String splType = MetaType.valueOf(metaType.toUpperCase()).getLanguageType();
         Object defaultValue = spval.get("defaultValue");
         sb.append(String.format("expression<%s> %s : ", splType, splName));
         if (defaultValue == null)
@@ -156,9 +156,8 @@ public class SubmissionTimeValue {
      */
     static void generateInnerDef(JSONObject spval, StringBuilder sb) {
         String name = "$" + mkOpParamName((String)spval.get("name"));
-        String valueClassName = (String) spval.get("valueClassName");
-        String typeModifier = (String) spval.get("typeModifier");
-        String splType = toSPLType(valueClassName, typeModifier);
+        String metaType = (String) spval.get("metaType");
+        String splType = MetaType.valueOf(metaType.toUpperCase()).getLanguageType();
         sb.append(String.format("expression<%s> %s", splType, name));
     }
     
@@ -177,19 +176,6 @@ public class SubmissionTimeValue {
     static void generateRef(JSONObject spval, StringBuilder sb) {
         String ref = "$" + mkOpParamName((String)spval.get("name"));
         sb.append(ref);
-    }
-    
-    private static String toSPLType(String className, String modifier) {
-        String splType = javaToSPL.get(className);
-        if (splType == null)
-            throw new IllegalArgumentException("Unhandled className "+className);
-        if (modifier != null) {
-            if ("utf16".equals(modifier))
-                splType = "ustring";
-            else if ("unsigned".equals(modifier))
-                splType = "u" + splType;
-        }
-        return splType;
     }
 
 }

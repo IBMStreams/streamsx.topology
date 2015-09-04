@@ -25,6 +25,7 @@ import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -214,9 +215,26 @@ public class SPLOperatorsTest extends TestTopology {
                 if (!(opParamValue instanceof JSONObject))
                     submitParams.put(opParamName, opParamValue);
                 else
-                    submitParams.put(opParamName, SPL.paramValueToString(opParamValue));
+                    submitParams.put(opParamName, pvToStr((JSONObject)opParamValue));
             }
         });
     }
+    
+    private String pvToStr(JSONObject jo) {
+        // A Client of the API shouldn't find itself in
+        // a place to need this.  It's just an artifact of
+        // the way these tests are composed plus lack of a 
+        // public form of valueToString(SPL.createValue(...)).
 
+        String type = (String) jo.get("type");
+        if (!"__spl_value".equals(type))
+            throw new IllegalArgumentException("jo " + jo);
+        JSONObject value = (JSONObject) jo.get("value");
+        String metaType = (String) value.get("metaType");
+        Object v = value.get("value");
+        if (metaType.startsWith("uint"))
+            return SPLGenerator.unsignedString(v);
+        else
+            return v.toString();
+    }
 }

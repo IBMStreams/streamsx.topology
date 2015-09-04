@@ -1,7 +1,11 @@
 package com.ibm.streamsx.topology.internal.core;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
+import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
@@ -11,10 +15,28 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
  */
 public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
     private static final long serialVersionUID = 1L;
+    private static final Map<Class<?>,MetaType> toMetaType = new HashMap<>();
+    static {
+        toMetaType.put(String.class,    MetaType.RSTRING);
+        toMetaType.put(Boolean.class,   MetaType.BOOLEAN);
+        toMetaType.put(Byte.class,      MetaType.INT8);
+        toMetaType.put(Short.class,     MetaType.INT16);
+        toMetaType.put(Integer.class,   MetaType.INT32);
+        toMetaType.put(Long.class,      MetaType.INT64);
+        toMetaType.put(Float.class,     MetaType.FLOAT32);
+        toMetaType.put(Double.class,    MetaType.FLOAT64);
+    }
+    
     private final String name;
-    private final String valueClassName;
-    private final String typeModifier;
+    private final MetaType metaType;
     private final T defaultValue;
+    
+    private static MetaType getMetaType(Class<?> valueClass) {
+        MetaType metaType = toMetaType.get(valueClass);
+        if (metaType == null)
+            throw new IllegalArgumentException("Unhandled valueClass " + valueClass.getCanonicalName());
+        return metaType;
+    }
 
     /*
      * A submission time parameter specification without a default value.
@@ -26,8 +48,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
         if (name == null || name.trim().isEmpty())
             throw new IllegalArgumentException("name");
         this.name = name;
-        this.valueClassName = valueClass.getCanonicalName();
-        this.typeModifier = null;
+        this.metaType = getMetaType(valueClass);
         this.defaultValue = null;
     }
 
@@ -44,8 +65,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
         if (defaultValue == null)
             throw new IllegalArgumentException("defaultValue");
         this.name = name;
-        this.valueClassName = defaultValue.getClass().getCanonicalName();
-        this.typeModifier = null;
+        this.metaType = getMetaType(defaultValue.getClass());
         this.defaultValue = defaultValue;
     }
     
@@ -58,8 +78,8 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
      * object {
      *   type : "__spl_value"
      *   value : object {
-     *     value : any. non-null.
-     *     typeModifier : optional null, "utf16", "unsigned"
+     *     value : any. non-null. type appropriate for metaType
+     *     metaType : com.ibm.streams.operator.Type.MetaType string.
      *   }
      * }
      * </code></pre>
@@ -77,8 +97,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
         JSONObject value = (JSONObject) jvalue.get("value");
         this.name = name;
         this.defaultValue = withDefault ? (T) value.get("value") : null;
-        this.valueClassName = value.get("value").getClass().getCanonicalName();
-        this.typeModifier = (String) value.get("typeModifier");
+        this.metaType =  MetaType.valueOf(((String) value.get("metaType")).toUpperCase());
     }
 
     @Override
@@ -105,10 +124,8 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
          *   type : "submissionParameter"
          *   value : object {
          *     name : string. submission parameter name
-         *     valueClassName : string. a java type
-         *     typeModifier : optional string to modify interpretation of
-         *                      valueClassName.  "utf16", "unsigned", null 
-         *     defaultValue : any. an instance of valueClassName. may be null.
+         *     metaType : operator.Type.MetaType string
+         *     defaultValue : any. may be null. type appropriate for metaType.
          *   }
          * }
          * </code></pre>
@@ -118,9 +135,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
         jo.put("type", "submissionParameter");
         jo.put("value", jv);
         jv.put("name", name);
-        jv.put("valueClassName", valueClassName);
-        if (typeModifier != null)
-            jv.put("typeModifier", typeModifier);
+        jv.put("metaType", metaType.name().toLowerCase());
         jv.put("defaultValue", defaultValue);
         return jo;
     }

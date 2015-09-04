@@ -256,10 +256,8 @@ public class GraphBuilder extends BJSONObject {
      *   type : "submissionParameter"
      *   value : object {
      *     name : string. submission parameter name
-     *     valueClassName : string. a java type
-     *     typeModifier : optional string to modify interpretation of
-     *                      valueClassName.  "utf16", "unsigned", null 
-     *     defaultValue : any. an instance of valueClassName. may be null.
+     *     metaType : com.ibm.streams.operator.Type.MetaType string
+     *     defaultValue : any. may be null. type appropriate for metaType
      *   }
      * }
      * </code></pre>

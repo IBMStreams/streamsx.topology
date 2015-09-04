@@ -61,20 +61,18 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
 public class SPL {
     
     /**
-     * Create a SPL parameter value wrapper object for the 
+     * Create a SPL value wrapper object for the 
      * specified SPL {@code MetaType}.
      * <p>
      * Use of this is required to construct a SPL operator parameter value
      * whose SPL type is not implied from simple Java type.  e.g.,
      * a {@code String} value is interpreted as a SPL {@code rstring},
      * and {@code Byte,Short,Integer,Long} are interpreted as SPL signed integers.
-     * Hence, this must be used for SPL {@code ustring} and unsigned integers.
      * @param value the value to wrap
      * @param metaType the SPL meta type
      * @return the wrapper object
      * @throws IllegalArgumentException if value is null or its class is
      *     not appropriate for {@code metaType}
-     * @see #paramValueToString(Object)
      */
     public static <T> Object createValue(T value, MetaType metaType) {
         return new SPLValue<T>(value, metaType).toJSON();
@@ -86,19 +84,6 @@ public class SPL {
             return splValue;
         }            
         throw new IllegalArgumentException("param is not from createValue()");
-    }
-
-    /**
-     * Convert a value from {@code createValue()} to a string
-     * appropriate for the wrapped value.
-     * @param paramValue the parameter value  
-     * @return the string
-     * @throws IllegalArgumentException if {@code paramValue} is not a
-     *      value from {@code createValue()}.
-     */
-    public static Object paramValueToString(Object paramValue) {
-        SPLValue<?> splValue = createSPLValue(paramValue);
-        return splValue.toString();
     }
 
     /**
