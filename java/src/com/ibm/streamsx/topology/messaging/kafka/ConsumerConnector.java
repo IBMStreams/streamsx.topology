@@ -177,6 +177,7 @@ public class ConsumerConnector {
             Util.tagOpAsJavaPrimitive(toOp(rawKafka), kind, className);
 
             rcvdMsgs = toMessageStream(rawKafka);
+            rcvdMsgs.colocate(rawKafka);
             
             // workaround streamsx.messaging issue#118 w/java8
             // isolate even in the single consumer case since we don't
@@ -198,6 +199,7 @@ public class ConsumerConnector {
                 Util.tagOpAsJavaPrimitive(toOp(rawKafka), kind, className);
                 
                 rcvdMsgs = toMessageStream(rawKafka);
+                rcvdMsgs.colocate(rawKafka);
                 
                 // workaround streamsx.messaging issue#118 w/java8
                 rcvdMsgs = rcvdMsgs.isolate();
