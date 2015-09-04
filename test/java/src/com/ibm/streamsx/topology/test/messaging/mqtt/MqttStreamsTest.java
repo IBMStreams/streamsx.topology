@@ -213,7 +213,7 @@ public class MqttStreamsTest extends TestTopology {
         assumeTrue(SC_OK);
     }
     
-    @Test
+    //@Test
     public void testSubscriptionClass() throws Exception {
         Subscription s;
 
@@ -263,7 +263,7 @@ public class MqttStreamsTest extends TestTopology {
         int qos = 0;
         
         // Test producer that takes a explicit topic and qos
-        
+
         ProducerConnector producer = new ProducerConnector(top, createProducerConfig(pubClientId));
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
         
@@ -285,7 +285,56 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    ////@Test
+    public void testPasswordAuth() throws Exception {
+        
+        checkAssumes();
+        setupDebug();
+        Topology top = new Topology("testPasswordAuth");
+        MsgGenerator mgen = new MsgGenerator(top.getName());
+        String subClientId = newSubClientId(top.getName());
+        String pubClientId = newPubClientId(top.getName());
+        String topic = getMqttTopics()[0];
+        List<Message> msgs = createMsgs(mgen, null/*topic*/);
+        int qos = 0;
+        
+        // Test producer that takes a explicit topic and qos
+
+        Map<String,Object> pconfig = createProducerConfig(pubClientId);
+        Map<String,Object> cconfig = createConsumerConfig(subClientId);
+
+        Supplier<String> userID = top.createSubmissionParameter("userID", System.getProperty("user.name"));
+        Supplier<String> password = top.createSubmissionParameter("password", String.class);
+        pconfig.put("userID", userID);
+        pconfig.put("password", password);
+        cconfig.put("userID", userID);
+        cconfig.put("password", password);
+        Map<String,Object> subparams = new HashMap<>();
+        subparams.put("password", "myMosquittoPw");
+        getConfig().put(ContextProperties.SUBMISSION_PARAMS, subparams);
+
+        ProducerConnector producer = new ProducerConnector(top, pconfig);
+        ConsumerConnector consumer = new ConsumerConnector(top, cconfig);
+        
+        TStream<Message> msgsToPublish = top.constants(msgs)
+                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+        
+        TSink sink = producer.publish(msgsToPublish, topic, qos);
+        
+        TStream<Message> rcvdMsgs = consumer.subscribe(new Subscription(topic, qos));
+
+        // for validation...
+        rcvdMsgs.print();
+        rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
+        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+        msgs = modifyList(msgs, setTopic(topic));
+        List<String> expectedAsString = mapList(msgs, msgToJSONStringFunc());
+
+        completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        assertTrue(sink != null);
+    }
+    
+    //@Test
     public void testConfigParams() throws Exception {
         
         checkAssumes();
@@ -351,7 +400,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testConfigParamsSubmissionParam() throws Exception {
         
         checkAssumes();
@@ -412,7 +461,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testExplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -447,7 +496,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testImplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -481,7 +530,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testMsgImplProducer() throws Exception {
         
         checkAssumes();
@@ -516,7 +565,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testSubtypeExplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -553,7 +602,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testSubtypeImplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -590,7 +639,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testMultiTopicProducer() throws Exception {
         
         checkAssumes();
@@ -632,7 +681,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    @Test
+    //@Test
     public void testMultiTopicConsumer() throws Exception {
         
         checkAssumes();

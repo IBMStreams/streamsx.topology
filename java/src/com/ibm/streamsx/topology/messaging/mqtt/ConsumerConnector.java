@@ -12,6 +12,7 @@ import java.util.Map;
 
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
@@ -32,78 +33,106 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * <p>
  * Sample use:
  * <pre>{@code
- * Topology top = ...
- * Properties consumerConfig = ...
- * ConsumerConnector cc = new ConsumerConnector(top, consumerConfig);
+ * Topology top = new Topology("An MQTT application");
+ * Supplier<T> serverID = top.createSubmissionParameter("serverID", "tcp://localhost:1883");
+ * Supplier<T> userID = top.createSubmissionParameter("userID", System.getProperty("user.name"));
+ * Supplier<T> password = top.createSubmissionParameter("password", String.class);
+ * 
+ * Map<String,Object> config = new HashMap<>();
+ * config.put("serverID", serverID);
+ * config.put("userID", userID);
+ * config.put("password", password);
+ * ConsumerConnector cc = new ConsumerConnector(top, config);
+ * 
  * TStream<Message> rcvdMsgs = cc.subscribe("myTopic");
  * }</pre>
- * <br/>TODO submission parameter support - any of the configuration properties
- * values may be specified as a submission time parameter via TBD
- * <pre>@{code
- *     Map<String,Object> config = ...
- *     config.put("serverURI", top.getSubmissionParamter("url", String.class));
- *     ConsumerConnector cc = new ConsumerConnector(top, config);
- * }</pre> 
- * <br/>TODO dynamic SPL operator configuration support: subscription, serverURI... ?
- * <br/>TODO SPL operator error oport support?
  * <p>
  * Configuration properties apply to {@code ConsumerConnector} and
  * {@code ProducerConnector} configurations unless stated otherwise.
+ * <br>
+ * All properties may be specified as submission parameters unless
+ * stated otherwise.  See {@link Topology#createSubmissionParameter(String, Class)}.
  * <p>
- * <ul>
- * <li>{@code serverURI} - Required String. URI to the MQTT server, either
+ * <table border=1>
+ * <tr><th>Property</th><th>Description</th></tr>
+ * <tr><td>serverURI</td>
+ *      <td>Required String. URI to the MQTT server, either
  *      {@code tcp://<hostid>[:<port>]}
  *      or {@code ssl://<hostid>[:<port>]}. 
  *      The port defaults to 1883 for "tcp:" and 8883 for "ssl:" URIs.
- *      </li>
- * <li>{@code clientID} - Optional String. A unique identifier for a connection
+ *      </td></tr>
+ * <tr><td>clientID</td>
+ *      <td>Optional String. A unique identifier for a connection
  *      to the MQTT server. By default a unique client ID is automatically
- *      generated for each connection.</li>
- * <li>{@code keepAliveInterval} - Optional Integer.  Automatically generate a MQTT
+ *      generated for each connection.
+ *      </td></tr>
+ * <tr><td>keepAliveInterval</td>
+ *      <td>Optional Integer.  Automatically generate a MQTT
  *      ping message to the server if a message or ping hasn't been
  *      sent or received in the last keelAliveInterval seconds.  
  *      Enables the client to detect if the server is no longer available
  *      without having to wait for the TCP/IP timeout.  
  *      A value of 0 disables keepalive processing.
- *      The default is 60.</li>
- * <li>{@code commandTimeoutMsec} - Optional Long. The maximum time in milliseconds
+ *      The default is 60.
+ *      </td></tr>
+ * <tr><td>commandTimeoutMsec</td>
+ *      <td>Optional Long. The maximum time in milliseconds
  *      to wait for a MQTT connect or publish action to complete.
  *      A value of 0 causes the client to wait indefinitely.
- *      The default is 0.</li>
- * <li>{@code reconnectDelayMsec} - Optional Long. The time in milliseconds before
+ *      The default is 0.
+ *      </td></tr>
+ * <tr><td>reconnectDelayMsec</td>
+ *      <td>Optional Long. The time in milliseconds before
  *      attempting to reconnect to the server following a connection failure.
- *      The default is 60000.</li>
- * <li>{@code userID} - Optional String.  The identifier to use when authenticating
- *      with server that is configured to require that form of authentication.</li>
- * <li>{@code password} - Optional String.  The identifier to use when authenticating
- *      with server that is configured to require that form of authentication.
- *      {@code userID} must be specified when {@code password} is specified.</li>
- * <li>{@code trustStore} - Optional String. The pathname to a file containing the
+ *      The default is 60000.
+ *      </td></tr>
+ * <tr><td>userID</td>
+ *      <td>Optional String.  The identifier to use when authenticating
+ *      with a server configured to require that form of authentication.
+ *      </td></tr>
+ * <tr><td>password</td>
+ *      <td>Optional String.  The identifier to use when authenticating
+ *      with server configured to require that form of authentication.
+ *      </td></tr>
+ * <tr><td>trustStore</td>
+ *      <td>Optional String. The pathname to a file containing the
  *      public certificate of trusted MQTT servers.  If a relative path
  *      is specified, the path is relative to the application directory.
  *      Required when connecting to a MQTT server with an 
- *      {@code ssl:/... serverURI}.</li>
- * <li>{@code trustStorePassword} - Required String when {@code trustStore} is used.
- *      The password needed to access the encrypted trustStore file.</li>
- * <li>{@code keyStore} - Optional String. The pathname to a file containing the
+ *      ssl:/... serverURI.
+ *      </td></tr>
+ * <tr><td>trustStorePassword</td>
+ *      <td>Required String when {@code trustStore} is used.
+ *      The password needed to access the encrypted trustStore file.
+ *      </td></tr>
+ * <tr><td>keyStore</td>
+ *      <td>Optional String. The pathname to a file containing the
  *      MQTT client's public private key certificates.
  *      If a relative path is specified, the path is relative to the
  *      application directory. 
- *      Required when an MQTT server is configured to use
- *      SSL client authentication.</li>
- * <li>{@code keyStorePassword} - Required String when {@code keyStore} is used.
- *      The password needed to access the encrypted keyStore file.</li>
- * <li>{@code receiveBufferSize} - [consumer] Optional Integer. The size, in number
+ *      Required when an MQTT server is configured to use SSL client authentication.
+ *      </td></tr>
+ * <tr><td>keyStorePassword</td>
+ *      <td>Required String when {@code keyStore} is used.
+ *      The password needed to access the encrypted keyStore file.
+ *      </td></tr>
+ * <tr><td>receiveBufferSize</td>
+ *      <td>[consumer] Optional Integer. The size, in number
  *      of messages, of the consumer's internal receive buffer.  Received
  *      messages are added to the buffer prior to being converted to a
  *      stream tuple. The receiver blocks when the buffer is full.
- *      The default is 50.</li>
- * <li>{@code retain} - [producer] Optional Boolean. Indicates if messages should be
- *      retained on the MQTT server.  Default is false.</li>
- * <li>{@code defaultQOS} - Optional Integer. The default
+ *      The default is 50.
+ *      </td></tr>
+ * <tr><td>retain</td>
+ *      <td>[producer] Optional Boolean. Indicates if messages should be
+ *      retained on the MQTT server.  Default is false.
+ *      </td></tr>
+ * <tr><td>defaultQOS</td>
+ *      <td>Optional Integer. The default
  *      MQTT quality of service used for message handling.
- *      The default is 0.</li>
- * </ul>
+ *      The default is 0.
+ *      </td></tr>
+ * </table>
  * 
  * @see <a href="http://mqtt.org">http://mqtt.org</a>
  * @see <a
