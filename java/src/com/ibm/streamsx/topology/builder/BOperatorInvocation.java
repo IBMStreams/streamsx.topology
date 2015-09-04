@@ -63,7 +63,7 @@ public class BOperatorInvocation extends BOperator {
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put(JOperator.RUNTIME, JOperator.RUNTIME_SPL);
+            json().put(JOperator.MODEL, JOperator.MODEL_SPL);
             json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_JAVA);
             json().put("kind", getKind(opClass));
             json().put("kind.javaclass", opClass.getCanonicalName());
@@ -85,7 +85,7 @@ public class BOperatorInvocation extends BOperator {
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put(JOperator.RUNTIME, JOperator.RUNTIME_SPL);
+            json().put(JOperator.MODEL, JOperator.MODEL_SPL);
             json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_JAVA);
             json().put("kind", getKind(opClass));
             json().put("kind.javaclass", opClass.getCanonicalName());

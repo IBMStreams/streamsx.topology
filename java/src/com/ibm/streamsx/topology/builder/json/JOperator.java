@@ -14,17 +14,17 @@ import com.ibm.json.java.OrderedJSONObject;
 public class JOperator {
     
     /**
-     * Runtime used to execute the operator.
+     * Programming model used to create the operator.
      */
-    public static final String RUNTIME = "runtime";
+    public static final String MODEL = "model";
     
     /**
-     * Language for the operator within its {@link #RUNTIME}.
+     * Language for the operator within its {@link #MODEL}.
      */
     public static final String LANGUAGE = "language";
     
-    public static final String RUNTIME_FUNCTIONAL = "functional";
-    public static final String RUNTIME_SPL = "spl";
+    public static final String MODEL_FUNCTIONAL = "functional";
+    public static final String MODEL_SPL = "spl";
     
     public static final String LANGUAGE_JAVA = "java";
     public static final String LANGUAGE_CPP = "cpp";
