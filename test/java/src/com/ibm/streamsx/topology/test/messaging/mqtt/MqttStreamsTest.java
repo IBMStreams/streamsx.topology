@@ -213,7 +213,7 @@ public class MqttStreamsTest extends TestTopology {
         assumeTrue(SC_OK);
     }
     
-    //@Test
+    @Test
     public void testSubscriptionClass() throws Exception {
         Subscription s;
 
@@ -249,7 +249,7 @@ public class MqttStreamsTest extends TestTopology {
         }
     }
     
-    //@Test
+    @Test
     public void testExplicitTopicAndQos() throws Exception {
         
         checkAssumes();
@@ -412,7 +412,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testExplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -447,7 +447,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testImplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -481,7 +481,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testMsgImplProducer() throws Exception {
         
         checkAssumes();
@@ -516,7 +516,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testSubtypeExplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -553,7 +553,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testSubtypeImplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -590,7 +590,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testMultiTopicProducer() throws Exception {
         
         checkAssumes();
@@ -632,7 +632,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testMultiTopicConsumer() throws Exception {
         
         checkAssumes();
