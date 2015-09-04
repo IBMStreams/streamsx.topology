@@ -47,7 +47,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * <br/>TODO dynamic SPL operator configuration support: subscription, serverURI... ?
  * <br/>TODO SPL operator error oport support?
  * <p>
- * Configuration properties apply to {@ConsumerConnector} and
+ * Configuration properties apply to {@code ConsumerConnector} and
  * {@code ProducerConnector} configurations unless stated otherwise.
  * <p>
  * <ul>
