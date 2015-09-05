@@ -9,40 +9,33 @@ import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Initializable;
 import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 
-public class FunctionalHandler<T> {
+public abstract class FunctionalHandler<T> {
 
     private final FunctionContext context;
     private final String serializedLogic;
-    private T logic;
     
     public FunctionalHandler(FunctionContext context, String serializedLogic) throws Exception {
         this.context = context;
         this.serializedLogic = serializedLogic;
-        resetToInitialState();
     }
     
     public FunctionContext getFunctionContext() {
         return context;
     }
     
-    public void resetToInitialState() throws Exception {
+    public T initialLogic() throws Exception {
         T initialLogic = getLogicObject(serializedLogic);
-        setLogic(initialLogic);
-    }
-    
-    public void setLogic(T logic) throws Exception {
-        synchronized (this) {
-            this.logic = logic;
-        }
-        initializeLogic(getFunctionContext(), getLogic());
+        return initialLogic;
     }
        
-    public synchronized T getLogic() {
-        return logic;
-    }
+    public abstract T getLogic();
     
     public void close() throws IOException {       
         closeLogic(getLogic());
+    }
+    
+    protected void initializeLogic() throws Exception {
+        initializeLogic(getFunctionContext(), getLogic());
     }
         
     static void initializeLogic(FunctionContext context, Object logicInstance) throws Exception {
