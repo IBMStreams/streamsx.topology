@@ -30,7 +30,8 @@ public class SubmissionTimeValue {
      * @return the name
      */
     public static String mkOpParamName(String spName) {
-        return "__jaa_stv_" + spName;
+        spName = spName.replace('.', '_');
+        return "__jaa_stv_" + SPLGenerator.getSPLCompatibleName(spName);
     }
 
     /**

@@ -52,6 +52,7 @@ import com.ibm.streamsx.topology.internal.logic.Throttle;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.logic.Identity;
+import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 
@@ -364,14 +365,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
     
     public TStream<T> parallel(int width, Routing routing) {
-        return parallel(valueSupplier(width), routing);
-    }
-    
-    private static <T> Supplier<T> valueSupplier(final T value) {
-        return new Supplier<T>() {
-            private static final long serialVersionUID = 1L;
-            @Override
-            public T get() { return value; }};
+        return parallel(new Value<Integer>(width), routing);
     }
     
     @Override

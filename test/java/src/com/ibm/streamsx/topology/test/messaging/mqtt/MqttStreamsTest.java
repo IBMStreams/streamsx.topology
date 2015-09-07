@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.test.messaging.mqtt;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -32,8 +31,8 @@ import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
+import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.messaging.mqtt.ConsumerConnector;
-import com.ibm.streamsx.topology.messaging.mqtt.ConsumerConnector.Subscription;
 import com.ibm.streamsx.topology.messaging.mqtt.ProducerConnector;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -49,7 +48,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * <ul>
  *     topic(s) to use. Defaults to "testTopic1,testTopic2".</li>
  * <li>{@code com.ibm.streamsx.topology.test.messaging.mqtt.serverURI} the
- *      MQTT broker serverURL. Defaults to "tcp:://localhost:1883".</li>
+ *      MQTT broker serverURI. Defaults to "tcp:://localhost:1883".</li>
  * <li>{@code com.ibm.streamsx.topology.test.messaging.mqtt.authMode} the
  *      authentication mode: null, "password", "ssl", "sslClientAuth".
  *      Default is null - no authentication.</li>
@@ -213,105 +212,47 @@ public class MqttStreamsTest extends TestTopology {
         assumeTrue(SC_OK);
     }
     
-    //@Test
-    public void testSubscriptionClass() throws Exception {
-        Subscription s;
-
-        s = new Subscription("topic");
-        assertEquals("topic", s.getTopic());
-        assertEquals(0, s.getQos());
-
-        s = new Subscription("topic", 0);
-        assertEquals("topic", s.getTopic());
-        assertEquals(0, s.getQos());
-
-        s = new Subscription("topic", 1);
-        assertEquals("topic", s.getTopic());
-        assertEquals(1, s.getQos());
-
-        s = new Subscription("topic", 2);
-        assertEquals("topic", s.getTopic());
-        assertEquals(2, s.getQos());
-
-        try {
-            s = new Subscription("topic", -1);
-            assertTrue("qos=-1", false);
-        }
-        catch (IllegalArgumentException e) {
-            // expected
-        }
-        try {
-            s = new Subscription("topic", 3);
-            assertTrue("qos=3", false);
-        }
-        catch (IllegalArgumentException e) {
-            // expected
-        }
-    }
-    
     @Test
-    public void testExplicitTopicAndQos() throws Exception {
+    public void testReusableApp() throws Exception {
         
         checkAssumes();
         setupDebug();
-        Topology top = new Topology("testExplicitTopicAndQos");
+        Topology top = new Topology("testReusableApp");
         MsgGenerator mgen = new MsgGenerator(top.getName());
         String subClientId = newSubClientId(top.getName());
         String pubClientId = newPubClientId(top.getName());
         String topic = getMqttTopics()[0];
         List<Message> msgs = createMsgs(mgen, null/*topic*/);
-        int qos = 0;
         
-        // Test producer that takes a explicit topic and qos
+        // Test an app structured more as a "reusable asset" - i.e.,
+        // where the mqtt connection info (URI, authInfo) and
+        // topic are defined at submission time.
+        
+        // define/create the app's submission parameters
+        ParameterHelper params = new ParameterHelper(top);
+        params.definitions().put("mqtt.serverURI", String.class);
+        params.definitions().put("mqtt.userID", System.getProperty("user.name"));
+        params.definitions().put("mqtt.password", String.class);
+        params.definitions().put("mqtt.pub.topic", String.class);
+        params.definitions().put("mqtt.sub.topic", String.class);
+        params.createAll();
+        
+        // add the values for our call to submit()
+        Map<String,Object> submitParams = new HashMap<>();
+        submitParams.put("mqtt.serverURI", "tcp://localhost:1883");
+        // submitParams.put("mqtt.userID", System.getProperty("user.name"));
+        submitParams.put("mqtt.password", "myMosquittoPw");
+        submitParams.put("mqtt.pub.topic", topic);
+        submitParams.put("mqtt.sub.topic", topic);
+        getConfig().put(ContextProperties.SUBMISSION_PARAMS, submitParams);
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig(pubClientId));
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
         
-        TStream<Message> msgsToPublish = top.constants(msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
-        
-        TSink sink = producer.publish(msgsToPublish, topic, qos);
-        
-        TStream<Message> rcvdMsgs = consumer.subscribe(new Subscription(topic, qos));
-
-        // for validation...
-        rcvdMsgs.print();
-        rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
-        msgs = modifyList(msgs, setTopic(topic));
-        List<String> expectedAsString = mapList(msgs, msgToJSONStringFunc());
-
-        completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
-        assertTrue(sink != null);
-    }
-    
-    ////@Test
-    public void testPasswordAuth() throws Exception {
-        
-        checkAssumes();
-        setupDebug();
-        Topology top = new Topology("testPasswordAuth");
-        MsgGenerator mgen = new MsgGenerator(top.getName());
-        String subClientId = newSubClientId(top.getName());
-        String pubClientId = newPubClientId(top.getName());
-        String topic = getMqttTopics()[0];
-        List<Message> msgs = createMsgs(mgen, null/*topic*/);
-        int qos = 0;
-        
-        // Test producer that takes a explicit topic and qos
+        // Produce and consume the msgs
 
         Map<String,Object> pconfig = createProducerConfig(pubClientId);
+        addMqttParams(pconfig, false, params);
         Map<String,Object> cconfig = createConsumerConfig(subClientId);
-
-        Supplier<String> userID = top.createSubmissionParameter("userID", System.getProperty("user.name"));
-        Supplier<String> password = top.createSubmissionParameter("password", String.class);
-        pconfig.put("userID", userID);
-        pconfig.put("password", password);
-        cconfig.put("userID", userID);
-        cconfig.put("password", password);
-        Map<String,Object> subparams = new HashMap<>();
-        subparams.put("password", "myMosquittoPw");
-        getConfig().put(ContextProperties.SUBMISSION_PARAMS, subparams);
+        addMqttParams(cconfig, true, params);
 
         ProducerConnector producer = new ProducerConnector(top, pconfig);
         ConsumerConnector consumer = new ConsumerConnector(top, cconfig);
@@ -319,9 +260,9 @@ public class MqttStreamsTest extends TestTopology {
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(initialDelayFunc(PUB_DELAY_MSEC));
         
-        TSink sink = producer.publish(msgsToPublish, topic, qos);
+        TSink sink = producer.publish(msgsToPublish, params.getString("mqtt.pub.topic"));
         
-        TStream<Message> rcvdMsgs = consumer.subscribe(new Subscription(topic, qos));
+        TStream<Message> rcvdMsgs = consumer.subscribe(params.getString("mqtt.sub.topic"));
 
         // for validation...
         rcvdMsgs.print();
@@ -334,7 +275,30 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    private static void addMqttParams(Map<String,Object> config,
+            boolean isConsumer, ParameterHelper params) {
+        for (Map.Entry<String, Supplier<?>> e : params.parameters().entrySet()) {
+            String name = e.getKey();
+            String prefix = "mqtt.";
+            if (!name.startsWith(prefix))
+                continue;
+            name = name.substring(prefix.length());
+            
+            prefix = isConsumer ? "sub." : "pub.";
+            if (name.startsWith("sub.") || name.startsWith("pub.")) {
+                if (name.equals(prefix + "topic"))
+                    continue;  // not a config param
+                if (name.startsWith("sub.") && !prefix.equals("sub.") 
+                    || name.startsWith("pub.") && !prefix.equals("pub."))
+                    continue;
+                name = name.substring(prefix.length());
+            }
+            
+            config.put(name, e.getValue());
+        }
+    }
+    
+    @Test
     public void testConfigParams() throws Exception {
         
         checkAssumes();
@@ -343,7 +307,8 @@ public class MqttStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
         String subClientId = newSubClientId(top.getName());
         String pubClientId = newPubClientId(top.getName());
-        String topic = getMqttTopics()[0];
+        String topicVal = getMqttTopics()[0];
+        Supplier<String> topic = new Value<String>(topicVal);
         List<Message> msgs = createMsgs(mgen, null/*topic*/);
         
         // Test more config properties to be sure we don't blow up
@@ -400,7 +365,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testConfigParamsSubmissionParam() throws Exception {
         
         checkAssumes();
@@ -409,7 +374,8 @@ public class MqttStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
         String subClientId = newSubClientId(top.getName());
         String pubClientId = newPubClientId(top.getName());
-        String topic = getMqttTopics()[0];
+        String topicVal = getMqttTopics()[0];
+        Supplier<String> topic = new Value<String>(topicVal);
         List<Message> msgs = createMsgs(mgen, null/*topic*/);
         
         // Test more config properties to be sure we don't blow up
@@ -461,7 +427,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testExplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -470,9 +436,10 @@ public class MqttStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
         String subClientId = newSubClientId(top.getName());
         String pubClientId = newPubClientId(top.getName());
-        String topic = getMqttTopics()[0];
+        String topicVal = getMqttTopics()[0];
+        Supplier<String> topic = new Value<String>(topicVal);
         List<Message> msgs = createMsgs(mgen, null/*topic*/);
-        List<String> expectedAsString = mapList(modifyList(msgs, setTopic(topic)),
+        List<String> expectedAsString = mapList(modifyList(msgs, setTopic(topicVal)),
                                                 msgToJSONStringFunc());
         
         // Test producer that takes an explicit topic and implicit config qos
@@ -496,7 +463,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testImplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -519,7 +486,7 @@ public class MqttStreamsTest extends TestTopology {
         
         TSink sink = producer.publish(msgsToPublish);
         
-        TStream<Message> rcvdMsgs = consumer.subscribe(topic);
+        TStream<Message> rcvdMsgs = consumer.subscribe(new Value<String>(topic));
 
         // for validation...
         rcvdMsgs.print();
@@ -530,7 +497,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testMsgImplProducer() throws Exception {
         
         checkAssumes();
@@ -539,9 +506,10 @@ public class MqttStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
         String subClientId = newSubClientId(top.getName());
         String pubClientId = newPubClientId(top.getName());
-        String topic = getMqttTopics()[0];
+        String topicVal = getMqttTopics()[0];
+        Supplier<String> topic = new Value<String>(topicVal);
         List<Message> msgs = createMsgs(mgen, null/*topic*/);
-        List<String> expectedAsString = mapList(modifyList(msgs, setTopic(topic)),
+        List<String> expectedAsString = mapList(modifyList(msgs, setTopic(topicVal)),
                                             msgToJSONStringFunc());
         
         // Test producer that takes TStream<SimpleMessage> and an explicit topic.
@@ -565,7 +533,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testSubtypeExplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -574,12 +542,13 @@ public class MqttStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
         String subClientId = newSubClientId(top.getName());
         String pubClientId = newPubClientId(top.getName());
-        String topic = getMqttTopics()[0];
+        String topicVal = getMqttTopics()[0];
+        Supplier<String> topic = new Value<String>(topicVal);
         List<MyMsgSubtype> msgs = new ArrayList<>();
         for(Message m : createMsgs(mgen, null/*topic*/)) {
             msgs.add(new MyMsgSubtype(m.getMessage()));
         }
-        List<String> expectedAsString = mapList(msgs, subtypeMsgToJSONStringFunc(topic));
+        List<String> expectedAsString = mapList(msgs, subtypeMsgToJSONStringFunc(topicVal));
         
         // Test producer that takes a TStream<MyMsgSubtype>
 
@@ -602,7 +571,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testSubtypeImplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -628,7 +597,7 @@ public class MqttStreamsTest extends TestTopology {
         
         TSink sink = producer.publish(msgsToPublish);
         
-        TStream<Message> rcvdMsgs = consumer.subscribe(topic);
+        TStream<Message> rcvdMsgs = consumer.subscribe(new Value<String>(topic));
 
         // for validation...
         rcvdMsgs.print();
@@ -639,7 +608,7 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(sink != null);
     }
     
-    //@Test
+    @Test
     public void testMultiTopicProducer() throws Exception {
         
         checkAssumes();
@@ -667,8 +636,8 @@ public class MqttStreamsTest extends TestTopology {
         
         TSink sink = producer.publish(msgsToPublish);
         
-        TStream<Message> rcvdTopic1Msgs = consumer.subscribe(topic1);
-        TStream<Message> rcvdTopic2Msgs = consumer.subscribe(topic2);
+        TStream<Message> rcvdTopic1Msgs = consumer.subscribe(new Value<String>(topic1));
+        TStream<Message> rcvdTopic2Msgs = consumer.subscribe(new Value<String>(topic2));
         
         // for validation...
         
@@ -679,51 +648,6 @@ public class MqttStreamsTest extends TestTopology {
                                             
         completeAndValidateUnordered(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
         assertTrue(sink != null);
-    }
-    
-    //@Test
-    public void testMultiTopicConsumer() throws Exception {
-        
-        checkAssumes();
-        setupDebug();
-        Topology top = new Topology("testMultiTopicConsumer");
-        MsgGenerator mgen = new MsgGenerator(top.getName());
-        String subClientId = newSubClientId(top.getName());
-        String pubClientId = newPubClientId(top.getName());
-        String[] topics = getMqttTopics();
-        String topic1 = topics[0];
-        String topic2 = topics[1];
-        List<Message> topic1Msgs = createMsgs(mgen, topic1);
-        List<Message> topic2Msgs = createMsgs(mgen, topic2);
-        List<Message> msgs = new ArrayList<>(topic1Msgs);
-        msgs.addAll(topic2Msgs);
-        List<String> expectedAsString = mapList(msgs, msgToJSONStringFunc());
-        
-        // Test consumer that receives from multiple topics
-
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig(pubClientId));
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
-      
-        TStream<Message> topic1MsgsToPublish = top.constants(topic1Msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
-        
-        TStream<Message> topic2MsgsToPublish = top.constants(topic2Msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
-
-        TSink sink1 = producer.publish(topic1MsgsToPublish);
-        TSink sink2 = producer.publish(topic2MsgsToPublish);
-        
-        TStream<Message> rcvdMsgs = consumer.subscribe(topic1, topic2);
-        
-        // for validation...
-        rcvdMsgs.print();
-        rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
-
-        completeAndValidateUnordered(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
-        assertTrue(sink1 != null);
-        assertTrue(sink2 != null);
-        assertTrue("sink1 != sink2", sink1 != sink2);
     }
     
     // would be nice if Tester provided this too

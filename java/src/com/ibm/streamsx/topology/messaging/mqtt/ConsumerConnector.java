@@ -4,10 +4,8 @@
  */
 package com.ibm.streamsx.topology.messaging.mqtt;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.ibm.streams.operator.Tuple;
@@ -17,6 +15,8 @@ import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.messaging.mqtt.Util.ParamHandler;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -34,9 +34,10 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * Sample use:
  * <pre>{@code
  * Topology top = new Topology("An MQTT application");
- * Supplier<T> serverID = top.createSubmissionParameter("serverID", "tcp://localhost:1883");
- * Supplier<T> userID = top.createSubmissionParameter("userID", System.getProperty("user.name"));
- * Supplier<T> password = top.createSubmissionParameter("password", String.class);
+ * Supplier<T> serverID = top.createSubmissionParameter("mqtt.serverID", "tcp://localhost:1883");
+ * Supplier<T> userID = top.createSubmissionParameter("mqtt.userID", System.getProperty("user.name"));
+ * Supplier<T> password = top.createSubmissionParameter("mqtt.password", String.class);
+ * Supplier<T> topic = top.createSubmissionParameter("mqtt.topic", String.class);
  * 
  * Map<String,Object> config = new HashMap<>();
  * config.put("serverID", serverID);
@@ -44,7 +45,10 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * config.put("password", password);
  * ConsumerConnector cc = new ConsumerConnector(top, config);
  * 
- * TStream<Message> rcvdMsgs = cc.subscribe("myTopic");
+ * TStream<Message> rcvdMsgs = cc.subscribe(topic);
+ * TStream<Message> rcvdMsgs2 = cc.subscribe(new Value("someTopic"));
+ * // or with Java8...
+ * TStream<Message> rcvdMsgs2 = cc.subscribe(()->"someTopic");
  * }</pre>
  * <p>
  * Configuration properties apply to {@code ConsumerConnector} and
@@ -149,44 +153,6 @@ public class ConsumerConnector {
     }
 
     /**
-     * A specification for subscribing to an MQTT topic and handling
-     * it with a quality of service.
-     */
-    public static class Subscription {
-        private final String topic;
-        private final int qos;
-        /**
-         * Same as Subscription(topic, 0)
-         * @param topic
-         */
-        public Subscription(String topic) {
-            this(topic, 0);
-        }
-        /**
-         * A specification for subscribing to a topic and handling
-         * it at a QOS.
-         * @param topic MQTT topic string
-         * @param qos MQTT Quality Of Service
-         * @throws IllegalArgumentException if topic is null or empty
-         * @throws IllegalArgumentException if qos<0 or qos>2
-         */
-        public Subscription(String topic, int qos) {
-            this.topic = topic;
-            this.qos = qos;
-            if (topic == null || topic.trim().length() == 0)
-                throw new IllegalArgumentException("topic");
-            if (qos<0 || qos>2)
-                throw new IllegalArgumentException("qos");
-        }
-        public String getTopic() {
-            return topic;
-        }
-        public int getQos() {
-            return qos;
-        }
-    }
-
-    /**
      * Create a consumer connector for subscribing to topics.
      * <p>
      * @param te {@link TopologyElement} 
@@ -207,68 +173,31 @@ public class ConsumerConnector {
     }
     
     /**
-     * Subscribe to one or more MQTT topics.
+     * Subscribe to a MQTT topic and create a stream of messages.
      * <p>
      * The quality of service for handling each topic is
      * the value of configuration property {@code defaultQOS}.
-     * <p>
-     * N.B., A topology that includes this will not support
-     * {@code StreamsContext.Type.EMBEDDED}.
-     * 
-     * @param topics
-     * @return TStream&lt;Message>
-     *      The generated {@code Message} tuples have a non-null {@code topic}.
-     *      The tuple's {@code key} will be null. 
-     * @throws IllegalArgumentException if topics is null or empty, or if
-     *         any of the topic values are null or empty.
-     */
-    public TStream<Message> subscribe(String... topics)
-    {
-        if (topics==null || topics.length==0)
-            throw new IllegalArgumentException("topics");
-        Integer qos = (Integer) config.get("defaultQOS");
-        if (qos == null)
-            qos = 0;
-        List<Subscription> topicSubs = new ArrayList<>();
-        for (String topic : topics) {
-            topicSubs.add( new Subscription(topic, qos) );
-        }
-        return subscribe(topicSubs.toArray(new Subscription[topicSubs.size()]));
-    }
-
-    /**
-     * Subscribe to one or more MQTT topics and create a stream of
-     * messages.
-     * <p>
+     * <p> 
      * N.B., A topology that includes this will not support
      * {@code StreamsContext.Type.EMBEDDED}.
      *
-     * @param topics one or more MQTT topics to subscribe to
+     * @param topic the MQTT topic.  May be a submission parameter.
      * @return TStream&lt;Message>
      *      The generated {@code Message} tuples have a non-null {@code topic}.
      *      The tuple's {@code key} will be null. 
-     * @throws IllegalArgumentException if topics is null or empty, or if
-     *         any of the topic values are null or empty.
-     */
-    public TStream<Message> subscribe(Subscription... topics)
+     * @throws IllegalArgumentException if topic is null.
+     * @see Value
+     * @see Topology#createSubmissionParameter(String, Class)
+    */
+    public TStream<Message> subscribe(Supplier<String> topic)
     {
-        if (topics==null || topics.length==0)
-            throw new IllegalArgumentException("topics");
-
-        List<String> topicStrs = new ArrayList<>();
-        List<Integer> topicQos = new ArrayList<>();
-        for (Subscription ts : topics) {
-            topicStrs.add(ts.getTopic());
-            topicQos.add(ts.getQos());
-        }
-        String topicCsv = Util.toCsv(topicStrs);
-        String qosCsv = Util.toCsv(topicQos);
+        if (topic==null)
+            throw new IllegalArgumentException("topic");
 
         Map<String, Object> params = new HashMap<>();
         params.put("reconnectionBound", -1);
         params.putAll(Util.configToSplParams(config, paramHandlers));
-        params.put("topics", topicCsv);
-        params.put("qosStr", qosCsv);
+        params.put("topics", topic);
         params.put("topicOutAttrName", "topic");
         params.put("dataAttributeName", "message");
         if (++sourceOpCnt > 1) {

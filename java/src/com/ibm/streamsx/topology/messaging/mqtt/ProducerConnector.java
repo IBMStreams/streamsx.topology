@@ -11,8 +11,11 @@ import java.util.Map;
 import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.messaging.mqtt.Util.ParamHandler;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -81,6 +84,7 @@ public class ProducerConnector {
 
     /**
      * Publish {@code stream} tuples to the MQTT Broker.
+     * <p>
      * Each {@code stream} tuple is sent to the topic specified by its
      * {@link Message#getTopic()} value.
      * The {@link Message#getKey()} field is ignored.
@@ -88,29 +92,13 @@ public class ProducerConnector {
      * The message is handle with the quality of service indicated
      * by configuration property {@code defaultQOS}.
      * <p>
-     * Same as {@code produce(stream, null, -1)}.
+     * Same as {@code produce(stream, null)}.
      * @param stream the stream to publish
      * @return the sink element
      */
     public TSink publish(TStream<? extends Message> stream)
     {
-        return publish(stream, null/*topic*/, -1/*qos*/);
-    }
-
-    /**
-     * Publish {@code stream} tuples to the MQTT Broker.
-     * Each {@code stream} tuple is sent to the specified topic.
-     * The {@link Message#getKey()} field is ignored.
-     * <p>
-     * The message is handle with the quality of service indicated
-     * by configuration property {@code defaultQOS}.
-     * <p>
-     * Same as {@code produce(stream, topic, -1)}.
-     * @param stream the stream to publish
-     * @return the sink element
-     */
-    public TSink  publish(TStream<? extends Message> stream, String topic) {
-        return publish(stream, topic, -1);
+        return publish(stream, null/*topic*/);
     }
     
     /**
@@ -123,20 +111,17 @@ public class ProducerConnector {
      * The messages added to MQTT include a topic and message.
      * The {@link Message#getKey()} field is ignored.
      * <p>
-     * If {@code qos==-1} the message is handled with the quality of service
+     * The message is handled with the quality of service
      * indicated by configuration property {@code defaultQOS}.
      * 
      * @param stream the stream to publish
-     * @param topic topic to publish to.  May be null.
+     * @param topic topic to publish to.  May be a submission parameter. May be null.
      * @param qos quality of service. -1 to use {@code defaultQOS}.
      * @return the sink element
-     * 
-     * @throws IllegalArgumentException if an empty {@code topic} is specified.
-     * @throws IllegalArgumentException if {@code qos<-1 || qos>2}.
+     * @see Value
+     * @see Topology#createSubmissionParameter(String, Class)
      */
-    public TSink publish(TStream<? extends Message> stream, String topic, int qos) {
-        if (topic!=null && topic.isEmpty())
-            throw new IllegalArgumentException("topic");
+    public TSink publish(TStream<? extends Message> stream, Supplier<String> topic) {
         
         stream = stream.lowLatency();
         
@@ -151,8 +136,6 @@ public class ProducerConnector {
             params.put("topicAttributeName", "topic");
         else
             params.put("topic", topic);
-        if (qos != -1)
-            params.put("qos", qos);
         params.put("dataAttributeName", "message");
         if (++sinkOpCnt > 1) {
             // each sink op requires its own clientID
@@ -175,7 +158,7 @@ public class ProducerConnector {
     }
     
     private static BiFunction<Message,OutputTuple,OutputTuple> 
-            cvtMsgFunc(final String topic)
+            cvtMsgFunc(final Supplier<String> topic)
     {
         return new BiFunction<Message,OutputTuple,OutputTuple>() {
             private static final long serialVersionUID = 1L;
@@ -185,8 +168,6 @@ public class ProducerConnector {
                 v2.setString("message", toSplValue(v1.getMessage()));
                 if (topic==null)
                     v2.setString("topic", toSplValue(v1.getTopic()));
-                else
-                    v2.setString("topic", topic);
                 return v2;
             }
             
