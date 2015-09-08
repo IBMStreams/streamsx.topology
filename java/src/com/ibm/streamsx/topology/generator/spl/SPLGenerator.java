@@ -131,7 +131,6 @@ public class SPLGenerator {
     
     private void generateMainCompConfig(JSONObject graphConfig, StringBuilder sb) {
         JSONArray hostPools = (JSONArray) graphConfig.get("__spl_hostPools");
-        System.out.println("__spl_hostPools:" + hostPools);
         if (hostPools != null && !hostPools.isEmpty()) {
             boolean seenOne = false;
             for (Object hpo : hostPools) {
