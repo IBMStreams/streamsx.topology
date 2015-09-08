@@ -68,6 +68,10 @@ public class InvokeStandalone {
             @SuppressWarnings("unchecked")
             Map<String,Object> params = (Map<String,Object>) config.get(ContextProperties.SUBMISSION_PARAMS); 
             for(Map.Entry<String,Object> e :  params.entrySet()) {
+                // note: this execution path does correctly
+                // handle / preserve the semantics of escaped \t and \n.
+                // e.g., "\\n" is NOT treated as a newline 
+                // rather it's the two char '\','n'
                 commands.add(e.getKey()+"="+e.getValue().toString());
             }
         }

@@ -93,9 +93,9 @@ public class SPLOperatorsTest extends TestTopology {
                 + " >");
         
         Random rand = new Random();
-        String r = "test\"Lit\nerals\\n" + rand.nextInt();
+        String r = "test    X\tY\"Lit\nerals\\nX\\tY " + rand.nextInt();
         opParamAdder.put("r", r);
-        String u = "test\"Lit\nerals\\n" + rand.nextInt();
+        String u = "test    X\tY\"Lit\nerals\\nX\\tY " + rand.nextInt();
         opParamAdder.put("u", SPL.createValue(u, MetaType.USTRING));
 
         boolean b = rand.nextBoolean();
@@ -127,6 +127,9 @@ public class SPLOperatorsTest extends TestTopology {
         SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtk"));
         SPLStream paramTuple = SPL.invokeSource(topology, "testgen::TypeLiteralTester", opParamAdder.getParams(), schema);
 
+        // paramTuple.print();
+        // paramTuple.filter(new AllowAll<Tuple>());
+        
         Tester tester = topology.getTester();
         
         Condition<Long> expectedCount = tester.tupleCount(paramTuple, 1);
@@ -137,6 +140,7 @@ public class SPLOperatorsTest extends TestTopology {
 
         assertTrue(expectedCount.toString(), expectedCount.valid());
         Tuple tuple = mr.getMostRecentTuple();
+        // System.out.println("tuple: " + tuple);
         
         assertEquals(r, tuple.getString("r"));
         assertEquals(u, tuple.getString("u"));
