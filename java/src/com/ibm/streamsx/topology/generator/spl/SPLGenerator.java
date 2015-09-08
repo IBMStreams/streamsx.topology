@@ -493,10 +493,10 @@ public class SPLGenerator {
     }
     
     private static boolean isUnsignedInt(Object type) {
-        return "uint8".equals(type)
-                || "uint16".equals(type)
-                || "uint32".equals(type)
-                || "uint64".equals(type);
+        return "UINT8".equals(type)
+                || "UINT16".equals(type)
+                || "UINT32".equals(type)
+                || "UINT64".equals(type);
     }
     
     /**

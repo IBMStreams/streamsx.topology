@@ -67,7 +67,7 @@ class SPLValue<T> {
     private static MetaType getMetaType(JSONObject jo) {
         JSONObject value = (JSONObject) jo.get("value");
         String metaType = (String) value.get("metaType");
-        return MetaType.valueOf(metaType.toUpperCase());
+        return MetaType.valueOf(metaType);
     }
     
     public JSONObject toJSON() {
@@ -79,7 +79,7 @@ class SPLValue<T> {
          *   type : "__spl_value"
          *   value : object {
          *     value : any. non-null. type appropriate for metaType
-         *     metaType : com.ibm.streams.operator.Type.MetaType string
+         *     metaType : com.ibm.streams.operator.Type.MetaType.name() string
          *   }
          * }
          * </code></pre>
@@ -88,7 +88,7 @@ class SPLValue<T> {
         JSONObject jv = new OrderedJSONObject();
         jo.put("type", "__spl_value");
         jo.put("value", jv);
-        jv.put("metaType", metaType.name().toLowerCase());
+        jv.put("metaType", metaType.name());
         jv.put("value", value);
         return jo;
     }

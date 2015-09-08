@@ -79,7 +79,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
      *   type : "__spl_value"
      *   value : object {
      *     value : any. non-null. type appropriate for metaType
-     *     metaType : com.ibm.streams.operator.Type.MetaType string.
+     *     metaType : com.ibm.streams.operator.Type.MetaType.name() string.
      *   }
      * }
      * </code></pre>
@@ -97,7 +97,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
         JSONObject value = (JSONObject) jvalue.get("value");
         this.name = name;
         this.defaultValue = withDefault ? (T) value.get("value") : null;
-        this.metaType =  MetaType.valueOf(((String) value.get("metaType")).toUpperCase());
+        this.metaType =  MetaType.valueOf((String) value.get("metaType"));
     }
 
     @Override
@@ -124,7 +124,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
          *   type : "submissionParameter"
          *   value : object {
          *     name : string. submission parameter name
-         *     metaType : operator.Type.MetaType string
+         *     metaType : operator.Type.MetaType.name() string
          *     defaultValue : any. may be null. type appropriate for metaType.
          *   }
          * }
@@ -135,7 +135,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
         jo.put("type", "submissionParameter");
         jo.put("value", jv);
         jv.put("name", name);
-        jv.put("metaType", metaType.name().toLowerCase());
+        jv.put("metaType", metaType.name());
         jv.put("defaultValue", defaultValue);
         return jo;
     }
