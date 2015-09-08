@@ -26,6 +26,9 @@ class Preprocessor {
     }
     
     void preprocess() {
+
+        GraphValidation graphValidationProcess = new GraphValidation();
+        graphValidationProcess.validateGraph(graph);
         
         PEPlacement pePlacementPreprocess = new PEPlacement();
 
