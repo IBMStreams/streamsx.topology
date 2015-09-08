@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
@@ -54,6 +55,37 @@ import com.ibm.streamsx.topology.tester.Tester;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
 public class ParallelTest extends TestTopology {
+
+    @Test
+    @Ignore("Issue #131")
+    public void testAdjacentParallel() throws Exception {
+        checkUdpSupported();
+        List<String> strings = getListOfUniqueStrings(200);
+        String[] stringArray = strings.toArray(new String[strings.size()]);
+        Topology topology = new Topology("testAdj");
+        TStream<String> out0 = topology.strings(stringArray)
+	    .parallel(5, TStream.Routing.HASH_PARTITIONED);
+	out0=out0.transform(randomStringProducer()).endParallel();
+        TStream<String> out2 = out0.parallel(5, TStream.Routing.HASH_PARTITIONED);
+	out2.print();
+	out2=out2.transform(randomStringProducer()).endParallel();
+
+        TStream<String> numRegions0 = out0.transform(uniqueStringCounter(200));
+        TStream<String> numRegions2 = out2.transform(uniqueStringCounter(200));
+        
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(out0, 200);
+        Condition<Long> expectedCount2 = tester.tupleCount(out2, 200);
+        Condition<List<String>> validNumRegions0 = tester.stringContents(numRegions0, "5");
+        Condition<List<String>> validNumRegions2 = tester.stringContents(numRegions2, "5");
+
+        complete(tester, expectedCount2, 10, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.valid());
+        assertTrue(validNumRegions0.valid());
+        assertTrue(validNumRegions2.valid());
+    }
+
     @Test
     public void testParallelNonPartitioned() throws Exception {
         checkUdpSupported();
@@ -665,6 +697,16 @@ public class ParallelTest extends TestTopology {
     }
     
     @SuppressWarnings("serial")
+    public static Predicate<String> nopStringFilter(){
+	return new Predicate<String>(){
+	    @Override
+	    public boolean test(String tuple){
+		return true;
+	    }
+	};
+    }
+
+    @SuppressWarnings("serial")
     public static Predicate<String> allowAB(){
         return new Predicate<String>() {
             
@@ -733,6 +775,50 @@ public class ParallelTest extends TestTopology {
             this.functionContext = functionContext; 
         }
         
+    }
+    
+    public static List<String> getListOfUniqueStrings(int num){
+        List<String> l = new ArrayList<>();
+        for(int i = 0; i < num; i++){
+            l.add(Integer.toString(i));
+        }
+        return l;
+    }
+    
+    @SuppressWarnings("serial")
+    public static Function<String, String> randomStringProducer(){
+        return new Function<String, String>(){
+            String uuid = null;
+            @Override
+            public String apply(String v) {
+		//System.out.println("Got to rsp : " + v);
+                if(uuid == null){
+                    uuid = UUID.randomUUID().toString();
+                }
+                return uuid;
+            }
+            
+        };
+    }
+    
+    @SuppressWarnings("serial")
+    public static Function<String, String> uniqueStringCounter(final int count){
+        return new Function<String, String>(){
+            Set<String> uniqueStrings = new HashSet<>();
+	    int _count = 0;
+            @Override
+            public String apply(String v) {
+		++_count;
+                uniqueStrings.add(v);
+		System.out.println(_count);
+                if(_count == count){
+		    System.out.println("returning " + uniqueStrings.size());
+                    return Integer.toString(uniqueStrings.size());
+                }
+		return null;
+            }
+            
+        };
     }
     
     

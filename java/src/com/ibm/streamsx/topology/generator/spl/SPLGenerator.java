@@ -326,12 +326,16 @@ public class SPLGenerator {
                     compOperator.put("outputs", parallelEnd.get("outputs"));
                     subComp.put("outputName", "parallelOutput");
 
-                 // Set all relevant output port names to the output port of the
+		    // Set all relevant output port names to the output port of the
                     // parallel composite.
                     JSONObject paraEndIn = (JSONObject)((JSONArray)parallelEnd.get("inputs")).get(0);
                     String parallelEndInputPortName = (String)(paraEndIn.get("name"));
                     List<JSONObject> parallelOutParents = GraphUtilities.getUpstream(parallelEnd, graph);
                     for(JSONObject end : parallelOutParents){
+			if(((String)end.get("kind")).equals("com.ibm.streamsx.topology.functional.java::HashAdder")){
+			    String endType = (String)((JSONObject)((JSONArray)end.get("outputs")).get(0)).get("type");
+			    ((JSONObject)((JSONArray)compOperator.get("outputs")).get(0)).put("type", endType);
+			}
                         JSONArray parallelOutputs = (JSONArray) end.get("outputs");
                         for(Object outputObj : parallelOutputs){
                             JSONObject paraOutput = (JSONObject)outputObj;
