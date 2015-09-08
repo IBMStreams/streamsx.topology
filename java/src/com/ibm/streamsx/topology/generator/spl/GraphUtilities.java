@@ -422,8 +422,12 @@ class GraphUtilities {
         // Attach op in inputs and outputs
         JSONArray opInputConns = (JSONArray) opInput.get("connections");
         JSONArray opOutputConns = (JSONArray) opOutput.get("connections");
-        opInputConns.add(oportName);
-        opOutputConns.add(iportName);
+	if(!opInputConns.contains(oportName)){
+	    opInputConns.add(oportName);
+	}
+	if(!opOutputConns.add(iportName)){
+	    opOutputConns.add(iportName);
+	}
         
         JSONArray outputConns = (JSONArray) output.get("connections");
         JSONArray inputConns = (JSONArray) input.get("connections");
