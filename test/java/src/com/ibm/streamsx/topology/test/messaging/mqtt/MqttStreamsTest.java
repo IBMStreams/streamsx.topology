@@ -78,6 +78,8 @@ public class MqttStreamsTest extends TestTopology {
     private java.util.logging.Level appTracingLevel = java.util.logging.Level.FINE;
     private static final Map<String,String> authInfo = new HashMap<>();
     static {
+        System.setProperty(PROP_PREFIX+"userID", System.getProperty("user.name"));
+        System.setProperty(PROP_PREFIX+"password", "myMosquittoPw");
         initAuthInfo("userID");
         initAuthInfo("password");
         initAuthInfo("trustStore");
@@ -213,92 +215,6 @@ public class MqttStreamsTest extends TestTopology {
     }
     
     @Test
-    public void testReusableApp() throws Exception {
-        
-        checkAssumes();
-        setupDebug();
-        Topology top = new Topology("testReusableApp");
-        MsgGenerator mgen = new MsgGenerator(top.getName());
-        String subClientId = newSubClientId(top.getName());
-        String pubClientId = newPubClientId(top.getName());
-        String topic = getMqttTopics()[0];
-        List<Message> msgs = createMsgs(mgen, null/*topic*/);
-        
-        // Test an app structured more as a "reusable asset" - i.e.,
-        // where the mqtt connection info (URI, authInfo) and
-        // topic are defined at submission time.
-        
-        // define/create the app's submission parameters
-        ParameterHelper params = new ParameterHelper(top);
-        params.definitions().put("mqtt.serverURI", String.class);
-        params.definitions().put("mqtt.userID", System.getProperty("user.name"));
-        params.definitions().put("mqtt.password", String.class);
-        params.definitions().put("mqtt.pub.topic", String.class);
-        params.definitions().put("mqtt.sub.topic", String.class);
-        params.createAll();
-        
-        // add the values for our call to submit()
-        Map<String,Object> submitParams = new HashMap<>();
-        submitParams.put("mqtt.serverURI", "tcp://localhost:1883");
-        // submitParams.put("mqtt.userID", System.getProperty("user.name"));
-        submitParams.put("mqtt.password", "myMosquittoPw");
-        submitParams.put("mqtt.pub.topic", topic);
-        submitParams.put("mqtt.sub.topic", topic);
-        getConfig().put(ContextProperties.SUBMISSION_PARAMS, submitParams);
-
-        
-        // Produce and consume the msgs
-
-        Map<String,Object> pconfig = createProducerConfig(pubClientId);
-        addMqttParams(pconfig, false, params);
-        Map<String,Object> cconfig = createConsumerConfig(subClientId);
-        addMqttParams(cconfig, true, params);
-
-        ProducerConnector producer = new ProducerConnector(top, pconfig);
-        ConsumerConnector consumer = new ConsumerConnector(top, cconfig);
-        
-        TStream<Message> msgsToPublish = top.constants(msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
-        
-        TSink sink = producer.publish(msgsToPublish, params.getString("mqtt.pub.topic"));
-        
-        TStream<Message> rcvdMsgs = consumer.subscribe(params.getString("mqtt.sub.topic"));
-
-        // for validation...
-        rcvdMsgs.print();
-        rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
-        msgs = modifyList(msgs, setTopic(topic));
-        List<String> expectedAsString = mapList(msgs, msgToJSONStringFunc());
-
-        completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
-        assertTrue(sink != null);
-    }
-    
-    private static void addMqttParams(Map<String,Object> config,
-            boolean isConsumer, ParameterHelper params) {
-        for (Map.Entry<String, Supplier<?>> e : params.parameters().entrySet()) {
-            String name = e.getKey();
-            String prefix = "mqtt.";
-            if (!name.startsWith(prefix))
-                continue;
-            name = name.substring(prefix.length());
-            
-            prefix = isConsumer ? "sub." : "pub.";
-            if (name.startsWith("sub.") || name.startsWith("pub.")) {
-                if (name.equals(prefix + "topic"))
-                    continue;  // not a config param
-                if (name.startsWith("sub.") && !prefix.equals("sub.") 
-                    || name.startsWith("pub.") && !prefix.equals("pub."))
-                    continue;
-                name = name.substring(prefix.length());
-            }
-            
-            config.put(name, e.getValue());
-        }
-    }
-    
-    @Test
     public void testConfigParams() throws Exception {
         
         checkAssumes();
@@ -425,6 +341,92 @@ public class MqttStreamsTest extends TestTopology {
         assertTrue(actBundle != null);
         actBundle.delete();
         assertTrue(sink != null);
+    }
+    
+    @Test
+    public void testReusableApp() throws Exception {
+        
+        checkAssumes();
+        setupDebug();
+        Topology top = new Topology("testReusableApp");
+        MsgGenerator mgen = new MsgGenerator(top.getName());
+        String subClientId = newSubClientId(top.getName());
+        String pubClientId = newPubClientId(top.getName());
+        String topic = getMqttTopics()[0];
+        List<Message> msgs = createMsgs(mgen, null/*topic*/);
+        
+        // Test an app structured more as a "reusable asset" - i.e.,
+        // where the mqtt connection info (URI, authInfo) and
+        // topic are defined at submission time.
+        
+        // define/create the app's submission parameters
+        ParameterHelper params = new ParameterHelper(top);
+        params.definitions().put("mqtt.serverURI", String.class);
+        params.definitions().put("mqtt.userID", System.getProperty("user.name"));
+        params.definitions().put("mqtt.password", String.class);
+        params.definitions().put("mqtt.pub.topic", String.class);
+        params.definitions().put("mqtt.sub.topic", String.class);
+        params.createAll();
+        
+        // add the values for our call to submit()
+        Map<String,Object> submitParams = new HashMap<>();
+        submitParams.put("mqtt.serverURI", "tcp://localhost:1883");
+        // submitParams.put("mqtt.userID", System.getProperty("user.name"));
+        submitParams.put("mqtt.password", "myMosquittoPw");
+        submitParams.put("mqtt.pub.topic", topic);
+        submitParams.put("mqtt.sub.topic", topic);
+        getConfig().put(ContextProperties.SUBMISSION_PARAMS, submitParams);
+
+        
+        // Produce and consume the msgs
+
+        Map<String,Object> pconfig = createProducerConfig(pubClientId);
+        addMqttParams(pconfig, false, params);
+        Map<String,Object> cconfig = createConsumerConfig(subClientId);
+        addMqttParams(cconfig, true, params);
+
+        ProducerConnector producer = new ProducerConnector(top, pconfig);
+        ConsumerConnector consumer = new ConsumerConnector(top, cconfig);
+        
+        TStream<Message> msgsToPublish = top.constants(msgs)
+                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+        
+        TSink sink = producer.publish(msgsToPublish, params.getString("mqtt.pub.topic"));
+        
+        TStream<Message> rcvdMsgs = consumer.subscribe(params.getString("mqtt.sub.topic"));
+
+        // for validation...
+        rcvdMsgs.print();
+        rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
+        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+        msgs = modifyList(msgs, setTopic(topic));
+        List<String> expectedAsString = mapList(msgs, msgToJSONStringFunc());
+
+        completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        assertTrue(sink != null);
+    }
+    
+    private static void addMqttParams(Map<String,Object> config,
+            boolean isConsumer, ParameterHelper params) {
+        for (Map.Entry<String, Supplier<?>> e : params.parameters().entrySet()) {
+            String name = e.getKey();
+            String prefix = "mqtt.";
+            if (!name.startsWith(prefix))
+                continue;
+            name = name.substring(prefix.length());
+            
+            prefix = isConsumer ? "sub." : "pub.";
+            if (name.startsWith("sub.") || name.startsWith("pub.")) {
+                if (name.equals(prefix + "topic"))
+                    continue;  // not a config param
+                if (name.startsWith("sub.") && !prefix.equals("sub.") 
+                    || name.startsWith("pub.") && !prefix.equals("pub."))
+                    continue;
+                name = name.substring(prefix.length());
+            }
+            
+            config.put(name, e.getValue());
+        }
     }
     
     @Test

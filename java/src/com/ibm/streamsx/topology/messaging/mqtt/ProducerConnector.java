@@ -16,7 +16,6 @@ import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.logic.Value;
-import com.ibm.streamsx.topology.messaging.mqtt.Util.ParamHandler;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
@@ -32,11 +31,40 @@ import com.ibm.streamsx.topology.tuple.Message;
  * <p>
  * Sample use:
  * <pre>{@code
+ * Topology top = new Topology("An MQTT application");
+ * // define submission properties for configuration information
+ * Supplier<T> serverID = top.createSubmissionParameter("mqtt.serverID", "tcp://localhost:1883");
+ * Supplier<T> userID = top.createSubmissionParameter("mqtt.userID", System.getProperty("user.name"));
+ * Supplier<T> password = top.createSubmissionParameter("mqtt.password", String.class);
+ * Supplier<T> topic = top.createSubmissionParameter("mqtt.topic", String.class);
+ * 
+ * // create the connector's configuration property map
+ * Map<String,Object> config = new HashMap<>();
+ * config.put("serverID", serverID);
+ * config.put("userID", userID);
+ * config.put("password", password);
+ * 
+ * // create the connector
+ * ProducerConnector producer = new ProducerConnector(top, config);
+ * 
+ * // publish to the submission parameter topic
+ * TStream<Message> msgsToPublish = ...
+ * producer.publish(msgsToPublish, topic);
+ * 
+ * // publish to a compile time topic
+ * // with Java8 Lambda expression...
+ * producer.publish(msgsToPublish, ()->"anotherTopic");
+ * // without Java8...
+ * producer.publish(msgsToPublish, new Value("anotherTopic"));
+ * }</pre>
+
+ * Sample use:
+ * <pre>{@code
  * Topology top = ...
  * Properties producerConfig = ...
  * ProducerConnector pc = new ProducerConnector(top, producerConfig);
  * TStream<Message> msgsToPublish = ...
- * pc.publish(msgsToPublish, "myTopic");
+ * pc.publish(msgsToPublish, new Value("myTopic"));
  * }</pre>
  * <p>
  * See {@link ConsumerConnector} for configuration properties.
@@ -49,24 +77,13 @@ public class ProducerConnector {
     private final TopologyElement te;
     private final Map<String,Object> config;
     private int sinkOpCnt;
-    
-    private static final Map<String, ParamHandler> paramHandlers = new HashMap<>();
-    static  {
-        paramHandlers.put("defaultQOS", new ParamHandler("qos", Integer.class));
-    }
-
    
     /**
      * Create a producer connector for publishing tuples.
      * <p>
-     * Minimal configuration typically includes:
-     * <ul>
-     * <li><code>metadata.broker.list</code></li>
-     * <li><code>serializer.class</code></li>
-     * <li><code>request.required.acks</code></li>
-     * </ul>
-     *
-     * @param config MQTTProducer configuration information.
+     * See {@link ConsumerConnector} for configuration properties.
+     * @param te {@link TopologyElement} 
+     * @param config producer configuration property information.
      */
     public ProducerConnector(TopologyElement te, Map<String,Object> config) {
         this.te = te;
@@ -75,7 +92,7 @@ public class ProducerConnector {
     }
     
     /**
-     * Get the connector's producer configuration information.
+     * Get the connector's configuration information.
      * @return the unmodifiable configuration 
      */
     public Map<String,Object> getConfig() {
@@ -83,7 +100,7 @@ public class ProducerConnector {
     }
 
     /**
-     * Publish {@code stream} tuples to the MQTT Broker.
+     * Publish {@code stream} tuples to one or more MQTT topics.
      * <p>
      * Each {@code stream} tuple is sent to the topic specified by its
      * {@link Message#getTopic()} value.
@@ -102,7 +119,7 @@ public class ProducerConnector {
     }
     
     /**
-     * Publish {@code stream} tuples to the MQTT Broker.
+     * Publish {@code stream} tuples to one or more MQTT topics.
      * <p>
      * If {@code topic} is null, each tuple is published to the topic
      * specified by its {@link Message#getTopic()}.
@@ -116,7 +133,6 @@ public class ProducerConnector {
      * 
      * @param stream the stream to publish
      * @param topic topic to publish to.  May be a submission parameter. May be null.
-     * @param qos quality of service. -1 to use {@code defaultQOS}.
      * @return the sink element
      * @see Value
      * @see Topology#createSubmissionParameter(String, Class)
@@ -131,7 +147,8 @@ public class ProducerConnector {
         
         Map<String,Object> params = new HashMap<String,Object>();
         params.put("reconnectionBound", -1);
-        params.putAll(Util.configToSplParams(config, paramHandlers));
+        params.put("qos", 0);
+        params.putAll(Util.configToSplParams(config));
         if (topic == null)
             params.put("topicAttributeName", "topic");
         else

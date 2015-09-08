@@ -17,7 +17,6 @@ import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.logic.Value;
-import com.ibm.streamsx.topology.messaging.mqtt.Util.ParamHandler;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.tuple.Message;
@@ -34,28 +33,38 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * Sample use:
  * <pre>{@code
  * Topology top = new Topology("An MQTT application");
+ * // create submission properties for configuration information
  * Supplier<T> serverID = top.createSubmissionParameter("mqtt.serverID", "tcp://localhost:1883");
  * Supplier<T> userID = top.createSubmissionParameter("mqtt.userID", System.getProperty("user.name"));
  * Supplier<T> password = top.createSubmissionParameter("mqtt.password", String.class);
  * Supplier<T> topic = top.createSubmissionParameter("mqtt.topic", String.class);
  * 
+ * // create the connector's configuration property map
  * Map<String,Object> config = new HashMap<>();
  * config.put("serverID", serverID);
  * config.put("userID", userID);
  * config.put("password", password);
- * ConsumerConnector cc = new ConsumerConnector(top, config);
  * 
- * TStream<Message> rcvdMsgs = cc.subscribe(topic);
- * TStream<Message> rcvdMsgs2 = cc.subscribe(new Value("someTopic"));
- * // or with Java8...
- * TStream<Message> rcvdMsgs2 = cc.subscribe(()->"someTopic");
+ * // create the connector
+ * ConsumerConnector consumer = new ConsumerConnector(top, config);
+ * 
+ * // subscribe to the submission parameter topic
+ * TStream<Message> rcvdMsgs = consumer.subscribe(topic);
+ * rcvdMsgs.print();
+ * 
+ * // subscribe to a compile time topic
+ * // with Java8 Lambda expression...
+ * TStream<Message> rcvdMsgs2 = consumer.subscribe(()->"anotherTopic");
+ * // without Java8...
+ * TStream<Message> rcvdMsgs2 = consumer.subscribe(new Value("anotherTopic"));
  * }</pre>
  * <p>
  * Configuration properties apply to {@code ConsumerConnector} and
  * {@code ProducerConnector} configurations unless stated otherwise.
  * <br>
  * All properties may be specified as submission parameters unless
- * stated otherwise.  See {@link Topology#createSubmissionParameter(String, Class)}.
+ * stated otherwise.  
+ * See {@link Topology#createSubmissionParameter(String, Class)}.
  * <p>
  * <table border=1>
  * <tr><th>Property</th><th>Description</th></tr>
@@ -68,7 +77,8 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * <tr><td>clientID</td>
  *      <td>Optional String. A unique identifier for a connection
  *      to the MQTT server. By default a unique client ID is automatically
- *      generated for each connection.
+ *      generated for each connection.  The MQTT broker only allows a single
+ *      connection for a particular {@code clientID}.
  *      </td></tr>
  * <tr><td>keepAliveInterval</td>
  *      <td>Optional Integer.  Automatically generate a MQTT
@@ -146,17 +156,12 @@ public class ConsumerConnector {
     private final TopologyElement te;
     private final Map<String,Object> config;
     private int sourceOpCnt;
-    
-    private static final Map<String, ParamHandler> paramHandlers = new HashMap<>();
-    static  {
-        paramHandlers.put("defaultQOS", new ParamHandler("qosStr"));
-    }
 
     /**
      * Create a consumer connector for subscribing to topics.
      * <p>
      * @param te {@link TopologyElement} 
-     * @param config consumer configuration information.
+     * @param config consumer configuration property information.
      */
     public ConsumerConnector(TopologyElement te, Map<String, Object> config) {
         this.te = te;
@@ -196,7 +201,8 @@ public class ConsumerConnector {
 
         Map<String, Object> params = new HashMap<>();
         params.put("reconnectionBound", -1);
-        params.putAll(Util.configToSplParams(config, paramHandlers));
+        params.put("qos", 0);
+        params.putAll(Util.configToSplParams(config));
         params.put("topics", topic);
         params.put("topicOutAttrName", "topic");
         params.put("dataAttributeName", "message");

@@ -39,7 +39,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * It also subscribes to the topic and reports the messages received.
  * The messages received may include messages from prior runs of the sample.
  * <p>
- * The sample requires a running MQTT broker with the following
+ * By default, the sample requires a running MQTT broker with the following
  * characteristics:
  * <ul>
  * <li>the broker's connection is {@code tcp://localhost:1883}</li>
@@ -62,6 +62,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * <LI>
  * {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar
  *  mqtt.MqttSample CONTEXT_TYPE
+ *     [serverURI=<value>]
  *     [userID=<value>] [password=<value>]
  *     [trustStore=<value>] [trustStorePassword=<value>]
  *     [keyStore=<value>] [keyStorePassword=<value>]
@@ -82,91 +83,88 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * </UL>
  */
 public class MqttSample {
-    private static final String SERVER_URI = "tcp://localhost:1883";    
+    private static String SERVER_URI = "tcp://localhost:1883";    
     
     private static final String TOPIC = "mqttSampleTopic";
 
     private static final int PUB_DELAY_MSEC = 5*1000;
-    private static final String uniq = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
     private boolean captureArtifacts = false;
     private boolean setAppTracingLevel = false;
     private java.util.logging.Level appTracingLevel = java.util.logging.Level.FINE;
-    private Map<String,Object> config = new HashMap<>();
-    static final Map<String,String> authInfo = new HashMap<>();
+    private static final Map<String,String> authInfo = new HashMap<>();
     
     public static void main(String[] args) throws Exception {
         String contextType = "DISTRIBUTED";
         if (args.length > 0)
             contextType = args[0];
-        System.out.println("\nREQUIRES:"
-                + ", MQTT broker at " + SERVER_URI
-                + "\n"
-                );
+        processArgs(args);
+        System.out.println("\nUsing MQTT broker at " + SERVER_URI +"\n");
 
-        initAuthInfo(args);
         MqttSample app = new MqttSample();
         app.publishSubscribe(contextType);
     }
     
     /**
-     * Publish some messages to a topic, scribe to the topic and report
+     * Publish some messages to a topic; subscribe to the topic and report
      * received messages.
      * @param contextType string value of a {@code StreamsContext.Type}
      * @throws Exception
      */
     public void publishSubscribe(String contextType) throws Exception {
         
-        setupConfig();
+        Map<String,Object> contextConfig = new HashMap<>();
+        initContextConfig(contextConfig);
+        
         Topology top = new Topology("mqttSample");
-        String pubClientId = newClientId(top.getName() + "_pub");
-        String subClientId = newClientId(top.getName() + "_sub");
+
+        // A compile time MQTT topic value.
         Supplier<String> topic = new Value<String>(TOPIC);
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig(pubClientId));
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
+        // Create the MQTT connectors
+        Map<String,Object> mqttConfig = createMqttConfig();
+        ProducerConnector producer = new ProducerConnector(top, mqttConfig);
+        ConsumerConnector consumer = new ConsumerConnector(top, mqttConfig);
         
-        TStream<Message> msgs = makeStreamToPublish(top);
+        // Create a stream of messages and for the sample, give the
+        // consumer a change to become ready
+        TStream<Message> msgs = makeStreamToPublish(top)
+                        .modify(initialDelayFunc(PUB_DELAY_MSEC));
 
-        // for the sample, give the consumer a chance to become ready
-        msgs = msgs.modify(initialDelayFunc(PUB_DELAY_MSEC));
-
+        // Publish the message stream to the topic
         producer.publish(msgs, topic);
         
+        // Subscribe to the topic and report received messages
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
+        rcvdMsgs.print();
 
-        rcvdMsgs.print();  // show what we received
-
-        // Execute the topology, to send and receive the messages.
+        // Submit the topology, to send and receive the messages.
         Future<?> future = StreamsContextFactory.getStreamsContext(contextType)
-                .submit(top, config);
+                .submit(top, contextConfig);
         
         if (contextType.contains("DISTRIBUTED")) {
             System.out.println("\nSee the job's PE console logs for the topology output.\n");
         }
-        else if (contextType.contains("STANDALONE")
-                || contextType.contains("EMBEDDED")) {
+        else if (contextType.contains("STANDALONE")) {
             Thread.sleep(15000);
             future.cancel(true);
         }
     }
     
-    private Map<String,Object> createConsumerConfig(String clientId) {
+    private Map<String,Object> createMqttConfig() {
         Map<String,Object> props = new HashMap<>();
         props.put("serverURI", SERVER_URI);
-        props.put("clientID", clientId);
         props.putAll(authInfo);
         return props;
     }
     
-    private Map<String,Object> createProducerConfig(String clientId) {
-        Map<String,Object> props = new HashMap<>();
-        props.put("serverURI", SERVER_URI);
-        props.put("clientID", clientId);
-        props.putAll(authInfo);
-        return props;
-    }
-
-    private static void initAuthInfo(String[] args) {
+    private static void processArgs(String[] args) {
+        String item = "serverURI";
+        String value = getArg(item, args);
+        if (value != null) {
+            SERVER_URI = value;
+            System.out.println("Using "+item+"="+value);
+        }
+        authInfo.put("userID", System.getProperty("user.name"));
         initAuthInfo("userID", args);
         initAuthInfo("password", args);
         initAuthInfo("trustStore", args);
@@ -174,17 +172,24 @@ public class MqttSample {
         initAuthInfo("keyStore", args);
         initAuthInfo("keyStorePassword", args);
     }
-    
+
     private static void initAuthInfo(String item, String[] args) {
+        String value = getArg(item, args);
+        if (value != null) {
+            authInfo.put(item, value);
+            if (item.toLowerCase().contains("password"))
+                value = "*****";
+            System.out.println("Using "+item+"="+value);
+        }
+    }
+    
+    private static String getArg(String item, String[] args) {
         for (String arg : args) {
             String[] parts = arg.split("=");
-            if (item.equals(parts[0])) {
-                authInfo.put(item, parts[1]);
-                if (item.toLowerCase().contains("password"))
-                    parts[1] = "*****";
-                System.out.println("Using "+item+"="+parts[1]);
-            }
+            if (item.equals(parts[0]))
+                return parts[1];
         }
+        return null;
     }
     
     @SuppressWarnings("serial")
@@ -202,17 +207,11 @@ public class MqttSample {
                 });
     }
     
-    private void setupConfig() {
+    private void initContextConfig(Map<String,Object> contextConfig) {
         if (captureArtifacts)
-            config.put(ContextProperties.KEEP_ARTIFACTS, true);
+            contextConfig.put(ContextProperties.KEEP_ARTIFACTS, true);
         if (setAppTracingLevel)
-            config.put(ContextProperties.TRACING_LEVEL, appTracingLevel);
-    }
-    
-    private String newClientId(String name) {
-        String clientId = name + "_" + uniq.replaceAll(":", "");
-        System.out.println("Using MQTT clientID " + clientId);
-        return clientId;
+            contextConfig.put(ContextProperties.TRACING_LEVEL, appTracingLevel);
     }
 
     @SuppressWarnings("serial")
