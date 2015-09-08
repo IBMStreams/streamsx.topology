@@ -29,8 +29,8 @@ class Preprocessor {
         
         PEPlacement pePlacementPreprocess = new PEPlacement();
 
-        // The hash adder operators need to be relocated to enable cat's cradle
-        // parallelism
+        // The hash adder operators need to be relocated to enable directly 
+	// adjacent parallel regions
         relocateHashAdders();
         
         pePlacementPreprocess.tagIsolationRegions(graph);
