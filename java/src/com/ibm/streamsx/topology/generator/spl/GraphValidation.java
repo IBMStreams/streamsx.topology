@@ -12,13 +12,19 @@ public class GraphValidation {
     }
     
     private void checkValidEndParallel(JSONObject graph){
-        List<JSONObject> endParallels = GraphUtilities.findOperatorByKind(BVirtualMarker.END_PARALLEL, graph);
+        List<JSONObject> endParallels = GraphUtilities.findOperatorByKind(BVirtualMarker.END_PARALLEL, graph);	
+
         for(JSONObject endParallel : endParallels){
-            List<JSONObject> endParallelParents = GraphUtilities.getUpstream(endParallel, graph);
-            if(endParallelParents.size() != 1){
-                throw new IllegalStateException("Cannot union multiple streams before invoking endParallel()");
-            }
-            JSONObject endParallelParent = endParallelParents.get(0);
+	    List<JSONObject> endParallelParents = null;
+	    // Setting up loop
+	    JSONObject endParallelParent = endParallel;
+            do{
+		endParallelParents = GraphUtilities.getUpstream(endParallelParent, graph);
+		if(endParallelParents.size() != 1){
+		    throw new IllegalStateException("Cannot union multiple streams before invoking endParallel()");
+		}
+		endParallelParent = endParallelParents.get(0);
+	    } while(((String)endParallelParent.get("kind")).startsWith("$"));
             List<JSONObject> endParallelParentChildren = GraphUtilities.getDownstream(endParallelParent, graph);
             if(endParallelParentChildren.size() != 1){
                 throw new IllegalStateException("Cannot fanout a stream before invoking endParallel()");
