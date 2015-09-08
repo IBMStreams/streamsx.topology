@@ -101,8 +101,15 @@ public class InvokeSubmit {
             @SuppressWarnings("unchecked")
             Map<String,Object> params = (Map<String,Object>) config.get(ContextProperties.SUBMISSION_PARAMS); 
             for(Map.Entry<String,Object> e :  params.entrySet()) {
+                // note: this "streamtool" execution path does NOT correctly
+                // handle / preserve the semantics of escaped \t and \n.
+                // e.g., "\\n" is treated as a newline 
+                // rather than the two char '\','n'
+                // This seems to be happening internal to streamtool.
+                // Adjust accordingly.
                 commands.add("-P");
-                commands.add(e.getKey()+"="+e.getValue().toString());
+                commands.add(e.getKey()+"="+e.getValue().toString()
+                                                .replace("\\", "\\\\\\"));
             }
         }
         commands.add(bundle.getAbsolutePath());
