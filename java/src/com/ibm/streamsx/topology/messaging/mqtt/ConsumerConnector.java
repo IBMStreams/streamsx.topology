@@ -185,7 +185,12 @@ public class ConsumerConnector {
      * <p> 
      * N.B., A topology that includes this will not support
      * {@code StreamsContext.Type.EMBEDDED}.
-     *
+     * <p>
+     * N.B. due to com.ibm.streamsx.messaging 
+     * <a href="https://github.com/IBMStreams/streamsx.messaging/issues/124">issue#124</a>,
+     * terminating a {@code StreamsContext.Type.STANDALONE} topology may result
+     * in ERROR messages and a stranded standalone process.
+
      * @param topic the MQTT topic.  May be a submission parameter.
      * @return TStream&lt;Message>
      *      The generated {@code Message} tuples have a non-null {@code topic}.
