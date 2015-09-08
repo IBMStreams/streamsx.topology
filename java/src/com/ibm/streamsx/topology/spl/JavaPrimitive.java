@@ -92,7 +92,7 @@ public class JavaPrimitive {
     public static List<SPLStream> invokeJavaPrimitive(
             TopologyElement te,
             Class<? extends Operator> opClass,
-            List<SPLInput> inputs, List<StreamSchema> outputSchemas, Map<String, ? extends Object> params) {
+            List<? extends SPLInput> inputs, List<StreamSchema> outputSchemas, Map<String, ? extends Object> params) {
         
         BOperatorInvocation op = te.builder().addOperator(
                 getInvocationName(opClass),

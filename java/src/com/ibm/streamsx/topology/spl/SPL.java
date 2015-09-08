@@ -8,7 +8,10 @@ import static com.ibm.streamsx.topology.internal.core.InternalProperties.TK_DIRS
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -138,7 +141,7 @@ public class SPL {
 
     /**
      * Create an SPLStream from the invocation of an SPL operator
-     * that consumes a stream.
+     * that consumes a stream and produces a stream.
      * 
      * @param name Name for the operator invocation.
      * @param kind
@@ -162,6 +165,60 @@ public class SPL {
         BOutputPort stream = op.addOutput(outputSchema);
         return new SPLStreamImpl(input, stream);
     }
+    
+    /**
+     * Invoke an SPL operator with an arbitrary number
+     * of input and output ports.
+     * <BR>
+     * Each input stream or window in {@code inputs} results in
+     * a input port for the operator with the input port index
+     * matching the position of the input in {@code inputs}.
+     * If {@code inputs} is {@code null} or empty then the operator will not
+     * have any input ports.
+     * <BR>
+     * Each SPL schema in {@code outputSchemas} an output port
+     * for the operator with the output port index
+     * matching the position of the schema in {@code outputSchemas}.
+     * If {@code outputSchemas} is {@code null} or empty then the operator will not
+     * have any output ports.
+     * 
+     * @param te Reference to Topology the operator will be in.
+     * @param name Name for the operator invocation.
+     * @param kind
+     *            SPL kind of the operator to be invoked.
+     * @param inputs Input streams to be connected to the operator. May be {@code null} if no input  streams are required.
+     * @param outputSchemas Schemas of the output streams. May be {@code null} if no output streams are required.
+     * @param params
+     *            Parameters for the SPL Java Primitive operator, ignored if {@code null}.
+     * @return List of {@code SPLStream} instances that represent the outputs of the operator.
+     */
+    public static List<SPLStream> invokeOperator(
+            TopologyElement te,
+            String name,
+            String kind,
+            List<? extends SPLInput> inputs,
+            List<StreamSchema> outputSchemas,
+            Map<String, ? extends Object> params) {
+        
+        BOperatorInvocation op = te.builder().addSPLOperator(name, kind, params);
+        
+        SourceInfo.setSourceInfo(op, SPL.class);
+        
+        if (inputs != null && !inputs.isEmpty()) {
+            for (SPLInput input : inputs)
+                SPL.connectInputToOperator(input, op);
+        }
+        
+        if (outputSchemas == null || outputSchemas.isEmpty())
+            return Collections.emptyList();
+        
+        List<SPLStream> streams = new ArrayList<>(outputSchemas.size());
+        for (StreamSchema outputSchema : outputSchemas)
+            streams.add(new SPLStreamImpl(te, op.addOutput(outputSchema)));
+            
+        return streams;
+    }
+    
 
     /**
      * Connect an input to an operator invocation, including making the input

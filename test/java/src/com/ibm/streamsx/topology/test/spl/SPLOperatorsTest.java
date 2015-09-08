@@ -8,6 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,55 @@ public class SPLOperatorsTest extends TestTopology {
 
         assertTrue(expectedCount.toString(), expectedCount.valid());
         assertTrue(expectedTuples.toString(), expectedTuples.valid());
+    }
+    
+    /**
+     * Test we can invoke an SPL operator.
+     */
+    @Test
+    public void testSPLOperatorMultipleOuptuts() throws Exception {
+        
+        // Invokes an SPL operator so cannot run in embedded.       
+        assumeSPLOk();   
+        
+        Topology topology = new Topology(); 
+        
+        SPLStream tuples = SPLStreamsTest.testTupleStream(topology);
+        
+        // Filter on the vi attribute, passing the value 321.
+        Map<String,Object> params = new HashMap<>();
+        params.put("attr", tuples.getSchema().getAttribute("vi"));
+        params.put("value", 321);        
+   
+        SPL.addToolkit(tuples, new File(getTestRoot(), "spl/testtk"));
+        List<SPLStream> outputs = SPL.invokeOperator(
+                topology,
+                "testSPLOperatorMultipleOuptuts",
+                "testspl::Int32FilterPF", 
+                Collections.singletonList(tuples),
+                Collections.nCopies(2, tuples.getSchema()),
+                params);
+        
+        SPLStream int32Filtered = outputs.get(0);
+        SPLStream int32Dropped = outputs.get(1);
+
+        Tester tester = topology.getTester();
+        
+        Condition<Long> expectedCount = tester.tupleCount(int32Dropped, 2);
+        Condition<List<Tuple>> expectedTuples = tester.tupleContents(int32Filtered,
+                SPLStreamsTest.TEST_TUPLES[0],
+                SPLStreamsTest.TEST_TUPLES[2]
+                );
+        Condition<List<Tuple>> droppedTuples = tester.tupleContents(int32Dropped,
+                SPLStreamsTest.TEST_TUPLES[1],
+                SPLStreamsTest.TEST_TUPLES[3]
+                );
+
+        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.toString(), expectedCount.valid());
+        assertTrue(expectedTuples.toString(), expectedTuples.valid());
+        assertTrue(droppedTuples.toString(), droppedTuples.valid());
     }
     
     /**
