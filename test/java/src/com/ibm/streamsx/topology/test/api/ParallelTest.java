@@ -55,6 +55,20 @@ import com.ibm.streamsx.topology.tester.Tester;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
 public class ParallelTest extends TestTopology {
+    
+    @Test(expected=IllegalStateException.class)
+    public void fanoutEndParallelException() throws Exception {
+        checkUdpSupported();
+        Topology topology = new Topology("testFanout");
+        TStream<String> fanOut = topology.strings("hello").parallel(5)
+                .filter(new AllowAll<String>());
+        fanOut.print();
+        fanOut.endParallel().print();
+        
+        Tester tester = topology.getTester();
+        
+        complete(tester); 
+    }
 
     @Test
     @Ignore("Issue #131")
