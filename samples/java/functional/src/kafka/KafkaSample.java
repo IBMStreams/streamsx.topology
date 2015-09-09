@@ -16,7 +16,9 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
+import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.messaging.kafka.ConsumerConnector;
 import com.ibm.streamsx.topology.messaging.kafka.ProducerConnector;
 import com.ibm.streamsx.topology.tuple.Message;
@@ -118,6 +120,7 @@ public class KafkaSample {
         setupConfig();
         Topology top = new Topology("kafkaSample");
         String groupId = newGroupId(top.getName());
+        Supplier<String> topic = new Value<String>(TOPIC);
 
         ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
@@ -127,9 +130,9 @@ public class KafkaSample {
         // for the sample, give the consumer a chance to become ready
         msgs = msgs.modify(initialDelayFunc(PUB_DELAY_MSEC));
 
-        producer.publish(msgs, TOPIC);
+        producer.publish(msgs, topic);
         
-        TStream<Message> rcvdMsgs = consumer.subscribe(TOPIC);
+        TStream<Message> rcvdMsgs = consumer.subscribe(topic);
 
         rcvdMsgs.print();  // show what we received
 
