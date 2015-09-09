@@ -4,20 +4,20 @@
  */
 package com.ibm.streamsx.topology.messaging.kafka;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.tuple.Message;
@@ -38,7 +38,10 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * Topology top = ...
  * Properties consumerConfig = ...
  * ConsumerConnector cc = new ConsumerConnector(top, consumerConfig);
- * TStream<Message> rcvdMsgs = cc.consumer("myTopic");
+ * // with Java8 Lambda expressions... 
+ * TStream<Message> rcvdMsgs = cc.consumer(()->"myTopic");
+ * // without Java8... 
+ * TStream<Message> rcvdMsgs = cc.consumer(new Value<String>("myTopic"));
  * </pre>
  * 
  * @see <a href="http://kafka.apache.org">http://kafka.apache.org</a>
@@ -89,29 +92,28 @@ public class ConsumerConnector {
     }
     
     /**
-     * Subscribe to one or more Kafka Cluster topics and create a stream of
-     * messages.
+     * Subscribe to a topic and create a stream of messages.
      * <p>
-     * Same as {@code consume(topic, 1)}
-     * @param topics one or more Kafka topics to subscribe to
+     * Same as {@code subscribe(new Value<Integer>(1), topic)}
+     * @param topic the topic to subscribe to.  May be a submission parameter.
      * @return TStream&lt;Message>
+     * @see Value
+     * @see Topology#createSubmissionParameter(String, Class)
      */
-    public TStream<Message> subscribe(
-            String... topics)
+    public TStream<Message> subscribe(Supplier<String> topic)
     {
-        return subscribe(1, topics);
+        return subscribe(new Value<Integer>(1), topic);
     }
 
     /**
-     * Subscribe to one or more Kafka Cluster topics and create a stream of
-     * messages.
+     * Subscribe to a topic and create a stream of messages.
      * <p>
      * N.B., A topology that includes this will not support
      * {@code StreamsContext.Type.EMBEDDED}.
      * <p>
      * N.B. due to com.ibm.streamsx.messaging 
      * <a href="https://github.com/IBMStreams/streamsx.messaging/issues/118">issue#118</a>,
-     * multiple consumers, or a single multi-topic consumer will have issues in
+     * multiple consumers will have issues in
      * {@code StreamsContext.Type.STANDALONE}.
      * <p>
      * N.B. due to com.ibm.streamsx.messaging 
@@ -129,29 +131,27 @@ public class ConsumerConnector {
      * {@code key==null} messages.
      *
      * @param threadsPerTopic number of threads to allocate to processing each
-     *        topic. 
-     * @param topics one or more Kafka topics to subscribe to
+     *        topic.  May be a submission parameter.
+     * @param topic the topic to subscribe to.  May be a submission parameter.
      * @return TStream&lt;Message>
      *      The generated {@code Message} tuples have a non-null {@code topic}.
      *      The tuple's {@code key} will be null if the Kafka message
      *      lacked a key or it's key was the empty string. 
-     * @throws IllegalArgumentException if topics is null or empty, or if
-     *         any of the topic values are null or empty.
-     * @throws IllegalArgumentException if threadsPerTopic <= 0.
+     * @throws IllegalArgumentException if topic is null.
+     * @throws IllegalArgumentException if threadsPerTopic is null.
+     * @see Value
+     * @see Topology#createSubmissionParameter(String, Class)
      */
-    public TStream<Message> subscribe(int threadsPerTopic, String... topics)
+    public TStream<Message> subscribe(Supplier<Integer> threadsPerTopic, Supplier<String> topic)
     {
-        if (topics==null || topics.length==0)
-            throw new IllegalArgumentException("topics");
-        for (String topic : topics) {
-            if (topic==null || topic.isEmpty())
-                throw new IllegalArgumentException("topics");
-        }
-        if (threadsPerTopic <= 0)
+        if (topic == null)
+            throw new IllegalArgumentException("topic");
+        if (threadsPerTopic == null 
+            || (threadsPerTopic.get() != null && threadsPerTopic.get() <= 0))
             throw new IllegalArgumentException("threadsPerTopic");
 
         Map<String, Object> params = new HashMap<>();
-        params.put("topic", topics);
+        params.put("topic", topic);
         params.put("threadsPerTopic", threadsPerTopic);
         if (!config.isEmpty())
             params.put("kafkaProperty", Util.toKafkaProperty(config));
@@ -160,56 +160,25 @@ public class ConsumerConnector {
         params.put("propertiesFile", PROP_FILE_PARAM);
         addPropertiesFile();
 
-        // see streamsx.messaging issue #109
-        TStream<Message> rcvdMsgs;
         // Use SPL.invoke to avoid adding a compile time dependency
         // to com.ibm.streamsx.messaging since JavaPrimitive.invoke*()
         // lack "kind" based variants.
         String kind = "com.ibm.streamsx.messaging.kafka::KafkaConsumer";
         String className = "com.ibm.streamsx.messaging.kafka.KafkaSource";
-        boolean confirmedMultiTopicConsumerWorks = false;
-        if (topics.length==1 || confirmedMultiTopicConsumerWorks) {
-            SPLStream rawKafka = SPL.invokeSource(
-                            te,
-                            kind,
-                            params,
-                            KafkaSchemas.KAFKA);
-            SPL.tagOpAsJavaPrimitive(toOp(rawKafka), kind, className);
-
-            rcvdMsgs = toMessageStream(rawKafka);
-            rcvdMsgs.colocate(rawKafka);
-            
-            // workaround streamsx.messaging issue#118 w/java8
-            // isolate even in the single consumer case since we don't
-            // know if others may be subsequently created.
-            rcvdMsgs = rcvdMsgs.isolate();
-        }
-        else {
-            // fake it with N kafkaConsumers
-            List<TStream<Message>> list = new ArrayList<TStream<Message>>(topics.length);
-            for (String topic : topics) {
-                Map<String,Object> myParams = new HashMap<>(params);
-                myParams.put("topic", topic);
-
-                SPLStream rawKafka = SPL.invokeSource(
+        SPLStream rawKafka = SPL.invokeSource(
                         te,
                         kind,
-                        myParams,
+                        params,
                         KafkaSchemas.KAFKA);
-                SPL.tagOpAsJavaPrimitive(toOp(rawKafka), kind, className);
-                
-                rcvdMsgs = toMessageStream(rawKafka);
-                rcvdMsgs.colocate(rawKafka);
-                
-                // workaround streamsx.messaging issue#118 w/java8
-                rcvdMsgs = rcvdMsgs.isolate();
-                
-                list.add(rcvdMsgs);
-            }
-            TStream<Message> kafka = list.remove(0);
-            
-            rcvdMsgs = kafka.union(new HashSet<>(list));
-        }
+        SPL.tagOpAsJavaPrimitive(toOp(rawKafka), kind, className);
+
+        TStream<Message> rcvdMsgs = toMessageStream(rawKafka);
+        rcvdMsgs.colocate(rawKafka);
+        
+        // workaround streamsx.messaging issue#118 w/java8
+        // isolate even in the single consumer case since we don't
+        // know if others may be subsequently created.
+        rcvdMsgs = rcvdMsgs.isolate();
         return rcvdMsgs;
     }
     

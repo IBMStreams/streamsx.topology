@@ -14,6 +14,7 @@ import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
@@ -37,7 +38,10 @@ import com.ibm.streamsx.topology.tuple.Message;
  *  
  * TStream<MyType> myStream = ...
  * TStream<Message> msgsToSend = myStream.transform(MyType to SimpleMessage);
- * pc.publish(msgsToSend, "myTopic");
+ * // with Java8 Lambda expressions... 
+ * pc.publish(msgsToSend, ()->"myTopic");
+ * // without Java8
+ * pc.publish(msgsToSend, new Value<String>("myTopic"));
  * </pre>
  * 
  * @see <a href="http://kafka.apache.org">http://kafka.apache.org</a>
@@ -86,9 +90,9 @@ public class ProducerConnector {
     }
 
     /**
-     * Publish {@code stream} tuples to the Kafka Broker.
+     * Publish a stream of messages to one or more topics.
      * Each {@code stream} tuple is sent to the topic specified by its
-     * {@link Message#getTopic()}.
+     * {@link Message#getTopic()} value.
      * Same as {@code produce(stream, null)}.
      * @param stream the stream to publish
      * @return the sink element
@@ -99,7 +103,7 @@ public class ProducerConnector {
     }
 
     /**
-     * Publish {@code stream} tuples to the Kafka Broker.
+     * Publish a stream of messages to a topic.
      * <p>
      * If {@code topic} is null, each tuple is published to the topic
      * specified by its {@link Message#getTopic()}.
@@ -107,7 +111,6 @@ public class ProducerConnector {
      * <p>
      * The messages added to Kafka include a topic, message and key.
      * If {@link Message#getKey()} is null, an empty key value is published.
-     * 
      * <p>
      * N.B. there seem to be some issues with the underlying 
      * com.ibm.streamsx.messaging library - e.g.,
@@ -125,11 +128,9 @@ public class ProducerConnector {
      * @param topic topic to publish to.  May be null.
      * @return the sink element
      * 
-     * @throws IllegalArgumentException if an empty {@code topic} is specified.
+     * @throws IllegalArgumentException if a non-null empty {@code topic} is specified.
      */
-    public TSink publish(TStream<? extends Message> stream, String topic) {
-        if (topic!=null && topic.isEmpty())
-            throw new IllegalArgumentException("topic");
+    public TSink publish(TStream<? extends Message> stream, Supplier<String> topic) {
         
         stream = stream.lowLatency();
         
@@ -140,6 +141,10 @@ public class ProducerConnector {
         Map<String,Object> params = new HashMap<String,Object>();
         if (!config.isEmpty())
             params.put("kafkaProperty", Util.toKafkaProperty(config));
+        if (topic == null)
+            params.put("topicAttribute", "topic");
+        else
+            params.put("topic", topic);
 
         // workaround streamsx.messaging issue #107
         params.put("propertiesFile", PROP_FILE_PARAM);
@@ -159,7 +164,7 @@ public class ProducerConnector {
     }
     
     private static BiFunction<Message,OutputTuple,OutputTuple> 
-            cvtMsgFunc(final String topic)
+            cvtMsgFunc(final Supplier<String> topic)
     {
         return new BiFunction<Message,OutputTuple,OutputTuple>() {
             private static final long serialVersionUID = 1L;
@@ -168,10 +173,10 @@ public class ProducerConnector {
             public OutputTuple apply(Message v1, OutputTuple v2) {
                 v2.setString("key", toSplValue(v1.getKey()));
                 v2.setString("message", toSplValue(v1.getMessage()));
-                if (topic==null)
+                if (topic==null || topic.get()==null)
                     v2.setString("topic", toSplValue(v1.getTopic()));
                 else
-                    v2.setString("topic", topic);
+                    v2.setString("topic", topic.get().toString());
                 return v2;
             }
             

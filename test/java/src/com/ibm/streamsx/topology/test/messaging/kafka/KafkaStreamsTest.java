@@ -27,7 +27,9 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
+import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.messaging.kafka.ConsumerConnector;
 import com.ibm.streamsx.topology.messaging.kafka.ProducerConnector;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -302,7 +304,8 @@ public class KafkaStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
         String groupId = newGroupId(top.getName());
 
-        String topic = getKafkaTopics()[0];
+        String topicVal = getKafkaTopics()[0];
+        Supplier<String> topic = new Value<String>(topicVal);
         
         ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
@@ -310,10 +313,10 @@ public class KafkaStreamsTest extends TestTopology {
         // Test producer that takes an arbitrary TStream<T> and explicit topic
         
         List<Vals> msgs = new ArrayList<>();
-        msgs.add(new Vals(mgen.create(topic, "Hello"), null, null));
-        msgs.add(new Vals(mgen.create(topic, "key1", "Are you there?"), "key1", null));
-        msgs.add(new Vals(mgen.create(topic, "Msg with an empty key"), "", null));
-        msgs.add(new Vals("", mgen.create(topic, null, "Msg with an empty msg (this is the key)"), null));
+        msgs.add(new Vals(mgen.create(topicVal, "Hello"), null, null));
+        msgs.add(new Vals(mgen.create(topicVal, "key1", "Are you there?"), "key1", null));
+        msgs.add(new Vals(mgen.create(topicVal, "Msg with an empty key"), "", null));
+        msgs.add(new Vals("", mgen.create(topicVal, null, "Msg with an empty msg (this is the key)"), null));
         
         TStream<Vals> valsToPublish = top.constants(msgs).asType(Vals.class);
         
@@ -329,7 +332,57 @@ public class KafkaStreamsTest extends TestTopology {
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
         List<Message> expectedAsMessage = mapList(msgs,
-                                            msgFromValsFunc(topic));
+                                            msgFromValsFunc(topicVal));
+        expectedAsMessage = modifyList(expectedAsMessage, adjustKey());
+        List<String> expectedAsString = mapList(expectedAsMessage,
+                                            msgToJSONStringFunc());
+
+        setupDebug();
+        completeAndValidate(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+    }
+    
+    @Test
+    public void testReusableApp() throws Exception {
+        
+        checkAssumes();
+        
+        Topology top = new Topology("testReusableApp");
+        MsgGenerator mgen = new MsgGenerator(top.getName());
+        String groupId = newGroupId(top.getName());
+
+        String topicVal = getKafkaTopics()[0];
+        Supplier<String> topic = top.createSubmissionParameter("kafka.topic", topicVal);
+        Supplier<Integer> threadsPerTopic = top.createSubmissionParameter("kafka.consumer.threadsPerTopic", 1);
+//        Supplier<String> consumerZkConnect = top.createSubmissionParameter("kafka.consumer.zookeeper.connect", ?);
+//        Supplier<String> consumerGroupId = top.createSubmissionParameter("kafka.consumer.group.id", ?);
+//        Supplier<String> producerBrokerList = top.createSubmissionParameter("kafka.producer.metadata.broker.list", ?);
+        
+        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
+        
+        // Test producer that takes an arbitrary TStream<T> and explicit topic
+        
+        List<Vals> msgs = new ArrayList<>();
+        msgs.add(new Vals(mgen.create(topicVal, "Hello"), null, null));
+        msgs.add(new Vals(mgen.create(topicVal, "key1", "Are you there?"), "key1", null));
+        msgs.add(new Vals(mgen.create(topicVal, "Msg with an empty key"), "", null));
+        msgs.add(new Vals("", mgen.create(topicVal, null, "Msg with an empty msg (this is the key)"), null));
+        
+        TStream<Vals> valsToPublish = top.constants(msgs).asType(Vals.class);
+        
+        TStream<Message> msgsToPublish = valsToPublish.transform(msgFromValsFunc(null));
+        
+        msgsToPublish = msgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
+        producer.publish(msgsToPublish, topic);
+        
+        TStream<Message> rcvdMsgs = consumer.subscribe(threadsPerTopic, topic);
+
+        // for validation...
+        rcvdMsgs.print();
+        rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
+        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+        List<Message> expectedAsMessage = mapList(msgs,
+                                            msgFromValsFunc(topicVal));
         expectedAsMessage = modifyList(expectedAsMessage, adjustKey());
         List<String> expectedAsString = mapList(expectedAsMessage,
                                             msgToJSONStringFunc());
@@ -347,7 +400,8 @@ public class KafkaStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
         String groupId = newGroupId(top.getName());
 
-        String topic = getKafkaTopics()[0];
+        String topicVal = getKafkaTopics()[0];
+        Supplier<String> topic = new Value<String>(topicVal);
 
         ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
@@ -355,12 +409,12 @@ public class KafkaStreamsTest extends TestTopology {
         // Test producer that takes an arbitrary TStream<T> and implicit topic
         
         List<Vals> msgs = new ArrayList<>();
-        msgs.add(new Vals(mgen.create(topic, "Hello"), null, null));
-        msgs.add(new Vals(mgen.create(topic, "key1", "Are you there?"), "key1", null));
+        msgs.add(new Vals(mgen.create(topicVal, "Hello"), null, null));
+        msgs.add(new Vals(mgen.create(topicVal, "key1", "Are you there?"), "key1", null));
         
         TStream<Vals> valsToPublish = top.constants(msgs).asType(Vals.class);
         
-        TStream<Message> msgsToPublish = valsToPublish.transform(msgFromValsFunc(topic));
+        TStream<Message> msgsToPublish = valsToPublish.transform(msgFromValsFunc(topicVal));
         
         msgsToPublish = msgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
         producer.publish(msgsToPublish);
@@ -372,7 +426,7 @@ public class KafkaStreamsTest extends TestTopology {
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
         List<Message> expectedAsMessage = mapList(msgs,
-                                            msgFromValsFunc(topic));
+                                            msgFromValsFunc(topicVal));
         List<String> expectedAsString = mapList(expectedAsMessage,
                                             msgToJSONStringFunc());
 
@@ -389,7 +443,8 @@ public class KafkaStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
         String groupId = newGroupId(top.getName());
 
-        String topic = getKafkaTopics()[0];
+        String topicVal = getKafkaTopics()[0];
+        Supplier<String> topic = new Value<String>(topicVal);
 
         ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
@@ -397,8 +452,8 @@ public class KafkaStreamsTest extends TestTopology {
         // Test producer that takes TStream<SimpleMessage> and an explicit topic.
         
         List<Message> msgs = new ArrayList<>();
-        msgs.add(new SimpleMessage(mgen.create(topic, "Hello")));
-        msgs.add(new SimpleMessage(mgen.create(topic, "key1", "Are you there?"), "key1"));
+        msgs.add(new SimpleMessage(mgen.create(topicVal, "Hello")));
+        msgs.add(new SimpleMessage(mgen.create(topicVal, "key1", "Are you there?"), "key1"));
         
         TStream<Message> msgsToPublish = top.constants(msgs);
         
@@ -411,7 +466,7 @@ public class KafkaStreamsTest extends TestTopology {
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
-        msgs = modifyList(msgs, setTopic(topic));
+        msgs = modifyList(msgs, setTopic(topicVal));
         List<String> expectedAsString = mapList(msgs,
                                             msgToJSONStringFunc());
 
@@ -428,7 +483,8 @@ public class KafkaStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
         String groupId = newGroupId(top.getName());
 
-        String topic = getKafkaTopics()[0];
+        String topicVal = getKafkaTopics()[0];
+        Supplier<String> topic = new Value<String>(topicVal);
 
         ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
@@ -436,8 +492,8 @@ public class KafkaStreamsTest extends TestTopology {
         // Test producer that takes a TStream<MyMsgSubtype>
         
         List<MyMsgSubtype> msgs = new ArrayList<>();
-        msgs.add(new MyMsgSubtype(mgen.create(topic, "Hello")));
-        msgs.add(new MyMsgSubtype(mgen.create(topic, "key1", "Are you there?"), "key1"));
+        msgs.add(new MyMsgSubtype(mgen.create(topicVal, "Hello")));
+        msgs.add(new MyMsgSubtype(mgen.create(topicVal, "key1", "Are you there?"), "key1"));
         
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs).asType(MyMsgSubtype.class);
         
@@ -451,7 +507,7 @@ public class KafkaStreamsTest extends TestTopology {
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
         List<String> expectedAsString = mapList(msgs,
-                                            subtypeMsgToJSONStringFunc(topic));
+                                            subtypeMsgToJSONStringFunc(topicVal));
 
         setupDebug();
         completeAndValidate(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
@@ -466,7 +522,8 @@ public class KafkaStreamsTest extends TestTopology {
         MsgGenerator mgen = new MsgGenerator(top.getName());
         String groupId = newGroupId(top.getName());
 
-        String topic = getKafkaTopics()[0];
+        String topicVal = getKafkaTopics()[0];
+        Supplier<String> topic = new Value<String>(topicVal);
 
         ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
@@ -474,8 +531,8 @@ public class KafkaStreamsTest extends TestTopology {
         // Test producer that takes a TStream<MyMsgSubtype> implicit topic
         
         List<MyMsgSubtype> msgs = new ArrayList<>();
-        msgs.add(new MyMsgSubtype(mgen.create(topic, "Hello"), null, topic));
-        msgs.add(new MyMsgSubtype(mgen.create(topic, "key1", "Are you there?"), "key1", topic));
+        msgs.add(new MyMsgSubtype(mgen.create(topicVal, "Hello"), null, topicVal));
+        msgs.add(new MyMsgSubtype(mgen.create(topicVal, "key1", "Are you there?"), "key1", topicVal));
         
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs).asType(MyMsgSubtype.class);
         
@@ -508,8 +565,11 @@ public class KafkaStreamsTest extends TestTopology {
         String groupId = newGroupId(top.getName());
 
         String[] topics = getKafkaTopics();
-        String topic1 = topics[0];
-        String topic2 = topics[1];
+        String topic1Val = topics[0];
+        String topic2Val = topics[1];
+        Supplier<String> topic1 = new Value<String>(topic1Val);
+        Supplier<String> topic2 = new Value<String>(topic2Val);
+
 
         ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
@@ -517,12 +577,12 @@ public class KafkaStreamsTest extends TestTopology {
         // Test producer that publishes to multiple topics (implies implicit topic)
         
         List<Message> topic1Msgs = new ArrayList<>();
-        topic1Msgs.add(new SimpleMessage(mgen.create(topic1, "Hello"), null, topic1));
-        topic1Msgs.add(new SimpleMessage(mgen.create(topic1, "Are you there?"), null, topic1));
+        topic1Msgs.add(new SimpleMessage(mgen.create(topic1Val, "Hello"), null, topic1Val));
+        topic1Msgs.add(new SimpleMessage(mgen.create(topic1Val, "Are you there?"), null, topic1Val));
         
         List<Message> topic2Msgs = new ArrayList<>();
-        topic2Msgs.add(new SimpleMessage(mgen.create(topic2, "Hello"), null, topic2));
-        topic2Msgs.add(new SimpleMessage(mgen.create(topic2, "Are you there?"), null, topic2));
+        topic2Msgs.add(new SimpleMessage(mgen.create(topic2Val, "Hello"), null, topic2Val));
+        topic2Msgs.add(new SimpleMessage(mgen.create(topic2Val, "Are you there?"), null, topic2Val));
         
         List<Message> msgs = new ArrayList<>(topic1Msgs);
         msgs.addAll(topic2Msgs);
@@ -557,8 +617,10 @@ public class KafkaStreamsTest extends TestTopology {
         String groupId = newGroupId(top.getName());
 
         String[] topics = getKafkaTopics();
-        String topic1 = topics[0];
-        String topic2 = topics[1];
+        String topic1Val = topics[0];
+        String topic2Val = topics[1];
+        Supplier<String> topic1 = new Value<String>(topic1Val);
+        Supplier<String> topic2 = new Value<String>(topic2Val);
 
         ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
@@ -598,66 +660,66 @@ public class KafkaStreamsTest extends TestTopology {
       ctxt.submit(top, getConfig()).get();
     }
     
-    @Test
-    public void testMultiTopicConsumer() throws Exception {
-        
-        checkAssumes();
-        
-        // streamsx.messaging issue#118 prevents successful execution
-        // It seems to consistently get 0 topic1 msgs
-        // and surprisingly reports the topic2 msgs twice (though
-        // this duplication behavior may be a different issue).
-        // [junit] [18:23:18.758] Using Kafka consumer group.id kafkaStreamsTestGroupId_testMultiTopicConsumer_181805.464
-        // [junit] {topic=testTopic2, key=mykey1, message=[18:23:18.758.2 testMultiTopicConsumer] [topic=testTopic2,key=null] Hello}
-        // [junit] {topic=testTopic2, key=mykey2, message=[18:23:18.758.3 testMultiTopicConsumer] [topic=testTopic2,key=null] Are you there?}
-        // [junit] {topic=testTopic2, key=mykey1, message=[18:23:18.758.2 testMultiTopicConsumer] [topic=testTopic2,key=null] Hello}
-        // [junit] {topic=testTopic2, key=mykey2, message=[18:23:18.758.3 testMultiTopicConsumer] [topic=testTopic2,key=null] Are you there?}
-        assumeTrue(getTesterType() != StreamsContext.Type.STANDALONE_TESTER);
-        
-        Topology top = new Topology("testMultiTopicConsumer");
-        MsgGenerator mgen = new MsgGenerator(top.getName());
-        String groupId = newGroupId(top.getName());
-
-        String[] topics = getKafkaTopics();
-        String topic1 = topics[0];
-        String topic2 = topics[1];
-
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
-      
-        // Test consumer that receives from multiple topics
-        
-        List<Message> topic1Msgs = new ArrayList<>();
-        topic1Msgs.add(new SimpleMessage(mgen.create(topic1, "Hello"), "mykey1", topic1));
-        topic1Msgs.add(new SimpleMessage(mgen.create(topic1, "Are you there?"), "mykey2", topic1));
-        
-        List<Message> topic2Msgs = new ArrayList<>();
-        topic2Msgs.add(new SimpleMessage(mgen.create(topic2, "Hello"), "mykey1", topic2));
-        topic2Msgs.add(new SimpleMessage(mgen.create(topic2, "Are you there?"), "mykey2", topic2));
-        
-        List<Message> msgs = new ArrayList<>(topic1Msgs);
-        msgs.addAll(topic2Msgs);
-        
-        TStream<Message> topic1MsgsToPublish = top.constants(topic1Msgs);
-        topic1MsgsToPublish = topic1MsgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
-        producer.publish(topic1MsgsToPublish);
-        
-        TStream<Message> topic2MsgsToPublish = top.constants(topic2Msgs);
-        topic2MsgsToPublish = topic2MsgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
-        producer.publish(topic2MsgsToPublish);
-        
-        TStream<Message> rcvdMsgs = consumer.subscribe(topics);
-        
-        // for validation...
-        rcvdMsgs.print();
-        rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
-        List<String> expectedAsString = mapList(msgs,
-                                            msgToJSONStringFunc());
-
-        setupDebug();
-        completeAndValidateUnordered(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
-    }
+//    @Test
+//    public void testMultiTopicConsumer() throws Exception {
+//        
+//        checkAssumes();
+//        
+//        // streamsx.messaging issue#118 prevents successful execution
+//        // It seems to consistently get 0 topic1 msgs
+//        // and surprisingly reports the topic2 msgs twice (though
+//        // this duplication behavior may be a different issue).
+//        // [junit] [18:23:18.758] Using Kafka consumer group.id kafkaStreamsTestGroupId_testMultiTopicConsumer_181805.464
+//        // [junit] {topic=testTopic2, key=mykey1, message=[18:23:18.758.2 testMultiTopicConsumer] [topic=testTopic2,key=null] Hello}
+//        // [junit] {topic=testTopic2, key=mykey2, message=[18:23:18.758.3 testMultiTopicConsumer] [topic=testTopic2,key=null] Are you there?}
+//        // [junit] {topic=testTopic2, key=mykey1, message=[18:23:18.758.2 testMultiTopicConsumer] [topic=testTopic2,key=null] Hello}
+//        // [junit] {topic=testTopic2, key=mykey2, message=[18:23:18.758.3 testMultiTopicConsumer] [topic=testTopic2,key=null] Are you there?}
+//        assumeTrue(getTesterType() != StreamsContext.Type.STANDALONE_TESTER);
+//        
+//        Topology top = new Topology("testMultiTopicConsumer");
+//        MsgGenerator mgen = new MsgGenerator(top.getName());
+//        String groupId = newGroupId(top.getName());
+//
+//        String[] topics = getKafkaTopics();
+//        String topic1 = topics[0];
+//        String topic2 = topics[1];
+//
+//        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
+//        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
+//      
+//        // Test consumer that receives from multiple topics
+//        
+//        List<Message> topic1Msgs = new ArrayList<>();
+//        topic1Msgs.add(new SimpleMessage(mgen.create(topic1, "Hello"), "mykey1", topic1));
+//        topic1Msgs.add(new SimpleMessage(mgen.create(topic1, "Are you there?"), "mykey2", topic1));
+//        
+//        List<Message> topic2Msgs = new ArrayList<>();
+//        topic2Msgs.add(new SimpleMessage(mgen.create(topic2, "Hello"), "mykey1", topic2));
+//        topic2Msgs.add(new SimpleMessage(mgen.create(topic2, "Are you there?"), "mykey2", topic2));
+//        
+//        List<Message> msgs = new ArrayList<>(topic1Msgs);
+//        msgs.addAll(topic2Msgs);
+//        
+//        TStream<Message> topic1MsgsToPublish = top.constants(topic1Msgs);
+//        topic1MsgsToPublish = topic1MsgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
+//        producer.publish(topic1MsgsToPublish);
+//        
+//        TStream<Message> topic2MsgsToPublish = top.constants(topic2Msgs);
+//        topic2MsgsToPublish = topic2MsgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
+//        producer.publish(topic2MsgsToPublish);
+//        
+//        TStream<Message> rcvdMsgs = consumer.subscribe(topics);
+//        
+//        // for validation...
+//        rcvdMsgs.print();
+//        rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
+//        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+//        List<String> expectedAsString = mapList(msgs,
+//                                            msgToJSONStringFunc());
+//
+//        setupDebug();
+//        completeAndValidateUnordered(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+//    }
     
     // would be nice if Tester provided this too
     private void completeAndValidateUnordered(String msg, Topology topology,
