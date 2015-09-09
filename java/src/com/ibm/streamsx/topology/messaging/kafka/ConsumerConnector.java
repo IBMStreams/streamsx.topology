@@ -174,7 +174,7 @@ public class ConsumerConnector {
                             kind,
                             params,
                             KafkaSchemas.KAFKA);
-            Util.tagOpAsJavaPrimitive(toOp(rawKafka), kind, className);
+            SPL.tagOpAsJavaPrimitive(toOp(rawKafka), kind, className);
 
             rcvdMsgs = toMessageStream(rawKafka);
             rcvdMsgs.colocate(rawKafka);
@@ -196,7 +196,7 @@ public class ConsumerConnector {
                         kind,
                         myParams,
                         KafkaSchemas.KAFKA);
-                Util.tagOpAsJavaPrimitive(toOp(rawKafka), kind, className);
+                SPL.tagOpAsJavaPrimitive(toOp(rawKafka), kind, className);
                 
                 rcvdMsgs = toMessageStream(rawKafka);
                 rcvdMsgs.colocate(rawKafka);

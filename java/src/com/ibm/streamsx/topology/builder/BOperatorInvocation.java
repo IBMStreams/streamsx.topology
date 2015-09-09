@@ -21,6 +21,7 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.builder.json.JOperator;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 // Union(A,B)
@@ -157,6 +158,10 @@ public class BOperatorInvocation extends BOperator {
             else {
                 // other kinds of JSONObject handled below
             }
+        }
+        else if (value instanceof Supplier<?>) {
+            value = ((Supplier<?>) value).get();
+            jsonValue = value;
         }
                 
         if (value instanceof String) {

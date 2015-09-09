@@ -24,6 +24,7 @@ import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
+import com.ibm.streamsx.topology.builder.json.JOperator;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
@@ -323,5 +324,22 @@ public class SPL {
             te.topology().getConfig().put(TK_DIRS, tks);
         }
         tks.add(toolkitRoot.getCanonicalPath());
+    }
+
+    /**
+     * Internal method.
+     * <BR>
+     * Not intended to be called by applications, may be removed at any time.
+     * <br>
+     * This is in lieu of a "kind" based JavaPrimitive.invoke*() methods.
+     * @param op the operator invocation
+     * @param kind SPL kind of the operator to be invoked.
+     * @param className the Java primitive operator's class name.
+     */
+    public static void tagOpAsJavaPrimitive(BOperatorInvocation op, String kind, String className) {
+        op.json().put(JOperator.MODEL, JOperator.MODEL_SPL);
+        op.json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_JAVA);
+        op.json().put("kind", kind);
+        op.json().put("kind.javaclass", className);
     }
 }
