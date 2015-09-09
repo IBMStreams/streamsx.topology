@@ -8,13 +8,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import com.ibm.streams.operator.logging.LogLevel;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
@@ -33,27 +35,32 @@ public class CheckpointTest extends TestTopology {
     }
     
     @Test
-    @Ignore("Waiting to implement the SPL generation")
     public void testPeriodicCheckpoint() throws Exception {
+        testPeriodicCheckpoint(2, 45);
+    }
+    
+    private void testPeriodicCheckpoint(int period, final int crashAfterCount) throws Exception {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
 
         final Topology topology = new Topology();
-        topology.checkpointPeriod(2, TimeUnit.SECONDS);
+        topology.checkpointPeriod(period, TimeUnit.SECONDS);
         
-        TStream<Long> lb = BeaconStreams.longBeacon(topology, 200);
+        TStream<Long> lb = BeaconStreams.longBeacon(topology, 500);
         TStream<Long> b = lb.throttle(100, TimeUnit.MILLISECONDS);
         
-        lb.colocate(b);        
-        b = b.filter(new CrashAfter<Long>(37));
+        lb.colocate(b);  
+        b = b.filter(new CrashAfter<Long>(crashAfterCount));
         lb.colocate(b);
         
         TStream<String> sb = StringStreams.toString(b.isolate());
         
-        Condition<Long> atLeast = topology.getTester().atLeastTupleCount(sb, 100);
+        Condition<Long> atLeast = topology.getTester().atLeastTupleCount(sb, 230);
         Condition<List<String>> output = topology.getTester().stringContents(sb);
         
         complete(topology.getTester(), atLeast, 90, TimeUnit.SECONDS);
+        
+        System.err.println("RESULT: " + output.getResult());
         
         Long starting = null;
         long last = -1;
@@ -66,19 +73,23 @@ public class CheckpointTest extends TestTopology {
                 starting = last = l;
                 continue;
             }
+               
             if (l > last) {
-                assertEquals(last+1L, l);
-                last = l;
-                continue;
+                if (l == last+1) {  
+                    assertTrue("no crash @" + l, count < crashAfterCount+1);
+                    last = l;
+                    continue;
+                }
             }
             
             // Has crashed and restarted,
-            assertEquals(38, count);
+            assertEquals("crash count @" + l, crashAfterCount+1, count);
             
             // Assert that there was a successful
             // checkpoint that increased the value
-            assertTrue(l > starting);
+            assertTrue("after ckpt @" + l, l > starting);
             starting = last = l;
+            count = 1;
         }
     }
     
@@ -97,8 +108,12 @@ public class CheckpointTest extends TestTopology {
 
         @Override
         public boolean test(T tuple) {
-            if (counter++ == crashAt)
+            System.err.println("CrashAt:" + counter + " -- " + new Date());
+            if (counter++ == crashAt) {
+                Logger.getAnonymousLogger().log(LogLevel.INFO, "Intentional crash!");
+                System.err.println("Intentional crash!");
                 System.exit(1);
+            }
             return true;
         }
         
