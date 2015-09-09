@@ -1,8 +1,5 @@
 package com.ibm.streamsx.topology.generator.spl;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
@@ -12,18 +9,7 @@ import com.ibm.streams.operator.Type.MetaType;
  * A Submission Time Value is the SPL realization of a "Submission Parameter".
  */
 public class SubmissionTimeValue {
-    private static final Map<String,String> javaToSPL = new HashMap<>();
-    static {
-        javaToSPL.put("java.lang.Boolean", "boolean");
-        javaToSPL.put("java.lang.String", "rstring");
-        javaToSPL.put("java.lang.Byte", "int8");
-        javaToSPL.put("java.lang.Short", "int16");
-        javaToSPL.put("java.lang.Integer", "int32");
-        javaToSPL.put("java.lang.Long", "int64");
-        javaToSPL.put("java.lang.Float", "float32");
-        javaToSPL.put("java.lang.Double", "float64");
-    }
-    
+
     /**
      * Create a json operator parameter name for the submission parameter name. 
      * @param spName the submission parameter name
@@ -129,13 +115,13 @@ public class SubmissionTimeValue {
         String splName = "$" + mkOpParamName((String)spval.get("name"));
         String name = SPLGenerator.stringLiteral((String) spval.get("name"));
         String metaType = (String) spval.get("metaType");
-        String splType = MetaType.valueOf(metaType.toUpperCase()).getLanguageType();
+        String splType = MetaType.valueOf(metaType).getLanguageType();
         Object defaultValue = spval.get("defaultValue");
         sb.append(String.format("expression<%s> %s : ", splType, splName));
         if (defaultValue == null)
             sb.append(String.format("(%s) getSubmissionTimeValue(%s)", splType, name));
         else {
-            if (splType.startsWith("uint"))
+            if (metaType.startsWith("UINT"))
                 defaultValue = SPLGenerator.unsignedString(defaultValue);
             defaultValue = SPLGenerator.stringLiteral(defaultValue.toString());
             sb.append(String.format("(%s) getSubmissionTimeValue(%s, %s)", splType, name, defaultValue));
@@ -157,7 +143,7 @@ public class SubmissionTimeValue {
     static void generateInnerDef(JSONObject spval, StringBuilder sb) {
         String name = "$" + mkOpParamName((String)spval.get("name"));
         String metaType = (String) spval.get("metaType");
-        String splType = MetaType.valueOf(metaType.toUpperCase()).getLanguageType();
+        String splType = MetaType.valueOf(metaType).getLanguageType();
         sb.append(String.format("expression<%s> %s", splType, name));
     }
     

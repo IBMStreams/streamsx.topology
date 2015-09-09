@@ -135,7 +135,7 @@ public class BOperatorInvocation extends BOperator {
                  *   type : "__spl_value"
                  *   value : object {
                  *     value : any. non-null. type appropriate for metaType
-                 *     metaType : com.ibm.streams.operator.Type.MetaType string
+                 *     metaType : com.ibm.streams.operator.Type.MetaType.name() string
                  *   }
                  * }
                  * </code></pre>
@@ -145,11 +145,11 @@ public class BOperatorInvocation extends BOperator {
                 value = splValue.get("value");
                 jsonValue = value;
                 String metaType = (String) splValue.get("metaType");
-                if ("ustring".equals(metaType)
-                        || "uint8".equals(metaType)
-                        || "uint16".equals(metaType)
-                        || "uint32".equals(metaType)
-                        || "uint64".equals(metaType)) {
+                if ("USTRING".equals(metaType)
+                        || "UINT8".equals(metaType)
+                        || "UINT16".equals(metaType)
+                        || "UINT32".equals(metaType)
+                        || "UINT64".equals(metaType)) {
                     jsonType = metaType;
                 }
                 // fall through to handle jsonValue as usual 

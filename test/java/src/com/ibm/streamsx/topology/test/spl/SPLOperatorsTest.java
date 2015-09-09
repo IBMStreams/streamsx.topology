@@ -286,7 +286,7 @@ public class SPLOperatorsTest extends TestTopology {
         JSONObject value = (JSONObject) jo.get("value");
         String metaType = (String) value.get("metaType");
         Object v = value.get("value");
-        if (metaType.startsWith("uint"))
+        if (metaType.startsWith("UINT"))
             return SPLGenerator.unsignedString(v);
         else
             return v.toString();
