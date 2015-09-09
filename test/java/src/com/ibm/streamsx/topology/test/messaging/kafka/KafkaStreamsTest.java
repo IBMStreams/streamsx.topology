@@ -353,9 +353,6 @@ public class KafkaStreamsTest extends TestTopology {
         String topicVal = getKafkaTopics()[0];
         Supplier<String> topic = top.createSubmissionParameter("kafka.topic", topicVal);
         Supplier<Integer> threadsPerTopic = top.createSubmissionParameter("kafka.consumer.threadsPerTopic", 1);
-//        Supplier<String> consumerZkConnect = top.createSubmissionParameter("kafka.consumer.zookeeper.connect", ?);
-//        Supplier<String> consumerGroupId = top.createSubmissionParameter("kafka.consumer.group.id", ?);
-//        Supplier<String> producerBrokerList = top.createSubmissionParameter("kafka.producer.metadata.broker.list", ?);
         
         ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
@@ -659,68 +656,7 @@ public class KafkaStreamsTest extends TestTopology {
       StreamsContext<?> ctxt = StreamsContextFactory.getStreamsContext(ctxtType);
       ctxt.submit(top, getConfig()).get();
     }
-    
-//    @Test
-//    public void testMultiTopicConsumer() throws Exception {
-//        
-//        checkAssumes();
-//        
-//        // streamsx.messaging issue#118 prevents successful execution
-//        // It seems to consistently get 0 topic1 msgs
-//        // and surprisingly reports the topic2 msgs twice (though
-//        // this duplication behavior may be a different issue).
-//        // [junit] [18:23:18.758] Using Kafka consumer group.id kafkaStreamsTestGroupId_testMultiTopicConsumer_181805.464
-//        // [junit] {topic=testTopic2, key=mykey1, message=[18:23:18.758.2 testMultiTopicConsumer] [topic=testTopic2,key=null] Hello}
-//        // [junit] {topic=testTopic2, key=mykey2, message=[18:23:18.758.3 testMultiTopicConsumer] [topic=testTopic2,key=null] Are you there?}
-//        // [junit] {topic=testTopic2, key=mykey1, message=[18:23:18.758.2 testMultiTopicConsumer] [topic=testTopic2,key=null] Hello}
-//        // [junit] {topic=testTopic2, key=mykey2, message=[18:23:18.758.3 testMultiTopicConsumer] [topic=testTopic2,key=null] Are you there?}
-//        assumeTrue(getTesterType() != StreamsContext.Type.STANDALONE_TESTER);
-//        
-//        Topology top = new Topology("testMultiTopicConsumer");
-//        MsgGenerator mgen = new MsgGenerator(top.getName());
-//        String groupId = newGroupId(top.getName());
-//
-//        String[] topics = getKafkaTopics();
-//        String topic1 = topics[0];
-//        String topic2 = topics[1];
-//
-//        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
-//        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
-//      
-//        // Test consumer that receives from multiple topics
-//        
-//        List<Message> topic1Msgs = new ArrayList<>();
-//        topic1Msgs.add(new SimpleMessage(mgen.create(topic1, "Hello"), "mykey1", topic1));
-//        topic1Msgs.add(new SimpleMessage(mgen.create(topic1, "Are you there?"), "mykey2", topic1));
-//        
-//        List<Message> topic2Msgs = new ArrayList<>();
-//        topic2Msgs.add(new SimpleMessage(mgen.create(topic2, "Hello"), "mykey1", topic2));
-//        topic2Msgs.add(new SimpleMessage(mgen.create(topic2, "Are you there?"), "mykey2", topic2));
-//        
-//        List<Message> msgs = new ArrayList<>(topic1Msgs);
-//        msgs.addAll(topic2Msgs);
-//        
-//        TStream<Message> topic1MsgsToPublish = top.constants(topic1Msgs);
-//        topic1MsgsToPublish = topic1MsgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
-//        producer.publish(topic1MsgsToPublish);
-//        
-//        TStream<Message> topic2MsgsToPublish = top.constants(topic2Msgs);
-//        topic2MsgsToPublish = topic2MsgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
-//        producer.publish(topic2MsgsToPublish);
-//        
-//        TStream<Message> rcvdMsgs = consumer.subscribe(topics);
-//        
-//        // for validation...
-//        rcvdMsgs.print();
-//        rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
-//        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
-//        List<String> expectedAsString = mapList(msgs,
-//                                            msgToJSONStringFunc());
-//
-//        setupDebug();
-//        completeAndValidateUnordered(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
-//    }
-    
+        
     // would be nice if Tester provided this too
     private void completeAndValidateUnordered(String msg, Topology topology,
             TStream<String> stream, int secTimeout, String... expected)
