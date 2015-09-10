@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.builder.json;
+package com.ibm.streamsx.topology.builder;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;

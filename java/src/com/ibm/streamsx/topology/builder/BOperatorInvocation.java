@@ -20,7 +20,6 @@ import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
-import com.ibm.streamsx.topology.builder.json.JOperator;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 

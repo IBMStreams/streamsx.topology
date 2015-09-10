@@ -12,8 +12,8 @@ import java.util.Set;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
-import com.ibm.streamsx.topology.builder.json.JOperator;
-import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
+import com.ibm.streamsx.topology.builder.JOperator;
+import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.function.Consumer;
 
 class PEPlacement {
