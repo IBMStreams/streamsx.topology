@@ -4,15 +4,20 @@ import com.ibm.streams.operator.state.Checkpoint;
 import com.ibm.streams.operator.state.StateHandler;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
+import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 
 class StatefulFunctionalHandler<T> extends FunctionalHandler<T> implements StateHandler {
     
     private T logic;
 
-    public StatefulFunctionalHandler(FunctionContext context,
+    StatefulFunctionalHandler(FunctionContext context,
             String serializedLogic) throws Exception {
         super(context, serializedLogic);
         resetToInitialState();
+    }
+    
+    boolean isStateful() {
+        return !ObjectUtils.isImmutable(getLogic().getClass());
     }
     
     @Override
@@ -38,7 +43,6 @@ class StatefulFunctionalHandler<T> extends FunctionalHandler<T> implements State
         synchronized (logic) {
             checkpoint.getOutputStream().writeObject(logic);
         }
-        checkpoint.getOutputStream().writeObject(getLogic());
     }
 
     @Override

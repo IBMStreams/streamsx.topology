@@ -28,7 +28,7 @@ public class LimitedSupplier<T> implements Supplier<Iterable<T>>,
 
     private final Function<Long, T> supplier;
     private final long count;
-    private transient long c;
+    private long c;
 
     public LimitedSupplier(Function<Long, T> supplier, long count) {
         this.supplier = supplier;

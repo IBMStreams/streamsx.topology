@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
@@ -131,11 +132,21 @@ public class SPLGenerator {
     
     private void generateMainCompConfig(JSONObject graphConfig, StringBuilder sb) {
         JSONArray hostPools = (JSONArray) graphConfig.get("__spl_hostPools");
-        if (hostPools != null && !hostPools.isEmpty()) {
+        boolean hasHostPools =  hostPools != null && !hostPools.isEmpty();
+        
+        JSONObject checkpoint = (JSONObject) graphConfig.get("checkpoint");
+        
+        boolean hasCheckpoint = checkpoint != null;
+                
+        if (hasHostPools || hasCheckpoint)
+            sb.append("  config\n");
+        
+        
+        if (hasHostPools) {
             boolean seenOne = false;
             for (Object hpo : hostPools) {
                 if (!seenOne) {
-                    sb.append("  config hostPool:\n");
+                    sb.append("    hostPool:\n");
                     seenOne = true;
                 } else {
                     sb.append(",");
@@ -155,6 +166,18 @@ public class SPLGenerator {
                 sb.append("]}, Sys.Shared)");
             }
             sb.append(";\n");
+        }
+        
+        if (hasCheckpoint) {
+            TimeUnit unit = TimeUnit.valueOf(checkpoint.get("unit").toString());
+            long period = Long.valueOf(checkpoint.get("period").toString());
+            
+            // SPL works in seconds, including fractions.
+            long periodMs = unit.toMillis(period);
+            double periodSec = ((double) periodMs) / 1000.0;
+            sb.append("    checkpoint: periodic(");
+            sb.append(periodSec);
+            sb.append(");\n");
         }
     }
 

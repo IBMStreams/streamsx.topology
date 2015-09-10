@@ -17,7 +17,9 @@ class FunctionalOpUtils {
                 throw new IllegalStateException(); // TODO compile time checks.
             
             StatefulFunctionalHandler<T> handler = new StatefulFunctionalHandler<T>(functionContext, functionalLogic);
-            context.registerStateHandler(handler);
+            
+            if (handler.isStateful())
+                context.registerStateHandler(handler);
             return handler;
         }
         return new StatelessFunctionalHandler<T>(functionContext, functionalLogic);
