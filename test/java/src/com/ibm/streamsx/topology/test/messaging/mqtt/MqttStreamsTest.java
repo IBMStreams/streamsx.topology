@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.test.messaging.mqtt;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
@@ -71,7 +72,7 @@ public class MqttStreamsTest extends TestTopology {
     private static final String PROP_PREFIX = "com.ibm.streamsx.topology.test.messaging.mqtt.";
     private static final int SEC_TIMEOUT = 30;
     private static final int PUB_DELAY_MSEC = 5*1000;
-    private final String BASE_CLIENT_ID = "mqttStreamsTestCientId";
+    private final String BASE_CLIENT_ID = "mqttStreamsTestClientId";
     private static final String uniq = simpleTS();
     private boolean captureArtifacts = false;
     private boolean setAppTracingLevel = false;
@@ -258,7 +259,16 @@ public class MqttStreamsTest extends TestTopology {
         consumerConfig.put("keyStorePassword", "woohoo");
    
         ProducerConnector producer = new ProducerConnector(top, producerConfig);
+        
+        Map<String,Object> pcfg = producer.getConfig();
+        for (String s : producerConfig.keySet())
+            assertEquals("property "+s, producerConfig.get(s), pcfg.get(s));
+        
         ConsumerConnector consumer = new ConsumerConnector(top, consumerConfig);
+        
+        Map<String,Object> ccfg = consumer.getConfig();
+        for (String s : consumerConfig.keySet())
+            assertEquals("property "+s, consumerConfig.get(s), ccfg.get(s));
         
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(initialDelayFunc(PUB_DELAY_MSEC));
@@ -650,6 +660,52 @@ public class MqttStreamsTest extends TestTopology {
                                             
         completeAndValidateUnordered(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
         assertTrue(sink != null);
+    }
+    
+    @Test
+    public void testMultiPubSub() throws Exception {
+        
+        checkAssumes();
+        setupDebug();
+        Topology top = new Topology("testMultiPubSub");
+        MsgGenerator mgen = new MsgGenerator(top.getName());
+        String subClientId = newSubClientId(top.getName());
+        String pubClientId = newPubClientId(top.getName());
+        String[] topics = getMqttTopics();
+        String topic1 = topics[0];
+        String topic2 = topics[1];
+        List<Message> topic1Msgs = createMsgs(mgen, topic1);
+        List<Message> topic2Msgs = createMsgs(mgen, topic2);
+        List<Message> msgs = new ArrayList<>(topic1Msgs);
+        msgs.addAll(topic2Msgs);
+        List<String> expectedAsString = mapList(msgs, msgToJSONStringFunc());
+        
+        // Multi pub / sub on a single connector
+
+        ProducerConnector producer = new ProducerConnector(top, createProducerConfig(pubClientId));
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
+        
+        TStream<Message> topic1MsgsToPublish = top.constants(topic1Msgs)
+                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+        TStream<Message> topic2MsgsToPublish = top.constants(topic2Msgs)
+                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+        
+        TSink sink1 = producer.publish(topic1MsgsToPublish, new Value<String>(topic1));
+        TSink sink2 = producer.publish(topic2MsgsToPublish, new Value<String>(topic2));
+        
+        TStream<Message> rcvdTopic1Msgs = consumer.subscribe(new Value<String>(topic1));
+        TStream<Message> rcvdTopic2Msgs = consumer.subscribe(new Value<String>(topic2));
+        
+        // for validation...
+        
+        TStream<Message> rcvdMsgs = rcvdTopic1Msgs.union(rcvdTopic2Msgs);
+        rcvdMsgs.print();
+        rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
+        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+                                            
+        completeAndValidateUnordered(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        assertTrue(sink1 != null);
+        assertTrue(sink2 != null);
     }
     
     // would be nice if Tester provided this too

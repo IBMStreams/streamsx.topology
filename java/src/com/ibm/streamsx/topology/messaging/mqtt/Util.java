@@ -6,7 +6,6 @@ package com.ibm.streamsx.topology.messaging.mqtt;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 class Util {
     private static final Map<String, ParamHandler> paramHandlers = new HashMap<>();
@@ -47,14 +46,6 @@ class Util {
             // we now require the caller to pass in the correct type.
             return value;
         }
-    }
-    
-    static Map<String,String> toMap(Properties props) {
-        Map<String,String> map = new HashMap<>();
-        for (String key : props.stringPropertyNames()) {
-            map.put(key,props.getProperty(key));
-        }
-        return map;
     }
     
     static Map<String,Object> configToSplParams(Map<String,Object> config) {
