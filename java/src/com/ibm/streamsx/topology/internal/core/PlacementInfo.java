@@ -16,8 +16,8 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
-import com.ibm.streamsx.topology.builder.json.JOperator;
-import com.ibm.streamsx.topology.builder.json.JOperator.JOperatorConfig;
+import com.ibm.streamsx.topology.builder.JOperator;
+import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.Placeable;
 
 /**

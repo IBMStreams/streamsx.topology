@@ -11,9 +11,13 @@ import com.ibm.streamsx.topology.function.UnaryOperator;
  *
  * @param <T> Type of the operand.
  */
-public class Identity<T> implements UnaryOperator<T> {
+public final class Identity<T> implements UnaryOperator<T> {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Returns the input value.
+     * @return {@code v}
+     */
     @Override
     public T apply(T v) {
         return v;

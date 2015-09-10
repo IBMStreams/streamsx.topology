@@ -15,7 +15,7 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
-import com.ibm.streamsx.topology.builder.json.JGraph;
+import com.ibm.streamsx.topology.builder.JGraph;
 
 public class SPLGenerator {
     // Needed for composite name generation

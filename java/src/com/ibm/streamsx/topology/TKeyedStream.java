@@ -11,7 +11,7 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 
 /**
- * A {@code TStream} is a declaration of a continuous sequence of tuples
+ * A {@code TKeyedStream} is a declaration of a continuous sequence of tuples
  * where each tuple has an inherent key. The key is obtained from a
  * tuple on the stream using {@link #getKeyFunction()}.
  * 

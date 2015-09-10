@@ -6,15 +6,15 @@ import com.ibm.streamsx.topology.function.Supplier;
  * A Supplier<T> for a single constant T value.
  * <p>
  * This class can be useful when using the Java application API
- * in the absence of Java8 Lambda expressions.
+ * in the absence of Java8 lambda expressions.
  * e.g.,
  * <pre>{@code
  *  // with Java8 Lambda expressions
- *  TStream<Foo> foo = ...
- *  foo.parallel(() -> 3).filter(...)
+ *  TStream<String> s = ...
+ *  s.parallel(() -> 3).filter(...)
  *  
  *  // without Lambda expressions
- *  foo.parallel(new Value<Integer>(3)).filter(...)
+ *  s.parallel(new Value<Integer>(3)).filter(...)
  * }</pre>
  * @param <T> the value's type
  */
@@ -37,5 +37,4 @@ public class Value<T> implements Supplier<T> {
     public T get() {
         return value;
     }
-
 }

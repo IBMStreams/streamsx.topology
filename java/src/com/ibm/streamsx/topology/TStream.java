@@ -142,7 +142,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * The user specifies a single logical processing pipeline and
      * the logical pipeline is transparently replicated for each of the channels. 
      * The API does not provide access to the individual channel streams.
-     * {@code unparallel()} declares the end of the parallel pipeline and combines
+     * {@code endParallel()} declares the end of the parallel pipeline and combines
      * all of the channel-specific streams into a single resulting stream.
      * </P>
      * <P>
@@ -154,17 +154,17 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * TStream&lt;MyType> s = ...
      * List&lt;&lt;TStream&lt;MyType>> splits = s.split(3, new ToIntFunction&lt;MyType>() {
      *             &#64;Override
-     *             public int applyAsInt(MyType t) {
-     *                 if(t.severity.equals("high"))
+     *             public int applyAsInt(MyType tuple) {
+     *                 if(tuple.severity.equals("high"))
      *                     return 0;
-     *                 else if(t.severity.equals("low"))
+     *                 else if(tuple.severity.equals("low"))
      *                     return 1;
      *                 else
      *                     return 2;
      *             }} );
-     * splits.get(0). ... high severity processing pipeline
-     * splits.get(1). ... low severity processing pipeline
-     * splits.get(2). ... "other" severity processing pipeline
+     * splits.get(0). ... // high severity processing pipeline
+     * splits.get(1). ... // low severity processing pipeline
+     * splits.get(2). ... // "other" severity processing pipeline
      * </code>
      * </pre>
      * </P>
@@ -201,10 +201,6 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * </pre>
      * 
      * </P>
-     * <P>
-     * The runtime class type of the stream must be available through reflection
-     * of {@code transformer}. 
-     * </P>
      * @param transformer
      *            Transformation logic to be executed against each tuple.
      * @return Stream that will contain tuples of type {@code U} transformed from this
@@ -230,8 +226,8 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * TStream&lt;String> strings = ...
      * TStream&lt;String> modifiedStrings = strings.modify(new UnaryOperator<String>() {
      *             &#64;Override
-     *             public String apply(String v) {
-     *                 return v.concat("extra");
+     *             public String apply(String tuple) {
+     *                 return tuple.concat("extra");
      *             }});
      * </code>
      * </pre>
@@ -239,7 +235,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * </P>
      * <P>
      * This method is equivalent to
-     * {@code transform(Function<T,T> modifier, T.class}).
+     * {@code transform(Function<T,T> modifier}).
      * </P
      * 
      * @param modifier
@@ -252,7 +248,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     /**
      * Declare a new stream that transforms tuples from this stream into one or
      * more (or zero) tuples of a different type {@code U}. For each tuple
-     * {@code t} on this stream, the returned stream will contain all tuples in
+     * {@code t} on this stream, the returned stream will contain all non-null tuples in
      * the {@code Iterator<U>} that is the result of {@code transformer.apply(t)}.
      * Tuples will be added to the returned stream in the order the iterator
      * returns them.
@@ -270,8 +266,8 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * TStream&lt;String> lines = ...
      * TStream&lt;String> words = lines.multiTransform(new Function<String, Iterable<String>>() {
      *             &#64;Override
-     *             public Iterable<String> apply(String t) {
-     *                 return Arrays.asList(t.split(" "));
+     *             public Iterable<String> apply(String tuple) {
+     *                 return Arrays.asList(tuple.split(" "));
      *             }});
      * </code>
      * </pre>
@@ -279,7 +275,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * </P>
      * 
      * @param transformer
-     *            Transformation logic to be executed against each tuple.     *            
+     *            Transformation logic to be executed against each tuple.     
      * @return Stream that will contain tuples of type {@code U} transformed from this
      *         stream's tuples.
      */
@@ -301,8 +297,8 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * values.sink(new Consumer<String>() {
      *             
      *             &#64;Override
-     *             public void accept(String v) {
-     *                 System.out.println(v);
+     *             public void accept(String tuple) {
+     *                 System.out.println(tuple);
      *                 
      *             }
      *         });
@@ -474,8 +470,9 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     TWindow<T,?> window(TWindow<?,?> configWindow);
 
     /**
-     * Publish tuples from this stream to allow other applications to consume
-     * them using:
+     * Publish tuples from this stream for consumption by other IBM Streams applications.
+     * 
+     * Applications consume published streams using:
      * <UL>
      * <LI>
      * {@link Topology#subscribe(String, Class)} for Java Streams applications.</LI>
@@ -491,7 +488,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * <LI>
      * For JSON streams ({@code TStream<JSONObject>}) the subscription is to
      * a JSON stream.
-     * </LI
+     * </LI>
      * <LI>
      * For Java streams ({@code TStream<T>}) the declared Java type ({@code T}
      * ) of the stream is an exact match.</LI>
@@ -581,13 +578,13 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * 
      * Each parallel channel can be thought of as being assigned its own thread.
      * As such, each parallelized stream function (filter and transform, in this
-     * case) operate independently from one another. <br>
+     * case) are separate instances and operate independently from one another. <br>
      * <br>
-     * parallel() will only parallelize the stream operations performed <b>after</b>
-     * the call to parallel() and before the call to endParallel().
+     * {@code parallel(...)} will only parallelize the stream operations performed <b>after</b>
+     * the call to {@code parallel(...)} and before the call to {@code endParallel()}.
      * 
-     * In the above example, the parallel() was invoked on {@code myStream}, so
-     * its subsequent functions, filter() and transform(), were parallelized. <br>
+     * In the above example, the {@code parallel(3)} was invoked on {@code myStream}, so
+     * its subsequent functions, {@code filter(...)} and {@code transform(...)}, were parallelized. <br>
      * <br>
      * Parallel regions aren't required to have an output stream, and thus may be
      * used as sinks. The following would be an example of a parallel sink:
@@ -604,12 +601,12 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * It is not necessary to invoke {@link #endParallel()} on parallel sinks.</b>
      * <br><br>
      * Limitations of parallel() are as follows: <br>
-     * Nested parallelism is not currently supported. A call to parallel()
-     * should never be made immediately after another call to parallel() without
-     * having an endParallel() in between. <br>
+     * Nested parallelism is not currently supported. A call to {@code parallel(...)}
+     * should never be made immediately after another call to {@code parallel(...)} without
+     * having an {@code endParallel()} in between. <br>
      * <br>
-     * Parallel() should not be invoked immediately after another call to
-     * parallel(). The following is invalid:
+     * {@code parallel()} should not be invoked immediately after another call to
+     * {@code parallel()}. The following is invalid:
      * 
      * <pre>
      * <code>
@@ -618,8 +615,8 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * 
      * </code>
      * 
-     * There must be at least one stream function between a parallel() and
-     * endParallel() invocation. The following is invalid:
+     * There must be at least one stream function between a {@code parallel(...)} and
+     * {@code endParallel()} invocation. The following is invalid:
      * 
      * <pre>
      * <code>
@@ -628,27 +625,27 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * 
      * </code>
      * 
-     * Every call to endParallel() must have a call to parallel preceding it. The
+     * Every call to {@code endParallel()} must have a call to {@code parallel(...)} preceding it. The
      * following is invalid:
      * 
      * <pre>
      * <code>
-     * Stream<String> myStream = topology.strings("a","b","c");
+     * TStream<String> myStream = topology.strings("a","b","c");
      * myStream.endParallel();
      * </pre>
      * 
      * </code>
      * 
-     * A parallelized Stream cannot be joined with another window, and a
-     * parallelized Window cannot be joined with a Stream. The following is
+     * A parallelized stream cannot be joined with another window, and a
+     * parallelized window cannot be joined with a stream. The following is
      * invalid:
      * 
      * <pre>
      * <code>
-     * Window<String> numWindow = topology.strings("1","2","3").last(3);
-     * Stream<String> stringStream = topology.strings("a","b","c");
-     * Stream<String> paraStringStream = myStream.parallel(5);
-     * Stream<String> filtered = myStream.filter(...);
+     * TWindow<String> numWindow = topology.strings("1","2","3").last(3);
+     * TStream<String> stringStream = topology.strings("a","b","c");
+     * TStream<String> paraStringStream = myStream.parallel(5);
+     * TStream<String> filtered = myStream.filter(...);
      * filtered.join(numWindow, ...);
      * </pre>
      * 
