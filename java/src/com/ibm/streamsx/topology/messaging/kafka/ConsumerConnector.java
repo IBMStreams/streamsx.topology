@@ -7,7 +7,6 @@ package com.ibm.streamsx.topology.messaging.kafka;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
@@ -51,7 +50,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
 public class ConsumerConnector {
     private static final String PROP_FILE_PARAM = "etc/kafkaStreams/emptyConsumerProperties";
     private final TopologyElement te;
-    private final Map<String,String> config;
+    private final Map<String,Object> config;
     private boolean addedFileDependency;
     
     void addPropertiesFile() {
@@ -66,6 +65,7 @@ public class ConsumerConnector {
      * <p>
      * See the Apache Kafka documentation for {@code KafkaConsumer}
      * configuration properties at <a href="http://kafka.apache.org">http://kafka.apache.org</a>.
+     * Configuration property values are strings.
      * <p>
      * Minimal configuration typically includes:
      * <ul>
@@ -78,16 +78,17 @@ public class ConsumerConnector {
      * @param te {@link TopologyElement} 
      * @param config KafkaConsumer configuration information.
      */
-    public ConsumerConnector(TopologyElement te, Properties config) {
+    public ConsumerConnector(TopologyElement te, Map<String, Object> config) {
         this.te = te;
-        this.config = Util.toMap(config);
+        this.config = new HashMap<>();
+        this.config.putAll(config);
     }
     
     /**
      * Get the connector's {@code KafkaConsumer} configuration information.
      * @return the unmodifiable configuration 
      */
-    public Map<String,String> getConfig() {
+    public Map<String,Object> getConfig() {
         return Collections.unmodifiableMap(config);
     }
     
