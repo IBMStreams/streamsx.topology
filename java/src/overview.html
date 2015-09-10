@@ -1,8 +1,8 @@
 <body>
 Java API to allow creation of streaming applications
-for IBM InfoSphere Streams by Java developers.
+for IBM Streams by Java developers.
 <P>
-IBM&reg; InfoSphere&reg; Streams is an advanced analytic platform that allows user-developed =
+IBM&reg; Streams is an advanced analytic platform that allows user-developed =
 applications to quickly ingest, analyze and correlate information as it arrives from
 thousands of real-time sources. Streams can handle very high data throughput rates,
 millions of events or messages per second.
@@ -18,7 +18,7 @@ The API provides the ability to perform some form of processing or analytics
 on each tuple as it appears on a stream, resulting in a new stream containing
 tuples representing the result of the processing against the input tuples.
 <BR>
-{@link com.ibm.streamsx.topology.Topology#source source streams} are streams
+{@link com.ibm.streamsx.topology.Topology#source Source streams} are streams
 containing tuples from external systems, for example
 a source stream may be created from a reading messages from a message queue system,
 such as MQTT. The purpose of a source stream is to bring the external data into
@@ -65,6 +65,17 @@ returns true if the input tuple (a {@code String} object) is not empty.
 At runtime, every {@code String} tuple that appears on {@code s} will result in a
 call to {@code test}, if the {@code String} tuple is not empty, then {@code filtered} will
 contain the {@code String} tuple.
+<BR>
+With Java 8 lambda expressions or method references can be used to provide the function.
+Using a lambda expression the above example simplifies to:
+<pre>
+<code>
+TStream&lt;String> s = ...
+TStream&lt;String> filtered = s.filter(tuple -> !tuple.isEmpty());
+</code>
+</pre>
+<BR>
+Java 8 is supported by IBM Streams 4.0.1 and later. 
 </P>
 <P>
 The API is provided as as an SPL toolkit {@code com.ibm.streamsx.topology} containing the

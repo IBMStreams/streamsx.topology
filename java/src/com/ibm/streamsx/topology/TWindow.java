@@ -17,7 +17,7 @@ import com.ibm.streamsx.topology.function.Function;
  * declares a window that at any time contains the last ten tuples seen on
  * stream {@code s}, while
  * {@link TStream#last(long, java.util.concurrent.TimeUnit) s.last(5,
- * TimeUnit.SECONDS)} is a window that always contains all tuples present in the
+ * TimeUnit.SECONDS)} is a window that always contains all tuples present on stream
  * {@code s} in the last five seconds.
  * <P>
  * Typically windows are keyed which means the window's configuration
