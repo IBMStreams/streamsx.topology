@@ -165,12 +165,16 @@
 
   <target name="unittest.kafka.standalone">
      <property name="topology.test.type" value="STANDALONE_TESTER"/>
-     <antcall target="unittest.kafka"/>
+     <antcall target="unittest.kafka.base"/>
   </target>
 
-  <target name="unittest.kafka">
-     <echo message="See com.ibm.streamsx.topology.test.messaging.kafka.package-info.java for required configuration information."/>
+  <target name="unittest.kafka.distributed">
      <property name="topology.test.type" value="DISTRIBUTED_TESTER"/>
+     <antcall target="unittest.kafka.base"/>
+  </target>
+
+  <target name="unittest.kafka.base">
+     <echo message="See com.ibm.streamsx.topology.test.messaging.kafka.package-info.java for required configuration information."/>
      <property name="topology.test.showoutput" value="yes"/>
      <property name="topology.test.include.name" value="**/kafka/*Test.java"/>
      <antcall target="unittest.simple"/>
@@ -187,12 +191,16 @@
 
   <target name="unittest.mqtt.standalone">
      <property name="topology.test.type" value="STANDALONE_TESTER"/>
-     <antcall target="unittest.mqtt"/>
+     <antcall target="unittest.mqtt.base"/>
+  </target>
+	 
+  <target name="unittest.mqtt.distributed">
+    <property name="topology.test.type" value="DISTRIBUTED_TESTER"/>
+     <antcall target="unittest.mqtt.base"/>
   </target>
 
-  <target name="unittest.mqtt">
+  <target name="unittest.mqtt.base">
      <echo message="See com.ibm.streamsx.topology.test.messaging.mqtt.package-info.java for required configuration information."/>
-     <property name="topology.test.type" value="DISTRIBUTED_TESTER"/>
      <property name="topology.test.showoutput" value="yes"/>
      <property name="topology.test.include.name" value="**/mqtt/*Test.java"/>
      <antcall target="unittest.simple"/>
