@@ -8,7 +8,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.Future;
 
 import com.ibm.streamsx.topology.TStream;
@@ -150,8 +149,8 @@ public class KafkaSample {
         }
     }
     
-    private Properties createConsumerConfig(String groupId) {
-        Properties props = new Properties();
+    private Map<String,Object> createConsumerConfig(String groupId) {
+        Map<String,Object> props = new HashMap<>();
         props.put("zookeeper.connect", ZOOKEEPER_CONNECT);
         props.put("group.id", groupId);
         props.put("zookeeper.session.timeout.ms", "400");
@@ -160,8 +159,8 @@ public class KafkaSample {
         return props;
     }
     
-    private Properties createProducerConfig() {
-        Properties props = new Properties();
+    private Map<String,Object> createProducerConfig() {
+        Map<String,Object> props = new HashMap<>();
         props.put("metadata.broker.list", KAFKA_METADATA_BROKER_LIST);
         props.put("serializer.class", "kafka.serializer.StringEncoder");
         props.put("request.required.acks", "1");

@@ -9,30 +9,20 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Properties;
 
 import com.ibm.streamsx.topology.TopologyElement;
 
 class Util {
     
-    static String[] toKafkaProperty(Map<String,String> props) {
+    static String[] toKafkaProperty(Map<String,Object> props) {
         List<String> list = new ArrayList<>();
-        for (Entry<String,String> e : props.entrySet()) {
+        for (Entry<String,Object> e : props.entrySet()) {
             list.add(e.getKey()+"="+e.getValue());
         }
         return list.toArray(new String[list.size()]);
-    }
-    
-    static Map<String,String> toMap(Properties props) {
-        Map<String,String> map = new HashMap<>();
-        for (String key : props.stringPropertyNames()) {
-            map.put(key,props.getProperty(key));
-        }
-        return map;
     }
     
     static void addPropertiesFile(TopologyElement te, String splParameter) {

@@ -13,8 +13,9 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
@@ -24,7 +25,6 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -222,8 +222,8 @@ public class KafkaStreamsTest extends TestTopology {
         }
     }
     
-    private Properties createConsumerConfig(String groupId) {
-        Properties props = new Properties();
+    private Map<String,Object> createConsumerConfig(String groupId) {
+        Map<String,Object> props = new HashMap<>();
         props.put("zookeeper.connect", getKafkaZookeeperConnect());
         props.put("group.id", groupId);
         props.put("zookeeper.session.timeout.ms", "400");
@@ -232,8 +232,8 @@ public class KafkaStreamsTest extends TestTopology {
         return props;
     }
     
-    private Properties createProducerConfig() {
-        Properties props = new Properties();
+    private Map<String,Object> createProducerConfig() {
+        Map<String,Object> props = new HashMap<>();
         props.put("metadata.broker.list", getKafkaMetadataBrokerList());
         props.put("serializer.class", "kafka.serializer.StringEncoder");
         props.put("request.required.acks", "1");
@@ -293,6 +293,28 @@ public class KafkaStreamsTest extends TestTopology {
         assumeTrue(!isEmbedded());
         
         assumeTrue(SC_OK);
+    }
+    
+    @Test
+    public void testConfigParams() throws Exception {
+        
+        Topology top = new Topology("testConfigParams");
+        String groupId = newGroupId(top.getName());
+
+        Map<String,Object> producerConfig = createProducerConfig();
+        Map<String,Object> consumerConfig = createConsumerConfig(groupId);
+        
+        ProducerConnector producer = new ProducerConnector(top, producerConfig);
+        
+        Map<String,Object> pcfg = producer.getConfig();
+        for (Object o : producerConfig.keySet())
+            assertEquals("property "+o, producerConfig.get(o), pcfg.get(o));
+        
+        ConsumerConnector consumer = new ConsumerConnector(top, consumerConfig);
+        
+        Map<String,Object> ccfg = consumer.getConfig();
+        for (Object o : consumerConfig.keySet())
+            assertEquals("property "+o, consumerConfig.get(o), ccfg.get(o));
     }
     
     @Test
@@ -548,6 +570,7 @@ public class KafkaStreamsTest extends TestTopology {
         setupDebug();
         completeAndValidate(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
+    
     @Test
     public void testMultiTopicProducer() throws Exception {
         
@@ -603,58 +626,6 @@ public class KafkaStreamsTest extends TestTopology {
                                             
         setupDebug();
         completeAndValidateUnordered(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
-    }
-    
-    //@Test
-    public void testDBGMulti() throws Exception {
-        
-        checkAssumes();
-        
-        Topology top = new Topology("testDBGMulti");
-        String groupId = newGroupId(top.getName());
-
-        String[] topics = getKafkaTopics();
-        String topic1Val = topics[0];
-        String topic2Val = topics[1];
-        Supplier<String> topic1 = new Value<String>(topic1Val);
-        Supplier<String> topic2 = new Value<String>(topic2Val);
-
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
-        
-        List<Message> topic1Msgs = new ArrayList<>();
-        topic1Msgs.add(new SimpleMessage("Hello"));
-        topic1Msgs.add(new SimpleMessage("Are you there?"));
-        topic1Msgs.add(new SimpleMessage("msg3"));
-        topic1Msgs.add(new SimpleMessage("msg4"));
-        topic1Msgs.add(new SimpleMessage("msg5"));
-        topic1Msgs.add(new SimpleMessage("msg6"));
-        topic1Msgs.add(new SimpleMessage("msg7"));
-        topic1Msgs.add(new SimpleMessage("msg8"));
-        topic1Msgs.add(new SimpleMessage("msg9"));
-        topic1Msgs.add(new SimpleMessage("msg10"));
-        
-        List<Message> msgs = new ArrayList<>(topic1Msgs);
-        
-        TStream<Message> msgsToPublish = top.constants(msgs);
-        msgsToPublish = msgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
-        msgsToPublish.throttle(1, TimeUnit.SECONDS);
-        
-        producer.publish(msgsToPublish, topic1);
-        producer.publish(msgsToPublish, topic2);
-        
-        TStream<Message> rcvdTopic1Msgs = consumer.subscribe(topic1);
-        rcvdTopic1Msgs.print();
-        //comment out topic2 and topic1 works!!! ???
-        TStream<Message> rcvdTopic2Msgs = consumer.subscribe(topic2);
-        rcvdTopic2Msgs.print();
-
-
-        setupDebug();
-      StreamsContext.Type ctxtType = StreamsContext.Type.STANDALONE;
-//      StreamsContext.Type ctxtType = StreamsContext.Type.DISTRIBUTED;
-      StreamsContext<?> ctxt = StreamsContextFactory.getStreamsContext(ctxtType);
-      ctxt.submit(top, getConfig()).get();
     }
         
     // would be nice if Tester provided this too
