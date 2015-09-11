@@ -28,6 +28,11 @@
             <equals arg1="${ant.java.version}" arg2="1.9"/>
           </or>
       </condition>
+      <condition property="notJava8">
+      	<not>
+            <equals arg1="${isJava8}" arg2="true"/>
+      	</not>
+      </condition>
       <condition property="disableJavadocLint" value="-Xdoclint:none" else="">
           <or>
             <equals arg1="${isJava8}" arg2="true"/>
@@ -164,7 +169,9 @@
     </java>
   </target>
 
-  <target name="doc">
+  <target name="doc" depends="docNo8, docAll" />
+
+  <target name="docAll" depends="checkJava8" if="isJava8">
        <mkdir dir="javadoc"/>
        <javadoc destdir="javadoc" classpathref="compile.classpath"
           Overview="src/overview.html"
@@ -177,5 +184,20 @@
           >
        </javadoc>
   </target>
+
+  <target name="docNo8" depends="checkJava8" if="notJava8">
+       <mkdir dir="javadoc"/>
+       <javadoc destdir="javadoc" classpathref="compile.classpath"
+          Overview="src/overview.html"
+          Windowtitle="Java Functional Samples"
+          Footer="streamsx.topology @ IBMStreams GitHub"
+          linksource="yes"
+          source="8"
+          additionalparam="${disableJavadocLint}"
+          >
+        <packageset dir="src" excludes="vwap" /> 
+       </javadoc>
+  </target>
+
 </project>
 
