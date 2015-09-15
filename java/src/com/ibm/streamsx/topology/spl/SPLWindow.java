@@ -10,7 +10,7 @@ import com.ibm.streamsx.topology.TWindow;
 /**
  * An SPL window, that has an SPL eviction policy and an SPL trigger policy.
  */
-public interface SPLWindow extends TWindow<Tuple>, SPLInput {
+public interface SPLWindow extends TWindow<Tuple,Object>, SPLInput {
 
     /**
      * SPL stream for this window.

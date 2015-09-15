@@ -90,7 +90,7 @@ public class BInputPort extends BInput {
                 port().triggerCount(((Number) triggerConfig).intValue());
                 break;
             case TIME:
-                port().triggerTime((Long) evictConfig, TimeUnit.MILLISECONDS);
+                port().triggerTime((Long) triggerConfig, TimeUnit.MILLISECONDS);
                 break;
             default:
                 ;
@@ -110,5 +110,31 @@ public class BInputPort extends BInput {
 
         return this;
     }
+    
+    /**
+     * Add a declaration of a default queue to this input port.
+     * @param functional True if this is for a functional operator.
+     */
+    public void addQueue(boolean functional) {
+        /* TODO - investigate
+         * Disable queuing for now, seeing a hang when
+         * using Java 8 and Streams 4.0.1 plus need
+         * to investigate performance impact more.
+         * 
 
+        JSONObject queue = new JSONObject();
+        queue.put("functional", functional);
+        json().put("queue", queue);
+        if (functional) {
+            JSONObject params = (JSONObject) op.json().get("parameters");
+            if (params == null) {
+                params = new JSONObject();
+                op.json().put("parameters", params);             
+            }
+            JSONObject value = new JSONObject();
+            value.put("value", 100);
+            params.put("queueSize", value);
+        }
+        */
+    }
 }

@@ -3,26 +3,26 @@
 # Copyright IBM Corp. 2015  
  */
 /**
- * Java application API for IBM InfoSphere Streams.
+ * Java application API for IBM Streams.
  * 
  * This API is used to generate streaming topologies for
- * execution by IBM InfoSphere Streams 4.0. An instance
+ * execution by IBM Streams 4.0 or later. An instance
  * of {@link com.ibm.streamsx.topology.Topology} is created
  * that then is used to build a topology (or graph) of
  * streams, represented by {@link com.ibm.streamsx.topology.TStream}
  * instances. This topology is the declaration of the application,
  * and it may then be :
  * <UL>
- * <LI>Submitted to an IBM InfoSphere Streams instance.</LI>
- * <LI>Executed as an IBM InfoSphere Streams standalone application.</LI>
- * <LI>Compiled into an IBM InfoSphere Streams application bundle ({@code .sab} file).</LI>
+ * <LI>Submitted to an IBM Streams instance.</LI>
+ * <LI>Executed as an IBM Streams standalone application.</LI>
+ * <LI>Compiled into an IBM Streams application bundle ({@code .sab} file).</LI>
  * <LI>Executed within the local JVM (not all toppologies are supported).</LI>
  * </UL>
  * 
  * A {@link com.ibm.streamsx.topology.TStream TStream} represents a continuous stream of tuples
  * with a specific type {@code T}. Streams are transformed into
  * new streams through functional transformations, defined using
- * a single method of an interface like {@link com.ibm.streamsx.topology.function7.Function}.
+ * a single method of an interface like {@link com.ibm.streamsx.topology.function.Function}.
  * <P>
  * A transformation consists of an instance of a functional interface,
  * known as the <i>functional logic</i>
@@ -33,12 +33,12 @@
  * is applied, for example:
  * <UL>
  * <LI>
- *  {@link com.ibm.streamsx.topology.TStream#filter(com.ibm.streamsx.topology.function7.Predicate)} declares that the <i>functional logic</i> will be
+ *  {@link com.ibm.streamsx.topology.TStream#filter(com.ibm.streamsx.topology.function.Predicate)} declares that the <i>functional logic</i> will be
  *  called for each tuple on the stream, and if it returns {@code true} then the
  *  input tuple is submitted to the new stream, otherwise the input tuple is discarded.
  * </LI>
  * <LI>
- * {@link com.ibm.streamsx.topology.TStream#transform(com.ibm.streamsx.topology.function7.Function, Class)} declares that the <i>functional logic</i> will be
+ * {@link com.ibm.streamsx.topology.TStream#transform(com.ibm.streamsx.topology.function.Function)} declares that the <i>functional logic</i> will be
  *  called for each tuple and its return value will be submitted to the output stream, unless
  *  it is {@code null}, in which case no tuple will be submitted.
  * </LI>
@@ -46,7 +46,7 @@
  * <h3>Functional Logic semantics</h3>
  * <h4>Declaring Functional Logic</h4>
  * When declaring (building) the topology any <i>functional logic</i> is an instance
- * of a Java interface, such as {@link com.ibm.streamsx.topology.function7.Predicate}.
+ * of a Java interface, such as {@link com.ibm.streamsx.topology.function.Predicate}.
  * These objects are <b> always </b> serialized and deserialized before being
  * executed against tuples on streams, regardless of the type of the {@code StreamsContext}.
  * <BR>
@@ -101,7 +101,7 @@
  * A functional logic instance lives for the lifetime of its container (embedded JVM, standalone process
  * or processing element in distributed mode),
  * thus it may maintain state across the invocations of its method. For a de-duplicating
- * {@link com.ibm.streamsx.topology.function7.Predicate} may maintain a collection of
+ * {@link com.ibm.streamsx.topology.function.Predicate} may maintain a collection of
  * previously seen tuples on the stream to filter out duplicates.
  * <BR>
  * In distributed mode, if a processing element (PE) restarts then any state will be lost and
@@ -152,7 +152,18 @@
  * from its method.</i>.
  * </LI>
  * </UL>
- * 
+ *  <h3>Included Libraries</h3>
+ *  This API requires the IBM Streams Java Operator API
+ *  which results in these libraries in the class path:
+ *  <UL>
+ *  <LI>
+ *  <a target="_blank" href="http://www-01.ibm.com/support/knowledgecenter/SSCRJU_4.0.0/com.ibm.streams.spl-java-operators.doc/api/overview-summary.html">IBM Streams Java Operator API</a> - {@code $STREAMS_INSTALL/lib/com.ibm.streams.operator.jar}</LI>
+ *  <LI>
+ *  <a target="_blank" href="http://www-01.ibm.com/support/knowledgecenter/SSCRJU_4.0.0/com.ibm.streams.spl-java-operators.doc/samples/overview-summary.html">IBM Streams Java Operator samples</a> - {@code $STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar}</LI>
+ *  <LI><a target="_blank" href="http://commons.apache.org/proper/commons-math/javadocs/api-2.2/index.html">Apache Commons Math 2.2</a> - {@code $STREAMS_INSTALL/ext/lib/commons-math-2.1.jar}</LI>
+ *  <LI><a target="_blank" href="https://logging.apache.org/log4j/1.2/apidocs/">Apache Log4j 1.2.17</a> - {@code $STREAMS_INSTALL/ext/lib/log4j-1.2.17.jar}</LI>
+ *  <LI><a target="_blank" href="http://www-01.ibm.com/support/knowledgecenter/api/content/SS7K4U_8.5.5/com.ibm.websphere.javadoc.liberty.doc/com.ibm.websphere.appserver.api.json_1.0-javadoc/index.html">JSON4J</a> - {@code $STREAMS_INSTALL/ext/lib/JSON4J.jar}</LI>
+ *  </UL>
  */
 package com.ibm.streamsx.topology;
 

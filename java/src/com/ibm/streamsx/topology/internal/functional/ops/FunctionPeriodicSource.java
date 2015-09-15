@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.internal.functional.ops;
 
-import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getOutputMapping;
 
 import com.ibm.streams.operator.OperatorContext;
@@ -15,21 +14,25 @@ import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streams.operator.samples.patterns.PollingTupleProducer;
-import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.function.FunctionContext;
+import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 @PrimitiveOperator
 @OutputPortSet(cardinality = 1)
 @SharedLoader
-public class FunctionPeriodicSource<T> extends PollingTupleProducer {
+public class FunctionPeriodicSource extends PollingTupleProducer implements Functional {
 
-    private Supplier<Iterable<T>> data;
-    private SPLMapping<T> mapping;
+    private FunctionalHandler<Supplier<Iterable<Object>>> dataHandler;
+    private SPLMapping<Object> mapping;
 
     private String functionalLogic;
     private String[] jar;
     private StreamingOutput<OutputTuple> output;
+    
+    private FunctionContext functionContext;
 
     @Override
     public synchronized void initialize(OperatorContext context)
@@ -37,13 +40,20 @@ public class FunctionPeriodicSource<T> extends PollingTupleProducer {
         super.initialize(context);
 
         FunctionalHelper.addLibraries(this, getJar());
-
-        data = getLogicObject(getFunctionLogic());
+        functionContext = new FunctionOperatorContext(context);
+        
         output = getOutput(0);
         mapping = getOutputMapping(this, 0);
+        
+        dataHandler = FunctionalOpUtils.createFunctionHandler(
+                getOperatorContext(), getFunctionContext(), getFunctionalLogic());
+    }
+    
+    FunctionContext getFunctionContext() {
+        return functionContext;
     }
 
-    protected String getFunctionLogic() {
+    public String getFunctionalLogic() {
         return functionalLogic;
     }
 
@@ -64,12 +74,18 @@ public class FunctionPeriodicSource<T> extends PollingTupleProducer {
     @Override
     protected void fetchTuples() throws Exception {
 
-        for (T tuple : data.get()) {
+        for (Object tuple : dataHandler.getLogic().get()) {
             if (Thread.interrupted())
                 return;
             if (tuple == null)
                 continue;
             output.submit(mapping.convertTo(tuple));
         }
+    }
+    
+    @Override
+    public void shutdown() throws Exception {
+        dataHandler.close();
+        super.shutdown();
     }
 }

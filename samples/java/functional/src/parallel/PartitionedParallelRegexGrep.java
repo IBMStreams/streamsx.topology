@@ -15,32 +15,7 @@ import java.util.regex.Pattern;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Predicate;
-
-/* begin_generated_IBM_copyright_prolog                             */
-/*                                                                  */
-/* This is an automatically generated copyright prolog.             */
-/* After initializing,  DO NOT MODIFY OR MOVE                       */
-/* **************************************************************** */
-/* THIS SAMPLE CODE IS PROVIDED ON AN "AS IS" BASIS. IBM MAKES NO   */
-/* REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED, CONCERNING    */
-/* USE OF THE SAMPLE CODE, OR THE COMPLETENESS OR ACCURACY OF THE   */
-/* SAMPLE CODE. IBM DOES NOT WARRANT UNINTERRUPTED OR ERROR-FREE    */
-/* OPERATION OF THIS SAMPLE CODE. IBM IS NOT RESPONSIBLE FOR THE    */
-/* RESULTS OBTAINED FROM THE USE OF THE SAMPLE CODE OR ANY PORTION  */
-/* OF THIS SAMPLE CODE.                                             */
-/*                                                                  */
-/* LIMITATION OF LIABILITY. IN NO EVENT WILL IBM BE LIABLE TO ANY   */
-/* PARTY FOR ANY DIRECT, INDIRECT, SPECIAL OR OTHER CONSEQUENTIAL   */
-/* DAMAGES FOR ANY USE OF THIS SAMPLE CODE, THE USE OF CODE FROM    */
-/* THIS [ SAMPLE PACKAGE,] INCLUDING, WITHOUT LIMITATION, ANY LOST  */
-/* PROFITS, BUSINESS INTERRUPTION, LOSS OF PROGRAMS OR OTHER DATA   */
-/* ON YOUR INFORMATION HANDLING SYSTEM OR OTHERWISE.                */
-/*                                                                  */
-/* (C) Copyright IBM Corp. 2015, 2015  All Rights reserved.         */
-/*                                                                  */
-/* end_generated_IBM_copyright_prolog                               */
+import com.ibm.streamsx.topology.function.Predicate;
 
 /**
  * PartitionedParallelRegexGrep is like ParallelRegexGrep, except that the Java
@@ -87,7 +62,7 @@ public class PartitionedParallelRegexGrep {
 
         // Begin parallel region
         TStream<String> parallelLines = lines
-                .parallel(5, TStream.Routing.PARTITIONED);
+                .parallel(5, TStream.Routing.HASH_PARTITIONED);
         TStream<String> ParallelFiltered = parallelLines
                 .filter(new Predicate<String>() {
 
@@ -120,7 +95,7 @@ public class PartitionedParallelRegexGrep {
         // Combine the results of each parallel filter into one stream, ending
         // the parallel region.
         TStream<String> filtered_condensed = ParallelFiltered
-                .unparallel();
+                .endParallel();
 
         // Print the combined results
         filtered_condensed.print();

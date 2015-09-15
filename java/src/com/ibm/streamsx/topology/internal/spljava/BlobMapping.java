@@ -15,7 +15,7 @@ class BlobMapping extends SPLMapping<Blob> {
 
     // Singleton, as stateless.
     BlobMapping() {
-        super(Schemas.BLOB, Blob.class);
+        super(Schemas.BLOB);
     }
 
     @Override

@@ -21,9 +21,28 @@
     <path refid="compile.classpath"/>
   </path>
 
+  <target name="checkJava8">
+      <condition property="isJava8">
+          <or>
+            <equals arg1="${ant.java.version}" arg2="1.8"/>
+            <equals arg1="${ant.java.version}" arg2="1.9"/>
+          </or>
+      </condition>
+      <condition property="notJava8">
+      	<not>
+            <equals arg1="${isJava8}" arg2="true"/>
+      	</not>
+      </condition>
+      <condition property="disableJavadocLint" value="-Xdoclint:none" else="">
+          <or>
+            <equals arg1="${isJava8}" arg2="true"/>
+          </or>
+      </condition>
+  </target>
+
   <target name="all" depends="jar"/>
 
-  <target name="init">
+ <target name="init" depends="checkJava8">
     <mkdir dir="${classes}"/>
   </target>
 
@@ -33,9 +52,24 @@
 	   destdir="${classes}"
 	   classpathref="compile.classpath"
 	   includeantruntime="no"
+	   excludes="vwap/**"
+	   />
+    <ant dir="../../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
+  </target>
+
+  <target name="compile8" depends="compile" if="isJava8">
+    <javac debug="true" 
+	   srcdir="${basedir}/src" 
+	   destdir="${classes}"
+	   classpathref="compile.classpath"
+	   includeantruntime="no"
+	   source="8"
+	   target="8"
+	   includes="vwap/**"
 	   />
   </target>
-  <target name="jar" depends="compile">
+
+  <target name="jar" depends="compile, compile8">
     <jar destfile="${jarname}" basedir="${classes}"/>
   </target>
 
@@ -59,6 +93,7 @@
   <!--    It is not in the stars to hold our destiny but in ourselves -->
   <!-- the output will only include destiny as the filter is starts with d -->
   <target name="run.filterecho">
+  	 <echo message="Expect only 'destiny' to be output" />
      <java classname="simple.FilterEcho" classpathref="run.classpath" fork="yes">
        <arg value="It"/> <arg value="is"/> <arg value="not"/>
        <arg value="in"/> <arg value="the"/> <arg value="stars"/>
@@ -74,6 +109,15 @@
      </java>
   </target>
 
+  <target name="run.vwap.distributed">
+     <fail unless="env.STREAMS_DOMAIN_ID" message="STREAMS_DOMAIN_ID not set."/>
+     <fail unless="env.STREAMS_INSTANCE_ID" message="STREAMS_INSTANCE_ID not set."/>
+     <echo message="Job will be submitted to Streams instance ${env.STREAMS_INSTANCE_ID} in domain ${env.STREAMS_DOMAIN_ID}" />
+     <java classname="vwap.Vwap" classpathref="run.classpath" fork="yes">
+       <arg value="DISTRIBUTED"/>
+     </java>
+  </target>
+
   <target name="run.publish">
      <java classname="topic.PublishBeacon" classpathref="run.classpath" fork="yes"/>
   </target>
@@ -81,7 +125,53 @@
      <java classname="topic.SubscribeBeacon" classpathref="run.classpath" fork="yes"/>
   </target>
 
-  <target name="doc">
+  <target name="run.fizzbuzz">
+     <java classname="games.FizzBuzz" classpathref="run.classpath" fork="yes"/>
+  </target>
+
+  <!-- Run the trending example, assuming there is a set of text files with
+       tweets in csv format in $HOME/tweets
+  -->
+  <target name="run.twitter.trending">
+     <java classname="twitter.TwitterTrending" classpathref="run.classpath" fork="yes">
+     <arg value="EMBEDDED"/>
+     <arg value="${user.home}/tweets"/>
+     </java>
+  </target>
+
+  <target name="run.kafka">
+    <java classname="kafka.KafkaSample" classpathref="run.classpath" fork="yes">
+      <arg value="STANDALONE"/>
+    </java>
+  </target>
+
+  <target name="run.kafka.distributed">
+    <fail unless="env.STREAMS_DOMAIN_ID" message="STREAMS_DOMAIN_ID not set."/>
+    <fail unless="env.STREAMS_INSTANCE_ID" message="STREAMS_INSTANCE_ID not set."/>
+    <echo message="Job will be submitted to Streams instance ${env.STREAMS_INSTANCE_ID} in domain ${env.STREAMS_DOMAIN_ID}" />
+    <java classname="kafka.KafkaSample" classpathref="run.classpath" fork="yes">
+      <arg value="DISTRIBUTED"/>
+    </java>
+  </target>
+
+  <target name="run.mqtt">
+    <java classname="mqtt.MqttSample" classpathref="run.classpath" fork="yes">
+      <arg value="STANDALONE"/>
+    </java>
+  </target>
+
+  <target name="run.mqtt.distributed">
+    <fail unless="env.STREAMS_DOMAIN_ID" message="STREAMS_DOMAIN_ID not set."/>
+    <fail unless="env.STREAMS_INSTANCE_ID" message="STREAMS_INSTANCE_ID not set."/>
+    <echo message="Job will be submitted to Streams instance ${env.STREAMS_INSTANCE_ID} in domain ${env.STREAMS_DOMAIN_ID}" />
+    <java classname="mqtt.MqttSample" classpathref="run.classpath" fork="yes">
+      <arg value="DISTRIBUTED"/>
+    </java>
+  </target>
+
+  <target name="doc" depends="docNo8, docAll" />
+
+  <target name="docAll" depends="checkJava8" if="isJava8">
        <mkdir dir="javadoc"/>
        <javadoc destdir="javadoc" classpathref="compile.classpath"
           Overview="src/overview.html"
@@ -89,8 +179,25 @@
           Footer="streamsx.topology @ IBMStreams GitHub"
           linksource="yes"
           sourcepath="src"
+          source="8"
+          additionalparam="${disableJavadocLint}"
           >
        </javadoc>
   </target>
+
+  <target name="docNo8" depends="checkJava8" if="notJava8">
+       <mkdir dir="javadoc"/>
+       <javadoc destdir="javadoc" classpathref="compile.classpath"
+          Overview="src/overview.html"
+          Windowtitle="Java Functional Samples"
+          Footer="streamsx.topology @ IBMStreams GitHub"
+          linksource="yes"
+          source="8"
+          additionalparam="${disableJavadocLint}"
+          >
+        <packageset dir="src" excludes="vwap" /> 
+       </javadoc>
+  </target>
+
 </project>
 

@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -22,8 +23,8 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.spl.FileSPLStreams;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
@@ -68,9 +69,9 @@ public class SimpleEmbeddedTest {
         TStream<String> hw = topology.strings("Hello", "World!", "Test!!");
 
         Tester tester = topology.getTester();
-        Condition expectedCount = tester.tupleCount(hw, 3);
-        Condition expectedContents = tester.stringContents(hw, "Hello",
-                "World!", "Test!!");
+        Condition<Long> expectedCount = tester.tupleCount(hw, 3);
+        Condition<List<String>> expectedContents = tester.stringContents(hw,
+                "Hello", "World!", "Test!!");
 
         StreamsContextFactory
                 .getStreamsContext(StreamsContext.Type.EMBEDDED_TESTER)
@@ -142,14 +143,14 @@ public class SimpleEmbeddedTest {
         Topology topology = new Topology("test");
 
         TStream<String> hw = topology.strings("Hello", "World!", "Test!!");
-        TStream<String> hw2 = hw.transform(new AppendXform("(stream-2)"), String.class);
+        TStream<String> hw2 = hw.transform(new AppendXform("(stream-2)"));
         // make sure "marker" ops are ok: union,parallel,unparallel
         hw
             .union(hw2)
             .parallel(2)
                 .filter(nilFilter)
                 .filter(nilFilter)
-            .unparallel()
+            .endParallel()
         .print();
 
         StreamsContext<?> sc = StreamsContextFactory

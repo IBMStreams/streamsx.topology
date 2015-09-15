@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.internal.functional.ops;
 
-import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getOutputMapping;
 
 import com.ibm.streams.operator.OperatorContext;
@@ -16,21 +15,25 @@ import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streams.operator.samples.patterns.ProcessTupleProducer;
-import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.function.FunctionContext;
+import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 @PrimitiveOperator
 @OutputPortSet(cardinality = 1)
 @SharedLoader
-public class FunctionSource<T> extends ProcessTupleProducer {
+public class FunctionSource extends ProcessTupleProducer implements Functional {
 
-    private Supplier<Iterable<T>> data;
-    private SPLMapping<T> mapping;
+    private FunctionalHandler<Supplier<Iterable<Object>>> dataHandler;
+    private SPLMapping<Object> mapping;
 
     private String functionalLogic;
     private String[] jar;
     private StreamingOutput<OutputTuple> output;
+    
+    private FunctionContext functionContext;
 
     @Override
     public synchronized void initialize(OperatorContext context)
@@ -39,12 +42,20 @@ public class FunctionSource<T> extends ProcessTupleProducer {
 
         FunctionalHelper.addLibraries(this, getJar());
 
-        data = getLogicObject(getFunctionLogic());
+        functionContext = new FunctionOperatorContext(context);
+        
         output = getOutput(0);
         mapping = getOutputMapping(this, 0);
+        
+        dataHandler = FunctionalOpUtils.createFunctionHandler(
+                getOperatorContext(), getFunctionContext(), getFunctionalLogic());
+    }
+    
+    FunctionContext getFunctionContext() {
+        return functionContext;
     }
 
-    protected String getFunctionLogic() {
+    public String getFunctionalLogic() {
         return functionalLogic;
     }
 
@@ -65,13 +76,26 @@ public class FunctionSource<T> extends ProcessTupleProducer {
     @Override
     protected void process() throws Exception {
 
-        for (T tuple : data.get()) {
-            if (Thread.interrupted())
-                return;
-            if (tuple == null)
-                continue;
-            output.submit(mapping.convertTo(tuple));
+        try {
+            Supplier<Iterable<Object>> data = dataHandler.getLogic();
+            for (Object tuple : data.get()) {
+                if (Thread.interrupted())
+                    return;
+                if (tuple == null)
+                    continue;
+                output.submit(mapping.convertTo(tuple));
+            }
+        } finally {
+            dataHandler.close();
+            dataHandler = null;
         }
         output.punctuate(StreamingData.Punctuation.FINAL_MARKER);
+    }
+    
+    @Override
+    public void shutdown() throws Exception {
+        if (dataHandler != null)
+             dataHandler.close();
+        super.shutdown();
     }
 }

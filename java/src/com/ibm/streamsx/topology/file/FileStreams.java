@@ -8,7 +8,7 @@ import java.util.Collections;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.spl.JavaPrimitive;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -32,10 +32,11 @@ public class FileStreams {
     public static TStream<String> directoryWatcher(TopologyElement te,
             String directory) {
 
-        SPLStream filesSpl = JavaPrimitive.invokeJavaSource(te,
+        SPLStream filesSpl = JavaPrimitive.invokeJavaPrimitiveSource(te,
                 DirectoryWatcher.class,
-                Collections.singletonMap("directory", directory),
-                Schemas.STRING);
+                Schemas.STRING,
+                Collections.singletonMap("directory", directory)
+                );
 
         return filesSpl.toStringStream();
     }

@@ -4,19 +4,18 @@
  */
 package com.ibm.streamsx.topology.internal.functional.window;
 
-import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
-
 import java.util.LinkedList;
+import java.util.List;
 
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.window.StreamWindow;
-import com.ibm.streams.operator.window.StreamWindow.Policy;
-import com.ibm.streams.operator.window.StreamWindowEvent;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
 
 /**
- * 
+ * This is set based aggregation, the user's function is given
+ * the complete list of tuples in the window.
  * State is LinkedList<I> input tuples as their Java object, with the newest
  * tuple at the front.
  * 
@@ -25,43 +24,19 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
  * @param <O>
  *            Output tuple type
  */
-public class SlidingSetAggregator<I, O> extends SlidingSet<I, O> {
+public abstract class SlidingSetAggregator<I, O> extends SlidingSet<I, O> {
 
-    private Function<Iterable<I>, O> aggregator;
+    private FunctionalHandler<Function<List<I>, O>> aggregatorHandler;
 
-    public SlidingSetAggregator(FunctionWindow<?> op, StreamWindow<Tuple> window)
-            throws ClassNotFoundException {
-        super(op, window);
-        aggregator = getLogicObject(op.getFunctionalLogic());
-    }
-
-    @Override
-    protected void postSetUpdate(StreamWindowEvent<Tuple> event,
-            Object partition, LinkedList<I> tuples) throws Exception {
-        boolean contentChanged = false;
-        switch (event.getType()) {
-        case INSERTION:
-            contentChanged = true;
-            break;
-        case EVICTION:
-            // For a count based window, the eviction preceeds the
-            // insertion, but should be seen as a single action,
-            // so the eviction does not result in calling the function.
-            // It will be immediately followed by the INSERTION
-            // which will result in the call back.
-            // For TIME insertion and eviction are independent.
-            if (getWindow().getEvictionPolicy() == Policy.TIME)
-                contentChanged = true;
-            break;
-        default:
-            break;
-        }
-        if (contentChanged)
-            aggregate(partition, tuples);
-    }
-
-    private void aggregate(Object partition, LinkedList<I> tuples)
+    public SlidingSetAggregator(FunctionWindow op, StreamWindow<Tuple> window)
             throws Exception {
+        super(op, window);
+        aggregatorHandler = op.createLogicHandler();
+    }
+
+    protected void aggregate(Object partition, LinkedList<I> tuples)
+            throws Exception {
+        final Function<List<I>, O> aggregator = aggregatorHandler.getLogic();
         O aggregation = aggregator.apply(tuples);
         if (aggregation != null) {
             Tuple splTuple = outputMapping.convertTo(aggregation);

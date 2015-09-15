@@ -62,12 +62,17 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         for (String key : config.keySet()) {
             Object value = config.get(key);
             
+            if (key.equals(ContextProperties.SUBMISSION_PARAMS)) {
+                // value causes issues below and no need to add this to json
+                continue;
+            }
             if (JSONObject.isValidObject(value)) {
                 graphConfig.put(key, value);
                 continue;
             }
             if (value instanceof Collection) {
                 JSONArray ja = new JSONArray();
+                @SuppressWarnings("unchecked")
                 Collection<Object> coll = (Collection<Object>) value;
                 ja.addAll(coll);
                 graphConfig.put(key, ja);            
@@ -89,16 +94,6 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         SPLGenerator generator = new  SPLGenerator();
         createNamespaceFile(json, config, "spl", generator.generateSPL(json));
         createNamespaceFile(json, config, "json", json.serialize());
-
-        /*
-         * File f = new File((File) config.get(ContextProperties.TOOLKIT_DIR),
-         * namespace + "/" + name + ".spl"); PrintWriter splFile = new
-         * PrintWriter(f, "UTF-8"); //
-         * splFile.print(app.splgraph().toSPLString());
-         * splFile.print(SPLGenerator.generateSPL(app.builder()));
-         * splFile.flush(); splFile.close();
-         */
-
     }
 
     private void createNamespaceFile(JSONObject json,
@@ -122,9 +117,13 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
         File tkNamespace = new File(toolkitRoot, namespace);
         File tkImplLib = new File(toolkitRoot, "impl/lib");
+        File tkEtc = new File(toolkitRoot, "etc");
+        File tkOpt = new File(toolkitRoot, "opt");
 
         tkImplLib.mkdirs();
         tkNamespace.mkdirs();
+        tkEtc.mkdir();
+        tkOpt.mkdir();
     }
 
 }

@@ -18,9 +18,10 @@ import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
-import com.ibm.streamsx.topology.function7.BiFunction;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
+import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionConvertToSPL;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 
@@ -92,8 +93,7 @@ public class SPLStreams {
      *            Schema of returned stream.
      * @return Stream containing the converted tuples.
      * 
-     * @see SPLStream#convert(com.ibm.streamsx.topology.function7.Function,
-     *      Class)
+     * @see SPLStream#convert(com.ibm.streamsx.topology.function.Function)
      */
     public static <T> SPLStream convertStream(TStream<T> stream,
             BiFunction<T, OutputTuple, OutputTuple> converter,
@@ -101,11 +101,12 @@ public class SPLStreams {
         
         String opName = converter.getClass().getSimpleName();
         if (opName.isEmpty()) {
-            opName = "SPLConvert" + stream.getTupleClass().getSimpleName();
+            opName = "SPLConvert" +  TypeDiscoverer.getTupleName(stream.getTupleType());
         }
 
         BOperatorInvocation convOp = JavaFunctional.addFunctionalOperator(
                 stream, opName, FunctionConvertToSPL.class, converter);
+        @SuppressWarnings("unused")
         BInputPort inputPort = stream.connectTo(convOp, true, null);
 
         BOutputPort convertedTuples = convOp.addOutput(schema);
@@ -136,7 +137,7 @@ public class SPLStreams {
             public String apply(Tuple tuple) {
                 return tuple.getString(0);
             }
-        }, String.class);
+        });
     }
     
     /**
@@ -165,7 +166,7 @@ public class SPLStreams {
             public String apply(Tuple tuple) {
                 return tuple.getString(attributeIndex);
             }
-        }, String.class);
+        });
     }
 
     /**
@@ -183,7 +184,6 @@ public class SPLStreams {
 
                     @Override
                     public OutputTuple apply(String v1, OutputTuple v2) {
-                        // TODO Auto-generated method stub
                         v2.setString(0, v1);
                         return v2;
                     }
@@ -199,7 +199,7 @@ public class SPLStreams {
      *            Count trigger policy value
      * @return SPL window with that will trigger every {@code count} tuples.
      */
-    public static SPLWindow triggerCount(TWindow<Tuple> window, int count) {
+    public static SPLWindow triggerCount(TWindow<Tuple,?> window, int count) {
         return new SPLWindowImpl(window, count);
     }
 
@@ -215,7 +215,7 @@ public class SPLStreams {
      * @return SPL window with that will trigger periodically according to
      *         {@code time}.
      */
-    public static SPLWindow triggerTime(TWindow<Tuple> window, long time,
+    public static SPLWindow triggerTime(TWindow<Tuple,?> window, long time,
             TimeUnit unit) {
         return new SPLWindowImpl(window, time, unit);
     }

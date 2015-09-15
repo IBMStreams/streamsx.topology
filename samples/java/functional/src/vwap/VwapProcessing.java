@@ -4,21 +4,27 @@
  */
 package vwap;
 
+import java.util.List;
+
+import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
-import com.ibm.streamsx.topology.function7.BiFunction;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.logic.Logic;
+import com.ibm.streamsx.topology.TWindow;
+import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Function;
 
 public class VwapProcessing {
 
-    public static TStream<Bargain> bargains(TStream<Trade> trades,
-            TStream<Quote> quotes) {
+    @SuppressWarnings("serial")
+    public static TStream<Bargain> bargains(TKeyedStream<Trade,String> trades,
+            TKeyedStream<Quote,String> quotes) {
+        
+        TWindow<Trade,String> tradesWindow = trades.last(4);
 
-        TStream<VWapT> vwap = trades.last(4).aggregate(
-                new Function<Iterable<Trade>, VWapT>() {
+        TKeyedStream<VWapT,String> vwap = tradesWindow.aggregate(
+                new Function<List<Trade>, VWapT>() {
 
                     @Override
-                    public VWapT apply(Iterable<Trade> tuples) {
+                    public VWapT apply(List<Trade> tuples) {
                         VWapT vwap = null;
                         for (Trade trade : tuples) {
                             if (vwap == null)
@@ -27,16 +33,18 @@ public class VwapProcessing {
                         }
                         return vwap == null ? null : vwap.complete();
                     }
-                }, VWapT.class);
+                }).key(VWapT::getTicker);
 
-        TStream<Bargain> bargainIndex = quotes.join(vwap.last(),
-                Logic.first(new BiFunction<Quote, VWapT, Bargain>() {
+        TStream<Bargain> bargainIndex = quotes.joinLast(vwap,
+                new BiFunction<Quote, VWapT, Bargain>() {
 
                     @Override
                     public Bargain apply(Quote v1, VWapT v2) {
+                        if (v2 == null) // window is empty!
+                            return null;
                         return new Bargain(v1, v2);
                     }
-                }), Bargain.class);
+                });
 
         return bargainIndex;
     }

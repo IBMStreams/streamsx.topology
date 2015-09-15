@@ -13,7 +13,7 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.file.FileStreams;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 
 /**
  * Sample continuous (streaming) regular expression grep topology application.
@@ -32,22 +32,21 @@ import com.ibm.streamsx.topology.function7.Predicate;
  * This demonstrates Java functional programming using an anonymous class.
  * <P>
  * <BR>
- * This may be executed as (from the {@code samples/java/functional directory} )
- * as:
+ * This may be executed from the {@code samples/java/functional} directory as:
  * <UL>
  * <LI>
- * {@code java -jar funcsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.RegexGrep} <i>CONTEXT_TYPE</i>
- * {@code $HOME/books .*Queen.*England.*}
- * - Run directly from the command line with a specific
- * {@code StreamsContext} where <i>CONTEXT_TYPE</i> is one of:
+ * {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar
+ *   simple.RegexGrep CONTEXT_TYPE $HOME/books ".*Queen.*England.*"
+ * } - Run directly from the command line.
+ * <i>CONTEXT_TYPE</i> is one of:
  * <UL>
- * <LI>{@code DISTRIBUTED} - Run as an IBM InfoSphere Streams distributed
+ * <LI>{@code DISTRIBUTED} - Run as an IBM Streams distributed
  * application.</LI>
- * <LI>{@code STANDALONE} - Run as an IBM InfoSphere Streams standalone
+ * <LI>{@code STANDALONE} - Run as an IBM Streams standalone
  * application.</LI>
  * <LI>{@code EMBEDDED} - Run embedded within this JVM.</LI>
- * <LI>{@code BUNDLE} - Create an IBM InfoSphere Streams application bundle.</LI>
- * <LI>{@code TOOLKIT} - Create an IBM InfoSphere Streams application toolkit.</LI>
+ * <LI>{@code BUNDLE} - Create an IBM Streams application bundle.</LI>
+ * <LI>{@code TOOLKIT} - Create an IBM Streams application toolkit.</LI>
  * </UL>
  * </LI>
  * <LI>

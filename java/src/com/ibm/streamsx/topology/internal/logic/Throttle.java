@@ -4,9 +4,10 @@
  */
 package com.ibm.streamsx.topology.internal.logic;
 
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.UnaryOperator;
 
-public final class Throttle<T> implements Function<T, T> {
+
+public final class Throttle<T> implements UnaryOperator<T> {
     /**
      * 
      */
@@ -26,8 +27,11 @@ public final class Throttle<T> implements Function<T, T> {
                 try {
                     Thread.sleep(nextTupleTime - now);
                 } catch (InterruptedException e) {
+                    // Force parent thread to terminate
+                    Thread.currentThread().interrupt();
                     return null;
                 }
+                now = System.currentTimeMillis();
             }
         }
         nextTupleTime = now + delayms;

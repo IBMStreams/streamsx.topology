@@ -5,7 +5,10 @@
 package com.ibm.streamsx.topology;
 
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.SPL_PREFIX;
+import static com.ibm.streamsx.topology.internal.core.TypeDiscoverer.getTupleName;
 
+import java.io.File;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,16 +21,20 @@ import java.util.logging.Logger;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.flow.declare.OperatorGraph;
+import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.DependencyResolver;
 import com.ibm.streamsx.topology.internal.core.InternalProperties;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.StreamImpl;
+import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionPeriodicSource;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSource;
 import com.ibm.streamsx.topology.internal.logic.Constants;
@@ -35,9 +42,10 @@ import com.ibm.streamsx.topology.internal.logic.EndlessSupplier;
 import com.ibm.streamsx.topology.internal.logic.LimitedSupplier;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.internal.logic.SingleToIterableSupplier;
-import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.internal.tester.TupleCollection;
+import com.ibm.streamsx.topology.json.JSONSchemas;
+import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -46,7 +54,7 @@ import com.ibm.streamsx.topology.tester.Tester;
  * A declaration of a topology of streaming data.
  * 
  * This class provides some fundamental generic methods to create source
- * streams, such as {@link #source(Supplier, Class)},
+ * streams, such as {@link #source(Supplier)},
  * {@link #subscribe(String, Class)}, {@link #strings(String...)}. <BR>
  * Utility methods in the {@code com.ibm.streamsx.topology.streams} package
  * provide specific source streams, or transformations on streams with specific
@@ -61,7 +69,7 @@ public class Topology implements TopologyElement {
     public static Logger TOPOLOGY_LOGGER = Logger.getLogger("com.ibm.streamsx.topology");
     
     /**
-     * Logger used for the interactions with IBM InfoSphere Streams functionality, name {@code com.ibm.streamsx.topology.streams}.
+     * Logger used for the interactions with IBM Streams functionality, name {@code com.ibm.streamsx.topology.streams}.
      */
     public static Logger STREAMS_LOGGER = Logger.getLogger("com.ibm.streamsx.topology.streams");
 
@@ -92,6 +100,8 @@ public class Topology implements TopologyElement {
         dependencyResolver = new DependencyResolver(this);
         name = defaultNames[1];
         builder = new GraphBuilder(defaultNames[0], name);
+        
+        checkForScala();
     }
     
     /**
@@ -102,6 +112,31 @@ public class Topology implements TopologyElement {
         String[] defaultNames = defaultNamespaceName(false);
         dependencyResolver = new DependencyResolver(this);
         builder = new GraphBuilder(defaultNames[0], name);
+        
+        checkForScala();
+    }
+    
+    /**
+     * If Scala is in the class path then automatically
+     * add the Scala library to the bundle.
+     */
+    private void checkForScala() {
+        try {
+            Class<?> csf = Class.forName("scala.Function");
+            if (csf.getProtectionDomain().getCodeSource() != null)
+                addClassDependency(csf);
+            else {
+                // Loaded from system loader, look for SCALA_HOME
+                String scalaHome = System.getenv("SCALA_HOME");
+                if (scalaHome != null) {
+                    File scalaLib = new File(scalaHome, "lib/scala-library.jar");
+                    addJarDependency(scalaLib.getAbsolutePath());
+                }
+            }
+            
+        } catch (ClassNotFoundException e) {
+            // not using Scala!
+        }
     }
 
     /**
@@ -118,6 +153,8 @@ public class Topology implements TopologyElement {
 
     /**
      * Get the underlying {@code OperatorGraph}. Internal use only.
+     * <BR>
+     * Not intended to be called by applications, may be removed at any time.
      */
     public OperatorGraph graph() {
         return builder().graph();
@@ -139,7 +176,7 @@ public class Topology implements TopologyElement {
      * @return Stream containing {@code tuples}.
      */
     public TStream<String> strings(String... tuples) {
-        return constants(Arrays.asList(tuples), String.class);
+        return _source(new Constants<String>(Arrays.asList(tuples)), String.class);
     }
 
     /**
@@ -149,23 +186,23 @@ public class Topology implements TopologyElement {
      * @return Stream containing {@code tuples}.
      */
     public TStream<Number> numbers(Number... tuples) {
-        return constants(Arrays.asList(tuples), Number.class);
+        return _source(new Constants<Number>(Arrays.asList(tuples)), Number.class);
     }
-
+    
     /**
      * Create a stream containing all the tuples in {@code data}.
      * 
      * @param data
      *            List of tuples.
-     * @param tupleTypeClass
-     *            Class type {@code T} of the returned stream.
      * @return Declared stream containing tuples from {@code data}.
      */
-    public <T> TStream<T> constants(final List<T> data, Class<T> tupleTypeClass) {
+    public <T> TStream<T> constants(final List<T> data) {
         if (data == null)
             throw new NullPointerException();
         
-        return source(new Constants<T>(data), tupleTypeClass);
+        Type constantType = TypeDiscoverer.determineStreamTypeFromFunctionArg(List.class, 0, data);
+        
+        return _source(new Constants<T>(data), constantType);
     }
 
     /**
@@ -176,26 +213,29 @@ public class Topology implements TopologyElement {
      * 
      * @param data
      *            Function that produces that data for the stream.
-     * @param tupleTypeClass
-     *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples from the iterator returned by
      *         {@code data.get()}.
      */
-    public <T> TStream<T> source(Supplier<Iterable<T>> data,
-            Class<T> tupleTypeClass) {
-        
+    public <T> TStream<T> source(Supplier<Iterable<T>> data) {
+        Type tupleType = TypeDiscoverer.determineStreamTypeNested(Supplier.class, 0, Iterable.class, data);
+        return _source(data, tupleType);
+    }
+    
+    private <T> TStream<T> _source(Supplier<Iterable<T>> data,
+            Type tupleType) {
+                
         String opName = LogicUtils.functionName(data);
         if (opName.isEmpty()) {
-            opName = tupleTypeClass.getSimpleName() + "Source";
+            opName = getTupleName(tupleType) + "Source";
         } else if (data instanceof Constants) {
-            opName = tupleTypeClass.getSimpleName() + opName;
+            opName = getTupleName(tupleType) + opName;
         }
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
                 FunctionSource.class, data);
         SourceInfo.setSourceInfo(bop, getClass());
-        return JavaFunctional.addJavaOutput(this, bop, tupleTypeClass);
+        return JavaFunctional.addJavaOutput(this, bop, tupleType);
     }
     
     /**
@@ -211,20 +251,26 @@ public class Topology implements TopologyElement {
      *            Function that produces that data for the stream.
      * @param period Approximate period {code data.get()} will be called.
      * @param unit Time unit of {@code period}.
-     * @param tupleTypeClass
-     *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples from the iterator returned by
      *         {@code data.get()}.
      */
     public <T> TStream<T> periodicMultiSource(Supplier<Iterable<T>> data,
+            long period, TimeUnit unit) {
+        
+        Type tupleType = TypeDiscoverer.determineStreamTypeNested(Supplier.class, 0, Iterable.class, data);
+        
+        return _periodicMultiSource(data, period, unit, tupleType);
+    }
+    
+    private <T> TStream<T> _periodicMultiSource(Supplier<Iterable<T>> data,
             long period, TimeUnit unit,
-            Class<T> tupleTypeClass) {
+           Type tupleType) {
         
         String opName = LogicUtils.functionName(data);
         if (opName.isEmpty()) {
-            opName = tupleTypeClass.getSimpleName() + "PeriodicMultiSource";
+            opName = TypeDiscoverer.getTupleName(tupleType) + "PeriodicMultiSource";
         } else if (data instanceof Constants) {
-            opName = tupleTypeClass.getSimpleName() + opName;
+            opName = TypeDiscoverer.getTupleName(tupleType) + opName;
         }
         
         double dperiod = ((double) unit.toMillis(period)) / 1000.0;
@@ -235,7 +281,7 @@ public class Topology implements TopologyElement {
                 opName,
                 FunctionPeriodicSource.class, data, params);
         SourceInfo.setSourceInfo(bop, getClass());
-        return JavaFunctional.addJavaOutput(this, bop, tupleTypeClass);
+        return JavaFunctional.addJavaOutput(this, bop, tupleType);
     }
     
     /**
@@ -249,15 +295,16 @@ public class Topology implements TopologyElement {
      *            Function that produces that data for the stream.
      * @param period Approximate period {code data.get()} will be called.
      * @param unit Time unit of {@code period}.
-     * @param tupleTypeClass
-     *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples returned by
      *         {@code data.get()}.
      */
     public <T> TStream<T> periodicSource(Supplier<T> data,
-            long period, TimeUnit unit, Class<T> tupleTypeClass) {
-        return periodicMultiSource(new SingleToIterableSupplier<T>(data),
-                period, unit, tupleTypeClass);
+            long period, TimeUnit unit) {
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, null);
+        
+        return _periodicMultiSource(new SingleToIterableSupplier<T>(data),
+                period, unit, tupleType);
     }
     
     /**
@@ -267,16 +314,15 @@ public class Topology implements TopologyElement {
      * 
      * @param data
      *            Supplier of the tuples.
-     * @param tupleTypeClass
-     *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples from calls to {@code data.get()}
      *         .
      */
-    public <T> TStream<T> endlessSource(Supplier<T> data,
-            Class<T> tupleTypeClass) {
-        return source(EndlessSupplier.supplier(data), tupleTypeClass);
+    public <T> TStream<T> endlessSource(Supplier<T> data) {
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, null);
+        return _source(EndlessSupplier.supplier(data), tupleType);
     }
-
+    
     /**
      * Declare an endless source stream.
      * {@code data.apply(n)} will be called repeatably, where {@code n} is the iteration number,
@@ -285,14 +331,14 @@ public class Topology implements TopologyElement {
      * 
      * @param data
      *            Supplier of the tuples.
-     * @param tupleTypeClass
-     *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples from calls to
      *         {@code data.apply(n)}.
      */
-    public <T> TStream<T> endlessSourceN(Function<Long, T> data,
-            Class<T> tupleTypeClass) {
-        return source(EndlessSupplier.supplierN(data), tupleTypeClass);
+    public <T> TStream<T> endlessSourceN(Function<Long, T> data) {
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, null);
+        
+        return _source(EndlessSupplier.supplierN(data), tupleType);
     }
 
     /**
@@ -304,16 +350,17 @@ public class Topology implements TopologyElement {
      *            Supplier of the tuples.
      * @param count
      *            Maximum number of tuples that will be seen on the stream.
-     * @param tupleTypeClass
-     *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples from calls to {@code data.get()}
      *         .
      */
     public <T> TStream<T> limitedSource(final Supplier<T> data,
-            final long count, Class<T> tupleTypeClass) {
+            final long count) {
         if (count < 0)
             throw new IllegalArgumentException(Long.toString(count));
-        return source(LimitedSupplier.supplier(data, count), tupleTypeClass);
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, null);
+        
+        return _source(LimitedSupplier.supplier(data, count), tupleType);
     }
 
     /**
@@ -326,16 +373,17 @@ public class Topology implements TopologyElement {
      *            Supplier of the tuples.
      * @param count
      *            Maximum number of tuples that will be seen on the stream.
-     * @param tupleTypeClass
-     *            Class type {@code T} of the returned stream.
      * @return New stream containing the tuples from calls to
      *         {@code data.apply(n)}.
      */
     public <T> TStream<T> limitedSourceN(final Function<Long, T> data,
-            final long count, Class<T> tupleTypeClass) {
+            final long count) {
         if (count < 0)
             throw new IllegalArgumentException(Long.toString(count));
-        return source(LimitedSupplier.supplierN(data, count), tupleTypeClass);
+        
+        Type tupleType = TypeDiscoverer.determineStreamType(data, null);
+        
+        return _source(LimitedSupplier.supplierN(data, count), tupleType);
     }
 
     /**
@@ -366,14 +414,49 @@ public class Topology implements TopologyElement {
      * even within the same application) to communicate
      * using published streams.
      * </P>
+     * <P>
+     * If {@code tupleTypeClass} is {@code JSONObject.class} then the
+     * subscription is the generic IBM Streams schema for JSON
+     * ({@link JSONSchemas#JSON}). Streams of type {@code JSONObject}
+     * are always published and subscribed using the generic schema
+     * to allow interchange between applications implemented in
+     * different languages.
+     * </P>
      * @param topic Topic to subscribe to.
      * @param tupleTypeClass Type to subscribe to.
      * @return Stream the will contain tuples from matching publishers.
+     * 
+     * @see TStream#publish(String)
+     * @see SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
      */
     public <T> TStream<T> subscribe(String topic, Class<T> tupleTypeClass) {
-        SPLMapping<T> mapping = Schemas.getSPLMapping(tupleTypeClass);
-        SPLStream splImport = SPLStreams.subscribe(this, topic,
-                mapping.getSchema());
+        if (JSONObject.class.equals(tupleTypeClass)) {
+            
+            @SuppressWarnings("unchecked")
+            TStream<T> json = (TStream<T>) SPLStreams.subscribe(this, topic, JSONSchemas.JSON).toJSON();
+            return json;
+        }
+        
+        StreamSchema mappingSchema = Schemas.getSPLMappingSchema(tupleTypeClass);
+        
+        SPLStream splImport;
+        
+        // Subscribed as an SPL Stream.
+        if (Schemas.usesDirectSchema(tupleTypeClass)) {
+            splImport = SPLStreams.subscribe(this, topic,
+                    mappingSchema);
+
+        } else {      
+            Map<String, Object> params = new HashMap<>();
+
+            params.put("topic", topic);
+            params.put("class", tupleTypeClass.getName());
+            params.put("streamType", mappingSchema);
+
+            splImport = SPL.invokeSource(this,
+                    "com.ibm.streamsx.topology.topic::SubscribeJava", params,
+                    mappingSchema);
+        }
 
         return new StreamImpl<T>(this, splImport.output(), tupleTypeClass);
     }
@@ -381,6 +464,8 @@ public class Topology implements TopologyElement {
     /**
      * Resolves the jar dependencies, sets the respective parameters. Internal
      * use only.
+     * <BR>
+     * Not intended to be called by applications, may be removed at any time.
      * 
      * @throws Exception
      */
@@ -452,6 +537,42 @@ public class Topology implements TopologyElement {
     public void addClassDependency(Class<?> clazz) {
         JavaFunctional.addClassDependency(this, clazz); 
     }
+
+    /**
+     * Add file or directory tree {@code location} to directory
+     * {@code dstDirName} in the application bundle, making it
+     * available to the topology's SPL operators at runtime - e.g.,
+     * an operator configuration file in "etc" in the application directory.
+     * <p>
+     * Use {@link #addClassDependency(Class)} or {@link #addJarDependency(String)}
+     * to add class or jar dependencies.
+     * <p>
+     * Functional logic implementations that need to access resources should
+     * package the resources in a jar or classes directory, add that to the
+     * topology as a dependency using {@code addJarDependency(String)}
+     * or {@code addClassDependency(Class)} and access them as resources from
+     * the class loader as described here:
+     *   <a href="https://docs.oracle.com/javase/tutorial/deployment/webstart/retrievingResources.html">https://docs.oracle.com/javase/tutorial/deployment/webstart/retrievingResources.html</a>
+     * <p>
+     * Legal values for {@code dstDirName} are {@code etc} or {@code opt}.
+     * <p>
+     * e.g.,
+     * <pre>
+     * // add "myConfigFile" to the bundle's "etc" directory
+     * addFileDependency("etc", "/tmp/myConfigFile");
+     * 
+     * // add "myApp" directory tree to the bundle's "etc" directory
+     * addFileDependency("etc", "/tmp/myApp");
+     * </pre>
+     * @param location path to a file or directory
+     * @param dstDirName name of directory in the bundle
+     * 
+     * @throws IllegalArgumentException if {@code dstDirName} is not {@code etc}
+     *     or {@code opt}, or {@code location} is not a file or directory.
+     */
+    public void addFileDependency(String location, String dstDirName) {
+        dependencyResolver.addFileDependency(location, dstDirName);
+    }
     
     private void finalizeConfig() {
         JSONObject jsonConfig = builder().getConfig();
@@ -517,9 +638,60 @@ public class Topology implements TopologyElement {
 
         return tester;
     }
+    
+    /**
+     * Checkpoint the state of the graph periodically.
+     * Each stateful element in the topology
+     * checkpoints its state periodically according to
+     * {@code period} and {@code unit}. Every element persists
+     * its state autonomously, asynchronously with processing
+     * its streams.
+     * <BR>
+     * Upon a failure of an element's container the element
+     * will restart in a new container using its last
+     * checkpointed state. If no state is available, due
+     * to a failure before the first checkpoint, then the
+     * element reverts to its initial state.
+     * <P>
+     * For stream processing elements defined by Java functions
+     * (such as {@link #source(Supplier)} and
+     * {@link TStream#transform(Function)}) the state is the
+     * serialized form of the object representing the function.
+     * Synchronization is applied to ensure that checkpointed state of
+     * the object does not include inconsistencies due to ongoing stream processing.
+     * <BR>
+     * If the function object is immutable then no checkpointing occurs for that element.
+     * A function object is taken as mutable if any of these conditions are true:
+     * <UL>
+     * <LI>It contains at least one non-transient, non-final instance field.</LI>
+     * <LI>A final instance field is a reference to a mutable object.
+     * Note that identification of what is a immutable object may be limited and
+     * so in some cases function objects may be checkpointed even though
+     * they are immutable. 
+     * </LI>
+     * </UL>
+     * Otherwise the function object is taken as immutable.
+     * </P>
+     * <P>
+     * Checkpointing is only supported is distributed contexts.
+     * </P>
+     * 
+     * @param period Approximate period for checkpointing.
+     * @param unit Time unit of {@code period}.
+     */
+    public void checkpointPeriod(long period, TimeUnit unit) {
+        JSONObject checkpoint = new JSONObject();
+        checkpoint.put("mode", "periodic");
+        checkpoint.put("period", period);
+        checkpoint.put("unit", unit.name());
+        
+        builder().getConfig().put("checkpoint", checkpoint);
+    }
 
     /**
      * Internal use only.
+     * <BR>
+     * Not intended to be called by applications, may be removed at any time.
      * @return the dependencyResolver
      */
     public DependencyResolver getDependencyResolver() {
@@ -577,4 +749,72 @@ public class Topology implements TopologyElement {
 
         return names;
     }
+
+    /**
+     * Create a submission parameter without a default value.
+     * <p>
+     * A submission parameter is a handle for a {@code T} whose actual value
+     * is not defined until topology submission time.
+     * <p>
+     * A submission parameter has a {@code name}.  The name must be unique
+     * within the topology.
+     * <p>
+     * The returned Supplier's {@code get()} returns null.
+     * <p>
+     * Submission parameters may be used for values in various
+     * cases such as {@code TStream.parallel()} width specifications.
+     * e.g.,
+     * <pre>{@code
+     * Supplier<Integer> width = topology.createSubmissionParameter("width", 1);
+     * TStream<String> myStream = ...;
+     * TStream<String> parallel_start = myStream.parallel(width);
+     * TStream<String> in_parallel = parallel_start.filter(...).transform(...);
+     * TStream<String> joined_parallel_streams = in_parallel.endParallel();
+     * }</pre>
+     * <p>
+     * Submission parameters may be used in Java Primitive Operator and
+     * SPL Operator parameter specifications.
+     * <p>
+     * The name is used to supply an actual value at topology submission time
+     * via {@link StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)}
+     * and {@link ContextProperties#SUBMISSION_PARAMS}, or when submitting
+     * a topology for execution via other execution runtime native mechanisms
+     * such as IBM Streams {@code streamtool}.
+     * <p>
+     * Topology submission behavior when a submission parameter 
+     * lacking a default value is used and a value is not provided at
+     * submission time is defined by the underlying topology execution runtime.
+     * Submission fails for contexts {@code DISTRIBUTED}, {@code STANDALONE},
+     * or {@code ANALYTIC_SERVICE}.
+     *
+     * @param name submission parameter name
+     * @param valueClass class object for {@code T}
+     * @return the {@code Supplier<T>} for the submission parameter
+     * @throws IllegalArgumentException if {@code name} is null, empty,
+     *  or has already been defined. 
+     */
+    public <T> Supplier<T> createSubmissionParameter(String name, Class<T> valueClass) {
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, valueClass); 
+        builder().createSubmissionParameter(name, sp.toJSON());
+        return sp;
+    }
+
+    /**
+     * Create a submission parameter with a default value.
+     * <p>
+     * See {@link #createSubmissionParameter(String, Class)} for a description
+     * of submission parameters.
+     * @param name submission parameter name
+     * @param defaultValue default value if parameter isn't specified.
+     * @return the {@code Supplier<T>} for the submission parameter
+     * @throws IllegalArgumentException if {@code name} is null, empty,
+     *  or has already been defined. 
+     * @throws IllegalArgumentException if {@code defaultValue} is null
+     */
+    public <T> Supplier<T> createSubmissionParameter(String name, T defaultValue) {
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, defaultValue);
+        builder().createSubmissionParameter(name, sp.toJSON());
+        return sp;
+    }
+
 }

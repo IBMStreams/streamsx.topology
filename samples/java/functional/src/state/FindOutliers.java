@@ -12,8 +12,8 @@ import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Predicate;
-import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.Supplier;
 
 /**
  * Finds outliers from a sequence of doubles (e.g. simulating a sensor reading).
@@ -42,7 +42,7 @@ public class FindOutliers {
                 return rand.nextGaussian();
             }
 
-        }, 100000, Double.class);
+        }, 100000);
 
         /*
          * Filters the values based on calculating the mean and standard

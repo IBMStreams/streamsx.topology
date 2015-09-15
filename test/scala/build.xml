@@ -1,0 +1,95 @@
+<project name="streamsx.topology.test.scala" default="all"
+    xmlns:jacoco="antlib:org.jacoco.ant"
+    >
+    <description>
+        Build the Streams Scala tests.
+    </description>
+
+  <import file="../../common-build.xml"/>
+
+  <property name="scala.home" value="${env.SCALA_HOME}"/>
+  <property name="scala-library.jar"
+            value="${scala.home}/lib/scala-library.jar"/>
+  <property name="src" location="src"/>
+  <property name="classes" location="../java/classes"/>
+  <property name="test.dir" location="../java/unittests"/>
+  <property name="jarname" location="../java/streamsx.topology.test.jar"/>
+
+  <path id="compile.classpath">
+    <path refid="streams.classpath"/>
+    <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
+    <pathelement location="${scala-library.jar}"/>
+    <pathelement location="${classes}"/>
+    <pathelement location="${junit.jar}"/>
+  </path>
+  <path id="test.classpath">
+    <pathelement location="${jarname}" />
+    <path refid="streams.classpath"/>
+    <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
+    <pathelement location="${scala-library.jar}"/>
+    <pathelement location="${junit.jar}"/>
+  </path>
+
+ <taskdef resource="scala/tools/ant/antlib.xml">
+   <classpath>
+     <pathelement location="${scala.home}/lib/scala-compiler.jar"   />
+     <pathelement location="${scala.home}/lib/scala-reflect.jar"   />
+     <pathelement location="${scala-library.jar}"   />
+   </classpath>
+ </taskdef>
+
+  <target name="all" depends="compile"/> 
+
+
+  <target name="init" if="env.SCALA_HOME">
+     <echo message="Scala:${scala.home}"/>
+  </target>
+
+  <target name="compile" depends="init" if="env.SCALA_HOME">
+    <scalac srcdir="${src}" target="jvm-1.7" addparams="-usemanifestcp"
+                destdir="${classes}"
+                            classpathref="compile.classpath">
+    </scalac>
+  </target>
+
+  <target name="unittest" depends="init" if="env.SCALA_HOME">
+     <mkdir dir="${test.dir}"/>
+     <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
+     <mkdir dir="${topology.test.dir}"/>
+     <echo message="Scala tests: ${topology.test.dir}"/>
+     <property name="topology.test.type" value="EMBEDDED_TESTER"/>
+     <property name="topology.test.sc_ok" value="true"/>
+     <property name="topology.test.perf_ok" value="true"/>
+     <property name="topology.test.coverage" value="true"/>
+     <property name="topology.test.resource_dir" location="resources"/>
+
+     <!-- Can be overridden by setting -D topology.install.compile on cmd line -->
+
+    <echo message="INSALL: ${topology.install.compile}"/>
+     
+   <jacoco:coverage enabled="${topology.test.coverage}">
+     <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="no"
+           haltonfailure="yes" failureproperty="topology.tests.failed">
+       <sysproperty key="topology.test.root" value="${topology.test.root}"/>
+       <sysproperty key="topology.test.type" value="${topology.test.type}"/>
+       <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
+       <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
+       <sysproperty key="topology.test.resource_dir" file="resources"/>
+
+       <sysproperty key="topology.install.compile" value="${topology.install.compile}"/>
+       
+       <classpath>
+         <path refid="test.classpath"/>
+       </classpath>
+       <assertions><enable/></assertions>
+       <formatter type="xml"/>
+       <batchtest todir="${topology.test.dir}">
+          <fileset dir="${classes}">
+             <include name="com/ibm/streamsx/topology/test/scala/**/*Test.class"/>
+          </fileset>
+       </batchtest>
+     </junit>
+   </jacoco:coverage>
+  </target>
+
+</project>

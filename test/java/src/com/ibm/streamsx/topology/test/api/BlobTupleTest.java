@@ -12,7 +12,7 @@ import com.ibm.streams.operator.types.Blob;
 import com.ibm.streams.operator.types.ValueFactory;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.test.TestTopology;
 
 @SuppressWarnings("serial")
@@ -24,9 +24,10 @@ public class BlobTupleTest extends TestTopology {
         String sdata = "YY" + BlobTupleTest.class.getName();
         byte[] data = sdata.getBytes(StandardCharsets.UTF_8);
         Blob blob = ValueFactory.newBlob(data, 0, data.length);
-        TStream<Blob> source = topology.constants(Collections.singletonList(blob), Blob.class);
+        TStream<Blob> source = topology.constants(Collections.singletonList(blob)).asType(Blob.class);
         assertNotNull(source);
         assertEquals(Blob.class, source.getTupleClass());
+        assertEquals(Blob.class, source.getTupleType());
         
         TStream<String> out = convertBlobToString(source);
         completeAndValidate(out, 10,  sdata);
@@ -38,7 +39,7 @@ public class BlobTupleTest extends TestTopology {
             @Override
             public String apply(Blob v) {
                 return new String(v.getData(), StandardCharsets.UTF_8);
-            }}, String.class);
+            }});
         return out;
     }
 }

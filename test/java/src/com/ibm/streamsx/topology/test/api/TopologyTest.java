@@ -21,7 +21,7 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Supplier;
+import com.ibm.streamsx.topology.function.Supplier;
 
 public class TopologyTest {
 
@@ -63,7 +63,7 @@ public class TopologyTest {
             public Iterable<String> get() {
                 // TODO Auto-generated method stub
                 return null;
-            }}, String.class);
+            }});
     }
     
     /**

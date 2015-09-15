@@ -6,7 +6,7 @@ package com.ibm.streamsx.topology.streams;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.logic.Identity;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
@@ -37,8 +37,7 @@ public class BeaconStreams {
      * @return A stream that will contain {@link BeaconTuple} instances.
      */
     public static TStream<BeaconTuple> beacon(TopologyElement te) {
-        return te.topology().endlessSourceN(new BeaconFunction(),
-                BeaconTuple.class);
+        return te.topology().endlessSourceN(new BeaconFunction());
     }
 
     /**
@@ -51,8 +50,7 @@ public class BeaconStreams {
      *         instances.
      */
     public static TStream<BeaconTuple> beacon(TopologyElement te, long count) {
-        return te.topology().limitedSourceN(new BeaconFunction(), count,
-                BeaconTuple.class);
+        return te.topology().limitedSourceN(new BeaconFunction(), count);
     }
 
     /**
@@ -64,7 +62,7 @@ public class BeaconStreams {
      * @return A stream that will contain tuples of monotonically increasing {@code Long} tuples.
      */
     public static TStream<Long> longBeacon(TopologyElement te) {
-        return te.topology().endlessSourceN(new Identity<Long>(), Long.class);
+        return te.topology().endlessSourceN(new Identity<Long>()).asType(Long.class);
     }
 
     /**
@@ -77,8 +75,7 @@ public class BeaconStreams {
      * @return A stream that will contain {@code count} tuples.
      */
     public static TStream<Long> longBeacon(TopologyElement te, long count) {
-        return te.topology().limitedSourceN(new Identity<Long>(), count,
-                Long.class);
+        return te.topology().limitedSourceN(new Identity<Long>(), count).asType(Long.class);
     }
     
     /**

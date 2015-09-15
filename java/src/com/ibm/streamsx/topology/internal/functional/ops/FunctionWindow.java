@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.functional.ops;
 
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getInputMapping;
+import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
 
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.Tuple;
@@ -16,14 +17,19 @@ import com.ibm.streams.operator.model.InputPortSet.WindowMode;
 import com.ibm.streams.operator.model.InputPorts;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.OutputPorts;
+import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.window.StreamWindow;
-import com.ibm.streamsx.topology.internal.functional.window.KeyablePartitioner;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.internal.functional.window.KeyPartitioner;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
-import com.ibm.streamsx.topology.tuple.Keyable;
 
 @InputPorts(@InputPortSet(cardinality = 1, windowingMode = WindowMode.Windowed))
 @OutputPorts(@OutputPortSet(cardinality = 1))
-public abstract class FunctionWindow<T> extends FunctionFunctor {
+public abstract class FunctionWindow extends FunctionFunctor {
+    
+    public static final String WINDOW_KEY_GETTER_PARAM = "keyGetter";
+    
+    private String keyGetter;
 
     private Metric nPartitions;
 
@@ -36,9 +42,14 @@ public abstract class FunctionWindow<T> extends FunctionFunctor {
         createWindowListener(window);
 
         if (window.isPartitioned()) {
-            SPLMapping<? extends Keyable<?>> input0Mapping = getInputMapping(
+            if (getKeyGetter() == null)
+                throw new IllegalStateException("Missing keyGetter function");
+            
+            SPLMapping<Object> input0Mapping = getInputMapping(
                     this, 0);
-            window.registerPartitioner(new KeyablePartitioner(input0Mapping));
+            Function<Object,Object> functionKeyGetter = getLogicObject(getKeyGetter());
+            window.registerPartitioner(new KeyPartitioner(input0Mapping,
+                    functionKeyGetter));
         }
     }
 
@@ -52,5 +63,17 @@ public abstract class FunctionWindow<T> extends FunctionFunctor {
     }
 
     abstract void createWindowListener(StreamWindow<Tuple> window)
-            throws ClassNotFoundException;
+            throws Exception;
+
+    public String getKeyGetter() {
+        return keyGetter;
+    }
+
+    /**
+     * Key getter for the window.
+     */
+    @Parameter(optional=true)
+    public void setKeyGetter(String keyGetter) {
+        this.keyGetter = keyGetter;
+    }
 }

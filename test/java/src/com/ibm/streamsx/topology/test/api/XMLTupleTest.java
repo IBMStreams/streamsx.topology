@@ -20,7 +20,7 @@ import com.ibm.streams.operator.types.ValueFactory;
 import com.ibm.streams.operator.types.XML;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.test.TestTopology;
 
 @SuppressWarnings("serial")
@@ -33,7 +33,7 @@ public class XMLTupleTest extends TestTopology {
         String sdata = "<book><title>Dracula</title><author>Bram Stoker</author></book>";
         byte[] data = sdata.getBytes(StandardCharsets.UTF_8);
         XML xml = ValueFactory.newXML(new ByteArrayInputStream(data));
-        TStream<XML> source = topology.constants(Collections.singletonList(xml), XML.class);
+        TStream<XML> source = topology.constants(Collections.singletonList(xml)).asType(XML.class);
         assertNotNull(source);
         assertEquals(XML.class, source.getTupleClass());
         
@@ -60,7 +60,7 @@ public class XMLTupleTest extends TestTopology {
                 } catch (Exception e) {
                     return null;
                 }
-            }}, String.class);
+            }});
         return out;
     }
 }

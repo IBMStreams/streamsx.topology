@@ -64,19 +64,26 @@ public class InvokeStandalone {
                 tls = "5";
             commands.add(tls);
         }
+        if (config.containsKey(ContextProperties.SUBMISSION_PARAMS)) {
+            @SuppressWarnings("unchecked")
+            Map<String,Object> params = (Map<String,Object>) config.get(ContextProperties.SUBMISSION_PARAMS); 
+            for(Map.Entry<String,Object> e :  params.entrySet()) {
+                // note: this execution path does correctly
+                // handle / preserve the semantics of escaped \t and \n.
+                // e.g., "\\n" is NOT treated as a newline 
+                // rather it's the two char '\','n'
+                commands.add(e.getKey()+"="+e.getValue().toString());
+            }
+        }
 
         trace.info("Invoking standalone application");
+        trace.info(Util.concatenate(commands));
+
         ProcessBuilder pb = new ProcessBuilder(commands);
         pb.inheritIO();
         Process standaloneProcess = pb.start();
 
         return new ProcessFuture(standaloneProcess);
-
-        /*
-         * int rc = standaloneProcess.waitFor();
-         * trace.info("Standalone application completed: return code=" + rc); if
-         * (rc != 0) throw new Exception("Standalone application failed!");
-         */
     }
 
     private static class ProcessFuture implements Future<Integer> {
@@ -119,6 +126,7 @@ public class InvokeStandalone {
             if (isDone)
                 return rc;
             rc = process.waitFor();
+            trace.info("Standalone application completed: return code=" + rc);
             notifyAll();
             return rc;
         }

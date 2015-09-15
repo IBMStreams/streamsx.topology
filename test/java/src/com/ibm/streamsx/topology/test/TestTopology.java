@@ -13,11 +13,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
 
 import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
@@ -85,6 +87,12 @@ public class TestTopology {
                 vmArgs.add(arg);
             }
         }
+        // Look for a different compiler
+        String differentCompile = System.getProperty(ContextProperties.COMPILE_INSTALL_DIR);
+        if (differentCompile != null) {
+            config.put(ContextProperties.COMPILE_INSTALL_DIR, differentCompile);
+            Topology.STREAMS_LOGGER.setLevel(Level.INFO);
+        }
     }
     
     
@@ -133,7 +141,7 @@ public class TestTopology {
      *   
      * In a distributed environment the 
      */
-    public boolean complete(Tester tester, Condition endCondition, long timeout, TimeUnit unit) throws Exception {
+    public boolean complete(Tester tester, Condition<?> endCondition, long timeout, TimeUnit unit) throws Exception {
         
         return tester.complete(getTesterContext(), getConfig(), endCondition, timeout, unit);
     }

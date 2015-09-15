@@ -13,7 +13,7 @@ import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.spl.SPLStream;
 
 /**
@@ -28,7 +28,7 @@ import com.ibm.streamsx.topology.spl.SPLStream;
  * produce the {@link #tupleCount(TStream, long) correct number of tuples}.</LI>
  * <LI>{@link Tester#splHandler(SPLStream, StreamHandler)  StreamHandler} - Provides the ability
  * to add an arbitrary handler to a stream, that will be called for every tuple on the stream. A number of implementations of
- * {@code StreamHandler} are in the {@code com.ibm.streams.flow.handlers} provided by the IBM InfoSphere Streams Java Operator API.</LI>
+ * {@code StreamHandler} are in the {@code com.ibm.streams.flow.handlers} provided by the IBM Streams Java Operator API.</LI>
  * </UL>
  * The stream being verified must not be connected, but may have multiple conditions or handlers added.
  * <BR>
@@ -163,7 +163,7 @@ public interface Tester {
      *  and
      * {@link com.ibm.streamsx.topology.context.StreamsContext.Type#STANDALONE_TESTER}.
      * <P>
-     * A topology completes when the IBM InfoSphere Streams runtime determines
+     * A topology completes when the IBM Streams runtime determines
      * that there is no more processing to be performed, which is typically once
      * all sources have indicated there is no more data to be processed,
      * and all of the source tuples have been fully processed by the topology.

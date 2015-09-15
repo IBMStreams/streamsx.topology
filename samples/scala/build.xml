@@ -1,0 +1,66 @@
+<project name="streamsx.topology.java" default="all" >
+    <description>
+        Build the Streams Scala samples.
+    </description>
+
+  <import file="../../common-build.xml"/>
+
+  <property name="scala.home" value="${env.SCALA_HOME}"/>
+  <property name="scala-library.jar"
+            value="${scala.home}/lib/scala-library.jar"/>
+  <property name="src" location="src"/>
+  <property name="classes" location="../java/functional/classes"/>
+
+  <path id="compile.classpath">
+    <path refid="streams.classpath"/>
+    <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar"/>
+    <pathelement location="${scala-library.jar}"   />
+  </path>
+
+  <path id="run.scala.classpath">
+    <pathelement location="../java/functional/functionalsamples.jar" />
+    <path refid="streams.classpath"/>
+    <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar"/>
+  </path>
+  <path id="run.java.classpath">
+    <path refid="run.scala.classpath"/>
+    <pathelement location="${scala-library.jar}"   />
+  </path>
+
+ <taskdef resource="scala/tools/ant/antlib.xml">
+   <classpath>
+     <pathelement location="${scala.home}/lib/scala-compiler.jar"   />
+     <pathelement location="${scala.home}/lib/scala-reflect.jar"   />
+     <pathelement location="${scala-library.jar}"   />
+   </classpath>
+ </taskdef>
+
+  <target name="all" depends="compile"/> 
+
+  <target name="init" if="env.SCALA_HOME">
+     <echo message="Scala:${scala.home}"/>
+  </target>
+
+  <target name="compile" depends="init" if="env.SCALA_HOME">
+    <scalac srcdir="${src}" target="jvm-1.7" addparams="-usemanifestcp"
+                destdir="${classes}"
+                classpathref="compile.classpath">
+    </scalac>
+  </target>
+
+  <target name="run.fizzbuzz">
+     <echo message="Runs games.FizzBuzzScala using Scala (SCALA_HOME/bin/scala)"/>
+     <echo message="SCALA_HOME:${scala.home}"/>
+     <exec executable="${scala.home}/bin/scala">
+        <arg value="-classpath"/>
+        <arg value="${toString:run.scala.classpath}"/>
+        <arg value="games.FizzBuzzScala"/>
+     </exec>
+  </target>
+
+  <target name="run.java.fizzbuzz">
+     <echo message="Runs games.FizzBuzzScala using Java (JAVA_HOME/bin/java)"/>
+     <java classname="games.FizzBuzzScala" classpathref="run.java.classpath" fork="yes"/>
+  </target>
+
+</project>

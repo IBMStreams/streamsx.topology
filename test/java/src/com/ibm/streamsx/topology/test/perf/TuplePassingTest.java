@@ -14,9 +14,9 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Consumer;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.test.TestTopology;
 
 public class TuplePassingTest extends TestTopology {
@@ -54,7 +54,7 @@ public class TuplePassingTest extends TestTopology {
 
         System.err.println("String-Standalone");
         addTimer(stringWorkload(stringSource(t, 1000000), 5));
-        StreamsContextFactory.getStreamsContext(Type.STANDALONE).submit(t);
+        StreamsContextFactory.getStreamsContext(Type.STANDALONE).submit(t).get();
     }
 
     @Test
@@ -84,7 +84,7 @@ public class TuplePassingTest extends TestTopology {
                 return "Better three hours too soon than a minute too late."
                         + c;
             }
-        }, n, String.class);
+        }, n);
     }
 
     public static TStream<String> emptyFilter(TStream<String> input) {
@@ -103,6 +103,7 @@ public class TuplePassingTest extends TestTopology {
         });
     }
 
+    @SuppressWarnings("serial")
     public static <T> void addTimer(TStream<T> input) {
 
         input.sink(new Consumer<T>() {
@@ -144,7 +145,7 @@ public class TuplePassingTest extends TestTopology {
                 public String apply(String v1) {
                     return v1.replace('e', 'E');
                 }
-            }, String.class);
+            });
 
             input = input.transform(new Function<String, String>() {
 
@@ -152,7 +153,7 @@ public class TuplePassingTest extends TestTopology {
                 public String apply(String v1) {
                     return v1.replace('E', 'e');
                 }
-            }, String.class);
+            });
         }
         return input;
 
@@ -173,7 +174,7 @@ public class TuplePassingTest extends TestTopology {
 
                 return tv;
             }
-        }, n, TestValue.class);
+        }, n);
     }
 
     @SuppressWarnings("serial")
@@ -200,7 +201,7 @@ public class TuplePassingTest extends TestTopology {
                     v2.l += 9835435l;
                     return v2;
                 }
-            }, TestValue.class);
+            });
 
             input = input.transform(new Function<TestValue, TestValue>() {
 
@@ -211,7 +212,7 @@ public class TuplePassingTest extends TestTopology {
                     v2.l -= 9835435l;
                     return v2;
                 }
-            }, TestValue.class);
+            });
 
         }
         return input;

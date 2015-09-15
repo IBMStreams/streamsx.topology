@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 
 /**
@@ -52,7 +53,7 @@ public class Trender {
      * 
      * @return A ListContainer containing the top ten most frequent hashtags.
      */
-    public ListContainer getTopTen() {
+    public List<HashTagCount> getTopTen() {
         ArrayList<HashTagCount> topTen = new ArrayList<HashTagCount>();
 
         // String[] topTen= new String[10];
@@ -83,7 +84,10 @@ public class Trender {
             topTen.add(idx, htc);
             minValue = topTen.get(0).getCount();
         }
-        return new ListContainer(topTen);
+        // Possible for the list to have 11 items
+        if (topTen.size() > 10)
+            topTen.remove(0);
+        return topTen;
     }
 
 }

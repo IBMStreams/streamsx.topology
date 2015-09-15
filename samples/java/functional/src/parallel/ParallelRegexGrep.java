@@ -15,8 +15,8 @@ import java.util.regex.Pattern;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
 
 public class ParallelRegexGrep {
     static final Logger trace = Logger.getLogger("samples");
@@ -50,7 +50,7 @@ public class ParallelRegexGrep {
                         return v1;
                     }
 
-                }, String.class);
+                });
 
         // Parallelize the Stream.
         // Since there are 5 channels of the stream, the approximate number of
@@ -83,9 +83,9 @@ public class ParallelRegexGrep {
                     }
                 });
 
-        // Join the results of each parallel filter into one stream, effectively
+        // Join the results of each parallel filter into one stream,
         // merging the parallel streams back into one stream.
-        TStream<String> filtered_condensed = filtered_parallel.unparallel();
+        TStream<String> filtered_condensed = filtered_parallel.endParallel();
 
         // Print the combined results
         filtered_condensed.print();

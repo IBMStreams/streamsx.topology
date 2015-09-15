@@ -5,9 +5,13 @@
 package com.ibm.streamsx.topology.test.spl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -18,12 +22,14 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.Type;
 import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.TStream.Routing;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.function7.BiFunction;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
+import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -72,6 +78,7 @@ public class SPLStreamsTest extends TestTopology {
     }
 
 
+    @SuppressWarnings("serial")
     public static class IntAndString implements Serializable {
         public int n;
         public String s;
@@ -87,9 +94,40 @@ public class SPLStreamsTest extends TestTopology {
         final Topology topology = new Topology("ConvertSPLStream");
         SPLStream splStream = createSPLFlowFromStream(topology, false);
         TStream<String> tupleString = splStream.toTupleString();
+        assertEquals(String.class, tupleString.getTupleClass());
+        assertEquals(String.class, tupleString.getTupleType());
         
         completeAndValidate(tupleString, 10,  "{ii=418,ss=\"325\"}",
                 "{ii=550,ss=\"457\"}", "{ii=9418,ss=\"9325\"}");
+    }
+    
+
+    @Test
+    public void testParameterizedConversionToSPL() throws Exception {
+        final Topology topology = new Topology();
+        List<List<String>> data = new ArrayList<>();
+        data.add(Collections.singletonList("fix"));
+        data.add(Arrays.asList(new String[] {"bug", "164"}));
+        TStream<List<String>> s = topology.constants(data);
+        
+        TStream<String> tupleString = convertListToSPL(s).toTupleString();
+        
+        completeAndValidate(tupleString, 10,  "{lrs=[\"fix\"]}",
+                "{lrs=[\"bug\",\"164\"]}");
+    }
+    
+    @SuppressWarnings("serial")
+    private static SPLStream convertListToSPL(TStream<List<String>> s) {
+        
+        return SPLStreams.convertStream(s, new BiFunction<List<String>, OutputTuple, OutputTuple>() {
+
+            @Override
+            public OutputTuple apply(List<String> v1, OutputTuple v2) {
+                v2.setList("lrs", v1);
+                return v2;
+            }
+        }, Type.Factory.getStreamSchema("tuple<list<ustring> lrs>"));
+
     }
 
     @Test
@@ -132,6 +170,7 @@ public class SPLStreamsTest extends TestTopology {
         completeAndValidate(strings, 10,  "34535", "43675232", "654932", "82343");
     }
 
+    @SuppressWarnings("serial")
     private static TStream<IntAndString> createStreamFromSPLStream(
             SPLStream stream) {
         return stream.convert(new Function<Tuple, IntAndString>() {
@@ -143,9 +182,10 @@ public class SPLStreamsTest extends TestTopology {
                 ias.s = v1.getString("ss");
                 return ias;
             }
-        }, IntAndString.class);
+        });
     }
 
+    @SuppressWarnings("serial")
     private static SPLStream createSPLFlowFromStream(final Topology topology,
             final boolean skipSecond) {
         TStream<String> source = topology.strings("325", "457", "9325");
@@ -160,7 +200,7 @@ public class SPLStreamsTest extends TestTopology {
                         is.n = Integer.valueOf(v1) + 93;
                         return is;
                     }
-                }, IntAndString.class);
+                });
 
         StreamSchema schema = Type.Factory
                 .getStreamSchema("tuple<int32 ii, rstring ss>");
@@ -178,7 +218,75 @@ public class SPLStreamsTest extends TestTopology {
                     }
                 }, schema);
 
-        assertEquals(schema, splStream.getSchema());
+        assertSPLStream(splStream, schema);
         return splStream;
+    }
+    
+    @Test
+    public void testMaintainSPLStream() {
+        Topology t = new Topology();
+        
+        SPLStream splStreamA = testTupleStream(t);
+        assertSPLStream(splStreamA, TEST_SCHEMA);
+        
+        
+        SPLStream splStreamB = splStreamA.filter(new AllowAll<Tuple>());
+        assertSPLStream(splStreamB, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamA = splStreamB.sample(1.0);
+        assertSPLStream(splStreamA, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamB = splStreamA.throttle(1, TimeUnit.MICROSECONDS);
+        assertSPLStream(splStreamB, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamA = splStreamB.lowLatency();
+        assertSPLStream(splStreamA, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamA = splStreamA.filter(new AllowAll<Tuple>());
+        
+        splStreamB = splStreamA.endLowLatency();
+        assertSPLStream(splStreamB, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamA = splStreamB.parallel(3);
+        assertSPLStream(splStreamA, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamA = splStreamA.filter(new AllowAll<Tuple>());
+        
+        splStreamB = splStreamA.endParallel();
+        assertSPLStream(splStreamB, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamB = splStreamB.filter(new AllowAll<Tuple>());
+        
+        splStreamA = splStreamB.parallel(2, Routing.ROUND_ROBIN);
+        assertSPLStream(splStreamA, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamA = splStreamA.filter(new AllowAll<Tuple>());
+        
+        splStreamB = splStreamA.endParallel();
+        assertSPLStream(splStreamB, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+        
+        splStreamB = splStreamB.filter(new AllowAll<Tuple>());
+
+        splStreamA = splStreamB.isolate();
+        assertSPLStream(splStreamA, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
+
+        
+
+    }
+    
+    static void assertSPLStream(SPLStream splStream, StreamSchema schema) {
+        assertEquals(schema, splStream.getSchema());
+        assertEquals(Tuple.class, splStream.getTupleClass());
+        assertEquals(Tuple.class, splStream.getTupleType());
     }
 }

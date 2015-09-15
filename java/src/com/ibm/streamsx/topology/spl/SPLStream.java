@@ -4,11 +4,15 @@
  */
 package com.ibm.streamsx.topology.spl;
 
+import java.util.concurrent.TimeUnit;
+
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.UnaryOperator;
 
 /**
  * A {@code SPLStream} is a declaration of a continuous sequence of tuples with
@@ -51,18 +55,16 @@ public interface SPLStream extends TStream<Tuple>, SPLInput {
 
     /**
      * Convert SPL tuples into Java objects. This call is equivalent to
-     * {@code transform(converter, tupleTypeClass)}.
+     * {@code transform(converter)}.
      * 
      * @param convertor
      *            Function to convert
-     * @param tupleTypeClass
-     *            Type {@code T} of the returned stream.
      * @return Stream containing tuples of type {@code T} transformed from this
      *         stream's SPL tuples.
      * 
-     * @see TStream#transform(Function, Class)
+     * @see TStream#transform(Function)
      */
-    <T> TStream<T> convert(Function<Tuple, T> convertor, Class<T> tupleTypeClass);
+    <T> TStream<T> convert(Function<Tuple, T> convertor);
 
     /**
      * Create a stream that converts each input tuple on this stream to its SPL
@@ -84,4 +86,65 @@ public interface SPLStream extends TStream<Tuple>, SPLInput {
      * @see SPLStreams#stringToSPLStream(TStream)
      */
     TStream<String> toStringStream();
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream endLowLatency();
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream filter(Predicate<Tuple> filter);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream lowLatency();
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream isolate();
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream modify(UnaryOperator<Tuple> modifier);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream sample(double fraction);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream throttle(long delay, TimeUnit unit);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream parallel(int width);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream parallel(int width,
+            com.ibm.streamsx.topology.TStream.Routing routing);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream endParallel();
 }

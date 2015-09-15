@@ -20,6 +20,8 @@ import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
+import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.tuple.JSONAble;
 
 // Union(A,B)
 //   OpC(A,B)
@@ -56,7 +58,8 @@ public class BOperatorInvocation extends BOperator {
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put("runtime", "spl.java");
+            json().put(JOperator.MODEL, JOperator.MODEL_SPL);
+            json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_JAVA);
             json().put("kind", getKind(opClass));
             json().put("kind.javaclass", opClass.getCanonicalName());
         }
@@ -77,7 +80,8 @@ public class BOperatorInvocation extends BOperator {
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put("runtime", "spl.java");
+            json().put(JOperator.MODEL, JOperator.MODEL_SPL);
+            json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_JAVA);
             json().put("kind", getKind(opClass));
             json().put("kind.javaclass", opClass.getCanonicalName());
         }
@@ -113,6 +117,52 @@ public class BOperatorInvocation extends BOperator {
         String jsonType = null;
 
         // Set the value in the OperatorInvocation.
+        
+        if (value instanceof JSONAble) {
+            value = ((JSONAble)value).toJSON();
+        }
+        if (value instanceof JSONObject) {
+            JSONObject jo = ((JSONObject) value);
+            if (jo.get("type") == null || jo.get("value") == null)
+                throw new IllegalArgumentException("Illegal JSONObject " + jo);
+            String type = (String) jo.get("type");
+            Object val = (JSONObject) jo.get("value");
+            if ("__spl_value".equals(type)) {
+                /*
+                 * The Value object is
+                 * <pre><code>
+                 * object {
+                 *   type : "__spl_value"
+                 *   value : object {
+                 *     value : any. non-null. type appropriate for metaType
+                 *     metaType : com.ibm.streams.operator.Type.MetaType.name() string
+                 *   }
+                 * }
+                 * </code></pre>
+                 */
+                // unwrap and fall through to handling for the wrapped value
+                JSONObject splValue = (JSONObject) val;
+                value = splValue.get("value");
+                jsonValue = value;
+                String metaType = (String) splValue.get("metaType");
+                if ("USTRING".equals(metaType)
+                        || "UINT8".equals(metaType)
+                        || "UINT16".equals(metaType)
+                        || "UINT32".equals(metaType)
+                        || "UINT64".equals(metaType)) {
+                    jsonType = metaType;
+                }
+                // fall through to handle jsonValue as usual 
+            }
+            else {
+                // other kinds of JSONObject handled below
+            }
+        }
+        else if (value instanceof Supplier<?>) {
+            value = ((Supplier<?>) value).get();
+            jsonValue = value;
+        }
+                
         if (value instanceof String) {
             op.setStringParameter(name, (String) value);
         } else if (value instanceof Byte) {
@@ -145,12 +195,16 @@ public class BOperatorInvocation extends BOperator {
             for (String vs : sa)
                 a.add(vs);
             jsonValue = a;
+            op.setStringParameter(name, sa);
         } else if (value instanceof Attribute) {
             Attribute attr = (Attribute) value;
             jsonValue = attr.getName();
             jsonType = "attribute";
             op.setAttributeParameter(name, attr.getName());
-            
+        } else if (value instanceof JSONObject) {
+            JSONObject jo = (JSONObject) value;
+            jsonType = (String) jo.get("type");
+            jsonValue = (JSONObject) jo.get("value");
         } else {
             throw new IllegalArgumentException("Type for parameter " + name + " is not supported:" +  value.getClass());
         }

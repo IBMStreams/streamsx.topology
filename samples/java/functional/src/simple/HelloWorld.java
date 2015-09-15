@@ -12,34 +12,32 @@ import com.ibm.streamsx.topology.context.StreamsContextFactory;
  * Sample Hello World topology application. This Java application builds a
  * simple topology that prints Hello World to standard output. <BR>
  * The application implements the typical pattern of code that declares a
- * topology followed by submission of the topology to a Streams context (@code
- * com.ibm.streamsx.topology.context.StreamsContext}.
+ * topology followed by submission of the topology to a Streams context
+ * {@code com.ibm.streamsx.topology.context.StreamsContext}.
  * <BR>
  * This demonstrates the mechanics of declaring a topology and executing it.
  * <P>
- * If no arguments are provided then the topology is executed in embedded mode,
- * within this JVM.
- * <BR>
- * This may be executed as (from the {@code samples/java/functional directory} )
- * as:
+ * This may be executed from the {@code samples/java/functional} directory as:
  * <UL>
  * <LI>{@code ant run.helloworld} - Using Apache Ant, this will run in embedded
  * mode.</LI>
  * <LI>
- * {@code java -jar funcsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.HelloWorld}
- * - Run directly from the command line in embedded mode.
- * <LI>
- * {@code java -jar funcsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.HelloWorld}
- * <i>CONTEXT_TYPE</i> - Run directly from the command line with a specific
- * {@code StreamsContext} where <i>CONTEXT_TYPE</i> is one of:
+ * {@code java -jar funcsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar
+ *  simple.HelloWorld [CONTEXT_TYPE] 
+ * } - Run directly from the command line.
+ * </LI>
+ * If no arguments are provided then the topology is executed in embedded mode,
+ * within this JVM.
+ * <BR>
+ * <i>CONTEXT_TYPE</i> is one of:
  * <UL>
- * <LI>{@code DISTRIBUTED} - Run as an IBM InfoSphere Streams distributed
+ * <LI>{@code DISTRIBUTED} - Run as an IBM Streams distributed
  * application.</LI>
- * <LI>{@code STANDALONE} - Run as an IBM InfoSphere Streams standalone
+ * <LI>{@code STANDALONE} - Run as an IBM Streams standalone
  * application.</LI>
  * <LI>{@code EMBEDDED} - Run embedded within this JVM.</LI>
- * <LI>{@code BUNDLE} - Create an IBM InfoSphere Streams application bundle.</LI>
- * <LI>{@code TOOLKIT} - Create an IBM InfoSphere Streams application toolkit.</LI>
+ * <LI>{@code BUNDLE} - Create an IBM Streams application bundle.</LI>
+ * <LI>{@code TOOLKIT} - Create an IBM Streams application toolkit.</LI>
  * </UL>
  * </LI>
  * <LI>

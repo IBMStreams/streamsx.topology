@@ -4,12 +4,18 @@
  */
 package vwap;
 
+import java.util.Map;
+
+import simple.Util;
+
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Type;
+import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.spl.FileSPLStreams;
 import com.ibm.streamsx.topology.spl.FileSPLStreams.Compression;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -32,12 +38,15 @@ public class Vwap {
      * @param args
      */
     public static void main(String[] args) throws Exception {
+        String type = args[0];
+        Map<String,Object> configMap = Util.createConfig(args);
 
         TStream<Bargain> bargains = createVwapTopology();
 
         bargains.print();
 
-        StreamsContextFactory.getStreamsContext(args[0]).submit(bargains.topology()).get();
+        StreamsContext<?> sc = StreamsContextFactory.getStreamsContext(type);
+        sc.submit(bargains.topology(), configMap).get();
     }
     
     /**
@@ -53,10 +62,10 @@ public class Vwap {
         SPLStream tradeQuotes = FileSPLStreams.csvCompressedReader(
                 vwapDataFileName, TQRecT, Compression.gzip);
 
-        // Convert the SPLStreams into Stream<T> instances,
+        // Convert the SPLStreams into TKeyedStream<T> instances,
         // unpacking the SPL Tuple into Quote and Trade objects
-        TStream<Trade> trades = Trade.getTrades(tradeQuotes);
-        TStream<Quote> quotes = Quote.getQuotes(tradeQuotes);
+        TKeyedStream<Trade,String> trades = Trade.getTrades(tradeQuotes);
+        TKeyedStream<Quote,String> quotes = Quote.getQuotes(tradeQuotes);
 
         TStream<Bargain> bargains = VwapProcessing.bargains(trades, quotes);
         

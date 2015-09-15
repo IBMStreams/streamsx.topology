@@ -28,13 +28,13 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 public abstract class SlidingSet<I, O> extends
         StatefulWindowListener<LinkedList<I>, Tuple> {
 
-    private final FunctionWindow<?> op;
+    private final FunctionWindow op;
     private final SPLMapping<I> inputMapping;
 
     protected final SPLMapping<O> outputMapping;
     protected final StreamingOutput<?> output;
 
-    protected SlidingSet(FunctionWindow<?> op, StreamWindow<Tuple> window)
+    protected SlidingSet(FunctionWindow op, StreamWindow<Tuple> window)
             throws ClassNotFoundException {
         super(window);
         this.op = op;
@@ -60,7 +60,7 @@ public abstract class SlidingSet<I, O> extends
         case EVICTION:
             // we only support count and time based eviction, which
             // means any eviction is always the oldest N tuples.
-            for (Tuple splTuple : event.getTuples()) {
+            for (@SuppressWarnings("unused") Tuple splTuple : event.getTuples()) {
                 tuples.removeFirst();
             }
             break;

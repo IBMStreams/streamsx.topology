@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.test.streams;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -17,7 +18,7 @@ import com.ibm.json.java.JSON;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
 import com.ibm.streamsx.topology.streams.StringStreams;
@@ -133,5 +134,17 @@ public class BeaconTest extends TestTopology {
         assertTrue(contents.toString(), contents.valid());
         
         
+    }
+    
+    @Test
+    public void testBeaconTypes() {
+        Topology t = new Topology();
+        assertEquals(BeaconTuple.class, BeaconStreams.beacon(t).getTupleClass());
+        assertEquals(BeaconTuple.class, BeaconStreams.beacon(t, 77).getTupleClass());
+        
+        assertEquals(Long.class, BeaconStreams.longBeacon(t).getTupleClass());
+        assertEquals(Long.class, BeaconStreams.longBeacon(t, 23).getTupleClass());
+        
+        assertEquals(Long.class, BeaconStreams.single(t).getTupleClass());
     }
 }

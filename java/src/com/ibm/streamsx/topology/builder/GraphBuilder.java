@@ -12,11 +12,15 @@ import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
+import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
+import com.ibm.streamsx.topology.tuple.JSONAble;
 
 /**
  * Low-level graph builder. GraphBuilder provides a layer on top of
@@ -39,8 +43,11 @@ public class GraphBuilder extends BJSONObject {
 
     private final List<BOperator> ops = new ArrayList<>();
     
-    private final JSONObject config = new JSONObject();
+    private final JSONObject config = new OrderedJSONObject();
 
+    private final JSONObject params = new OrderedJSONObject();
+    private final JSONObject spParams = new JSONObject();
+    
     public GraphBuilder(String namespace, String name) {
         super();
 
@@ -48,6 +55,7 @@ public class GraphBuilder extends BJSONObject {
         json().put("name", name);
         json().put("public", true);
         json().put("config", config);
+        json().put("parameters", params);
     }
 
    public BOperatorInvocation addOperator(Class<? extends Operator> opClass,
@@ -83,13 +91,22 @@ public class GraphBuilder extends BJSONObject {
        }
        return name;
    }
-
-    public static String UNION = "$Union$";
-    public static String PARALLEL = "$Parallel$";
-    public static String UNPARALLEL = "$Unparallel$";
+    
+    public BOutput lowLatency(BOutput parent){
+        BOutput lowLatencyOutput = addPassThroughMarker(parent, BVirtualMarker.LOW_LATENCY, true);
+        return lowLatencyOutput;
+    }
+    
+    public BOutput endLowLatency(BOutput parent){
+        return addPassThroughMarker(parent, BVirtualMarker.END_LOW_LATENCY, false);
+    }
+    
+    public BOutput isolate(BOutput parent){
+        return addPassThroughMarker(parent, BVirtualMarker.ISOLATE, false);
+    }
 
     public BOutput addUnion(Set<BOutput> outputs) {
-        BOperator op = addVirtualMarkerOperator(UNION);
+        BOperator op = addVirtualMarkerOperator(BVirtualMarker.UNION);
         return new BUnionOutput(op, outputs);
     }
 
@@ -97,9 +114,12 @@ public class GraphBuilder extends BJSONObject {
      * Add a marker operator, that is actually a PassThrough in OperatorGraph,
      * so that we can run this graph locally with a single thread.
      */
-    public BOutput parallel(BOutput parallelize, int width) {
-    	BOutput parallelOutput = addPassThroughMarker(parallelize, PARALLEL, true);
-    	parallelOutput.json().put("width", width);
+    public BOutput parallel(BOutput parallelize, Supplier<Integer> width) {
+        BOutput parallelOutput = addPassThroughMarker(parallelize, BVirtualMarker.PARALLEL, true);
+        if (width.get() != null)
+            parallelOutput.json().put("width", width.get());
+        else
+            parallelOutput.json().put("width", ((JSONAble) width).toJSON());
         return parallelOutput;
     }
 
@@ -108,18 +128,18 @@ public class GraphBuilder extends BJSONObject {
      * so that we can run this graph locally with a single thread.
      */
     public BOutput unparallel(BOutput parallelize) {
-        return addPassThroughMarker(parallelize, UNPARALLEL, false);
+        return addPassThroughMarker(parallelize, BVirtualMarker.END_PARALLEL, false);
     }
 
-    public BOutput addPassThroughMarker(BOutput output, String kind,
+    public BOutput addPassThroughMarker(BOutput output, BVirtualMarker virtualMarker,
             boolean createRegion) {
         BOperatorInvocation op = addOperator(PassThrough.class, null);
         op.json().put("marker", true);
-        op.json().put("kind", kind);
+        op.json().put("kind", virtualMarker.kind());
 
         if (createRegion) {
             final String regionName = op.op().getName();
-            regionMarkers.put(regionName, kind);
+            regionMarkers.put(regionName, virtualMarker.kind());
             op.addRegion(regionName);
         }
 
@@ -129,8 +149,16 @@ public class GraphBuilder extends BJSONObject {
         // Create the output port.
         return op.addOutput(input.port().getStreamSchema());
     }
+    
+    public BOutput addPassThroughOperator(BOutput output) {
+        BOperatorInvocation op = addOperator(PassThrough.class, null);
+        // Create the input port that consumes the output
+        BInputPort input = op.inputFrom(output, null);
+        // Create the output port.
+        return op.addOutput(input.port().getStreamSchema());
+    }
 
-    public BOperator addVirtualMarkerOperator(String kind) {
+    public BOperator addVirtualMarkerOperator(BVirtualMarker kind) {
         final BMarkerOperator op = new BMarkerOperator(this, kind);
         ops.add(op);
         return op;
@@ -140,7 +168,10 @@ public class GraphBuilder extends BJSONObject {
             Map<String, ? extends Object> params) {
         final BOperatorInvocation op = new BOperatorInvocation(this, params);
         op.json().put("kind", kind);
-        op.json().put("runtime", "spl.cpp");
+
+        json().put(JOperator.MODEL, JOperator.MODEL_SPL);
+        json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_SPL);
+
         ops.add(op);
         return op;
     }
@@ -149,7 +180,10 @@ public class GraphBuilder extends BJSONObject {
         name = userSuppliedName(name);
         final BOperatorInvocation op = new BOperatorInvocation(this, name, params);
         op.json().put("kind", kind);
-        op.json().put("runtime", "spl.cpp");
+        
+        json().put(JOperator.MODEL, JOperator.MODEL_SPL);
+        json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_SPL);
+        
         ops.add(op);
         return op;
     }
@@ -160,18 +194,20 @@ public class GraphBuilder extends BJSONObject {
      */
     public void checkSupportsEmbeddedMode() throws IllegalStateException {
         for (BOperator op : ops) {
+            if (BVirtualMarker.isVirtualMarker((String) op.json().get("kind")))
+                continue;
+            
             // note: runtime==null for markers
-            String runtime = (String) op.json().get("runtime");
-            if (!"spl.java".equals(runtime)) {
-                Boolean marker = (Boolean) op.json().get("marker");
-                if (marker==null || !marker) {
+            String runtime = (String) op.json().get(JOperator.MODEL);
+            String language = (String) op.json().get(JOperator.LANGUAGE);
+            
+            if (!JOperator.MODEL_SPL.equals(runtime) || !JOperator.LANGUAGE_JAVA.equals(language)) {
                     String namespace = (String) json().get("namespace");
                     String name = (String) json().get("name");
                     throw new IllegalStateException(
                             "Topology '"+namespace+"."+name+"'"
                             + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
-                            + " the topology contains non-Java operators.");
-                }
+                            + " the topology contains non-Java operator:" + op.json().get("kind"));
             }
         }
     }
@@ -209,4 +245,29 @@ public class GraphBuilder extends BJSONObject {
     public List<BOperator> getOps() {
         return ops;
     }
+
+    /**
+     * Create a submission parameter.
+     * <p>  
+     * The SubmissionParameter parameter value json is: 
+     * <pre><code>
+     * object {
+     *   type : "submissionParameter"
+     *   value : object {
+     *     name : string. submission parameter name
+     *     metaType : com.ibm.streams.operator.Type.MetaType.name() string
+     *     defaultValue : any. may be null. type appropriate for metaType
+     *   }
+     * }
+     * </code></pre>
+     * @param name the submission parameter name
+     * @param jo the SubmissionParameter parameter value object
+     */
+    public void createSubmissionParameter(String name, JSONObject jo) {
+        if (spParams.containsKey(name))
+            throw new IllegalArgumentException("name is already defined");
+        spParams.put(name, jo);
+        params.put(SubmissionTimeValue.mkOpParamName(name), jo);
+    }
+
 }

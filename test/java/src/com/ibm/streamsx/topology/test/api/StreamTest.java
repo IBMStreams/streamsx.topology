@@ -6,25 +6,34 @@ package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assume;
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.function7.Function;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.context.StreamsContext.Type;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.FunctionContainer;
+import com.ibm.streamsx.topology.function.FunctionContext;
+import com.ibm.streamsx.topology.function.Initializable;
+import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.ToIntFunction;
+import com.ibm.streamsx.topology.streams.BeaconStreams;
+import com.ibm.streamsx.topology.streams.CollectionStreams;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -47,6 +56,7 @@ public class StreamTest extends TestTopology {
         TStream<String> source = topology.strings("a", "b", "c");
         assertStream(topology, source);
         assertSame(String.class, source.getTupleClass());
+        assertSame(String.class, source.getTupleType());
     }
 
     @Test
@@ -77,8 +87,8 @@ public class StreamTest extends TestTopology {
         TStream<String> source = f.strings("325", "457", "9325");
         assertStream(f, source);
 
-        TStream<Integer> i1 = source.transform(stringToInt(), Integer.class);
-        TStream<Integer> i2 = i1.transform(add17(), Integer.class);
+        TStream<Integer> i1 = source.transform(stringToInt());
+        TStream<Integer> i2 = i1.transform(add17());
         completeAndValidate(i2, 10, "342", "474", "9342");
     }
 
@@ -88,9 +98,8 @@ public class StreamTest extends TestTopology {
         TStream<String> source = f.strings("93", "68", "221");
         assertStream(f, source);
 
-        TStream<Integer> i1 = source.transform(stringToIntExcept68(),
-                Integer.class);
-        TStream<Integer> i2 = i1.transform(add17(), Integer.class);
+        TStream<Integer> i1 = source.transform(stringToIntExcept68());
+        TStream<Integer> i2 = i1.transform(add17());
         
         completeAndValidate(i2, 10, "110", "238");
     }
@@ -102,8 +111,7 @@ public class StreamTest extends TestTopology {
                 "its fleece was white as snow");
         assertStream(topology, source);
 
-        TStream<String> words = source.multiTransform(splitWords(),
-                String.class);
+        TStream<String> words = source.multiTransform(splitWords());
         
         completeAndValidate(words, 10, "mary", "had",
                 "a", "little", "lamb", "its", "fleece", "was", "white", "as",
@@ -126,6 +134,15 @@ public class StreamTest extends TestTopology {
         final Topology topology = new Topology("Union");
         TStream<String> s1 = topology.strings("A1", "B1", "C1", "D1");
         TStream<String> s2 = topology.strings("A2", "B2", "C2", "D2");
+        List<String> l3 = new ArrayList<>();
+        l3.add("A3");
+        l3.add("B3");
+        TStream<String> s3 = topology.constants(l3);
+        
+        List<String> l4 = new ArrayList<>();
+        l4.add("A4");
+        l4.add("B4");
+        TStream<String> s4 = topology.constants(l4);
 
         assertNotSame(s1, s2);
 
@@ -133,20 +150,34 @@ public class StreamTest extends TestTopology {
 
         assertNotSame(su, s1);
         assertNotSame(su, s2);
-
+        
+        // Merge with two different schema types
+        // but the primary has the correct direct type.
+        su = su.union(s3);   
+        assertEquals(String.class, su.getTupleClass());
+        assertEquals(String.class, su.getTupleType());
+        
+        // Merge with two different schema types
+        // but the primary has the generic type
+        assertNull(s4.getTupleClass());
+        su = s4.union(su);
+        assertEquals(String.class, su.getTupleClass());
+        assertEquals(String.class, su.getTupleType());
+        
         // TODO - testing doesn't work against union streams in embedded.
         su = su.filter(new AllowAll<String>());
 
         Tester tester = topology.getTester();
 
-        Condition<Long> suCount = tester.tupleCount(su, 8);
-        Condition<List<String>> suContents = tester.stringContentsUnordered(su, "A1", "B1", "C1", "D1", "A2", "B2", "C2", "D2");
+        Condition<Long> suCount = tester.tupleCount(su, 12);
+        Condition<List<String>> suContents = tester.stringContentsUnordered(su, "A1", "B1", "C1", "D1", "A2", "B2", "C2", "D2", "A3", "B3", "A4", "B4");
 
-        assertTrue(complete(tester, suCount, 10, TimeUnit.SECONDS));
+        //assertTrue(complete(tester, suCount, 10, TimeUnit.SECONDS));
+        complete(tester, suCount, 10, TimeUnit.SECONDS);
 
-
-        assertTrue("SU:" + suCount, suCount.valid());
         assertTrue("SU:" + suContents, suContents.valid());
+        assertTrue("SU:" + suCount, suCount.valid());
+
     }
 
     @Test
@@ -181,7 +212,7 @@ public class StreamTest extends TestTopology {
 
         final Topology topology = new Topology("EmbeddedParallel");
         TStream<Number> s1 = topology.numbers(1, 2, 3, 94, 5, 6).parallel(6)
-                .filter(new AllowAll<Number>()).unparallel();
+                .filter(new AllowAll<Number>()).endParallel();
 
         TStream<String> sp = StringStreams.toString(s1);
 
@@ -197,6 +228,56 @@ public class StreamTest extends TestTopology {
         assertTrue("SP:" + spCount, spCount.valid());
         assertTrue("SPContents:" + spContents, spContents.valid());
     }
+    
+    @Test
+    public void testSplit() throws Exception {
+        final Topology topology = new Topology("testSplit");
+        
+        TStream<String> s1 = topology.strings("ch0", "ch1", "ch2", "omit",
+                    "another-ch2", "another-ch1", "another-ch0", "another-omit");
+
+        List<TStream<String>> splits = s1.split(3, myStringSplitter());
+
+        assertEquals("list size", 3, splits.size());
+
+        Tester tester = topology.getTester();
+        
+        List<Condition<List<String>>> contents = new ArrayList<>();
+        for(int i = 0; i < splits.size(); i++) {
+            TStream<String> ch = splits.get(i);
+            Condition<List<String>> chContents = 
+                    tester.stringContents(ch, "ch"+i, "another-ch"+i);
+            contents.add(chContents);
+        }
+
+        TStream<String> all = splits.get(0).union(
+                new HashSet<>(splits.subList(1, splits.size())));
+        Condition<Long> uCount = tester.tupleCount(all, 6);
+
+        complete(tester, uCount, 10, TimeUnit.SECONDS);
+
+        for(int i = 0; i < splits.size(); i++) {
+            assertTrue("chContents["+i+"]:" + contents.get(i), contents.get(i).valid());
+        }
+    }
+    
+    /**
+     * Partition strings based on the last character of the string.
+     * If the last character is a digit return its value as an int, else return -1.
+     * @return
+     */
+    @SuppressWarnings("serial")
+    private static ToIntFunction<String> myStringSplitter() {
+        return new ToIntFunction<String>() {
+
+            @Override
+            public int applyAsInt(String s) {
+                char ch = s.charAt(s.length() - 1);
+                return Character.digit(ch, 10);
+            }
+        };
+    }
+    
 
     @SuppressWarnings("serial")
     static Function<String, Integer> stringToInt() {
@@ -241,5 +322,67 @@ public class StreamTest extends TestTopology {
                 return Arrays.asList(v1.split(" "));
             }
         };
+    }
+    
+    
+    @Test
+    public void testFunctionContextNonDistributed() throws Exception {
+        
+        assumeTrue(getTesterType() != Type.DISTRIBUTED_TESTER);
+        
+        Topology t = new Topology();
+        TStream<Map<String, Object>> values = BeaconStreams.single(t).transform(new ExtractFunctionContext());
+        TStream<String> strings = StringStreams.toString(CollectionStreams.flattenMap(values));
+                
+        Tester tester = t.getTester();
+        
+        Condition<Long> spCount = tester.tupleCount(strings, 7);
+        Condition<List<String>> spContents = tester.stringContents(strings, 
+                "channel=-1",
+                "domainId=" + System.getProperty("user.name"),
+                "id=0",
+                "instanceId=" + System.getProperty("user.name"),
+                "jobId=0",
+                "maxChannels=0",
+                "relaunchCount=0"
+                );
+
+        complete(tester, spCount, 60, TimeUnit.SECONDS);
+
+        // assertTrue("SU:" + suContents, suContents.valid());
+        assertTrue("SP:" + spCount, spCount.valid());
+        assertTrue("SPContents:" + spContents, spContents.valid());
+    }
+    
+    public static class ExtractFunctionContext
+         implements Function<Long,Map<String,Object>>, Initializable {
+        private static final long serialVersionUID = 1L;
+        private FunctionContext functionContext;
+        
+        @Override
+        public Map<String, Object> apply(Long v) {
+            Map<String,Object> values = new TreeMap<>();
+            
+            values.put("channel", functionContext.getChannel());
+            values.put("maxChannels", functionContext.getMaxChannels());
+            
+            FunctionContainer container = functionContext.getContainer();
+            values.put("id", container.getId());
+            values.put("jobId", container.getJobId());
+            values.put("relaunchCount", container.getRelaunchCount());
+            
+            values.put("domainId", container.getDomainId());
+            values.put("instanceId", container.getInstanceId());
+            
+            return values;
+        }
+        
+        @Override
+        public void initialize(FunctionContext functionContext)
+                throws Exception {
+            this.functionContext = functionContext;
+            
+        }
+        
     }
 }

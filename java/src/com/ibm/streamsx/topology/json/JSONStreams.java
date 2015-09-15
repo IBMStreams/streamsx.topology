@@ -11,8 +11,8 @@ import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streamsx.topology.TStream;
-import com.ibm.streamsx.topology.function7.BiFunction;
-import com.ibm.streamsx.topology.function7.Function;
+import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.tuple.JSONAble;
@@ -118,7 +118,7 @@ public class JSONStreams {
      * @return Stream that will contain the serialized JSON values.
      */
     public static TStream<String> serialize(TStream<JSONObject> stream) {
-        return stream.transform(new SerializeJSON(), String.class);
+        return stream.transform(new SerializeJSON());
     }
 
     /**
@@ -132,7 +132,7 @@ public class JSONStreams {
      * @return Stream that will contain the JSON objects.
      */
     public static TStream<JSONObject> deserialize(TStream<String> stream) {
-        return stream.transform(new DeserializeJSON(), JSONObject.class);
+        return stream.transform(new DeserializeJSON());
     }
     
     /**
@@ -142,6 +142,6 @@ public class JSONStreams {
      * @return Stream that will contain the JSON objects.
      */
     public static <T extends JSONAble> TStream<JSONObject> toJSON(TStream<T> stream) {
-        return stream.transform(new ToJSON<T>(), JSONObject.class);
+        return stream.transform(new ToJSON<T>());
     }
 }

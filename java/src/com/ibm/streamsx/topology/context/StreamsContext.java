@@ -21,7 +21,7 @@ import com.ibm.streamsx.topology.Topology;
 public interface StreamsContext<T> {
 
     /**
-     * Types of the {@link StreamsContext InfoSphere Streams context} that a
+     * Types of the {@link StreamsContext IBM Streams context} that a
      * {@link Topology} can be executed against.
      * 
      */
@@ -44,15 +44,16 @@ public interface StreamsContext<T> {
 
         /**
          * Execution of the topology produces an SPL application bundle
-         * {@code .sab} file that can be submitted to an InfoSphere Streams
+         * {@code .sab} file that can be submitted to an IBM Streams
          * instances as a distributed application. The bundle is self-contained
          * and 
          * <P>
-         * A bundle ({@code .sab} file) can be submitted to an InfoSphere Streams
+         * A bundle ({@code .sab} file) can be submitted to an IBM Streams
          * instance using:
          * <UL>
          * <LI> {@code streamtool submitjob} from the command line</LI>
-         * <LI> InfoSphere Streams JMX api </LI>
+         * <LI> IBM Streams Console</LI>
+         * <LI> IBM Streams JMX api </LI>
          * </UL>
          * <BR>
          * Using the {@link #DISTRIBUTED} context allows the topology to
@@ -71,7 +72,7 @@ public interface StreamsContext<T> {
 
         /**
          * Execution of the topology produces an SPL application bundle
-         * {@code .sab} file that can be executed as an InfoSphere Streams
+         * {@code .sab} file that can be executed as an IBM Streams
          * standalone application.
          * <P>
          * The returned type for the {@code submit} calls is
@@ -114,8 +115,6 @@ public interface StreamsContext<T> {
          * When {@code submit} returns the {@code Future} will be complete,
          * but the Streams job will still be running, as typically distributed
          * jobs are long running, consuming continuous streams of data.
-         * <BR>
-         * Calling {@code Future.cancel(true)} will cancel the job in the Streams instance.
          * </P>
          * <P>
          * This initial implementation uses {@code streamtool} to submit and cancel jobs,
@@ -153,7 +152,33 @@ public interface StreamsContext<T> {
          * streams, sub-topologies, and, SPL primitive operators and composites.
          */
         DISTRIBUTED_TESTER,
-
+        
+        
+        /**
+         * The topology is submitted to a Streams instance running
+         * in Streaming Analytics Service on
+         * <a href="http://www.ibm.com/Bluemix‎" target="_blank">IBM Bluemix</a>.
+         * <P>
+         * The returned type for the {@code submit} calls is
+         * a {@code Future&lt;BigInteger>} where the value is
+         * the job identifier.
+         * <BR>
+         * When {@code submit} returns the {@code Future} will be complete,
+         * but the Streams job will still be running, as typically distributed
+         * jobs are long running, consuming continuous streams of data.
+         * </P>
+         * <P>
+         * The name of the Streaming Analytics Service must be set as a
+         * configuration property for a submit, using {@link AnalyticsServiceProperties#SERVICE_NAME}.
+         * The definition for the service is defined one of two ways:
+         * <UL>
+         * <LI>Using the configuration property {@link AnalyticsServiceProperties#VCAP_SERVICES}.
+         * This takes precedence over the environment variable.</LI>
+         * <LI>Using the environment variable {@code VCAP_SERVICES}</LI>
+         * </UL>
+         * </P>
+         */
+        ANALYTICS_SERVICE,
         ;
     }
 
@@ -183,7 +208,7 @@ public interface StreamsContext<T> {
     Future<T> submit(Topology topology) throws Exception;
 
     /**
-     * Submit {@code topology} to this Streams context ith a specific configuration.
+     * Submit {@code topology} to this Streams context with a specific configuration.
      * @param topology Topology to be submitted.
      * @param config Configuration to be used for the submission, may be modified by this method.
      * @return Future for the submission, see the descriptions for the {@link Type}

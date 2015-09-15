@@ -3,7 +3,7 @@ package com.ibm.streamsx.topology.internal.test.handlers;
 import com.ibm.streams.flow.handlers.StreamHandler;
 import com.ibm.streams.operator.StreamingData.Punctuation;
 import com.ibm.streams.operator.Tuple;
-import com.ibm.streamsx.topology.function7.Predicate;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.tester.Condition;
 
 public class StringTupleTester implements StreamHandler<Tuple>, Condition<String>{ 

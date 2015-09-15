@@ -13,8 +13,8 @@ import com.ibm.streamsx.topology.context.StreamsContextFactory;
 * simple topology that echos its command line arguments to standard output.
 * <BR>
 * The application implements the typical pattern of code that declares a
-* topology followed by submission of the topology to a Streams context (@code
-* com.ibm.streamsx.topology.context.StreamsContext}.
+* topology followed by submission of the topology to a Streams context
+* {@code com.ibm.streamsx.topology.context.StreamsContext}.
 * <BR>
 * This demonstrates passing in values (the command line arguments) into a topology,
 * so that the same application can produce different ouput depending on the passed
@@ -23,14 +23,14 @@ import com.ibm.streamsx.topology.context.StreamsContextFactory;
 * This topology is always executed in embedded mode,
 * within this JVM.
 * <BR>
-* This may be executed as (from the {@code samples/java/functional directory} )
-* as:
+* This may be executed from the {@code samples/java/functional} directory as:
 * <UL>
 * <LI>{@code ant run.echo} - Using Apache Ant, this will run in embedded
 * mode.</LI>
 * <LI>
-* {@code java -jar funcsamples.jar:../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar simple.Echo}
-* - Run directly from the command line in embedded mode.
+* {@code java -cp functionalsamples.jar:../../../com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar:$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar
+*  simple.Echo text to echo
+* } - Run directly from the command line in embedded mode.
 * <LI>
 * An application execution within your IDE once you set the class path to include the correct jars.</LI>
 * </UL>

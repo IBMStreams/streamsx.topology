@@ -28,14 +28,20 @@
 	   srcdir="${src}" 
 	   destdir="${classes}"
 	   classpathref="compile.classpath"/>
+    <ant dir="../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
 
 
   <target name="jar" depends="compile">
   <manifestclasspath property="jar.classpath" jarfile="${jar}">
-     <classpath refid="tk.classpath" />
+     <classpath>
+       <path refid="tk.classpath"/>
+       <fileset dir="${tk.opt}/slf4j-1.7.5">
+          <include name="*.jar"/>
+       </fileset>
+     </classpath>
   </manifestclasspath>
-    <jar destfile="${jar}" basedir="${classes}">
+    <jar destfile="${jar}">
        <manifest>
           <attribute name="Class-Path" value="${jar.classpath}"/>
        </manifest>

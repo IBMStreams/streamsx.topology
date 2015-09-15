@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.context;
 
+import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
+import com.ibm.streamsx.topology.internal.context.AnalyticsServiceStreamsContext;
 import com.ibm.streamsx.topology.internal.context.BundleStreamsContext;
 import com.ibm.streamsx.topology.internal.context.DistributedStreamsContext;
 import com.ibm.streamsx.topology.internal.context.DistributedTester;
@@ -15,15 +17,15 @@ import com.ibm.streamsx.topology.internal.context.ToolkitStreamsContext;
 
 public class StreamsContextFactory {
 
-    public static StreamsContext getEmbedded() {
+    public static StreamsContext<JavaTestableGraph> getEmbedded() {
         return new EmbeddedStreamsContext();
     }
 
-    public static StreamsContext getStreamsContext(String type) {
+    public static StreamsContext<?> getStreamsContext(String type) {
         return getStreamsContext(StreamsContext.Type.valueOf(type));
     }
 
-    public static StreamsContext getStreamsContext(StreamsContext.Type type) {
+    public static StreamsContext<?> getStreamsContext(StreamsContext.Type type) {
         switch (type) {
         case EMBEDDED:
             return getEmbedded();
@@ -43,6 +45,8 @@ public class StreamsContextFactory {
             return new EmbeddedTester();
         case DISTRIBUTED_TESTER:
             return new DistributedTester();
+        case ANALYTICS_SERVICE:
+            return new AnalyticsServiceStreamsContext();
         default:
             throw new IllegalArgumentException("Unknown type:" + type);
         }
