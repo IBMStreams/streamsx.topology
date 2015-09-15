@@ -794,7 +794,7 @@ public class Topology implements TopologyElement {
      *  or has already been defined. 
      */
     public <T> Supplier<T> createSubmissionParameter(String name, Class<T> valueClass) {
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, valueClass); 
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(this, name, valueClass); 
         builder().createSubmissionParameter(name, sp.toJSON());
         return sp;
     }
@@ -812,7 +812,7 @@ public class Topology implements TopologyElement {
      * @throws IllegalArgumentException if {@code defaultValue} is null
      */
     public <T> Supplier<T> createSubmissionParameter(String name, T defaultValue) {
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, defaultValue);
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(this, name, defaultValue);
         builder().createSubmissionParameter(name, sp.toJSON());
         return sp;
     }

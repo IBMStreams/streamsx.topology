@@ -30,6 +30,7 @@ public class FunctionPeriodicSource extends PollingTupleProducer implements Func
 
     private String functionalLogic;
     private String[] jar;
+    private String[] submissionParams;
     private StreamingOutput<OutputTuple> output;
     
     private FunctionContext functionContext;
@@ -40,6 +41,7 @@ public class FunctionPeriodicSource extends PollingTupleProducer implements Func
         super.initialize(context);
 
         FunctionalHelper.addLibraries(this, getJar());
+        SubmissionParameterManager.initialize(context);
         functionContext = new FunctionOperatorContext(context);
         
         output = getOutput(0);
@@ -69,6 +71,15 @@ public class FunctionPeriodicSource extends PollingTupleProducer implements Func
     @Parameter(optional = true)
     public void setJar(String[] jar) {
         this.jar = jar;
+    }
+
+    public final String[] getSubmissionParams() {
+        return submissionParams;
+    }
+
+    @Parameter(optional = true)
+    public final void setSubmissionParams(String[] SubmissionParams) {
+        this.submissionParams = SubmissionParams;
     }
     
     @Override

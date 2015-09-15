@@ -28,6 +28,7 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
     // parameters
     private String functionalLogic;
     private String[] jar;
+    private String[] submissionParams;
     
     private FunctionContext functionContext;
     
@@ -55,11 +56,21 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
         this.jar = jar;
     }
 
+    public final String[] getSubmissionParams() {
+        return submissionParams;
+    }
+
+    @Parameter(optional = true)
+    public final void setSubmissionParams(String[] SubmissionParams) {
+        this.submissionParams = SubmissionParams;
+    }
+
     @Override
     public synchronized void initialize(OperatorContext context)
             throws Exception {
         super.initialize(context);
         FunctionalHelper.addLibraries(this, getJar());
+        SubmissionParameterManager.initialize(context);
         functionContext = new FunctionOperatorContext(context);
     }
     

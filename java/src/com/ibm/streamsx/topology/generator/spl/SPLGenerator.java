@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.ibm.streamsx.topology.internal.core.SubmissionParameter.TYPE_SUBMISSION_PARAMETER;
+
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
@@ -24,9 +26,12 @@ public class SPLGenerator {
     // The final list of composites (Main composite and parallel regions), which
     // compose the graph.
     ArrayList<JSONObject> composites = new ArrayList<JSONObject>();
+    
+    private SubmissionTimeValues stvHelper;
 
     public String generateSPL(JSONObject graph) throws IOException {
         
+        stvHelper = new SubmissionTimeValues(graph);
         new Preprocessor(graph).preprocess();
        
         // Generate parallel composites
@@ -109,12 +114,12 @@ public class SPLGenerator {
                 JSONObject param = (JSONObject) jparams.get(name);
                 Object type = param.get("type");
                 Object value = param.get("value");
-                if ("submissionParameter".equals(type)) {
+                if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
                     sb.append("  ");
                     if (isMainComposite)
-                        SubmissionTimeValue.generateMainDef((JSONObject)value, sb);
+                        SubmissionTimeValues.generateMainDef((JSONObject)value, sb);
                     else
-                        SubmissionTimeValue.generateInnerDef((JSONObject)value, sb);
+                        SubmissionTimeValues.generateInnerDef((JSONObject)value, sb);
                     sb.append(";\n");
                 }
                 else
@@ -187,15 +192,21 @@ public class SPLGenerator {
 
         if (ops == null || ops.isEmpty())
             return;
+        
+        OperatorGenerator opGenerator = new OperatorGenerator(this);
 
         for (int i = 0; i < ops.size(); i++) {
             JSONObject op = (JSONObject) ops.get(i);
 
-            String splOp = OperatorGenerator.generate(graphConfig, op);
+            String splOp = opGenerator.generate(graphConfig, op);
             sb.append(splOp);
             sb.append("\n");
 
         }
+    }
+    
+    SubmissionTimeValues stvHelper() {
+        return stvHelper;
     }
 
     /**
@@ -322,7 +333,7 @@ public class SPLGenerator {
                 // to populate the parallel composite.
                 JSONObject parallelEnd = separateIntoComposites(parallelStarts,
                         subComp, graph);
-                SubmissionTimeValue.addJsonInstanceParams(compOperator, subComp);
+                stvHelper.addJsonInstanceParams(compOperator, subComp);
 
                 // Set all relevant input port connections to the input port
                 // name of the parallel composite
@@ -391,7 +402,7 @@ public class SPLGenerator {
         compOps.addAll(visited);
 
         comp.put("operators", compOps);
-        SubmissionTimeValue.addJsonParamDefs(comp);
+        stvHelper.addJsonParamDefs(comp);
         composites.add(comp);
 
         // If one of the operators in the composite was the $unparallel operator

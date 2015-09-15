@@ -213,8 +213,14 @@ public class ParallelTest extends TestTopology {
         boolean submissionAppend = true;
         String submissionFlushName = "flush";
         Integer submissionFlush = 1;
+        String submissionThresholdName = "threshold";
+        String submissionDefaultedThresholdName = "defaultedTreshold";
+        Integer submissionThreshold = -1;
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
 
+        Supplier<Integer> threshold = topology.createSubmissionParameter(submissionThresholdName, Integer.class);
+        Supplier<Integer> defaultedThreshold = topology.createSubmissionParameter(submissionDefaultedThresholdName, submissionThreshold);
+                
         TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
         TStream<BeaconTuple> pb = fb.parallel(
                 topology.createSubmissionParameter(submissionWidthName, Integer.class));
@@ -231,6 +237,10 @@ public class ParallelTest extends TestTopology {
         splParams.put("append", topology.createSubmissionParameter(submissionAppendName, submissionAppend));
         splParams.put("flush", SPL.createSubmissionParameter(topology, submissionFlushName, SPL.createValue(0, Type.MetaType.UINT32), false));
         SPL.invokeSink("spl.adapter::FileSink", splStream, splParams);
+        
+        // use a submission parameter in "inner" functional logic
+        is = is.filter(thresholdFilter(threshold));
+        is = is.filter(thresholdFilter(defaultedThreshold));
 
         // avoid another parallel impl limitation noted in issue#173
         is = is.filter(passthru());
@@ -246,6 +256,7 @@ public class ParallelTest extends TestTopology {
         Map<String,Object> params = new HashMap<>();
         params.put(submissionWidthName, submissionWidth);
         params.put(submissionFlushName, submissionFlush);
+        params.put(submissionThresholdName, submissionThreshold);
         getConfig().put(ContextProperties.SUBMISSION_PARAMS, params);
         StreamsContextFactory
                 .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
@@ -253,6 +264,16 @@ public class ParallelTest extends TestTopology {
 
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
+    }
+
+    @SuppressWarnings("serial")
+    private static Predicate<Integer> thresholdFilter(final Supplier<Integer> threshold) {
+        return new Predicate<Integer>() {
+            @Override
+            public boolean test(Integer tuple) {
+                return tuple > threshold.get();
+            }
+        };
     }
     
     @SuppressWarnings("serial")

@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015  
+ */
 package com.ibm.streamsx.topology.internal.core;
 
 import java.util.HashMap;
@@ -6,7 +10,9 @@ import java.util.Map;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streams.operator.Type.MetaType;
+import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 /**
@@ -30,6 +36,12 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
     private final String name;
     private final MetaType metaType;
     private final T defaultValue;
+    private transient final Topology top;
+    private transient T value;
+    private transient boolean initialized;
+
+    /** operator parameter type for submission parameter value */
+    public static final String TYPE_SUBMISSION_PARAMETER = "submissionParameter";
     
     private static MetaType getMetaType(Class<?> valueClass) {
         MetaType metaType = toMetaType.get(valueClass);
@@ -40,13 +52,15 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
 
     /*
      * A submission time parameter specification without a default value.
+     * @param top the associated topology
      * @param name submission parameter name
      * @param valueClass class object for {@code T}
      * @throws IllegalArgumentException if {@code name} is null or empty
      */
-    public SubmissionParameter(String name, Class<T> valueClass) {
+    public SubmissionParameter(Topology top, String name, Class<T> valueClass) {
         if (name == null || name.trim().isEmpty())
             throw new IllegalArgumentException("name");
+        this.top = top;
         this.name = name;
         this.metaType = getMetaType(valueClass);
         this.defaultValue = null;
@@ -54,16 +68,18 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
 
     /**
      * A submission time parameter specification with a default value.
+     * @param top the associated topology
      * @param name submission parameter name
      * @param defaultValue default value if parameter isn't specified.
      * @throws IllegalArgumentException if {@code name} is null or empty
      * @throws IllegalArgumentException if {@code defaultValue} is null
      */
-    public SubmissionParameter(String name, T defaultValue) {
+    public SubmissionParameter(Topology top, String name, T defaultValue) {
         if (name == null || name.trim().isEmpty())
             throw new IllegalArgumentException("name");
         if (defaultValue == null)
             throw new IllegalArgumentException("defaultValue");
+        this.top = top;
         this.name = name;
         this.metaType = getMetaType(defaultValue.getClass());
         this.defaultValue = defaultValue;
@@ -83,6 +99,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
      *   }
      * }
      * </code></pre>
+     * @param top the associated topology
      * @param name
      * @param jvalue JSONObject
      * @param withDefault true create a submission parameter with a default value,
@@ -90,19 +107,26 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
      *        When false, the wrapped value's value is ignored.
      */
     @SuppressWarnings("unchecked")
-    public SubmissionParameter(String name, JSONObject jvalue, boolean withDefault) {
+    public SubmissionParameter(Topology top, String name, JSONObject jvalue, boolean withDefault) {
         String type = (String) jvalue.get("type");
         if (!"__spl_value".equals(type))
             throw new IllegalArgumentException("defaultValue");
         JSONObject value = (JSONObject) jvalue.get("value");
+        this.top = top;
         this.name = name;
         this.defaultValue = withDefault ? (T) value.get("value") : null;
         this.metaType =  MetaType.valueOf((String) value.get("metaType"));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T get() {
-        return null;
+        if (!initialized) {
+            if (top == null)
+                value = (T) SubmissionParameterManager.getValue(name, metaType);
+            initialized = true;
+        }
+        return value;
     }
    
     public String getName() {
@@ -132,7 +156,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
          */
         OrderedJSONObject jo = new OrderedJSONObject();
         OrderedJSONObject jv = new OrderedJSONObject();
-        jo.put("type", "submissionParameter");
+        jo.put("type", TYPE_SUBMISSION_PARAMETER);
         jo.put("value", jv);
         jv.put("name", name);
         jv.put("metaType", metaType.name());

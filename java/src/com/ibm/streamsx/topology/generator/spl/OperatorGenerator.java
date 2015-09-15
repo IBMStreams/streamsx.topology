@@ -5,9 +5,13 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
+import static com.ibm.streamsx.topology.generator.spl.SubmissionTimeValues.TYPE_SPL_SUBMISSION_PARAMS;
+import static com.ibm.streamsx.topology.internal.core.SubmissionParameter.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAMS;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
@@ -20,8 +24,14 @@ import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.ContextProperties;
 
 class OperatorGenerator {
+    
+    private final SPLGenerator splGenerator;
+    
+    OperatorGenerator(SPLGenerator splGenerator) {
+        this.splGenerator = splGenerator;
+    }
 
-    static String generate(JSONObject graphConfig, JSONObject op)
+    String generate(JSONObject graphConfig, JSONObject op)
             throws IOException {
         StringBuilder sb = new StringBuilder();
         noteAnnotations(op, sb);
@@ -86,8 +96,8 @@ class OperatorGenerator {
             else {
                 JSONObject jo = (JSONObject) width;
                 String jsonType = (String) jo.get("type");
-                if ("submissionParameter".equals(jsonType))
-                    SubmissionTimeValue.generateRef((JSONObject) jo.get("value"), sb);
+                if (TYPE_SUBMISSION_PARAMETER.equals(jsonType))
+                    sb.append(SubmissionTimeValues.generateCompParamName((JSONObject) jo.get("value")));
                 else
                     throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
             }
@@ -278,7 +288,7 @@ class OperatorGenerator {
         }
     }
 
-    static void paramClause(JSONObject graphConfig, JSONObject op,
+    void paramClause(JSONObject graphConfig, JSONObject op,
             StringBuilder sb) {
 
         JSONArray vmArgs = (JSONArray) graphConfig
@@ -292,8 +302,20 @@ class OperatorGenerator {
                 hasVMArgs = false;
         }
 
+        // determine if we need to inject a "submissionParams" param 
+        boolean addSubmissionParamsParam = false;
+        JSONObject submissionParamsParam = 
+                splGenerator.stvHelper().getSubmissionParamsParam();
+        if (submissionParamsParam != null) {
+            Map<String,JSONObject> functionalOps = 
+                    splGenerator.stvHelper().getFunctionalOps();
+            if (functionalOps.containsKey((String) op.get("name")))
+                addSubmissionParamsParam = true;
+        }
+        
         JSONObject params = (JSONObject) op.get("parameters");
-        if (!hasVMArgs && (params == null || params.isEmpty())) {
+        if (!hasVMArgs && (params == null || params.isEmpty())
+            && !addSubmissionParamsParam) {
             return;
         }
 
@@ -319,6 +341,15 @@ class OperatorGenerator {
             parameterValue(tmpVMArgParam, sb);
             sb.append(";\n");
         }
+        
+        if (addSubmissionParamsParam) {
+            sb.append("      ");
+            sb.append(NAME_SUBMISSION_PARAMS);
+            sb.append(": ");
+            
+            parameterValue(submissionParamsParam, sb);
+            sb.append(";\n");
+        }
     }
 
     // Set of "type"s where the "value" in the JSON is printed as-is.
@@ -332,8 +363,20 @@ class OperatorGenerator {
     static void parameterValue(JSONObject param, StringBuilder sb) {
         Object value = param.get("value");
         Object type = param.get("type");
-        if ("submissionParameter".equals(type)) {
-            SubmissionTimeValue.generateRef((JSONObject) value, sb);
+        if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
+            sb.append(SubmissionTimeValues.generateCompParamName((JSONObject) value));
+            return;
+        } else if (TYPE_SPL_SUBMISSION_PARAMS.equals(type)) {
+            JSONArray a = (JSONArray) value;
+            for (int i = 0; i < a.size(); i++) {
+                if (i != 0)
+                    sb.append(", ");
+                String sv = (String) a.get(i);
+                if (i%2 == 0)
+                    SPLGenerator.stringLiteral(sb, sv);
+                else
+                    sb.append(sv);
+            }
             return;
         } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
             if ("USTRING".equals(type))
