@@ -19,7 +19,7 @@ import com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterMana
 /**
  * A Submission Time Value is the SPL realization of a "Submission Parameter".
  */
-public class SubmissionTimeValues {
+public class SubmissionTimeValue {
     /** Special operator parameter type for conveying
      * submission parameter values in an SPL functional operator
      * parameter, ultimately for access by functional logic.
@@ -48,7 +48,7 @@ public class SubmissionTimeValues {
         return "__jaa_stv_" + SPLGenerator.getSPLCompatibleName(spName);
     }
 
-    SubmissionTimeValues(JSONObject graph) {
+    SubmissionTimeValue(JSONObject graph) {
         allSubmissionParams = getAllSubmissionParams(graph);
         submissionParamsParam = mkSubmissionParamsParam();
     }
@@ -226,7 +226,7 @@ public class SubmissionTimeValues {
      * @param spval JSONObject for the submission parameter's value
      * @param sb
      */
-    static void generateMainDef(JSONObject spval, StringBuilder sb) {
+    void generateMainDef(JSONObject spval, StringBuilder sb) {
         String paramName = generateCompParamName(spval);
         String spName = SPLGenerator.stringLiteral((String) spval.get("name"));
         String metaType = (String) spval.get("metaType");
@@ -255,7 +255,7 @@ public class SubmissionTimeValues {
      * @param spval JSONObject for the submission parameter's value
      * @param sb
      */
-    static void generateInnerDef(JSONObject spval, StringBuilder sb) {
+    void generateInnerDef(JSONObject spval, StringBuilder sb) {
         String paramName = generateCompParamName(spval);
         String metaType = (String) spval.get("metaType");
         String splType = MetaType.valueOf(metaType).getLanguageType();
@@ -275,7 +275,7 @@ public class SubmissionTimeValues {
      * @param spval JSONObject for the submission parameter's value
      * @return the name
      */
-    static String generateCompParamName(JSONObject spval) {
+    String generateCompParamName(JSONObject spval) {
         return "$" + mkOpParamName((String)spval.get("name"));
     }
 

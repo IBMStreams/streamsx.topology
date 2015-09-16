@@ -27,11 +27,11 @@ public class SPLGenerator {
     // compose the graph.
     ArrayList<JSONObject> composites = new ArrayList<JSONObject>();
     
-    private SubmissionTimeValues stvHelper;
+    private SubmissionTimeValue stvHelper;
 
     public String generateSPL(JSONObject graph) throws IOException {
         
-        stvHelper = new SubmissionTimeValues(graph);
+        stvHelper = new SubmissionTimeValue(graph);
         new Preprocessor(graph).preprocess();
        
         // Generate parallel composites
@@ -117,9 +117,9 @@ public class SPLGenerator {
                 if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
                     sb.append("  ");
                     if (isMainComposite)
-                        SubmissionTimeValues.generateMainDef((JSONObject)value, sb);
+                        stvHelper.generateMainDef((JSONObject)value, sb);
                     else
-                        SubmissionTimeValues.generateInnerDef((JSONObject)value, sb);
+                        stvHelper.generateInnerDef((JSONObject)value, sb);
                     sb.append(";\n");
                 }
                 else
@@ -205,7 +205,7 @@ public class SPLGenerator {
         }
     }
     
-    SubmissionTimeValues stvHelper() {
+    SubmissionTimeValue stvHelper() {
         return stvHelper;
     }
 

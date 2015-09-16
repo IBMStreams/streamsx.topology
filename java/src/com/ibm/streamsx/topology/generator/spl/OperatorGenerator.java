@@ -5,7 +5,7 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
-import static com.ibm.streamsx.topology.generator.spl.SubmissionTimeValues.TYPE_SPL_SUBMISSION_PARAMS;
+import static com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.TYPE_SPL_SUBMISSION_PARAMS;
 import static com.ibm.streamsx.topology.internal.core.SubmissionParameter.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAMS;
 
@@ -25,10 +25,10 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 
 class OperatorGenerator {
     
-    private final SPLGenerator splGenerator;
+    private final SubmissionTimeValue stvHelper;
     
     OperatorGenerator(SPLGenerator splGenerator) {
-        this.splGenerator = splGenerator;
+        this.stvHelper = splGenerator.stvHelper();
     }
 
     String generate(JSONObject graphConfig, JSONObject op)
@@ -86,7 +86,7 @@ class OperatorGenerator {
         }
     }
 
-    private static void parallelAnnotation(JSONObject op, StringBuilder sb) {
+    private void parallelAnnotation(JSONObject op, StringBuilder sb) {
         Boolean parallel = (Boolean) op.get("parallelOperator");
         if (parallel != null && parallel) {
             sb.append("@parallel(width=");
@@ -97,7 +97,7 @@ class OperatorGenerator {
                 JSONObject jo = (JSONObject) width;
                 String jsonType = (String) jo.get("type");
                 if (TYPE_SUBMISSION_PARAMETER.equals(jsonType))
-                    sb.append(SubmissionTimeValues.generateCompParamName((JSONObject) jo.get("value")));
+                    sb.append(stvHelper.generateCompParamName((JSONObject) jo.get("value")));
                 else
                     throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
             }
@@ -288,7 +288,7 @@ class OperatorGenerator {
         }
     }
 
-    void paramClause(JSONObject graphConfig, JSONObject op,
+    private void paramClause(JSONObject graphConfig, JSONObject op,
             StringBuilder sb) {
 
         JSONArray vmArgs = (JSONArray) graphConfig
@@ -304,11 +304,9 @@ class OperatorGenerator {
 
         // determine if we need to inject a "submissionParams" param 
         boolean addSubmissionParamsParam = false;
-        JSONObject submissionParamsParam = 
-                splGenerator.stvHelper().getSubmissionParamsParam();
+        JSONObject submissionParamsParam = stvHelper.getSubmissionParamsParam();
         if (submissionParamsParam != null) {
-            Map<String,JSONObject> functionalOps = 
-                    splGenerator.stvHelper().getFunctionalOps();
+            Map<String,JSONObject> functionalOps = stvHelper.getFunctionalOps();
             if (functionalOps.containsKey((String) op.get("name")))
                 addSubmissionParamsParam = true;
         }
@@ -360,11 +358,11 @@ class OperatorGenerator {
         PARAM_TYPES_TOSTRING.add("attribute");
     }
 
-    static void parameterValue(JSONObject param, StringBuilder sb) {
+    private void parameterValue(JSONObject param, StringBuilder sb) {
         Object value = param.get("value");
         Object type = param.get("type");
         if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
-            sb.append(SubmissionTimeValues.generateCompParamName((JSONObject) value));
+            sb.append(stvHelper.generateCompParamName((JSONObject) value));
             return;
         } else if (TYPE_SPL_SUBMISSION_PARAMS.equals(type)) {
             JSONArray a = (JSONArray) value;

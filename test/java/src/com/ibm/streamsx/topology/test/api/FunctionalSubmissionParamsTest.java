@@ -25,6 +25,7 @@ import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
+import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -34,17 +35,6 @@ import com.ibm.streamsx.topology.tester.Tester;
  * <p>
  * <p>
  * Really need to test in all 3 of DISTRIBUTED, STANDALONE, EMBEDDED.
- * <p>
- * Given the implementation we don't need to test every functional operation.
- *         // FunctionFilter op is based on FunctionFunctor and the
-        // latter is what knows about submission params.
-        // Hence, given the implementation, this test should cover
-        // all sub classes (modify,transform,split,sink,window,aggregate...).
-        //
-        // That really accounts for all functional
-        // operators except:  FunctionSource and FunctionPeriodicSource
-        
-
  * <p>
  * See {@code ParallelTest} for submission parameter as a width specification
  * and submission parameter use within parallel regions (composites) as
@@ -158,7 +148,16 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         Topology topology = new Topology("MiscTest");
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
-        // see classdoc regarding coverage
+        // FunctionFilter op is based on FunctionFunctor and the
+        // latter is what knows about submission params.
+        // Hence, given the implementation, this test should cover
+        // all sub classes (modify,transform,split,sink,window,aggregate...).
+        //
+        // That really accounts for all functional
+        // operators except FunctionSource and FunctionPeriodicSource and
+        // we have tests for those.
+        //
+        // But we really should verify anyway...
         
         Supplier<Integer> someInt = topology.createSubmissionParameter("someInt", Integer.class);
         Supplier<Integer> someIntD = topology.createSubmissionParameter("someIntD", 2);
@@ -190,25 +189,16 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
                 xformed, xformedD
 //                joined, joinedD
                 ));
-        TStream<Integer> union = modified.union(all);        
+        TStream<Integer> union = modified.union(all);
+        // tester sees 0 tuples when they are really there so...
+        union = union.filter(new AllowAll<Integer>());
         
         Tester tester = topology.getTester();
-        Condition<Long> expectedCount0 = tester.tupleCount(union, all.size() * 5);
-        Condition<Long> expectedCount1 = tester.tupleCount(modified, 5);
-        Condition<Long> expectedCount2 = tester.tupleCount(modifiedD, 5);
-        Condition<Long> expectedCount3 = tester.tupleCount(xformed, 5);
-        Condition<Long> expectedCount4 = tester.tupleCount(xformedD, 5);
-//        Condition<Long> expectedCount5 = tester.tupleCount(joined, 5);
-//        Condition<Long> expectedCount6 = tester.tupleCount(joinedD, 5);
+        Condition<Long> expectedCount = tester.tupleCount(union, all.size() * 5);
         
-        complete(tester, expectedCount0, 15, TimeUnit.SECONDS);
+        complete(tester, expectedCount, 15, TimeUnit.SECONDS);
 
-        assertTrue(expectedCount1.toString(), expectedCount1.valid());
-        assertTrue(expectedCount2.toString(), expectedCount2.valid());
-        assertTrue(expectedCount3.toString(), expectedCount2.valid());
-        assertTrue(expectedCount4.toString(), expectedCount2.valid());
-//        assertTrue(expectedCount5.toString(), expectedCount2.valid());
-//        assertTrue(expectedCount6.toString(), expectedCount2.valid());
+        assertTrue(expectedCount.toString(), expectedCount.valid());
     }
 
 
@@ -427,7 +417,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         };
     }
     
-    @SuppressWarnings("serial")
+    @SuppressWarnings({ "serial", "unused" })
     private static BiFunction<Integer, List<Integer>, Integer> biFunctionFn(final Supplier<Integer> someInt, final int expected) {
         return new BiFunction<Integer, List<Integer>, Integer>() {
 
