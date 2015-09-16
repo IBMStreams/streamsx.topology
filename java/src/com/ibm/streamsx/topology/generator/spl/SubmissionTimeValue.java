@@ -76,9 +76,11 @@ public class SubmissionTimeValue {
     
     /**
      * Create a {@link TYPE_SPL_SUBMISSION_PARAMS} operator parameter
-     * @return the parameter.
+     * @return the parameter. null if no submission parameters.
      */
     private JSONObject mkSubmissionParamsParam() {
+        if (allSubmissionParams.isEmpty())
+            return null;
         JSONArray ja = new JSONArray(allSubmissionParams.size() * 2);
         for (Object key : allSubmissionParams.keySet()) {
             String opParamName = (String) key;
@@ -115,6 +117,9 @@ public class SubmissionTimeValue {
         // Also, if the op has functional logic, enrich the op too...
         // and further enrich the composite.
         
+        if (allSubmissionParams.isEmpty())
+            return;
+        
         // scan for spParams
         JSONObject spParams = new JSONObject();
         boolean addedAll = false;
@@ -122,7 +127,7 @@ public class SubmissionTimeValue {
         for (Object op : operators) {
             JSONObject jop = (JSONObject)op;
             JSONObject params = (JSONObject) jop.get("parameters");
-            if (params != null && !allSubmissionParams.isEmpty()) {
+            if (params != null) {
                 boolean addAll = false;
                 for (Object pname : params.keySet()) {
                     // if functional logic add "submissionParameters" param
@@ -201,7 +206,7 @@ public class SubmissionTimeValue {
     
     /** Get the graph's submission parameters in the form of a
      * operator parameter of TYPE_SPL_SUBMISSION_PARAMS
-     * @return the op parameter
+     * @return the op parameter. null if no submission params in the topology.
      */
     JSONObject getSubmissionParamsParam() {
         return submissionParamsParam;
