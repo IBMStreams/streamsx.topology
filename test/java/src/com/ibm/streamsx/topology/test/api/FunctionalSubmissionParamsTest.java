@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.test.api;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -18,12 +19,15 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -86,10 +90,10 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         Supplier<Integer> someInt = topology.createSubmissionParameter("someInt", Integer.class);
         Supplier<Integer> someIntD = topology.createSubmissionParameter("someIntD", 20);
 
-        // note these SP Suppliers check and blow up if get the wrong value
+        // The test's functional logic asserts it receives the expected SP value.
         
-        TStream<Integer> s = topology.source(sourceSupplier(someInt, 10));
-        TStream<Integer> sD = topology.source(sourceSupplier(someIntD, 20));
+        TStream<Integer> s = topology.source(sourceIterableSupplier(someInt, 10));
+        TStream<Integer> sD = topology.source(sourceIterableSupplier(someIntD, 20));
 
         Map<String,Object> params = new HashMap<>();
         params.put("someInt", 10);
@@ -118,10 +122,16 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         Supplier<Integer> someInt = topology.createSubmissionParameter("someInt", Integer.class);
         Supplier<Integer> someIntD = topology.createSubmissionParameter("someIntD", 20);
         
-        // note these SP Suppliers check and blow up if get the wrong value
+        // The test's functional logic asserts it receives the expected SP value.
 
-        TStream<Integer> s = topology.periodicMultiSource(sourceSupplier(someInt, 10), 100, TimeUnit.MILLISECONDS);
-        TStream<Integer> sD = topology.periodicMultiSource(sourceSupplier(someIntD, 20), 100, TimeUnit.MILLISECONDS);
+        // HEADS UP.  issue#213 - exceptions in the supplier get silently eaten
+        // and the stream just ends up with 0 tuples.
+        
+        TStream<Integer> s = topology.periodicSource(sourceSupplier(someInt, 10), 100, TimeUnit.MILLISECONDS);
+        TStream<Integer> sD = topology.periodicSource(sourceSupplier(someIntD, 20), 100, TimeUnit.MILLISECONDS);
+
+        TStream<Integer> ms = topology.periodicMultiSource(sourceIterableSupplier(someInt, 10), 100, TimeUnit.MILLISECONDS);
+        TStream<Integer> msD = topology.periodicMultiSource(sourceIterableSupplier(someIntD, 20), 100, TimeUnit.MILLISECONDS);
 
         Map<String,Object> params = new HashMap<>();
         params.put("someInt", 10);
@@ -129,23 +139,31 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         
         ////////////////////
         
-        TStream<Integer> union = s.union(sD);
+        Set<TStream<Integer>> all = new HashSet<>( Arrays.asList(
+                s, sD,
+                ms, msD
+                ));
+        TStream<Integer> union = s.union(all);
         
         Tester tester = topology.getTester();
         Condition<Long> expectedCount1 = tester.tupleCount(s, 5);
         Condition<Long> expectedCount2 = tester.tupleCount(sD, 5);
-        Condition<Long> expectedCount3 = tester.tupleCount(union, 10);
+        Condition<Long> expectedCount3 = tester.tupleCount(ms, 5);
+        Condition<Long> expectedCount4 = tester.tupleCount(msD, 5);
+        Condition<Long> expectedCount = tester.tupleCount(union, 20);
         
-        complete(tester, expectedCount3, 15, TimeUnit.SECONDS);
+        complete(tester, expectedCount, 15, TimeUnit.SECONDS);
 
         assertTrue(expectedCount1.toString(), expectedCount1.valid());
         assertTrue(expectedCount2.toString(), expectedCount2.valid());
+        assertTrue(expectedCount3.toString(), expectedCount3.valid());
+        assertTrue(expectedCount4.toString(), expectedCount4.valid());
     }
     
 
     @Test
-    public void MiscTest() throws Exception {
-        Topology topology = new Topology("MiscTest");
+    public void OthersTest() throws Exception {
+        Topology topology = new Topology("OthersTest");
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         // FunctionFilter op is based on FunctionFunctor and the
@@ -166,17 +184,59 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         
         TStream<Integer> s = topology.constants(data);
 
-        // note these SP Suppliers check and blow up if get the wrong value
+        // The test's functional logic asserts it receives the expected SP value.
+        // Its the main form of validation for the test.
         
+        // TStream.modify
         TStream<Integer> modified = s.modify(unaryFn(someInt, 1));
         TStream<Integer> modifiedD = s.modify(unaryFn(someIntD, 2));
         
+        // TStream.transform
         TStream<Integer> xformed = s.transform(functionFn(someInt, 1));
         TStream<Integer> xformedD = s.transform(functionFn(someIntD, 2));
+        
+        // TStream.multiTransform
+        TStream<Integer> multiXformed = s.multiTransform(functionIterableFn(someInt, 1));
+        TStream<Integer> multiXformedD = s.multiTransform(functionIterableFn(someIntD, 2));
 
+        // TStream.join
         // issue#210 NPE in WindowDefinition._joinInternal (not a SP problem)
 //        TStream<Integer> joined = s.join(s.last(1), biFunctionFn(someInt, 1));
-//        TStream<Integer> joinedD = s.join(s.last(1), biFunctionFn(someInt, 2));
+//        TStream<Integer> joinedD = s.join(s.last(1), biFunctionFn(someIntD, 2));
+//
+//        TStream<Integer> lastJoined = s.joinLast(s, biFunctionFn(someInt, 1));
+//        TStream<Integer> lastJoinedD = s.joinLast(s, biFunctionFn(someIntD, 2));
+
+        // TStream.key
+        TStream<Integer> keyd = s.key(functionFn(someInt, 1));
+        // work around issue#212
+        TStream<Integer> keydD = s.filter(new AllowAll<Integer>()).key(functionFn(someIntD, 2));
+        
+        // TStream.sink
+        s.sink(sinkerFn(someInt, 1));
+        s.sink(sinkerFn(someIntD, 2));
+
+        // TStream.split
+        List<TStream<Integer>> split = s.split(2,toIntFn(someInt, 1));
+        TStream<Integer> unionedSplit = split.get(0).union(split.get(1));
+        List<TStream<Integer>> splitD = s.split(2,toIntFn(someIntD, 2));
+        TStream<Integer> unionedSplitD = splitD.get(0).union(splitD.get(1));
+        
+        // TStream.window
+        TWindow<Integer,?> win = s.window(s.last(1).key(functionFn(someInt, 1)));
+        TStream<Integer> winAgg = win.aggregate(functionListFn(someIntD, 2));
+        TWindow<Integer,?> winD = s.window(s.last(1).key(functionFn(someInt, 1)));
+        TStream<Integer> winAggD = winD.aggregate(functionListFn(someIntD, 2));
+        
+        // TWindow.aggregate
+        TStream<Integer> agg = s.last(1).aggregate(functionListFn(someInt, 1));
+        TStream<Integer> aggD = s.last(1).aggregate(functionListFn(someIntD, 2));
+        s.last(1).aggregate(functionListFn(someInt, 1), 1, TimeUnit.MILLISECONDS);
+        s.last(1).aggregate(functionListFn(someIntD, 2), 1, TimeUnit.MILLISECONDS);
+
+        // TWindow.key
+        TStream<Integer> kagg = s.last(1).key(functionFn(someInt, 1)).aggregate(functionListFn(someIntD, 2));
+        TStream<Integer> kaggD = s.last(1).key(functionFn(someInt, 1)).aggregate(functionListFn(someIntD, 2));
 
         Map<String,Object> params = new HashMap<>();
         params.put("someInt", 1);
@@ -186,8 +246,15 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         
         Set<TStream<Integer>> all = new HashSet<>( Arrays.asList(
                 modified, modifiedD,
-                xformed, xformedD
+                xformed, xformedD,
+                multiXformed, multiXformedD,
 //                joined, joinedD
+//                lastJoined, lastJoinedD,
+                keyd, keydD,
+                unionedSplit, unionedSplitD,
+                winAgg, winAggD,
+                agg, aggD,
+                kagg, kaggD
                 ));
         TStream<Integer> union = modified.union(all);
         // tester sees 0 tuples when they are really there so...
@@ -229,7 +296,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         
         TStream<Integer> s = topology.constants(data);
 
-        // note these SP Suppliers check and blow up if get the wrong value
+        // The test's functional logic asserts it receives the expected SP value.
 
         TStream<Integer> strSpFiltered = s.filter(strPredicateFn(strSp, "yo"));
         TStream<Integer> strSpDFiltered = s.filter(strPredicateFn(strSpD, "dude"));
@@ -303,6 +370,13 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         assertTrue(expectedCount13.toString(), expectedCount13.valid());
         assertTrue(expectedCount14.toString(), expectedCount14.valid());
     }
+    
+    private static void myAssertEquals(String s, Object expected, Object actual) {
+        // avoid need for junit in the executing topology
+        if ((expected == null && actual != null )
+                || !expected.equals(actual))
+            throw new java.lang.AssertionError(s + " expected=" + expected + " actual=" + actual);
+    }
 
     @SuppressWarnings("serial")
     private static Predicate<Integer> thresholdFilter(final Supplier<Integer> threshold) {
@@ -315,42 +389,36 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
     }
 
     @SuppressWarnings("serial")
-    private static Supplier<Iterable<Integer>> sourceSupplier(final Supplier<Integer> someInt, final int expected) {
+    private static Supplier<Integer> sourceSupplier(final Supplier<Integer> someInt, final Integer expected) {
+        return new Supplier<Integer>() {
+            private transient Iterator<Integer> iter;
+            @Override
+            public Integer get() {
+                myAssertEquals("SP value", expected, someInt.get());
+                if (iter == null) {
+                    iter = Arrays.asList(1, 2, 3, 4, 5).iterator();
+                }
+                if (iter.hasNext())
+                    return iter.next();
+                else
+                    return null;
+            }
+        };
+    }
+
+    @SuppressWarnings("serial")
+    private static Supplier<Iterable<Integer>> sourceIterableSupplier(final Supplier<Integer> someInt, final Integer expected) {
         return new Supplier<Iterable<Integer>>() {
-           private Iterator<Integer> iter;
+            boolean done;
             @Override
             public Iterable<Integer> get() {
-                return new Iterable<Integer>() {
-
-                    @Override
-                    public Iterator<Integer> iterator() {
-                        if (iter==null) {
-                            iter = new Iterator<Integer>() {
-                                int cnt = 0;
-                                @Override
-                                public boolean hasNext() {
-                                    if (someInt.get() != expected)
-                                        throw new IllegalStateException("Didn't get expected SP value.  Expected " + expected + " got " + someInt.get());
-                                    return cnt < 5;
-                                }
-
-                                @Override
-                                public Integer next() {
-                                    if (cnt > 10000)
-                                        throw new IllegalStateException("runaway?");
-                                    return cnt++;
-                                }
-                                @Override
-                                public void remove() {
-                                    throw new UnsupportedOperationException("remove");
-                                }
-
-                            };
-                        }
-                        return iter;
-                    }
-                    
-                };
+                myAssertEquals("SP value", expected, someInt.get());
+                if (!done) {
+                    done = true;
+                    return Arrays.asList(1, 2, 3, 4, 5);
+                }
+                else
+                    return Collections.emptyList();
             }
         };
     }
@@ -361,8 +429,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
 //        return new Predicate<Integer>() {
 //            @Override
 //            public boolean test(Integer v) {
-//                if (!someU.get().equals(expected))
-//                    throw new IllegalStateException("Didn't get expected SP value.  Expected " + expected + " got " + someU.get());
+//                myAssertEquals("SP value", expected, someU.get());
 //                return true;
 //            }
 //        };
@@ -373,8 +440,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         return new Predicate<Integer>() {
             @Override
             public boolean test(Integer v) {
-                if (!someU.get().equals(expected))
-                    throw new IllegalStateException("Didn't get expected SP value.  Expected " + expected + " got " + someU.get());
+                myAssertEquals("SP value", expected, someU.get());
                 return true;
             }
         };
@@ -385,48 +451,106 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         return new Predicate<Integer>() {
             @Override
             public boolean test(Integer v) {
-                if (!someU.get().equals(expected))
-                    throw new IllegalStateException("Didn't get expected SP value.  Expected " + expected + " got " + someU.get());
+                myAssertEquals("SP value", expected, someU.get());
                 return true;
             }
         };
     }
     
     @SuppressWarnings("serial")
-    private static UnaryOperator<Integer> unaryFn(final Supplier<Integer> someInt, final int expected) {
+    private static UnaryOperator<Integer> unaryFn(final Supplier<Integer> someInt, final Integer expected) {
         return new UnaryOperator<Integer>() {
             @Override
             public Integer apply(Integer v) {
-                if (!someInt.get().equals(expected))
-                    throw new IllegalStateException("Didn't get expected SP value.  Expected " + expected + " got " + someInt.get());
+                myAssertEquals("SP value", expected, someInt.get());
                 return v;
             }
         };
     }
     
     @SuppressWarnings("serial")
-    private static Function<Integer,Integer> functionFn(final Supplier<Integer> someInt, final int expected) {
+    private static Function<Integer,Integer> functionFn(final Supplier<Integer> someInt, final Integer expected) {
         return new Function<Integer,Integer>() {
 
             @Override
             public Integer apply(Integer v) {
-                if (!someInt.get().equals(expected))
-                    throw new IllegalStateException("Didn't get expected SP value.  Expected " + expected + " got " + someInt.get());
+                myAssertEquals("SP value", expected, someInt.get());
                 return v;
             }
         };
     }
     
+    @SuppressWarnings("serial")
+    private static Function<List<Integer>,Integer> functionListFn(final Supplier<Integer> someInt, final Integer expected) {
+        return new Function<List<Integer>,Integer>() {
+
+            @Override
+            public Integer apply(List<Integer> v) {
+                myAssertEquals("SP value", expected, someInt.get());
+                if (v.size() > 0)
+                    return v.get(0);
+                return null;
+            }
+        };
+    }
+    
+    @SuppressWarnings("serial")
+    private static Function<Integer,Iterable<Integer>> functionIterableFn(final Supplier<Integer> someInt, final Integer expected) {
+        return new Function<Integer,Iterable<Integer>>() {
+
+            @Override
+            public Iterable<Integer> apply(Integer v) {
+                myAssertEquals("SP value", expected, someInt.get());
+                return Arrays.asList(v);
+            }
+        };
+    }
+    
     @SuppressWarnings({ "serial", "unused" })
-    private static BiFunction<Integer, List<Integer>, Integer> biFunctionFn(final Supplier<Integer> someInt, final int expected) {
+    private static BiFunction<Integer, List<Integer>, Integer> biFunctionListFn(final Supplier<Integer> someInt, final Integer expected) {
         return new BiFunction<Integer, List<Integer>, Integer>() {
 
             @Override
             public Integer apply(Integer v1, List<Integer> v2) {
-                if (!someInt.get().equals(expected))
-                    throw new IllegalStateException("Didn't get expected SP value.  Expected " + expected + " got " + someInt.get());
+                myAssertEquals("SP value", expected, someInt.get());
                 return v1;
             }
         };
     }
+    
+    @SuppressWarnings({ "serial", "unused" })
+    private static BiFunction<Integer, Integer, Integer> biFunctionFn(final Supplier<Integer> someInt, final Integer expected) {
+        return new BiFunction<Integer, Integer, Integer>() {
+
+            @Override
+            public Integer apply(Integer v1, Integer v2) {
+                myAssertEquals("SP value", expected, someInt.get());
+                return v1;
+            }
+        };
+    }
+    
+    @SuppressWarnings("serial")
+    private static ToIntFunction<Integer> toIntFn(final Supplier<Integer> someInt, final Integer expected) {
+        return new ToIntFunction<Integer>() {
+
+            @Override
+            public int applyAsInt(Integer tuple) {
+                myAssertEquals("SP value", expected, someInt.get());
+                return tuple;
+            }
+        };
+    }
+    
+    @SuppressWarnings("serial")
+    private static Consumer<Integer> sinkerFn(final Supplier<Integer> someInt, final Integer expected) {
+        return new Consumer<Integer>() {
+
+            @Override
+            public void accept(Integer v) {
+                myAssertEquals("SP value", expected, someInt.get());
+            }
+        };
+    }
+    
 }
