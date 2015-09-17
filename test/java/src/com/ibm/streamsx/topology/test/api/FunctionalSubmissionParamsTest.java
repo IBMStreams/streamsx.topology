@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -298,20 +299,20 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
 
         // The test's functional logic asserts it receives the expected SP value.
 
-        TStream<Integer> strSpFiltered = s.filter(strPredicateFn(strSp, "yo"));
-        TStream<Integer> strSpDFiltered = s.filter(strPredicateFn(strSpD, "dude"));
-        TStream<Integer> byteSpFiltered = s.filter(numPredicateFn(byteSp, (byte)1));
-        TStream<Integer> byteSpDFiltered = s.filter(numPredicateFn(byteSpD, (byte)2));
-        TStream<Integer> shortSpFiltered = s.filter(numPredicateFn(shortSp, (short)3));
-        TStream<Integer> shortSpDFiltered = s.filter(numPredicateFn(shortSpD, (short)4));
-        TStream<Integer> intSpFiltered = s.filter(numPredicateFn(intSp, 5));
-        TStream<Integer> intSpDFiltered = s.filter(numPredicateFn(intSpD, 6));
-        TStream<Integer> longSpFiltered = s.filter(numPredicateFn(longSp, (long)7));
-        TStream<Integer> longSpDFiltered = s.filter(numPredicateFn(longSpD, (long)8));
-        TStream<Integer> floatSpFiltered = s.filter(numPredicateFn(floatSp, 9.0f));
-        TStream<Integer> floatSpDFiltered = s.filter(numPredicateFn(floatSpD, 10.0f));
-        TStream<Integer> doubleSpFiltered = s.filter(numPredicateFn(doubleSp, 11.0d));
-        TStream<Integer> doubleSpDFiltered = s.filter(numPredicateFn(doubleSpD, 12.0d));
+        TStream<Integer> strSpFiltered = s.filter(predicateFn(strSp, "yo"));
+        TStream<Integer> strSpDFiltered = s.filter(predicateFn(strSpD, "dude"));
+        TStream<Integer> byteSpFiltered = s.filter(predicateFn(byteSp, (byte)1));
+        TStream<Integer> byteSpDFiltered = s.filter(predicateFn(byteSpD, (byte)2));
+        TStream<Integer> shortSpFiltered = s.filter(predicateFn(shortSp, (short)3));
+        TStream<Integer> shortSpDFiltered = s.filter(predicateFn(shortSpD, (short)4));
+        TStream<Integer> intSpFiltered = s.filter(predicateFn(intSp, 5));
+        TStream<Integer> intSpDFiltered = s.filter(predicateFn(intSpD, 6));
+        TStream<Integer> longSpFiltered = s.filter(predicateFn(longSp, (long)7));
+        TStream<Integer> longSpDFiltered = s.filter(predicateFn(longSpD, (long)8));
+        TStream<Integer> floatSpFiltered = s.filter(predicateFn(floatSp, 9.0f));
+        TStream<Integer> floatSpDFiltered = s.filter(predicateFn(floatSpD, 10.0f));
+        TStream<Integer> doubleSpFiltered = s.filter(predicateFn(doubleSp, 11.0d));
+        TStream<Integer> doubleSpDFiltered = s.filter(predicateFn(doubleSpD, 12.0d));
 
         Map<String,Object> params = new HashMap<>();
         params.put("strSp", "yo");
@@ -423,31 +424,8 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         };
     }
 
-    // issue#209 prevents this from working.  Do non-generic variants instead
-//    @SuppressWarnings("serial")
-//    private static <U> Predicate<Integer> predicateFn(final Supplier<U> someU, final U expected) {
-//        return new Predicate<Integer>() {
-//            @Override
-//            public boolean test(Integer v) {
-//                myAssertEquals("SP value", expected, someU.get());
-//                return true;
-//            }
-//        };
-//    }
-
     @SuppressWarnings("serial")
-    private static Predicate<Integer> strPredicateFn(final Supplier<String> someU, final String expected) {
-        return new Predicate<Integer>() {
-            @Override
-            public boolean test(Integer v) {
-                myAssertEquals("SP value", expected, someU.get());
-                return true;
-            }
-        };
-    }
-
-    @SuppressWarnings("serial")
-    private static Predicate<Integer> numPredicateFn(final Supplier<? extends Number> someU, final Number expected) {
+    private static <U extends Serializable> Predicate<Integer> predicateFn(final Supplier<U> someU, final U expected) {
         return new Predicate<Integer>() {
             @Override
             public boolean test(Integer v) {
