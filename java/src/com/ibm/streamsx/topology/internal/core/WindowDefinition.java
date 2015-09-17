@@ -152,7 +152,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         
         String opName = LogicUtils.functionName(joiner);
         if (opName.isEmpty()) {
-            opName = getTupleClass().getSimpleName() + "Join";
+            opName = TypeDiscoverer.getTupleName(getTupleType()) + "Join";
         }
         
         Map<String, Object> params = getOperatorParams();
