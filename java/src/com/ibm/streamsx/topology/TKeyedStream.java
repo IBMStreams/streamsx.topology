@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 
 /**
@@ -111,7 +112,20 @@ public interface TKeyedStream<T,K> extends TStream<T> {
     @Override
     TKeyedStream<T,K> parallel(int width,
             com.ibm.streamsx.topology.TStream.Routing routing);
-    
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    TKeyedStream<T,K> parallel(Supplier<Integer> width);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    TKeyedStream<T,K> parallel(Supplier<Integer> width,
+            com.ibm.streamsx.topology.TStream.Routing routing);
+   
     /**
      * {@inheritDoc}
      */
