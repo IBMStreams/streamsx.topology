@@ -783,8 +783,8 @@ public class Topology implements TopologyElement {
      * }</pre>
      * <p>
      * Submission parameters may also be used for values in various
-     * cases such as {@code TStream.parallel()} width specifications
-     * and MQTT connector configuration and topic specifications.
+     * cases such as {@link TStream#parallel(Supplier)} width value
+     * and MQTT connector configuration and topic values.
      * e.g.,
      * <pre>{@code
      * Supplier<Integer> width = topology.createSubmissionParameter("width", 1);
@@ -795,7 +795,7 @@ public class Topology implements TopologyElement {
      * }</pre>
      * <p>
      * Finally, submission parameters may be used in Java Primitive Operator
-     * and SPL Operator parameter specifications.
+     * and SPL Operator parameter values.
      * <p>
      * The submission parameter's name is used to supply an actual value
      * at topology submission time
