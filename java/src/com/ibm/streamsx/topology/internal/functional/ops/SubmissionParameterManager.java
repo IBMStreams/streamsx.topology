@@ -122,9 +122,11 @@ public class SubmissionParameterManager {
     public synchronized static void initializeEmbedded(GraphBuilder builder,
             Map<String, Object> config) {
 
-        if (params != UNINIT_MAP)
-            return;
-
+        // N.B. in an embedded context, within a single JVM/classloader,
+        // multiple topologies can be executed serially as well as concurrently.
+        // TODO handle the concurrent case - e.g., with per-topology-submit
+        // managers.
+        
         // create map of all submission params used by the topology
         // and the parameter's string value (initially null for no default)
         Map<String,String> allsp = new HashMap<>();  // spName, spStrVal
