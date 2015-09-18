@@ -5,9 +5,13 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
+import static com.ibm.streamsx.topology.internal.core.SubmissionParameter.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_NAMES;
+import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_VALUES;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
@@ -18,10 +22,17 @@ import com.ibm.streams.operator.window.StreamWindow.Type;
 import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
 
 class OperatorGenerator {
+    
+    private final SubmissionTimeValue stvHelper;
+    
+    OperatorGenerator(SPLGenerator splGenerator) {
+        this.stvHelper = splGenerator.stvHelper();
+    }
 
-    static String generate(JSONObject graphConfig, JSONObject op)
+    String generate(JSONObject graphConfig, JSONObject op)
             throws IOException {
         StringBuilder sb = new StringBuilder();
         noteAnnotations(op, sb);
@@ -76,7 +87,7 @@ class OperatorGenerator {
         }
     }
 
-    private static void parallelAnnotation(JSONObject op, StringBuilder sb) {
+    private void parallelAnnotation(JSONObject op, StringBuilder sb) {
         Boolean parallel = (Boolean) op.get("parallelOperator");
         if (parallel != null && parallel) {
             sb.append("@parallel(width=");
@@ -86,8 +97,8 @@ class OperatorGenerator {
             else {
                 JSONObject jo = (JSONObject) width;
                 String jsonType = (String) jo.get("type");
-                if ("submissionParameter".equals(jsonType))
-                    SubmissionTimeValue.generateRef((JSONObject) jo.get("value"), sb);
+                if (TYPE_SUBMISSION_PARAMETER.equals(jsonType))
+                    sb.append(stvHelper.generateCompParamName((JSONObject) jo.get("value")));
                 else
                     throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
             }
@@ -278,7 +289,7 @@ class OperatorGenerator {
         }
     }
 
-    static void paramClause(JSONObject graphConfig, JSONObject op,
+    private void paramClause(JSONObject graphConfig, JSONObject op,
             StringBuilder sb) {
 
         JSONArray vmArgs = (JSONArray) graphConfig
@@ -292,8 +303,18 @@ class OperatorGenerator {
                 hasVMArgs = false;
         }
 
+        // determine if we need to inject submission param names and values info. 
+        boolean addSPInfo = false;
+        ParamsInfo stvOpParamInfo = stvHelper.getSplInfo();
+        if (stvOpParamInfo != null) {
+            Map<String,JSONObject> functionalOps = stvHelper.getFunctionalOps();
+            if (functionalOps.containsKey((String) op.get("name")))
+                addSPInfo = true;
+        }
+        
         JSONObject params = (JSONObject) op.get("parameters");
-        if (!hasVMArgs && (params == null || params.isEmpty())) {
+        if (!hasVMArgs && (params == null || params.isEmpty())
+            && !addSPInfo) {
             return;
         }
 
@@ -319,6 +340,20 @@ class OperatorGenerator {
             parameterValue(tmpVMArgParam, sb);
             sb.append(";\n");
         }
+        
+        if (addSPInfo) {
+            sb.append("      ");
+            sb.append(NAME_SUBMISSION_PARAM_NAMES);
+            sb.append(": ");
+            sb.append(stvOpParamInfo.names);
+            sb.append(";\n");
+
+            sb.append("      ");
+            sb.append(NAME_SUBMISSION_PARAM_VALUES);
+            sb.append(": ");
+            sb.append(stvOpParamInfo.values);
+            sb.append(";\n");
+        }
     }
 
     // Set of "type"s where the "value" in the JSON is printed as-is.
@@ -329,11 +364,11 @@ class OperatorGenerator {
         PARAM_TYPES_TOSTRING.add("attribute");
     }
 
-    static void parameterValue(JSONObject param, StringBuilder sb) {
+    private void parameterValue(JSONObject param, StringBuilder sb) {
         Object value = param.get("value");
         Object type = param.get("type");
-        if ("submissionParameter".equals(type)) {
-            SubmissionTimeValue.generateRef((JSONObject) value, sb);
+        if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
+            sb.append(stvHelper.generateCompParamName((JSONObject) value));
             return;
         } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
             if ("USTRING".equals(type))

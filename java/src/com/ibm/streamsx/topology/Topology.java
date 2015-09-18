@@ -754,38 +754,61 @@ public class Topology implements TopologyElement {
      * Create a submission parameter without a default value.
      * <p>
      * A submission parameter is a handle for a {@code T} whose actual value
-     * is not defined until topology submission time.
+     * is not defined until topology submission time.  Submission
+     * parameters enable the creation of more reusable topology bundles.
      * <p>
      * A submission parameter has a {@code name}.  The name must be unique
      * within the topology.
      * <p>
-     * The returned Supplier's {@code get()} returns null.
+     * The parameter is a {@link Supplier}. 
+     * Prior to submitting the topology, while constructing the topology,
+     * {@code parameter.get()} returns null.
      * <p>
-     * Submission parameters may be used for values in various
-     * cases such as {@code TStream.parallel()} width specifications.
+     * When the topology is submitted, {@code parameter.get()}
+     * in the executing topology returns the actual submission time value
+     * (or the default value see {@link #createSubmissionParameter(String, Object)}).
+     * <p>
+     * Submission parameters may be used within functional logic.
+     * e.g.,
+     * <pre>{@code
+     * Supplier<Integer> threshold = topology.createSubmissionParameter("threshold", 100);
+     * TStream<Integer> s = ...;
+     * // with a Java8 lambda expression
+     * TStream<Integer> filtered1 = s.filter(v -> v > threshold.get());
+     * // without
+     * TStream<Integer> filtered2 = s.filter(new Predicate() {
+     *      public boolean test(Integer v) {
+     *          return v > threshold.get();
+     *      }} );
+     * }</pre>
+     * <p>
+     * Submission parameters may also be used for values in various
+     * cases such as {@link TStream#parallel(Supplier)} width value
+     * and MQTT connector configuration and topic values.
      * e.g.,
      * <pre>{@code
      * Supplier<Integer> width = topology.createSubmissionParameter("width", 1);
-     * TStream<String> myStream = ...;
-     * TStream<String> parallel_start = myStream.parallel(width);
+     * TStream<String> s = ...;
+     * TStream<String> parallel_start = s.parallel(width);
      * TStream<String> in_parallel = parallel_start.filter(...).transform(...);
      * TStream<String> joined_parallel_streams = in_parallel.endParallel();
      * }</pre>
      * <p>
-     * Submission parameters may be used in Java Primitive Operator and
-     * SPL Operator parameter specifications.
+     * Finally, submission parameters may be used in Java Primitive Operator
+     * and SPL Operator parameter values.
      * <p>
-     * The name is used to supply an actual value at topology submission time
+     * The submission parameter's name is used to supply an actual value
+     * at topology submission time
      * via {@link StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)}
-     * and {@link ContextProperties#SUBMISSION_PARAMS}, or when submitting
-     * a topology for execution via other execution runtime native mechanisms
-     * such as IBM Streams {@code streamtool}.
+     * and {@link ContextProperties#SUBMISSION_PARAMS},
+     * or when submitting a topology bundle for execution via other
+     * execution runtime native mechanisms such as IBM Streams {@code streamtool}.
      * <p>
      * Topology submission behavior when a submission parameter 
-     * lacking a default value is used and a value is not provided at
+     * lacking a default value is created and a value is not provided at
      * submission time is defined by the underlying topology execution runtime.
      * Submission fails for contexts {@code DISTRIBUTED}, {@code STANDALONE},
-     * or {@code ANALYTIC_SERVICE}.
+     * {@code ANALYTIC_SERVICE}, or {@code EMBEDDED}.
      *
      * @param name submission parameter name
      * @param valueClass class object for {@code T}
@@ -794,7 +817,7 @@ public class Topology implements TopologyElement {
      *  or has already been defined. 
      */
     public <T> Supplier<T> createSubmissionParameter(String name, Class<T> valueClass) {
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, valueClass); 
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(this, name, valueClass); 
         builder().createSubmissionParameter(name, sp.toJSON());
         return sp;
     }
@@ -812,7 +835,7 @@ public class Topology implements TopologyElement {
      * @throws IllegalArgumentException if {@code defaultValue} is null
      */
     public <T> Supplier<T> createSubmissionParameter(String name, T defaultValue) {
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, defaultValue);
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(this, name, defaultValue);
         builder().createSubmissionParameter(name, sp.toJSON());
         return sp;
     }

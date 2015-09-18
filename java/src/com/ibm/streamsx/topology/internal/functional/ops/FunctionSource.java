@@ -31,6 +31,8 @@ public class FunctionSource extends ProcessTupleProducer implements Functional {
 
     private String functionalLogic;
     private String[] jar;
+    private String[] submissionParamNames;
+    private String[] submissionParamValues;
     private StreamingOutput<OutputTuple> output;
     
     private FunctionContext functionContext;
@@ -41,6 +43,7 @@ public class FunctionSource extends ProcessTupleProducer implements Functional {
         super.initialize(context);
 
         FunctionalHelper.addLibraries(this, getJar());
+        SubmissionParameterManager.initialize(context);
 
         functionContext = new FunctionOperatorContext(context);
         
@@ -71,6 +74,24 @@ public class FunctionSource extends ProcessTupleProducer implements Functional {
     @Parameter(optional = true)
     public void setJar(String[] jar) {
         this.jar = jar;
+    }
+
+    public final String[] getSubmissionParamNames() {
+        return submissionParamNames;
+    }
+
+    @Parameter(optional = true)
+    public final void setSubmissionParamNames(String[] SubmissionParamNames) {
+        this.submissionParamNames = SubmissionParamNames;
+    }
+    
+    public final String[] getSubmissionParamValues() {
+        return submissionParamValues;
+    }
+    
+    @Parameter(optional = true)
+    public final void setSubmissionParamValues(String[] SubmissionParamValues) {
+        this.submissionParamValues = SubmissionParamValues;
     }
 
     @Override
