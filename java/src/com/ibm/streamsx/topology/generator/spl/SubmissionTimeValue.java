@@ -14,29 +14,41 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streams.operator.Type.MetaType;
-import com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager;
 
 /**
  * A Submission Time Value is the SPL realization of a "Submission Parameter".
  */
 public class SubmissionTimeValue {
-    /** Special operator parameter type for conveying
-     * submission parameter values in an SPL functional operator
-     * parameter, ultimately for access by functional logic.
-     * <p>
-     * The operator parameter's value is a 
-     * JSONArray of {@code spOpParamName, (rstring) $+spOpParamName} pairs
-     * for each submission parameter in the topology.
-     * <p>
-     * See {@link SubmissionParameterManager}
-     */
-    public static final String TYPE_SPL_SUBMISSION_PARAMS = "__spl_submissionParams";
+    private static final String OP_ATTR_SPL_SUBMISSION_PARAMS = "__spl_submissionParams";
     /** map<spOpParamName,opParam> opParam has type TYPE_SUBMISSION_PARAMETER */
     private final Map<String,JSONObject> allSubmissionParams;
-    /** An opParam of type TYPE_SPL_SUBMISSION_PARAMS */
-    private final JSONObject submissionParamsParam;
     /** map<opName,opJsonObject> */
     private Map<String,JSONObject> functionalOps = new HashMap<>();
+    private ParamsInfo paramsInfo;
+    
+    /**
+     * Info for SPL operator parameters
+     * NAME_SUBMISSION_PARAM_NAMES and NAME_SUBMISSION_PARAM_VALUES
+     */
+    static class ParamsInfo {
+        /** The value for the NAME_SUBMISSION_PARAM_NAMES param.
+         * <p>
+         * A string of comma separated literal STV opParamName strings.
+         * e.g., "__jaa_threshold", "__jaa_width"
+         */
+        final String names;
+        /** The value for the NAME_SUBMISSION_PARAM_VALUES param.
+         * <p>
+         * A string of comma separated STV opParam expression strings.
+         * e.g., (rstring) $__jaa_threshold, (rstring) $__jaa_width 
+         */
+        final String values;
+        
+        ParamsInfo(String names, String values) {
+            this.names = names;
+            this.values = values;
+        }
+    }
     
     /**
      * Create a json operator parameter name for the submission parameter name. 
@@ -50,7 +62,7 @@ public class SubmissionTimeValue {
 
     SubmissionTimeValue(JSONObject graph) {
         allSubmissionParams = getAllSubmissionParams(graph);
-        submissionParamsParam = mkSubmissionParamsParam();
+        paramsInfo = mkSubmissionParamsInfo();
     }
     
     /**
@@ -75,24 +87,32 @@ public class SubmissionTimeValue {
     }
     
     /**
-     * Create a {@link TYPE_SPL_SUBMISSION_PARAMS} operator parameter
-     * @return the parameter. null if no submission parameters.
+     * Create a ParamsInfo for the topology's submission parameters.
+     * @return the parameter info. null if no submission parameters.
      */
-    private JSONObject mkSubmissionParamsParam() {
+    private ParamsInfo mkSubmissionParamsInfo() {
         if (allSubmissionParams.isEmpty())
             return null;
-        JSONArray ja = new JSONArray(allSubmissionParams.size() * 2);
+
+        StringBuilder namesSb = new StringBuilder();
+        StringBuilder valuesSb = new StringBuilder();
+        
+        boolean first = true;
         for (Object key : allSubmissionParams.keySet()) {
             String opParamName = (String) key;
             JSONObject spParam = (JSONObject) allSubmissionParams.get(opParamName);
             JSONObject spval = (JSONObject) spParam.get("value");
-            ja.add(opParamName);
-            ja.add("(rstring) "+generateCompParamName(spval));
+            if (first)
+                first = false;
+            else {
+                namesSb.append(", ");
+                valuesSb.append(", ");
+            }
+            namesSb.append(SPLGenerator.stringLiteral(opParamName));
+            valuesSb.append("(rstring) ").append(generateCompParamName(spval));
         }
-        JSONObject param = new JSONObject();
-        param.put("type", TYPE_SPL_SUBMISSION_PARAMS);
-        param.put("value", ja);
-        return param;
+
+        return new ParamsInfo(namesSb.toString(), valuesSb.toString());
     }
     
     /**
@@ -105,7 +125,7 @@ public class SubmissionTimeValue {
      * <p>
      * If the composite has any functional operator children, enrich
      * the composite to have declarations for all submission parameters.
-     * Also accumulate such children and make them available via
+     * Also accumulate the functional children and make them available via
      * {@link #getFunctionalOps()}.
      * 
      * @param composite the composite definition
@@ -177,7 +197,7 @@ public class SubmissionTimeValue {
         }
         
         // make the results of our efforts available to addJsonInstanceParams
-        composite.put(TYPE_SPL_SUBMISSION_PARAMS, spParams);
+        composite.put(OP_ATTR_SPL_SUBMISSION_PARAMS, spParams);
     }
 
     /**
@@ -187,7 +207,7 @@ public class SubmissionTimeValue {
      * @param composite the composite definition
      */
     void addJsonInstanceParams(JSONObject compInstance, JSONObject composite) {
-        JSONObject spParams = (JSONObject) composite.get(TYPE_SPL_SUBMISSION_PARAMS);
+        JSONObject spParams = (JSONObject) composite.get(OP_ATTR_SPL_SUBMISSION_PARAMS);
         if (spParams != null) {
             JSONObject opParams = (JSONObject) compInstance.get("parameters");
             if (opParams == null) {
@@ -204,12 +224,21 @@ public class SubmissionTimeValue {
         }
     }
     
-    /** Get the graph's submission parameters in the form of a
+//    /** Get the graph's submission parameters in the form of a
+//     * operator parameter of TYPE_SPL_SUBMISSION_PARAMS
+//     * @return the op parameter. null if no submission params in the topology.
+//     */
+//    JSONObject getSubmissionParamsParam() {
+//        return submissionParamsParam;
+//    }
+    
+    /** Get the info for operator NAME_SUBISSION_PARAM_NAMES
+     * and NAMEgraph's submission parameter info in the form of a
      * operator parameter of TYPE_SPL_SUBMISSION_PARAMS
      * @return the op parameter. null if no submission params in the topology.
      */
-    JSONObject getSubmissionParamsParam() {
-        return submissionParamsParam;
+    ParamsInfo getSplInfo() {
+        return paramsInfo;
     }
     
     /** Get the list of functional ops learned by {@link #addJsonParamDefs(JSONObject)}.

@@ -5,9 +5,9 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
-import static com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.TYPE_SPL_SUBMISSION_PARAMS;
 import static com.ibm.streamsx.topology.internal.core.SubmissionParameter.TYPE_SUBMISSION_PARAMETER;
-import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAMS;
+import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_NAMES;
+import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_VALUES;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -22,6 +22,7 @@ import com.ibm.streams.operator.window.StreamWindow.Type;
 import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
 
 class OperatorGenerator {
     
@@ -302,18 +303,18 @@ class OperatorGenerator {
                 hasVMArgs = false;
         }
 
-        // determine if we need to inject a "submissionParams" param 
-        boolean addSubmissionParamsParam = false;
-        JSONObject submissionParamsParam = stvHelper.getSubmissionParamsParam();
-        if (submissionParamsParam != null) {
+        // determine if we need to inject submission param names and values info. 
+        boolean addSPInfo = false;
+        ParamsInfo stvOpParamInfo = stvHelper.getSplInfo();
+        if (stvOpParamInfo != null) {
             Map<String,JSONObject> functionalOps = stvHelper.getFunctionalOps();
             if (functionalOps.containsKey((String) op.get("name")))
-                addSubmissionParamsParam = true;
+                addSPInfo = true;
         }
         
         JSONObject params = (JSONObject) op.get("parameters");
         if (!hasVMArgs && (params == null || params.isEmpty())
-            && !addSubmissionParamsParam) {
+            && !addSPInfo) {
             return;
         }
 
@@ -340,12 +341,17 @@ class OperatorGenerator {
             sb.append(";\n");
         }
         
-        if (addSubmissionParamsParam) {
+        if (addSPInfo) {
             sb.append("      ");
-            sb.append(NAME_SUBMISSION_PARAMS);
+            sb.append(NAME_SUBMISSION_PARAM_NAMES);
             sb.append(": ");
-            
-            parameterValue(submissionParamsParam, sb);
+            sb.append(stvOpParamInfo.names);
+            sb.append(";\n");
+
+            sb.append("      ");
+            sb.append(NAME_SUBMISSION_PARAM_VALUES);
+            sb.append(": ");
+            sb.append(stvOpParamInfo.values);
             sb.append(";\n");
         }
     }
@@ -363,18 +369,6 @@ class OperatorGenerator {
         Object type = param.get("type");
         if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
             sb.append(stvHelper.generateCompParamName((JSONObject) value));
-            return;
-        } else if (TYPE_SPL_SUBMISSION_PARAMS.equals(type)) {
-            JSONArray a = (JSONArray) value;
-            for (int i = 0; i < a.size(); i++) {
-                if (i != 0)
-                    sb.append(", ");
-                String sv = (String) a.get(i);
-                if (i%2 == 0)
-                    SPLGenerator.stringLiteral(sb, sv);
-                else
-                    sb.append(sv);
-            }
             return;
         } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
             if ("USTRING".equals(type))

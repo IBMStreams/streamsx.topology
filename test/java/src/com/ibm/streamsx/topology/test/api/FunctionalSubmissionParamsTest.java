@@ -50,7 +50,7 @@ import com.ibm.streamsx.topology.tester.Tester;
  */
 public class FunctionalSubmissionParamsTest extends TestTopology {
 
-    //@Test
+    @Test
     public void FilterTest() throws Exception {
         Topology topology = new Topology("FilterTest");
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
@@ -83,7 +83,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         assertTrue(expectedCount2.toString(), expectedCount2.valid());
     }
 
-    //@Test
+    @Test
     public void SourceTest() throws Exception {
         Topology topology = new Topology("SourceTest");
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
@@ -115,7 +115,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         assertTrue(expectedCount2.toString(), expectedCount2.valid());
     }
 
-    //@Test
+    @Test
     public void PeriodicSourceTest() throws Exception {
         Topology topology = new Topology("PeriodicSourceTest");
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
@@ -268,7 +268,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
     }
 
 
-    //@Test
+    @Test
     public void AllTypesTest() throws Exception {
         Topology topology = new Topology("AllTypesTest");
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
@@ -482,7 +482,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         };
     }
     
-    @SuppressWarnings({ "serial", "unused" })
+    @SuppressWarnings("serial")
     private static BiFunction<Integer, List<Integer>, Integer> biFunctionListFn(final Supplier<Integer> someInt, final Integer expected) {
         return new BiFunction<Integer, List<Integer>, Integer>() {
 
@@ -494,7 +494,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         };
     }
     
-    @SuppressWarnings({ "serial", "unused" })
+    @SuppressWarnings("serial")
     private static BiFunction<Integer, Integer, Integer> biFunctionFn(final Supplier<Integer> someInt, final Integer expected) {
         return new BiFunction<Integer, Integer, Integer>() {
 

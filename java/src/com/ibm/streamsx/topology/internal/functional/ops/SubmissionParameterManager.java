@@ -80,28 +80,31 @@ public class SubmissionParameterManager {
     }
     private static final Map<String,String> UNINIT_MAP = Collections.emptyMap();
     /**  map of topology's <spOpParamName, strVal> */
-    private static Map<String,String> params = UNINIT_MAP;
+    private static volatile Map<String,String> params = UNINIT_MAP;
     
     /** The name of the functional operator's actual SPL parameter
-     * for the submission parameters. */
-    public static final String NAME_SUBMISSION_PARAMS = "submissionParams";
+     * for the submission parameters names */
+    public static final String NAME_SUBMISSION_PARAM_NAMES = "submissionParamNames";
+    /** The name of the functional operator's actual SPL parameter
+     * for the submission parameters values */
+    public static final String NAME_SUBMISSION_PARAM_VALUES = "submissionParamValues";
     
     /**
      * Initialize submission parameter value information
      * from operator context information.
      * @param context the operator context
      */
-    public static void initialize(OperatorContext context) {
+    public synchronized static void initialize(OperatorContext context) {
         // The TYPE_SPL_SUBMISSION_PARAMS parameter value is the same for
         // all operator contexts.
         if (params == UNINIT_MAP) {
-            if (context.getParameterNames().contains(NAME_SUBMISSION_PARAMS)) {
+            List<String> names = context.getParameterValues(NAME_SUBMISSION_PARAM_NAMES);
+            if (names != null && !names.isEmpty()) {
+                List<String> values = context.getParameterValues(NAME_SUBMISSION_PARAM_VALUES);
                 Map<String,String> map = new HashMap<>();
-                List<String> values = context.getParameterValues(NAME_SUBMISSION_PARAMS);
-                // value is a TYPE_SPL_SUBMISSION_PARAMS parameter's value
-                for (int i = 0; i < values.size(); ) {
-                    String name = values.get(i++);
-                    String value = values.get(i++);
+                for (int i = 0; i < names.size(); i++) {
+                    String name = names.get(i);
+                    String value = values.get(i);
                     map.put(name, value);
                 }
                 params = map;
@@ -116,8 +119,11 @@ public class SubmissionParameterManager {
      * @param builder the topology's builder
      * @param config StreamsContext.submit() configuration
      */
-    public static void initializeEmbedded(GraphBuilder builder,
+    public synchronized static void initializeEmbedded(GraphBuilder builder,
             Map<String, Object> config) {
+
+        if (params != UNINIT_MAP)
+            return;
 
         // create map of all submission params used by the topology
         // and the parameter's string value (initially null for no default)
