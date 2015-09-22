@@ -19,6 +19,9 @@ import com.ibm.streamsx.topology.function.UnaryOperator;
  * <BR>
  * A keyed stream is obtained from a {@code TStream} using 
  * {@link TStream#key(Function)} or {@link TStream#key()}.
+ * The keyed stream is the same logical stream as the
+ * {@code TStream} it was created from since the key
+ * is only used in subsequent processing.
  * <BR>
  * Most methods on {@code TKeyedStream} that return a stream of the
  * same type ({@code T}) return an instance of {@code TKeyedStream}
