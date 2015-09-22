@@ -86,8 +86,9 @@
  * # Details
  * [Publish] is a composite operator that invokes an `spl.adapter::Export` operator
  * using these stream properties:
- * * `__spl_exportType` : Set to the literal `topic`.
+ * * `__spl_exportType` : Set to the literal `topic` for SPL publish, `topic.java` for publishing by a Java class.
  * * `__spl_topic` : Set to the topic to publish to.
+ * * `__spl_class` : Set to the Java class of the stream when `__spl_exportType` is `topic.java`, otherwise unset.
  *
  * [Subscribe] is a composite operator that invokes an `spl.adapter::Import` operator
  * using a subscription to match the published topics.
