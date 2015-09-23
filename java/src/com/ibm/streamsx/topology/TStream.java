@@ -319,6 +319,9 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * will appear on the returned stream. <BR>
      * No ordering of tuples across this stream and {@code other} is defined,
      * thus the return stream is unordered.
+     * <BR>
+     * If {@code other} is this stream or keyed version of this stream
+     * then {@code this} is returned as a stream cannot be unioned with itself.
      * 
      * @param other
      *            Stream to union with this stream.
@@ -334,6 +337,14 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * No ordering of tuples across this stream and {@code others} is defined,
      * thus the return stream is unordered. <BR>
      * If others does not contain any streams then {@code this} is returned.
+     * <BR>
+     * A stream or a keyed version of a stream cannot be unioned with itself,
+     * so any stream that is represented multiple times in {@code others}
+     * or this stream will be reduced to a single copy of itself.
+     * <BR>
+     * In the case that no stream is to be unioned with this stream
+     * then {@code this} is returned (for example, {@code others}
+     * is empty or only contains the same logical stream as {@code this}.
      * 
      * @param others
      *            Streams to union with this stream.
@@ -784,7 +795,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * key, defined by {@code keyFunction}.
      * <P> 
      * A keyed stream provides control over the behavior of
-     * tuples with {@link #parallel(int) parallel streams} and
+     * downstream processing of tuples with {@link #parallel(int) parallel streams} and
      * {@link TWindow windows}.
      * <BR>
      * With parallel streams all tuples that have the same key
