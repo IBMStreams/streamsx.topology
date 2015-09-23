@@ -307,11 +307,12 @@ public class GraphUtilities {
     }
 
     /**
-     * Starting with {@code starts} nodes, visits every node in the specified
-     * direction and apply the consumer's accept() method.
+     * Starting with {@code starts} nodes, visit every node in the specified
+     * direction and apply the consumer's {@code accept()} method.
      * <p>
-     * Cease traversal of a branch if an element in
-     * {@code visitController.markerBounderies()} is encountered.
+     * Don't call {@code accept()} for a
+     * {@code visitController.markerBounderies()}
+     * node and cease traversal of a branch if such an node is encountered.
      * <p>
      * During traversal, return if {@code visitController.getStop()==true}.
      * @param visitController may be null; defaults is Direction.DOWNSTREAM
@@ -338,8 +339,8 @@ public class GraphUtilities {
                 return;
             consumer.accept(op);
             visited.add(op);  
-            GraphUtilities.getUnvisitedAdjacentNodes(visitController.direction(), visited,
-                    unvisited, op, graph, visitController.markerBoundaries());
+            GraphUtilities.getUnvisitedAdjacentNodes(visitController, visited,
+                    unvisited, op, graph);
             unvisited.remove(0);
         }
     }
@@ -347,14 +348,17 @@ public class GraphUtilities {
     static void getUnvisitedAdjacentNodes(
             Collection<JSONObject> visited, Collection<JSONObject> unvisited,
             JSONObject op, JSONObject graph, Set<BVirtualMarker> boundaries) {
-        getUnvisitedAdjacentNodes(Direction.BOTH, visited, unvisited,
-                op, graph, boundaries);
+        getUnvisitedAdjacentNodes(new VisitController(Direction.BOTH, boundaries),
+                visited, unvisited, op, graph);
     }
 
     static void getUnvisitedAdjacentNodes(
-            Direction direction,
+            VisitController visitController,
             Collection<JSONObject> visited, Collection<JSONObject> unvisited,
-            JSONObject op, JSONObject graph, Set<BVirtualMarker> boundaries) {
+            JSONObject op, JSONObject graph) {
+        
+        Direction direction = visitController.direction();
+        Set<BVirtualMarker> boundaries = visitController.markerBoundaries();
         
         List<JSONObject> parents = GraphUtilities.getUpstream(op, graph);
         List<JSONObject> children = GraphUtilities.getDownstream(op, graph);
