@@ -108,14 +108,23 @@ public class GraphBuilder extends BJSONObject {
     public BOutput endLowLatency(BOutput parent){
         return addPassThroughMarker(parent, BVirtualMarker.END_LOW_LATENCY, false);
     }
+
+    public boolean isInLowLatencyRegion(BOutput output) {
+        BOperator op;
+        if (output instanceof BUnionOutput)
+            op = ((BUnionOutput) output).operator();
+        else
+            op = ((BOutputPort) output).operator();
+        return isInLowLatencyRegion(op);
+    }
     
-    public boolean isInLowLatencyRegion(BOperatorInvocation... operators) {
+    public boolean isInLowLatencyRegion(BOperator... operators) {
         // handle nested low latency regions
         JSONObject graph = complete();
         final VisitController visitController =
                 new VisitController(Direction.UPSTREAM);
         final int[] openRegionCount = { 0 };
-        for (BOperatorInvocation operator : operators) {
+        for (BOperator operator : operators) {
             JSONObject jop = operator.complete();
             GraphUtilities.visitOnce(visitController,
                     Collections.singletonList(jop), graph,

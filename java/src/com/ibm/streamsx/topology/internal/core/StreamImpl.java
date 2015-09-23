@@ -480,6 +480,8 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> isolate() {
         BOutput toBeIsolated = output();
+        if (builder().isInLowLatencyRegion(toBeIsolated))
+                throw new IllegalStateException("isolate() is not allowed in a low latency region");
         BOutput isolatedOutput = builder().isolate(toBeIsolated); 
         return addMatchingStream(isolatedOutput);
     }

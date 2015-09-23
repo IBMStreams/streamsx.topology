@@ -177,6 +177,22 @@ public class IsolateTest extends TestTopology {
         // assertTrue(expectedCount.valid());
         // assertTrue(expectedContent.valid());
     }
+    
+    @Test(expected = IllegalStateException.class)
+    public void lowLatencyViolationTest() throws Exception {
+
+        /** lowLatency -> ... isolate ... -> endLowLatency */
+        
+        final Topology topology = new Topology("lowLatencyViolationTest");
+        
+        topology.strings("a")
+                .lowLatency()
+                .modify(getContainerIdAppend())
+                .isolate()  // expect ISE: not legal in a low latency region
+                .modify(getContainerIdAppend())
+                .endLowLatency()
+                ;
+    }
        
     /**
      * Get the container ids from a tuple of the form produced with
