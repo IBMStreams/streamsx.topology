@@ -17,6 +17,8 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.PERuntime;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.builder.JOperator;
+import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.ToIntFunction;
@@ -76,7 +78,10 @@ public class LowLatencyTest extends TestTopology {
         JSONArray ops = (JSONArray)graph.get("operators");
         for(Object opObj : ops){
             JSONObject op = (JSONObject)opObj;
-            String lowLatencyTag = (String) op.get("lowLatencyTag");
+            String lowLatencyTag = null;
+            JSONObject placement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
+            if (placement != null)
+                lowLatencyTag = (String) placement.get(JOperator.PLACEMENT_LOW_LATENCY_REGION_ID);
             String kind = (String)op.get("kind");
             JSONObject queue = (JSONObject) op.get("queue");
             if(queue != null && (lowLatencyTag!=null || lowLatencyTag.equals(""))){
