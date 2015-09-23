@@ -596,7 +596,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public BOperatorInvocation operator() {
         if (isPlaceable())
             return ((BOutputPort) output()).operator();
-        throw new IllegalStateException();
+        throw new IllegalStateException("Illegal operation: Placeable.isPlaceable()==false");
     }
     
     private PlacementInfo getPlacementInfo() {

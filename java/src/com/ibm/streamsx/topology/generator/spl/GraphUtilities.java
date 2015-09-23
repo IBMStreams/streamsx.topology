@@ -11,11 +11,10 @@ import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
 
-class GraphUtilities {
+public class GraphUtilities {
     static ArrayList<JSONObject> findStarts(JSONObject graph) {
         ArrayList<JSONObject> starts = new ArrayList<JSONObject>();
         JSONArray ops = (JSONArray) graph.get("operators");
@@ -272,14 +271,62 @@ class GraphUtilities {
             ops.remove(iso);
         }
     }
+    
+    public enum Direction {UPSTREAM, DOWNSTREAM, BOTH};
+    
+    public static class VisitController {
+        private final Direction direction;
+        private final Set<BVirtualMarker> markerBoundaries;
+        private boolean stop = false;
+        /** default is DOWNSTREAM */
+        public VisitController() {
+            this(Direction.DOWNSTREAM, null);
+        }
+        public VisitController(Direction direction) {
+            this(direction, null);
+        }
+        public VisitController(Direction direction, Set<BVirtualMarker> markerBoundaries) {
+            this.direction = direction;
+            if (markerBoundaries == null)
+                markerBoundaries = Collections.emptySet();
+            this.markerBoundaries = markerBoundaries;
+        }
+        public Direction direction() { return direction; }
+        public Set<BVirtualMarker> markerBoundaries() { return markerBoundaries; }
+        public boolean stopped() { return stop; }
+        public void setStop() { stop = true; }
+    }
 
     // Visits every node in the region defined by the boundaries, and applies
     // to it the consumer's accept() method.
     static void visitOnce(List<JSONObject> starts,
             Set<BVirtualMarker> boundaries, JSONObject graph,
             Consumer<JSONObject> consumer) {
+        visitOnce(new VisitController(Direction.BOTH, boundaries),
+                starts, graph, consumer);
+    }
+
+    /**
+     * Starting with {@code starts} nodes, visits every node in the specified
+     * direction and apply the consumer's accept() method.
+     * <p>
+     * Cease traversal of a branch if an element in
+     * {@code visitController.markerBounderies()} is encountered.
+     * <p>
+     * During traversal, return if {@code visitController.getStop()==true}.
+     * @param visitController may be null; defaults is Direction.DOWNSTREAM
+     * @param starts
+     * @param graph
+     * @param consumer
+     */
+    public static void visitOnce(VisitController visitController,
+            List<JSONObject> starts, JSONObject graph,
+            Consumer<JSONObject> consumer) {
         Set<JSONObject> visited = new HashSet<JSONObject>();
         List<JSONObject> unvisited = new ArrayList<JSONObject>();
+        if (visitController == null)
+            visitController = new VisitController();
+
 
         unvisited.addAll(starts);
 
@@ -287,17 +334,25 @@ class GraphUtilities {
             JSONObject op = unvisited.get(0);
             // Modify and THEN add to hashSet as to not break the hashCode of
             // the object in the hashSet.
+            if (visitController.stopped())
+                return;
             consumer.accept(op);
             visited.add(op);  
-            GraphUtilities.getUnvisitedAdjacentNodes(visited, unvisited, op,
-                    graph, boundaries);
+            GraphUtilities.getUnvisitedAdjacentNodes(visitController.direction(), visited,
+                    unvisited, op, graph, visitController.markerBoundaries());
             unvisited.remove(0);
-            
-  
         }
     }
 
     static void getUnvisitedAdjacentNodes(
+            Collection<JSONObject> visited, Collection<JSONObject> unvisited,
+            JSONObject op, JSONObject graph, Set<BVirtualMarker> boundaries) {
+        getUnvisitedAdjacentNodes(Direction.BOTH, visited, unvisited,
+                op, graph, boundaries);
+    }
+
+    static void getUnvisitedAdjacentNodes(
+            Direction direction,
             Collection<JSONObject> visited, Collection<JSONObject> unvisited,
             JSONObject op, JSONObject graph, Set<BVirtualMarker> boundaries) {
         
@@ -307,40 +362,44 @@ class GraphUtilities {
         removeVisited(children, visited);
 
         // --- Process parents ---
-        Set<JSONObject> allOperatorChildren = new HashSet<>();
-        List<JSONObject> operatorParents = new ArrayList<>();
-        for (JSONObject parent : parents) {
-            if (equalsAny(boundaries, (String) parent.get("kind"))) {
-                operatorParents.add(parent);
-                allOperatorChildren.addAll(GraphUtilities.getDownstream(parent,
-                        graph));
+        if (direction != Direction.DOWNSTREAM) {
+            Set<JSONObject> allOperatorChildren = new HashSet<>();
+            List<JSONObject> operatorParents = new ArrayList<>();
+            for (JSONObject parent : parents) {
+                if (equalsAny(boundaries, (String) parent.get("kind"))) {
+                    operatorParents.add(parent);
+                    allOperatorChildren.addAll(GraphUtilities.getDownstream(parent,
+                            graph));
+                }
             }
+            visited.addAll(operatorParents);
+            parents.removeAll(operatorParents);
+    
+            removeVisited(allOperatorChildren, visited);
+            parents.addAll(allOperatorChildren);
+    
+            unvisited.addAll(parents);
         }
-        visited.addAll(operatorParents);
-        parents.removeAll(operatorParents);
-
-        removeVisited(allOperatorChildren, visited);
-        parents.addAll(allOperatorChildren);
-
-        unvisited.addAll(parents);
 
         // --- Process children ---
-        List<JSONObject> childrenToRemove = new ArrayList<JSONObject>();
-        Set<JSONObject> allOperatorParents = new HashSet<>();
-        for (JSONObject child : children) {
-            if (equalsAny(boundaries, (String) child.get("kind"))) {
-                childrenToRemove.add(child);
-                allOperatorParents.addAll(GraphUtilities.getUpstream(child,
-                        graph));
+        if (direction != Direction.UPSTREAM) {
+            List<JSONObject> childrenToRemove = new ArrayList<JSONObject>();
+            Set<JSONObject> allOperatorParents = new HashSet<>();
+            for (JSONObject child : children) {
+                if (equalsAny(boundaries, (String) child.get("kind"))) {
+                    childrenToRemove.add(child);
+                    allOperatorParents.addAll(GraphUtilities.getUpstream(child,
+                            graph));
+                }
             }
+            visited.addAll(childrenToRemove);
+            children.removeAll(childrenToRemove);
+    
+            removeVisited(allOperatorParents, visited);
+            children.addAll(allOperatorParents);
+    
+            unvisited.addAll(children);
         }
-        visited.addAll(childrenToRemove);
-        children.removeAll(childrenToRemove);
-
-        removeVisited(allOperatorParents, visited);
-        children.addAll(allOperatorParents);
-
-        unvisited.addAll(children);
     }
 
     private static void removeVisited(Collection<JSONObject> ops,

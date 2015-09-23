@@ -17,6 +17,7 @@ import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Initializable;
+import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -176,6 +177,29 @@ public class IsolateTest extends TestTopology {
         // assertTrue(expectedCount.valid());
         // assertTrue(expectedContent.valid());
     }
+       
+    /**
+     * Get the container ids from a tuple of the form produced with
+     * getContainerIdAgg() - i.e. <some-tag> <id1> [<id2> ...]
+     * @param results
+     * @return
+     */
+    public static Set<String> getContainerIds(List<String> results) {
+        Set<String> ids = new HashSet<>();
+        for (String s : results) {
+            boolean first = true;
+            for (String stok : s.split(" ")) {
+                if (first) {
+                    first = false;
+                    continue;
+                }
+                // see GetContainerIdAndChannelAppend
+                String[] idParts = stok.split("::ch-");
+                ids.add(idParts[0]); // just the container id
+            }
+        }        
+        return ids;
+    }
 
 
     public static Function<String, String> getContainerId() {
@@ -196,6 +220,66 @@ public class IsolateTest extends TestTopology {
         public void initialize(FunctionContext functionContext)
                 throws Exception {
             id = functionContext.getContainer().getId();
+        }
+    }
+
+    /**
+     * Create a UnaryOperator function that appends the fn's container id
+     * onto the tuple's value.
+     * @return the function
+     */
+    public static UnaryOperator<String> getContainerIdAppend() {
+        return new GetContainerIdAppend();
+    }
+    
+    /**
+     * A UnaryOperator that appends the fn's container id onto the tuple's value.
+     */
+    @SuppressWarnings("serial")
+    public static final class GetContainerIdAppend implements
+            UnaryOperator<String> , Initializable {
+        
+        private String id;
+        @Override
+        public String apply(String v) {
+            return v + " " + id;
+        }
+
+        @Override
+        public void initialize(FunctionContext functionContext)
+                throws Exception {
+            id = functionContext.getContainer().getId();
+        }
+    }
+
+    /**
+     * Create a UnaryOperator function that appends the fn's container id
+     * and channel onto the tuple's value.
+     * @return the function
+     */
+    public static UnaryOperator<String> getContainerIdAndChannelAppend() {
+        return new GetContainerIdAppend();
+    }
+    
+    /**
+     * A UnaryOperator that appends the fn's container id and parallel channel onto the tuple's value.
+     */
+    @SuppressWarnings("serial")
+    public static final class GetContainerIdAndChannelAppend implements
+            UnaryOperator<String> , Initializable {
+        
+        private String id;
+        private int channel;
+        @Override
+        public String apply(String v) {
+            return String.format("%s %s::ch-%d", v, id, channel);
+        }
+
+        @Override
+        public void initialize(FunctionContext functionContext)
+                throws Exception {
+            id = functionContext.getContainer().getId();
+            channel = functionContext.getChannel();
         }
     }
 }

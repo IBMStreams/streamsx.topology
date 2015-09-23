@@ -86,6 +86,11 @@
      <fail message="Unittests failed" if="topology.tests.failed"/>
   </target>
 
+  <target name="unittest.everything"
+          depends="unittest.main,unittest.standalone,unittest.standalone.other,unittest.distributed,unittest.distributed.other">
+     <fail message="Unittests failed" if="topology.tests.failed"/>
+  </target>
+
   <target name="unittest.main">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="EMBEDDED_TESTER"/>
@@ -98,8 +103,27 @@
      </antcall>
   </target>
 
+  <target name="unittest.standalone.other">
+     <antcall target="unittest.mqtt" inheritAll="no">
+       <param name="topology.test.type" value="STANDALONE_TESTER"/>
+     </antcall>
+     <antcall target="unittest.kafka" inheritAll="no">
+       <param name="topology.test.type" value="STANDALONE_TESTER"/>
+     </antcall>
+  </target>
+
   <target name="unittest.distributed">
      <antcall target="unittest.base" inheritAll="no">
+       <param name="topology.test.type" value="DISTRIBUTED_TESTER"/>
+     </antcall>
+     <fail message="Unittests failed" if="topology.tests.failed"/>
+  </target>
+
+  <target name="unittest.distributed.other">
+     <antcall target="unittest.mqtt" inheritAll="no">
+       <param name="topology.test.type" value="DISTRIBUTED_TESTER"/>
+     </antcall>
+     <antcall target="unittest.kafka" inheritAll="no">
        <param name="topology.test.type" value="DISTRIBUTED_TESTER"/>
      </antcall>
      <fail message="Unittests failed" if="topology.tests.failed"/>

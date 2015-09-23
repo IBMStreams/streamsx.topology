@@ -31,6 +31,14 @@
     </ant>
   </target>
 
+  <target name="test.everything" >
+    <ant dir="test/java">
+       <target name="unittest.everything"/>
+       <target name="junit.report"/>
+       <target name="coverage.report"/>
+    </ant>
+  </target>
+
   <target name="test.quick" >
     <ant dir="test/java">
        <target name="unittest.quick"/>
