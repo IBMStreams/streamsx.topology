@@ -560,5 +560,19 @@ public class PlaceableTest extends TestTopology {
 //        Set<String> ids = getContainerIds(contents.getResult());
 //        assertEquals("ids: "+ids, 1, ids.size());
     }    
+    
+    @Test(expected = IllegalStateException.class)
+    public void testColocateIsolateViolation() throws Exception {
+        
+        // verify s1.isolate().modify().colocate(s1) is disallowed
+        
+        Topology t = new Topology("testColocateIsolateViolation");
+        
+        TStream<String> s1 = t.strings("a");
+        s1.isolate()
+            .modify(getContainerIdAppend())
+            .colocate(s1)  // throws ISE: can't colocate isolated stream with parent
+            ;
+    }
 
 }

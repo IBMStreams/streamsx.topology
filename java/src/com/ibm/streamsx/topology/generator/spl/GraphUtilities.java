@@ -103,7 +103,7 @@ public class GraphUtilities {
      * @param graph The graph JSONObject in which {@code visitOp} resides.
      * @return A list of all operators immediately upstream from {@code visitOp}
      */
-    static List<JSONObject> getUpstream(JSONObject visitOp,
+    public static List<JSONObject> getUpstream(JSONObject visitOp,
             JSONObject graph) {
         List<JSONObject> uniqueParents = new ArrayList<>();
         Set<JSONObject> parents = new HashSet<>();
