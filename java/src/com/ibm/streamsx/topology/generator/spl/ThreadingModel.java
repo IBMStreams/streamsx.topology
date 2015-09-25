@@ -56,8 +56,13 @@ class ThreadingModel {
                 // remove anything from the operator's params.
                 functional = (boolean) queue.get("functional");
 
+                JSONObject placement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
+                
                 // See if operator is in a lowLatency region
-                String regionTag = (String) op.get("lowLatencyTag");
+                String regionTag = null;
+                if (placement != null) {
+                    regionTag = (String) placement.get(JOperator.PLACEMENT_LOW_LATENCY_REGION_ID);
+                }
                 if (regionTag != null && !regionTag.isEmpty()) {
                     regionTagExists = true;
                 }               
@@ -65,8 +70,10 @@ class ThreadingModel {
                 // See if operator has different colocation tag than any of 
                 // its parents.
 
-                String colocTag = (String) JOperatorConfig.getJSONItem(op,
-                        JOperatorConfig.PLACEMENT).get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
+                String colocTag = null;
+                if (placement != null) {
+                    colocTag = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
+                }
 
                 List<JSONObject> parents = GraphUtilities.getUpstream(op, graph);
                 for(JSONObject parent : parents){

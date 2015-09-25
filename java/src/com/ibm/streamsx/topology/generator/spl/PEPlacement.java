@@ -192,14 +192,14 @@ class PEPlacement {
                 new Consumer<JSONObject>() {
                     @Override
                     public void accept(JSONObject op) {
-                        // If the region has already been assigned a lowLatency
-                        // tag, simply
-                        // return.
-                        String regionTag = (String) op.get("lowLatencyTag");
+                        // If the region has already been assigned a
+                        // lowLatency tag, simply return.
+                        JSONObject placement = JOperatorConfig.createJSONItem(op, JOperatorConfig.PLACEMENT);
+                        String regionTag = (String) placement.get(JOperator.PLACEMENT_LOW_LATENCY_REGION_ID);
                         if (regionTag != null && !regionTag.isEmpty()) {
                             return;
                         }
-                        op.put("lowLatencyTag", lowLatencyTag);
+                        placement.put(JOperator.PLACEMENT_LOW_LATENCY_REGION_ID, lowLatencyTag);
                     }
                 });
 

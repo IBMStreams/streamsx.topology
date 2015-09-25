@@ -49,7 +49,7 @@ class PlacementInfo {
     /**
      * Fuse a number of placeables.
      * If fusing occurs then the fusing id
-     * is set as "colocate" the "placement" JSON object in
+     * is set as "explicitColocate" the "placement" JSON object in
      * the operator's config.
      * 
      */
