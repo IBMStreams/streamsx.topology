@@ -63,7 +63,6 @@
           Overview="java/src/overview.html"
           Windowtitle="Java Application API for InfoSphere Streams"
           Footer="streamsx.topology 0.9 beta @ IBMStreams GitHub"
-          failonwarning="yes"
           additionalparam="${disableJavadocLint}"
           >
             <fileset dir="java/src">
