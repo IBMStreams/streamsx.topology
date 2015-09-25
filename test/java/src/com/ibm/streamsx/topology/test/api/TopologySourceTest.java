@@ -16,11 +16,30 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 
 public class TopologySourceTest extends TestTopology {
+    
+    @Test (expected = NullPointerException.class)
+    public void testConstantsNullData() throws Exception {
+        Topology t = new Topology("testConstantsNullData");
+        t.constants(null);  // throw NPE
+    }
+    
+    @Test (expected = IllegalArgumentException.class)
+    public void testLimitedSourceNNegCount() throws Exception {
+        Topology t = new Topology("testLimitedSourceNNegCount");
+        t.limitedSourceN(new FunctionalSource(), -1);  // throw IAE
+    }
+    
+    @Test (expected = IllegalArgumentException.class)
+    public void testLimitedSourceNegCount() throws Exception {
+        Topology t = new Topology("testLimitedSourceNegCount");
+        t.limitedSource(new Value<String>("s"), -1);  // throw IAE
+    }
 
     @Test
     public void testLimitedSource() throws Exception {

@@ -59,13 +59,13 @@ public class SPLStreams {
     /**
      * Convert a {@code Stream} to an {@code SPLStream}. For each tuple
      * {@code t} on {@code stream}, the returned stream will contain a tuple
-     * that is the result of {@code transformer.call(t, outTuple)} when the
+     * that is the result of {@code converter.apply(t, outTuple)} when the
      * return is not {@code null}. {@code outTuple} is a newly created, empty,
-     * {@code OutputTuple}, the {@code convert.call()} method populates
+     * {@code OutputTuple}, the {@code converter.apply()} method populates
      * {@code outTuple} from {@code t}.
      * 
      * <P>
-     * Example of transforming a stream containing a {@code Sensor} object to an
+     * Example of converting a stream containing a {@code Sensor} object to an
      * SPL schema of {@code tuple<rstring id, float64 reading>}.
      * 
      * <pre>
@@ -73,9 +73,9 @@ public class SPLStreams {
      * Stream&lt;Sensor> sensors = ...
      * StreamSchema schema = Type.Factory.getStreamSchema("tuple&lt;rstring id, float64 reading>");
      * SPLStream splSensors = SPLStreams.convertStream(sensors,
-     *   new Function2&lt;Sensor, OutputTuple, OutputTuple>() {
+     *   new BiFunction2&lt;Sensor, OutputTuple, OutputTuple>() {
      *             &#64;Override
-     *             public OutputTuple call(Sensor sensor, OutputTuple outTuple) {
+     *             public OutputTuple apply(Sensor sensor, OutputTuple outTuple) {
      *                 outTuple.setString("id", sensor.getId());
      *                 outTuple.setDouble("reading", sensor.getReading());
      *                 return outTuple;
@@ -90,8 +90,8 @@ public class SPLStreams {
      * @param converter
      *            Converter used to populate the SPL tuple.
      * @param schema
-     *            Schema of returned stream.
-     * @return Stream containing the converted tuples.
+     *            Schema of returned SPLStream.
+     * @return SPLStream containing the converted tuples.
      * 
      * @see SPLStream#convert(com.ibm.streamsx.topology.function.Function)
      */

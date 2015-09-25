@@ -12,9 +12,10 @@ import com.ibm.streams.operator.StreamSchema;
  * SPL schema for {@link com.ibm.streamsx.topology.spl.SPLStream SPLStream}
  */
 class KafkaSchemas {
+    @SuppressWarnings("unused")
+    private static final KafkaSchemas forCoverage = new KafkaSchemas();
 
-    private KafkaSchemas() {
-    }
+    private KafkaSchemas() { }
 
     /**
      * SPL tuple schema for the way our implementation uses the

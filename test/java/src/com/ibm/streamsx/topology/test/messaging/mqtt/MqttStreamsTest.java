@@ -215,6 +215,15 @@ public class MqttStreamsTest extends TestTopology {
         assumeTrue(SC_OK);
     }
     
+    @Test (expected = IllegalArgumentException.class)
+    public void testSubscribeNullTopic() throws Exception {
+        Topology top = new Topology("testSubscribeNullTopic");
+        String subClientId = newSubClientId(top.getName());
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
+        
+        consumer.subscribe(null); // throws IAG
+   }
+    
     @Test
     public void testConfigParams() throws Exception {
         

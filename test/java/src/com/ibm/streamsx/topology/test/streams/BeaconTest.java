@@ -5,6 +5,8 @@
 package com.ibm.streamsx.topology.test.streams;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -32,6 +34,43 @@ import com.ibm.streamsx.topology.tuple.BeaconTuple;
 # Copyright IBM Corp. 2015  
  */
 public class BeaconTest extends TestTopology {
+    
+    @Test
+    public void testBeaconTupleToString() throws Exception {
+        BeaconTuple bt1 = new BeaconTuple(0, 1);
+        BeaconTuple bt2 = new BeaconTuple(0, 2);
+        
+        String s = bt1.toString();
+        assertNotNull(s);
+        assertFalse(s.isEmpty());
+        assertFalse(s.equals(bt2.toString()));
+    }
+    
+    @Test
+    public void testBeaconTupleHashCode() throws Exception {
+        BeaconTuple bt1 = new BeaconTuple(0, 1);
+        BeaconTuple bt2 = new BeaconTuple(0, 2);
+        BeaconTuple bt3 = new BeaconTuple(0, 2);
+        
+        assertTrue(bt1.hashCode() != 0);
+        assertTrue(bt1.hashCode() != bt2.hashCode());
+        assertTrue(bt2.hashCode() == bt3.hashCode());
+    }
+    
+    @Test
+    public void testBeaconTupleEquals() throws Exception {
+        BeaconTuple bt1 = new BeaconTuple(0, 1);
+        BeaconTuple bt2 = new BeaconTuple(0, 2);
+        BeaconTuple bt3 = new BeaconTuple(0, 2);
+        BeaconTuple bt4 = new BeaconTuple(1, 2);
+        
+        assertTrue(!bt1.equals("foo"));
+        assertTrue(!bt1.equals(null));
+        assertTrue(bt1.equals(bt1));
+        assertTrue(!bt1.equals(bt2));
+        assertTrue(bt2.equals(bt3));
+        assertTrue(!bt3.equals(bt4));
+    }
 
     @Test
     public void testFixedCount() throws Exception {
