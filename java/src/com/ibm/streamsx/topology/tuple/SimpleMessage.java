@@ -80,9 +80,9 @@ public class SimpleMessage implements Serializable, Message {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + message != null ? message.hashCode() : 0;
-        result = prime * result + key != null ? key.hashCode() : 0;
-        result = prime * result + topic != null ? topic.hashCode() : 0;
+        result = prime * result + (message != null ? message.hashCode() : 0);
+        result = prime * result + (key != null ? key.hashCode() : 0);
+        result = prime * result + (topic != null ? topic.hashCode() : 0);
         return result;
     }
 

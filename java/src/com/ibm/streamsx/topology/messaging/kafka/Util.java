@@ -16,6 +16,10 @@ import java.util.Map.Entry;
 import com.ibm.streamsx.topology.TopologyElement;
 
 class Util {
+    @SuppressWarnings("unused")
+    private static final Util forCoverage = new Util();
+    
+    private Util() { }
     
     static String[] toKafkaProperty(Map<String,Object> props) {
         List<String> list = new ArrayList<>();

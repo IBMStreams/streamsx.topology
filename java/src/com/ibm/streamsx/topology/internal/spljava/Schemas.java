@@ -16,7 +16,9 @@ import com.ibm.streams.operator.types.Blob;
 import com.ibm.streams.operator.types.XML;
 
 public class Schemas {
-
+    @SuppressWarnings("unused")
+    private static final Schemas forCoverage = new Schemas();
+    
     public static final StreamSchema STRING = getStreamSchema("tuple<rstring string>");
     public static final StreamSchema BLOB = getStreamSchema("tuple<blob binary>");
     public static final StreamSchema XML = getStreamSchema("tuple<xml document>");
@@ -32,6 +34,8 @@ public class Schemas {
         
         DIRECT_SCHEMA_CLASSES = Collections.unmodifiableSet(directSchemaClasses);
     }
+    
+    private Schemas() { }
     
     public static boolean usesDirectSchema(Type type) {
         return DIRECT_SCHEMA_CLASSES.contains(type);

@@ -12,9 +12,10 @@ import com.ibm.streams.operator.StreamSchema;
  * SPL schema for {@link com.ibm.streamsx.topology.spl.SPLStream SPLStream}
  */
 class MqttSchemas {
+    @SuppressWarnings("unused")
+    private static final MqttSchemas forCoverage = new MqttSchemas();
 
-    private MqttSchemas() {
-    }
+    private MqttSchemas() { }
 
     /**
      * SPL tuple schema for the way our implementation uses the

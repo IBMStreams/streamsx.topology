@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.test.messaging.kafka;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -255,6 +256,15 @@ public class KafkaStreamsTest extends TestTopology {
                 assertEquals("ctor "+vals.toString(), vals.msg, t.getMessage());
                 assertEquals("ctor "+vals.toString(), vals.topic, t.getTopic());
             }
+            
+            Exception exc = null;
+            try {
+                new SimpleMessage(null, "key", "topic");  // throw IAE
+            } catch (Exception e) {
+                exc = e;
+            }
+            assertNotNull(exc);
+            assertTrue(exc.getClass().toString(), exc instanceof IllegalArgumentException);
         }
         // test equals()
         for (Vals vals : testMsgVals) {
@@ -285,6 +295,14 @@ public class KafkaStreamsTest extends TestTopology {
             assertFalse("neg equals() - "+t.toString(), t.equals(null));
             assertFalse("neg equals() - "+t.toString(), t.equals("notAMessageObject"));
         }
+        // test hashCode()
+        {
+            SimpleMessage t = new SimpleMessage("x", "y", "z");
+            assertTrue(t.hashCode() != 0);
+            t = new SimpleMessage("x", null, null);
+            assertTrue(t.hashCode() != 0);
+        }
+        
     }
     
     private void checkAssumes() {
@@ -294,6 +312,31 @@ public class KafkaStreamsTest extends TestTopology {
         
         assumeTrue(SC_OK);
     }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void testSubscribeNullTopic() throws Exception {
+        Topology top = new Topology("testSubscribeNullTopic");
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig("group"));
+        
+        consumer.subscribe(null); // throws IAE
+   }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void testSubscribeNullThreadsPerTopic() throws Exception {
+        Topology top = new Topology("testSubscribeNullThreadsPerTopic");
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig("group"));
+        
+        consumer.subscribe(null, new Value<String>("topic")); // throws IAE
+   }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void testSubscribeNegThreadsPerTopic() throws Exception {
+        Topology top = new Topology("testSubscribeNegThreadsPerTopic");
+        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig("group"));
+        
+        consumer.subscribe(new Value<Integer>(-1), new Value<String>("topic")); // throws IAE
+   }
+    
     
     @Test
     public void testConfigParams() throws Exception {

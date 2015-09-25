@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 class Util {
+    @SuppressWarnings("unused")
+    private static final Util forCoverage = new Util();
     private static final Map<String, ParamHandler> paramHandlers = new HashMap<>();
     static  {
         paramHandlers.put("serverURI", new ParamHandler("serverURI"));
@@ -25,6 +27,8 @@ class Util {
         paramHandlers.put("trustStore", new ParamHandler("trustStore"));
         paramHandlers.put("trustStorePassword", new ParamHandler("trustStorePassword"));
     }
+    
+    private Util() { };
 
     private static class ParamHandler {
         @SuppressWarnings("unused")
