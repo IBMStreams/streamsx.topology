@@ -318,7 +318,7 @@ public class KafkaStreamsTest extends TestTopology {
         Topology top = new Topology("testSubscribeNullTopic");
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig("group"));
         
-        consumer.subscribe(null); // throws IAG
+        consumer.subscribe(null); // throws IAE
    }
 
     @Test (expected = IllegalArgumentException.class)
@@ -326,7 +326,7 @@ public class KafkaStreamsTest extends TestTopology {
         Topology top = new Topology("testSubscribeNullThreadsPerTopic");
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig("group"));
         
-        consumer.subscribe(null, new Value<String>("topic")); // throws IAG
+        consumer.subscribe(null, new Value<String>("topic")); // throws IAE
    }
 
     @Test (expected = IllegalArgumentException.class)
@@ -334,7 +334,7 @@ public class KafkaStreamsTest extends TestTopology {
         Topology top = new Topology("testSubscribeNegThreadsPerTopic");
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig("group"));
         
-        consumer.subscribe(new Value<Integer>(-1), new Value<String>("topic")); // throws IAG
+        consumer.subscribe(new Value<Integer>(-1), new Value<String>("topic")); // throws IAE
    }
     
     

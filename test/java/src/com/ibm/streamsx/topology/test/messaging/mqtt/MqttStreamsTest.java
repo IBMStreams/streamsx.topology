@@ -221,7 +221,7 @@ public class MqttStreamsTest extends TestTopology {
         String subClientId = newSubClientId(top.getName());
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
         
-        consumer.subscribe(null); // throws IAG
+        consumer.subscribe(null); // throws IAE
    }
     
     @Test

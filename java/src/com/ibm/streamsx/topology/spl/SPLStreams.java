@@ -73,7 +73,7 @@ public class SPLStreams {
      * Stream&lt;Sensor> sensors = ...
      * StreamSchema schema = Type.Factory.getStreamSchema("tuple&lt;rstring id, float64 reading>");
      * SPLStream splSensors = SPLStreams.convertStream(sensors,
-     *   new BiFunction2&lt;Sensor, OutputTuple, OutputTuple>() {
+     *   new BiFunction&lt;Sensor, OutputTuple, OutputTuple>() {
      *             &#64;Override
      *             public OutputTuple apply(Sensor sensor, OutputTuple outTuple) {
      *                 outTuple.setString("id", sensor.getId());
