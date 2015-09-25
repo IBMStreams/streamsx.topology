@@ -33,27 +33,35 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     // This is the eviction policy in SPL terms
     protected final StreamWindow.Policy policy;
     protected final long config;
+    protected final TimeUnit timeUnit;
         
     private final Function<T,?> keyGetter;
     
-    private WindowDefinition(TStream<T> stream, StreamWindow.Policy policy, long config, Function<T,?> keyGetter) {
+    private WindowDefinition(TStream<T> stream, StreamWindow.Policy policy, long config, TimeUnit timeUnit, Function<T,?> keyGetter) {
         super(stream);
         this.stream = stream;
         this.policy = policy;
         this.config = config;
         this.keyGetter = keyGetter;
+        this.timeUnit = timeUnit;
+        
+        assert (timeUnit == null && policy != StreamWindow.Policy.TIME) ||
+               (timeUnit != null && policy == StreamWindow.Policy.TIME);
     }
 
     public WindowDefinition(TStream<T> stream, int count) {
-        this(stream, Policy.COUNT, count, null);
+        this(stream, Policy.COUNT, count, null, null);
     }
 
     public WindowDefinition(TStream<T> stream, long time, TimeUnit unit) {
-        this(stream, Policy.TIME, unit.toMillis(time), null);
+        this(stream, Policy.TIME, time, unit, null);
     }
 
     public WindowDefinition(TStream<T> stream, TWindow<?,?> configWindow) {
-        this(stream, ((WindowDefinition<?,?>) configWindow).policy, ((WindowDefinition<?,?>) configWindow).config, null);
+        this(stream, ((WindowDefinition<?,?>) configWindow).policy,
+                ((WindowDefinition<?,?>) configWindow).config,
+                ((WindowDefinition<?,?>) configWindow).timeUnit,
+                null);
     }
     
     private final void setPartitioned(final java.lang.reflect.Type type) {
@@ -97,7 +105,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         
         java.lang.reflect.Type aggregateType = TypeDiscoverer.determineStreamType(aggregator, null);
         
-        return aggregate(aggregator, aggregateType, Policy.COUNT, 1);
+        return aggregate(aggregator, aggregateType, Policy.COUNT, 1, null);
     }
     
     @Override
@@ -105,11 +113,11 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
             long period, TimeUnit unit) {
         java.lang.reflect.Type aggregateType = TypeDiscoverer.determineStreamType(aggregator, null);
         
-        return aggregate(aggregator, aggregateType, Policy.TIME, unit.toMillis(period));
+        return aggregate(aggregator, aggregateType, Policy.TIME, period, unit);
     }
     
     private <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
-            java.lang.reflect.Type aggregateType, Policy triggerPolicy, Object triggerConfig) {
+            java.lang.reflect.Type aggregateType, Policy triggerPolicy, Object triggerConfig, TimeUnit triggerTimeUnit) {
         
         if (getTupleClass() == null && !isKeyed()) {
             java.lang.reflect.Type tupleType = TypeDiscoverer.determineStreamTypeNested(Function.class, 0, List.class, aggregator);
@@ -126,7 +134,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
                 opName, FunctionAggregate.class, aggregator, getOperatorParams());
         SourceInfo.setSourceInfo(aggOp, WindowDefinition.class);
 
-        addInput(aggOp, triggerPolicy, triggerConfig);
+        addInput(aggOp, triggerPolicy, triggerConfig, triggerTimeUnit);
 
         return JavaFunctional.addJavaOutput(this, aggOp, aggregateType);
     }
@@ -138,13 +146,13 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         return params;
     }
 
-    public BInputPort addInput(BOperatorInvocation aggOp,
-            StreamWindow.Policy triggerPolicy, Object triggerConfig) {
+    private BInputPort addInput(BOperatorInvocation aggOp,
+            StreamWindow.Policy triggerPolicy, Object triggerConfig, TimeUnit triggerTimeUnit) {
         BInputPort bi = stream.connectTo(aggOp, true, null);
         
         
-        return bi.window(Type.SLIDING, policy, config, triggerPolicy,
-                triggerConfig, isKeyed());
+        return bi.window(Type.SLIDING, policy, config, timeUnit,
+                triggerPolicy, triggerConfig, triggerTimeUnit, isKeyed());
     }
     
     public <J, U> TStream<J> joinInternal(TStream<U> xstream,
@@ -168,7 +176,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         SourceInfo.setSourceInfo(joinOp, WindowDefinition.class);
                
         @SuppressWarnings("unused")
-        BInputPort input0 = addInput(joinOp, Policy.COUNT, Integer.MAX_VALUE);
+        BInputPort input0 = addInput(joinOp, Policy.COUNT, Integer.MAX_VALUE, (TimeUnit) null);
 
         @SuppressWarnings("unused")
         BInputPort input1 = xstream.connectTo(joinOp, true, null);
@@ -181,7 +189,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     public <U> TWindow<T,U> key(Function<T, U> keyGetter) {
         if (keyGetter == null)
             throw new NullPointerException();
-        return new WindowDefinition<T,U>(stream, policy, config, keyGetter);
+        return new WindowDefinition<T,U>(stream, policy, config, timeUnit, keyGetter);
     }
     @Override
     public TWindow<T, T> key() {

@@ -80,6 +80,14 @@ public class WindowTest extends TestTopology {
         assertNotNull(window);
         assertWindow(f, window);
     }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testZeroTime() throws Exception {
+        final Topology f = new Topology("ZeroTimeWindow");
+        TStream<String> source = f.strings("a", "b", "c");
+        source.last(0, TimeUnit.DAYS);
+    }    
+    
 
     @Test
     public void testCountAggregate() throws Exception {
