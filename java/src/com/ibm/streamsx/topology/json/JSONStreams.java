@@ -151,14 +151,14 @@ public class JSONStreams {
     /**
      * Declare a stream that flattens an array present in the input tuple.
      * For each tuple on {@code stream} the key {@code arrayKey} is extracted
-     * and if it is a list then each value in the list will be present
+     * and if it is an array then each value in the array will be present
      * on the returned stream as an individual tuple.
      * <BR>
-     * If a list value is a JSON object will be placed on returned stream,
+     * If an array value is a JSON object it will be placed on returned stream,
      * otherwise a JSON object will be placed on the returned stream with
      * the key {@link #PAYLOAD} containing the value.
      * <BR>
-     * If {@code arrayKey} is not present, is not a list or is an empty list
+     * If {@code arrayKey} is not present, is not an array or is an empty array
      * then no tuples will result on the returned stream.
      * <P>
      * Any additional keys ({@code additionalKeys}) that are specified are
@@ -168,10 +168,30 @@ public class JSONStreams {
      * If an addition key is not in the input tuple, then it is not copied into
      * the flattened tuples. 
      * </P>
+     * <P>
+     * For example, with a JSON object input tuple of:
+     * <pre>
+     * <code>
+     * {"ts":"13:28:07", "sensors":
+     *   [
+     *     {"temperature": 34.2},
+     *     {"rainfall": 12.96}
+     *   ]
+     * }
+     * </code>
+     * </pre>
+     * and a call of {@code flattenArray(stream, "sensors", "ts")} would result in two tuples:
+     * <pre>
+     * <code>
+     * {"temperature": 34.2, "ts": "13:28:07"}
+     * {"rainfall": 12.96, "ts": "13:28:07"}
+     * </code>
+     * </pre>
+     * </P>
      * 
      * @param stream Steam containing tuples with an array to be flattened.
      * @param arrayKey Key of the array in each input tuple.
-     * @param additionalKeys Additional keys that copied 
+     * @param additionalKeys Additional keys that copied from the input tuple into each resultant tuple from the array
      * @return Stream containing tuples flattened from input tuple.
      */
     public static TStream<JSONObject> flattenArray(TStream<JSONObject> stream,
@@ -180,7 +200,6 @@ public class JSONStreams {
                 new Function<JSONObject, Iterable<JSONObject>>() {
                     private static final long serialVersionUID = 1L;
 
-                    @SuppressWarnings("unchecked")
                     @Override
                     public Iterable<JSONObject> apply(JSONObject tuple) {
                         Object oa = tuple.get(arrayKey);
