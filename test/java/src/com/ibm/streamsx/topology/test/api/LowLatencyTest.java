@@ -1,6 +1,8 @@
 package com.ibm.streamsx.topology.test.api;
 
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerId;
+import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIdAppend;
+import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
@@ -24,6 +26,7 @@ import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
+import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -166,6 +169,52 @@ public class LowLatencyTest extends TestTopology {
                 return i++;
             }
         };
+    }
+    
+    @Test
+    public void nestedTest() throws Exception {
+        
+        // ensure nested low latency yields all fn in the same container
+        
+        final Topology topology = new Topology("nestedTest");
+        final Tester tester = topology.getTester();
+        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+        
+        String[] s1Strs = {"a"};
+        TStream<String> s1 = topology.strings(s1Strs);
+
+        TStream<String> s2 = 
+                s1
+                .isolate()
+                .lowLatency()
+                    .modify(getContainerIdAppend())
+                    .lowLatency()
+                        .modify(getContainerIdAppend())
+                    .endLowLatency()
+                    .modify(getContainerIdAppend())
+                .endLowLatency()
+                ;
+        
+        // NOTE, this works in the sense that all end up in the same container,
+        // but currently only because of the default fuse-island behavior.
+        // There are two issues with the json:
+        // a) the 3rd modify is missing a lowLatencyTag
+        // b) the 2nd modify has a different tag than the first.
+        //    logically it must net out to being in the same container,
+        //    so its just easiest if they're the same tag.
+        //    It's not clear that having them be different is an absolute wrong,
+        //    it's just that it doesn't add any value and complicates things.
+        
+        // s2.print();
+        
+        Condition<Long> uCount = tester.tupleCount(s2.filter(new AllowAll<String>()), 1);
+        Condition<List<String>> contents = tester.stringContents(
+                s2.filter(new AllowAll<String>()), "");
+
+        complete(tester, uCount, 10, TimeUnit.SECONDS);
+
+        Set<String> ids = getContainerIds(contents.getResult());
+        assertEquals("ids: "+ids, 1, ids.size());
     }
 
 }

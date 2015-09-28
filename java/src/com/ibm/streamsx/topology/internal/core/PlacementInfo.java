@@ -5,20 +5,26 @@
 package com.ibm.streamsx.topology.internal.core;
 
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.ISOLATE;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
+import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.Placeable;
+import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 
 /**
  * Manages fusing of Placeables. 
@@ -49,27 +55,32 @@ class PlacementInfo {
     /**
      * Fuse a number of placeables.
      * If fusing occurs then the fusing id
-     * is set as "explicitColocate" the "placement" JSON object in
+     * is set as "explicitColocate" in the "placement" JSON object in
      * the operator's config.
-     * 
+     * @throws IllegalArgumentException if Placeables are from different
+     *          topologies or if Placeable.isPlaceable()==false.
      */
     
-    boolean colocate(Placeable<?> first, Placeable<?> ... toFuse) {
+    synchronized boolean colocate(Placeable<?> first, Placeable<?> ... toFuse) {
         
         Set<Placeable<?>> elements = new HashSet<>();
         elements.add(first);
-        for (Placeable<?> element : toFuse) {
+        elements.addAll(Arrays.asList(toFuse));
+      
+        // check high level constraints
+        for (Placeable<?> element : elements) {
             if (!element.isPlaceable())
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("Placeable.isPlaceable()==false");
             
             if (!first.topology().equals(element.topology()) )
-                throw new IllegalArgumentException();
-            
-            elements.add(element);
+                throw new IllegalArgumentException("Different topologies: "+ first.topology().getName() + " and " + element.topology().getName());
         }
         
         if (elements.size() < 2)
             return false;
+        
+        disallowColocateInLowLatency(elements);
+        disallowColocateIsolatedOpWithParent(first, toFuse);
         
         String fusingId = null;
         for (Placeable<?> element : elements) {
@@ -101,6 +112,40 @@ class PlacementInfo {
              updatePlacementJSON(element);
         }
         return true;
+    }
+    
+    /** throw if s1.isolate().filter().colocate(s1) */
+    private void disallowColocateIsolatedOpWithParent(Placeable<?> first, Placeable<?> ... toFuse) {
+        JSONObject graph = first.builder().complete();
+        JSONObject colocateOp = first.operator().complete();
+        List<JSONObject> parents = GraphUtilities.getUpstream(colocateOp, graph);
+        if (!parents.isEmpty()) {
+            JSONObject isolate = parents.get(0);
+            String kind = (String) isolate.get("kind");
+            if (!ISOLATE.kind().equals(kind))
+                return;
+            parents = GraphUtilities.getUpstream(isolate, graph);
+            if (parents.isEmpty())
+                return;
+            JSONObject isolateParentOp = parents.get(0);
+            for (Placeable<?> placeable : toFuse) {
+                JSONObject tgtOp = placeable.operator().complete();
+                if (tgtOp == isolateParentOp)
+                    throw new IllegalStateException("Illegal to colocate an isolated stream with its parent.");
+            }
+        }
+    }
+    
+    // A short term concession to the fact that colocate()
+    // and low latency regions aren't playing well together
+    // i.e., the low latency guarantee is being violated.
+    // So disallow that configuration for now.
+    private void disallowColocateInLowLatency(Set<Placeable<?>> elements) {
+        for (Placeable<?> element : elements) {
+            BOperatorInvocation op = element.operator();
+            if (element.builder().isInLowLatencyRegion(op))
+                throw new IllegalStateException("colocate() is not allowed in a low latency region");
+        }
     }
     
     synchronized Set<String> getResourceTags(Placeable<?> element) {
