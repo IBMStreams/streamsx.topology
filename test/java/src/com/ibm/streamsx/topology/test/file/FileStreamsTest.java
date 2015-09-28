@@ -23,6 +23,7 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.file.FileStreams;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
+import com.ibm.streamsx.topology.test.InitialDelay;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -61,8 +62,20 @@ public class FileStreamsTest extends TestTopology {
 
         // Create the files from within the topology to ensure it works
         // in distributed and standalone.
-        TStream<Long> single = BeaconStreams.single(t);
-        single.sink(createFiles(files, repeat));
+        //
+        // Due to vagaries / delays that can occur in operator startup
+        // in different processes (distributed mode), delay the initial
+        // file creation process to give the watcher a chance to startup.
+        //
+        // e.g., with numberOfFiles=20 & repeat=1, each group of files
+        // only lasts 20*(10ms*2) => 200ms.  That can easily happen before
+        // the watcher is started and has done its first dir.listFiles(),
+        // with the result being not seeing/processing the expected number
+        // of files.
+        
+        BeaconStreams.single(t)
+                    .modify(new InitialDelay<Long>(5*1000))
+                    .sink(createFiles(files, repeat));
 
         Tester tester = t.getTester();
         Condition<Long> expectedCount = tester.tupleCount(fileNames,
@@ -105,7 +118,7 @@ public class FileStreamsTest extends TestTopology {
                     for (int r = 0; r < repeat; r++) {
                         for (int i = 0; i < files.length; i++) {
                             Path path = Paths.get(files[i]);
-                            if (repeat > 0) {
+                            if (repeat > 1) {
                                 path.toFile().delete();
                                 Thread.sleep(10);
                             }

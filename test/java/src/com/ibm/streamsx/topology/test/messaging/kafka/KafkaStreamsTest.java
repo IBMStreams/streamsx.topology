@@ -33,6 +33,7 @@ import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.messaging.kafka.ConsumerConnector;
 import com.ibm.streamsx.topology.messaging.kafka.ProducerConnector;
+import com.ibm.streamsx.topology.test.InitialDelay;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -387,7 +388,7 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<Message> msgsToPublish = valsToPublish.transform(msgFromValsFunc(null));
         
-        msgsToPublish = msgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
+        msgsToPublish = msgsToPublish.modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
         producer.publish(msgsToPublish, topic);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
@@ -434,7 +435,7 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<Message> msgsToPublish = valsToPublish.transform(msgFromValsFunc(null));
         
-        msgsToPublish = msgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
+        msgsToPublish = msgsToPublish.modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
         producer.publish(msgsToPublish, topic);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(threadsPerTopic, topic);
@@ -478,7 +479,7 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<Message> msgsToPublish = valsToPublish.transform(msgFromValsFunc(topicVal));
         
-        msgsToPublish = msgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
+        msgsToPublish = msgsToPublish.modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
         producer.publish(msgsToPublish);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
@@ -519,7 +520,7 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<Message> msgsToPublish = top.constants(msgs);
         
-        msgsToPublish = msgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
+        msgsToPublish = msgsToPublish.modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
         producer.publish(msgsToPublish, topic);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
@@ -559,7 +560,7 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs).asType(MyMsgSubtype.class);
         
-        msgsToPublish = msgsToPublish.modify(myMsgInitialDelayFunc(PUB_DELAY_MSEC));
+        msgsToPublish = msgsToPublish.modify(new InitialDelay<MyMsgSubtype>(PUB_DELAY_MSEC));
         producer.publish(msgsToPublish, topic);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
@@ -598,7 +599,7 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs).asType(MyMsgSubtype.class);
         
-        msgsToPublish = msgsToPublish.modify(myMsgInitialDelayFunc(PUB_DELAY_MSEC));
+        msgsToPublish = msgsToPublish.modify(new InitialDelay<MyMsgSubtype>(PUB_DELAY_MSEC));
         producer.publish(msgsToPublish);
         
         TStream<Message> rcvdMsgs = consumer.subscribe(topic);
@@ -652,7 +653,7 @@ public class KafkaStreamsTest extends TestTopology {
         
         TStream<Message> msgsToPublish = top.constants(msgs);
         
-        msgsToPublish = msgsToPublish.modify(initialDelayFunc(PUB_DELAY_MSEC));
+        msgsToPublish = msgsToPublish.modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
         producer.publish(msgsToPublish);
         
         TStream<Message> rcvdTopic1Msgs = consumer.subscribe(topic1);
@@ -715,46 +716,6 @@ public class KafkaStreamsTest extends TestTopology {
                                 && tuple.getKey().matches(pattern));
                 }
             });
-    }
-
-    private static UnaryOperator<Message> initialDelayFunc(final int delayMsec) {
-        return new UnaryOperator<Message>() {
-            private static final long serialVersionUID = 1L;
-            private int initialDelayMsec = delayMsec;
-    
-            @Override
-            public Message apply(Message v) {
-                if (initialDelayMsec != -1) {
-                    try {
-                        Thread.sleep(initialDelayMsec);
-                    } catch (InterruptedException e) {
-                        // done delaying
-                    }
-                    initialDelayMsec = -1;
-                }
-                return v;
-            }
-        };
-    }
-
-    private static UnaryOperator<MyMsgSubtype> myMsgInitialDelayFunc(final int delayMsec) {
-        return new UnaryOperator<MyMsgSubtype>() {
-            private static final long serialVersionUID = 1L;
-            private int initialDelayMsec = delayMsec;
-    
-            @Override
-            public MyMsgSubtype apply(MyMsgSubtype v) {
-                if (initialDelayMsec != -1) {
-                    try {
-                        Thread.sleep(initialDelayMsec);
-                    } catch (InterruptedException e) {
-                        // done delaying
-                    }
-                    initialDelayMsec = -1;
-                }
-                return v;
-            }
-        };
     }
 
     /**
