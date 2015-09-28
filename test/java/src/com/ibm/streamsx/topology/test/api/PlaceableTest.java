@@ -21,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIdAppend;
+
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.TSink;
@@ -37,6 +39,7 @@ import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
+import com.ibm.streamsx.topology.tester.Tester;
 
 /**
  * Tests to verify Placeable
@@ -414,4 +417,162 @@ public class PlaceableTest extends TestTopology {
         assertTrue(aout.getResult().toString(), aout.valid());
     }
     
+    @Test(expected = IllegalArgumentException.class)
+    public void testColocateLowLatancyNotPlaceable1() throws Exception {
+        
+        // test current behavior of a not-placeable construct
+        
+        Topology t = new Topology("testColocateLowLatancyNotPlaceable1");
+        
+        TStream<String> s1 = 
+                t.strings("a")
+                .modify(getContainerIdAppend())
+                .modify(getContainerIdAppend())
+                ;
+        
+        @SuppressWarnings("unused")
+        TStream<String> s2 = 
+                t.strings("A")
+                .lowLatency()
+                .colocate(s1)  // throws IAE: not placeable
+                .modify(getContainerIdAppend())
+                .modify(getContainerIdAppend())
+                .endLowLatency()
+                ;
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testColocateLowLatancyNotPlaceable2() throws Exception {
+        
+        // test current behavior of a not-placeable construct
+        
+        Topology t = new Topology("testColocateLowLatancyNotPlaceable2");
+        
+        TStream<String> s1 = 
+                t.strings("a")
+                .modify(getContainerIdAppend())
+                .modify(getContainerIdAppend())
+                ;
+        
+        @SuppressWarnings("unused")
+        TStream<String> s2 = 
+                t.strings("A")
+                .lowLatency()
+                .modify(getContainerIdAppend())
+                .modify(getContainerIdAppend())
+                .endLowLatency()
+                .colocate(s1)  // throws IAE: not placeable
+                ;
+    }
+
+    @Test(expected = IllegalStateException.class)
+    @SuppressWarnings("unused")
+    public void testColocateLowLatancy() throws Exception {
+        
+        // test colocate doesn't violate low latency as well as does colocate
+        
+        final Topology topology = new Topology("testColocateLowLatancy");
+        Tester tester = topology.getTester();
+        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+        
+        TStream<String> s1 = 
+                topology.strings("a")
+                .modify(getContainerIdAppend())
+                ;
+        
+        TStream<String> s2 = 
+                topology.strings("A")
+                .lowLatency()
+                .modify(getContainerIdAppend())
+                .colocate(s1)  // expect throw ISE: colocate in a low latency region
+                .modify(getContainerIdAppend())
+                .endLowLatency()
+                ;
+        
+        // once it's supported... (today it breaks the low latency guarantee)
+//        // Given the default fuse-island behavior, expect islands to continue
+//        // to be fused, now both in a single container.
+//        
+//        TStream<String> all = s1.union(s2);
+//        all.print();
+//        
+//        Condition<Long> nTuples = tester.tupleCount(
+//                                    all.filter(new AllowAll<String>()), 2);
+//        Condition<List<String>> contents = tester.stringContents(
+//                                    all.filter(new AllowAll<String>()), "");
+//
+//        complete(tester, nTuples, 10, TimeUnit.SECONDS);
+//
+//        Set<String> ids = getContainerIds(contents.getResult());
+//        assertEquals("ids: "+ids, 1, ids.size());
+    }
+    
+    @SuppressWarnings("unused")
+    @Test(expected = IllegalStateException.class)
+    public void testColocateLowLatencyRegions() throws Exception {
+        
+        // ensure colocating two low latency regions doesn't break lowLatancy
+        // and colocating is achieved.
+        
+        Topology t = new Topology("testColocateLowLatencyRegions");
+        Tester tester = t.getTester();
+        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+        
+        TStream<String> s1 = 
+                t.strings("a")
+                .lowLatency()
+                .modify(getContainerIdAppend())
+                .modify(getContainerIdAppend())
+                ;
+                s1
+                .endLowLatency()
+                ;
+        
+        TStream<String> s2 = 
+                t.strings("A")
+                .lowLatency()
+                .modify(getContainerIdAppend())
+                .modify(getContainerIdAppend())
+                ;
+                s2
+                .endLowLatency()
+                ;
+                
+        s1.colocate(s2);  // expect throw ISE: colocate in a low latency region
+        
+        // once it's supported... (today it breaks the low latency guarantee)
+//        // Given the default fuse-island behavior, expect islands to continue
+//        // to be fused, now both in a single container.
+//        
+//        // Today FAILING in an interesting way.
+//        // There are 2 PEs:
+//        // - one has just the single colocated s1 and s2 modify ops
+//        // - the other has everything else
+//        
+//        TStream<String> all = s1.union(s2);
+//        all.print();
+//        Condition<Long> nTuples = tester.tupleCount(all.filter(new AllowAll<String>()), 2);
+//        Condition<List<String>> contents = tester.stringContents(
+//                all.filter(new AllowAll<String>()), "");
+//
+//        complete(tester, nTuples, 10, TimeUnit.SECONDS);
+//
+//        Set<String> ids = getContainerIds(contents.getResult());
+//        assertEquals("ids: "+ids, 1, ids.size());
+    }    
+    
+    @Test(expected = IllegalStateException.class)
+    public void testColocateIsolateViolation() throws Exception {
+        
+        // verify s1.isolate().modify().colocate(s1) is disallowed
+        
+        Topology t = new Topology("testColocateIsolateViolation");
+        
+        TStream<String> s1 = t.strings("a");
+        s1.isolate()
+            .modify(getContainerIdAppend())
+            .colocate(s1)  // throws ISE: can't colocate isolated stream with parent
+            ;
+    }
+
 }

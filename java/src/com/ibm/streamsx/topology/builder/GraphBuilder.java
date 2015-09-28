@@ -5,10 +5,14 @@
 package com.ibm.streamsx.topology.builder;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
@@ -17,7 +21,11 @@ import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
+import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
+import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 import com.ibm.streamsx.topology.tuple.JSONAble;
@@ -99,6 +107,46 @@ public class GraphBuilder extends BJSONObject {
     
     public BOutput endLowLatency(BOutput parent){
         return addPassThroughMarker(parent, BVirtualMarker.END_LOW_LATENCY, false);
+    }
+
+    public boolean isInLowLatencyRegion(BOutput output) {
+        BOperator op;
+        if (output instanceof BUnionOutput)
+            op = ((BUnionOutput) output).operator();
+        else
+            op = ((BOutputPort) output).operator();
+        return isInLowLatencyRegion(op);
+    }
+    
+    public boolean isInLowLatencyRegion(BOperator... operators) {
+        // handle nested low latency regions
+        JSONObject graph = complete();
+        final VisitController visitController =
+                new VisitController(Direction.UPSTREAM);
+        final int[] openRegionCount = { 0 };
+        for (BOperator operator : operators) {
+            JSONObject jop = operator.complete();
+            GraphUtilities.visitOnce(visitController,
+                    Collections.singletonList(jop), graph,
+                new Consumer<JSONObject>() {
+                    private static final long serialVersionUID = 1L;
+                    @Override
+                    public void accept(JSONObject jo) {
+                        String kind = (String) jo.get("kind");
+                        if (LOW_LATENCY.kind().equals(kind)) {
+                            if (openRegionCount[0] <= 0)
+                                visitController.setStop();
+                            else
+                                openRegionCount[0]--;
+                        }
+                        else if (END_LOW_LATENCY.kind().equals(kind))
+                            openRegionCount[0]++;
+                    }
+                });
+            if (visitController.stopped() || openRegionCount[0] > 0)
+                return true;
+        }
+        return false;
     }
     
     public BOutput isolate(BOutput parent){
