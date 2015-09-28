@@ -9,10 +9,12 @@ import java.util.Map;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.Tuple;
+import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
+import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -31,6 +33,7 @@ public class RestServer {
     
     private final Topology topology;
     private final int port;
+    private Placeable<?> firstInvocation;
     
     /**
      * Create a REST server that will listen on port 8080.
@@ -159,9 +162,13 @@ public class RestServer {
         params.put("context", context);
         params.put("contextResourceBase", "opt/html/" + context);
 
-        SPL.invokeSink(name, "com.ibm.streamsx.inet.rest::HTTPTupleView",
+        TSink tv = SPL.invokeSink(name, "com.ibm.streamsx.inet.rest::HTTPTupleView",
                 splWindow,
                 params);
+        if (firstInvocation == null)
+            firstInvocation = tv;
+        else
+            firstInvocation.colocate(tv);
 
         return null;
     }
