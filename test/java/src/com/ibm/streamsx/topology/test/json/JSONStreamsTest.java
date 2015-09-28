@@ -269,4 +269,24 @@ public class JSONStreamsTest extends TestTopology {
                
         completeAndValidate(output, 10,  e1r.toString(), e2.toString(), e1.toString(), e2.toString());
     }
+    
+    @Test
+    public void testFlattenNoObjects() throws Exception {
+        final Topology t = new Topology();
+
+        final JSONObject value = new JSONObject();
+        final JSONArray array = new JSONArray();
+        array.add("hello");
+        value.put("greetings", array);
+                
+        TStream<JSONObject> s = t.constants(Collections.singletonList(value));
+
+        TStream<JSONObject> jsonm = JSONStreams.flattenArray(s, "greetings");
+        TStream<String> output = JSONStreams.serialize(jsonm);
+        
+        JSONObject payload = new JSONObject();
+        payload.put("payload", "hello");
+               
+        completeAndValidate(output, 10,  payload.toString());
+    }
 }
