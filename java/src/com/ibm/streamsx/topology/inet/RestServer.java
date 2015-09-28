@@ -170,6 +170,8 @@ public class RestServer {
         else
             firstInvocation.colocate(tv);
 
-        return null;
+        // Always mapping to a single operator per window
+        // so currently it's always port 0.
+        return name + "/ports/input/0";
     }
 }
