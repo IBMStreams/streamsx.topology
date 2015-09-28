@@ -563,6 +563,9 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * object returned by its {@link TKeyedStream#getKeyFunction() key function},
      * so that all tuples with the same key are sent to the same channel.
      * <br>
+     * If parallel is invoked when submitting to an embedded context, the flow
+     * will execute as though parallel had not been called.
+     * <br>
      * Given the following code:
      * 
      * <pre>
@@ -622,16 +625,6 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * <pre>
      * <code>
      * myStream.parallel(2).parallel(2);
-     * </pre>
-     * 
-     * </code>
-     * 
-     * There must be at least one stream function between a {@code parallel(...)} and
-     * {@code endParallel()} invocation. The following is invalid:
-     * 
-     * <pre>
-     * <code>
-     * myStream.parallel(2).endParallel();
      * </pre>
      * 
      * </code>
