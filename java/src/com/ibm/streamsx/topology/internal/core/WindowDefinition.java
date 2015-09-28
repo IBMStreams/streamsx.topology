@@ -111,6 +111,9 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     @Override
     public <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
             long period, TimeUnit unit) {
+        if (period == 0)
+            throw new IllegalArgumentException("Aggregate period cannot be zero.");
+        
         java.lang.reflect.Type aggregateType = TypeDiscoverer.determineStreamType(aggregator, null);
         
         return aggregate(aggregator, aggregateType, Policy.TIME, period, unit);

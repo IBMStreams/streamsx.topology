@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -82,11 +83,18 @@ public class WindowTest extends TestTopology {
     }
     
     @Test(expected=IllegalArgumentException.class)
-    public void testZeroTime() throws Exception {
+    public void testZeroTimeWindow() throws Exception {
         final Topology f = new Topology("ZeroTimeWindow");
         TStream<String> source = f.strings("a", "b", "c");
         source.last(0, TimeUnit.DAYS);
-    }    
+    } 
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testZeroTimeAggregate() throws Exception {
+        final Topology f = new Topology("ZeroTimeWindow");
+        TStream<Number> source = f.numbers(1, 2, 3, 4, 5, 6, 7);
+        source.last(1, TimeUnit.DAYS).aggregate(new SumInt(), 0, TimeUnit.HOURS);
+    }
     
 
     @Test
@@ -265,7 +273,7 @@ public class WindowTest extends TestTopology {
     }
     
     /**
-     * Test a continuous aggregation.
+     * Test a periodic aggregation.
      */
     @Test
     public void testPeriodicAggregateLastSeconds() throws Exception {
@@ -312,6 +320,32 @@ public class WindowTest extends TestTopology {
             }
         }
     }
+    
+    /**
+     * Test a periodic aggregation with microsecond aggregation.
+     * Basically a test that the application runs, hard to test
+     * for specific results for such a short window.
+     */
+    @Test
+    public void testPeriodicAggregateLastMicroseconds() throws Exception {
+        
+        assumeTrue(!isEmbedded());
+        
+        
+        final Topology t = new Topology();
+        TStream<String> source = t.periodicSource(new PeriodicStrings(), 10, TimeUnit.MILLISECONDS);
+        
+        TStream<JSONObject> aggregate = source.last(3, TimeUnit.MICROSECONDS).aggregate(
+                new AggregateStrings(), 10, TimeUnit.MICROSECONDS);
+        TStream<String> strings = JSONStreams.serialize(aggregate);
+        
+        Tester tester = t.getTester();
+                
+        // Aggregate 10 microseconds, so 2 seconds is around 200,000 tuples.
+        Condition<Long> ending = tester.atLeastTupleCount(strings, 200_000);
+        complete(tester, ending, 30, TimeUnit.SECONDS);
+    }
+    
     
     public static class AggregateStrings implements Function<List<String>, JSONObject> {
 
