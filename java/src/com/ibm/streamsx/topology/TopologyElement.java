@@ -35,5 +35,10 @@ public interface TopologyElement {
      */
     OperatorGraph graph();
 
+    /**
+     * Get the underlying {@code OperatorGraph}. Internal use only.
+     * <BR>
+     * Not intended to be called by applications, may be removed at any time.
+     */
     GraphBuilder builder();
 }

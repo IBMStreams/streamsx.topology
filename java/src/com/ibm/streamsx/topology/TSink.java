@@ -24,6 +24,10 @@ import com.ibm.streamsx.topology.context.Placeable;
 public interface TSink extends TopologyElement, Placeable<TSink> {
     
     /**
+     * Internal method.
+     * <BR>
+     * <B><I>Not intended to be called by applications, may be removed at any time.</I></B>
+     * <BR>
      * Get the operator associated with the sink.
      * @return the operator
      */

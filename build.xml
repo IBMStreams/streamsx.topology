@@ -69,6 +69,8 @@
             <fileset dir="java/src">
                <include name="com/ibm/streamsx/topology/**"/>
                <exclude name="com/ibm/streamsx/topology/internal/**"/>
+               <exclude name="com/ibm/streamsx/topology/builder/**"/>
+               <exclude name="com/ibm/streamsx/topology/generator/spl/**"/>
             </fileset>
        </javadoc>
        <ant dir="toolkit" target="spldoc"/>

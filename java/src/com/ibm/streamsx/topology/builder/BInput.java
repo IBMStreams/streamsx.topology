@@ -8,7 +8,7 @@ public class BInput extends BJSONObject {
 
     private final GraphBuilder builder;
 
-    public BInput(GraphBuilder builder) {
+    protected BInput(GraphBuilder builder) {
         this.builder = builder;
     }
 
