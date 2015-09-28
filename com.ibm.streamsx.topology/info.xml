@@ -6,7 +6,7 @@
     Toolkit providing mechanisms to build IBM InfoSphere Streams
     applications in other programming languages, with Java and Scala support.
     </description>
-    <version>0.9.1.beta</version>
+    <version>1.0.0.beta</version>
     <requiredProductVersion>4.0.0.0</requiredProductVersion>
     </identity>
   <dependencies/>

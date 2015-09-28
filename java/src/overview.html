@@ -8,7 +8,7 @@ thousands of real-time sources. Streams can handle very high data throughput rat
 millions of events or messages per second.
 <BR>
 With this API Java developers can build streaming applications that can be
-executed using IBM InfoSphere Streams, including the processing being distributed
+executed using IBM Streams, including the processing being distributed
 across multiple computing resources (hosts or machines) for scalability.
 <BR>
 The fundamental building block of a Java Streams application is a
@@ -87,29 +87,38 @@ These features are supported:
 <TABLE class="overviewSummary" border="1" style="width:80%">
 <TR><TH>Feature</TH><TH>Reference</TH><TH>Since</TH></TR>
 
-<TR class="rowColor"><TD>Tuple types are Java objects.</TD><TD>{@link com.ibm.streamsx.topology.TStream}</TD><TD>0.7</TD></TR>
+<TR class="rowColor"><TD>Tuple types are Java objects.</TD><TD>{@link com.ibm.streamsx.topology.TStream}</TD><TD>1.0</TD></TR>
+
 <TR class="altColor"><TD>Functional programming, streams are transformed, filtered etc. by functional transformations
-implemented as Java functions. A Java function is an implementation of interface with a single method.</TD><TD>{@link com.ibm.streamsx.topology.TStream}</TD><TD>0.7</TD></TR>
+implemented as Java functions. A Java function is an implementation of interface with a single method.</TD><TD>{@link com.ibm.streamsx.topology.TStream}</TD><TD>1.0</TD></TR>
 
-<TR class="rowColor"><TD>Execution within the Java virtual machine, IBM InfoSphere Streams
-4.0 Streams standalone or distributed</TD><TD>{@link com.ibm.streamsx.topology.context.StreamsContext}</TD><TD>0.7</TD></TR>
+<TR class="rowColor"><TD>Execution within the Java virtual machine, IBM Streams
+4.0 Streams standalone or distributed & IBM Bluemix</TD><TD>{@link com.ibm.streamsx.topology.context.StreamsContext}</TD><TD>1.0</TD></TR>
 
-<TR class="altColor"><TD>Pipeline topologies.</TD><TD>{@link com.ibm.streamsx.topology.Topology}</TD><TD>0.7</TD></TR>
+<TR class="altColor"><TD>Pipeline topologies.</TD><TD>{@link com.ibm.streamsx.topology.Topology}</TD><TD>1.0</TD></TR>
 <TR class="rowColor"><TD>Fan-out, multiple independent functions may be applied to a
-single stream to produce multiple streams of different or the same type.</TD><TD>{@link com.ibm.streamsx.topology.TStream}</TD><TD>0.7</TD></TR>
+single stream to produce multiple streams of different or the same type.</TD><TD>{@link com.ibm.streamsx.topology.TStream}</TD><TD>1.0</TD></TR>
 <TR class="altColor"><TD>Fan-in, multiple independent streams of the same type may transformed by a
-single function to produce a single stream.</TD><TD>{@link com.ibm.streamsx.topology.TStream#union union}</TD><TD>0.7</TD></TR>
+single function to produce a single stream.</TD><TD>{@link com.ibm.streamsx.topology.TStream#union union}</TD><TD>1.0</TD></TR>
 
-<TR class="rowColor"><TD>Window based aggregation and joins, including partitioning.</TD><TD>{@link com.ibm.streamsx.topology.TWindow}</TD><TD>0.7</TD></TR>
-<TR class="altColor"><TD>Parallel streams (UDP, User Defined Parallelism), including partitioning.</TD><TD>{@link com.ibm.streamsx.topology.TStream#parallel parallel}</TD><TD>0.7</TD></TR>
-<TR class="rowColor"><TD>Dynamic topic based publish-subscribe stream model for cross application communication (Streams dynamic connections).</TD>
-<TD>{@link com.ibm.streamsx.topology.TStream#publish publish}, {@link com.ibm.streamsx.topology.Topology#subscribe subscribe}</TD><TD>0.7</TD></TR>
+<TR class="rowColor"><TD>Window based aggregation and joins, including partitioning.</TD><TD>{@link com.ibm.streamsx.topology.TWindow}</TD><TD>1.0</TD></TR>
+<TR class="altColor"><TD>Parallel streams (UDP, User Defined Parallelism), including partitioning.</TD><TD>{@link com.ibm.streamsx.topology.TStream#parallel parallel}</TD><TD>1.0</TD></TR>
+<TR class="rowColor"><TD>Topic based publish-subscribe stream model for cross application communication (Streams dynamic connections).</TD>
+<TD>{@link com.ibm.streamsx.topology.TStream#publish publish}, {@link com.ibm.streamsx.topology.Topology#subscribe subscribe}</TD><TD>1.0</TD></TR>
+
+<TR class="altColor"><TD>Ability to specify where portions of the topology will execute in distributed mode, including
+running on resources (hosts) with specified tags.</TD>
+<TD>{@link com.ibm.streamsx.topology.context.Placeable},
+{@link com.ibm.streamsx.topology.TStream#isolate isolate},
+{@link com.ibm.streamsx.topology.TStream#lowLatency lowLatency}</TD><TD>1.0</TD></TR>
+<TR class="rowColor"><TD>Integration with Apache Kafka and MQTT messaging systems</TD><TD>
+{@link com.ibm.streamsx.topology.messaging.kafka.ConsumerConnector Kafka}, {@link com.ibm.streamsx.topology.messaging.mqtt.ConsumerConnector MQTT}</TD><TD>1.0</TD></TR>
 
 <TR class="altColor"><TD>Testing of topologies, including those using SPL operators,
-while running in distributed, standalone or embedded.</TD><TD>{@link com.ibm.streamsx.topology.tester.Tester}</TD><TD>0.7</TD></TR>
+while running in distributed, standalone or embedded.</TD><TD>{@link com.ibm.streamsx.topology.tester.Tester}</TD><TD>1.0</TD></TR>
 
-<TR class="rowColor"><TD>Integration with SPL streams using SPL attribute schemas.</TD><TD>{@link com.ibm.streamsx.topology.spl.SPLStream}</TD><TD>0.7</TD></TR>
-<TR class="altColor"><TD>Invocation of existing SPL primitive or composite operators.</TD><TD>{@link com.ibm.streamsx.topology.spl.SPL}</TD><TD>0.7</TD></TR>
+<TR class="rowColor"><TD>Integration with SPL streams using SPL attribute schemas.</TD><TD>{@link com.ibm.streamsx.topology.spl.SPLStream}</TD><TD>1.0</TD></TR>
+<TR class="altColor"><TD>Invocation of existing SPL primitive or composite operators.</TD><TD>{@link com.ibm.streamsx.topology.spl.SPL}</TD><TD>1.0</TD></TR>
 </TABLE>
 
 <H2>Samples</H2>
@@ -141,7 +150,7 @@ it is not a runtime representation of the graph. The {@code TStream} is submitte
 The API requires these jar files to be in the classpath for compilation and execution:
 <UL>
 <LI>&bull; {@code com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar} - Jar for this API.</LI>
-<LI>&bull; {@code $STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar} - IBM InfoSphere Streams Java Operator API.</LI>
+<LI>&bull; {@code $STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar} - IBM Streams Java Operator API.</LI>
 </UL>
 <BR>
 <H2>Testing</H2>

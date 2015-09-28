@@ -845,18 +845,18 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     /**
      * Internal method.
      * <BR>
-     * Not intended to be called by applications, may be removed at any time.
+     * <B><I>Not intended to be called by applications, may be removed at any time.</I></B>
      */
     BOutput output();
 
     /**
      * Internal method.
+     * <BR>
+     * <B><I>Not intended to be called by applications, may be removed at any time.</I></B>
+     * <BR>
      * Connect this stream to a downstream operator. If input is null then a new
      * input port will be created, otherwise it will be used to connect to this
      * stream. Returns input or the new port if input was null.
-     * 
-     * <BR>
-     * Not intended to be called by applications, may be removed at any time.
      */
     BInputPort connectTo(BOperatorInvocation receivingBop, boolean functional, BInputPort input);
 }
