@@ -3,6 +3,7 @@ package com.ibm.streamsx.topology.test.api;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +21,7 @@ import com.ibm.streamsx.topology.function.Initializable;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
+import com.ibm.streamsx.topology.tester.MultiLongCondition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 public class IsolateTest extends TestTopology {
@@ -29,7 +31,7 @@ public class IsolateTest extends TestTopology {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
         
-        Topology topology = new Topology("isolationTest");
+        Topology topology = new Topology("simpleIsolationTest");
 
         // Construct topology
         TStream<String> ss = topology.strings("hello");
@@ -42,15 +44,14 @@ public class IsolateTest extends TestTopology {
         Condition<List<String>> condss1 = tester.stringContents(ss1, "");
         Condition<List<String>> condss2 = tester.stringContents(ss2, "");
 
-        // Jenkins seems to fail when running this with a distributed tester.
-        // Not sure why, but the tests pass on my local build.
-        try {
-            StreamsContextFactory
-                    .getStreamsContext(StreamsContext.Type.DISTRIBUTED_TESTER)
-                    .submit(topology).get(90, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // avoid union so as to not affect isolation
+        // but don't just await a timeout for complete
+        Condition<Long> condss1Cnt = tester.tupleCount(ss1, 1);
+        Condition<Long> condss2Cnt = tester.tupleCount(ss2, 1);
+        Condition<Long> endCond = new MultiLongCondition(Arrays.asList(condss1Cnt, condss2Cnt));
+        
+        complete(topology.getTester(), endCond, 15, TimeUnit.SECONDS);
+
         Integer result1 = Integer.parseInt(condss1.getResult().get(0));
         Integer result2 = Integer.parseInt(condss2.getResult().get(0));
 
@@ -64,7 +65,7 @@ public class IsolateTest extends TestTopology {
     @Test
     public void isolateIsEndOfStreamTest() throws Exception {
         assumeTrue(SC_OK);
-        Topology topology = new Topology("isolationTest");
+        Topology topology = new Topology("isolateIsEndOfStreamTest");
 
         // Construct topology
         TStream<String> ss = topology.strings("hello");
@@ -77,7 +78,7 @@ public class IsolateTest extends TestTopology {
 
     @Test
     public void multipleIsolationTest() throws Exception {
-        Topology topology = new Topology("isolationTest");
+        Topology topology = new Topology("multipleIsolationTest");
 
         TStream<String> ss = topology.strings("hello", "world");
         TStream<String> ss0 = ss.isolate();
@@ -106,7 +107,7 @@ public class IsolateTest extends TestTopology {
      */
     @Test(expected = IllegalStateException.class)
     public void multipleIsolationExceptionTest() throws Exception {
-        Topology topology = new Topology("isolationTest");
+        Topology topology = new Topology("multipleIsolationExceptionTest");
 
         TStream<String> ss = topology.strings("hello", "world");
         TStream<String> ss0 = ss.isolate();
@@ -130,7 +131,7 @@ public class IsolateTest extends TestTopology {
     
     @Test
     public void islandIsolationTest() throws Exception {
-        Topology topology = new Topology("isolationTest");
+        Topology topology = new Topology("islandIsolationTest");
 
         TStream<String> ss = topology.strings("hello", "world");
         ss.transform(getContainerId()).isolate()
@@ -146,7 +147,7 @@ public class IsolateTest extends TestTopology {
 
     @Test
     public void unionIsolateTest() throws Exception {
-        Topology topology = new Topology("isolationTest");
+        Topology topology = new Topology("unionIsolateTest");
 
         TStream<String> s1 = topology.strings("1");
         TStream<String> s2 = topology.strings("2");
