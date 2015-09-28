@@ -5,8 +5,11 @@
 package com.ibm.streamsx.topology.json;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.ibm.json.java.JSON;
+import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.OutputTuple;
@@ -25,7 +28,7 @@ public class JSONStreams {
     
     /**
      * When the JSON is an array the approach is to use an
-     * {@code JSONObject} with a single attribute {@value}
+     * {@code JSONObject} with a single attribute (key) {@value}
      * containing the value.
      */
     public static final String PAYLOAD = "payload";
@@ -143,5 +146,85 @@ public class JSONStreams {
      */
     public static <T extends JSONAble> TStream<JSONObject> toJSON(TStream<T> stream) {
         return stream.transform(new ToJSON<T>());
+    }
+    
+    /**
+     * Declare a stream that flattens an array present in the input tuple.
+     * For each tuple on {@code stream} the key {@code arrayKey} is extracted
+     * and if it is a list then each value in the list will be present
+     * on the returned stream as an individual tuple.
+     * <BR>
+     * If a list value is a JSON object will be placed on returned stream,
+     * otherwise a JSON object will be placed on the returned stream with
+     * the key {@link #PAYLOAD} containing the value.
+     * <BR>
+     * If {@code arrayKey} is not present, is not a list or is an empty list
+     * then no tuples will result on the returned stream.
+     * <P>
+     * Any additional keys ({@code additionalKeys}) that are specified are
+     * copied (with their value) into each JSON object on the returned stream from the input tuple,
+     * unless the flattened tuple already contains a value for the key.
+     * <BR>
+     * If an addition key is not in the input tuple, then it is not copied into
+     * the flattened tuples. 
+     * </P>
+     * 
+     * @param stream Steam containing tuples with an array to be flattened.
+     * @param arrayKey Key of the array in each input tuple.
+     * @param additionalKeys Additional keys that copied 
+     * @return Stream containing tuples flattened from input tuple.
+     */
+    public static TStream<JSONObject> flattenArray(TStream<JSONObject> stream,
+            final String arrayKey, final String... additionalKeys) {
+        return stream.multiTransform(
+                new Function<JSONObject, Iterable<JSONObject>>() {
+                    private static final long serialVersionUID = 1L;
+
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    public Iterable<JSONObject> apply(JSONObject tuple) {
+                        Object oa = tuple.get(arrayKey);
+                        if (!(oa instanceof JSONArray))
+                            return null;
+
+                        JSONArray ja = (JSONArray) oa;
+
+                        if (ja.isEmpty())
+                            return null;
+                        
+                        JSONObject additional = null;
+                        if (additionalKeys.length != 0) {
+                            additional = new JSONObject();
+                            for (String addKey : additionalKeys) {
+                                Object akv = tuple.get(addKey);
+                                if (akv != null)
+                                    additional.put(addKey, akv);
+                            }
+                            if (additional.isEmpty())
+                                additional = null;
+                        }
+
+                        List<JSONObject> tuples = new ArrayList<>(ja.size());
+                        for (Object av : ja) {
+                            JSONObject flattened;
+                            if (av instanceof JSONObject) {
+                                flattened = (JSONObject) av;
+                            } else {
+                                flattened = new JSONObject();
+                                flattened.put(PAYLOAD, av);
+                            }
+                            if (additional != null) {
+                                for (Object addKey : additional.keySet()) {
+                                    if (!flattened.containsKey(addKey))
+                                        flattened.put(addKey, additional.get(addKey));
+                                }
+                            }
+
+                            tuples.add(flattened);
+                        }
+
+                        return tuples;
+                    }
+                });
     }
 }
