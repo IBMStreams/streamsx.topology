@@ -5,11 +5,14 @@
 package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
@@ -174,6 +177,42 @@ public class TopologySourceTest extends TestTopology {
         public Iterable<String> get() {
             long now = System.currentTimeMillis();
             return Arrays.asList("A"+now, "B"+now, "C"+now);
+        }
+    }
+    
+    @Test(expected=ExecutionException.class)
+    public void testExceptionSource() throws Exception {
+        assumeTrue(isEmbedded());
+        
+        Topology topology = new Topology();
+
+        TStream<String> ts = topology.limitedSource(new ExceptionSource(), 4);
+
+        Condition<List<String>> c = topology.getTester().stringContents(ts, "A0");
+
+        complete(topology.getTester(), c, 10, TimeUnit.SECONDS);
+    }
+    
+    @Test(expected=ExecutionException.class)
+    @Ignore("Test for issue #213")
+    public void testExceptionPeriodicSource() throws Exception {
+        assumeTrue(isEmbedded());
+        
+        Topology topology = new Topology();
+
+        TStream<String> ts = topology.periodicSource(new ExceptionSource(), 1, TimeUnit.MILLISECONDS);
+
+        Condition<List<String>> c = topology.getTester().stringContents(ts, "A0");
+
+        complete(topology.getTester(), c, 10, TimeUnit.SECONDS);
+    }
+
+    private static class ExceptionSource implements Supplier<String> {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String get() {
+            throw new RuntimeException("ExceptionSource testing");
         }
     }
 }

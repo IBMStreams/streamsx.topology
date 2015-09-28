@@ -13,17 +13,20 @@ class SPLWindowImpl extends WindowDefinition<Tuple,Object> implements SPLWindow 
 
     private final StreamWindow.Policy triggerPolicy;
     private final long triggerConfig;
+    private final TimeUnit triggerTimeUnit;
 
     SPLWindowImpl(TWindow<Tuple,?> window, int count) {
         super(window.getStream(), window);
         this.triggerPolicy = Policy.COUNT;
         this.triggerConfig = count;
+        triggerTimeUnit = null;
     }
 
     SPLWindowImpl(TWindow<Tuple,?> window, long time, TimeUnit unit) {
         super(window.getStream(), window);
         this.triggerPolicy = Policy.TIME;
-        this.triggerConfig = unit.toMillis(time);
+        this.triggerConfig = time;
+        triggerTimeUnit = unit;
     }
 
     @Override
@@ -35,7 +38,7 @@ class SPLWindowImpl extends WindowDefinition<Tuple,Object> implements SPLWindow 
      * Make the passed input port windowed.
      */
     void windowInput(BInputPort inputPort) {
-        inputPort.window(StreamWindow.Type.SLIDING, policy, config,
-                triggerPolicy, triggerConfig, false);
+        inputPort.window(StreamWindow.Type.SLIDING, policy, config, this.timeUnit,
+                triggerPolicy, triggerConfig, triggerTimeUnit, false);
     }
 }

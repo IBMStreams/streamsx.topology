@@ -51,8 +51,8 @@ public class BInputPort extends BInput {
     }
 
     public BInputPort window(StreamWindow.Type type,
-            StreamWindow.Policy evictPolicy, Object evictConfig,
-            StreamWindow.Policy triggerPolicy, Object triggerConfig,
+            StreamWindow.Policy evictPolicy, Object evictConfig, TimeUnit evictTimeUnit,
+            StreamWindow.Policy triggerPolicy, Object triggerConfig, TimeUnit triggerTimeUnit,
             boolean partitioned) {
 
         switch (type) {
@@ -75,7 +75,7 @@ public class BInputPort extends BInput {
             port().evictCount(((Number) evictConfig).intValue());
             break;
         case TIME:
-            port().evictTime((Long) evictConfig, TimeUnit.MILLISECONDS);
+            port().evictTime((Long) evictConfig, evictTimeUnit);
             break;
         default:
             ;
@@ -83,6 +83,8 @@ public class BInputPort extends BInput {
         }
         winJson.put("evictPolicy", evictPolicy.name());
         winJson.put("evictConfig", evictConfig);
+        if (evictPolicy == StreamWindow.Policy.TIME)
+            winJson.put("evictTimeUnit", evictTimeUnit.name());
 
         if (triggerPolicy != null && triggerPolicy != StreamWindow.Policy.NONE) {
             switch (triggerPolicy) {
@@ -90,7 +92,7 @@ public class BInputPort extends BInput {
                 port().triggerCount(((Number) triggerConfig).intValue());
                 break;
             case TIME:
-                port().triggerTime((Long) triggerConfig, TimeUnit.MILLISECONDS);
+                port().triggerTime((Long) triggerConfig, triggerTimeUnit);
                 break;
             default:
                 ;
@@ -99,6 +101,8 @@ public class BInputPort extends BInput {
 
             winJson.put("triggerPolicy", triggerPolicy.name());
             winJson.put("triggerConfig", triggerConfig);
+            if (triggerTimeUnit != null)
+                winJson.put("triggerTimeUnit", triggerTimeUnit.name());
         }
 
         if (partitioned) {

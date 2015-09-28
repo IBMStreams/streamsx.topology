@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONArtifact;
@@ -242,12 +243,12 @@ class OperatorGenerator {
             }
 
             appendWindowPolicy(window.get("evictPolicy"),
-                    window.get("evictConfig"), sb);
+                    window.get("evictConfig"), window.get("evictTimeUnit"), sb);
 
             Object triggerPolicy = window.get("triggerPolicy");
             if (triggerPolicy != null) {
                 sb.append(", ");
-                appendWindowPolicy(triggerPolicy, window.get("triggerConfig"),
+                appendWindowPolicy(triggerPolicy, window.get("triggerConfig"), window.get("triggerTimeUnit"),
                         sb);
             }
 
@@ -260,7 +261,7 @@ class OperatorGenerator {
 
     }
 
-    static void appendWindowPolicy(Object policyName, Object config,
+    static void appendWindowPolicy(Object policyName, Object config, Object timeUnit,
             StringBuilder sb) {
         StreamWindow.Policy policy = StreamWindow.Policy
                 .valueOf((String) policyName);
@@ -277,12 +278,37 @@ class OperatorGenerator {
         case PUNCTUATION:
             break;
         case TIME:
-            Long ms = (Long) config;
-            double secs = ms.doubleValue() / 1000.0;
+        {
+            TimeUnit unit = TimeUnit.valueOf(timeUnit.toString());
+            Long time = (Long) config;
+            double secs;
+            switch (unit) {
+            case DAYS:
+            case HOURS:
+            case MINUTES:
+            case SECONDS:
+                secs = unit.toSeconds(time);
+                break;
+            case MILLISECONDS:
+                secs = ((double) time) / 1000.0;
+                break;
+                
+            case MICROSECONDS:
+                secs = ((double) time) / 1000_000.0;
+                break;
+
+            case NANOSECONDS:
+                secs = ((double) time) / 1000_000_000.0;
+                break;
+
+            default:
+                throw new IllegalStateException();
+            }
             sb.append("time(");
             sb.append(secs);
             sb.append(")");
             break;
+        }
         default:
             break;
 

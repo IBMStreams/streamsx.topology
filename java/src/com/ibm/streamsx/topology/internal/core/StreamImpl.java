@@ -298,6 +298,8 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public TWindow<T,?> last(long time, TimeUnit unit) {
+        if (time == 0)
+            throw new IllegalArgumentException("Window duration of zero is not allowed.");
         return new WindowDefinition<T,Object>(this, time, unit);
     }
 
