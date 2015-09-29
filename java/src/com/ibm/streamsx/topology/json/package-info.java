@@ -6,7 +6,7 @@
  * JSON streams.
  * JSON (<a href="http://www.json.org/">JavaScript Object Notation</a>)
  * is a lightweight data-interchange format that can be used to exchange
- * streams between different languages.
+ * streams between applications implemented in different languages.
  * <h3>Java</h3>
  * Within Java the recommended stream type for JSON data
  * is {@code TStream<JSONObject>}.
@@ -39,6 +39,8 @@
  * </TR>
  * <TR><TD>SPLStream (any other schema)</TD><TD></TD></TR>
  * </TABLE>
+ * <BR>
+ * @see <a href="http://www.json.org/">http://www.json.org - JSON (JavaScript Object Notation) is a lightweight data-interchange format.</a> 
  */
 package com.ibm.streamsx.topology.json;
 

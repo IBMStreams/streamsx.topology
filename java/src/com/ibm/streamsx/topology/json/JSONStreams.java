@@ -23,6 +23,18 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
 /**
  * Utilities for JSON streams.
  * 
+ * A JSON stream is a stream of JSON objects represented
+ * by the class {@code com.ibm.json.java.JSONObject}.
+ * When a JSON value that is an array or value (not an object)
+ * needs to be present on the stream, the approach is to
+ * represent it as a object with the key {@link #PAYLOAD "payload"}
+ * containing the array or value.
+ * <BR>
+ * A JSON stream can be {@link TStream#publish(String) published}
+ * so that IBM Streams applications implemented in different languages
+ * can subscribe to it.
+ * 
+ * @see <a href="http://www.json.org/">http://www.json.org - JSON (JavaScript Object Notation) is a lightweight data-interchange format.</a>
  */
 public class JSONStreams {
     
@@ -39,7 +51,7 @@ public class JSONStreams {
      * Function to deserialize a String to a JSONObject.
      * If the serialized JSON is an array,
      * then a JSON object is created, with
-     * a single attribute {@code payload} containing the deserialized
+     * a single key {@code payload} containing the deserialized
      * value.
       */
     public static final class DeserializeJSON implements
@@ -152,9 +164,9 @@ public class JSONStreams {
     
     /**
      * Declare a stream that flattens an array present in the input tuple.
-     * For each tuple on {@code stream} the key {@code arrayKey} is extracted
-     * and if it is an array then each element in the array will be present
-     * on the returned stream as an individual tuple.
+     * For each tuple on {@code stream} the key {@code arrayKey} and its
+     * value are extracted and if it is an array then each element in
+     * the array will be present on the returned stream as an individual tuple.
      * <BR>
      * If an array element is a JSON object it will be placed on returned stream,
      * otherwise a JSON object will be placed on the returned stream with
