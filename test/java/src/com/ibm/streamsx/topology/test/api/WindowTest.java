@@ -329,6 +329,7 @@ public class WindowTest extends TestTopology {
     @Test
     public void testPeriodicAggregateLastMicroseconds() throws Exception {
         
+        // Embedded doesn't support window sizes < 1ms (see issue #211)
         assumeTrue(!isEmbedded());
         
         
