@@ -9,12 +9,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +33,7 @@ import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.messaging.mqtt.ConsumerConnector;
 import com.ibm.streamsx.topology.messaging.mqtt.ProducerConnector;
+import com.ibm.streamsx.topology.test.InitialDelay;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -280,7 +279,7 @@ public class MqttStreamsTest extends TestTopology {
             assertEquals("property "+s, consumerConfig.get(s), ccfg.get(s));
         
         TStream<Message> msgsToPublish = top.constants(msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+                .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
 
         TSink sink = producer.publish(msgsToPublish, topic);
         
@@ -342,7 +341,7 @@ public class MqttStreamsTest extends TestTopology {
         ConsumerConnector consumer = new ConsumerConnector(top, consumerConfig);
         
         TStream<Message> msgsToPublish = top.constants(msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+                .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
 
         TSink sink = producer.publish(msgsToPublish, topic);
         
@@ -408,7 +407,7 @@ public class MqttStreamsTest extends TestTopology {
         ConsumerConnector consumer = new ConsumerConnector(top, cconfig);
         
         TStream<Message> msgsToPublish = top.constants(msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+                .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
         
         TSink sink = producer.publish(msgsToPublish, params.getString("mqtt.pub.topic"));
         
@@ -469,7 +468,7 @@ public class MqttStreamsTest extends TestTopology {
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
         
         TStream<Message> msgsToPublish = top.constants(msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+                .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
 
         TSink sink = producer.publish(msgsToPublish, topic);
         
@@ -503,7 +502,7 @@ public class MqttStreamsTest extends TestTopology {
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
         
         TStream<Message> msgsToPublish = top.constants(msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+                .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
         
         TSink sink = producer.publish(msgsToPublish);
         
@@ -539,7 +538,7 @@ public class MqttStreamsTest extends TestTopology {
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
         
         TStream<Message> msgsToPublish = top.constants(msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+                .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
         
         TSink sink = producer.publish(msgsToPublish, topic);
         
@@ -577,7 +576,7 @@ public class MqttStreamsTest extends TestTopology {
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
         
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs).asType(MyMsgSubtype.class)
-                .modify(myMsgInitialDelayFunc(PUB_DELAY_MSEC));
+                .modify(new InitialDelay<MyMsgSubtype>(PUB_DELAY_MSEC));
         
         TSink sink = producer.publish(msgsToPublish, topic);
         
@@ -614,7 +613,7 @@ public class MqttStreamsTest extends TestTopology {
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
         
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs).asType(MyMsgSubtype.class)
-                .modify(myMsgInitialDelayFunc(PUB_DELAY_MSEC));
+                .modify(new InitialDelay<MyMsgSubtype>(PUB_DELAY_MSEC));
         
         TSink sink = producer.publish(msgsToPublish);
         
@@ -653,7 +652,7 @@ public class MqttStreamsTest extends TestTopology {
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
         
         TStream<Message> msgsToPublish = top.constants(msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+                .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
         
         TSink sink = producer.publish(msgsToPublish);
         
@@ -695,9 +694,9 @@ public class MqttStreamsTest extends TestTopology {
         ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
         
         TStream<Message> topic1MsgsToPublish = top.constants(topic1Msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+                .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
         TStream<Message> topic2MsgsToPublish = top.constants(topic2Msgs)
-                .modify(initialDelayFunc(PUB_DELAY_MSEC));
+                .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
         
         TSink sink1 = producer.publish(topic1MsgsToPublish, new Value<String>(topic1));
         TSink sink2 = producer.publish(topic2MsgsToPublish, new Value<String>(topic2));
@@ -770,46 +769,6 @@ public class MqttStreamsTest extends TestTopology {
             });
     }
 
-    private static UnaryOperator<Message> initialDelayFunc(final int delayMsec) {
-        return new UnaryOperator<Message>() {
-            private static final long serialVersionUID = 1L;
-            private int initialDelayMsec = delayMsec;
-    
-            @Override
-            public Message apply(Message v) {
-                if (initialDelayMsec != -1) {
-                    try {
-                        Thread.sleep(initialDelayMsec);
-                    } catch (InterruptedException e) {
-                        // done delaying
-                    }
-                    initialDelayMsec = -1;
-                }
-                return v;
-            }
-        };
-    }
-
-    private static UnaryOperator<MyMsgSubtype> myMsgInitialDelayFunc(final int delayMsec) {
-        return new UnaryOperator<MyMsgSubtype>() {
-            private static final long serialVersionUID = 1L;
-            private int initialDelayMsec = delayMsec;
-    
-            @Override
-            public MyMsgSubtype apply(MyMsgSubtype v) {
-                if (initialDelayMsec != -1) {
-                    try {
-                        Thread.sleep(initialDelayMsec);
-                    } catch (InterruptedException e) {
-                        // done delaying
-                    }
-                    initialDelayMsec = -1;
-                }
-                return v;
-            }
-        };
-    }
-
     /**
      * Modify List<T> => List<T> via func
      */
@@ -880,62 +839,6 @@ public class MqttStreamsTest extends TestTopology {
         jo.put("topic", m.getTopic());
         return jo.toString();
 
-    }
-}
-
-/*
- * Use top.supplier(new DelayedSupplierIterable<>(msgs, delay)) 
- * subsequently yields:
- * java.lang.NullPointerException
-at com.ibm.streamsx.topology.spl.SPLStreams.convertStream(SPLStreams.java:104)
-at com.ibm.streamsx.topology.messaging.mqtt.ProducerConnector.publish(ProducerConnector.java:142)
-at com.ibm.streamsx.topology.messaging.mqtt.ProducerConnector.publish(ProducerConnector.java:114)
-at com.ibm.streamsx.topology.test.messaging.mqtt.MqttStreamsTest.testConfigParams(MqttStreamsTest.java:288)
-
- * Looks like the TStream returned by top.constants ends up
- * with its getTupleClass() returning null?
- * [line 104] opName = "SPLConvert" + stream.getTupleClass().getSimpleName();
- */
-class DelayedSupplierIterable<T> implements Supplier<Iterable<T>>, Iterable<T>, Iterator<T>, Serializable {
-    private static final long serialVersionUID = 1L;
-    private final Iterable<T> data;
-    private Iterator<T> iter;
-    private int initialDelayMsec;
-    DelayedSupplierIterable(Iterable<T> data, int initialDelayMsec) {
-        this.data = data;
-        this.initialDelayMsec = initialDelayMsec;
-    }
-    @Override
-    public Iterable<T> get() {
-        return this;
-    }
-    @Override
-    public Iterator<T> iterator() {
-        return this;
-    }
-    @Override
-    public boolean hasNext() {
-        if (iter==null)
-            iter = data.iterator();
-        return iter.hasNext();
-    }
-    @Override
-    public T next() {
-        if (iter==null)
-            iter = data.iterator();
-        if (initialDelayMsec != -1) {
-            try {
-                Thread.sleep(initialDelayMsec);
-            } catch (InterruptedException e) {
-                // done delaying
-            }
-            initialDelayMsec = -1;
-        }
-        return iter.next();
-    }
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("remove");
     }
 }
 
