@@ -27,9 +27,11 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
 public class JSONStreams {
     
     /**
-     * When the JSON is an array the approach is to use an
-     * {@code JSONObject} with a single attribute (key) {@value}
-     * containing the value.
+     * JSON key for arrays and values.
+     * When JSON is an array or a value (not an object)
+     * it is represented as a {@code JSONObject} tuple
+     * with an attribute (key) {@value}
+     * containing the array or value.
      */
     public static final String PAYLOAD = "payload";
 
@@ -151,19 +153,19 @@ public class JSONStreams {
     /**
      * Declare a stream that flattens an array present in the input tuple.
      * For each tuple on {@code stream} the key {@code arrayKey} is extracted
-     * and if it is an array then each value in the array will be present
+     * and if it is an array then each element in the array will be present
      * on the returned stream as an individual tuple.
      * <BR>
-     * If an array value is a JSON object it will be placed on returned stream,
+     * If an array element is a JSON object it will be placed on returned stream,
      * otherwise a JSON object will be placed on the returned stream with
-     * the key {@link #PAYLOAD} containing the value.
+     * the key {@link #PAYLOAD payload} containing the element's value.
      * <BR>
      * If {@code arrayKey} is not present, is not an array or is an empty array
      * then no tuples will result on the returned stream.
      * <P>
      * Any additional keys ({@code additionalKeys}) that are specified are
-     * copied (with their value) into each JSON object on the returned stream from the input tuple,
-     * unless the flattened tuple already contains a value for the key.
+     * copied (with their value) into each JSON object on the returned stream
+     * from the input tuple, unless the flattened tuple already contains a value for the key.
      * <BR>
      * If an addition key is not in the input tuple, then it is not copied into
      * the flattened tuples. 
@@ -188,7 +190,30 @@ public class JSONStreams {
      * </code>
      * </pre>
      * </P>
-     * 
+     * <P>
+     * With a JSON input tuple containing an array of simple values:
+     * <pre>
+     * <code>
+     * {"ts":"13:43:09", "unit": "C", "readings":
+     *   [
+     *     33.9,
+     *     33.8,
+     *     34.1
+     *   ]
+     * }
+     * </code>
+     * </pre>
+     * and a call of {@code flattenArray(stream, "readings", "ts", "unit")}
+     * would result in three tuples:
+     * <pre>
+     * <code>
+     * {"payload": 33.9, "ts": "13:43:09", "unit":"C"}
+     * {"payload": 33.8, "ts": "13:43:09", "unit":"C"}
+     * {"payload": 34.1, "ts": "13:43:09", "unit":"C"}
+     * </code>
+     * </pre>
+     * </P>
+     * </P>
      * @param stream Steam containing tuples with an array to be flattened.
      * @param arrayKey Key of the array in each input tuple.
      * @param additionalKeys Additional keys that copied from the input tuple into each resultant tuple from the array
