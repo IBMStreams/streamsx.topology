@@ -55,7 +55,6 @@ import com.ibm.streamsx.topology.tester.Tester;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
 public class ParallelTest extends TestTopology {
-    
     @Test(expected=IllegalStateException.class)
     public void fanoutEndParallelException() throws Exception {
         checkUdpSupported();
@@ -71,33 +70,69 @@ public class ParallelTest extends TestTopology {
     }
 
     @Test
-    @Ignore("Issue #131")
     public void testAdjacentParallel() throws Exception {
         checkUdpSupported();
-        List<String> strings = getListOfUniqueStrings(200);
-        String[] stringArray = strings.toArray(new String[strings.size()]);
-        Topology topology = new Topology("testAdj");
-        TStream<String> out0 = topology.strings(stringArray)
-	    .parallel(5, TStream.Routing.HASH_PARTITIONED);
-	out0=out0.transform(randomStringProducer()).endParallel();
-        TStream<String> out2 = out0.parallel(5, TStream.Routing.HASH_PARTITIONED);
-	out2.print();
-	out2=out2.transform(randomStringProducer()).endParallel();
-
-        TStream<String> numRegions0 = out0.transform(uniqueStringCounter(200));
-        TStream<String> numRegions2 = out2.transform(uniqueStringCounter(200));
         
-        Tester tester = topology.getTester();
-        Condition<Long> expectedCount = tester.tupleCount(out0, 200);
-        Condition<Long> expectedCount2 = tester.tupleCount(out2, 200);
-        Condition<List<String>> validNumRegions0 = tester.stringContents(numRegions0, "5");
-        Condition<List<String>> validNumRegions2 = tester.stringContents(numRegions2, "5");
+        List<String> stringList = getListOfUniqueStrings(800);
+        String stringArray[] = new String[800];
+        stringArray = stringList.toArray(stringArray);
+        Topology topology = new Topology("testAdj");
 
-        complete(tester, expectedCount2, 10, TimeUnit.SECONDS);
+        TStream<String> out0 = topology.strings(stringArray).parallel(20,
+                TStream.Routing.HASH_PARTITIONED);
+        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+
+        TStream<String> out2 = out0.parallel(5,
+                TStream.Routing.HASH_PARTITIONED);
+        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+
+        TStream<String> numRegions = out2.multiTransform(uniqueStringCounter(800,
+                "region"));
+
+        Tester tester = topology.getTester();
+
+        Condition<List<String>> assertFinished = tester
+                .stringContentsUnordered(numRegions, "20", "5");
+
+        Condition<Long> expectedCount = tester.tupleCount(out2, 800);
+
+        complete(tester);
 
         assertTrue(expectedCount.valid());
-        assertTrue(validNumRegions0.valid());
-        assertTrue(validNumRegions2.valid());
+	assertTrue(assertFinished.valid());
+    }
+
+    @Test
+    public void testAdjacentEndParallelUnionSource() throws Exception {
+        checkUdpSupported();
+        
+        List<String> stringList = getListOfUniqueStrings(800);
+        String stringArray[] = new String[800];
+        stringArray = stringList.toArray(stringArray);
+        Topology topology = new Topology("testAdj");
+
+        TStream<String> out0 = topology.strings(stringArray).parallel(20,
+                TStream.Routing.HASH_PARTITIONED);
+        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+	
+        TStream<String> out2 = topology.strings(stringArray).union(out0).parallel(5,
+                TStream.Routing.HASH_PARTITIONED);
+        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+
+        TStream<String> numRegions = out2.multiTransform(uniqueStringCounter(1600,
+                "region"));
+
+        Tester tester = topology.getTester();
+
+        Condition<List<String>> assertFinished = tester
+                .stringContentsUnordered(numRegions, "20", "5");
+
+        Condition<Long> expectedCount = tester.tupleCount(out2, 1600);
+
+        complete(tester);
+
+        assertTrue(expectedCount.valid());
+	assertTrue(assertFinished.valid());
     }
 
     @Test
@@ -821,36 +856,45 @@ public class ParallelTest extends TestTopology {
     }
     
     @SuppressWarnings("serial")
-    public static Function<String, String> randomStringProducer(){
+    public static Function<String, String> randomStringProducer(final String region){
         return new Function<String, String>(){
             String uuid = null;
             @Override
             public String apply(String v) {
-		//System.out.println("Got to rsp : " + v);
-                if(uuid == null){
-                    uuid = UUID.randomUUID().toString();
-                }
-                return uuid;
+		if(uuid == null){
+		    uuid=UUID.randomUUID().toString();
+		}
+		String ret = v + " " + region+uuid;                
+                return ret;
             }
             
         };
     }
     
     @SuppressWarnings("serial")
-    public static Function<String, String> uniqueStringCounter(final int count){
-        return new Function<String, String>(){
-            Set<String> uniqueStrings = new HashSet<>();
-	    int _count = 0;
+    public static Function<String, Iterable<String>> uniqueStringCounter(final int count, final String region){
+        return new Function<String, Iterable<String>>(){
+            Set<String> numChannels1 = new HashSet<>();
+            Set<String> numChannels2 = new HashSet<>();
+            int _count = 0;
             @Override
-            public String apply(String v) {
-		++_count;
-                uniqueStrings.add(v);
-		System.out.println(_count);
-                if(_count == count){
-		    System.out.println("returning " + uniqueStrings.size());
-                    return Integer.toString(uniqueStrings.size());
+            public Iterable<String> apply(String v) {
+                if(_count < count){
+                    _count++;                
+                    String[] channelIds = v.split(" ");
+		    if(channelIds.length > 2){
+			numChannels1.add(channelIds[1]);
+			numChannels2.add(channelIds[2]);
+		    }
+		    if(_count == count){
+                        List<String> l = new ArrayList<String>();
+			
+                        l.add(Integer.toString(numChannels1.size()));
+                        l.add(Integer.toString(numChannels2.size()));
+                        return l;
+                    }
                 }
-		return null;
+                return null;  
             }
             
         };
