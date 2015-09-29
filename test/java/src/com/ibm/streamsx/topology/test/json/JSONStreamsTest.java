@@ -9,7 +9,9 @@ import static org.junit.Assert.assertFalse;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
@@ -200,4 +202,91 @@ public class JSONStreamsTest extends TestTopology {
         checkJsonOutput(JSON.parse(JSON_EXAMPLE), jsonString);
     }
     
+    @Test
+    public void testFlatten() throws Exception {
+        final Topology t = new Topology();
+
+        final JSONObject value = new JSONObject();
+        final JSONArray array = new JSONArray();
+        JSONObject e1 = new JSONObject(); e1.put("val", "hello"); array.add(e1);
+        JSONObject e2 = new JSONObject(); e2.put("val", "goodbye"); array.add(e2);
+        JSONObject e3 = new JSONObject(); e3.put("val", "farewell"); array.add(e3);
+        value.put("greetings", array);
+        
+        List<JSONObject> inputs = new ArrayList<>();
+        inputs.add(value);
+        inputs.add(new JSONObject()); // no list present
+        
+        JSONObject emptyList = new JSONObject();
+        emptyList.put("greetings", new JSONArray());
+        inputs.add(emptyList);
+        
+        TStream<JSONObject> s = t.constants(inputs);
+
+        TStream<JSONObject> jsonm = JSONStreams.flattenArray(s, "greetings");
+        TStream<String> output = JSONStreams.serialize(jsonm);
+               
+        completeAndValidate(output, 10,  e1.toString(), e2.toString(), e3.toString());
+    }
+    
+    @Test
+    public void testFlattenWithAttributes() throws Exception {
+        final Topology t = new Topology();
+        
+        JSONObject e1 = new JSONObject(); e1.put("val", "hello"); 
+        JSONObject e2 = new JSONObject(); e2.put("val", "goodbye"); e2.put("a", "def");
+
+        final JSONObject value = new JSONObject();
+        {
+            value.put("a", "abc");
+            final JSONArray array = new JSONArray();
+            array.add(e1);
+            array.add(e2);
+            value.put("greetings", array);
+        }
+
+        List<JSONObject> inputs = new ArrayList<>();
+        inputs.add(value);
+
+        final JSONObject value2 = new JSONObject();
+        {
+            final JSONArray array2 = new JSONArray();
+            array2.add(e1.clone());
+            array2.add(e2.clone());
+            value2.put("greetings", array2);
+        }
+        inputs.add(value2);
+        
+        
+        TStream<JSONObject> s = t.constants(inputs);
+
+        TStream<JSONObject> jsonm = JSONStreams.flattenArray(s, "greetings", "a");;
+        TStream<String> output = JSONStreams.serialize(jsonm);
+        
+        JSONObject e1r = (JSONObject) e1.clone();
+        e1r.put("a", "abc");
+        assertFalse(e1.containsKey("a"));
+               
+        completeAndValidate(output, 10,  e1r.toString(), e2.toString(), e1.toString(), e2.toString());
+    }
+    
+    @Test
+    public void testFlattenNoObjects() throws Exception {
+        final Topology t = new Topology();
+
+        final JSONObject value = new JSONObject();
+        final JSONArray array = new JSONArray();
+        array.add("hello");
+        value.put("greetings", array);
+                
+        TStream<JSONObject> s = t.constants(Collections.singletonList(value));
+
+        TStream<JSONObject> jsonm = JSONStreams.flattenArray(s, "greetings");
+        TStream<String> output = JSONStreams.serialize(jsonm);
+        
+        JSONObject payload = new JSONObject();
+        payload.put("payload", "hello");
+               
+        completeAndValidate(output, 10,  payload.toString());
+    }
 }
