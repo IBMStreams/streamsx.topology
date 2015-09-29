@@ -27,7 +27,7 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
  * by the class {@code com.ibm.json.java.JSONObject}.
  * When a JSON value that is an array or value (not an object)
  * needs to be present on the stream, the approach is to
- * represent it as a object with the key {@link #PAYLOAD "payload"}
+ * represent it as a object with the key {@link #PAYLOAD payload}
  * containing the array or value.
  * <BR>
  * A JSON stream can be {@link TStream#publish(String) published}
