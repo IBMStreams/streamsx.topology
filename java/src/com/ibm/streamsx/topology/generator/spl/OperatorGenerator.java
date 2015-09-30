@@ -323,11 +323,8 @@ class OperatorGenerator {
         boolean hasVMArgs = vmArgs != null && !vmArgs.isEmpty();
 
         // VMArgs only apply to Java SPL operators.
-        if (hasVMArgs) {
-
-            if (!JOperator.LANGUAGE_JAVA.equals(op.get(JOperator.LANGUAGE)))
-                hasVMArgs = false;
-        }
+        boolean isJavaOp = JOperator.LANGUAGE_JAVA.equals(op.get(JOperator.LANGUAGE));
+        hasVMArgs &= isJavaOp;
 
         // determine if we need to inject submission param names and values info. 
         boolean addSPInfo = false;
@@ -349,6 +346,17 @@ class OperatorGenerator {
         for (Object on : params.keySet()) {
             String name = (String) on;
             JSONObject param = (JSONObject) params.get(name);
+            if (hasVMArgs && "vmArg".equals(name)) {
+                JSONArray ja = new JSONArray();
+                ja.addAll(vmArgs);
+                vmArgs = ja;
+                Object value = param.get("value");
+                if (value instanceof JSONArray)
+                    vmArgs.addAll((JSONArray) value);
+                else
+                    vmArgs.add(value);
+                continue;
+            }
             sb.append("      ");
             sb.append(name);
             sb.append(": ");
