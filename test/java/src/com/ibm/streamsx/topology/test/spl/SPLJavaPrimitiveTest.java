@@ -72,6 +72,7 @@ public class SPLJavaPrimitiveTest extends TestTopology {
     public void testIsolatedVmArgs2() throws Exception {
         // isolation only works in DISTRIBUTED
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+        assumeTrue(SC_OK);
 
         Topology t = new Topology("testIsolatedVmArgs1"); 
         SPL.addToolkit(t, new File(getTestRoot(), "spl/testtk"));

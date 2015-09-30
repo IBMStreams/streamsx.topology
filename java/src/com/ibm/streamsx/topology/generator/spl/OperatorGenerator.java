@@ -346,7 +346,7 @@ class OperatorGenerator {
         for (Object on : params.keySet()) {
             String name = (String) on;
             JSONObject param = (JSONObject) params.get(name);
-            if ("vmArg".equals(name) && isJavaOp && hasVMArgs) {
+            if (hasVMArgs && "vmArg".equals(name)) {
                 JSONArray ja = new JSONArray();
                 ja.addAll(vmArgs);
                 vmArgs = ja;
