@@ -7,6 +7,9 @@
 
   <import file="../../common-build.xml"/>
 
+  <property name="topology.test.showoutput" value="no"/>
+  <property name="topology.test.haltonfailure" value="yes"/>
+	
   <property name="classes" location="classes"/>
   <property name="jarname" value="streamsx.topology.test.jar"/>
   <property name="test.dir" location="unittests"/>
@@ -14,6 +17,8 @@
   <property name="topology.src.dir" location="../../java/src"/>
   <property name="samples.src.dir" location="../../samples/java/functional/src"/>
   <property name="samples.jar" location="../../samples/java/functional/functionalsamples.jar"/>
+  <property name="testtk" location="../spl/testtk"/>
+  <property name="testtk.java" location="${testtk}/impl/java"/>
 
     <property name="topology.install.compile" value="${env.STREAMS_INSTALL}"/>
     <echo message="Streams compile install: ${topology.install.compile}"/>
@@ -23,6 +28,7 @@
     <pathelement location="../../samples/java/functional/functionalsamples.jar"/>
     <pathelement location="resources/ThirdPartyResource.jar"/>
     <pathelement location="resources/classes/ThirdParty"/>
+    <pathelement location="${testtk.java}/bin"/>
     <path refid="streams.classpath"/>
   </path>
 
@@ -31,6 +37,7 @@
     <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
     <pathelement location="resources/ThirdPartyResource.jar"/>
     <pathelement location="resources/classes/ThirdParty"/>
+    <pathelement location="${testtk.java}/bin"/>
     <path refid="streams.classpath"/>
   </path>
   <path id="test.sample.classpath">
@@ -38,7 +45,7 @@
     <path refid="test.classpath"/>
   </path>
 
-  <target name="all" depends="jar,test.toolkit"/>
+  <target name="all" depends="test.toolkit,jar"/>
 
   <target name="init">
     <mkdir dir="${classes}"/>
@@ -61,14 +68,25 @@
   </target>
 
   <target name="test.toolkit">
+    <mkdir dir="${testtk.java}/bin"/>
+    <javac debug="true"
+   	   srcdir="${testtk.java}/src"
+   	   destdir="${testtk.java}/bin"
+   	   classpathref="compile.classpath"
+       includeantruntime="no"
+   	   />
    <exec executable="${streams.install}/bin/spl-make-toolkit">
      <arg value="-i"/>
-     <arg value="../spl/testtk"/>
+     <arg value="${testtk}"/>
    </exec>
    </target>
+	
+  <target name="test.toolkit.clean">
+  	<delete dir="${testtk.java}/bin"/>
+  </target>
 
 
-  <target name="clean" >
+  <target name="clean" depends="test.toolkit.clean">
     <delete dir="${classes}"/>
     <delete file="${jarname}"/>
     <delete dir="${test.dir}"/>
@@ -121,8 +139,8 @@
      <property name="topology.test.coverage" value="true"/>
      <property name="topology.test.resource_dir" location="resources"/>
    <jacoco:coverage enabled="${topology.test.coverage}">
-     <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="no"
-           haltonfailure="yes" failureproperty="topology.tests.failed">
+     <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
+           haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>
        <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
@@ -144,7 +162,7 @@
    </jacoco:coverage>
    <jacoco:coverage enabled="${topology.test.coverage}">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes"
-           haltonfailure="yes" failureproperty="topology.tests.failed">
+           haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>
        <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
@@ -217,10 +235,9 @@
      <property name="topology.test.perf_ok" value="true"/>
      <property name="topology.test.coverage" value="true"/>
      <property name="topology.test.resource_dir" location="resources"/>
-  	 <property name="topology.test.showoutput" value="no"/>
    <jacoco:coverage enabled="${topology.test.coverage}">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
-           haltonfailure="yes" failureproperty="topology.tests.failed">
+           haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>
        <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
