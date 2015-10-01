@@ -35,6 +35,7 @@ public class LowLatencyTest extends TestTopology {
     @Test
     public void simpleLowLatencyTest() throws Exception{
         assumeTrue(SC_OK);
+        assumeTrue(isMainRun());
         Topology topology = new Topology("lowLatencyTest");
 
         // Construct topology
@@ -49,6 +50,7 @@ public class LowLatencyTest extends TestTopology {
     @Test
     public void multipleRegionLowLatencyTest() throws Exception{
         assumeTrue(SC_OK);
+        assumeTrue(isMainRun());
         Topology topology = new Topology("lowLatencyTest");
 
         // Construct topology
@@ -67,6 +69,7 @@ public class LowLatencyTest extends TestTopology {
     
     @Test
     public void threadedPortTest() throws Exception{
+        assumeTrue(isMainRun());
         Topology topology = new Topology("lowLatencyTest");
 
         // Construct topology
@@ -174,7 +177,7 @@ public class LowLatencyTest extends TestTopology {
     @Test
     public void nestedTest() throws Exception {
         
-        // ensure nested low latency yields all fn in the same container
+        // ensure nested low latency yields all fns in the same container
         
         final Topology topology = new Topology("nestedTest");
         final Tester tester = topology.getTester();

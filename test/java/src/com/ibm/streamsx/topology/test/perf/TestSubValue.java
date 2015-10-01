@@ -8,9 +8,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 public class TestSubValue implements Serializable {
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
     public boolean b;
     public BigDecimal bd;

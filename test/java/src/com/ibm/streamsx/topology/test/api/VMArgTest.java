@@ -14,7 +14,6 @@ import org.junit.Test;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
-import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.test.TestTopology;
 
@@ -23,7 +22,7 @@ public class VMArgTest extends TestTopology {
     @Test
     public void testSettingSystemProperty() throws Exception {
         
-        assumeTrue(getTesterType() != StreamsContext.Type.EMBEDDED_TESTER);
+        assumeTrue(!isEmbedded());
         
         final Topology topology = new Topology("testSettingSystemProperty");
         
@@ -37,8 +36,6 @@ public class VMArgTest extends TestTopology {
         @SuppressWarnings("unchecked")
         List<String> vmArgs = (List<String>) config.get(ContextProperties.VMARGS);
         vmArgs.add(vmArg);
-        
-        // StreamsContextFactory.getStreamsContext(Type.TOOLKIT).submit(topology, config);
         
         // config.put(ContextProperties.KEEP_ARTIFACTS, Boolean.TRUE);
         completeAndValidate(config, source, 10, propertyValue);

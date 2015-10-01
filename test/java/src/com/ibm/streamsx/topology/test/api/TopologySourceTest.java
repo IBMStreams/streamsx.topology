@@ -28,18 +28,21 @@ public class TopologySourceTest extends TestTopology {
     
     @Test (expected = NullPointerException.class)
     public void testConstantsNullData() throws Exception {
+        assumeTrue(isMainRun());
         Topology t = new Topology("testConstantsNullData");
         t.constants(null);  // throw NPE
     }
     
     @Test (expected = IllegalArgumentException.class)
     public void testLimitedSourceNNegCount() throws Exception {
+        assumeTrue(isMainRun());
         Topology t = new Topology("testLimitedSourceNNegCount");
         t.limitedSourceN(new FunctionalSource(), -1);  // throw IAE
     }
     
     @Test (expected = IllegalArgumentException.class)
     public void testLimitedSourceNegCount() throws Exception {
+        assumeTrue(isMainRun());
         Topology t = new Topology("testLimitedSourceNegCount");
         t.limitedSource(new Value<String>("s"), -1);  // throw IAE
     }

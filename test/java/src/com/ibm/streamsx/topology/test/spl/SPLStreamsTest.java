@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.test.spl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -224,6 +225,7 @@ public class SPLStreamsTest extends TestTopology {
     
     @Test
     public void testMaintainSPLStream() {
+        assumeTrue(isMainRun());
         Topology t = new Topology();
         
         SPLStream splStreamA = testTupleStream(t);

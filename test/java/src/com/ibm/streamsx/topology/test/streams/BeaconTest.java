@@ -8,6 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,6 +38,7 @@ public class BeaconTest extends TestTopology {
     
     @Test
     public void testBeaconTupleToString() throws Exception {
+        assumeTrue(isMainRun());
         BeaconTuple bt1 = new BeaconTuple(0, 1);
         BeaconTuple bt2 = new BeaconTuple(0, 2);
         
@@ -48,6 +50,7 @@ public class BeaconTest extends TestTopology {
     
     @Test
     public void testBeaconTupleHashCode() throws Exception {
+        assumeTrue(isMainRun());
         BeaconTuple bt1 = new BeaconTuple(0, 1);
         BeaconTuple bt2 = new BeaconTuple(0, 2);
         BeaconTuple bt3 = new BeaconTuple(0, 2);
@@ -59,6 +62,7 @@ public class BeaconTest extends TestTopology {
     
     @Test
     public void testBeaconTupleEquals() throws Exception {
+        assumeTrue(isMainRun());
         BeaconTuple bt1 = new BeaconTuple(0, 1);
         BeaconTuple bt2 = new BeaconTuple(0, 2);
         BeaconTuple bt3 = new BeaconTuple(0, 2);
@@ -177,6 +181,7 @@ public class BeaconTest extends TestTopology {
     
     @Test
     public void testBeaconTypes() {
+        assumeTrue(isMainRun());
         Topology t = new Topology();
         assertEquals(BeaconTuple.class, BeaconStreams.beacon(t).getTupleClass());
         assertEquals(BeaconTuple.class, BeaconStreams.beacon(t, 77).getTupleClass());

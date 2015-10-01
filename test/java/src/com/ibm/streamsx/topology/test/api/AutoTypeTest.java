@@ -8,6 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
@@ -15,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
@@ -24,6 +26,7 @@ import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.streams.StringStreams;
+import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
 /**
@@ -31,8 +34,12 @@ import com.ibm.streamsx.topology.tuple.BeaconTuple;
  *
  */
 @SuppressWarnings("serial")
-public class AutoTypeTest {
-    
+public class AutoTypeTest extends TestTopology {
+
+    @Before
+    public void onlyMainRun() {
+        assumeTrue(isMainRun());
+    }
 
     @Test
     public void testAutoTransform() {
@@ -241,6 +248,7 @@ public class AutoTypeTest {
    
     // @Test
     public void _testStringsUnion() throws Exception {
+        assumeTrue(isEmbedded());
         Topology t = new Topology();
         TStream<String> strings0 = t.strings("a", "b", "c");
         TStream<String> strings1 = t.constants(Collections.nCopies(10, "hello"));

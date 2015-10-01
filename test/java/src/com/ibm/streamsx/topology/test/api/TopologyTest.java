@@ -8,6 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -22,8 +23,9 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.test.TestTopology;
 
-public class TopologyTest {
+public class TopologyTest extends TestTopology {
 
     public static void assertFlowElement(Topology f, TopologyElement fe) {
         assertSame(f, fe.topology());
@@ -32,6 +34,7 @@ public class TopologyTest {
 
     @Test
     public void testBasics() {
+        assumeTrue(isMainRun());
         final Topology f = new Topology("F123");
         assertEquals("F123", f.getName());
         assertSame(f, f.topology());
@@ -40,6 +43,7 @@ public class TopologyTest {
     
     @Test
     public void testDefaultName() {
+        assumeTrue(isMainRun());
         final Topology f = new Topology();
         assertSame(f, f.topology());
         assertEquals("testDefaultName", f.getName());
@@ -51,6 +55,7 @@ public class TopologyTest {
      */
     @Test(expected=IllegalArgumentException.class)
     public void testNonStaticContext() {
+        assumeTrue(isMainRun());
         final Topology t = new Topology();
         
         // This captures a reference to the instance
@@ -72,6 +77,7 @@ public class TopologyTest {
      */
     @Test
     public void main() {
+        assumeTrue(isMainRun());
         final Topology f = new Topology();
         assertSame(f, f.topology());
         assertEquals("TopologyTest", f.getName());
@@ -80,14 +86,15 @@ public class TopologyTest {
 
     @Test
     public void testStringStreamPrint() throws Exception {
+        assumeTrue(isEmbedded());  // checkPrint() forces embedded context
         final Topology f = new Topology("Simple");
         TStream<String> source = f.strings("a", "b", "c");
         assertNotNull(source);
         source.print();
-        checkPrint(f, "a", "b", "c");
+        checkPrintEmbedded(f, "a", "b", "c");
     }
 
-    public static void checkPrint(Topology f, String... strings)
+    public static void checkPrintEmbedded(Topology f, String... strings)
             throws Exception {
 
         PrintStream originalOut = System.out;

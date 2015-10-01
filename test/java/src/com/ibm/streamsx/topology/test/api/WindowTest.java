@@ -31,9 +31,6 @@ import com.ibm.streamsx.topology.tester.Tester;
 public class WindowTest extends TestTopology {
 
     public static final class PeriodicStrings implements Supplier<String> {
-        /**
-         * 
-         */
         private static final long serialVersionUID = 1L;
         private int id;
 
@@ -66,6 +63,7 @@ public class WindowTest extends TestTopology {
 
     @Test
     public void testBasicCount() throws Exception {
+        assumeTrue(isMainRun());
         final Topology f = new Topology("CountWindow");
         TStream<String> source = f.strings("a", "b", "c");
         TWindow<String,?> window = source.last(10);
@@ -75,6 +73,7 @@ public class WindowTest extends TestTopology {
 
     @Test
     public void testBasicTime() throws Exception {
+        assumeTrue(isMainRun());
         final Topology f = new Topology("TimeWindow");
         TStream<String> source = f.strings("a", "b", "c");
         TWindow<String,?> window = source.last(10, TimeUnit.SECONDS);
@@ -84,6 +83,7 @@ public class WindowTest extends TestTopology {
     
     @Test(expected=IllegalArgumentException.class)
     public void testZeroTimeWindow() throws Exception {
+        assumeTrue(isMainRun());
         final Topology f = new Topology("ZeroTimeWindow");
         TStream<String> source = f.strings("a", "b", "c");
         source.last(0, TimeUnit.DAYS);
@@ -91,6 +91,7 @@ public class WindowTest extends TestTopology {
     
     @Test(expected=IllegalArgumentException.class)
     public void testZeroTimeAggregate() throws Exception {
+        assumeTrue(isMainRun());
         final Topology f = new Topology("ZeroTimeWindow");
         TStream<Number> source = f.numbers(1, 2, 3, 4, 5, 6, 7);
         source.last(1, TimeUnit.DAYS).aggregate(new SumInt(), 0, TimeUnit.HOURS);
@@ -330,8 +331,7 @@ public class WindowTest extends TestTopology {
     public void testPeriodicAggregateLastMicroseconds() throws Exception {
         
         // Embedded doesn't support window sizes < 1ms (see issue #211)
-        assumeTrue(!isEmbedded());
-        
+        assumeTrue(!isEmbedded());        
         
         final Topology t = new Topology();
         TStream<String> source = t.periodicSource(new PeriodicStrings(), 10, TimeUnit.MILLISECONDS);
@@ -349,10 +349,6 @@ public class WindowTest extends TestTopology {
     
     
     public static class AggregateStrings implements Function<List<String>, JSONObject> {
-
-        /**
-         * 
-         */
         private static final long serialVersionUID = 1L;
         
         private transient long lastts;
