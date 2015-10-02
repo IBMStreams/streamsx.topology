@@ -21,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
+import static com.ibm.streamsx.topology.messaging.kafka.Util.identifyStreamsxMessagingVer;
+
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
@@ -186,8 +188,8 @@ public class KafkaStreamsTest extends TestTopology {
         return System.getProperty("com.ibm.streamsx.topology.test.messaging.kafka.zookeeper.connect", "localhost:2181");
     }
     
-    private String getKafkaMetadataBrokerList() {
-        return System.getProperty("com.ibm.streamsx.topology.test.messaging.kafka.metedata.broker.list", "localhost:9092");
+    private String getKafkaBootstrapServers() {
+        return System.getProperty("com.ibm.streamsx.topology.test.messaging.kafka.bootstrap.servers", "localhost:9092");
     }
     
     private static class MsgId {
@@ -236,9 +238,21 @@ public class KafkaStreamsTest extends TestTopology {
     
     private Map<String,Object> createProducerConfig() {
         Map<String,Object> props = new HashMap<>();
-        props.put("metadata.broker.list", getKafkaMetadataBrokerList());
-        props.put("serializer.class", "kafka.serializer.StringEncoder");
-        props.put("request.required.acks", "1");
+        try {
+            if (identifyStreamsxMessagingVer().startsWith("2.0")) {
+                props.put("metadata.broker.list", getKafkaBootstrapServers());
+                props.put("serializer.class", "kafka.serializer.StringEncoder");
+                props.put("request.required.acks", "1");
+            }
+            else {
+                // starting with steamsx.messaging v3.0, the 
+                // kafka "new producer configs" are used. 
+                props.put("bootstrap.servers", getKafkaBootstrapServers());
+                props.put("acks", "1");
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to identify com.ibm.streamsx.messaging toolkit version: " + e);
+        }
         return props;
     }
     

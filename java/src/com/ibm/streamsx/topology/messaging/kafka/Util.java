@@ -13,9 +13,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import com.ibm.streamsx.topology.TopologyElement;
 
-class Util {
+public class Util {
     @SuppressWarnings("unused")
     private static final Util forCoverage = new Util();
     
@@ -51,4 +62,22 @@ class Util {
         }
     }
  
+    public static String identifyStreamsxMessagingVer() throws Exception {
+        String tkloc = System.getenv("STREAMS_INSTALL")
+                        + "/toolkits/com.ibm.streamsx.messaging";
+        File info = new File(tkloc, "info.xml");
+        // e.g., <info:version>2.0.1</info:version>
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document d = db.parse(info);
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        NodeList nodes = (NodeList)xpath.evaluate("/toolkitInfoModel/identity/version",
+                d.getDocumentElement(), XPathConstants.NODESET);
+        Element e = (Element) nodes.item(0);
+        Node n = e.getChildNodes().item(0);
+        String ver = n.getNodeValue();
+        return ver;
+    }
+
 }
