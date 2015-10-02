@@ -67,7 +67,15 @@ public class ProducerConnector {
      * configuration properties at <a href="http://kafka.apache.org">http://kafka.apache.org</a>.
      * Configuration property values are strings.
      * <p>
-     * Minimal configuration typically includes:
+     * Starting with {@code com.ibm.streamsx.messaging v3.0}, the 
+     * Kafka "New Producer configs" are used.  Minimal configuration
+     * typically includes:
+     * <p>
+     * <ul>
+     * <li><code>bootstrap.servers</code></li>
+     * <li><code>acks</code></li>
+     * </ul>
+     * Earlier streamsx.messaging version's minimal configuration typically includes:
      * <ul>
      * <li><code>metadata.broker.list</code></li>
      * <li><code>serializer.class</code></li>

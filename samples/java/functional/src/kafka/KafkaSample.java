@@ -4,11 +4,23 @@
  */
 package kafka;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
@@ -82,7 +94,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  */
 public class KafkaSample {
     private static final String ZOOKEEPER_CONNECT = "localhost:2181";    
-    private static final String KAFKA_METADATA_BROKER_LIST = "localhost:9092";
+    private static final String KAFKA_BOOTSTRAP_SERVER_LIST = "localhost:9092";
     
     private static final String TOPIC = "kafkaSampleTopic";
 
@@ -92,6 +104,7 @@ public class KafkaSample {
     private boolean setAppTracingLevel = false;
     private java.util.logging.Level appTracingLevel = java.util.logging.Level.FINE;
     private Map<String,Object> config = new HashMap<>();
+    private String streamsxMessagingVer;
     
     public static void main(String[] args) throws Exception {
         String contextType = "DISTRIBUTED";
@@ -99,7 +112,7 @@ public class KafkaSample {
             contextType = args[0];
         System.out.println("\nREQUIRES:"
                 + " Kafka topic " + TOPIC + " exists"
-                + ", Kafka broker at " + KAFKA_METADATA_BROKER_LIST
+                + ", Kafka broker at " + KAFKA_BOOTSTRAP_SERVER_LIST
                 + ", Kafka zookeeper at " + ZOOKEEPER_CONNECT
                 + "\n"
                 );
@@ -117,6 +130,7 @@ public class KafkaSample {
     public void publishSubscribe(String contextType) throws Exception {
         
         setupConfig();
+        identifyStreamsxMessagingVer();
         Topology top = new Topology("kafkaSample");
         String groupId = newGroupId(top.getName());
         Supplier<String> topic = new Value<String>(TOPIC);
@@ -161,9 +175,17 @@ public class KafkaSample {
     
     private Map<String,Object> createProducerConfig() {
         Map<String,Object> props = new HashMap<>();
-        props.put("metadata.broker.list", KAFKA_METADATA_BROKER_LIST);
-        props.put("serializer.class", "kafka.serializer.StringEncoder");
-        props.put("request.required.acks", "1");
+        if (streamsxMessagingVer.startsWith("2.0")) {
+            props.put("metadata.broker.list", KAFKA_BOOTSTRAP_SERVER_LIST);
+            props.put("serializer.class", "kafka.serializer.StringEncoder");
+            props.put("request.required.acks", "1");
+        }
+        else {
+            // starting with steamsx.messaging v3.0, the 
+            // kafka "new producer configs" are used. 
+            props.put("bootstrap.servers", KAFKA_BOOTSTRAP_SERVER_LIST);
+            props.put("acks", "1");
+        }
         return props;
     }
     
@@ -214,5 +236,23 @@ public class KafkaSample {
                 return v;
             }
         };
+    }
+    
+    private void identifyStreamsxMessagingVer() throws Exception {
+        String tkloc = System.getenv("STREAMS_INSTALL")
+                        + "/toolkits/com.ibm.streamsx.messaging";
+        File info = new File(tkloc, "info.xml");
+        // e.g., <info:version>2.0.1</info:version>
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document d = db.parse(info);
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        NodeList nodes = (NodeList)xpath.evaluate("/toolkitInfoModel/identity/version",
+                d.getDocumentElement(), XPathConstants.NODESET);
+        Element e = (Element) nodes.item(0);
+        Node n = e.getChildNodes().item(0);
+        String ver = n.getNodeValue();
+        streamsxMessagingVer = ver;
     }
 }
