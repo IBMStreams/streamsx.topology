@@ -205,6 +205,7 @@ public class JoinTest extends TestTopology {
         completeAndValidate(asString, 25, "a3", "b1", "c2", "empty");
     }
     
+    @SuppressWarnings("serial")
     private static TKeyedStream<String,String> firstChar(TStream<String> strings) {
         return strings.key(new Function<String,String>() {
 

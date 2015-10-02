@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.test.internal;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.io.Serializable;
@@ -18,13 +19,15 @@ import org.junit.Test;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 import com.ibm.streamsx.topology.test.AllowAll;
+import com.ibm.streamsx.topology.test.TestTopology;
 
 @SuppressWarnings("serial")
-public class FunctionalTest {
+public class FunctionalTest extends TestTopology {
     
    
     @Test
     public void testStatefulLogicTest() {
+        assumeTrue(isMainRun());
         
         assertTrue(ObjectUtils.isImmutable(new AllowAll<String>()));
         assertTrue(ObjectUtils.isImmutable(new FinalPrimitive(42)));

@@ -2,16 +2,9 @@ package com.ibm.streamsx.topology.test.api;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.tester.Condition;
-import com.ibm.streamsx.topology.tester.Tester;
 import com.ibm.streamsx.topology.test.TestTopology;
 
-import java.util.List;
-
-import static org.junit.Assert.assertTrue;
 import ThirdParty.ThirdPartyResource;
 import org.junit.Test;
 

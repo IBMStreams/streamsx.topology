@@ -207,11 +207,8 @@ public class MqttStreamsTest extends TestTopology {
     }
 
     private void checkAssumes() {
-        // Embedded and MQTTConnector implementation leveraging 
-        // SPL MQTTSink,Source ops don't mix.
+        // can we run embedded (all-java ops) if streamsx.messaging jar is in classpath?
         assumeTrue(!isEmbedded());
-        
-        assumeTrue(SC_OK);
     }
     
     @Test (expected = IllegalArgumentException.class)

@@ -307,11 +307,8 @@ public class KafkaStreamsTest extends TestTopology {
     }
     
     private void checkAssumes() {
-        // Embedded and KafkaConnector implementation leveraging 
-        // SPL kafkaProducer,Consumer ops don't mix.
+        // can we run embedded (all-java ops) if streamsx.messaging jar is in classpath?
         assumeTrue(!isEmbedded());
-        
-        assumeTrue(SC_OK);
     }
 
     @Test (expected = IllegalArgumentException.class)

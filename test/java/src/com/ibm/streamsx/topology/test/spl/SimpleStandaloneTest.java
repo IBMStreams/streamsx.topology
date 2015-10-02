@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.test.spl;
 
-import static com.ibm.streamsx.topology.test.TestTopology.SC_OK;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -12,6 +11,7 @@ import static org.junit.Assume.assumeTrue;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.ibm.streams.flow.handlers.StreamCollector;
@@ -21,18 +21,24 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.streams.StringStreams;
+import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
-public class SimpleStandaloneTest {
+public class SimpleStandaloneTest extends TestTopology {
+    
+    @Before
+    public void checkStandalone() {
+        assumeSPLOk();
+        assumeTrue(getTesterType() == Type.STANDALONE_TESTER);
+    }
 
     @Test
     public void testSimple() throws Exception {
-
-        assumeTrue(SC_OK);
 
         Topology topology = new Topology("testSimple");
 
@@ -57,7 +63,6 @@ public class SimpleStandaloneTest {
 
     @Test
     public void testSimpleWithConditions() throws Exception {
-        assumeTrue(SC_OK);
 
         Topology topology = new Topology("testSimpleConditions");
 
@@ -78,7 +83,6 @@ public class SimpleStandaloneTest {
 
     @Test
     public void testTwoStreams() throws Exception {
-        assumeTrue(SC_OK);
 
         Topology topology = new Topology("testTwoStreams");
 

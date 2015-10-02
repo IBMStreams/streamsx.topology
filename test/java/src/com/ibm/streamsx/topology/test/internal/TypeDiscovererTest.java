@@ -6,22 +6,29 @@ package com.ibm.streamsx.topology.test.internal;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
 import com.ibm.streamsx.topology.json.JSONStreams.SerializeJSON;
+import com.ibm.streamsx.topology.test.TestTopology;
 
 @SuppressWarnings("serial")
-public class TypeDiscovererTest {
-    
+public class TypeDiscovererTest extends TestTopology {
+
+    @Before
+    public void checkIsMain() {
+        assumeTrue(isMainRun());
+    }
    
     @Test
     public void testAnonymousFunction() {

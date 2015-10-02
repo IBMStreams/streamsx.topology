@@ -67,6 +67,7 @@ public class IsolateTest extends TestTopology {
     @Test
     public void isolateIsEndOfStreamTest() throws Exception {
         assumeTrue(SC_OK);
+        assumeTrue(isMainRun());
         Topology topology = new Topology("isolateIsEndOfStreamTest");
 
         // Construct topology
@@ -80,6 +81,8 @@ public class IsolateTest extends TestTopology {
 
     @Test
     public void multipleIsolationTest() throws Exception {
+        assumeTrue(SC_OK);
+        assumeTrue(isMainRun());
         Topology topology = new Topology("multipleIsolationTest");
 
         TStream<String> ss = topology.strings("hello", "world");
@@ -109,6 +112,8 @@ public class IsolateTest extends TestTopology {
      */
     @Test(expected = IllegalStateException.class)
     public void multipleIsolationExceptionTest() throws Exception {
+        assumeTrue(SC_OK);
+        assumeTrue(isMainRun());
         Topology topology = new Topology("multipleIsolationExceptionTest");
 
         TStream<String> ss = topology.strings("hello", "world");
@@ -133,6 +138,8 @@ public class IsolateTest extends TestTopology {
     
     @Test
     public void islandIsolationTest() throws Exception {
+        assumeTrue(SC_OK);
+        assumeTrue(isMainRun());
         Topology topology = new Topology("islandIsolationTest");
 
         TStream<String> ss = topology.strings("hello", "world");
@@ -149,6 +156,8 @@ public class IsolateTest extends TestTopology {
 
     @Test
     public void unionIsolateTest() throws Exception {
+        assumeTrue(SC_OK);
+        assumeTrue(isMainRun());
         Topology topology = new Topology("unionIsolateTest");
 
         TStream<String> s1 = topology.strings("1");
@@ -183,6 +192,7 @@ public class IsolateTest extends TestTopology {
     
     @Test(expected = IllegalStateException.class)
     public void lowLatencyViolationTest() throws Exception {
+        assumeTrue(isMainRun());
 
         /** lowLatency -> ... isolate ... -> endLowLatency */
         

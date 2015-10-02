@@ -4,8 +4,9 @@
  */
 package com.ibm.streamsx.topology.test.streams;
 
-import static com.ibm.streamsx.topology.test.api.TopologyTest.checkPrint;
+import static com.ibm.streamsx.topology.test.api.TopologyTest.checkPrintEmbedded;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 
 import org.junit.Test;
 
@@ -28,11 +29,12 @@ public class StringStreamsTest extends TestTopology {
 
     @Test
     public void testContainsNoMatch() throws Exception {
+        assumeTrue(isEmbedded());  // checkPrint() forces embedded context
         final Topology f = new Topology("ContainsNoMatch");
         TStream<String> source = f.strings("abc", "bcd", "cde");
         TStream<String> filtered = StringStreams.contains(source, "xyz");
         assertNotNull(filtered);
         filtered.print();
-        checkPrint(f);
+        checkPrintEmbedded(f);
     }
 }

@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.ibm.json.java.JSONObject;
@@ -35,14 +36,16 @@ import com.ibm.streamsx.topology.tester.Tester;
 
 public class SPLOperatorsTest extends TestTopology {
     
+    @Before
+    public void runSpl() {
+        assumeSPLOk();
+    }
+    
     /**
      * Test we can invoke an SPL operator.
      */
     @Test
     public void testSPLOperator() throws Exception {
-        
-        // Invokes an SPL operator so cannot run in embedded.       
-        assumeSPLOk();   
         
         Topology topology = new Topology("testSPLOperator"); 
         
@@ -75,9 +78,6 @@ public class SPLOperatorsTest extends TestTopology {
      */
     @Test
     public void testSPLOperatorMultipleOuptuts() throws Exception {
-        
-        // Invokes an SPL operator so cannot run in embedded.       
-        assumeSPLOk();   
         
         Topology topology = new Topology(); 
         
@@ -124,9 +124,6 @@ public class SPLOperatorsTest extends TestTopology {
      */
 
     private void testOpParams(String testName, OpParamAdder opParamAdder) throws Exception {
-        
-        // Invokes an SPL operator so cannot run in embedded.       
-        assumeSPLOk();   
         
         Topology topology = new Topology(testName); 
         opParamAdder.init(topology, getConfig());

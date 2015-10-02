@@ -48,6 +48,7 @@ public class StreamTest extends TestTopology {
 
     @Test
     public void testBasics() throws Exception {
+        assumeTrue(isMainRun());
         final Topology topology = new Topology("BasicStream");
         
         assertEquals("BasicStream", topology.getName());
@@ -120,6 +121,7 @@ public class StreamTest extends TestTopology {
 
     @Test
     public void testUnionNops() throws Exception {
+        assumeTrue(isMainRun());
         final Topology f = new Topology("Union");
         TStream<String> s1 = f.strings("A1", "B1", "C1", "D1");
 
