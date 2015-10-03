@@ -18,8 +18,7 @@ import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.logic.Value;
-import com.ibm.streamsx.topology.messaging.mqtt.ConsumerConnector;
-import com.ibm.streamsx.topology.messaging.mqtt.ProducerConnector;
+import com.ibm.streamsx.topology.messaging.mqtt.MqttStreams;
 import com.ibm.streamsx.topology.tuple.Message;
 import com.ibm.streamsx.topology.tuple.SimpleMessage;
 
@@ -28,12 +27,9 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * Demonstrate integrating with the MQTT messaging system
  * <a href="http://mqtt.org">http://mqtt.org</a>.
  * <p>
- * Connectors are used to create a bridge between topology streams
- * and an MQTT broker:
- * <ul>
- * <li>{@link com.ibm.streamsx.topology.messaging.mqtt.ConsumerConnector mqtt.ConsumerConnector} - subscribe to MQTT topics and create streams of messages.</li>
- * <li>{@link com.ibm.streamsx.topology.messaging.mqtt.ProducerConnector mqtt.ProducerConnector} - publish streams of messages to MQTT topics.</li>
- * </ul>
+ * {@link com.ibm.streamsx.topology.messaging.mqtt.MqttStreams MqttStreams} is
+ * a connector used to create a bridge between topology streams
+ * and an MQTT broker.
  * <p>
  * The sample publishes some messages to a MQTT topic.  
  * It also subscribes to the topic and reports the messages received.
@@ -120,10 +116,8 @@ public class MqttSample {
         // A compile time MQTT topic value.
         Supplier<String> topic = new Value<String>(TOPIC);
 
-        // Create the MQTT connectors
-        Map<String,Object> mqttConfig = createMqttConfig();
-        ProducerConnector producer = new ProducerConnector(top, mqttConfig);
-        ConsumerConnector consumer = new ConsumerConnector(top, mqttConfig);
+        // Create the MQTT connector
+        MqttStreams mqtt = new MqttStreams(top, createMqttConfig());
         
         // Create a stream of messages and for the sample, give the
         // consumer a change to become ready
@@ -131,10 +125,10 @@ public class MqttSample {
                         .modify(initialDelayFunc(PUB_DELAY_MSEC));
 
         // Publish the message stream to the topic
-        producer.publish(msgs, topic);
+        mqtt.publish(msgs, topic);
         
         // Subscribe to the topic and report received messages
-        TStream<Message> rcvdMsgs = consumer.subscribe(topic);
+        TStream<Message> rcvdMsgs = mqtt.subscribe(topic);
         rcvdMsgs.print();
 
         // Submit the topology, to send and receive the messages.
@@ -164,9 +158,10 @@ public class MqttSample {
             SERVER_URI = value;
             System.out.println("Using "+item+"="+value);
         }
-        authInfo.put("userID", System.getProperty("user.name"));
         initAuthInfo("userID", args);
         initAuthInfo("password", args);
+        if (authInfo.containsKey("password") && !authInfo.containsKey("userID"))
+            authInfo.put("userID", System.getProperty("user.name"));
         initAuthInfo("trustStore", args);
         initAuthInfo("trustStorePassword", args);
         initAuthInfo("keyStore", args);

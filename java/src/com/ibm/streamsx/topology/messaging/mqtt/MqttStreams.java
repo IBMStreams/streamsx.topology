@@ -8,36 +8,42 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.Tuple;
+import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
+import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
+import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.tuple.Message;
 import com.ibm.streamsx.topology.tuple.SimpleMessage;
 
 /**
- * A simple connector to an MQTT broker for consuming MQTT messages
- * -- subscribing to MQTT topics and creating a {@code TStream<Message>}.
+ * A simple connector to a MQTT broker for publishing
+ * {@code TStream<Message>} tuples to MQTT topics, and
+ * subscribing to MQTT topics and creating {@code TStream<Message>} streams.
  * <p>
- * A connector is for a specific MQTT broker as specified in
- * the consumer configuration.  Any number of subscribers may be created -
- * {@code subscribe()} may be called any number of times.
+ * A connector is for a specific MQTT Broker as specified in
+ * the configuration. Any number of {@code publish()} and {@code subscribe()}
+ * connections may be created from a single MqttStreams connector.
  * <p>
  * Sample use:
  * <pre>{@code
- * Topology top = new Topology("An MQTT application");
- * // create submission properties for configuration information
- * Supplier<T> serverID = top.createSubmissionParameter("mqtt.serverID", "tcp://localhost:1883");
- * Supplier<T> userID = top.createSubmissionParameter("mqtt.userID", System.getProperty("user.name"));
- * Supplier<T> password = top.createSubmissionParameter("mqtt.password", String.class);
- * Supplier<T> topic = top.createSubmissionParameter("mqtt.topic", String.class);
+ * Topology t = new Topology("An MQTT application");
+ * // optionally, define submission properties for configuration information
+ * Supplier<T> serverID = t.createSubmissionParameter("mqtt.serverID", "tcp://localhost:1883");
+ * Supplier<T> userID = t.createSubmissionParameter("mqtt.userID", System.getProperty("user.name"));
+ * Supplier<T> password = t.createSubmissionParameter("mqtt.password", String.class);
+ * Supplier<T> pubTopic = t.createSubmissionParameter("mqtt.pubTopic", String.class);
+ * Supplier<T> subTopic = t.createSubmissionParameter("mqtt.subTopic", String.class);
  * 
  * // create the connector's configuration property map
  * Map<String,Object> config = new HashMap<>();
@@ -46,21 +52,31 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * config.put("password", password);
  * 
  * // create the connector
- * ConsumerConnector consumer = new ConsumerConnector(top, config);
+ * MqttStreams mqtt = new MqttStreams(t, config);
  * 
- * // subscribe to the submission parameter topic
- * TStream<Message> rcvdMsgs = consumer.subscribe(topic);
+ * // publish to the submission parameter "pubTopic"
+ * TStream<Message> msgsToPublish = ...
+ * mqtt.publish(msgsToPublish, pubTopic);
+ * 
+ * // publish to a compile time topic
+ * // with Java8 Lambda expression...
+ * mqtt.publish(msgsToPublish, ()->"anotherTopic");
+ * // without Java8...
+ * mqtt.publish(msgsToPublish, new Value("anotherTopic"));
+ * 
+ * // subscribe to the submission parameter "subTopic"
+ * TStream<Message> rcvdMsgs = mqtt.subscribe(subTopic);
  * rcvdMsgs.print();
  * 
  * // subscribe to a compile time topic
  * // with Java8 Lambda expression...
- * TStream<Message> rcvdMsgs2 = consumer.subscribe(()->"anotherTopic");
+ * TStream<Message> rcvdMsgs2 = mqtt.subscribe(()->"anotherTopic");
  * // without Java8...
- * TStream<Message> rcvdMsgs2 = consumer.subscribe(new Value("anotherTopic"));
+ * TStream<Message> rcvdMsgs2 = mqtt.subscribe(new Value("anotherTopic"));
  * }</pre>
  * <p>
- * Configuration properties apply to {@code ConsumerConnector} and
- * {@code ProducerConnector} configurations unless stated otherwise.
+ * Configuration properties apply to {@code publish} and
+ * {@code subscribe} unless stated otherwise.
  * <br>
  * All properties may be specified as submission parameters unless
  * stated otherwise.  
@@ -76,9 +92,14 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  *      </td></tr>
  * <tr><td>clientID</td>
  *      <td>Optional String. A unique identifier for a connection
- *      to the MQTT server. By default a unique client ID is automatically
- *      generated for each connection.  The MQTT broker only allows a single
+ *      to the MQTT server. 
+ *      The MQTT broker only allows a single
  *      connection for a particular {@code clientID}.
+ *      By default a unique client ID is automatically
+ *      generated for each use of {@code publish()} and {@code subscribe()}.
+ *      The specified clientID is used for the first
+ *      use {@code publish()} or {@code subscribe()} use and
+ *      suffix is added for each subsequent uses.
  *      </td></tr>
  * <tr><td>keepAliveInterval</td>
  *      <td>Optional Integer.  Automatically generate a MQTT
@@ -131,14 +152,14 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  *      The password needed to access the encrypted keyStore file.
  *      </td></tr>
  * <tr><td>receiveBufferSize</td>
- *      <td>[consumer] Optional Integer. The size, in number
- *      of messages, of the consumer's internal receive buffer.  Received
+ *      <td>[subscribe] Optional Integer. The size, in number
+ *      of messages, of the subscriber's internal receive buffer.  Received
  *      messages are added to the buffer prior to being converted to a
  *      stream tuple. The receiver blocks when the buffer is full.
  *      The default is 50.
  *      </td></tr>
  * <tr><td>retain</td>
- *      <td>[producer] Optional Boolean. Indicates if messages should be
+ *      <td>[publish] Optional Boolean. Indicates if messages should be
  *      retained on the MQTT server.  Default is false.
  *      </td></tr>
  * <tr><td>defaultQOS</td>
@@ -152,18 +173,19 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * @see <a
  *      href="http://ibmstreams.github.io/streamsx.messaging/">com.ibm.streamsx.messaging</a>
  */
-public class ConsumerConnector {
+public class MqttStreams {
     private final TopologyElement te;
     private final Map<String,Object> config;
-    private int sourceOpCnt;
-
+    private int opCnt;
+    
     /**
-     * Create a consumer connector for subscribing to topics.
+     * Create a MQTT connector for publishing tuples to topics
+     * subscribing to topics.
      * <p>
      * @param te {@link TopologyElement} 
-     * @param config consumer configuration property information.
+     * @param config configuration property information.
      */
-    public ConsumerConnector(TopologyElement te, Map<String, Object> config) {
+    public MqttStreams(TopologyElement te, Map<String, Object> config) {
         this.te = te;
         this.config = new HashMap<>();
         this.config.putAll(config);
@@ -175,6 +197,103 @@ public class ConsumerConnector {
      */
     public Map<String,Object> getConfig() {
         return Collections.unmodifiableMap(config);
+    }
+
+    /**
+     * Publish {@code stream} tuples to one or more MQTT topics.
+     * <p>
+     * Each {@code stream} tuple is sent to the topic specified by its
+     * {@link Message#getTopic()} value.
+     * The {@link Message#getKey()} field is ignored.
+     * <p>
+     * The message is handled with the quality of service indicated
+     * by configuration property {@code defaultQOS}.
+     * <p>
+     * Same as {@code publish(stream, null)}.
+     * @param stream the stream to publish
+     * @return the sink element
+     */
+    public TSink publish(TStream<? extends Message> stream)
+    {
+        return publish(stream, null/*topic*/);
+    }
+    
+    /**
+     * Publish {@code stream} tuples to one or more MQTT topics.
+     * <p>
+     * If {@code topic} is null, each tuple is published to the topic
+     * specified by its {@link Message#getTopic()}.
+     * Otherwise, all tuples are published to {@code topic}.
+     * <p>
+     * The messages added to MQTT include a topic and message.
+     * The {@link Message#getKey()} field is ignored.
+     * <p>
+     * The message is handled with the quality of service
+     * indicated by configuration property {@code defaultQOS}.
+     * 
+     * @param stream the stream to publish
+     * @param topic topic to publish to.  May be a submission parameter. May be null.
+     * @return the sink element
+     * @see Value
+     * @see Topology#createSubmissionParameter(String, Class)
+     */
+    public TSink publish(TStream<? extends Message> stream, Supplier<String> topic) {
+        
+        stream = stream.lowLatency();
+        
+        @SuppressWarnings("unchecked")
+        SPLStream splStream = SPLStreams.convertStream((TStream<Message>)stream,
+                cvtMsgFunc(topic), MqttSchemas.MQTT);
+        
+        Map<String,Object> params = new HashMap<String,Object>();
+        params.put("reconnectionBound", -1);
+        params.put("qos", 0);
+        params.putAll(Util.configToSplParams(config));
+        params.remove("messageQueueSize");
+        if (topic == null)
+            params.put("topicAttributeName", "topic");
+        else
+            params.put("topic", topic);
+        params.put("dataAttributeName", "message");
+        if (++opCnt > 1) {
+            // each op requires its own clientID
+            String clientId = (String) params.get("clientID");
+            if (clientId != null && clientId.length() > 0)
+                params.put("clientID", opCnt+"-"+clientId);
+        }
+       
+        // Use SPL.invoke to avoid adding a compile time dependency
+        // to com.ibm.streamsx.messaging since JavaPrimitive.invoke*()
+        // lack "kind" based variants.
+        String kind = "com.ibm.streamsx.messaging.mqtt::MQTTSink";
+        String className = "com.ibm.streamsx.messaging.kafka.MqttSinkOperator";
+        TSink sink = SPL.invokeSink(
+                kind,
+                splStream,
+                params);
+        SPL.tagOpAsJavaPrimitive(sink.operator(), kind, className);
+        return sink;
+    }
+    
+    private static BiFunction<Message,OutputTuple,OutputTuple> 
+            cvtMsgFunc(final Supplier<String> topic)
+    {
+        return new BiFunction<Message,OutputTuple,OutputTuple>() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public OutputTuple apply(Message v1, OutputTuple v2) {
+                v2.setString("message", toSplValue(v1.getMessage()));
+                if (topic==null)
+                    v2.setString("topic", toSplValue(v1.getTopic()));
+                return v2;
+            }
+            
+            private String toSplValue(String s) {
+                // SPL doesn't allow null
+                return s==null ? "" : s;
+            }
+        };
     }
     
     /**
@@ -190,7 +309,7 @@ public class ConsumerConnector {
      * <a href="https://github.com/IBMStreams/streamsx.messaging/issues/124">issue#124</a>,
      * terminating a {@code StreamsContext.Type.STANDALONE} topology may result
      * in ERROR messages and a stranded standalone process.
-
+     *
      * @param topic the MQTT topic.  May be a submission parameter.
      * @return TStream&lt;Message>
      *      The generated {@code Message} tuples have a non-null {@code topic}.
@@ -208,14 +327,15 @@ public class ConsumerConnector {
         params.put("reconnectionBound", -1);
         params.put("qos", 0);
         params.putAll(Util.configToSplParams(config));
+        params.remove("retain");
         params.put("topics", topic);
         params.put("topicOutAttrName", "topic");
         params.put("dataAttributeName", "message");
-        if (++sourceOpCnt > 1) {
-            // each source op requires its own clientID
+        if (++opCnt > 1) {
+            // each op requires its own clientID
             String clientId = (String) params.get("clientID");
             if (clientId != null && clientId.length() > 0)
-                params.put("clientID", sourceOpCnt+"-"+clientId);
+                params.put("clientID", opCnt+"-"+clientId);
         }
 
         // Use SPL.invoke to avoid adding a compile time dependency

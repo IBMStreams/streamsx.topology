@@ -6,13 +6,10 @@
  * Support for integrating with the MQTT messaging system
  * <a href="http://mqtt.org">http://mqtt.org</a>.
  * <p>
- * Connectors are used to create a bridge between topology streams
- * and a MQTT broker:
- * <ul>
- * <li>{@link com.ibm.streamsx.topology.messaging.mqtt.ConsumerConnector mqtt.ConsumerConnector} - subscribe to MQTT topics and create streams of messages.</li>
- * <li>{@link com.ibm.streamsx.topology.messaging.mqtt.ProducerConnector mqtt.ProducerConnector} - publish streams of messages to MQTT topics.</li>
- * </ul>
- * 
+ * {@link com.ibm.streamsx.topology.messaging.mqtt.MqttStreams MqttStreams} is
+ * a connector to bridge between topology streams
+ * and a MQTT broker.
+ * <p>
  * Functionality in this package is provided by the open source SPL toolkit
  * <a href="http://ibmstreams.github.io/streamsx.messaging/">com.ibm.streamsx.messaging</a>
  * release 2.0.0 or later.
