@@ -136,7 +136,16 @@ public class MqttSample {
                 .submit(top, contextConfig);
         
         if (contextType.contains("DISTRIBUTED")) {
-            System.out.println("\nSee the job's PE console logs for the topology output.\n");
+            System.out.println("\nSee the job's PE console logs for the topology output.\n"
+                    + "Use Streams Studio or streamtool.  e.g.,\n"
+                    + "    # identify the job's \"Print\" PE\n"
+                    + "    streamtool lspes --jobs " + future.get() + "\n"
+                    + "    # print the PE's console log\n"
+                    + "    streamtool viewlog --print --console --pe <the-peid>"
+                    + "\n");
+            System.out.println("Cancel the job using Streams Studio or streamtool. e.g.,\n"
+                    + "    streamtool canceljob " + future.get()
+                    + "\n");
         }
         else if (contextType.contains("STANDALONE")) {
             Thread.sleep(15000);
