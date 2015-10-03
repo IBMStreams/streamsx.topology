@@ -9,8 +9,8 @@
  * Connectors are used to create a bridge between topology streams
  * and a Kafka cluster:
  * <ul>
- * <li>{@link com.ibm.streamsx.topology.messaging.kafka.ConsumerConnector ConsumerConnector} - subscribe to Kafka topics and create streams of messages.</li>
- * <li>{@link com.ibm.streamsx.topology.messaging.kafka.ProducerConnector ProducerConnector} - publish streams of messages to Kafka topics.</li>
+ * <li>{@link com.ibm.streamsx.topology.messaging.kafka.KafkaConsumer KafkaConsumer} - subscribe to Kafka topics and create streams of messages.</li>
+ * <li>{@link com.ibm.streamsx.topology.messaging.kafka.KafkaProducer KafkaProducer} - publish streams of messages to Kafka topics.</li>
  * </ul>
  * 
  * Functionality in this package is provided by the open source SPL toolkit

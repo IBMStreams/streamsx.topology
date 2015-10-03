@@ -30,8 +30,8 @@ import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.logic.Value;
-import com.ibm.streamsx.topology.messaging.kafka.ConsumerConnector;
-import com.ibm.streamsx.topology.messaging.kafka.ProducerConnector;
+import com.ibm.streamsx.topology.messaging.kafka.KafkaConsumer;
+import com.ibm.streamsx.topology.messaging.kafka.KafkaProducer;
 import com.ibm.streamsx.topology.tuple.Message;
 import com.ibm.streamsx.topology.tuple.SimpleMessage;
 
@@ -43,8 +43,8 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * Connectors are used to create a bridge between topology streams
  * and a Kafka cluster:
  * <ul>
- * <li>{@link com.ibm.streamsx.topology.messaging.kafka.ConsumerConnector ConsumerConnector} - subscribe to Kafka topics and create streams of messages.</li>
- * <li>{@link com.ibm.streamsx.topology.messaging.kafka.ProducerConnector ProducerConnector} - publish streams of messages to Kafka topics.</li>
+ * <li>{@link com.ibm.streamsx.topology.messaging.kafka.KafkaConsumer KafkaConsumer} - subscribe to Kafka topics and create streams of messages.</li>
+ * <li>{@link com.ibm.streamsx.topology.messaging.kafka.KafkaProducer KafkaProducer} - publish streams of messages to Kafka topics.</li>
  * </ul>
  * <p>
  * The sample publishes some messages to a Kafka topic.  
@@ -135,8 +135,8 @@ public class KafkaSample {
         String groupId = newGroupId(top.getName());
         Supplier<String> topic = new Value<String>(TOPIC);
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
+        KafkaProducer producer = new KafkaProducer(top, createProducerConfig());
+        KafkaConsumer consumer = new KafkaConsumer(top, createConsumerConfig(groupId));
         
         TStream<Message> msgs = makeStreamToPublish(top);
 

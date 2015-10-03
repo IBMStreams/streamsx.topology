@@ -3,8 +3,7 @@
 # Copyright IBM Corp. 2015  
  */
 /**
- * Tests for {@link com.ibm.streamsx.topology.messaging.mqtt.ConsumerConnector mqtt.ConsumerConnector}
- * and {@link com.ibm.streamsx.topology.messaging.mqtt.ProducerConnector mqtt.ProducerConnector}
+ * Tests for {@link com.ibm.streamsx.topology.messaging.mqtt.MqttStreams mqtt.MqttStreams}.
  *
  * <p>The tests require access to an operational MQTT broker with the
  * following configuration:

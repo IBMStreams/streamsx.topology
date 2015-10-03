@@ -33,7 +33,7 @@ import com.ibm.streamsx.topology.tuple.Message;
  * <pre>
  * Topology top = ...
  * Properties producerConfig = ...
- * ProducerConnector pc = new ProducerConnector(top, producerConfig);
+ * KafkaProducer pc = new KafkaProducer(top, producerConfig);
  *  
  * TStream<MyType> myStream = ...
  * TStream<Message> msgsToSend = myStream.transform(MyType to SimpleMessage);
@@ -47,7 +47,7 @@ import com.ibm.streamsx.topology.tuple.Message;
  * @see <a
  *      href="http://ibmstreams.github.io/streamsx.messaging/">com.ibm.streamsx.messaging</a>
  */
-public class ProducerConnector {
+public class KafkaProducer {
     private static final String PROP_FILE_PARAM = "etc/kafkaStreams/emptyProducerProperties";
     private final TopologyElement te;
     private final Map<String,Object> config;
@@ -84,7 +84,7 @@ public class ProducerConnector {
      *
      * @param config KafkaProducer configuration information.
      */
-    public ProducerConnector(TopologyElement te, Map<String,Object> config) {
+    public KafkaProducer(TopologyElement te, Map<String,Object> config) {
         this.te = te;
         this.config = new HashMap<>();
         this.config.putAll(config);
@@ -128,7 +128,7 @@ public class ProducerConnector {
      * try isolating the producer from its feeding streams.
      * e.g.,
      * <pre>
-     * ProducerConnector pc = ...
+     * KafkaProducer pc = ...
      * TStream<Message> s = ...
      * pc.publish(s.isolate(), ...);
      * </pre> 
