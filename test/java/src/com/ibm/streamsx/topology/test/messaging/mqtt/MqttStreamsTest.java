@@ -31,8 +31,7 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.logic.Value;
-import com.ibm.streamsx.topology.messaging.mqtt.ConsumerConnector;
-import com.ibm.streamsx.topology.messaging.mqtt.ProducerConnector;
+import com.ibm.streamsx.topology.messaging.mqtt.MqttStreams;
 import com.ibm.streamsx.topology.test.InitialDelay;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -180,15 +179,7 @@ public class MqttStreamsTest extends TestTopology {
         }
     }
     
-    private Map<String,Object> createConsumerConfig(String clientId) {
-        Map<String,Object> props = new HashMap<>();
-        props.put("serverURI", getServerURI());
-        props.put("clientID", clientId);
-        props.putAll(authInfo);
-        return props;
-    }
-    
-    private Map<String,Object> createProducerConfig(String clientId) {
+    private Map<String,Object> createConfig(String clientId) {
         Map<String,Object> props = new HashMap<>();
         props.put("serverURI", getServerURI());
         props.put("clientID", clientId);
@@ -215,9 +206,9 @@ public class MqttStreamsTest extends TestTopology {
     public void testSubscribeNullTopic() throws Exception {
         Topology top = new Topology("testSubscribeNullTopic");
         String subClientId = newSubClientId(top.getName());
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
+        MqttStreams mqtt = new MqttStreams(top, createConfig(subClientId));
         
-        consumer.subscribe(null); // throws IAE
+        mqtt.subscribe(null); // throws IAE
    }
     
     @Test
@@ -227,60 +218,40 @@ public class MqttStreamsTest extends TestTopology {
         setupDebug();
         Topology top = new Topology("testConfigParams");
         MsgGenerator mgen = new MsgGenerator(top.getName());
-        String subClientId = newSubClientId(top.getName());
-        String pubClientId = newPubClientId(top.getName());
+        String clientId = newPubClientId(top.getName());
         String topicVal = getMqttTopics()[0];
         Supplier<String> topic = new Value<String>(topicVal);
         List<Message> msgs = createMsgs(mgen, null/*topic*/);
         
         // Test more config properties to be sure we don't blow up
         
-        Map<String,Object> producerConfig = createProducerConfig(pubClientId);
-        producerConfig.put("defaultQOS", 1);
-        producerConfig.put("keepAliveInterval", 10);
-        producerConfig.put("commandTimeoutMsec", 20000L);
-        producerConfig.put("reconnectDelayMsec", 4000L);
-        producerConfig.put("reconnectionBound", 10);
-        producerConfig.put("retain", false);
-        producerConfig.put("userID", System.getProperty("user.name"));
-        producerConfig.put("password", "foobar");
-        producerConfig.put("trustStore", "/tmp/no-such-trustStore");
-        producerConfig.put("trustStorePassword", "woohoo");
-        producerConfig.put("keyStore", "/tmp/no-such-keyStore");
-        producerConfig.put("keyStorePassword", "woohoo");
-        
-        Map<String,Object>  consumerConfig = createConsumerConfig(subClientId);
-        consumerConfig.put("defaultQOS", 1);
-        consumerConfig.put("keepAliveInterval", 20);
-        consumerConfig.put("commandTimeoutMsec", 30000L);
-        consumerConfig.put("reconnectDelayMsec", 5000L);
-        consumerConfig.put("receiveBufferSize", 10);
-        consumerConfig.put("reconnectionBound", 20);
-        consumerConfig.put("userID", System.getProperty("user.name"));
-        consumerConfig.put("password", "foobar");
-        consumerConfig.put("trustStore", "/tmp/no-such-trustStore");
-        consumerConfig.put("trustStorePassword", "woohoo");
-        consumerConfig.put("keyStore", "/tmp/no-such-keyStore");
-        consumerConfig.put("keyStorePassword", "woohoo");
+        Map<String,Object>  config = createConfig(clientId);
+        config.put("defaultQOS", 1);
+        config.put("keepAliveInterval", 20);
+        config.put("commandTimeoutMsec", 30000L);
+        config.put("reconnectDelayMsec", 5000L);
+        config.put("receiveBufferSize", 10);
+        config.put("reconnectionBound", 20);
+        config.put("retain", false);
+        config.put("userID", System.getProperty("user.name"));
+        config.put("password", "foobar");
+        config.put("trustStore", "/tmp/no-such-trustStore");
+        config.put("trustStorePassword", "woohoo");
+        config.put("keyStore", "/tmp/no-such-keyStore");
+        config.put("keyStorePassword", "woohoo");
    
-        ProducerConnector producer = new ProducerConnector(top, producerConfig);
+        MqttStreams mqtt = new MqttStreams(top, config);
         
-        Map<String,Object> pcfg = producer.getConfig();
-        for (String s : producerConfig.keySet())
-            assertEquals("property "+s, producerConfig.get(s), pcfg.get(s));
-        
-        ConsumerConnector consumer = new ConsumerConnector(top, consumerConfig);
-        
-        Map<String,Object> ccfg = consumer.getConfig();
-        for (String s : consumerConfig.keySet())
-            assertEquals("property "+s, consumerConfig.get(s), ccfg.get(s));
+        Map<String,Object> pcfg = mqtt.getConfig();
+        for (String s : config.keySet())
+            assertEquals("property "+s, config.get(s), pcfg.get(s));
         
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
 
-        TSink sink = producer.publish(msgsToPublish, topic);
+        TSink sink = mqtt.publish(msgsToPublish, topic);
         
-        TStream<Message> rcvdMsgs = consumer.subscribe(topic);
+        TStream<Message> rcvdMsgs = mqtt.subscribe(topic);
 
         // for validation...
         rcvdMsgs.print();
@@ -318,7 +289,7 @@ public class MqttStreamsTest extends TestTopology {
         Supplier<String> keyStore = top.createSubmissionParameter("keyStore", String.class);
         Supplier<String> keyStorePassword = top.createSubmissionParameter("keyStorePassword", String.class);
         
-        Map<String,Object> producerConfig = createProducerConfig(pubClientId);
+        Map<String,Object> producerConfig = createConfig(pubClientId);
         producerConfig.put("userID", userID);
         producerConfig.put("password", password);
         producerConfig.put("trustStore", trustStore);
@@ -326,7 +297,7 @@ public class MqttStreamsTest extends TestTopology {
         producerConfig.put("keyStore", keyStore);
         producerConfig.put("keyStorePassword", keyStorePassword);
         
-        Map<String,Object>  consumerConfig = createConsumerConfig(subClientId);
+        Map<String,Object>  consumerConfig = createConfig(subClientId);
         consumerConfig.put("userID", userID);
         consumerConfig.put("password", password);
         consumerConfig.put("trustStore", trustStore);
@@ -334,8 +305,8 @@ public class MqttStreamsTest extends TestTopology {
         consumerConfig.put("keyStore", keyStore);
         consumerConfig.put("keyStorePassword", keyStorePassword);
    
-        ProducerConnector producer = new ProducerConnector(top, producerConfig);
-        ConsumerConnector consumer = new ConsumerConnector(top, consumerConfig);
+        MqttStreams producer = new MqttStreams(top, producerConfig);
+        MqttStreams consumer = new MqttStreams(top, consumerConfig);
         
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
@@ -383,7 +354,7 @@ public class MqttStreamsTest extends TestTopology {
         params.definitions().put("mqtt.sub.topic", String.class);
         params.createAll();
         
-        // add the values for our call to submit()
+        // add the actual param values for our call to submit()
         Map<String,Object> submitParams = new HashMap<>();
         submitParams.put("mqtt.serverURI", "tcp://localhost:1883");
         // submitParams.put("mqtt.userID", System.getProperty("user.name"));
@@ -395,13 +366,13 @@ public class MqttStreamsTest extends TestTopology {
         
         // Produce and consume the msgs
 
-        Map<String,Object> pconfig = createProducerConfig(pubClientId);
+        Map<String,Object> pconfig = createConfig(pubClientId);
         addMqttParams(pconfig, false, params);
-        Map<String,Object> cconfig = createConsumerConfig(subClientId);
+        Map<String,Object> cconfig = createConfig(subClientId);
         addMqttParams(cconfig, true, params);
 
-        ProducerConnector producer = new ProducerConnector(top, pconfig);
-        ConsumerConnector consumer = new ConsumerConnector(top, cconfig);
+        MqttStreams producer = new MqttStreams(top, pconfig);
+        MqttStreams consumer = new MqttStreams(top, cconfig);
         
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
@@ -445,6 +416,40 @@ public class MqttStreamsTest extends TestTopology {
     }
     
     @Test
+    public void testExplicitTopicProducerSingleConnector() throws Exception {
+        
+        checkAssumes();
+        setupDebug();
+        Topology top = new Topology("testExplicitTopicProducerSingleConnector");
+        MsgGenerator mgen = new MsgGenerator(top.getName());
+        String clientId = newPubClientId(top.getName());
+        String topicVal = getMqttTopics()[0];
+        Supplier<String> topic = new Value<String>(topicVal);
+        List<Message> msgs = createMsgs(mgen, null/*topic*/);
+        List<String> expectedAsString = mapList(modifyList(msgs, setTopic(topicVal)),
+                                                msgToJSONStringFunc());
+        
+        // Test producer that takes an explicit topic and implicit config qos
+        
+        MqttStreams mqtt = new MqttStreams(top, createConfig(clientId));
+        
+        TStream<Message> msgsToPublish = top.constants(msgs)
+                .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
+
+        TSink sink = mqtt.publish(msgsToPublish, topic);
+        
+        TStream<Message> rcvdMsgs = mqtt.subscribe(topic);
+
+        // for validation...
+        rcvdMsgs.print();
+        rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
+        TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+
+        completeAndValidate(clientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
+        assertTrue(sink != null);
+    }
+    
+    @Test
     public void testExplicitTopicProducer() throws Exception {
         
         checkAssumes();
@@ -461,8 +466,8 @@ public class MqttStreamsTest extends TestTopology {
         
         // Test producer that takes an explicit topic and implicit config qos
         
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig(pubClientId));
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
+        MqttStreams producer = new MqttStreams(top, createConfig(pubClientId));
+        MqttStreams consumer = new MqttStreams(top, createConfig(subClientId));
         
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
@@ -495,8 +500,8 @@ public class MqttStreamsTest extends TestTopology {
         
         // Test producer that takes an arbitrary TStream<T> and implicit topic
         
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig(pubClientId));
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
+        MqttStreams producer = new MqttStreams(top, createConfig(pubClientId));
+        MqttStreams consumer = new MqttStreams(top, createConfig(subClientId));
         
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
@@ -531,8 +536,8 @@ public class MqttStreamsTest extends TestTopology {
         
         // Test producer that takes TStream<SimpleMessage> and an explicit topic.
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig(pubClientId));
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
+        MqttStreams producer = new MqttStreams(top, createConfig(pubClientId));
+        MqttStreams consumer = new MqttStreams(top, createConfig(subClientId));
         
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
@@ -569,8 +574,8 @@ public class MqttStreamsTest extends TestTopology {
         
         // Test producer that takes a TStream<MyMsgSubtype>
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig(pubClientId));
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
+        MqttStreams producer = new MqttStreams(top, createConfig(pubClientId));
+        MqttStreams consumer = new MqttStreams(top, createConfig(subClientId));
         
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs).asType(MyMsgSubtype.class)
                 .modify(new InitialDelay<MyMsgSubtype>(PUB_DELAY_MSEC));
@@ -606,8 +611,8 @@ public class MqttStreamsTest extends TestTopology {
 
         // Test producer that takes a TStream<MyMsgSubtype> implicit topic
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig(pubClientId));
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
+        MqttStreams producer = new MqttStreams(top, createConfig(pubClientId));
+        MqttStreams consumer = new MqttStreams(top, createConfig(subClientId));
         
         TStream<MyMsgSubtype> msgsToPublish = top.constants(msgs).asType(MyMsgSubtype.class)
                 .modify(new InitialDelay<MyMsgSubtype>(PUB_DELAY_MSEC));
@@ -645,8 +650,8 @@ public class MqttStreamsTest extends TestTopology {
         
         // Test producer that publishes to multiple topics (implies implicit topic)
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig(pubClientId));
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
+        MqttStreams producer = new MqttStreams(top, createConfig(pubClientId));
+        MqttStreams consumer = new MqttStreams(top, createConfig(subClientId));
         
         TStream<Message> msgsToPublish = top.constants(msgs)
                 .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));
@@ -687,8 +692,8 @@ public class MqttStreamsTest extends TestTopology {
         
         // Multi pub / sub on a single connector
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig(pubClientId));
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(subClientId));
+        MqttStreams producer = new MqttStreams(top, createConfig(pubClientId));
+        MqttStreams consumer = new MqttStreams(top, createConfig(subClientId));
         
         TStream<Message> topic1MsgsToPublish = top.constants(topic1Msgs)
                 .modify(new InitialDelay<Message>(PUB_DELAY_MSEC));

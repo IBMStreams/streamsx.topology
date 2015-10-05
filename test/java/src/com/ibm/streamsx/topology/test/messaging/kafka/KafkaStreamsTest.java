@@ -33,8 +33,8 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.logic.Value;
-import com.ibm.streamsx.topology.messaging.kafka.ConsumerConnector;
-import com.ibm.streamsx.topology.messaging.kafka.ProducerConnector;
+import com.ibm.streamsx.topology.messaging.kafka.KafkaConsumer;
+import com.ibm.streamsx.topology.messaging.kafka.KafkaProducer;
 import com.ibm.streamsx.topology.test.InitialDelay;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -328,7 +328,7 @@ public class KafkaStreamsTest extends TestTopology {
     @Test (expected = IllegalArgumentException.class)
     public void testSubscribeNullTopic() throws Exception {
         Topology top = new Topology("testSubscribeNullTopic");
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig("group"));
+        KafkaConsumer consumer = new KafkaConsumer(top, createConsumerConfig("group"));
         
         consumer.subscribe(null); // throws IAE
    }
@@ -336,7 +336,7 @@ public class KafkaStreamsTest extends TestTopology {
     @Test (expected = IllegalArgumentException.class)
     public void testSubscribeNullThreadsPerTopic() throws Exception {
         Topology top = new Topology("testSubscribeNullThreadsPerTopic");
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig("group"));
+        KafkaConsumer consumer = new KafkaConsumer(top, createConsumerConfig("group"));
         
         consumer.subscribe(null, new Value<String>("topic")); // throws IAE
    }
@@ -344,7 +344,7 @@ public class KafkaStreamsTest extends TestTopology {
     @Test (expected = IllegalArgumentException.class)
     public void testSubscribeNegThreadsPerTopic() throws Exception {
         Topology top = new Topology("testSubscribeNegThreadsPerTopic");
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig("group"));
+        KafkaConsumer consumer = new KafkaConsumer(top, createConsumerConfig("group"));
         
         consumer.subscribe(new Value<Integer>(-1), new Value<String>("topic")); // throws IAE
    }
@@ -359,13 +359,13 @@ public class KafkaStreamsTest extends TestTopology {
         Map<String,Object> producerConfig = createProducerConfig();
         Map<String,Object> consumerConfig = createConsumerConfig(groupId);
         
-        ProducerConnector producer = new ProducerConnector(top, producerConfig);
+        KafkaProducer producer = new KafkaProducer(top, producerConfig);
         
         Map<String,Object> pcfg = producer.getConfig();
         for (Object o : producerConfig.keySet())
             assertEquals("property "+o, producerConfig.get(o), pcfg.get(o));
         
-        ConsumerConnector consumer = new ConsumerConnector(top, consumerConfig);
+        KafkaConsumer consumer = new KafkaConsumer(top, consumerConfig);
         
         Map<String,Object> ccfg = consumer.getConfig();
         for (Object o : consumerConfig.keySet())
@@ -384,8 +384,8 @@ public class KafkaStreamsTest extends TestTopology {
         String topicVal = getKafkaTopics()[0];
         Supplier<String> topic = new Value<String>(topicVal);
         
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
+        KafkaProducer producer = new KafkaProducer(top, createProducerConfig());
+        KafkaConsumer consumer = new KafkaConsumer(top, createConsumerConfig(groupId));
         
         // Test producer that takes an arbitrary TStream<T> and explicit topic
         
@@ -431,8 +431,8 @@ public class KafkaStreamsTest extends TestTopology {
         Supplier<String> topic = top.createSubmissionParameter("kafka.topic", topicVal);
         Supplier<Integer> threadsPerTopic = top.createSubmissionParameter("kafka.consumer.threadsPerTopic", 1);
         
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
+        KafkaProducer producer = new KafkaProducer(top, createProducerConfig());
+        KafkaConsumer consumer = new KafkaConsumer(top, createConsumerConfig(groupId));
         
         // Test producer that takes an arbitrary TStream<T> and explicit topic
         
@@ -477,8 +477,8 @@ public class KafkaStreamsTest extends TestTopology {
         String topicVal = getKafkaTopics()[0];
         Supplier<String> topic = new Value<String>(topicVal);
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
+        KafkaProducer producer = new KafkaProducer(top, createProducerConfig());
+        KafkaConsumer consumer = new KafkaConsumer(top, createConsumerConfig(groupId));
         
         // Test producer that takes an arbitrary TStream<T> and implicit topic
         
@@ -520,8 +520,8 @@ public class KafkaStreamsTest extends TestTopology {
         String topicVal = getKafkaTopics()[0];
         Supplier<String> topic = new Value<String>(topicVal);
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
+        KafkaProducer producer = new KafkaProducer(top, createProducerConfig());
+        KafkaConsumer consumer = new KafkaConsumer(top, createConsumerConfig(groupId));
         
         // Test producer that takes TStream<SimpleMessage> and an explicit topic.
         
@@ -560,8 +560,8 @@ public class KafkaStreamsTest extends TestTopology {
         String topicVal = getKafkaTopics()[0];
         Supplier<String> topic = new Value<String>(topicVal);
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
+        KafkaProducer producer = new KafkaProducer(top, createProducerConfig());
+        KafkaConsumer consumer = new KafkaConsumer(top, createConsumerConfig(groupId));
        
         // Test producer that takes a TStream<MyMsgSubtype>
         
@@ -599,8 +599,8 @@ public class KafkaStreamsTest extends TestTopology {
         String topicVal = getKafkaTopics()[0];
         Supplier<String> topic = new Value<String>(topicVal);
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
+        KafkaProducer producer = new KafkaProducer(top, createProducerConfig());
+        KafkaConsumer consumer = new KafkaConsumer(top, createConsumerConfig(groupId));
         
         // Test producer that takes a TStream<MyMsgSubtype> implicit topic
         
@@ -646,8 +646,8 @@ public class KafkaStreamsTest extends TestTopology {
         Supplier<String> topic2 = new Value<String>(topic2Val);
 
 
-        ProducerConnector producer = new ProducerConnector(top, createProducerConfig());
-        ConsumerConnector consumer = new ConsumerConnector(top, createConsumerConfig(groupId));
+        KafkaProducer producer = new KafkaProducer(top, createProducerConfig());
+        KafkaConsumer consumer = new KafkaConsumer(top, createConsumerConfig(groupId));
         
         // Test producer that publishes to multiple topics (implies implicit topic)
         

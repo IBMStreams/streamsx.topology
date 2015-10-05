@@ -36,7 +36,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * <pre>
  * Topology top = ...
  * Properties consumerConfig = ...
- * ConsumerConnector cc = new ConsumerConnector(top, consumerConfig);
+ * KafkaConsumer cc = new KafkaConsumer(top, consumerConfig);
  * // with Java8 Lambda expressions... 
  * TStream<Message> rcvdMsgs = cc.consumer(()->"myTopic");
  * // without Java8... 
@@ -47,7 +47,7 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * @see <a
  *      href="http://ibmstreams.github.io/streamsx.messaging/">com.ibm.streamsx.messaging</a>
  */
-public class ConsumerConnector {
+public class KafkaConsumer {
     private static final String PROP_FILE_PARAM = "etc/kafkaStreams/emptyConsumerProperties";
     private final TopologyElement te;
     private final Map<String,Object> config;
@@ -78,7 +78,7 @@ public class ConsumerConnector {
      * @param te {@link TopologyElement} 
      * @param config KafkaConsumer configuration information.
      */
-    public ConsumerConnector(TopologyElement te, Map<String, Object> config) {
+    public KafkaConsumer(TopologyElement te, Map<String, Object> config) {
         this.te = te;
         this.config = new HashMap<>();
         this.config.putAll(config);

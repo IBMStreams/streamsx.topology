@@ -16,12 +16,12 @@ import com.ibm.streamsx.topology.function.Supplier;
  * or a configuration driven compile time constant.
  * <p>
  * <pre>{@code
- * Topology topology = new Topology("my application");
+ * Topology t = new Topology("my application");
  * 
  * // define and create the topology's global 
  * // submission time and compile time parameters
  * // Our submission parameters 
- * ParameterHelper params = new ParameterHelper(topology);
+ * ParameterHelper params = new ParameterHelper(t);
  * params.definitions().put("mqtt.serverURI", "tcp://localhost:1883");
  * params.definitions().put("mqtt.userID", System.getProperty("user.name"));
  * params.definitions().put("mqtt.password", String.class);
@@ -34,11 +34,11 @@ import com.ibm.streamsx.topology.function.Supplier;
  * 
  * ...
  * // use the parameters when creating the MQTT connector configuration
- * ConsumerConnector consumer = new ConsumerConnector(topology, createConfig(params));
+ * MqttStreams mqtt = new MqttStreams(t, createConfig(params));
  * 
  * // use the submission parameters when constructing the topology
  * TStream<Message> filteredMsgs =
- *              consumer.subscribe(params.getString("mqtt.topic"))
+ *              mqtt.subscribe(params.getString("mqtt.topic"))
  *              .parallel(params.getInt("stage1width"))
  *                .filter(...)
  *              .endParallel();
