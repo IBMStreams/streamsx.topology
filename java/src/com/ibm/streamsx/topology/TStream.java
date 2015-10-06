@@ -442,9 +442,12 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * If no tuples have been seen on the stream in the last {@code time} seconds
      * then the window will be empty.
      * <BR>
-     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
-     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
-     * In this case that means each partition independently maintains the last {@code time}
+     * The window has a single partition that always contains the
+     * last {@code time} seconds of tuples seen on this stream
+     * <BR>
+     * A key based partitioned window can be created from the returned window
+     * using {@link TWindow#key(Function)} or {@link TWindow#key()}.
+     * When the window is partitioned each partition independently maintains the last {@code time}
      * seconds of tuples for each key seen on this stream.
      * 
      * @param time Time size of the window
@@ -460,12 +463,16 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * which will be less than {@code count}. If no tuples have been
      * seen on the stream then the window will be empty.
      * <BR>
-     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
-     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
-     * In this case that means each partition independently maintains the last {@code count} tuples for each
-     * key seen on this stream.
-     * Otherwise the window has a single partition that always contains the
+     * The window has a single partition that always contains the
      * last {@code count} tuples seen on this stream.
+     * <BR>
+     * The window has a single partition that always contains the last tuple seen
+     * on this stream.
+     * <BR>
+     * A key based partitioned window can be created from the returned window
+     * using {@link TWindow#key(Function)} or {@link TWindow#key()}.
+     * When the window is partitioned each partition independently maintains the
+     * last {@code count} tuples for each key seen on this stream.
      * 
      * @param count Tuple size of the window
      * @return Window on this stream representing the last {@code count} tuples.
@@ -476,12 +483,13 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * Declare a {@link TWindow} that continually represents the last tuple on this stream.
      * If no tuples have been seen on the stream then the window will be empty.
      * <BR>
-     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
-     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
-     * In this case that means each partition independently maintains the last tuple for
-     * each key seen on this stream.
-     * Otherwise the window has a single partition that always contains the last tuple seen
+     * The window has a single partition that always contains the last tuple seen
      * on this stream.
+     * <BR>
+     * A key based partitioned window can be created from the returned window
+     * using {@link TWindow#key(Function)} or {@link TWindow#key()}.
+     * When the window is partitioned each partition independently maintains the
+     * last tuple for each key seen on this stream.
      * 
      * @return Window on this stream representing the last tuple.
      */
@@ -491,18 +499,16 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * Declare a {@link TWindow} on this stream that has the same configuration
      * as another window.
      * <BR>
-     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
-     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
-     * In this case that means each partition independently maintains the configured
-     * list of tuples for each key seen on this stream.
-     * Otherwise the window has a single partition that contains the 
-     * configured list of tuples for this stream.
+     * The window has a single partition.
+     * <BR>
+     * A key based partitioned window can be created from the returned window
+     * using {@link TWindow#key(Function)} or {@link TWindow#key()}.
      * 
      * @param configWindow
      *            Window to copy the configuration from.
      * @return Window on this stream with the same configuration as {@code configWindow}.
      */
-    TWindow<T,?> window(TWindow<?,?> configWindow);
+    TWindow<T,Object> window(TWindow<?,?> configWindow);
 
     /**
      * Publish tuples from this stream for consumption by other IBM Streams applications.
@@ -835,7 +841,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * 
      * @param <K> Type of the key.
      */
-    <K> TKeyedStream<T,K> key(Function<T,K> keyFunction);
+    // <K> TKeyedStream<T,K> key(Function<T,K> keyFunction);
     
     /**
      * Return a keyed stream that contains the same tuples as this stream. 
@@ -849,17 +855,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * 
      * @see #key(Function)
      */
-    TKeyedStream<T,T> key();
-    
-    /**
-     * Is this stream keyed.
-     * If this stream is keyed, then it is an instance of {@link TKeyedStream}.
-     * @return {@code true} if this stream is keyed, {@code false} otherwise.
-     * 
-     * @see #key(Function)
-     * @see #key()
-     */
-    boolean isKeyed();
+    // TKeyedStream<T,T> key();
     
     /**
      * Internal method.

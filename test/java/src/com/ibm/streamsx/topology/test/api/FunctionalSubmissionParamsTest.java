@@ -207,11 +207,6 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         TStream<Integer> joinedD = s.join(s.last(1), biFunctionListFn(someIntD, 2));
         TStream<Integer> lastJoined = s.joinLast(s, biFunctionFn(someInt, 1));
         TStream<Integer> lastJoinedD = s.joinLast(s, biFunctionFn(someIntD, 2));
-
-        // TStream.key
-        TStream<Integer> keyd = s.key(functionFn(someInt, 1));
-        // work around issue#212
-        TStream<Integer> keydD = s.filter(new AllowAll<Integer>()).key(functionFn(someIntD, 2));
         
         // TStream.sink
         s.sink(sinkerFn(someInt, 1));
@@ -251,7 +246,6 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
                 multiXformed, multiXformedD,
                 joined, joinedD,
                 lastJoined, lastJoinedD,
-                keyd, keydD,
                 unionedSplit, unionedSplitD,
                 winAgg, winAggD,
                 agg, aggD,

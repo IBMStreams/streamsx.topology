@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
@@ -611,25 +610,6 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
         return JavaFunctional.addJavaOutput(this, bop, tupleClass);
-    }
-    
-    @Override
-    public <K> TKeyedStream<T, K> key(Function<T, K> keyGetter) {
-        if (keyGetter == null)
-            throw new NullPointerException();
-        return new KeyedStreamImpl<T, K>(this, output,
-                refineType(Function.class, 0, keyGetter), keyGetter);
-    }
-    
-    @Override
-    public TKeyedStream<T, T> key() {
-        UnaryOperator<T> identity = Logic.identity();
-        return key(identity);
-    }
-    
-    @Override
-    public boolean isKeyed() {
-        return false;
     }
     
     /* Placement control */

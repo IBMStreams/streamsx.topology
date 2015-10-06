@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
-import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.Topology;
@@ -206,16 +205,6 @@ public class JoinTest extends TestTopology {
         TStream<String> asString = StringStreams.toString(joined);
         
         completeAndValidate(asString, 25, "a3", "b1", "c2", "empty");
-    }
-    
-    @SuppressWarnings("serial")
-    private static TKeyedStream<String,String> firstChar(TStream<String> strings) {
-        return strings.key(new Function<String,String>() {
-
-            @Override
-            public String apply(String v) {
-                return v.substring(0, 1);
-            }});
     }
 
     @SuppressWarnings("serial")
