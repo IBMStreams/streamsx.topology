@@ -62,11 +62,14 @@ public class ParallelTest extends TestTopology {
         TStream<String> fanOut = topology.strings("hello").parallel(5)
                 .filter(new AllowAll<String>());
         fanOut.print();
-        fanOut.endParallel().print();
+        fanOut.endParallel();
         
         Tester tester = topology.getTester();
         
-        complete(tester); 
+	Condition<Long> expectedCount = tester.tupleCount(fanOut, 1);
+
+	complete(tester, expectedCount, 60, TimeUnit.SECONDS);
+	assertTrue(expectedCount.valid());
     }
 
     @Test
@@ -96,12 +99,13 @@ public class ParallelTest extends TestTopology {
 
         Condition<Long> expectedCount = tester.tupleCount(out2, 800);
 
-        complete(tester);
+	complete(tester, assertFinished, 60, TimeUnit.SECONDS);
 
+	System.out.println(expectedCount.getResult());
         assertTrue(expectedCount.valid());
 	assertTrue(assertFinished.valid());
     }
-
+    
     @Test
     public void testAdjacentEndParallelUnionSource() throws Exception {
         checkUdpSupported();
@@ -129,7 +133,7 @@ public class ParallelTest extends TestTopology {
 
         Condition<Long> expectedCount = tester.tupleCount(out2, 1600);
 
-        complete(tester);
+	complete(tester, assertFinished, 60, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.valid());
 	assertTrue(assertFinished.valid());
@@ -154,10 +158,7 @@ public class ParallelTest extends TestTopology {
         Condition<Long> expectedCount = tester.tupleCount(numRegions, 1);
         Condition<List<String>> regionCount = tester.stringContents(numRegions, "5");
 
-        StreamsContextFactory
-                .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
-                .submit(topology).get();
-
+	complete(tester, regionCount, 10, TimeUnit.SECONDS);
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
     }
@@ -195,9 +196,8 @@ public class ParallelTest extends TestTopology {
         Map<String,Object> params = new HashMap<>();
         params.put(submissionWidthName, submissionWidth);
         getConfig().put(ContextProperties.SUBMISSION_PARAMS, params);
-        StreamsContextFactory
-                .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
-                .submit(topology, getConfig()).get();
+
+	complete(tester, regionCount, 10, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
@@ -228,9 +228,8 @@ public class ParallelTest extends TestTopology {
         Map<String,Object> params = new HashMap<>();
         params.put(submissionWidthName, submissionWidth);
         getConfig().put(ContextProperties.SUBMISSION_PARAMS, params);
-        StreamsContextFactory
-                .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
-                .submit(topology, getConfig()).get();
+
+	complete(tester, regionCount, 10, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
@@ -293,10 +292,9 @@ public class ParallelTest extends TestTopology {
         params.put(submissionFlushName, submissionFlush);
         params.put(submissionThresholdName, submissionThreshold);
         getConfig().put(ContextProperties.SUBMISSION_PARAMS, params);
-        StreamsContextFactory
-                .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
-                .submit(topology, getConfig()).get();
-
+	
+	complete(tester, regionCount, 10, TimeUnit.SECONDS);
+	
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
     }
@@ -357,10 +355,7 @@ public class ParallelTest extends TestTopology {
         Condition<Long> expectedCount = tester.tupleCount(numRegions, 1);
         Condition<List<String>> regionCount = tester.stringContents(numRegions, submissionWidth.toString());
 
-        StreamsContextFactory
-                .getStreamsContext(StreamsContext.Type.STANDALONE_TESTER)
-                .submit(topology).get();
-
+	complete(tester, regionCount, 10, TimeUnit.SECONDS);
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
     }
