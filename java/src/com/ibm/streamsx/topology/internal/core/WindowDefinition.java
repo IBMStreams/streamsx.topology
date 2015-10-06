@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindow.Policy;
 import com.ibm.streams.operator.window.StreamWindow.Type;
-import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.builder.BInputPort;
@@ -159,18 +158,18 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     }
     
     public <J, U> TStream<J> joinInternal(TStream<U> xstream,
+            Function<U,K> xstreamKey,
             BiFunction<U, List<T>, J> joiner, java.lang.reflect.Type tupleType) {
         
         String opName = LogicUtils.functionName(joiner);
         if (opName.isEmpty()) {
             opName = TypeDiscoverer.getTupleName(getTupleType()) + "Join";
         }
-        
+
         Map<String, Object> params = getOperatorParams();
-        if (isKeyed() && xstream instanceof TKeyedStream) {
-            @SuppressWarnings("unchecked")
-            KeyedStreamImpl<T,?> kstream = (KeyedStreamImpl<T, ?>) xstream;
-            params.put(FunctionJoin.JOIN_KEY_GETTER_PARAM, ObjectUtils.serializeLogic(kstream.getKeyFunction()));
+        if (isKeyed() && xstreamKey != null) {
+            
+            params.put(FunctionJoin.JOIN_KEY_GETTER_PARAM, ObjectUtils.serializeLogic(xstreamKey));
         }
 
         BOperatorInvocation joinOp = JavaFunctional.addFunctionalOperator(this,

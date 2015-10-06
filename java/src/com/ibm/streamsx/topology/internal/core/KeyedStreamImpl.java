@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
-import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
@@ -47,19 +46,6 @@ class KeyedStreamImpl<T,K> extends StreamImpl<T> implements TKeyedStream<T, K> {
     /*
      * Override window methods to return a keyed window.
      */
-
-    @Override
-    public TWindow<T, K> last() {
-        return super.last().key(getKeyFunction());
-    }
-    @Override
-    public TWindow<T, K> last(int count) {
-        return super.last(count).key(getKeyFunction());
-    }
-    @Override
-    public TWindow<T, K> last(long time, TimeUnit unit) {
-        return super.last(time, unit).key(getKeyFunction());
-    }
     
     /*
      * Override stream methods to return a keyed window.
@@ -99,11 +85,6 @@ class KeyedStreamImpl<T,K> extends StreamImpl<T> implements TKeyedStream<T, K> {
     @Override
     public TKeyedStream<T,K> isolate() {
         return _key(super.isolate());
-    }
-   
-    @Override
-    public TWindow<T, K> window(TWindow<?, ?> window) {
-        return super.window(window).key(getKeyFunction());
     }
     
     @Override

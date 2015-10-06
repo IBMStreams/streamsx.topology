@@ -44,28 +44,7 @@ public interface TKeyedStream<T,K> extends TStream<T> {
      */
     public Function<T,K> getKeyFunction();
     
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    TWindow<T,K> last(long time, TimeUnit unit);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    TWindow<T,K> last(int count);
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    TWindow<T,K> last();
-
-    /**
-     * {@inheritDoc}
-     */
-    TWindow<T,K> window(TWindow<?,?> configWindow);
     
     /**
      * {@inheritDoc}

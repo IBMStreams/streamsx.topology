@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.logic.Logic.identity;
+import static com.ibm.streamsx.topology.logic.Logic.notKeyed;
 import static java.util.Collections.singletonMap;
 
 import java.lang.reflect.Type;
@@ -51,7 +53,7 @@ import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
-import com.ibm.streamsx.topology.logic.Identity;
+import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -287,24 +289,24 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
-    public TWindow<T,?> last(int count) {
+    public TWindow<T,Object> last(int count) {
         return new WindowDefinition<T,Object>(this, count);
     }
 
     @Override
-    public TWindow<T,?> window(TWindow<?,?> window) {
+    public TWindow<T,Object> window(TWindow<?,?> window) {
         return new WindowDefinition<T,Object>(this, window);
     }
 
     @Override
-    public TWindow<T,?> last(long time, TimeUnit unit) {
-        if (time == 0)
+    public TWindow<T,Object> last(long time, TimeUnit unit) {
+        if (time <= 0)
             throw new IllegalArgumentException("Window duration of zero is not allowed.");
         return new WindowDefinition<T,Object>(this, time, unit);
     }
 
     @Override
-    public TWindow<T,?> last() {
+    public TWindow<T,Object> last() {
         return last(1);
     }
     
@@ -314,20 +316,42 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         Type tupleType = TypeDiscoverer.determineStreamTypeFromFunctionArg(BiFunction.class, 2, joiner);
         
-        return ((WindowDefinition<U,?>) window).joinInternal(this, joiner, tupleType);
+        return ((WindowDefinition<U,?>) window).joinInternal(this, null, joiner, tupleType);
     }
     
     @Override
-    public <J, U> TStream<J> joinLast(TStream<U> other,
+    public <J, U> TStream<J> joinLast(
+            TStream<U> other,
+            BiFunction<T, U, J> joiner) {
+        Function<T,Object> nkt = notKeyed();
+        Function<U,Object> nku = notKeyed();
+        return joinLast(nkt, other, nku, joiner);
+    }
+    
+    @Override
+    public <J, U, K> TStream<J> joinLast(
+            Function<T,K> keyer,
+            TStream<U> other,
+            Function<U,K> otherKeyer,
             BiFunction<T, U, J> joiner) {
         
-        TWindow<U,?> window = other.last();
+        TWindow<U,K> window = other.last().key(otherKeyer);
         
         Type tupleType = TypeDiscoverer.determineStreamTypeFromFunctionArg(BiFunction.class, 2, joiner);
         
         BiFunction<T,List<U>, J> wrapperJoiner = new FirstOfSecondParameterIterator<>(joiner);
         
-        return ((WindowDefinition<U,?>) window).joinInternal(this, wrapperJoiner, tupleType);
+        return ((WindowDefinition<U,K>) window).joinInternal(this, keyer, wrapperJoiner, tupleType);
+    }
+    
+    public <J, U, K> TStream<J> join(TWindow<U,K> window,
+            Function<T,K> keyer,
+            BiFunction<T, List<U>, J> joiner) {
+        
+        Type tupleType = TypeDiscoverer.determineStreamTypeFromFunctionArg(BiFunction.class, 2, joiner);
+        
+        return ((WindowDefinition<U,K>) window).joinInternal(this, keyer, joiner, tupleType);
+        
     }
     
 
@@ -375,7 +399,9 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         if (routing == Routing.ROUND_ROBIN)
             return _parallel(width, null);
         
-        return _parallel(width, new Identity<T>());
+        UnaryOperator<T> identity = Logic.identity();
+        
+        return _parallel(width, identity);
     }
     
     @Override
@@ -581,7 +607,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     private TStream<T> fixDirectSchema(Class<T> tupleClass) {
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 "SchemaFix",
-                FunctionTransform.class, new Identity<T>());
+                FunctionTransform.class, identity());
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
         return JavaFunctional.addJavaOutput(this, bop, tupleClass);
@@ -597,7 +623,8 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     @Override
     public TKeyedStream<T, T> key() {
-        return key(new Identity<T>());
+        UnaryOperator<T> identity = Logic.identity();
+        return key(identity);
     }
     
     @Override

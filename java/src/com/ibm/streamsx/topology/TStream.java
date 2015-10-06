@@ -390,6 +390,23 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
             BiFunction<T, List<U>, J> joiner);
     
     /**
+     * Join this stream with a partitioned window of type {@code U} with key type {@code K}.
+     * For each tuple on this stream, it is joined with the contents of {@code window}
+     * for the key {@code keyer.apply(tuple)}. Each tuple is
+     * passed into {@code joiner} and the return value is submitted to the
+     * returned stream. If call returns null then no tuple is submitted.
+     * 
+     * @param window Window to join this stream with.
+     * @param keyer Key function for this stream to match the window's key.
+     * @param joiner Join function.
+     * @return A stream that is the results of joining this stream with
+     *         {@code window}.
+     */
+    <J, U, K> TStream<J> join(TWindow<U,K> window,
+            Function<T,K> keyer,
+            BiFunction<T, List<U>, J> joiner);
+    
+    /**
      * Join this stream with the last tuple seen on a stream of type {@code U}.
      * For each tuple on this
      * stream, it is joined with the last tuple seen on {@code other}. Each tuple is
@@ -409,7 +426,14 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @return A stream that is the results of joining this stream with
      *         {@code other}.
      */
-    <J,U> TStream<J> joinLast(TStream<U> other,
+    <J,U,K> TStream<J> joinLast(
+            Function<T,K> keyer,
+            TStream<U> other,
+            Function<U,K> otherKeyer,
+            BiFunction<T, U, J> joiner);
+    
+    <J,U> TStream<J> joinLast(
+            TStream<U> other,
             BiFunction<T, U, J> joiner);
 
     /**
@@ -427,7 +451,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @param unit Unit for {@code time}
      * @return Window on this stream representing the last {@code time} seconds.
      */
-    TWindow<T,?> last(long time, TimeUnit unit);
+    TWindow<T,Object> last(long time, TimeUnit unit);
 
     /**
      * Declare a {@link TWindow} that continually represents the last {@code count} tuples
@@ -446,7 +470,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @param count Tuple size of the window
      * @return Window on this stream representing the last {@code count} tuples.
      */
-    TWindow<T,?> last(int count);
+    TWindow<T,Object> last(int count);
 
     /**
      * Declare a {@link TWindow} that continually represents the last tuple on this stream.
@@ -461,7 +485,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * 
      * @return Window on this stream representing the last tuple.
      */
-    TWindow<T,?> last();
+    TWindow<T,Object> last();
 
     /**
      * Declare a {@link TWindow} on this stream that has the same configuration
@@ -821,7 +845,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * {@code strings.key()} and thus when made {@link #parallel(int) parallel}
      * all {@code String} objects with the same value will be sent to the
      * same channel.
-     * @return Keyed stream containing tuples from this stream.
+     * @return this.
      * 
      * @see #key(Function)
      */

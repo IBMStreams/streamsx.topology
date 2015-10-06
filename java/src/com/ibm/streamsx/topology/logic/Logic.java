@@ -7,9 +7,27 @@ package com.ibm.streamsx.topology.logic;
 import java.util.List;
 
 import com.ibm.streamsx.topology.function.BiFunction;
+import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
 
 public class Logic {
+    static final Object ZERO = Integer.valueOf(0);
+    
+    public static <T> UnaryOperator<T> identity() {
+        return new Identity<>();
+    }
+    
+    public static <T> Function<T,Object> notKeyed() {
+        return new Function<T,Object>() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Object apply(T v) {              
+                return ZERO;
+            }          
+        };
+    }
 
     /**
      * Wrap a {@link BiFunction} instance that operators on a single value for
