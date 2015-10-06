@@ -17,7 +17,6 @@ import org.junit.Test;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.Topology;
@@ -163,16 +162,16 @@ public class WindowTest extends TestTopology {
 
         final Topology f = new Topology("KeyedStreamAggregate");
 
-        TKeyedStream<StockPrice,String> source = f.constants(Arrays.asList(PRICES)).key(new Function<StockPrice,String>() {
+        TStream<StockPrice> source = f.constants(Arrays.asList(PRICES)).asType(StockPrice.class);        
+
+        TStream<StockPrice> aggregate = source.last(2).key(new Function<StockPrice,String>() {
 
             private static final long serialVersionUID = 1L;
 
             @Override
             public String apply(StockPrice v) {
                 return v.getKey();
-            }});        
-
-        TStream<StockPrice> aggregate = source.last(2).aggregate(new AveragePrice());
+            }}).aggregate(new AveragePrice());
         
         return aggregate;
     }

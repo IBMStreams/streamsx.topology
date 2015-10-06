@@ -45,7 +45,7 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionTransform;
 import com.ibm.streamsx.topology.internal.functional.ops.HashAdder;
 import com.ibm.streamsx.topology.internal.functional.ops.HashRemover;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
-import com.ibm.streamsx.topology.internal.logic.ObjectHasher;
+import com.ibm.streamsx.topology.internal.logic.KeyFunctionHasher;
 import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
@@ -372,6 +372,21 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     @Override
     public TStream<T> parallel(Supplier<Integer> width, Routing routing) {
+        if (routing == Routing.ROUND_ROBIN)
+            return _parallel(width, null);
+        
+        return _parallel(width, new Identity<T>());
+    }
+    
+    @Override
+    public TStream<T> parallel(Supplier<Integer> width,
+            Function<T, ?> keyer) {
+        if (keyer == null)
+            throw new IllegalArgumentException("keyer");
+        return _parallel(width, keyer);
+    }
+    
+    private TStream<T> _parallel(Supplier<Integer> width, Function<T,?> keyer) {
 
         if (width == null)
             throw new IllegalArgumentException("width");
@@ -389,14 +404,14 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         BOutput toBeParallelized = output();
         boolean needHashRemover = false;
-        if (routing == TStream.Routing.HASH_PARTITIONED || routing == TStream.Routing.KEY_PARTITIONED) {
+        if (keyer != null) {
 
-            final ToIntFunction<?> hasher = parallelHasher(routing);
+            final ToIntFunction<T> hasher = new KeyFunctionHasher<>(keyer);
             
             BOperatorInvocation hashAdder = JavaFunctional.addFunctionalOperator(this,
                     "HashAdder",
                     HashAdder.class, hasher);
-            hashAdder.json().put("routing", routing.toString());
+            // hashAdder.json().put("routing", routing.toString());
             BInputPort ip = connectTo(hashAdder, true, null);
 
             StreamSchema hashSchema = ip.port().getStreamSchema()
@@ -425,11 +440,18 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         return addMatchingStream(parallelOutput);
     }
     
-    ToIntFunction<?> parallelHasher(TStream.Routing routing) {
-        if (routing == TStream.Routing.HASH_PARTITIONED)
-            return ObjectHasher.SINGLETON;
-        
-        throw new IllegalArgumentException("Routing not supported for this stream:" + routing);
+    static <T> ToIntFunction<T> parallelHasher(final Function<T,?> keyFunction) {
+        return new ToIntFunction<T>() {
+
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public int applyAsInt(T tuple) {
+                return keyFunction.apply(tuple).hashCode();
+            }};
     }
 
     @Override

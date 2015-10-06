@@ -680,6 +680,8 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      */
     TStream<T> parallel(Supplier<Integer> width, Routing routing);
     
+    TStream<T> parallel(Supplier<Integer> width, Function<T,?> keyFunction);
+    
     /**
      * Ends a parallel region by merging the channels into a single stream.
      * 
