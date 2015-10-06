@@ -7,7 +7,7 @@ package vwap;
 import java.math.BigDecimal;
 
 import com.ibm.streams.operator.Tuple;
-import com.ibm.streamsx.topology.TKeyedStream;
+import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.spl.SPLStream;
 
 public class Trade extends Ticker {
@@ -57,7 +57,7 @@ public class Trade extends Ticker {
      * Get the stream of trades from the SPL stream.
      * The stream is keyed by the ticker symbol.
      */
-    public static TKeyedStream<Trade,String> getTrades(SPLStream tradeQuotes) {
-        return tradeQuotes.transform(Trade::convertToTrade).key(Trade::getTicker);
+    public static TStream<Trade> getTrades(SPLStream tradeQuotes) {
+        return tradeQuotes.transform(Trade::convertToTrade);
     }
 }
