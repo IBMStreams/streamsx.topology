@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.core;
 
 import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.logic.Logic.notKeyed;
+import static com.ibm.streamsx.topology.logic.Value.of;
 import static java.util.Collections.singletonMap;
 
 import java.lang.reflect.Type;
@@ -53,7 +54,6 @@ import com.ibm.streamsx.topology.internal.logic.Throttle;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.logic.Logic;
-import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 
@@ -389,10 +389,6 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         this.connectTo(op, false, null);
     }
     
-    public TStream<T> parallel(int width, Routing routing) {
-        return parallel(new Value<Integer>(width), routing);
-    }
-    
     @Override
     public TStream<T> parallel(Supplier<Integer> width, Routing routing) {
         if (routing == Routing.ROUND_ROBIN)
@@ -481,7 +477,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public TStream<T> parallel(int width) {
-        return parallel(width, TStream.Routing.ROUND_ROBIN);
+        return parallel(of(width), TStream.Routing.ROUND_ROBIN);
     }
 
     @Override

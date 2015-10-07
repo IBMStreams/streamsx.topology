@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.test.api;
 
 import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
+import static com.ibm.streamsx.topology.logic.Value.of;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -77,11 +78,11 @@ public class ParallelTest extends TestTopology {
         stringArray = stringList.toArray(stringArray);
         Topology topology = new Topology("testAdj");
 
-        TStream<String> out0 = topology.strings(stringArray).parallel(20,
+        TStream<String> out0 = topology.strings(stringArray).parallel(of(20),
                 TStream.Routing.HASH_PARTITIONED);
         out0 = out0.transform(randomStringProducer("region1")).endParallel();
 
-        TStream<String> out2 = out0.parallel(5,
+        TStream<String> out2 = out0.parallel(of(5),
                 TStream.Routing.HASH_PARTITIONED);
         out2 = out2.transform(randomStringProducer("region2")).endParallel();
 
@@ -110,11 +111,11 @@ public class ParallelTest extends TestTopology {
         stringArray = stringList.toArray(stringArray);
         Topology topology = new Topology("testAdj");
 
-        TStream<String> out0 = topology.strings(stringArray).parallel(20,
+        TStream<String> out0 = topology.strings(stringArray).parallel(of(20),
                 TStream.Routing.HASH_PARTITIONED);
         out0 = out0.transform(randomStringProducer("region1")).endParallel();
 	
-        TStream<String> out2 = topology.strings(stringArray).union(out0).parallel(5,
+        TStream<String> out2 = topology.strings(stringArray).union(out0).parallel(of(5),
                 TStream.Routing.HASH_PARTITIONED);
         out2 = out2.transform(randomStringProducer("region2")).endParallel();
 
@@ -416,7 +417,7 @@ public class ParallelTest extends TestTopology {
 
         TStream<String> kb = topology.source(
                 stringTuple5Counter(count));
-        TStream<String> pb = kb.parallel(5, TStream.Routing.HASH_PARTITIONED);
+        TStream<String> pb = kb.parallel(Value.of(5), TStream.Routing.HASH_PARTITIONED);
         TStream<ChannelAndSequence> cs = pb.transform(stringTupleChannelSeqTransformer());
         TStream<ChannelAndSequence> joined = cs.endParallel();
 

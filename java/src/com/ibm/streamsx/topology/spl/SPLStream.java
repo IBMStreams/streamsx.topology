@@ -12,6 +12,7 @@ import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 
 /**
@@ -139,8 +140,15 @@ public interface SPLStream extends TStream<Tuple>, SPLInput {
      * {@inheritDoc}
      */
     @Override
-    SPLStream parallel(int width,
+    SPLStream parallel(Supplier<Integer> width,
             com.ibm.streamsx.topology.TStream.Routing routing);
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream parallel(Supplier<Integer> width,
+            Function<Tuple, ?> keyFunction);
     
     /**
      * {@inheritDoc}

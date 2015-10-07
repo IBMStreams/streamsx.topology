@@ -60,7 +60,11 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
 	    
 	    /**
 	     * Tuples will be consistently routed to the same channel based upon 
-	     * their key. The stream being parallelized must be a {@link TKeyedStream}.
+	     * their key. The key is obtained through:
+	     * <UL>
+	     * <LI>A function called against each tuple when using {@link TStream#parallel(Supplier, Function)}</LI>
+	     * <LI>The {@link com.ibm.streamsx.topology.logic.Logic#identity() identity function} when using {@link TStream#parallel(Supplier, Routing)}</LI>
+	     * </UL>
 	     */
 	    KEY_PARTITIONED,
 	    
@@ -544,17 +548,17 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     void publish(String topic);
 
     /**
-     * Parallelizes the stream into {@code width} parallel channels. If the 
-     * stream is an instance of {@link TKeyedStream} the parallel channels are partitioned
-     * so that each tuple with the same {@link TKeyedStream#getKeyFunction() key} will be sent to the same channel.
-     * Otherwise, the parallel channels are not partitioned, and tuples are routed
-     * in a round-robin fashion.
+     * Parallelizes the stream into a a fixed
+     * number of parallel channels using round-robin distribution.
+     * <BR>
+     * Tuples are routed to the parallel channels in a
+     * {@link Routing#ROUND_ROBIN round-robin fashion}.
      * <BR>
      * Subsequent transformations on the returned stream will be executed
      * {@code width} channels until {@link #endParallel()} is called or
      * the stream terminates.
      * <br>
-     * See {@link #parallel(int, Routing)} for more information.
+     * See {@link #parallel(Supplier, Routing)} for more information.
      * @param width
      *            The degree of parallelism in the parallel region.
      * @return A reference to a stream for which subsequent transformations will be
@@ -587,11 +591,11 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * {@code hashCode()} of the tuple is used to route the tuple to a corresponding 
      * channel, so that all tuples with the same hash code are sent to the same channel.
      * <BR>
-     * If {@link Routing#KEY_PARTITIONED} is specified and 
-     * the stream is a {@link TKeyedStream} then each tuple is 
-     * routed to a parallel channel according to the {@code hashCode()} of the 
-     * object returned by its {@link TKeyedStream#getKeyFunction() key function},
-     * so that all tuples with the same key are sent to the same channel.
+     * If {@link Routing#KEY_PARTITIONED} is specified each tuple is
+     * is taken to be its own key and is
+     * routed so that all tuples with the same key are sent to the same channel.
+     * This is equivalent to calling {@link #parallel(Supplier, Function)} with
+     * an identity function.
      * <br>
      * If parallel is invoked when submitting to an embedded context, the flow
      * will execute as though parallel had not been called.
@@ -601,7 +605,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * <pre>
      * <code>
      * TStream&lt;String> myStream = ...;
-     * TStream&lt;String> parallel_start = myStream.parallel(3, TStream.Routing.ROUND_ROBIN);
+     * TStream&lt;String> parallel_start = myStream.parallel(of(3), TStream.Routing.ROUND_ROBIN);
      * TStream&lt;String> in_parallel = parallel_start.filter(...).transform(...);
      * TStream&lt;String> joined_parallel_streams = in_parallel.endParallel();
      * </code>
@@ -622,7 +626,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * 
      * Each parallel channel can be thought of as being assigned its own thread.
      * As such, each parallelized stream function (filter and transform, in this
-     * case) are separate instances and operate independently from one another. <br>
+     * case) are separate instances and operate independently from one another.
      * <br>
      * {@code parallel(...)} will only parallelize the stream operations performed <b>after</b>
      * the call to {@code parallel(...)} and before the call to {@code endParallel()}.
@@ -691,33 +695,37 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @return A reference to a TStream<> at the beginning of the parallel
      * region.
      * 
-     * @see #split(int, ToIntFunction)
-     */
-    TStream<T> parallel(int width, Routing routing);
-    
-    /**
-     * Parallelizes the stream into {@code width} parallel channels.
-     * Same as {@link #parallel(int,Routing)} except the {@code width} is
-     * specified with a {@code Supplier<Integer>} such as one created
-     * by {@link Topology#createSubmissionParameter(String, Class)}.
-     * 
-     * @param width The degree of parallelism. see {@link #parallel(int width)}
-     * for more details.
-     * @param routing Defines how tuples will be routed channels.
-     * @return A reference to a TStream<> at the beginning of the parallel
-     * region.
      * @throws IllegalArgumentException if {@code width} is null
+     * 
+     * @see Topology#createSubmissionParameter(String, Class)
+     * @see #split(int, ToIntFunction)
      */
     TStream<T> parallel(Supplier<Integer> width, Routing routing);
     
-    TStream<T> parallel(Supplier<Integer> width, Function<T,?> keyFunction);
+    /**
+     * Parallelizes the stream into a number of parallel channels
+     * using key based distribution.
+     * <BR>
+     * For each tuple {@code t} {@code keyer.apply(t)} is called
+     * and then the tuples are routed
+     * so that all tuples with the same key are sent to the same channel.
+     * 
+     * @param width The degree of parallelism.
+     * @param keyer Function to obtian the key from each tuple. 
+     * @return A reference to a TStream<> at the beginning of the parallel
+     * region.
+     * 
+     * @see #parallel(Supplier, Routing)
+     */
+    TStream<T> parallel(Supplier<Integer> width, Function<T,?> keyer);
     
     /**
      * Ends a parallel region by merging the channels into a single stream.
      * 
      * @return A stream for which subsequent transformations are no longer parallelized.
      * @see #parallel(int)
-     * @see #parallel(int, Routing)
+     * @see #parallel(Supplier, Routing)
+     * @see #parallel(Supplier, Function)
      */
     TStream<T> endParallel();
 
