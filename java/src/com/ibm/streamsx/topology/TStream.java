@@ -49,7 +49,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
 
     /**
      * Enumeration for routing tuples to parallel channels.
-     * @see TStream#parallel(int, Routing)
+     * @see TStream#parallel(Supplier, Routing)
      */
 	public enum Routing {
 	   /**
@@ -65,6 +65,19 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
 	     * <LI>A function called against each tuple when using {@link TStream#parallel(Supplier, Function)}</LI>
 	     * <LI>The {@link com.ibm.streamsx.topology.logic.Logic#identity() identity function} when using {@link TStream#parallel(Supplier, Routing)}</LI>
 	     * </UL>
+	     * The key for a {@code t} is the return from {@code keyer.apply(t)}.
+	     * <BR>
+	     * Any two tuples {@code t1} and {@code t2} will appear on
+	     * the same channel if for their keys  {@code k1} and {@code k2}
+	     * {@code k1.equals(k2)} is true.
+	     * <BR>
+	     * If {@code k1} and {@code k2} are not equal then there is
+	     * no guarantee about which channels {@code t1} and {@code t2}
+	     * will appear on, they may end up on the same or different channels. 
+	     * <BR>
+	     * The assumption is made that
+	     * the key classes correctly implement the contract for {@code equals} and
+	     * {@code hashCode()}.
 	     */
 	    KEY_PARTITIONED,
 	    
@@ -106,7 +119,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     TStream<T> filter(Predicate<T> filter);
     
     /**
-     * Distribute a stream's tuples among {@code n} streams (channels) 
+     * Distribute a stream's tuples among {@code n} streams
      * as specified by a {@code splitter}.
      * 
      * <P>
@@ -119,35 +132,34 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * </P>
      *
      * <P>
-     * Each split channel's {@code TStream} is exposed by the API. The user
-     * has full control over the each channel's processing pipeline. 
-     * Each channel's pipeline must be declared explicitly.
-     * Each channel can have different processing pipelines.  
-     * Any combination of channel pipeline result streams may be combined using
-     * {@code union()}.
+     * Each split {@code TStream} is exposed by the API. The user
+     * has full control over the each stream's processing pipeline. 
+     * Each stream's pipeline must be declared explicitly.
+     * Each stream can have different processing pipelines.  
      * </P>
      * <P>
-     * An N-channel {@code split()} is logically equivalent to a
+     * An N-way {@code split()} is logically equivalent to a
      * collection of N {@code filter()} invocations, each with a
-     * {@code predicate} to select the tuples for its "channel".
+     * {@code predicate} to select the tuples for its stream.
      * {@code split()} is more efficient. Each tuple is analyzed only once
-     * by a single {@code splitter} instance to identify the destination channel.
+     * by a single {@code splitter} instance to identify the destination stream.
      * For example, these are logically equivalent:
      * <pre>
-     * List&lt;TStream&lt;Foo>> channels = stream.split(2, mySplitter());
+     * List&lt;TStream&lt;String>> streams = stream.split(2, mySplitter());
      * 
-     * TStream&lt;Foo> channel0 = stream.filter(myPredicate("ch0")); 
-     * TStream&lt;Foo> channel1 = stream.filter(myPredicate("ch1")); 
+     * TStream&lt;String> stream0 = stream.filter(myPredicate("ch0")); 
+     * TStream&lt;String> stream1 = stream.filter(myPredicate("ch1")); 
      * </pre>
      * </P>
      * <P>
-     * {@code parallel()} also distributes a stream's tuples among
-     * N-channels but it presents a different usage model.  
+     * {@link #parallel(Supplier, Routing)} also distributes a stream's
+     * tuples among N-channels but it presents a different usage model.  
      * The user specifies a single logical processing pipeline and
      * the logical pipeline is transparently replicated for each of the channels. 
-     * The API does not provide access to the individual channel streams.
-     * {@code endParallel()} declares the end of the parallel pipeline and combines
-     * all of the channel-specific streams into a single resulting stream.
+     * The API does not provide access to the individual channels in
+     * the logical stream.
+     * {@link #endParallel()} declares the end of the parallel pipeline and combines
+     * all of the channels into a single resulting stream.
      * </P>
      * <P>
      * Example of splitting a stream of tuples by their severity
@@ -177,7 +189,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @return List of {@code n} streams
      * 
      * @throws IllegalArgumentException if {@code n <= 0}
-     * @see #parallel(int, Routing)
+     * @see #parallel(Supplier, Routing)
      */
     List<TStream<T>> split(int n, ToIntFunction<T> splitter);
 
@@ -411,6 +423,38 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
             BiFunction<T, List<U>, J> joiner);
     
     /**
+     * Join this stream with the last tuple seen on a stream of type {@code U}
+     * with partitioning.
+     * For each tuple on this
+     * stream, it is joined with the last tuple seen on {@code other}
+     * with a matching key (of type {@code K}).
+     * <BR>
+     * Each tuple {@code t} on this stream will match the last tuple
+     * {@code u} on {@code other} if
+     * {@code keyer.apply(t).equals(otherKeyer.apply(u))}
+     * is true.
+     * <BR>
+     * The assumption is made that
+     * the key classes correctly implement the contract for {@code equals} and
+     * {@code hashCode()}.
+     * <P>Each tuple is
+     * passed into {@code joiner} and the return value is submitted to the
+     * returned stream. If call returns null then no tuple is submitted.
+     * </P>
+     * @param keyer Key function for this stream
+     * @param other Stream to join with.
+     * @param otherKeyer Key function for {@code other}
+     * @param joiner Join function.
+     * @return A stream that is the results of joining this stream with
+     *         {@code other}.
+     */
+    <J,U,K> TStream<J> joinLast(
+            Function<T,K> keyer,
+            TStream<U> other,
+            Function<U,K> otherKeyer,
+            BiFunction<T, U, J> joiner);
+ 
+    /**
      * Join this stream with the last tuple seen on a stream of type {@code U}.
      * For each tuple on this
      * stream, it is joined with the last tuple seen on {@code other}. Each tuple is
@@ -430,12 +474,6 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @return A stream that is the results of joining this stream with
      *         {@code other}.
      */
-    <J,U,K> TStream<J> joinLast(
-            Function<T,K> keyer,
-            TStream<U> other,
-            Function<U,K> otherKeyer,
-            BiFunction<T, U, J> joiner);
-    
     <J,U> TStream<J> joinLast(
             TStream<U> other,
             BiFunction<T, U, J> joiner);
@@ -708,13 +746,15 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * <BR>
      * For each tuple {@code t} {@code keyer.apply(t)} is called
      * and then the tuples are routed
-     * so that all tuples with the same key are sent to the same channel.
+     * so that all tuples with the
+     * {@link Routing#KEY_PARTITIONED same key are sent to the same channel}.
      * 
      * @param width The degree of parallelism.
-     * @param keyer Function to obtian the key from each tuple. 
-     * @return A reference to a TStream<> at the beginning of the parallel
-     * region.
+     * @param keyer Function to obtain the key from each tuple. 
+     * @return A reference to a stream with {@code width} channels
+     * at the beginning of the parallel region.
      * 
+     * @see Routing#KEY_PARTITIONED
      * @see #parallel(Supplier, Routing)
      */
     TStream<T> parallel(Supplier<Integer> width, Function<T,?> keyer);
