@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.test.api;
 
+import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
+import static com.ibm.streamsx.topology.logic.Value.of;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -28,9 +30,6 @@ import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.PERuntime;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Type;
-
-import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
-
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
@@ -44,6 +43,7 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
+import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
@@ -81,11 +81,11 @@ public class ParallelTest extends TestTopology {
         stringArray = stringList.toArray(stringArray);
         Topology topology = new Topology("testAdj");
 
-        TStream<String> out0 = topology.strings(stringArray).parallel(20,
+        TStream<String> out0 = topology.strings(stringArray).parallel(of(20),
                 TStream.Routing.HASH_PARTITIONED);
         out0 = out0.transform(randomStringProducer("region1")).endParallel();
 
-        TStream<String> out2 = out0.parallel(5,
+        TStream<String> out2 = out0.parallel(of(5),
                 TStream.Routing.HASH_PARTITIONED);
         out2 = out2.transform(randomStringProducer("region2")).endParallel();
 
@@ -115,11 +115,11 @@ public class ParallelTest extends TestTopology {
         stringArray = stringList.toArray(stringArray);
         Topology topology = new Topology("testAdj");
 
-        TStream<String> out0 = topology.strings(stringArray).parallel(20,
+        TStream<String> out0 = topology.strings(stringArray).parallel(of(20),
                 TStream.Routing.HASH_PARTITIONED);
         out0 = out0.transform(randomStringProducer("region1")).endParallel();
 	
-        TStream<String> out2 = topology.strings(stringArray).union(out0).parallel(5,
+        TStream<String> out2 = topology.strings(stringArray).union(out0).parallel(of(5),
                 TStream.Routing.HASH_PARTITIONED);
         out2 = out2.transform(randomStringProducer("region2")).endParallel();
 
@@ -374,9 +374,9 @@ public class ParallelTest extends TestTopology {
         Topology topology = new Topology("testParallelPartition");
         final int count = new Random().nextInt(10) + 37;
 
-        TStream<BeaconTuple> kb = keyBeacon(topology.source(
-                keyableBeacon5Counter(count)));
-        TStream<BeaconTuple> pb = kb.parallel(5);
+        TStream<BeaconTuple> kb = topology.source(
+                keyableBeacon5Counter(count));
+        TStream<BeaconTuple> pb = kb.parallel(new Value<Integer>(5), keyBeacon());
         TStream<ChannelAndSequence> cs = pb.transform(channelSeqTransformer());
         TStream<ChannelAndSequence> joined = cs.endParallel();
 
@@ -392,16 +392,15 @@ public class ParallelTest extends TestTopology {
          assertTrue(validCount.valid());
     }
     
-    static TStream<BeaconTuple> keyBeacon(TStream<BeaconTuple> beacon) {
+    static Function<BeaconTuple, Long> keyBeacon() {
         
-        return beacon.key(new Function<BeaconTuple,Long>() {
+        return new Function<BeaconTuple,Long>() {
            private static final long serialVersionUID = 1L;
 
             @Override
             public Long apply(BeaconTuple v) {
                 return v.getSequence();
-            }});
-        
+            }};
     }
     
     @Test
@@ -413,7 +412,7 @@ public class ParallelTest extends TestTopology {
 
         TStream<String> kb = topology.source(
                 stringTuple5Counter(count));
-        TStream<String> pb = kb.parallel(5, TStream.Routing.HASH_PARTITIONED);
+        TStream<String> pb = kb.parallel(Value.of(5), TStream.Routing.HASH_PARTITIONED);
         TStream<ChannelAndSequence> cs = pb.transform(stringTupleChannelSeqTransformer());
         TStream<ChannelAndSequence> joined = cs.endParallel();
 
@@ -502,7 +501,7 @@ public class ParallelTest extends TestTopology {
     }
 
     @SuppressWarnings("serial")
-    static Supplier<Iterable<BeaconTuple>> keyableBeacon5Counter(
+    static Supplier<Iterable<BeaconTuple>> keyableBeacon5Counter( 
             final int count) {
         return new Supplier<Iterable<BeaconTuple>>() {
 
@@ -541,7 +540,6 @@ public class ParallelTest extends TestTopology {
                         ret.add(Integer.toString(i));
                     }
                 }
-                // TODO Auto-generated method stub
                 return ret;
             }
 

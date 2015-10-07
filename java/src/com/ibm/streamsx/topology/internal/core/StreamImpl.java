@@ -4,6 +4,9 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.logic.Logic.identity;
+import static com.ibm.streamsx.topology.logic.Logic.notKeyed;
+import static com.ibm.streamsx.topology.logic.Value.of;
 import static java.util.Collections.singletonMap;
 
 import java.lang.reflect.Type;
@@ -18,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
@@ -45,14 +47,13 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionTransform;
 import com.ibm.streamsx.topology.internal.functional.ops.HashAdder;
 import com.ibm.streamsx.topology.internal.functional.ops.HashRemover;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
-import com.ibm.streamsx.topology.internal.logic.ObjectHasher;
+import com.ibm.streamsx.topology.internal.logic.KeyFunctionHasher;
 import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
-import com.ibm.streamsx.topology.logic.Identity;
-import com.ibm.streamsx.topology.logic.Value;
+import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 
@@ -287,24 +288,24 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
-    public TWindow<T,?> last(int count) {
+    public TWindow<T,Object> last(int count) {
         return new WindowDefinition<T,Object>(this, count);
     }
 
     @Override
-    public TWindow<T,?> window(TWindow<?,?> window) {
+    public TWindow<T,Object> window(TWindow<?,?> window) {
         return new WindowDefinition<T,Object>(this, window);
     }
 
     @Override
-    public TWindow<T,?> last(long time, TimeUnit unit) {
-        if (time == 0)
+    public TWindow<T,Object> last(long time, TimeUnit unit) {
+        if (time <= 0)
             throw new IllegalArgumentException("Window duration of zero is not allowed.");
         return new WindowDefinition<T,Object>(this, time, unit);
     }
 
     @Override
-    public TWindow<T,?> last() {
+    public TWindow<T,Object> last() {
         return last(1);
     }
     
@@ -314,20 +315,42 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         Type tupleType = TypeDiscoverer.determineStreamTypeFromFunctionArg(BiFunction.class, 2, joiner);
         
-        return ((WindowDefinition<U,?>) window).joinInternal(this, joiner, tupleType);
+        return ((WindowDefinition<U,?>) window).joinInternal(this, null, joiner, tupleType);
     }
     
     @Override
-    public <J, U> TStream<J> joinLast(TStream<U> other,
+    public <J, U> TStream<J> joinLast(
+            TStream<U> other,
+            BiFunction<T, U, J> joiner) {
+        Function<T,Object> nkt = notKeyed();
+        Function<U,Object> nku = notKeyed();
+        return joinLast(nkt, other, nku, joiner);
+    }
+    
+    @Override
+    public <J, U, K> TStream<J> joinLast(
+            Function<T,K> keyer,
+            TStream<U> other,
+            Function<U,K> otherKeyer,
             BiFunction<T, U, J> joiner) {
         
-        TWindow<U,?> window = other.last();
+        TWindow<U,K> window = other.last().key(otherKeyer);
         
         Type tupleType = TypeDiscoverer.determineStreamTypeFromFunctionArg(BiFunction.class, 2, joiner);
         
         BiFunction<T,List<U>, J> wrapperJoiner = new FirstOfSecondParameterIterator<>(joiner);
         
-        return ((WindowDefinition<U,?>) window).joinInternal(this, wrapperJoiner, tupleType);
+        return ((WindowDefinition<U,K>) window).joinInternal(this, keyer, wrapperJoiner, tupleType);
+    }
+    
+    public <J, U, K> TStream<J> join(TWindow<U,K> window,
+            Function<T,K> keyer,
+            BiFunction<T, List<U>, J> joiner) {
+        
+        Type tupleType = TypeDiscoverer.determineStreamTypeFromFunctionArg(BiFunction.class, 2, joiner);
+        
+        return ((WindowDefinition<U,K>) window).joinInternal(this, keyer, joiner, tupleType);
+        
     }
     
 
@@ -366,12 +389,25 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         this.connectTo(op, false, null);
     }
     
-    public TStream<T> parallel(int width, Routing routing) {
-        return parallel(new Value<Integer>(width), routing);
+    @Override
+    public TStream<T> parallel(Supplier<Integer> width, Routing routing) {
+        if (routing == Routing.ROUND_ROBIN)
+            return _parallel(width, null);
+        
+        UnaryOperator<T> identity = Logic.identity();
+        
+        return _parallel(width, identity);
     }
     
     @Override
-    public TStream<T> parallel(Supplier<Integer> width, Routing routing) {
+    public TStream<T> parallel(Supplier<Integer> width,
+            Function<T, ?> keyer) {
+        if (keyer == null)
+            throw new IllegalArgumentException("keyer");
+        return _parallel(width, keyer);
+    }
+    
+    private TStream<T> _parallel(Supplier<Integer> width, Function<T,?> keyer) {
 
         if (width == null)
             throw new IllegalArgumentException("width");
@@ -389,14 +425,14 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         BOutput toBeParallelized = output();
         boolean needHashRemover = false;
-        if (routing == TStream.Routing.HASH_PARTITIONED || routing == TStream.Routing.KEY_PARTITIONED) {
+        if (keyer != null) {
 
-            final ToIntFunction<?> hasher = parallelHasher(routing);
+            final ToIntFunction<T> hasher = new KeyFunctionHasher<>(keyer);
             
             BOperatorInvocation hashAdder = JavaFunctional.addFunctionalOperator(this,
                     "HashAdder",
                     HashAdder.class, hasher);
-            hashAdder.json().put("routing", routing.toString());
+            // hashAdder.json().put("routing", routing.toString());
             BInputPort ip = connectTo(hashAdder, true, null);
 
             StreamSchema hashSchema = ip.port().getStreamSchema()
@@ -425,16 +461,23 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         return addMatchingStream(parallelOutput);
     }
     
-    ToIntFunction<?> parallelHasher(TStream.Routing routing) {
-        if (routing == TStream.Routing.HASH_PARTITIONED)
-            return ObjectHasher.SINGLETON;
-        
-        throw new IllegalArgumentException("Routing not supported for this stream:" + routing);
+    static <T> ToIntFunction<T> parallelHasher(final Function<T,?> keyFunction) {
+        return new ToIntFunction<T>() {
+
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public int applyAsInt(T tuple) {
+                return keyFunction.apply(tuple).hashCode();
+            }};
     }
 
     @Override
     public TStream<T> parallel(int width) {
-        return parallel(width, TStream.Routing.ROUND_ROBIN);
+        return parallel(of(width), TStream.Routing.ROUND_ROBIN);
     }
 
     @Override
@@ -559,28 +602,10 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     private TStream<T> fixDirectSchema(Class<T> tupleClass) {
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 "SchemaFix",
-                FunctionTransform.class, new Identity<T>());
+                FunctionTransform.class, identity());
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
         return JavaFunctional.addJavaOutput(this, bop, tupleClass);
-    }
-    
-    @Override
-    public <K> TKeyedStream<T, K> key(Function<T, K> keyGetter) {
-        if (keyGetter == null)
-            throw new NullPointerException();
-        return new KeyedStreamImpl<T, K>(this, output,
-                refineType(Function.class, 0, keyGetter), keyGetter);
-    }
-    
-    @Override
-    public TKeyedStream<T, T> key() {
-        return key(new Identity<T>());
-    }
-    
-    @Override
-    public boolean isKeyed() {
-        return false;
     }
     
     /* Placement control */

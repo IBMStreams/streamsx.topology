@@ -25,7 +25,6 @@ import com.ibm.streamsx.topology.function.Initializable;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
-import com.ibm.streamsx.topology.tester.MultiLongCondition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 public class IsolateTest extends TestTopology {

@@ -2,11 +2,13 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.tester;
+package com.ibm.streamsx.topology.test.api;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import com.ibm.streamsx.topology.tester.Condition;
 
 public class MultiLongCondition implements Condition<Long> {
     private final List<Condition<Long>> conditions;

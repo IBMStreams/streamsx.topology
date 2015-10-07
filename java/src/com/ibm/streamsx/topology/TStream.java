@@ -49,7 +49,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
 
     /**
      * Enumeration for routing tuples to parallel channels.
-     * @see TStream#parallel(int, Routing)
+     * @see TStream#parallel(Supplier, Routing)
      */
 	public enum Routing {
 	   /**
@@ -60,7 +60,24 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
 	    
 	    /**
 	     * Tuples will be consistently routed to the same channel based upon 
-	     * their key. The stream being parallelized must be a {@link TKeyedStream}.
+	     * their key. The key is obtained through:
+	     * <UL>
+	     * <LI>A function called against each tuple when using {@link TStream#parallel(Supplier, Function)}</LI>
+	     * <LI>The {@link com.ibm.streamsx.topology.logic.Logic#identity() identity function} when using {@link TStream#parallel(Supplier, Routing)}</LI>
+	     * </UL>
+	     * The key for a {@code t} is the return from {@code keyer.apply(t)}.
+	     * <BR>
+	     * Any two tuples {@code t1} and {@code t2} will appear on
+	     * the same channel if for their keys  {@code k1} and {@code k2}
+	     * {@code k1.equals(k2)} is true.
+	     * <BR>
+	     * If {@code k1} and {@code k2} are not equal then there is
+	     * no guarantee about which channels {@code t1} and {@code t2}
+	     * will appear on, they may end up on the same or different channels. 
+	     * <BR>
+	     * The assumption is made that
+	     * the key classes correctly implement the contract for {@code equals} and
+	     * {@code hashCode()}.
 	     */
 	    KEY_PARTITIONED,
 	    
@@ -102,7 +119,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     TStream<T> filter(Predicate<T> filter);
     
     /**
-     * Distribute a stream's tuples among {@code n} streams (channels) 
+     * Distribute a stream's tuples among {@code n} streams
      * as specified by a {@code splitter}.
      * 
      * <P>
@@ -115,35 +132,34 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * </P>
      *
      * <P>
-     * Each split channel's {@code TStream} is exposed by the API. The user
-     * has full control over the each channel's processing pipeline. 
-     * Each channel's pipeline must be declared explicitly.
-     * Each channel can have different processing pipelines.  
-     * Any combination of channel pipeline result streams may be combined using
-     * {@code union()}.
+     * Each split {@code TStream} is exposed by the API. The user
+     * has full control over the each stream's processing pipeline. 
+     * Each stream's pipeline must be declared explicitly.
+     * Each stream can have different processing pipelines.  
      * </P>
      * <P>
-     * An N-channel {@code split()} is logically equivalent to a
+     * An N-way {@code split()} is logically equivalent to a
      * collection of N {@code filter()} invocations, each with a
-     * {@code predicate} to select the tuples for its "channel".
+     * {@code predicate} to select the tuples for its stream.
      * {@code split()} is more efficient. Each tuple is analyzed only once
-     * by a single {@code splitter} instance to identify the destination channel.
+     * by a single {@code splitter} instance to identify the destination stream.
      * For example, these are logically equivalent:
      * <pre>
-     * List&lt;TStream&lt;Foo>> channels = stream.split(2, mySplitter());
+     * List&lt;TStream&lt;String>> streams = stream.split(2, mySplitter());
      * 
-     * TStream&lt;Foo> channel0 = stream.filter(myPredicate("ch0")); 
-     * TStream&lt;Foo> channel1 = stream.filter(myPredicate("ch1")); 
+     * TStream&lt;String> stream0 = stream.filter(myPredicate("ch0")); 
+     * TStream&lt;String> stream1 = stream.filter(myPredicate("ch1")); 
      * </pre>
      * </P>
      * <P>
-     * {@code parallel()} also distributes a stream's tuples among
-     * N-channels but it presents a different usage model.  
+     * {@link #parallel(Supplier, Routing)} also distributes a stream's
+     * tuples among N-channels but it presents a different usage model.  
      * The user specifies a single logical processing pipeline and
      * the logical pipeline is transparently replicated for each of the channels. 
-     * The API does not provide access to the individual channel streams.
-     * {@code endParallel()} declares the end of the parallel pipeline and combines
-     * all of the channel-specific streams into a single resulting stream.
+     * The API does not provide access to the individual channels in
+     * the logical stream.
+     * {@link #endParallel()} declares the end of the parallel pipeline and combines
+     * all of the channels into a single resulting stream.
      * </P>
      * <P>
      * Example of splitting a stream of tuples by their severity
@@ -173,7 +189,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @return List of {@code n} streams
      * 
      * @throws IllegalArgumentException if {@code n <= 0}
-     * @see #parallel(int, Routing)
+     * @see #parallel(Supplier, Routing)
      */
     List<TStream<T>> split(int n, ToIntFunction<T> splitter);
 
@@ -390,6 +406,55 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
             BiFunction<T, List<U>, J> joiner);
     
     /**
+     * Join this stream with a partitioned window of type {@code U} with key type {@code K}.
+     * For each tuple on this stream, it is joined with the contents of {@code window}
+     * for the key {@code keyer.apply(tuple)}. Each tuple is
+     * passed into {@code joiner} and the return value is submitted to the
+     * returned stream. If call returns null then no tuple is submitted.
+     * 
+     * @param window Window to join this stream with.
+     * @param keyer Key function for this stream to match the window's key.
+     * @param joiner Join function.
+     * @return A stream that is the results of joining this stream with
+     *         {@code window}.
+     */
+    <J, U, K> TStream<J> join(TWindow<U,K> window,
+            Function<T,K> keyer,
+            BiFunction<T, List<U>, J> joiner);
+    
+    /**
+     * Join this stream with the last tuple seen on a stream of type {@code U}
+     * with partitioning.
+     * For each tuple on this
+     * stream, it is joined with the last tuple seen on {@code other}
+     * with a matching key (of type {@code K}).
+     * <BR>
+     * Each tuple {@code t} on this stream will match the last tuple
+     * {@code u} on {@code other} if
+     * {@code keyer.apply(t).equals(otherKeyer.apply(u))}
+     * is true.
+     * <BR>
+     * The assumption is made that
+     * the key classes correctly implement the contract for {@code equals} and
+     * {@code hashCode()}.
+     * <P>Each tuple is
+     * passed into {@code joiner} and the return value is submitted to the
+     * returned stream. If call returns null then no tuple is submitted.
+     * </P>
+     * @param keyer Key function for this stream
+     * @param other Stream to join with.
+     * @param otherKeyer Key function for {@code other}
+     * @param joiner Join function.
+     * @return A stream that is the results of joining this stream with
+     *         {@code other}.
+     */
+    <J,U,K> TStream<J> joinLast(
+            Function<T,K> keyer,
+            TStream<U> other,
+            Function<U,K> otherKeyer,
+            BiFunction<T, U, J> joiner);
+ 
+    /**
      * Join this stream with the last tuple seen on a stream of type {@code U}.
      * For each tuple on this
      * stream, it is joined with the last tuple seen on {@code other}. Each tuple is
@@ -409,7 +474,8 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @return A stream that is the results of joining this stream with
      *         {@code other}.
      */
-    <J,U> TStream<J> joinLast(TStream<U> other,
+    <J,U> TStream<J> joinLast(
+            TStream<U> other,
             BiFunction<T, U, J> joiner);
 
     /**
@@ -418,16 +484,19 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * If no tuples have been seen on the stream in the last {@code time} seconds
      * then the window will be empty.
      * <BR>
-     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
-     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
-     * In this case that means each partition independently maintains the last {@code time}
+     * The window has a single partition that always contains the
+     * last {@code time} seconds of tuples seen on this stream
+     * <BR>
+     * A key based partitioned window can be created from the returned window
+     * using {@link TWindow#key(Function)} or {@link TWindow#key()}.
+     * When the window is partitioned each partition independently maintains the last {@code time}
      * seconds of tuples for each key seen on this stream.
      * 
      * @param time Time size of the window
      * @param unit Unit for {@code time}
      * @return Window on this stream representing the last {@code time} seconds.
      */
-    TWindow<T,?> last(long time, TimeUnit unit);
+    TWindow<T,Object> last(long time, TimeUnit unit);
 
     /**
      * Declare a {@link TWindow} that continually represents the last {@code count} tuples
@@ -436,49 +505,52 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * which will be less than {@code count}. If no tuples have been
      * seen on the stream then the window will be empty.
      * <BR>
-     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
-     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
-     * In this case that means each partition independently maintains the last {@code count} tuples for each
-     * key seen on this stream.
-     * Otherwise the window has a single partition that always contains the
+     * The window has a single partition that always contains the
      * last {@code count} tuples seen on this stream.
+     * <BR>
+     * The window has a single partition that always contains the last tuple seen
+     * on this stream.
+     * <BR>
+     * A key based partitioned window can be created from the returned window
+     * using {@link TWindow#key(Function)} or {@link TWindow#key()}.
+     * When the window is partitioned each partition independently maintains the
+     * last {@code count} tuples for each key seen on this stream.
      * 
      * @param count Tuple size of the window
      * @return Window on this stream representing the last {@code count} tuples.
      */
-    TWindow<T,?> last(int count);
+    TWindow<T,Object> last(int count);
 
     /**
      * Declare a {@link TWindow} that continually represents the last tuple on this stream.
      * If no tuples have been seen on the stream then the window will be empty.
      * <BR>
-     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
-     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
-     * In this case that means each partition independently maintains the last tuple for
-     * each key seen on this stream.
-     * Otherwise the window has a single partition that always contains the last tuple seen
+     * The window has a single partition that always contains the last tuple seen
      * on this stream.
+     * <BR>
+     * A key based partitioned window can be created from the returned window
+     * using {@link TWindow#key(Function)} or {@link TWindow#key()}.
+     * When the window is partitioned each partition independently maintains the
+     * last tuple for each key seen on this stream.
      * 
      * @return Window on this stream representing the last tuple.
      */
-    TWindow<T,?> last();
+    TWindow<T,Object> last();
 
     /**
      * Declare a {@link TWindow} on this stream that has the same configuration
      * as another window.
      * <BR>
-     * When this stream is an instance of {@link TKeyedStream} then the window is partitioned
-     * by each tuple's key, obtained by {@link TKeyedStream#getKeyFunction()}.
-     * In this case that means each partition independently maintains the configured
-     * list of tuples for each key seen on this stream.
-     * Otherwise the window has a single partition that contains the 
-     * configured list of tuples for this stream.
+     * The window has a single partition.
+     * <BR>
+     * A key based partitioned window can be created from the returned window
+     * using {@link TWindow#key(Function)} or {@link TWindow#key()}.
      * 
      * @param configWindow
      *            Window to copy the configuration from.
      * @return Window on this stream with the same configuration as {@code configWindow}.
      */
-    TWindow<T,?> window(TWindow<?,?> configWindow);
+    TWindow<T,Object> window(TWindow<?,?> configWindow);
 
     /**
      * Publish tuples from this stream for consumption by other IBM Streams applications.
@@ -514,17 +586,17 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     void publish(String topic);
 
     /**
-     * Parallelizes the stream into {@code width} parallel channels. If the 
-     * stream is an instance of {@link TKeyedStream} the parallel channels are partitioned
-     * so that each tuple with the same {@link TKeyedStream#getKeyFunction() key} will be sent to the same channel.
-     * Otherwise, the parallel channels are not partitioned, and tuples are routed
-     * in a round-robin fashion.
+     * Parallelizes the stream into a a fixed
+     * number of parallel channels using round-robin distribution.
+     * <BR>
+     * Tuples are routed to the parallel channels in a
+     * {@link Routing#ROUND_ROBIN round-robin fashion}.
      * <BR>
      * Subsequent transformations on the returned stream will be executed
      * {@code width} channels until {@link #endParallel()} is called or
      * the stream terminates.
      * <br>
-     * See {@link #parallel(int, Routing)} for more information.
+     * See {@link #parallel(Supplier, Routing)} for more information.
      * @param width
      *            The degree of parallelism in the parallel region.
      * @return A reference to a stream for which subsequent transformations will be
@@ -557,11 +629,11 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * {@code hashCode()} of the tuple is used to route the tuple to a corresponding 
      * channel, so that all tuples with the same hash code are sent to the same channel.
      * <BR>
-     * If {@link Routing#KEY_PARTITIONED} is specified and 
-     * the stream is a {@link TKeyedStream} then each tuple is 
-     * routed to a parallel channel according to the {@code hashCode()} of the 
-     * object returned by its {@link TKeyedStream#getKeyFunction() key function},
-     * so that all tuples with the same key are sent to the same channel.
+     * If {@link Routing#KEY_PARTITIONED} is specified each tuple is
+     * is taken to be its own key and is
+     * routed so that all tuples with the same key are sent to the same channel.
+     * This is equivalent to calling {@link #parallel(Supplier, Function)} with
+     * an identity function.
      * <br>
      * If parallel is invoked when submitting to an embedded context, the flow
      * will execute as though parallel had not been called.
@@ -571,7 +643,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * <pre>
      * <code>
      * TStream&lt;String> myStream = ...;
-     * TStream&lt;String> parallel_start = myStream.parallel(3, TStream.Routing.ROUND_ROBIN);
+     * TStream&lt;String> parallel_start = myStream.parallel(of(3), TStream.Routing.ROUND_ROBIN);
      * TStream&lt;String> in_parallel = parallel_start.filter(...).transform(...);
      * TStream&lt;String> joined_parallel_streams = in_parallel.endParallel();
      * </code>
@@ -592,7 +664,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * 
      * Each parallel channel can be thought of as being assigned its own thread.
      * As such, each parallelized stream function (filter and transform, in this
-     * case) are separate instances and operate independently from one another. <br>
+     * case) are separate instances and operate independently from one another.
      * <br>
      * {@code parallel(...)} will only parallelize the stream operations performed <b>after</b>
      * the call to {@code parallel(...)} and before the call to {@code endParallel()}.
@@ -661,31 +733,39 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @return A reference to a TStream<> at the beginning of the parallel
      * region.
      * 
+     * @throws IllegalArgumentException if {@code width} is null
+     * 
+     * @see Topology#createSubmissionParameter(String, Class)
      * @see #split(int, ToIntFunction)
      */
-    TStream<T> parallel(int width, Routing routing);
+    TStream<T> parallel(Supplier<Integer> width, Routing routing);
     
     /**
-     * Parallelizes the stream into {@code width} parallel channels.
-     * Same as {@link #parallel(int,Routing)} except the {@code width} is
-     * specified with a {@code Supplier<Integer>} such as one created
-     * by {@link Topology#createSubmissionParameter(String, Class)}.
+     * Parallelizes the stream into a number of parallel channels
+     * using key based distribution.
+     * <BR>
+     * For each tuple {@code t} {@code keyer.apply(t)} is called
+     * and then the tuples are routed
+     * so that all tuples with the
+     * {@link Routing#KEY_PARTITIONED same key are sent to the same channel}.
      * 
-     * @param width The degree of parallelism. see {@link #parallel(int width)}
-     * for more details.
-     * @param routing Defines how tuples will be routed channels.
-     * @return A reference to a TStream<> at the beginning of the parallel
-     * region.
-     * @throws IllegalArgumentException if {@code width} is null
+     * @param width The degree of parallelism.
+     * @param keyer Function to obtain the key from each tuple. 
+     * @return A reference to a stream with {@code width} channels
+     * at the beginning of the parallel region.
+     * 
+     * @see Routing#KEY_PARTITIONED
+     * @see #parallel(Supplier, Routing)
      */
-    TStream<T> parallel(Supplier<Integer> width, Routing routing);
+    TStream<T> parallel(Supplier<Integer> width, Function<T,?> keyer);
     
     /**
      * Ends a parallel region by merging the channels into a single stream.
      * 
      * @return A stream for which subsequent transformations are no longer parallelized.
      * @see #parallel(int)
-     * @see #parallel(int, Routing)
+     * @see #parallel(Supplier, Routing)
+     * @see #parallel(Supplier, Function)
      */
     TStream<T> endParallel();
 
@@ -809,7 +889,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * 
      * @param <K> Type of the key.
      */
-    <K> TKeyedStream<T,K> key(Function<T,K> keyFunction);
+    // <K> TKeyedStream<T,K> key(Function<T,K> keyFunction);
     
     /**
      * Return a keyed stream that contains the same tuples as this stream. 
@@ -819,21 +899,11 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * {@code strings.key()} and thus when made {@link #parallel(int) parallel}
      * all {@code String} objects with the same value will be sent to the
      * same channel.
-     * @return Keyed stream containing tuples from this stream.
+     * @return this.
      * 
      * @see #key(Function)
      */
-    TKeyedStream<T,T> key();
-    
-    /**
-     * Is this stream keyed.
-     * If this stream is keyed, then it is an instance of {@link TKeyedStream}.
-     * @return {@code true} if this stream is keyed, {@code false} otherwise.
-     * 
-     * @see #key(Function)
-     * @see #key()
-     */
-    boolean isKeyed();
+    // TKeyedStream<T,T> key();
     
     /**
      * Internal method.

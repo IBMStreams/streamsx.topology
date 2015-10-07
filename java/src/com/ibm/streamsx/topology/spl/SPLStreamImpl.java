@@ -20,6 +20,7 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.internal.core.StreamImpl;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
@@ -139,13 +140,19 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     }
     
     @Override
-    public SPLStream parallel(int width,
+    public SPLStream parallel(Supplier<Integer> width,
             com.ibm.streamsx.topology.TStream.Routing routing) {
         if(routing != TStream.Routing.ROUND_ROBIN){
             throw new IllegalArgumentException("Partitioning is not currently "
-                    + "supported with SPLStreams.");
+                    + "supported with SPLStream.");
         }
         return asSPL(super.parallel(width, routing));
+    }
+    @Override
+    public SPLStream parallel(Supplier<Integer> width,
+            Function<Tuple, ?> keyer) {
+        throw new IllegalArgumentException("Partitioning is not currently "
+                + "supported with SPLStream.");
     }
     
     @Override

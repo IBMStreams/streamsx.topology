@@ -6,6 +6,7 @@ package parallel;
 
 import static com.ibm.streamsx.topology.file.FileStreams.directoryWatcher;
 import static com.ibm.streamsx.topology.file.FileStreams.textFileReader;
+import static com.ibm.streamsx.topology.logic.Value.of;
 
 import java.io.ObjectStreamException;
 import java.util.logging.Logger;
@@ -62,7 +63,7 @@ public class PartitionedParallelRegexGrep {
 
         // Begin parallel region
         TStream<String> parallelLines = lines
-                .parallel(5, TStream.Routing.HASH_PARTITIONED);
+                .parallel(of(5), TStream.Routing.HASH_PARTITIONED);
         TStream<String> ParallelFiltered = parallelLines
                 .filter(new Predicate<String>() {
 

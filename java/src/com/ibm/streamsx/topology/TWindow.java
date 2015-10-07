@@ -20,14 +20,17 @@ import com.ibm.streamsx.topology.function.Function;
  * TimeUnit.SECONDS)} is a window that always contains all tuples present on stream
  * {@code s} in the last five seconds.
  * <P>
- * Typically windows are keyed which means the window's configuration
+ * Typically windows are partitioned by a key which means the window's configuration
  * is independently maintained for each key seen on the stream.
  * For example with a window created using {@link TStream#last(int) last(3)}
- * then each key has its own window containing the last
+ * then each key has its own window partition containing the last
  * three tuples with the same key.
  * <BR>
- * A window is keyed if it is created from a {@link TKeyedStream} 
- * or using {@link #key(Function)} or {@link #key()} on another window.
+ * A partitioned window is created by calling {@link #key(Function)}
+ * or {@link #key()}.
+ * <BR>
+ * When a window is not partitioned it acts as though it has
+ * a single partition with a constant key with the value {@code Integer.valueOf(0)}.
  * 
  * @param <T>
  *            Tuple type, any instance of {@code T} at runtime must be
@@ -103,7 +106,9 @@ public interface TWindow<T,K> extends TopologyElement {
     TStream<T> getStream();
     
     /**
-     * Return a keyed window that contains the same tuples as this window. 
+     * Return a keyed (partitioned) window that has the same
+     * configuration as this window with the each tuple's
+     * key defined by a function. 
      * A keyed window is a window where each tuple has an inherent
      * key, defined by {@code keyFunction}.
      * <P> 
@@ -115,18 +120,17 @@ public interface TWindow<T,K> extends TopologyElement {
      * </P>
      * @param keyFunction Function that gets the key from a tuple.
      * The key function must be stateless.
-     * @return Keyed window containing tuples from this window.
-     * 
-     * @see TKeyedStream
+     * @return Keyed window with the same configuration as this window.
      * 
      * @param <U> Type of the key.
      */
     <U> TWindow<T,U> key(Function<T,U> keyFunction);
     
     /**
-     * Return a keyed window that contains the same tuples as this window. 
+     * Return a keyed (partitioned) window that has the same
+     * configuration as this window with each tuple being the key.
      * The key of each tuple is the tuple itself.
-     * @return Keyed window containing tuples from this window.
+     * @return Keyed window with the same configuration as this window.
      * 
      * @see #key(Function)
      */
@@ -138,7 +142,6 @@ public interface TWindow<T,K> extends TopologyElement {
      * 
      * @see #key(Function)
      * @see #key()
-     * @see TKeyedStream
      */
     boolean isKeyed();
 }

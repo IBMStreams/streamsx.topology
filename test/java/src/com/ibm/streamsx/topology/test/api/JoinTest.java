@@ -11,13 +11,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
-import com.ibm.streamsx.topology.TKeyedStream;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.function.UnaryOperator;
+import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 
@@ -139,11 +140,11 @@ public class JoinTest extends TestTopology {
     @Test
     public void testKeyedJoin() throws Exception {
         final Topology t = new Topology();
-        TKeyedStream<String,String> strings = t.strings("a", "b", "c", "a", "a", "c").key();
+        TStream<String> strings = t.strings("a", "b", "c", "a", "a", "c");
         
-        TKeyedStream<String,String> main = delayedList(t, "a", "b", "c", "d").key();
+        TStream<String> main = delayedList(t, "a", "b", "c", "d");
         
-        TStream<Integer> joined = _testKeyedJoin(main, strings.last(3));
+        TStream<Integer> joined = _testKeyedJoin(main, strings.last(3).key());
         TStream<String> asString = StringStreams.toString(joined);
         
         completeAndValidate(asString, 25, "3", "1", "2", "0");
@@ -164,7 +165,7 @@ public class JoinTest extends TestTopology {
             @Override
             public Iterable<String> get() {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     return null;
                 }
@@ -173,9 +174,10 @@ public class JoinTest extends TestTopology {
             }});
     }
     
-    private static TStream<Integer> _testKeyedJoin(TKeyedStream<String,String> main, TWindow<String,String> window) {
+    private static TStream<Integer> _testKeyedJoin(TStream<String> main, TWindow<String,String> window) {
         
-        return main.join(window, new BiFunction<String, List<String>, Integer>() {
+        UnaryOperator<String> selfKeyed = Logic.identity();
+        return main.join(window, selfKeyed, new BiFunction<String, List<String>, Integer>() {
 
             /**
              * 
@@ -195,29 +197,35 @@ public class JoinTest extends TestTopology {
     @Test
     public void testKeyedJoinLast() throws Exception {
         final Topology t = new Topology();
-        TKeyedStream<String,String> strings = firstChar(t.strings("a1", "b1", "c1", "a2", "a3", "c2"));
+        TStream<String> strings = t.strings("a1", "b1", "c1", "a2", "a3", "c2");
         
-        TKeyedStream<String,String> main = delayedList(t, "a", "b", "c", "d").key();
+        TStream<String> main = delayedList(t, "a", "b", "c", "d");
         
         TStream<String> joined = _testKeyedJoinLast(main, strings);
         TStream<String> asString = StringStreams.toString(joined);
         
         completeAndValidate(asString, 25, "a3", "b1", "c2", "empty");
     }
-    
+
     @SuppressWarnings("serial")
-    private static TKeyedStream<String,String> firstChar(TStream<String> strings) {
-        return strings.key(new Function<String,String>() {
+    private static TStream<String> _testKeyedJoinLast(TStream<String> main, TStream<String> strings) {
+        
+        UnaryOperator<String> sk = Logic.identity();
+        UnaryOperator<String> selfKeyed = new UnaryOperator<String>() {
+
+            @Override
+            public String apply(String v) {
+                return v;
+            }};
+        
+        Function<String,String> firstChar = new Function<String,String>() {
 
             @Override
             public String apply(String v) {
                 return v.substring(0, 1);
-            }});
-    }
-
-    private static TStream<String> _testKeyedJoinLast(TKeyedStream<String,String> main, TKeyedStream<String,String> strings) {
+            }};
         
-        return main.joinLast(strings, new BiFunction<String, String, String>() {
+        return main.joinLast(selfKeyed, strings, firstChar, new BiFunction<String, String, String>() {
 
             /**
              * 

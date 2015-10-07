@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.test.spl;
 
+import static com.ibm.streamsx.topology.logic.Value.of;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
@@ -266,7 +267,7 @@ public class SPLStreamsTest extends TestTopology {
         
         splStreamB = splStreamB.filter(new AllowAll<Tuple>());
         
-        splStreamA = splStreamB.parallel(2, Routing.ROUND_ROBIN);
+        splStreamA = splStreamB.parallel(of(2), Routing.ROUND_ROBIN);
         assertSPLStream(splStreamA, TEST_SCHEMA);
         assertNotSame(splStreamA, splStreamB);
         
