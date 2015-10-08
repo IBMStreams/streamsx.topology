@@ -34,9 +34,9 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     protected final long config;
     protected final TimeUnit timeUnit;
         
-    private final Function<T,?> keyGetter;
+    private final Function<? super T,? extends K> keyGetter;
     
-    private WindowDefinition(TStream<T> stream, StreamWindow.Policy policy, long config, TimeUnit timeUnit, Function<T,?> keyGetter) {
+    private WindowDefinition(TStream<T> stream, StreamWindow.Policy policy, long config, TimeUnit timeUnit, Function<? super T,? extends K> keyGetter) {
         super(stream);
         this.stream = stream;
         this.policy = policy;
@@ -158,7 +158,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     }
     
     public <J, U> TStream<J> joinInternal(TStream<U> xstream,
-            Function<U,K> xstreamKey,
+            Function<? super U, ? extends K> xstreamKey,
             BiFunction<U, List<T>, J> joiner, java.lang.reflect.Type tupleType) {
         
         String opName = LogicUtils.functionName(joiner);
@@ -188,7 +188,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     }
     
     @Override
-    public <U> TWindow<T,U> key(Function<T, U> keyGetter) {
+    public <U> TWindow<T,U> key(Function<? super T, ? extends U> keyGetter) {
         if (keyGetter == null)
             throw new NullPointerException();
         return new WindowDefinition<T,U>(stream, policy, config, timeUnit, keyGetter);

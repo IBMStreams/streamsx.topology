@@ -412,26 +412,27 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * passed into {@code joiner} and the return value is submitted to the
      * returned stream. If call returns null then no tuple is submitted.
      * 
-     * @param window Window to join this stream with.
      * @param keyer Key function for this stream to match the window's key.
+     * @param window Keyed window to join this stream with.
      * @param joiner Join function.
      * @return A stream that is the results of joining this stream with
      *         {@code window}.
      */
-    <J, U, K> TStream<J> join(TWindow<U,K> window,
+    <J, U, K> TStream<J> join(
             Function<T,K> keyer,
+            TWindow<U,K> window,
             BiFunction<T, List<U>, J> joiner);
     
     /**
      * Join this stream with the last tuple seen on a stream of type {@code U}
      * with partitioning.
      * For each tuple on this
-     * stream, it is joined with the last tuple seen on {@code other}
+     * stream, it is joined with the last tuple seen on {@code lastStream}
      * with a matching key (of type {@code K}).
      * <BR>
      * Each tuple {@code t} on this stream will match the last tuple
-     * {@code u} on {@code other} if
-     * {@code keyer.apply(t).equals(otherKeyer.apply(u))}
+     * {@code u} on {@code lastStream} if
+     * {@code keyer.apply(t).equals(lastStreamKeyer.apply(u))}
      * is true.
      * <BR>
      * The assumption is made that
@@ -442,40 +443,37 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * returned stream. If call returns null then no tuple is submitted.
      * </P>
      * @param keyer Key function for this stream
-     * @param other Stream to join with.
-     * @param otherKeyer Key function for {@code other}
+     * @param lastStream Stream to join with.
+     * @param lastStreamKeyer Key function for {@code lastStream}
      * @param joiner Join function.
      * @return A stream that is the results of joining this stream with
-     *         {@code other}.
+     *         {@code lastStream}.
      */
     <J,U,K> TStream<J> joinLast(
-            Function<T,K> keyer,
-            TStream<U> other,
-            Function<U,K> otherKeyer,
+            Function<? super T, ? extends K> keyer,
+            TStream<U> lastStream,
+            Function<? super U, ? extends K> lastStreamKeyer,
             BiFunction<T, U, J> joiner);
  
     /**
      * Join this stream with the last tuple seen on a stream of type {@code U}.
      * For each tuple on this
-     * stream, it is joined with the last tuple seen on {@code other}. Each tuple is
+     * stream, it is joined with the last tuple seen on {@code lastStream}. Each tuple is
      * passed into {@code joiner} and the return value is submitted to the
      * returned stream. If call returns null then no tuple is submitted.
      * <BR>
-     * This is a simplified version of
-     * <BR>
-     * {@code this.join(other.last(), new BiFunction<T,List<U>,J>() ...) }
-     * <BR>
+     * This is a simplified version of {@link #join(TWindow, BiFunction)}
      * where instead the window contents are passed as a single tuple of type {@code U}
-     * rather than a list containing one tuple. If no tuple has been seen on {@code other}
+     * rather than a list containing one tuple. If no tuple has been seen on {@code lastStream}
      * then {@code null} will be passed as the second argument to {@code joiner}.
      * 
-     * @param other Stream to join with.
+     * @param lastStream Stream to join with.
      * @param joiner Join function.
      * @return A stream that is the results of joining this stream with
-     *         {@code other}.
+     *         {@code lastStream}.
      */
     <J,U> TStream<J> joinLast(
-            TStream<U> other,
+            TStream<U> lastStream,
             BiFunction<T, U, J> joiner);
 
     /**

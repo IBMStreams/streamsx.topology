@@ -124,7 +124,7 @@ public interface TWindow<T,K> extends TopologyElement {
      * 
      * @param <U> Type of the key.
      */
-    <U> TWindow<T,U> key(Function<T,U> keyFunction);
+    <U> TWindow<T,U> key(Function<? super T, ? extends U> keyFunction);
     
     /**
      * Return a keyed (partitioned) window that has the same
