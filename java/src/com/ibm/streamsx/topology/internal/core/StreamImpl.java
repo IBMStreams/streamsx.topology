@@ -329,9 +329,9 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     @Override
     public <J, U, K> TStream<J> joinLast(
-            Function<T,K> keyer,
+            Function<? super T,? extends K> keyer,
             TStream<U> lastStream,
-            Function<U,K> lastStreamKeyer,
+            Function<? super U, ? extends K> lastStreamKeyer,
             BiFunction<T, U, J> joiner) {
         
         TWindow<U,K> window = lastStream.last().key(lastStreamKeyer);
