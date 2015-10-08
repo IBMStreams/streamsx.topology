@@ -412,14 +412,15 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * passed into {@code joiner} and the return value is submitted to the
      * returned stream. If call returns null then no tuple is submitted.
      * 
-     * @param window Window to join this stream with.
      * @param keyer Key function for this stream to match the window's key.
+     * @param window Keyed window to join this stream with.
      * @param joiner Join function.
      * @return A stream that is the results of joining this stream with
      *         {@code window}.
      */
-    <J, U, K> TStream<J> join(TWindow<U,K> window,
+    <J, U, K> TStream<J> join(
             Function<T,K> keyer,
+            TWindow<U,K> window,
             BiFunction<T, List<U>, J> joiner);
     
     /**
