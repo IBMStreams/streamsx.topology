@@ -320,21 +320,21 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     @Override
     public <J, U> TStream<J> joinLast(
-            TStream<U> other,
+            TStream<U> lastStream,
             BiFunction<T, U, J> joiner) {
         Function<T,Object> nkt = notKeyed();
         Function<U,Object> nku = notKeyed();
-        return joinLast(nkt, other, nku, joiner);
+        return joinLast(nkt, lastStream, nku, joiner);
     }
     
     @Override
     public <J, U, K> TStream<J> joinLast(
             Function<T,K> keyer,
-            TStream<U> other,
-            Function<U,K> otherKeyer,
+            TStream<U> lastStream,
+            Function<U,K> lastStreamKeyer,
             BiFunction<T, U, J> joiner) {
         
-        TWindow<U,K> window = other.last().key(otherKeyer);
+        TWindow<U,K> window = lastStream.last().key(lastStreamKeyer);
         
         Type tupleType = TypeDiscoverer.determineStreamTypeFromFunctionArg(BiFunction.class, 2, joiner);
         
