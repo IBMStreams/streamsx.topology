@@ -17,7 +17,7 @@ public class VwapProcessing {
     public static TStream<Bargain> bargains(TStream<Trade> trades,
             TStream<Quote> quotes) {
         
-        TWindow<Trade,String> tradesWindow = trades.last(4).key(Trade::getTicker);
+        TWindow<Trade,String> tradesWindow = trades.last(4).key(Ticker::getTicker);
 
         TStream<VWapT> vwap = tradesWindow.aggregate(
                 new Function<List<Trade>, VWapT>() {
@@ -35,7 +35,7 @@ public class VwapProcessing {
                 });
 
         TStream<Bargain> bargainIndex = quotes.joinLast(
-                Quote::getTicker,
+                Ticker::getTicker,
                 vwap,
                 VWapT::getTicker,
                 new BiFunction<Quote, VWapT, Bargain>() {
