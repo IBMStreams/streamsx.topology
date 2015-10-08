@@ -177,7 +177,7 @@ public class JoinTest extends TestTopology {
     private static TStream<Integer> _testKeyedJoin(TStream<String> main, TWindow<String,String> window) {
         
         UnaryOperator<String> selfKeyed = Logic.identity();
-        return main.join(window, selfKeyed, new BiFunction<String, List<String>, Integer>() {
+        return main.join(selfKeyed, window, new BiFunction<String, List<String>, Integer>() {
 
             /**
              * 

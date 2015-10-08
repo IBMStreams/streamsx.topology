@@ -343,8 +343,10 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         return ((WindowDefinition<U,K>) window).joinInternal(this, keyer, wrapperJoiner, tupleType);
     }
     
-    public <J, U, K> TStream<J> join(TWindow<U,K> window,
+    @Override
+    public <J, U, K> TStream<J> join(
             Function<T,K> keyer,
+            TWindow<U,K> window,            
             BiFunction<T, List<U>, J> joiner) {
         
         Type tupleType = TypeDiscoverer.determineStreamTypeFromFunctionArg(BiFunction.class, 2, joiner);
