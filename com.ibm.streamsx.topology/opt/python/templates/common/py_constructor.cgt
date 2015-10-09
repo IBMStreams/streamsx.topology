@@ -1,0 +1,59 @@
+    // Common code for the constructor of Python operators
+    // Loads the Python runtime and initializes the function and module variables.
+    
+    
+    // Initialization code goes here, assumption is
+    // that operators within the same PE are initialized
+    // serially.
+    if (Py_IsInitialized() == 0) {
+        Py_InitializeEx(0);
+        PyEval_InitThreads();
+        PyEval_SaveThread();
+    }
+    
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+   std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
+   std::string cmnDir = tkDir + "/opt/.__splpy/common";
+   std::string splpySetup = cmnDir + "/spl_setup.py";
+    
+    const char* spl_setup_py = splpySetup.c_str();
+    int fd = open(spl_setup_py, O_RDONLY);
+    if (fd < 0) {
+         SPLAPPTRC(L_ERROR, "Python script spl_setup.py not found!", "python");
+         throw;   
+    }
+    if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
+         SPLAPPTRC(L_ERROR, "Python script spl_setup.py failed!", "python");
+         close(fd);
+         throw;
+    }
+
+    //std::string modulePath = tkDir + "/opt/python/streams/" + "<%=$module%>.py";
+    //std::string modulePath = "/home/streamsadmin/dan.py";
+    //const char * moduleNameC = modulePath.c_str();
+    const char * moduleNameC = "<%=$module%>";
+    //const char * moduleNameC = "dan";
+    PyObject * moduleName = PyUnicode_FromString(moduleNameC);
+    
+    module_ = PyImport_Import(moduleName);
+    if (module_ == NULL) {
+        Py_DECREF(moduleName);
+        SPLAPPLOG(L_ERROR, "Fatal error: missing module: " << moduleNameC, "python");
+        throw;
+    }
+    SPLAPPTRC(L_INFO, "Created module: " << moduleNameC, "python");
+    Py_DECREF(moduleName);
+    
+    const char * functionNameC = "<%=$functionName%>";   
+    function_ = PyObject_GetAttrString(module_, functionNameC);
+    
+    if (!PyCallable_Check(function_)) {
+            SPLAPPLOG(L_ERROR, "Fatal error: function not callable: " << functionNameC, "python");
+            throw;
+    }
+    PyGILState_Release(gstate);
+    SPLAPPTRC(L_INFO, "Callable function: " << functionNameC, "python");
+
+
