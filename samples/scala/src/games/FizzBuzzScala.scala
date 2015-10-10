@@ -6,6 +6,8 @@ import com.ibm.streamsx.topology.context.StreamsContextFactory
 
 import java.util.concurrent.TimeUnit
 
+// Implicit conversions of Scala anonymous functions
+// to functions for the Java Application API
 import com.ibm.streamsx.topology.functions.FunctionConversions._
 
 object FizzBuzzScala {

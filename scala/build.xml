@@ -17,6 +17,13 @@
     <pathelement location="${classes}"/>
   </path>
 
+  <path id="scaladoc.classpath">
+    <path refid="compile.classpath"/>
+    <fileset dir="${scala.home}/lib">
+          <include name="*.jar" />
+    </fileset>
+  </path>
+
  <taskdef resource="scala/tools/ant/antlib.xml">
    <classpath>
      <pathelement location="${scala.home}/lib/scala-compiler.jar"   />
@@ -37,6 +44,28 @@
                 destdir="${classes}"
                             classpathref="compile.classpath">
     </scalac>
+  </target>
+
+  <target name="scaladoc" if="env.SCALA_HOME">
+    <property name="doc.dir" value="${tk}/doc/scaladoc"/>
+    <fileset id="scala.source.files" dir="${src}">
+       <include name="**/*.scala"/>
+    </fileset>
+    <pathconvert pathsep=" " refid="scala.source.files" property="line.of.files"/>
+    <mkdir dir="${doc.dir}"/>
+      <exec executable="${scala.home}/bin/scaladoc">
+        <arg value="-d"/>
+        <arg value="${doc.dir}"/>
+        <arg value="-classpath"/>
+        <arg value="${tk.lib}/com.ibm.streamsx.topology.jar"/>
+        <arg value="-doc-title"/>
+        <arg value="Scala support for IBM Streams"/>
+        <arg value="-doc-version"/>
+        <arg value="${streamsx.topology.version}"/>
+        <arg value="-doc-footer"/>
+        <arg value="streamsx.topology @ IBMStreams GitHub"/>
+        <arg line="${line.of.files}"/>
+      </exec>
   </target>
 
 </project>
