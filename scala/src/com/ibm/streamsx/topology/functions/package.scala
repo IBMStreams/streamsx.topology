@@ -54,16 +54,16 @@ package com.ibm.streamsx.topology
   * ===Details===
   * The version of Scala used is defined by the value of the environment variable SCALA_HOME.
   * When a IBM Streams application bundle is created, then
-  * `$SCALA_HOME/lib/scala-library.jar` is copied into the Streams application bundle
+  * `\$SCALA_HOME/lib/scala-library.jar` is copied into the Streams application bundle
   * for use during application execution.
   * 
   * These libraries must be added to the Scala classpath for compilation and execution:
   * 
   * `com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar` - Scala & Java Application APIs for IBM Streams
   * 
-  * `$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar` - IBM Streams Java Operator API and its samples
+  * `\$STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar` - IBM Streams Java Operator API and its samples
   * 
-  * When compiling with scalac the flag '-usemanifestcp` is required.
+  * When compiling with scalac the flag `-usemanifestcp` is required.
   * 
  */
 package object functions {
