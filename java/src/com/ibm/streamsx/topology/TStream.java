@@ -95,11 +95,16 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * {@code filter.test(t)} returns {@code false} then then {@code t} will not
      * appear in the returned stream.
      * <P>
-     * Example of filtering out all empty strings from stream {@code s} of type
+     * Examples of filtering out all empty strings from stream {@code s} of type
      * {@code String}
      * 
      * <pre>
      * <code>
+     * // Java 8 - Using lambda expression
+     * TStream&lt;String> s = ...
+     * TStream&lt;String> filtered = s.filter(t -> !t.isEmpty());
+     *             
+     * // Java 7 - Using anonymous class
      * TStream&lt;String> s = ...
      * TStream&lt;String> filtered = s.filter(new Predicate&lt;String>() {
      *             &#64;Override
@@ -202,11 +207,20 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * is submitted to the returned stream for {@code t}.
      * 
      * <P>
-     * Example of transforming a stream containing numeric values as
+     * Examples of transforming a stream containing numeric values as
      * {@code String} objects into a stream of {@code Double} values.
      * 
      * <pre>
      * <code>
+     * // Java 8 - Using lambda expression
+     * TStream&lt;String> strings = ...
+     * TStream&lt;Double> doubles = strings.transform(v -> Double.valueOf(v));
+     * 
+     * // Java 8 - Using method reference
+     * TStream&lt;String> strings = ...
+     * TStream&lt;Double> doubles = strings.transform(Double::valueOf);
+     * 
+     * // Java 7 - Using anonymous class
      * TStream&lt;String> strings = ...
      * TStream&lt;Double> doubles = strings.transform(new Function<String, Double>() {
      *             &#64;Override
@@ -273,17 +287,23 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * If the return is null or an empty iterator then no tuples are added to
      * the returned stream for input tuple {@code t}.
      * <P>
-     * Example of transforming a stream containing lines of text into a stream
+     * Examples of transforming a stream containing lines of text into a stream
      * of words split out from each line. The order of the words in the stream
      * will match the order of the words in the lines.
      * 
      * <pre>
      * <code>
+     * // Java 8 - Using lambda expression
+     * TStream&lt;String> lines = ...
+     * TStream&lt;String> words = lines.multiTransform(
+     *                     line -> Arrays.asList(line.split(" ")));
+     *             
+     * // Java 7 - Using anonymous class
      * TStream&lt;String> lines = ...
      * TStream&lt;String> words = lines.multiTransform(new Function<String, Iterable<String>>() {
      *             &#64;Override
-     *             public Iterable<String> apply(String tuple) {
-     *                 return Arrays.asList(tuple.split(" "));
+     *             public Iterable<String> apply(String line) {
+     *                 return Arrays.asList(line.split(" "));
      *             }});
      * </code>
      * </pre>
