@@ -64,6 +64,8 @@
         <arg value="${streamsx.topology.version}"/>
         <arg value="-doc-footer"/>
         <arg value="streamsx.topology @ IBMStreams GitHub"/>
+        <arg value="-doc-root-content"/>
+        <arg value="overview.md"/>
         <arg line="${line.of.files}"/>
       </exec>
   </target>
