@@ -209,7 +209,8 @@ public class Topology implements TopologyElement {
      * Declare a new source stream that iterates over the return of
      * {@code Iterable<T> get()} from {@code data}. Once all the tuples from
      * {@code data.get()} have been submitted on the stream, no more tuples are
-     * submitted.
+     * submitted. In some cases the iteration may never complete leading
+     * to an endless stream.
      * 
      * @param data
      *            Function that produces that data for the stream.
