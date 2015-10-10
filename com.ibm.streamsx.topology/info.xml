@@ -3,8 +3,29 @@
   <identity>
     <name>com.ibm.streamsx.topology</name>
     <description>
-    Toolkit providing mechanisms to build IBM Streams
-    applications in other programming languages, with Java and Scala support.
+Toolkit providing mechanisms to build IBM Streams
+applications in other programming languages, with Java and Scala support.
+# Java
+*Java Application API* - A library that allows the definition
+and execution of streaming applications implemented in Java.
+Applications use Java code to process tuples and tuples are Java objects.
+
+See the documentation under `doc/javadoc/index.html` for details.
+# Scala
+*Scala Support* - The Java Application API supports applications written in Scala.
+
+See the documentation under `doc/scaladoc/index.html` for details.
+
+# SPL
+*Topic based* [com.ibm.streamsx.topology.topic::Publish|Publish] and
+[com.ibm.streamsx.topology.topic::Subscribe|Subscribe] operators
+provide the mechanism to exchange streams between applications
+regardles of the thier implementation language.
+[compilationunit:com.ibm.streamsx.topology::types.spl|SPL types] are
+provided that allow interchange with applications implemented
+in other languages.
+
+
     </description>
     <version>1.1.1.beta</version>
     <requiredProductVersion>4.0.0.0</requiredProductVersion>

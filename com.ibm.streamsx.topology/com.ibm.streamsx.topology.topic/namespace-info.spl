@@ -51,7 +51,7 @@
  * An SPL application uses [Publish] to publish a stream to a topic, and [Subscribe]
  * to subscribe to a topic.
  *
- * # Java Publish-Subscribe
+ * # Java & Scala Publish-Subscribe
  * A Java application uses [../../javadoc/com/ibm/streamsx/topology/TStream.html#publish(java.lang.String)|TStream.publish(topic)]
  * to publish streams.
  * 
@@ -63,19 +63,24 @@
  * * SPL Tuples
  *   * SPL : SPL schema of the stream.
  *   * Java : [../../javadoc/com/ibm/streamsx/topology/spl/SPLStream.html|SPLStream] with a schema matching the SPL schema.
+ *   * Scala : `com.ibm.streamsx.topology.spl.SPLStream` with a schema matching the SPL schema.
  * * JSON tuples
+ *   * SPL : [com.ibm.streamsx.topology::Json]  
  *   * Java: `TStream<JSONObject>`.
        See [../../javadoc/com/ibm/streamsx/topology/json/package-summary.html#package_description|com.ibm.streamsx.topology.json].
- *   * SPL : [com.ibm.streamsx.topology::Json]  
+ *   * Scala: `TStream[JSONObject]`
  * * String tuples
- *   * Java: `TStream<String>`
  *   * SPL : [com.ibm.streamsx.topology::String]
+ *   * Java: `TStream<String>`
+ *   * Scala: `TStream[String]`
  * * XML tuples
- *   * Java: `TStream<com.ibm.streams.operator.types.XML>`
  *   * SPL : [com.ibm.streamsx.topology::XML]
+ *   * Java: `TStream<com.ibm.streams.operator.types.XML>`
+ *   * Java: `TStream[com.ibm.streams.operator.types.XML]`
  * * Binary tuples
- *   * Java: `TStream<com.ibm.streams.operator.types.Blob>`
  *   * SPL : [com.ibm.streamsx.topology::Blob]
+ *   * Java: `TStream<com.ibm.streams.operator.types.Blob>`
+ *   * Scala: `TStream[com.ibm.streams.operator.types.Blob]`
  *
  * + Relationship to Export & Import
  * Publish-subscribe is a simplification of IBM Streams `Export` and `Import`.
