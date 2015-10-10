@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015  
+ */
 package games
 
 import com.ibm.streamsx.topology.Topology
