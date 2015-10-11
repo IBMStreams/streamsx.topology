@@ -20,6 +20,8 @@
     <ant dir="toolkit" target="clean"/>
     <ant dir="test/java" target="clean"/>
     <delete dir="${tk}/doc/javadoc"/>
+    <delete dir="${tk}/doc/spldoc"/>
+    <delete dir="${tk}/doc/scaladoc"/>
     <delete dir="${release.base}"/>
   </target>
 
@@ -61,8 +63,8 @@
        </copy>
        <javadoc destdir="${tk}/doc/javadoc" classpathref="javadoc.classpath"
           Overview="java/src/overview.html"
-          Windowtitle="Java Application API for InfoSphere Streams"
-          Footer="streamsx.topology 1.1 beta @ IBMStreams GitHub"
+          Windowtitle="Java Application API for IBM Streams"
+          Footer="streamsx.topology ${streams.topology.version} @ IBMStreams GitHub"
           failonwarning="yes"
           additionalparam="${disableJavadocLint}"
           >
@@ -74,6 +76,7 @@
             </fileset>
        </javadoc>
        <ant dir="toolkit" target="spldoc"/>
+       <ant dir="scala" target="scaladoc"/>
 
   </target>
   <target name="create_release_bundle">
