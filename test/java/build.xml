@@ -82,6 +82,9 @@
    </target>
 	
   <target name="test.toolkit.clean">
+  	<delete file="${testtk}/toolkit.xml"/>
+  	<delete dir="${testtk}/testjava"/>
+  	<delete dir="${testtk.java}/bin"/>
   	<delete dir="${testtk.java}/bin"/>
   </target>
 
