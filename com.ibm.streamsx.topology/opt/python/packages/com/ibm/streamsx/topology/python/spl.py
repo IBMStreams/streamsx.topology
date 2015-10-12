@@ -1,3 +1,6 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015
+
 from enum import Enum
 import functools
 import inspect

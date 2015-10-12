@@ -16,17 +16,17 @@
 
    std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
    std::string cmnDir = tkDir + "/opt/.__splpy/common";
-   std::string splpySetup = cmnDir + "/spl_setup.py";
+   std::string splpySetup = cmnDir + "/splpy_setup.py";
     
     const char* spl_setup_py = splpySetup.c_str();
     int fd = open(spl_setup_py, O_RDONLY);
     if (fd < 0) {
-         SPLAPPTRC(L_ERROR, "Python script spl_setup.py not found!", "python");
+         SPLAPPTRC(L_ERROR, "Python script splpy_setup.py not found!", "python");
          throw;   
     }
     if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
          close(fd);
-         SPLAPPTRC(L_ERROR, "Python script spl_setup.py failed!", "python");
+         SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
          PyErr_Print();
          throw;
     }

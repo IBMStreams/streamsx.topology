@@ -1,4 +1,8 @@
-/* Additional includes go here */
+/*
+ * # Licensed Materials - Property of IBM
+ * # Copyright IBM Corp. 2015  
+ */
+
 #include <Python.h>
 #include <string>
 #include <sys/types.h>
@@ -13,7 +17,7 @@
 
  require "splpy_operator.pm";
  use Switch;
- require $cmnDir."/spl_python.pm";
+ require $cmnDir."/splpy_python.pm";
 
  my $module = splpy_Module();
  my $functionName = splpy_FunctionName();
@@ -41,45 +45,26 @@ MY_OPERATOR::MY_OPERATOR()
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-    // Finalization code goes here
-    // Py_Finalize();
 }
 
 // Notify port readiness
 void MY_OPERATOR::allPortsReady() 
 {
-    // Notifies that all ports are ready. No tuples should be submitted before
-    // this. Source operators can use this method to spawn threads.
-
-    /*
-      createThreads(1); // Create source thread
-    */
 }
  
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    // This is an asynchronous call
 }
 
 // Processing for source and threaded operators   
 void MY_OPERATOR::process(uint32_t idx)
 {
-    // A typical implementation will loop until shutdown
-    /*
-      while(!getPE().getShutdownRequested()) {
-          // do work ...
-      }
-    */
 }
 
 // Tuple processing for mutating ports 
 void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
 {
-    // Sample submit code
-    /* 
-      submit(otuple, 0); // submit to output port 0
-    */
 }
 
 // Tuple processing for non-mutating ports
@@ -113,14 +98,6 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 // Punctuation processing
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
-    /*
-      if(punct==Punctuation::WindowMarker) {
-        // ...;
-      } else if(punct==Punctuation::FinalMarker) {
-        // ...;
-      }
-    */
 }
 
 <%SPL::CodeGen::implementationEpilogue($model);%>
-
