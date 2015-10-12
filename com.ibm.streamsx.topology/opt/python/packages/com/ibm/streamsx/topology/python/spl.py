@@ -11,16 +11,16 @@ def operator(wrapped):
     @functools.wraps(wrapped)
     def _operator(*args, **kwargs):
         return wrapped(*args, **kwargs)
-    _operator.__spl_optype = OperatorType.Function
-    _operator.__spl_file = inspect.getsourcefile(wrapped)
+    _operator.__splpy_optype = OperatorType.Function
+    _operator.__splpy_file = inspect.getsourcefile(wrapped)
     return _operator
 
 def ignore(wrapped):
     @functools.wraps(wrapped)
     def _ignore(*args, **kwargs):
         return wrapped(*args, **kwargs)
-    _ignore._spl_optype = OperatorType.Ignore
-    _ignore._spl_file = inspect.getsourcefile(wrapped)
+    _ignore.__splpy_optype = OperatorType.Ignore
+    _ignore.__splpy_file = inspect.getsourcefile(wrapped)
     return _ignore
 
 # Defines a function as a sink operator
@@ -30,6 +30,6 @@ def sink(wrapped):
         ret = wrapped(*args, **kwargs)
         assert ret == None, "SPL @sink function must not return any value, except None"
         return None
-    _sink._spl_optype = OperatorType.Sink
-    _sink._spl_file = inspect.getsourcefile(wrapped)
+    _sink.__splpy_optype = OperatorType.Sink
+    _sink.__splpy_file = inspect.getsourcefile(wrapped)
     return _sink
