@@ -1,12 +1,19 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015
+
 import os
 import sys
 import inspect
 import time
 
-# Add lib, opt/python/packages and opt/python/modules for this toolkit
-# to the current Python path. Assumption is that this script
-# is copied into the operator directory for any operator
-# that is mapped to a Python function.
+# Add
+# 
+# opt/.__splpy/common/packages
+# opt/python/packages
+# opt/python/modules
+# opt/python/streams
+#
+# for this toolkitto the current Python path.
 
 # This is executed at runtime by the initialization
 # of a Python operator
@@ -25,6 +32,7 @@ optDir = os.path.dirname(splpyDir)
 pythonDir = os.path.join(optDir, 'python')
 
 __splpy_addDirToPath(os.path.join(splpyDir, 'packages'))
+
 __splpy_addDirToPath(os.path.join(pythonDir, 'streams'))
 __splpy_addDirToPath(os.path.join(pythonDir, 'packages'))
 __splpy_addDirToPath(os.path.join(pythonDir, 'modules'))
