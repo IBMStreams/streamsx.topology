@@ -14,23 +14,17 @@ import time
 # This file is contained in
 # toolkit_root/opt/.__splpy/common
 
+def __splpy_addDirToPath(dir):
+    if os.path.isdir(dir):
+        if dir not in sys.path:
+            sys.path.append(dir)
+        
 commonDir = os.path.dirname(os.path.realpath(__file__))
 splpyDir = os.path.dirname(commonDir)
 optDir = os.path.dirname(splpyDir)
 pythonDir = os.path.join(optDir, 'python')
 
-addPath = os.path.join(splpyDir, 'packages')
-if addPath not in sys.path:
-    sys.path.append(addPath)
-
-addPath = os.path.join(pythonDir, 'streams')
-if addPath not in sys.path:
-    sys.path.append(addPath)
-
-addPath = os.path.join(pythonDir, 'packages')
-if addPath not in sys.path:
-    sys.path.append(addPath)
-
-addPath = os.path.join(pythonDir, 'modules')
-if addPath not in sys.path:
-    sys.path.append(addPath)
+__splpy_addDirToPath(os.path.join(splpyDir, 'packages'))
+__splpy_addDirToPath(os.path.join(pythonDir, 'streams'))
+__splpy_addDirToPath(os.path.join(pythonDir, 'packages'))
+__splpy_addDirToPath(os.path.join(pythonDir, 'modules'))

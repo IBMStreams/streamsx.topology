@@ -75,7 +75,7 @@ def copyPythonDir(dir):
     shutil.copytree(cmn_src, cmn_dst)
 
 def copyCGT(opdir, ns, name, funcTuple):
-     cgtbase = funcTuple.__spl_optype.spl_template
+     cgtbase = funcTuple.__splpy_optype.spl_template
      optemplate = os.path.join(topologyToolkitDir(), "opt", "python", "templates","operators", cgtbase)
      opcgt_cpp = os.path.join(opdir, name + '_cpp.cgt')
      shutil.copy(optemplate + '_cpp.cgt', opcgt_cpp)
@@ -93,7 +93,7 @@ def copyCGT(opdir, ns, name, funcTuple):
      
 
 def modifyModel(ns, name, funcTuple):
-    cgtbase = funcTuple.__spl_optype.spl_template
+    cgtbase = funcTuple.__splpy_optype.spl_template
     etree.register_namespace('opm', 'http://www.ibm.com/xmlns/prod/streams/spl/operator')
     etree.register_namespace('opm', opmns())
     etree.register_namespace('cmn', cmnns())
@@ -133,7 +133,7 @@ def writeConfig(dynm, opdir, name, fnname, funcTuple):
     cfgfile = open(cfgpath, 'w')
     cfgfile.write('sub splpy_Module { \''+ name   + "\'}\n")
     cfgfile.write('sub splpy_FunctionName {\'' + fnname + "\'}\n")
-    cfgfile.write('sub splpy_OperatorType {\'' + funcTuple.__spl_optype.name + "\'}\n")
+    cfgfile.write('sub splpy_OperatorType {\'' + funcTuple.__splpy_optype.name + "\'}\n")
     writeParameterInfo(cfgfile, funcTuple)
     cfgfile.write("1;\n")
     cfgfile.close()
@@ -172,11 +172,11 @@ for mf in glob.glob(os.path.join('opt', 'python', 'streams', '*.py')):
             continue
         if fnname.startswith('spl'):
             continue
-        if not hasattr(funcOp, '__spl_optype'):
+        if not hasattr(funcOp, '__splpy_optype'):
             continue
-        if funcOp.__spl_optype == OperatorType.Ignore:
+        if funcOp.__splpy_optype == OperatorType.Ignore:
             continue
-        if streamsPythonFile != funcOp.__spl_file:
+        if streamsPythonFile != funcOp.__splpy_file:
             continue
 
         functionTupleOperator(dynm, name, fnname, funcOp)

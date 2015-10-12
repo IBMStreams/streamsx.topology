@@ -25,21 +25,19 @@
          throw;   
     }
     if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
-         SPLAPPTRC(L_ERROR, "Python script spl_setup.py failed!", "python");
          close(fd);
+         SPLAPPTRC(L_ERROR, "Python script spl_setup.py failed!", "python");
+         PyErr_Print();
          throw;
     }
 
-    //std::string modulePath = tkDir + "/opt/python/streams/" + "<%=$module%>.py";
-    //std::string modulePath = "/home/streamsadmin/dan.py";
-    //const char * moduleNameC = modulePath.c_str();
     const char * moduleNameC = "<%=$module%>";
-    //const char * moduleNameC = "dan";
     PyObject * moduleName = PyUnicode_FromString(moduleNameC);
     
     module_ = PyImport_Import(moduleName);
     if (module_ == NULL) {
         Py_DECREF(moduleName);
+        PyErr_Print();
         SPLAPPLOG(L_ERROR, "Fatal error: missing module: " << moduleNameC, "python");
         throw;
     }
