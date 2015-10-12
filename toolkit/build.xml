@@ -46,5 +46,14 @@
     <delete dir="${tk}/doc"/>
     <delete file="${tk}/toolkit.xml"/>
     <delete dir="${tk}/license"/>
+    <!-- generated toolkit files -->
+    <delete>
+       <fileset dir="${tk}">
+          <include name="com.ibm.streamsx.topology.functional.java/**"/>
+          <include name="com.ibm.streamsx.topology.file/**"/>
+          <include name="com.ibm.streamsx.topology.testing/**"/>
+          <exclude name="**/namespace-info.spl"/>
+       </fileset>
+    </delete>
   </target>
 </project>
