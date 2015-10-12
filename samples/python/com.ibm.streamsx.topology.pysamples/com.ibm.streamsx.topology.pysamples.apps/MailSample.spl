@@ -1,6 +1,6 @@
 namespace com.ibm.streamsx.topology.pysamples.apps;
 
-use com.ibm.streamsx.python.pysamples.mail::simplesendmail ;
+use com.ibm.streamsx.topology.pysamples.mail::simplesendmail ;
 
 public composite MailSample
 {
