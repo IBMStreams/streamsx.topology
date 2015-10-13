@@ -15,16 +15,16 @@
   <property name="tk.jarname" value="com.ibm.streamsx.topology.jar"/>
   <property name="os.tk.lib" location="../../../${tk.lib.gen}"/>
   <available file="${os.tk.lib}/${tk.jarname}"
-             property="tk.lib"
+             property="tk.jar"
              value="${os.tk.lib}/${tk.jarname}"/>
-  <property name="tk.lib"
+  <property name="tk.jar"
      location="${streams.install}/toolkits/${tk.lib.gen}/${tk.jarname}"/>
 
   <property name="classes" location="classes"/>
   <property name="jarname" value="functionalsamples.jar"/>
 
   <path id="compile.classpath">
-    <pathelement location="${tk.lib}" />
+    <pathelement location="${tk.jar}" />
     <pathelement location="${streams.install}/lib/com.ibm.streams.operator.samples.jar" />
   </path>
 
