@@ -29,6 +29,7 @@
     <pathelement location="resources/ThirdPartyResource.jar"/>
     <pathelement location="resources/classes/ThirdParty"/>
     <pathelement location="${testtk.java}/bin"/>
+    <pathelement location="${junit.jar}"/>
     <path refid="streams.classpath"/>
   </path>
 
@@ -53,7 +54,7 @@
 
   <target name="compile" depends="init">
     <javac debug="true" 
-           includeantruntime="yes"
+           includeantruntime="no"
 	   srcdir="${basedir}/src" 
 	   destdir="${classes}"
 	   classpathref="compile.classpath"

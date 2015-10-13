@@ -8,10 +8,10 @@
   <property name="release.base" location="release-${ant.project.name}" />
 
   <target name="all">
-    <ant dir="java"/>
-    <ant dir="samples/java/functional"/>
-    <ant dir="toolkit"/>
-    <ant dir="test/java"/>
+    <ant dir="java" inheritAll="true"/>
+    <ant dir="samples/java/functional" inheritAll="true"/>
+    <ant dir="toolkit" inheritAll="true"/>
+    <ant dir="test/java" inheritAll="true"/>
   </target>
 
   <target name="clean" >
@@ -26,7 +26,7 @@
   </target>
 
   <target name="test" >
-    <ant dir="test/java">
+    <ant dir="test/java" inheritAll="true">
        <target name="unittest"/>
        <target name="junit.report"/>
        <target name="coverage.report"/>
@@ -34,7 +34,7 @@
   </target>
 
   <target name="test.quick" >
-    <ant dir="test/java">
+    <ant dir="test/java" inheritAll="true">
        <target name="unittest.quick"/>
        <target name="junit.report"/>
     </ant>
