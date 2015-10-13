@@ -6,13 +6,25 @@
   <property environment="env"/>
   <fail unless="env.STREAMS_INSTALL" message="STREAMS_INSTALL not set."/>
   <property name="streams.install" value="${env.STREAMS_INSTALL}"/>
-  <property name="tk.lib" location="../../../com.ibm.streamsx.topology/lib"/>
+
+  <!-- If the samples are at the same level as the toolkit
+       then use the jar from that toolkit (open source distribution)
+       otherwise assume they are in the product
+  -->
+  <property name="tk.lib.gen" value="com.ibm.streamsx.topology/lib"/>
+  <property name="tk.jarname" value="com.ibm.streamsx.topology.jar"/>
+  <property name="os.tk.lib" location="../../../${tk.lib.gen}"/>
+  <available file="${os.tk.lib}/${tk.jarname}"
+             property="tk.lib"
+             value="${os.tk.lib}/${tk.jarname}"/>
+  <property name="tk.lib"
+     location="${streams.install}/toolkits/${tk.lib.gen}/${tk.jarname}"/>
 
   <property name="classes" location="classes"/>
   <property name="jarname" value="functionalsamples.jar"/>
 
   <path id="compile.classpath">
-    <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
+    <pathelement location="${tk.lib}" />
     <pathelement location="${streams.install}/lib/com.ibm.streams.operator.samples.jar" />
   </path>
 
