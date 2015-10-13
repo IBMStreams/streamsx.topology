@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+import org.junit.Ignore;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
@@ -327,6 +328,7 @@ public class WindowTest extends TestTopology {
      * for specific results for such a short window.
      */
     @Test
+    @Ignore("Java SPL not supporting small window sizes")
     public void testPeriodicAggregateLastMicroseconds() throws Exception {
         
         // Embedded doesn't support window sizes < 1ms (see issue #211)
