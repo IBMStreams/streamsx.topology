@@ -1,9 +1,12 @@
-<project name="streamsx.topology.java" default="all" >
+<project name="ScalaSamples" default="all" >
     <description>
         Build the Streams Scala samples.
     </description>
 
-  <import file="../../common-build.xml"/>
+  <property environment="env"/>
+  <fail unless="env.STREAMS_INSTALL" message="STREAMS_INSTALL not set."/>
+  <property name="streams.install" value="${env.STREAMS_INSTALL}"/>
+  <property name="tk.lib" location="../../com.ibm.streamsx.topology/lib"/>
 
   <property name="scala.home" value="${env.SCALA_HOME}"/>
   <property name="scala-library.jar"
@@ -11,16 +14,17 @@
   <property name="src" location="src"/>
   <property name="classes" location="../java/functional/classes"/>
 
+
   <path id="compile.classpath">
-    <path refid="streams.classpath"/>
     <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar"/>
+    <pathelement location="${streams.install}/lib/com.ibm.streams.operator.samples.jar" />
     <pathelement location="${scala-library.jar}"   />
   </path>
 
   <path id="run.scala.classpath">
     <pathelement location="../java/functional/functionalsamples.jar" />
-    <path refid="streams.classpath"/>
     <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar"/>
+    <pathelement location="${streams.install}/lib/com.ibm.streams.operator.samples.jar" />
   </path>
   <path id="run.java.classpath">
     <path refid="run.scala.classpath"/>
