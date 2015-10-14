@@ -25,7 +25,7 @@
 
   <path id="compile.classpath">
     <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
-    <pathelement location="../../samples/java/functional/functionalsamples.jar"/>
+    <pathelement location="${samples.jar}"/>
     <pathelement location="resources/ThirdPartyResource.jar"/>
     <pathelement location="resources/classes/ThirdParty"/>
     <pathelement location="${testtk.java}/bin"/>
@@ -42,7 +42,7 @@
     <path refid="streams.classpath"/>
   </path>
   <path id="test.sample.classpath">
-    <pathelement location="../../samples/java/functional/functionalsamples.jar"/>
+    <pathelement location="${samples.jar}"/>
     <path refid="test.classpath"/>
   </path>
 
