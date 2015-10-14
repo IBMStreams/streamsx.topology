@@ -1,0 +1,160 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015  
+ */
+
+/**
+
+# Python Support
+
++ Decorating Python Functions as SPL Operators
+SPL operators that call a Python function are created by
+decorators provided by this toolkit.
+
+`bin/spl-python-extract.py` is a Python script that creates SPL operators from
+Python functions contained in modules in a toolkit.
+The resulting operators embed the Python runtime to
+allow stream processing using Python.
+
+To create SPL operators from Python functions one or moe Python
+modules are created in the `opt/python/streams` directory
+of the SPL toolkit that will contain the operators.
+
+Each module must import the `com.ibm.streamsx.topology.python.spl`
+package which is located in the `opt/packages` directory of this toolkit.
+It contains the decorators use to create SPL operators from Python functions.
+The module must also define a function `splNamespace` that returns a string
+containing the SPL namespace the operators for that module will be placed in.
+
+For example:
+
+
+    # Import the SPL utilities
+    from com.ibm.streamsx.topology.python import spl
+
+    # Defines the SPL namespace for any functions in this module
+    # Multiple modules can map to the same namespace
+    def splNamespace():
+       return "com.ibm.streamsx.topology.pysamples.mail"
+
+Any Python docstring for the function is copied into the SPL operator's description field in its operator model, providing a description for IDE developers using the toolkit.
+
+Functions in the modules that are not decorated, decorated with `@spl.ignore` or start with `spl` are ignored and will not result in any SPL operator.
+
+++ Conversion between SPL and Python tuples.
+SPL attributes map to Python tuples by position.
+# SPL Tuple passed into a Python function
+When an SPL tuple is passed into a Python function through its SPL operator
+the SPL tuple's attributes passed by position. The first attribute is
+the first positional parameter in the Python function. For example:
+    # SPL input schema: tuple<int32 id, float64 reading>
+    ＠spl.sink
+    def myfunc(a,b):
+      # a is set to: id
+      # b is set to: reading
+
+If more SPL attributes exist than specified parameters then the additional attributes are ignored.
+
+A Python variable argument can be used to capture all of the remaining attributes, for example:
+    # SPL input schema: tuple<int32 id, float64 reading, float lat, float lon>
+    ＠spl.sink
+    def myvarargfunc(a, *values)
+      # a is set to: id
+      # values is set to the values of: reading, lat, lon
+
+# Python function return conversion to SPL Tuples
+A Python function must return `None`, a Python tuple or a list of Python tuples.
+When `None` is return then no tuple will be submitted to the operator's output port. When a single tuple is returned is is converted to an SPL tuple and submitted to the output port. When a list of tuples is returned, each tuple is converted to a tuple and submitted to the output port, in order of the list starting with the first tuple (position 0).
+
+The values of a Python tuple are assigned to an output SPL tuple by position, so the first value in the Python tuple is assigned to the first attribute in the SPL tuple.
+
+    # SPL output schema: tuple<int32 x, float64 y, float32 z>
+    ＠spl.pipe
+    def myfunc(a,b):
+       return a,b,a+b
+
+    # The SPL output will be:
+    # x is set to: a
+    # y is set to: b 
+    # z is set to: a+b
+
+When a returned tuple has less values than attributes in the SPL output schema the attributes not set by the Python function will be set to their SPL default or copied from the input tuple, depending on the operator type.
+
+When a returned tuple has more values than attributes in the SPL output schema then the additional values are ignored.
+
+++ \@spl.pipe
+Decorator to create a pipe SPL operator.
+When a Python function is decorated with `@spl.pipe`
+a pipe SPL operator is created with a single input port
+and single output port.  For each input tuple the function is called,
+and its return value is used to submit zero or more tuples on the output port. 
+
+When the function returns a tuple containing less values than attributes
+in the SPL output schema then the remaining attributes are copied from
+the input tuple if a matching attribute is found, otherwise they are set
+to the SPL default value.
+
+# Examples
+
+Simple `Noop` pipe operator that passes the input SPL tuple onto its output using a variable argument.
+
+    ＠spl.pipe
+    def Noop(*tuple):
+      "Pass the tuple along without any change"
+      return tuple
+
+Simple filter, note that no return statement is equivalent to returning `None`:
+    ＠spl.pipe
+    def SimpleFilter(a,b):
+      "Filter tuples only allowing output if the first attribute is less than the second. Returns the sum of the first two attributes."
+      if (a < b):
+         return a+b,
+
+Demonstration of returning multiple tuples as a list.
+    ＠spl.pipe
+    def ReturnList(a,b,c):
+      "Demonstrate returning a list of values, each value is submitted as an SPL tuple" 
+      return [(a+1,b+1,c+1),(a+2,b+2,c+2),(a+3,b+3,c+3),(a+4,b+4,c+4)]
+
+
+++ \@spl.sink
+Decorator to create a sink SPL operator.
+If the Python function is decorated with `@spl.sink`
+then the operator is a sink operator, with a single
+input port and no output ports.
+For each input tuple the function is called.
+
+++ \@spl.ignore
+Decorator to ignore a Python function.
+If the Python function is decorated with `@spl.ignore`
+then function is ignored by `spl-python-extract.py`.
+
+++ Extracting SPL operators from decorated Python functions
+
+To create operators in a toolkit, execute `python3 spl-python-extract.py -i toolkit-directory`. Any Python module in the toolkit's `opt/python/streams` directory will have its functions converted to SPL operators.
+
+These directories in a toolkit are automatically added to the Python search path during execution of an operator.
+ * `opt/python/streams` - Contains modules that define Python functions that will be created as SPL operators
+ * `opt/python/packages` - Root directory for Python [https://docs.python.org/3.4/tutorial/modules.html#packages|packages] hierarchy.
+ * `opt/python/modules` - Arbitrary [https://docs.python.org/3.4/tutorial/modules.html#modules|modules], not defined as a packages.
+
+A single Python embedded runtime is used by an SPL processing element (PE), thus when multiple operators
+implemented in python are fused into the same PE they share the same runtime. The library and include
+paths to the Python runtime are set from the version of Python used to execute `spl-extract.py`.
+
+The toolkit has no dependency on this toolkit `com.ibm.streamsx.topology` once `spl-extract.py` has been executed.
+
+This toolkit `com.ibm.streamsx.python` contains `opt/python/streams/spl_samples.py` for
+examples of how data is passed into and out of Python from SPL,
+using positional arguments. These operators are created in the
+SPL namespace `com.ibm.streamsx.python.positional`.
+
+E.g.
+
+python3 $HOME/toolkits/com.ibm.streamsx.topology/bin/spl-python-extract.py -i samples/python/com.ibm.streamsx.topology.pysamples
+
+The current set of SPL types supported is listed in
+the `com.ibm.streamsx.python.examples/Test01.spl` example.
+*/
+
+namespace com.ibm.streamsx.topology.python;

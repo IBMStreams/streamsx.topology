@@ -1,0 +1,47 @@
+<project name="streamsx.topology.sample.python" default="all" >
+    <description>
+        Build the sample python toolkit.
+    </description>
+
+  <import file="../../common-build.xml"/>
+
+  <property name="pytk" location="com.ibm.streamsx.topology.pysamples"/>
+
+  <target name="all" depends="spldoc,extract"/>
+
+  <target name="extract">
+   <exec dir="${pytk}" executable="/usr/local/bin/python3">
+     <arg value="${tk}/bin/spl-python-extract.py"/>
+     <arg value="-i"/>
+     <arg value="${pytk}"/>
+   </exec>
+
+   <exec executable="${streams.install}/bin/spl-make-toolkit">
+     <arg value="-i"/>
+     <arg value="${pytk}"/>
+   </exec>
+   </target>
+
+   <target name="spldoc" depends="extract">
+   <exec executable="${streams.install}/bin/spl-make-doc">
+     <arg value="--include-composite-operator-diagram"/>
+     <arg value="-i"/>
+     <arg value="${pytk}"/>
+   </exec>
+   </target>
+
+  <target name="clean" >
+    <delete dir="${pytk}/output"/>
+    <delete dir="${pytk}/doc"/>
+    <delete dir="${pytk}/opt/.__splpy"/>
+    <delete file="${pytk}/toolkit.xml"/>
+    <delete includeemptydirs="true" >
+       <fileset dir="${pytk}">
+          <include name="com.ibm.streamsx.topology.pysamples.mail/**"/>
+          <include name="com.ibm.streamsx.topology.pysamples.positional/**"/>
+          <exclude name="**/namespace-info.spl"/>
+       </fileset>
+    </delete>
+  </target>
+
+</project>

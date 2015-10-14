@@ -11,7 +11,9 @@
     <ant dir="java" inheritAll="true"/>
     <ant dir="samples/java/functional" inheritAll="true"/>
     <ant dir="toolkit" inheritAll="true"/>
+    <ant dir="samples/python" inheritAll="true"/>
     <ant dir="test/java" inheritAll="true"/>
+    <ant dir="test/python" inheritAll="true"/>
   </target>
 
   <target name="clean" >
