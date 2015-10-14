@@ -17,7 +17,7 @@ from com.ibm.streamsx.topology.python import spl
 #
 # The function must be decorated with one of these
 #
-# @spl.operator - Function is a function operator
+# @spl.pipe - Function is a pipe operator
 # @spl.sink - Function is a sink operator
 # @spl.ignore - Function is ignored
 
@@ -67,8 +67,8 @@ def splNamespace():
 #
 # See Test01.spl
 
-@spl.operator
-def noop(*tuple):
+@spl.pipe
+def Noop(*tuple):
     "Pass the tuple along without any change"
     return tuple
 
@@ -92,8 +92,8 @@ def noop(*tuple):
 #
 # See Test02.spl
 
-@spl.operator
-def simplefilter(a,b):
+@spl.pipe
+def SimpleFilter(a,b):
    "Filter tuples only allowing output if the first attribute is less than the second. Returns the sum of the first two attributes."
    if (a < b):
        return a+b,
@@ -108,8 +108,8 @@ def simplefilter(a,b):
 # as arithmetic addition for the integers and string
 # concatenation for the string values.
 
-@spl.operator
-def addFirstTwoSecondTwo(a,b,c,d):
+@spl.pipe
+def AddFirstTwoSecondTwo(a,b,c,d):
     "Add first two and second two attributes"
     return a+b,c+d
 
@@ -117,8 +117,8 @@ def addFirstTwoSecondTwo(a,b,c,d):
 # as the first parameter (threshold) and all the remaining
 # attributes are available as a variable argument list
 #
-@spl.operator
-def lowest(threshold, *values):
+@spl.pipe
+def Lowest(threshold, *values):
     "Find the lowest value above a threshold in all the remaining attributes"
     lm = None
     for v in values:
@@ -130,13 +130,11 @@ def lowest(threshold, *values):
     if lm != None:
          return lm,
 
-
-    
-# Returns four copies of the tuple passed in. This demonstrates the
+# Returns four tuples. This demonstrates the
 # ability for a python tuple to submit multiple tuples as output.
 #
-@spl.operator
-def returnList(a,b,c):
+@spl.pipe
+def ReturnList(a,b,c):
     "Demonstrate returning a list of values, each value is submitted as a tuple" 
     return [(a+1,b+1,c+1),(a+2,b+2,c+2),(a+3,b+3,c+3),(a+4,b+4,c+4)]
 
