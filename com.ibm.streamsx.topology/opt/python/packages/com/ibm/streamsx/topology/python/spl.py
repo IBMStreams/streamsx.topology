@@ -5,19 +5,19 @@ from enum import Enum
 import functools
 import inspect
 
-OperatorType = Enum('OperatorType', 'Ignore Source Sink Function')
-OperatorType.Function.spl_template = 'PythonTupleFunction'
-OperatorType.Sink.spl_template = 'PythonTupleSink'
+OperatorType = Enum('OperatorType', 'Ignore Source Sink Pipe')
+OperatorType.Pipe.spl_template = 'PythonFunctionPipe'
+OperatorType.Sink.spl_template = 'PythonFunctionSink'
+
+def pipe(wrapped):
+    @functools.wraps(wrapped)
+    def _pipe(*args, **kwargs):
+        return wrapped(*args, **kwargs)
+    _pipe.__splpy_optype = OperatorType.Pipe
+    _pipe.__splpy_file = inspect.getsourcefile(wrapped)
+    return _pipe
 
 # Allows functions in any module in opt/python/streams to be explicitly ignored.
-def operator(wrapped):
-    @functools.wraps(wrapped)
-    def _operator(*args, **kwargs):
-        return wrapped(*args, **kwargs)
-    _operator.__splpy_optype = OperatorType.Function
-    _operator.__splpy_file = inspect.getsourcefile(wrapped)
-    return _operator
-
 def ignore(wrapped):
     @functools.wraps(wrapped)
     def _ignore(*args, **kwargs):

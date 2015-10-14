@@ -6,6 +6,16 @@ import glob
 import os
 import shutil
 import xml.etree.ElementTree as etree
+import argparse
+
+############################################
+# Argument parsing
+cmd_parser = argparse.ArgumentParser(description='Extract SPL operators from Python functions.')
+cmd_parser.add_argument('-i', '--directory', required=True,
+                   help='Toolkit directory')
+cmd_args = cmd_parser.parse_args()
+
+############################################
 
 def opmns():
     return 'http://www.ibm.com/xmlns/prod/streams/spl/operator'
@@ -80,9 +90,9 @@ def copyCGT(opdir, ns, name, funcTuple):
      opcgt_cpp = os.path.join(opdir, name + '_cpp.cgt')
      shutil.copy(optemplate + '_cpp.cgt', opcgt_cpp)
      shutil.copy(optemplate + '_h.cgt', os.path.join(opdir, name + '_h.cgt'))
-     shutil.copy(optemplate + '.xml', os.path.join(opdir, name + '.xml'))
-
-     replaceTokenInFile(opcgt_cpp, "__SPLPY__RELATIVE_TK_DIR__SPLPY__", "../../..");
+     opmodel_xml = os.path.join(opdir, name + '.xml')
+     shutil.copy(optemplate + '.xml', opmodel_xml)
+     replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", funcTuple.__doc__);
      #copyTemplate(ns, name, 'python-powered16.gif', 'python-powered16.gif')
      #copyTemplate(ns, name, 'python-powered32.gif', 'python-powered32.gif')
      #copyTemplate(ns, name, 'spl_python.pm', 'spl_python.pm')
@@ -159,10 +169,18 @@ def functionTupleOperator(dynm, name, fnname, funcTuple) :
 # Functions may be decorated with spl decorators to
 # change the operator type.
 
-sys.path.append(os.path.join('opt', 'python', 'packages'))
-sys.path.append(os.path.join('opt', 'python', 'modules'))
-    
-for mf in glob.glob(os.path.join('opt', 'python', 'streams', '*.py')):
+tk_streams = os.path.join(cmd_args.directory, 'opt', 'python', 'streams')
+if not os.path.isdir(tk_streams):
+    sys.exit(0)
+
+tk_packages = os.path.join(cmd_args.directory, 'opt', 'python', 'packages')
+if os.path.isdir(tk_packages):
+    sys.path.append(tk_packages)
+tk_modules = os.path.join(cmd_args.directory, 'opt', 'python', 'modules')
+if os.path.isdir(tk_modules):
+    sys.path.append(tk_modules)
+
+for mf in glob.glob(os.path.join(tk_streams, '*.py')):
     print('Checking ', mf, 'for operators')
     (name, suffix, mode, mtype)  = inspect.getmoduleinfo(mf)
     dynm = imp.load_source(name, mf)
