@@ -10,7 +10,7 @@
   <target name="all" depends="spldoc,extract"/>
 
   <target name="extract">
-   <exec dir="${pytk}" executable="/usr/local/bin/python3">
+   <exec executable="/usr/local/bin/python3">
      <arg value="${tk}/bin/spl-python-extract.py"/>
      <arg value="-i"/>
      <arg value="${pytk}"/>

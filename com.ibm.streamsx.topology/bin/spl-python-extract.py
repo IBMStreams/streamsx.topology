@@ -5,7 +5,6 @@ import imp
 import glob
 import os
 import shutil
-import xml.etree.ElementTree as etree
 import argparse
 
 ############################################
@@ -17,18 +16,14 @@ cmd_args = cmd_parser.parse_args()
 
 ############################################
 
-def opmns():
-    return 'http://www.ibm.com/xmlns/prod/streams/spl/operator'
-def cmnns():
-    return 'http://www.ibm.com/xmlns/prod/streams/spl/common'
-
 # Return the root of the com.ibm.streamsx.topology toolkit
 def topologyToolkitDir():
     _bin = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     return os.path.dirname(_bin)
 
+# User toolkit (corresponding to -i directory)
 def userToolkitDir():
-    return os.getcwd()
+    return cmd_args.directory 
 
 # Directory containing Python packages in com.ibm.streamsx.topology toolkit
 def pythonPackagesDir():
@@ -71,9 +66,6 @@ def replaceTokenInFile(file, token, value):
 
 
 # Copy a single file from the templates directory to the newly created operator directory
-def copyTemplate(ns, name, f, t):
-     shutil.copy(topologyToolkitDir() + '/opt/templates/' + f, os.path.join(ns, name, t))
-
 def copyTemplateDir(dir):
     copyPythonDir(os.path.join("templates", dir))
 
@@ -93,32 +85,6 @@ def copyCGT(opdir, ns, name, funcTuple):
      opmodel_xml = os.path.join(opdir, name + '.xml')
      shutil.copy(optemplate + '.xml', opmodel_xml)
      replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", funcTuple.__doc__);
-     #copyTemplate(ns, name, 'python-powered16.gif', 'python-powered16.gif')
-     #copyTemplate(ns, name, 'python-powered32.gif', 'python-powered32.gif')
-     #copyTemplate(ns, name, 'spl_python.pm', 'spl_python.pm')
-     #copyTemplate(ns, name, 'spl_setup.py', 'spl_setup.py')
-     #copyTemplate(ns, name, 'py_constructor.cgt', 'py_constructor.cgt')
-     #copyTemplate(ns, name, 'py_functionReturnToTuples.cgt', 'py_functionReturnToTuples.cgt')
-     #shutil.copytree(topologyToolkitDir() + '/opt/python/packages', os.path.join(opdir, 'packages'))
-     
-
-def modifyModel(ns, name, funcTuple):
-    cgtbase = funcTuple.__splpy_optype.spl_template
-    etree.register_namespace('opm', 'http://www.ibm.com/xmlns/prod/streams/spl/operator')
-    etree.register_namespace('opm', opmns())
-    etree.register_namespace('cmn', cmnns())
-    tree = etree.parse(topologyToolkitDir() + '/opt/templates/' + cgtbase + '.xml')
-    root = tree.getroot()
-    context = tree.find('.//{' + opmns() + '}context')
-    desc = context.find('{' + opmns() + '}description')
-    desc.text = funcTuple.__doc__
-    libname = context.find('.//{' + cmnns() + '}lib')
-    libname.text = 'python' + sysconfig.get_config_var('LDVERSION')
-    libpath = context.find('.//{' + cmnns() + '}libPath')
-    libpath.text = sysconfig.get_config_var('LIBDIR')
-    incpath = context.find('.//{' + cmnns() + '}includePath')
-    incpath.text = sysconfig.get_path('include')
-    tree.write(os.path.join(ns, name, name + '.xml'), encoding='UTF-8', xml_declaration=True)
 
 def writeParameterInfo(cfgfile, funcTuple):
         sig = inspect.signature(funcTuple)
@@ -160,7 +126,6 @@ def functionTupleOperator(dynm, name, fnname, funcTuple) :
     copyTemplateDir("icons")
     copyPythonDir("packages")
     copyCGT(opdir, ns, fnname, funcTuple)
-    #modifyModel_NEW(opdir, ns, fnname, funcTuple)
     writeConfig(dynm, opdir, name, fnname, funcTuple)
 
 # Look at all the modules in opt/python/streams (opt/python/streams/*.py) and extract
@@ -169,14 +134,14 @@ def functionTupleOperator(dynm, name, fnname, funcTuple) :
 # Functions may be decorated with spl decorators to
 # change the operator type.
 
-tk_streams = os.path.join(cmd_args.directory, 'opt', 'python', 'streams')
+tk_streams = os.path.join(userToolkitDir(), 'opt', 'python', 'streams')
 if not os.path.isdir(tk_streams):
     sys.exit(0)
 
-tk_packages = os.path.join(cmd_args.directory, 'opt', 'python', 'packages')
+tk_packages = os.path.join(userToolkitDir(), 'opt', 'python', 'packages')
 if os.path.isdir(tk_packages):
     sys.path.append(tk_packages)
-tk_modules = os.path.join(cmd_args.directory, 'opt', 'python', 'modules')
+tk_modules = os.path.join(userToolkitDir(), 'opt', 'python', 'modules')
 if os.path.isdir(tk_modules):
     sys.path.append(tk_modules)
 
