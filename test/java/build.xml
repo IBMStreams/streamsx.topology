@@ -134,6 +134,11 @@
     </ant>
   </target>
 
+  <!-- Allow the pattern of tests to run be set
+       ant -Dtopology.tes.base.pattern='**/WindowTest.java'
+  -->
+  <property name="topology.test.base.pattern" value="**/*Test.java"/>
+
   <target name="unittest.base" depends="jar,unittest.base.scala">
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
@@ -159,7 +164,7 @@
        <batchtest todir="${topology.test.dir}">
           <fileset dir="${basedir}/src" 
           	 excludes="**/samples/*Test.java,**/test/messaging/" >
-             <include name="**/*Test.java"/>
+             <include name="${topology.test.base.pattern}"/>
           </fileset>
        </batchtest>
      </junit>
