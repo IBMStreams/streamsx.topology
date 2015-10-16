@@ -4,8 +4,8 @@
 import sys
 import smtplib
 
-# Import the SPL utilities
-from com.ibm.streamsx.topology.python import spl
+# Import the SPL decorators
+from streamsx.spl import spl
 
 server = smtplib.SMTP('localhost')
 

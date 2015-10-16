@@ -37,7 +37,7 @@ def setup():
 
 setup()
 
-from com.ibm.streamsx.topology.python.spl import OperatorType
+from streamsx.spl.spl import OperatorType
 
 def makeNamespaceDir(ns):
      nsdir = os.path.join(userToolkitDir(), ns)

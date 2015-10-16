@@ -39,6 +39,7 @@
        <fileset dir="${pytk}">
           <include name="com.ibm.streamsx.topology.pysamples.mail/**"/>
           <include name="com.ibm.streamsx.topology.pysamples.positional/**"/>
+          <include name="opt/.__splpy/**"/>
           <exclude name="**/namespace-info.spl"/>
        </fileset>
     </delete>

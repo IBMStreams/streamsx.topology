@@ -29,8 +29,8 @@ containing the SPL namespace the operators for that module will be placed in.
 For example:
 
 
-    # Import the SPL utilities
-    from com.ibm.streamsx.topology.python import spl
+    # Import the SPL decorators
+    from streamsx.spl import spl
 
     # Defines the SPL namespace for any functions in this module
     # Multiple modules can map to the same namespace

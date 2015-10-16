@@ -7,8 +7,8 @@
 # is called for every input tuple, and results in
 # no submission or a single tuple being submitted.
 
-# Import the SPL utilities
-from com.ibm.streamsx.topology.python import spl
+# Import the SPL decorators
+from streamsx.spl import spl
 
 # Any function in a Python module (.py file) within the
 # toolkit's opt/python/streams directory is converted to a primitive operator
