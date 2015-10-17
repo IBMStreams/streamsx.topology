@@ -64,7 +64,7 @@
        <javadoc destdir="${tk}/doc/javadoc" classpathref="javadoc.classpath"
           Overview="java/src/overview.html"
           Windowtitle="Java Application API for IBM Streams"
-          Footer="streamsx.topology ${streams.topology.version} @ IBMStreams GitHub"
+          Footer="streamsx.topology ${streamsx.topology.version} @ IBMStreams GitHub"
           failonwarning="yes"
           additionalparam="${disableJavadocLint}"
           >
