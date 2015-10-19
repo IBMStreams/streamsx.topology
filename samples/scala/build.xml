@@ -30,6 +30,7 @@
   <path id="compile.classpath">
     <pathelement location="${tk.lib}"/>
     <pathelement location="${streams.install}/lib/com.ibm.streams.operator.samples.jar" />
+    <pathelement location="${streams.install}/lib/com.ibm.streams.operator.jar" />
     <pathelement location="${scala-library.jar}"   />
   </path>
 
