@@ -4,7 +4,12 @@
     <name>com.ibm.streamsx.topology</name>
     <description>
 Toolkit providing mechanisms to build IBM Streams
-applications in other programming languages, with Java and Scala support.
+applications in other programming languages, with Java, Scala and Python support.
+
+This is an **experimental version** that adds the ability to easily convert Python functions to SPL operators.
+
+Java, Scala and SPL support is based upon the 1.1 release.
+
 # Java
 *Java Application API* - A library that allows the definition
 and execution of streaming applications implemented in Java.
@@ -25,9 +30,14 @@ regardles of the thier implementation language.
 provided that allow interchange with applications implemented
 in other languages.
 
+# Python - Experimental
+A Python function can be simply turned into an SPL operator to allow
+tuple processing using Python.
+
+See the documentation under [namespace:com.ibm.streamsx.topology.python|com.ibm.streamsx.topology.python] for details.
 
     </description>
-    <version>1.1.3</version>
+    <version>1.2.0.experimental</version>
     <requiredProductVersion>4.0.0.0</requiredProductVersion>
     </identity>
   <dependencies/>

@@ -5,6 +5,8 @@
 
 /**
 
+Support for Python in IBM Streams.
+
 # Python Support
 
 + Decorating Python Functions as SPL Operators
@@ -16,11 +18,11 @@ Python functions contained in modules in a toolkit.
 The resulting operators embed the Python runtime to
 allow stream processing using Python.
 
-To create SPL operators from Python functions one or moe Python
+To create SPL operators from Python functions one or more Python
 modules are created in the `opt/python/streams` directory
-of the SPL toolkit that will contain the operators.
+of an SPL toolkit.
 
-Each module must import the `com.ibm.streamsx.topology.python.spl`
+Each module must import the `streamsx.spl`
 package which is located in the `opt/packages` directory of this toolkit.
 It contains the decorators use to create SPL operators from Python functions.
 The module must also define a function `splNamespace` that returns a string
@@ -45,7 +47,7 @@ Functions in the modules that are not decorated, decorated with `@spl.ignore` or
 SPL attributes map to Python tuples by position.
 # SPL Tuple passed into a Python function
 When an SPL tuple is passed into a Python function through its SPL operator
-the SPL tuple's attributes passed by position. The first attribute is
+its attributes are passed by position. The first attribute is
 the first positional parameter in the Python function. For example:
     # SPL input schema: tuple<int32 id, float64 reading>
     ＠spl.sink
@@ -124,6 +126,32 @@ then the operator is a sink operator, with a single
 input port and no output ports.
 For each input tuple the function is called.
 
+# Examples
+
+Operator to send an e-mail for each tuple using the local SMTP server.
+
+    import sys
+    import smtplib
+    
+    # Import the SPL decorators
+    from streamsx.spl import spl
+    
+    server = smtplib.SMTP('localhost')
+
+    def splNamespace():
+        return "com.ibm.streamsx.topology.pysamples.mail"
+
+    # Decorate this function as a sink operator
+    # This means the operator will have a single
+    # input port and no output ports. The SPL tuple
+    # is passed in as described in spl_samples.py.
+    # The function must return None, typically by
+    # not having any return statement.
+    ＠spl.sink
+    def simplesendmail(from_addr, to_addrs, msg):
+        "Send a simple email"
+        server.sendmail(from_addr, to_addrs, msg)
+
 ++ \@spl.ignore
 Decorator to ignore a Python function.
 If the Python function is decorated with `@spl.ignore`
@@ -140,21 +168,18 @@ These directories in a toolkit are automatically added to the Python search path
 
 A single Python embedded runtime is used by an SPL processing element (PE), thus when multiple operators
 implemented in python are fused into the same PE they share the same runtime. The library and include
-paths to the Python runtime are set from the version of Python used to execute `spl-extract.py`.
+paths to the Python runtime are set from the version of Python used to execute `spl-python-extract.py`.
 
-The toolkit has no dependency on this toolkit `com.ibm.streamsx.topology` once `spl-extract.py` has been executed.
+The toolkit has no dependency on this toolkit (`com.ibm.streamsx.topology`) once `spl-python-extract.py` has been executed.
 
-This toolkit `com.ibm.streamsx.python` contains `opt/python/streams/spl_samples.py` for
+The sample SPL toolkit `samples/python/com.ibm.streamsx.topology.pysamples` contains `opt/python/streams/spl_samples.py` for
 examples of how data is passed into and out of Python from SPL,
-using positional arguments. These operators are created in the
-SPL namespace `com.ibm.streamsx.python.positional`.
+using positional arguments.
 
 E.g.
 
 python3 $HOME/toolkits/com.ibm.streamsx.topology/bin/spl-python-extract.py -i samples/python/com.ibm.streamsx.topology.pysamples
 
-The current set of SPL types supported is listed in
-the `com.ibm.streamsx.python.examples/Test01.spl` example.
 */
 
 namespace com.ibm.streamsx.topology.python;
