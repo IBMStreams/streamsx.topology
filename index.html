@@ -30,7 +30,7 @@
         <div class="navbar-collapse collapse" id="navbar-main">
           <ul class="nav navbar-nav">
             <li>
-              <a href="https://github.com/Ibmstreams/streamsx.topology/releases">Releases</a>
+              <a href="https://github.com/IBMstreams/streamsx.topology/releases">Releases</a>
             </li>
             <li>
               <a href="doc.html">Documentation</a>
@@ -105,7 +105,18 @@
 	      </div>
 	    </div>
 	  <p>Please refer to the <a href="gettingstarted.html">getting started guide</a>, <a href="FAQ.html">FAQ</a> page, and <a href="doc.html">documentation</a> for help.</p>
-	  
+<h3>Experimental Python Support</h3>
+<a href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.2.0_experimental"> 1.2.0_experimental release</a> - 2015/10/20
+<p>
+This is an <b>experimental version</b> of the com.ibm.streamsx.topology SPL toolkit that adds the ability to easily convert Python functions to SPL operators.
+<BR>
+SPL operators that call a Python function are created by decorators provided by this toolkit.
+<BR>
+bin/spl-python-extract.py is a Python script that creates SPL operators from Python functions contained in modules in a toolkit. The resulting operators embed the Python runtime to allow stream processing using Python.
+<BR>
+For details see the SPLDOC for <a href="experimental/python/spldoc/html/tk$com.ibm.streamsx.topology/ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> namesapce.
+
+</p>
 	</section>
 	    
 
