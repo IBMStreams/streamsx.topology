@@ -1,4 +1,4 @@
-#Sun Oct 11 06:09:41 GMT-08:00 2015
+#Tue Oct 20 05:16:06 GMT-08:00 2015
 copytosourcelist=
 hreftargetslist=spldoc/dita/tk$com.ibm.streamsx.topology/ns$com.ibm.streamsx.topology.topic$2.xml,spldoc/dita/toolkits/ix$Operator.xml,spldoc/dita/tk$com.ibm.streamsx.topology/ix$Operator.xml,spldoc/dita/tk$com.ibm.streamsx.topology/ns$com.ibm.streamsx.topology.topic$1.xml,spldoc/dita/tk$com.ibm.streamsx.topology/tk$com.ibm.streamsx.topology.xml,spldoc/dita/tk$com.ibm.streamsx.topology/spl$com.ibm.streamsx.topology$types.xml,spldoc/dita/toolkits/ix$Type.xml,spldoc/dita/tk$com.ibm.streamsx.topology/ix$Type.xml,spldoc/dita/tk$com.ibm.streamsx.topology/ns$com.ibm.streamsx.topology.xml,spldoc/dita/toolkits/toolkits.xml,spldoc/dita/tk$com.ibm.streamsx.topology/spl$com.ibm.streamsx.topology.topic$topics.xml,spldoc/dita/tk$com.ibm.streamsx.topology/ns$com.ibm.streamsx.topology.topic.xml,spldoc/dita/tk$com.ibm.streamsx.topology/spl$com.ibm.streamsx.topology.topic$topicsjava.xml
 fullditatopicfile=fullditatopic.list
@@ -37,7 +37,7 @@ codereffile=coderef.list
 keylist=
 codereflist=
 user.input.file.listfile=usr.input.file.list
-user.input.dir=/home/streamsadmin/topo_rel_11/streamsx.topology/com.ibm.streamsx.topology/doc
+user.input.dir=/home/streamsadmin/topology/11update/code/streamsx.topology/com.ibm.streamsx.topology/doc
 uplevels=../../
 tempdirToinputmapdir.relative.value=spldoc/dita/
 conrefpushfile=conrefpush.list
