@@ -7,6 +7,8 @@
 
 Support for Python in IBM Streams.
 
+This is an **experimental version** of `com.ibm.streamsx.topology` that adds the ability to easily convert Python functions to SPL operators.
+
 # Python Support
 
 + Decorating Python Functions as SPL Operators
@@ -179,6 +181,10 @@ using positional arguments.
 E.g.
 
 python3 $HOME/toolkits/com.ibm.streamsx.topology/bin/spl-python-extract.py -i samples/python/com.ibm.streamsx.topology.pysamples
+
+++ Sample toolkit
+
+A toolkit with a number of decorated Python functions and SPL applications that invoke them is supplied under `samples/python/com.ibm.streamsx.topology.pysamples`.
 
 */
 
