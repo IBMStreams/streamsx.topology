@@ -1,11 +1,9 @@
 import os
 from os.path import dirname
 
-__author__ = 'wcmarsha'
-
 import tempfile
-from topology.context.ToolkitStreamsContext import ToolkitStreamsContext
-from topology.context.ContextProperties import ContextProperties
+from streamsx.topology.context.ToolkitStreamsContext import ToolkitStreamsContext
+from streamsx.topology.context.ContextProperties import ContextProperties
 
 class DistributedBundleStreamsContext(ToolkitStreamsContext):
     def __init__(self):

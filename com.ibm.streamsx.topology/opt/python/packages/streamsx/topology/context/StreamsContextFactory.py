@@ -1,10 +1,10 @@
-from topology.context.ToolkitStreamsContext import ToolkitStreamsContext
-from topology.context.StandaloneBundleStreamsContext import StandaloneBundleStreamsContext
-from topology.context.StandaloneStreamsContext import StandaloneStreamsContext
-from topology.context.DistributedStreamsContext import DistributedStreamsContext
-from topology.context.DistributedBundleStreamsContext import DistributedBundleStreamsContext
+from streamsx.topology.context.ToolkitStreamsContext import ToolkitStreamsContext
+from streamsx.topology.context.StandaloneBundleStreamsContext import StandaloneBundleStreamsContext
+from streamsx.topology.context.StandaloneStreamsContext import StandaloneStreamsContext
+from streamsx.topology.context.DistributedStreamsContext import DistributedStreamsContext
+from streamsx.topology.context.DistributedBundleStreamsContext import DistributedBundleStreamsContext
 
-from topology.context.Types import Types
+from streamsx.topology.context.Types import Types
 
 __author__ = 'wcmarsha'
 

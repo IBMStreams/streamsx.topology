@@ -1,11 +1,9 @@
 import os
 from os.path import dirname
 
-__author__ = 'wcmarsha'
-
 import tempfile
-from topology.context.ToolkitStreamsContext import ToolkitStreamsContext
-from topology.context.ContextProperties import ContextProperties
+from streamsx.topology.context.ToolkitStreamsContext import ToolkitStreamsContext
+from streamsx.topology.context.ContextProperties import ContextProperties
 
 class StandaloneBundleStreamsContext(ToolkitStreamsContext):
     def __init__(self):
@@ -19,8 +17,8 @@ class StandaloneBundleStreamsContext(ToolkitStreamsContext):
         toolkit_root = config[ContextProperties.TOOLKIT_DIR]
 
         # Get python SPL toolkit to compile
-        python_toolkit_root = dirname(dirname(dirname(dirname(dirname(os.path.abspath(__file__))))))
-        python_toolkit_root = os.path.join(python_toolkit_root, "com.ibm.streamsx.topology.functional.python")
+        python_toolkit_root = dirname(dirname(dirname(dirname(dirname(dirname(dirname(os.path.abspath(__file__))))))))
+#        python_toolkit_root = os.path.join(python_toolkit_root, "com.ibm.streamsx.topology.functional.python")
 
         # Go to the root of the generated toolkit
         prev_cwd = os.getcwd()

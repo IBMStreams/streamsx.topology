@@ -1,5 +1,3 @@
-__author__ = 'wcmarsha'
-
 
 class ContextProperties:
     """Properties that can be specified when submitting the topology to a context."""

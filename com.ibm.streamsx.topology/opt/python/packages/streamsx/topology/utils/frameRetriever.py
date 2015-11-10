@@ -1,5 +1,3 @@
-__author__ = 'wcmarsha'
-
 import sys
 
 def functionId(obj, nFramesUp):

@@ -1,7 +1,5 @@
 import os
-from topology.context.DistributedBundleStreamsContext import DistributedBundleStreamsContext
-
-__author__ = 'wcmarsha'
+from streamsx.topology.context.DistributedBundleStreamsContext import DistributedBundleStreamsContext
 
 class DistributedStreamsContext(DistributedBundleStreamsContext):
     def __init__(self):

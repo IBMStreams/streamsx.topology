@@ -1,10 +1,7 @@
 import json
 import os
 import tempfile
-from topology.context.ContextProperties import ContextProperties
-
-__author__ = 'wcmarsha'
-
+from streamsx.topology.context.ContextProperties import ContextProperties
 
 class ToolkitStreamsContext(object): #Use new-style class
     def __init__(self):
@@ -46,7 +43,7 @@ class ToolkitStreamsContext(object): #Use new-style class
 
         # Get path to com.ibm.streamsx.topology/lib
         topology_lib = os.path.abspath(__file__)
-        for i in range(5):
+        for i in range(7):
             topology_lib = os.path.dirname(topology_lib)
         topology_lib = os.path.join(topology_lib, "lib")
         os.system("java -cp \"" + streams_install + "/lib/*:" + topology_lib +

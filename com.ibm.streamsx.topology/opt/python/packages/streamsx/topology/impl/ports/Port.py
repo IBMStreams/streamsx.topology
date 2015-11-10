@@ -1,7 +1,7 @@
 __author__ = 'wcmarsha'
 
-from topology.api.ports.PortDeclaration import PortDeclaration
-from topology.utils.decorators import overrides
+from streamsx.topology.api.ports.PortDeclaration import PortDeclaration
+from streamsx.topology.utils.decorators import overrides
 
 class Port(PortDeclaration):
     """

@@ -1,4 +1,3 @@
-__author__ = 'wcmarsha'
 
 class Stream(object):
     """

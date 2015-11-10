@@ -1,7 +1,7 @@
-from topology.context import StreamsContextFactory
-from topology.context.Types import Types
-from topology.impl.OpGraph import OpGraph
-from topology.Stream import Stream
+from streamsx.topology.context import StreamsContextFactory
+from streamsx.topology.context.Types import Types
+from streamsx.topology.impl.OpGraph import OpGraph
+from streamsx.topology.Stream import Stream
 
 import shutil
 import inspect

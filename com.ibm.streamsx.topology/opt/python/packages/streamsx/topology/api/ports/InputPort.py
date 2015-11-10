@@ -1,7 +1,6 @@
-__author__ = 'wcmarsha'
 
-from topology.api.ports.PortDeclaration import PortDeclaration
-from topology.utils.frameRetriever import functionId
+from streamsx.topology.api.ports.PortDeclaration import PortDeclaration
+from streamsx.topology.utils.frameRetriever import functionId
 
 class InputPort(PortDeclaration):
 

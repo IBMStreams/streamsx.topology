@@ -1,6 +1,5 @@
-__author__ = 'wcmarsha'
 
-from topology.utils.frameRetriever import functionId
+from streamsx.topology.utils.frameRetriever import functionId
 
 class OperatorInvocation(object):
     """

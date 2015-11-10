@@ -1,8 +1,7 @@
-__author__ = 'wcmarsha'
 
 import uuid
-from topology.api.OperatorGraph import OperatorGraph
-from topology.impl.OpInvocation import OpInvocation
+from streamsx.topology.api.OperatorGraph import OperatorGraph
+from streamsx.topology.impl.OpInvocation import OpInvocation
 
 
 class OpGraph(OperatorGraph):

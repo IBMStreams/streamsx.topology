@@ -1,4 +1,3 @@
-__author__ = 'wcmarsha'
 
 def overrides(interface_class):
     def overrider(method):

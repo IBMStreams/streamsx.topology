@@ -1,10 +1,9 @@
-__author__ = 'wcmarsha'
 
-from topology.api.ports.PortDeclaration import PortDeclaration
-from topology.api.ports.InputPort import InputPort
-from topology.impl.ports.OPort import OPort
-from topology.impl.ports.Port import Port
-from topology.utils.decorators import overrides
+from streamsx.topology.api.ports.PortDeclaration import PortDeclaration
+from streamsx.topology.api.ports.InputPort import InputPort
+from streamsx.topology.impl.ports.OPort import OPort
+from streamsx.topology.impl.ports.Port import Port
+from streamsx.topology.utils.decorators import overrides
 
 class IPort(Port, InputPort):
     def __init__(self, name, operator = None, index = None):

@@ -1,9 +1,7 @@
-__author__ = 'wcmarsha'
-
-from topology.api.ports.OutputPort import OutputPort
-from topology.api.ports.PortDeclaration import PortDeclaration
-from topology.impl.ports.Port import Port
-from topology.utils.decorators import overrides
+from streamsx.topology.api.ports.OutputPort import OutputPort
+from streamsx.topology.api.ports.PortDeclaration import PortDeclaration
+from streamsx.topology.impl.ports.Port import Port
+from streamsx.topology.utils.decorators import overrides
 
 class OPort(Port, OutputPort):
     def __init__(self, name, operator = None, index = None):

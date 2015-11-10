@@ -1,7 +1,5 @@
-from topology.context.StandaloneBundleStreamsContext import StandaloneBundleStreamsContext
+from streamsx.topology.context.StandaloneBundleStreamsContext import StandaloneBundleStreamsContext
 import os
-
-__author__ = 'wcmarsha'
 
 class StandaloneStreamsContext(StandaloneBundleStreamsContext):
     def __init__(self):

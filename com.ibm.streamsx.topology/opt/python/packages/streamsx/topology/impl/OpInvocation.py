@@ -1,9 +1,8 @@
-__author__ = 'wcmarsha'
 
-from topology.api.OperatorInvocation import OperatorInvocation
-from topology.utils.decorators import overrides
-from topology.impl.ports.OPort import OPort
-from topology.impl.ports.IPort import IPort
+from streamsx.topology.api.OperatorInvocation import OperatorInvocation
+from streamsx.topology.utils.decorators import overrides
+from streamsx.topology.impl.ports.OPort import OPort
+from streamsx.topology.impl.ports.IPort import IPort
 import binascii
 import marshal
 import inspect
@@ -90,16 +89,16 @@ class OpInvocation(OperatorInvocation):
         _op = {}
         _op["name"] = self.getName()
 
-        kind = ""
+        kkind = ""
         if len(self.getInputPorts()) > 0 and len(self.getOutputPorts()) > 0:
             """this is a transform function"""
-            kind = "pythonFunctions::tupleFunction"
+            kind = "com.ibm.streamsx.topology.functional.python::FunctionTransform"
         elif len(self.getInputPorts()) > 0 and len(self.getOutputPorts()) == 0:
             """this is a sink function"""
-            kind = "pythonFunctions::sinkFunction"
+            kind = "com.ibm.streamsx.topology.functional.python::FunctionSink"
         elif len(self.getInputPorts()) == 0 and len(self.getOutputPorts()) > 0:
             """this is a source function"""
-            kind = "pythonFunctions::sourceFunction"
+            kind = "com.ibm.streamsx.topology.functional.python::FunctionSource"
 
         _op["kind"] = kind
         _op["partitioned"] = False

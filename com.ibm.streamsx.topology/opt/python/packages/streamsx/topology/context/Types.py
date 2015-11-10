@@ -1,5 +1,3 @@
-__author__ = 'wcmarsha'
-
 
 class Types:
     """Contains the strings values for the different available streams contexts.
