@@ -1,0 +1,174 @@
+/* Additional includes go here */
+
+#include <Python.h>
+#include <string>
+#include <iostream>
+#include <stdio.h>
+#include <sstream>
+
+
+#pragma SPL_NON_GENERIC_OPERATOR_IMPLEMENTATION_PROLOGUE
+
+// Constructor
+MY_OPERATOR::MY_OPERATOR()
+{
+  // Initialize the python runtime
+  SPLAPPTRC(L_INFO, "Starting initialization of python tuplefunction", "python");
+  if (Py_IsInitialized() == 0) {
+    Py_InitializeEx(0);
+    // Initialize the threaded context if it hasn't.
+    if( PyEval_ThreadsInitialized() == 0){
+      PyEval_InitThreads();
+      // Calling PyEval_InitThreads grabs the gobal lock.
+      // Release it immediately, and so this thread can be registered with
+      // PyGILState_Ensure(). It's possible this step is unnecessary, but
+      // it's taken to be safe.
+      PyEval_SaveThread();
+    }
+  }
+
+  // Register this thread with the python runtime. Needed in preparation for
+  // invoking python runtime functions.
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  std::string toolkitDir = getToolkitDirectory();
+
+  // This is a path to the ibmstreams.modulesScript module. The modulesScript
+  // module is a python script responsible for adding the following locations
+  // to the Python path of the operator's python runtime:
+  //
+  // opt/python/streams
+  // opt/python/packages
+  // opt/python/modules
+  //
+  std::string pythonIncludeModulesDir = toolkitDir + "/opt/python";
+  std::string appDirectory = getPE().getApplicationDirectory();
+
+  simpleStringCatchErr("import sys");
+
+  // Add the ibmstreams.modulesScript to the Python path
+  std::stringstream ss;
+  ss<<"sys.path.append(\""<<pythonIncludeModulesDir<<"\")";
+  simpleStringCatchErr(ss.str().c_str());
+  ss.str("");
+
+  // Run the modules script, passing in the path to the application directory
+  simpleStringCatchErr("from ibmstreams.modulesScript import addToolkitModulesToPythonPath");
+  ss<<"addToolkitModulesToPythonPath(\""<<appDirectory.c_str()<<"\")";
+  simpleStringCatchErr(ss.str().c_str());
+  ss.str("");
+
+  // Get a reference to a sink function object
+  simpleStringCatchErr("from ibmstreams.function_factory import functionFactory");
+  simpleStringCatchErr("from ibmstreams.function_types import functionTypes");
+  PyObject* main = PyImport_AddModule("__main__");
+  PyObject* globalDictionary = PyModule_GetDict(main);
+  PyObject* localDictionary = PyDict_New();
+
+  std::string serializedFunc = getParameter_serializedFunc();
+  std::string functionName = getParameter_functionName();
+  std::string functionLocation = getParameter_functionLocation();
+
+  ss<<"functionFactory.getFunction(functionTypes.SINK_FUNCTION, \""<<serializedFunc<<"\",\""<<functionName<<"\", \""<<functionLocation<<"\")";
+
+  // Obtain the reference
+  sinkFunction = PyRun_String(ss.str().c_str(), Py_eval_input, globalDictionary, localDictionary);
+  if(sinkFunction == NULL){
+      PyErr_Print();
+      throw;
+  }
+
+  PyGILState_Release(gstate);
+  SPLAPPTRC(L_INFO, "Finished initialization of python operator", "python");
+}
+
+// Destructor
+MY_OPERATOR::~MY_OPERATOR() 
+{
+    // Finalization code goes here
+}
+
+// Notify port readiness
+void MY_OPERATOR::allPortsReady() 
+{
+    // Notifies that all ports are ready. No tuples should be submitted before
+    // this. Source operators can use this method to spawn threads.
+
+    /*
+      createThreads(1); // Create source thread
+    */
+}
+ 
+// Notify pending shutdown
+void MY_OPERATOR::prepareToShutdown() 
+{
+    // This is an asynchronous call
+}
+
+// Processing for source and threaded operators   
+void MY_OPERATOR::process(uint32_t idx)
+{
+    // A typical implementation will loop until shutdown
+    /*
+      while(!getPE().getShutdownRequested()) {
+          // do work ...
+      }
+    */
+}
+
+// Tuple processing for mutating ports 
+void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
+{
+  IPort0Type &ip = static_cast<IPort0Type &>(tuple);
+  SPL::blob pyblob = ip.get___splpy_o();
+  long int sizeb = pyblob.getSize();
+  const unsigned char * pybytes = pyblob.getData();
+
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  // Might need to decref later
+  PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
+  PyObject * pyTuple = PyTuple_New(1);
+
+  PyTuple_SetItem(pyTuple, 0, pyBytes);
+
+  // Might need to decref later
+  PyObject * pyReturnVar = PyObject_CallObject(sinkFunction, pyTuple);
+
+  if(pyReturnVar == 0){
+    PyErr_Print();
+    throw;
+  }
+
+  PyGILState_Release(gstate);
+}
+
+// Tuple processing for non-mutating ports
+void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
+{
+}
+
+// Punctuation processing
+void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
+{
+    /*
+      if(punct==Punctuation::WindowMarker) {
+        // ...;
+      } else if(punct==Punctuation::FinalMarker) {
+        // ...;
+      }
+    */
+}
+
+void MY_OPERATOR::simpleStringCatchErr(const char * str){
+  int ret = PyRun_SimpleString(str);
+  if(ret == -1){
+    SPLAPPLOG(L_ERROR, "Fatal error while executing the following Python String:"<<std::endl<<str, "python");
+    PyErr_Print();
+    throw;
+  }
+}
+
+#pragma SPL_NON_GENERIC_OPERATOR_IMPLEMENTATION_EPILOGUE
