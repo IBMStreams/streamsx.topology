@@ -122,7 +122,6 @@ void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
 
   PyTuple_SetItem(pyTuple, 0, pyBytes);
 
-  // Might need to decref later
   PyObject * pyReturnVar = PyObject_CallObject(tupleFunction, pyTuple);
   Py_DECREF(pyTuple);
 
@@ -137,8 +136,8 @@ void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
   long int size = PyBytes_Size(pyReturnVar);
   char * bytes = PyBytes_AsString(pyReturnVar);
   SPL::blob serializedObject((const unsigned char *)bytes, size);
-  OPort0Type op(serializedObject);
   Py_DECREF(pyReturnVar);
+  OPort0Type op(serializedObject);
 
   PyGILState_Release(gstate);
   submit(op, 0);

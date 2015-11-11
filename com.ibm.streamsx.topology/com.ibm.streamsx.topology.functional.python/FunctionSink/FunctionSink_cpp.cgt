@@ -128,7 +128,6 @@ void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
 
-  // Might need to decref later
   PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
   PyObject * pyTuple = PyTuple_New(1);
 
@@ -136,11 +135,13 @@ void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
 
   // Might need to decref later
   PyObject * pyReturnVar = PyObject_CallObject(sinkFunction, pyTuple);
+  Py_DECREF(pyTuple);
 
   if(pyReturnVar == 0){
     PyErr_Print();
     throw;
   }
+  Py_DECREF(pyReturnVar);
 
   PyGILState_Release(gstate);
 }

@@ -108,6 +108,7 @@ void MY_OPERATOR::process(uint32_t idx)
     gstate = PyGILState_Ensure();
     PyObject * pyReturnVar = PyObject_CallObject(sourceFunction, NULL);
     if(pyReturnVar == Py_None){
+      Py_DECREF(pyReturnVar);
       continue;
     } else if(pyReturnVar == 0){
       PyErr_Print();
@@ -117,6 +118,7 @@ void MY_OPERATOR::process(uint32_t idx)
     long int size = PyBytes_Size(pyReturnVar);
     char * bytes = PyBytes_AsString(pyReturnVar);
     SPL::blob serializedObject((const unsigned char *)bytes, size);
+    Py_DECREF(pyReturnVar);
     OPort0Type op(serializedObject);
 
     PyGILState_Release(gstate);
