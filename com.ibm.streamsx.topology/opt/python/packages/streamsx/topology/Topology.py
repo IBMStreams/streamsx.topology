@@ -1,3 +1,6 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015
+
 from streamsx.topology.context import StreamsContextFactory
 from streamsx.topology.context.Types import Types
 from streamsx.topology.impl.OpGraph import OpGraph

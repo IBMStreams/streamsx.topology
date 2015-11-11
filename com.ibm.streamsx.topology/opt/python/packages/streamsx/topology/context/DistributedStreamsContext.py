@@ -1,3 +1,6 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015
+
 import os
 from streamsx.topology.context.DistributedBundleStreamsContext import DistributedBundleStreamsContext
 

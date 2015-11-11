@@ -1,4 +1,5 @@
-__author__ = 'wcmarsha'
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015
 
 from streamsx.topology.api.ports.PortDeclaration import PortDeclaration
 from streamsx.topology.utils.decorators import overrides

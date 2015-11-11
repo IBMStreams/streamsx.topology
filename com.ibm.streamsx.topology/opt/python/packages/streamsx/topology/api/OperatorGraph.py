@@ -1,3 +1,6 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015
+
 from streamsx.topology.utils.frameRetriever import functionId
 
 class OperatorGraph(object):

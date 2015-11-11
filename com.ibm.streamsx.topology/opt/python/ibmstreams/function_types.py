@@ -1,3 +1,6 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015
+
 class functionTypes:
     """Contains string values for the different kinds of stream Python functions that
         can be returned from a functionFactory. A stream python function is a function

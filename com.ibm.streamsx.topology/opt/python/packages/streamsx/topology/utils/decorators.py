@@ -1,3 +1,5 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015
 
 def overrides(interface_class):
     def overrider(method):

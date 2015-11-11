@@ -1,3 +1,5 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015
 
 class ContextProperties:
     """Properties that can be specified when submitting the topology to a context."""

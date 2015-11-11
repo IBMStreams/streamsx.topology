@@ -1,3 +1,5 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015
 
 class Types:
     """Contains the strings values for the different available streams contexts.

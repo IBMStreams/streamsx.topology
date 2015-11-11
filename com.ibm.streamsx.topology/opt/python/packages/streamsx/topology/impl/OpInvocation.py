@@ -1,3 +1,5 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015
 
 from streamsx.topology.api.OperatorInvocation import OperatorInvocation
 from streamsx.topology.utils.decorators import overrides

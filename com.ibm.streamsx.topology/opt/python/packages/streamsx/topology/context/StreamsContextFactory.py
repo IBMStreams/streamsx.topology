@@ -1,3 +1,6 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015
+
 from streamsx.topology.context.ToolkitStreamsContext import ToolkitStreamsContext
 from streamsx.topology.context.StandaloneBundleStreamsContext import StandaloneBundleStreamsContext
 from streamsx.topology.context.StandaloneStreamsContext import StandaloneStreamsContext
@@ -5,9 +8,6 @@ from streamsx.topology.context.DistributedStreamsContext import DistributedStrea
 from streamsx.topology.context.DistributedBundleStreamsContext import DistributedBundleStreamsContext
 
 from streamsx.topology.context.Types import Types
-
-__author__ = 'wcmarsha'
-
 
 class StreamsContextFactory:
     """A factory for getting different submission contexts"""
