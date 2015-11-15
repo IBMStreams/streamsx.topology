@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.context;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 
 /**
@@ -220,4 +221,6 @@ public interface StreamsContext<T> {
      */
     Future<T> submit(Topology topology, Map<String, Object> config)
             throws Exception;
+    
+    Future<T> submit(JSONObject json, Map<String, Object> config) throws Exception;
 }

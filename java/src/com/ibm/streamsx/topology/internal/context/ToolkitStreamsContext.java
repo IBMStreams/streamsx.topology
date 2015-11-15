@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,6 +58,69 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         return new CompletedFuture<File>(toolkitRoot);
     }
     
+    @Override
+    public Future<File> submit(JSONObject json, Map<String, Object> config) throws Exception {
+    	if (config == null)
+    		config = new HashMap<>();
+    	
+        if (!config.containsKey(ContextProperties.TOOLKIT_DIR)) {
+            config.put(ContextProperties.TOOLKIT_DIR, Files
+                    .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
+        }
+
+        final File toolkitRoot = new File((String) config.get(ContextProperties.TOOLKIT_DIR));
+
+        makeDirectoryStructure(toolkitRoot,
+                json.get("namespace").toString());
+
+        generateSPL(json, config);
+        
+        copyIncludes(toolkitRoot, json);
+        return new CompletedFuture<File>(toolkitRoot);
+    }
+    
+    /**
+     * Looks for "includes" in the config which will be
+     * a list of JSON object representing files or directories to copy
+     * into the toolkit, with source being the file or directory path
+     * and target being the target directory relative to toolkitRoot.
+     * @param toolkitRoot
+     * @param json
+     * @throws IOException
+     * 
+     * TODO add support for directories
+     */
+    private void copyIncludes(File toolkitRoot, JSONObject json) throws IOException {
+    	
+    	JSONObject config = (JSONObject) json.get("config");
+    	if (config == null || config.isEmpty())
+    		return;
+    	JSONArray includes = (JSONArray) config.get("includes");
+    	if (includes == null || includes.isEmpty())
+    		return;
+    	
+    	for (Object inco : includes) {
+    		JSONObject inc = (JSONObject) inco;
+    		
+    		String source = inc.get("source").toString();
+    		String target = inc.get("target").toString();
+    		
+    		File srcFile = new File(source);
+    		File targetDir = new File(toolkitRoot, target);
+    		if (!targetDir.exists())
+    			targetDir.mkdirs();
+    		if (srcFile.isFile())
+    			copyFile(srcFile, targetDir);
+    	}
+    }
+    
+    private static void copyFile(File srcFile, File targetDir) throws IOException {
+        Files.copy(srcFile.toPath(), 
+                new File(targetDir, srcFile.getName()).toPath(),
+                StandardCopyOption.REPLACE_EXISTING);
+
+    }
+    
     protected void addConfigToJSON(JSONObject graphConfig, Map<String,Object> config) {
         
         for (String key : config.keySet()) {
@@ -85,11 +149,17 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         ja.add(new Integer(22));
     }
 
-    private void generateSPL(Topology app, Map<String, Object> config)
+    private JSONObject generateSPL(Topology app, Map<String, Object> config)
             throws IOException {
 
         JSONObject json = app.builder().complete();
-
+        generateSPL(json, config);
+        return json;
+    }
+    
+    private void generateSPL(JSONObject json, Map<String, Object> config)
+            throws IOException {
+    
         // Create the SPL file, and save a copy of the JSON file.
         SPLGenerator generator = new  SPLGenerator();
         createNamespaceFile(json, config, "spl", generator.generateSPL(json));
