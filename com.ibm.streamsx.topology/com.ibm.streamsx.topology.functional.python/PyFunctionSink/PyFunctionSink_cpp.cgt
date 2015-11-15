@@ -1,0 +1,124 @@
+/* Additional includes go here */
+
+#include <Python.h>
+#include <string>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdio.h>
+
+#include "splpy.h"
+
+<%SPL::CodeGen::implementationPrologue($model);%>
+
+
+// Constructor
+MY_OPERATOR::MY_OPERATOR()
+{
+  std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
+  std::string cmnDir = tkDir + "/opt/.__splpy/common";
+  std::string splpySetup = cmnDir + "/splpy_setup.py";
+  const char* spl_setup_py = splpySetup.c_str();
+
+  streamsx::topology::Splpy::loadCPython(spl_setup_py);
+
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+    PyObject *_module_;
+    PyObject *_function_;
+
+    std::string appDirSetup = "import streamsx.runtime\n";
+    appDirSetup += "streamsx.runtime.setupOperator(\"";
+    appDirSetup += ProcessingElement::pe().getApplicationDirectory();
+    appDirSetup += "\")\n";
+
+    const char* spl_setup_appdir = appDirSetup.c_str();
+    if (PyRun_SimpleString(spl_setup_appdir) != 0) {
+         SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
+         PyErr_Print();
+         throw;
+    }
+
+<%
+ my $module =  $model->getParameterByName("functionModule")->getValueAt(0)->getCppExpression() . '.c_str()';
+ my $functionName = $model->getParameterByName("functionName")->getValueAt(0)->getCppExpression() . '.c_str()';
+%>
+
+    PyObject * appFunction = 
+      streamsx::topology::Splpy::loadFunction(<%=$module%>, <%=$functionName%>);
+
+    PyObject * depickleInput = 
+      streamsx::topology::Splpy::loadFunction("streamsx.runtime", "depickleInput");
+
+    PyObject * funcArg = PyTuple_New(1);
+    PyTuple_SetItem(funcArg, 0, appFunction);
+
+    function_ = PyObject_CallObject(depickleInput, funcArg);
+    // TODO error check
+    Py_DECREF(depickleInput);
+    Py_DECREF(funcArg);
+
+    PyGILState_Release(gstate);
+}
+
+// Destructor
+MY_OPERATOR::~MY_OPERATOR() 
+{
+    // Finalization code goes here
+}
+
+// Notify port readiness
+void MY_OPERATOR::allPortsReady() 
+{
+}
+ 
+// Notify pending shutdown
+void MY_OPERATOR::prepareToShutdown() 
+{
+    // This is an asynchronous call
+}
+
+// Processing for source and threaded operators   
+void MY_OPERATOR::process(uint32_t idx)
+{
+}
+
+// Tuple processing for mutating ports 
+void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
+{
+}
+
+// Tuple processing for non-mutating ports
+void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
+{
+  IPort0Type const &ip = static_cast<IPort0Type const &>(tuple);
+  SPL::blob pyblob = ip.get___splpy_o();
+  long int sizeb = pyblob.getSize();
+  const unsigned char * pybytes = pyblob.getData();
+
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
+
+  PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
+  PyObject * pyTuple = PyTuple_New(1);
+  PyTuple_SetItem(pyTuple, 0, pyBytes);
+
+  PyObject * pyReturnVar = PyObject_CallObject(function_, pyTuple);
+  Py_DECREF(pyTuple);
+
+  if(pyReturnVar == 0){
+    PyErr_Print();
+     PyGILState_Release(gstate);
+    throw;
+  }
+
+  Py_DECREF(pyReturnVar);
+  PyGILState_Release(gstate);
+}
+
+// Punctuation processing
+void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
+{
+}
+<%SPL::CodeGen::implementationEpilogue($model);%>

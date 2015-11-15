@@ -16,6 +16,13 @@ def pickleReturn(function) :
         return pickle.dumps(function(v))
     return _pickleReturn;
 
+# Given a function F return a function
+# that depickes the input and then calls F
+def depickleInput(function) :
+    def _pickleReturn(v):
+        return function(pickle.loads(v))
+    return _pickleReturn;
+
 
 # Given a function that returns an iterable
 # return a function that can be called
