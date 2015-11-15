@@ -1,57 +1,17 @@
-    // Common code for the constructor of Python operators
+    // Common code for the constructor of SPL Python operators
+    // that are created from Python functions
     // Loads the Python runtime and initializes the function and module variables.
+    // Setup up script that the extractor copies into the toolkit
+    std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
+    std::string splpySetup = tkDir + "/opt/.__splpy/common/splpy_setup.py";
+    const char* spl_setup_py = splpySetup.c_str();
     
-    
-    // Initialization code goes here, assumption is
-    // that operators within the same PE are initialized
-    // serially.
-    if (Py_IsInitialized() == 0) {
-        Py_InitializeEx(0);
-        PyEval_InitThreads();
-        PyEval_SaveThread();
-    }
+    streamsx::topology::Splpy::loadCPython(spl_setup_py);
     
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
-   std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
-   std::string cmnDir = tkDir + "/opt/.__splpy/common";
-   std::string splpySetup = cmnDir + "/splpy_setup.py";
-    
-    const char* spl_setup_py = splpySetup.c_str();
-    int fd = open(spl_setup_py, O_RDONLY);
-    if (fd < 0) {
-         SPLAPPTRC(L_ERROR, "Python script splpy_setup.py not found!", "python");
-         throw;   
-    }
-    if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
-         close(fd);
-         SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
-         PyErr_Print();
-         throw;
-    }
-
-    const char * moduleNameC = "<%=$module%>";
-    PyObject * moduleName = PyUnicode_FromString(moduleNameC);
-    
-    module_ = PyImport_Import(moduleName);
-    if (module_ == NULL) {
-        Py_DECREF(moduleName);
-        PyErr_Print();
-        SPLAPPLOG(L_ERROR, "Fatal error: missing module: " << moduleNameC, "python");
-        throw;
-    }
-    SPLAPPTRC(L_INFO, "Created module: " << moduleNameC, "python");
-    Py_DECREF(moduleName);
-    
-    const char * functionNameC = "<%=$functionName%>";   
-    function_ = PyObject_GetAttrString(module_, functionNameC);
-    
-    if (!PyCallable_Check(function_)) {
-            SPLAPPLOG(L_ERROR, "Fatal error: function not callable: " << functionNameC, "python");
-            throw;
-    }
+    // Set the function the operator will call as a member field
+    function_ =
+      streamsx::topology::Splpy::loadFunction("<%=$module%>", "<%=$functionName%>");   
     PyGILState_Release(gstate);
-    SPLAPPTRC(L_INFO, "Callable function: " << functionNameC, "python");
-
-
