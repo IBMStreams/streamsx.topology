@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <stdio.h>
 
+#include "splpy.h"
+
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 <%

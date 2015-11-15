@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <stdio.h>
 
+#include "splpy.h"
+
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 <%
@@ -19,8 +21,9 @@
  use Switch;
  require $cmnDir."/splpy_python.pm";
 
- my $module = splpy_Module();
- my $functionName = splpy_FunctionName();
+ // must be a C++ expression
+ my $module =  '"' . splpy_Module() . '"';
+ my $functionName = '"' . splpy_FunctionName() . '"';
  my $fixedParam = splpy_FixedParam();
  
  my $iport = $model->getInputPortAt(0);
