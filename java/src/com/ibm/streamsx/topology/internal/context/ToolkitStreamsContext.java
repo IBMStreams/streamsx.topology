@@ -53,7 +53,7 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         
         addConfigToJSON(app.builder().getConfig(), config);
 
-        generateSPL(app, config);
+        generateSPL(toolkitRoot, app);
         return new CompletedFuture<File>(toolkitRoot);
     }
     
@@ -79,31 +79,25 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
             }
         }
     }
-    
-    public static void main(String[] args) {
-        JSONArray ja = new JSONArray();
-        ja.add(new Integer(22));
-    }
 
-    private void generateSPL(Topology app, Map<String, Object> config)
+    private void generateSPL(File toolkitRoot, Topology app)
             throws IOException {
 
         JSONObject json = app.builder().complete();
 
         // Create the SPL file, and save a copy of the JSON file.
         SPLGenerator generator = new  SPLGenerator();
-        createNamespaceFile(json, config, "spl", generator.generateSPL(json));
-        createNamespaceFile(json, config, "json", json.serialize());
+        createNamespaceFile(toolkitRoot, json, "spl", generator.generateSPL(json));
+        createNamespaceFile(toolkitRoot, json, "json", json.serialize());
     }
 
-    private void createNamespaceFile(JSONObject json,
-            Map<String, Object> config, String suffix, String content)
+    private void createNamespaceFile(File toolkitRoot, JSONObject json, String suffix, String content)
             throws IOException {
 
         String namespace = (String) json.get("namespace");
         String name = (String) json.get("name");
 
-        File f = new File((String) config.get(ContextProperties.TOOLKIT_DIR),
+        File f = new File(toolkitRoot,
                 namespace + "/" + name + "." + suffix);
         PrintWriter splFile = new PrintWriter(f, "UTF-8");
         // splFile.print(app.splgraph().toSPLString());
