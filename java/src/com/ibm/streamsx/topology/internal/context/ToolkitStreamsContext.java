@@ -7,8 +7,13 @@ package com.ibm.streamsx.topology.internal.context;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.HashMap;
@@ -53,8 +58,15 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         graphItems = app.finalizeGraph(getType(), config);
         
         addConfigToJSON(app.builder().getConfig(), config);
-
-        generateSPL(app, config);
+        
+        JSONObject jsonGraph = app.builder().complete();
+        
+        return createToolkitFromGraph(toolkitRoot, jsonGraph);
+    }
+    
+    private Future<File> createToolkitFromGraph(File toolkitRoot, JSONObject jsonGraph) throws IOException {
+        copyIncludes(toolkitRoot, jsonGraph);
+        generateSPL(toolkitRoot, jsonGraph);
         return new CompletedFuture<File>(toolkitRoot);
     }
     
@@ -73,54 +85,9 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         makeDirectoryStructure(toolkitRoot,
                 json.get("namespace").toString());
 
-        generateSPL(json, config);
-        
-        copyIncludes(toolkitRoot, json);
-        return new CompletedFuture<File>(toolkitRoot);
+        return createToolkitFromGraph(toolkitRoot, json);
     }
-    
-    /**
-     * Looks for "includes" in the config which will be
-     * a list of JSON object representing files or directories to copy
-     * into the toolkit, with source being the file or directory path
-     * and target being the target directory relative to toolkitRoot.
-     * @param toolkitRoot
-     * @param json
-     * @throws IOException
-     * 
-     * TODO add support for directories
-     */
-    private void copyIncludes(File toolkitRoot, JSONObject json) throws IOException {
-    	
-    	JSONObject config = (JSONObject) json.get("config");
-    	if (config == null || config.isEmpty())
-    		return;
-    	JSONArray includes = (JSONArray) config.get("includes");
-    	if (includes == null || includes.isEmpty())
-    		return;
-    	
-    	for (Object inco : includes) {
-    		JSONObject inc = (JSONObject) inco;
-    		
-    		String source = inc.get("source").toString();
-    		String target = inc.get("target").toString();
-    		
-    		File srcFile = new File(source);
-    		File targetDir = new File(toolkitRoot, target);
-    		if (!targetDir.exists())
-    			targetDir.mkdirs();
-    		if (srcFile.isFile())
-    			copyFile(srcFile, targetDir);
-    	}
-    }
-    
-    private static void copyFile(File srcFile, File targetDir) throws IOException {
-        Files.copy(srcFile.toPath(), 
-                new File(targetDir, srcFile.getName()).toPath(),
-                StandardCopyOption.REPLACE_EXISTING);
 
-    }
-    
     protected void addConfigToJSON(JSONObject graphConfig, Map<String,Object> config) {
         
         for (String key : config.keySet()) {
@@ -144,36 +111,26 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         }
     }
     
-    public static void main(String[] args) {
-        JSONArray ja = new JSONArray();
-        ja.add(new Integer(22));
+    private static JSONObject getGraphConfig(JSONObject json) {
+    	return (JSONObject) json.get("config");
     }
 
-    private JSONObject generateSPL(Topology app, Map<String, Object> config)
+    private void generateSPL(File toolkitRoot, JSONObject jsonGraph)
             throws IOException {
 
-        JSONObject json = app.builder().complete();
-        generateSPL(json, config);
-        return json;
-    }
-    
-    private void generateSPL(JSONObject json, Map<String, Object> config)
-            throws IOException {
-    
         // Create the SPL file, and save a copy of the JSON file.
         SPLGenerator generator = new  SPLGenerator();
-        createNamespaceFile(json, config, "spl", generator.generateSPL(json));
-        createNamespaceFile(json, config, "json", json.serialize());
+        createNamespaceFile(toolkitRoot, jsonGraph, "spl", generator.generateSPL(jsonGraph));
+        createNamespaceFile(toolkitRoot, jsonGraph, "json", jsonGraph.serialize());
     }
 
-    private void createNamespaceFile(JSONObject json,
-            Map<String, Object> config, String suffix, String content)
+    private void createNamespaceFile(File toolkitRoot, JSONObject json, String suffix, String content)
             throws IOException {
 
         String namespace = (String) json.get("namespace");
         String name = (String) json.get("name");
 
-        File f = new File((String) config.get(ContextProperties.TOOLKIT_DIR),
+        File f = new File(toolkitRoot,
                 namespace + "/" + name + "." + suffix);
         PrintWriter splFile = new PrintWriter(f, "UTF-8");
         // splFile.print(app.splgraph().toSPLString());
@@ -195,5 +152,87 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         tkEtc.mkdir();
         tkOpt.mkdir();
     }
+    
+    /**
+     * Looks for "includes" in the graph config which will be
+     * a list of JSON object representing files or directories to copy
+     * into the toolkit, with source being the file or directory path
+     * and target being the target directory relative to toolkitRoot.
+     * @param toolkitRoot
+     * @param json
+     * @throws IOException
+     * 
+     * TODO add support for directories
+     */
+    private void copyIncludes(File toolkitRoot, JSONObject json) throws IOException {
+    	
+    	JSONObject config = getGraphConfig(json);
+    	JSONArray includes = (JSONArray) config.get("includes");
+    	if (includes == null || includes.isEmpty())
+    		return;
+    	
+    	for (Object inco : includes) {
+    		JSONObject inc = (JSONObject) inco;
+    		
+    		String source = inc.get("source").toString();
+    		String target = inc.get("target").toString();
+    		
+    		File srcFile = new File(source);
+    		File targetDir = new File(toolkitRoot, target);
+    		if (!targetDir.exists())
+    			targetDir.mkdirs();
+    		if (srcFile.isFile())
+    			copyFile(srcFile, targetDir);
+    		else if (srcFile.isDirectory())
+    			copyDirectoryToDirectory(srcFile, targetDir);
+    	}
+    }
 
+    private static void copyFile(File srcFile, File targetDir) throws IOException {
+        Files.copy(srcFile.toPath(), 
+                new File(targetDir, srcFile.getName()).toPath(),
+                StandardCopyOption.REPLACE_EXISTING);
+
+    }
+    
+    /**
+     * Copy srcDir tree to a directory of the same name in dstDir.
+     * The destination directory is created if necessary.
+     * @param srcDir
+     * @param dstDir
+     */
+    private static void copyDirectoryToDirectory(File srcDir, File dstDir)
+            throws IOException {
+        String dirname = srcDir.getName();
+        dstDir = new File(dstDir, dirname);
+        copyDirectory(srcDir, dstDir);
+    }
+
+    /**
+     * Copy srcDir's children, recursively, to dstDir.  dstDir is created
+     * if necessary.  Any existing children in dstDir are overwritten.
+     * @param srcDir
+     * @param dstDir
+     */
+    private static void copyDirectory(File srcDir, File dstDir) throws IOException {
+        final Path targetPath = dstDir.toPath();
+        final Path sourcePath = srcDir.toPath();
+        Files.walkFileTree(sourcePath, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(final Path dir,
+                    final BasicFileAttributes attrs) throws IOException {
+                Files.createDirectories(targetPath.resolve(sourcePath
+                        .relativize(dir)));
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(final Path file,
+                    final BasicFileAttributes attrs) throws IOException {
+                Files.copy(file,
+                        targetPath.resolve(sourcePath.relativize(file)));
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
 }
