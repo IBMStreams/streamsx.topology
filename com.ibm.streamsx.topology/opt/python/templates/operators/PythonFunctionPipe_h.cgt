@@ -35,7 +35,6 @@ public:
   void process(Punctuation const & punct, uint32_t port);
 private:
   // Members
-    PyObject *module_;
     PyObject *function_;
 }; 
 
