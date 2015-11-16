@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,7 +70,24 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         return new CompletedFuture<File>(toolkitRoot);
     }
     
-    
+    @Override
+    public Future<File> submit(JSONObject json, Map<String, Object> config) throws Exception {
+    	if (config == null)
+    		config = new HashMap<>();
+    	
+        if (!config.containsKey(ContextProperties.TOOLKIT_DIR)) {
+            config.put(ContextProperties.TOOLKIT_DIR, Files
+                    .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
+        }
+
+        final File toolkitRoot = new File((String) config.get(ContextProperties.TOOLKIT_DIR));
+
+        makeDirectoryStructure(toolkitRoot,
+                json.get("namespace").toString());
+
+        return createToolkitFromGraph(toolkitRoot, json);
+    }
+
     protected void addConfigToJSON(JSONObject graphConfig, Map<String,Object> config) {
         
         for (String key : config.keySet()) {
@@ -99,6 +117,7 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
     private void generateSPL(File toolkitRoot, JSONObject jsonGraph)
             throws IOException {
+
         // Create the SPL file, and save a copy of the JSON file.
         SPLGenerator generator = new  SPLGenerator();
         createNamespaceFile(toolkitRoot, jsonGraph, "spl", generator.generateSPL(jsonGraph));
