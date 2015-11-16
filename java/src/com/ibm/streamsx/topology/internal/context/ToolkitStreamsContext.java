@@ -71,21 +71,25 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
     }
     
     @Override
-    public Future<File> submit(JSONObject json, Map<String, Object> config) throws Exception {
-    	if (config == null)
-    		config = new HashMap<>();
+    public Future<File> submit(JSONObject json) throws Exception {
     	
-        if (!config.containsKey(ContextProperties.TOOLKIT_DIR)) {
-            config.put(ContextProperties.TOOLKIT_DIR, Files
+    	JSONObject deployInfo = (JSONObject) json.get("deploy");
+    	if (deployInfo == null)
+    		json.put("deploy", deployInfo = new JSONObject());
+    	
+        if (!deployInfo.containsKey(ContextProperties.TOOLKIT_DIR)) {
+        	deployInfo.put(ContextProperties.TOOLKIT_DIR, Files
                     .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
         }
 
-        final File toolkitRoot = new File((String) config.get(ContextProperties.TOOLKIT_DIR));
+        final File toolkitRoot = new File((String) deployInfo.get(ContextProperties.TOOLKIT_DIR));
+        
+        JSONObject jsonGraph = (JSONObject) json.get("graph");
 
         makeDirectoryStructure(toolkitRoot,
-                json.get("namespace").toString());
+        		jsonGraph.get("namespace").toString());
 
-        return createToolkitFromGraph(toolkitRoot, json);
+        return createToolkitFromGraph(toolkitRoot, jsonGraph);
     }
 
     protected void addConfigToJSON(JSONObject graphConfig, Map<String,Object> config) {
@@ -133,7 +137,6 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         File f = new File(toolkitRoot,
                 namespace + "/" + name + "." + suffix);
         PrintWriter splFile = new PrintWriter(f, "UTF-8");
-        // splFile.print(app.splgraph().toSPLString());
         splFile.print(content);
         splFile.flush();
         splFile.close();

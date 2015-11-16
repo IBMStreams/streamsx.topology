@@ -47,17 +47,17 @@ public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> 
     }
     
     @Override
-    public Future<Integer> submit(JSONObject json, Map<String, Object> config) throws Exception {
-        if (config == null)
-            config = new HashMap<>();
+    public Future<Integer> submit(JSONObject json) throws Exception {
 
-    	File bundle = bundler.submit(json, config).get();
+    	File bundle = bundler.submit(json).get();
         InvokeStandalone invokeStandalone = new InvokeStandalone(bundle);
 
-        preInvoke();
-        Future<Integer> future = invokeStandalone.invoke(config);
+        // TODO:
+        // preInvoke();
+        // Future<Integer> future = invokeStandalone.invoke(config);
 
         // bundle.delete();
-        return future;
+        // return future;
+        return null;
     }
 }

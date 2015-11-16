@@ -29,7 +29,7 @@ abstract class StreamsContextImpl<T> implements StreamsContext<T> {
     }
     
     @Override
-    public Future<T> submit(JSONObject json, Map<String, Object> config) throws Exception {
+    public Future<T> submit(JSONObject json) throws Exception {
     	throw new UnsupportedOperationException();
     }
     

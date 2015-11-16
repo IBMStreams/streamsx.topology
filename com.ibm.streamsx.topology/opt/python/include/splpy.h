@@ -30,7 +30,9 @@ namespace streamsx {
     
        int fd = open(spl_setup_py, O_RDONLY);
        if (fd < 0) {
-         SPLAPPTRC(L_ERROR, "Python script splpy_setup.py not found!", "python");
+         SPLAPPTRC(L_ERROR,
+            "Python script splpy_setup.py not found!:" << spl_setup_py,
+                             "python");
            throw;   
        }
        PyGILState_STATE gstate;

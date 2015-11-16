@@ -16,8 +16,8 @@
 MY_OPERATOR::MY_OPERATOR()
 {
   std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
-  std::string cmnDir = tkDir + "/opt/.__splpy/common";
-  std::string splpySetup = cmnDir + "/splpy_setup.py";
+  std::string streamsxDir = tkDir + "/opt/python/packages/streamsx";
+  std::string splpySetup = streamsxDir + "/splpy_setup.py";
   const char* spl_setup_py = splpySetup.c_str();
 
   streamsx::topology::Splpy::loadCPython(spl_setup_py);

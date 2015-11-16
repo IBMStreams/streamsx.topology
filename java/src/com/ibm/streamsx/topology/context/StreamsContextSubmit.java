@@ -23,7 +23,7 @@ public class StreamsContextSubmit {
             fis.close();
             
             StreamsContext<?> sc = StreamsContextFactory.getStreamsContext(context);
-            sc.submit(json, null);
+            sc.submit(json);
         }
     }
 }
