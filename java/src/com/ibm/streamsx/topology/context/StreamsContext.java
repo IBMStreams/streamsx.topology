@@ -229,7 +229,7 @@ public interface StreamsContext<T> {
      * <LI>{@code deploy} - Optional - Deployment information.</LI>
      * <LI>{@code graph} - Required - JSON representation of the topology graph.</LI>
      * </UL>
-     * @param json Topology and deployment info to be submitted.
+     * @param submission Topology and deployment info to be submitted.
      * @return Future for the submission, see the descriptions for the {@link Type}
      * returned by {@link #getType()} for details on what the encapsulated returned
      * value represents.
@@ -237,5 +237,9 @@ public interface StreamsContext<T> {
      * 
      * @see ContextProperties
      */
-    Future<T> submit(JSONObject json) throws Exception;
+    Future<T> submit(JSONObject submission) throws Exception;
+    
+    String SUBMISSION_DEPLOY = "deploy";
+    String SUBMISSION_GRAPH = "graph";
+    
 }

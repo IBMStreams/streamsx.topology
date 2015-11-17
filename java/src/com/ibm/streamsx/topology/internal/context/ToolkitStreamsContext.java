@@ -14,7 +14,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,11 +70,11 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
     }
     
     @Override
-    public Future<File> submit(JSONObject json) throws Exception {
+    public Future<File> submit(JSONObject submission) throws Exception {
     	
-    	JSONObject deployInfo = (JSONObject) json.get("deploy");
+    	JSONObject deployInfo = (JSONObject) submission.get(SUBMISSION_DEPLOY);
     	if (deployInfo == null)
-    		json.put("deploy", deployInfo = new JSONObject());
+    		submission.put("deploy", deployInfo = new JSONObject());
     	
         if (!deployInfo.containsKey(ContextProperties.TOOLKIT_DIR)) {
         	deployInfo.put(ContextProperties.TOOLKIT_DIR, Files
@@ -84,7 +83,7 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
         final File toolkitRoot = new File((String) deployInfo.get(ContextProperties.TOOLKIT_DIR));
         
-        JSONObject jsonGraph = (JSONObject) json.get("graph");
+        JSONObject jsonGraph = (JSONObject) submission.get(SUBMISSION_GRAPH);
 
         makeDirectoryStructure(toolkitRoot,
         		jsonGraph.get("namespace").toString());
