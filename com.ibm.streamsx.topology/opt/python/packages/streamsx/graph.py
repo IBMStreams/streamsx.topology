@@ -4,9 +4,7 @@
 import uuid
 import json
 import inspect
-
-from streamsx.topology.impl.ports.IPort import IPort
-from streamsx.topology.impl.ports.OPort import OPort
+from streamsx.pyspl import CommonSchema
 
 class SPLGraph(object):
 
@@ -17,31 +15,27 @@ class SPLGraph(object):
         self.operators = []
         self.modules = set()
 
-    def getName(self):
-        return self.name
-
-    def addOperator(self, kind, function, name=None):
+    def addOperator(self, kind, function=None, name=None):
         if name is None:
-            name = self.getName() + "_OP"+str(len(self.getOperators()))
-        op = SPLInvocation(len(self.getOperators()), kind, function, name, {}, self)
+            name = self.name + "_OP"+str(len(self.operators))
+        op = SPLInvocation(len(self.operators), kind, function, name, {}, self)
         self.operators.append(op)
-        if not inspect.isbuiltin(function):
-            self.modules.add(inspect.getmodule(function))
+        # TODO
+        if not function is None:
+            if not inspect.isbuiltin(function):
+                self.modules.add(inspect.getmodule(function))
         return op
-
-    def getOperators(self):
-        return self.operators
 
     def generateSPLGraph(self):
         _graph = {}
-        _graph["name"] = self.getName()
-        _graph["namespace"] = self.getName()
+        _graph["name"] = self.name
+        _graph["namespace"] = self.name
         _graph["public"] = True
         _graph["config"] = {}
         _graph["config"]["includes"] = []
         _ops = []
         self.addModules(_graph["config"]["includes"])
-        for op in self.getOperators():
+        for op in self.operators:
             _ops.append(op.generateSPLOperator())
 
         _graph["operators"] = _ops
@@ -72,26 +66,19 @@ class SPLInvocation(object):
         self.inputPorts = []
         self.outputPorts = []
 
-    def getGraph(self):
-        return self.graph
-
-    def addOutputPort(self, name=None, inputPort=None):
+    def addOutputPort(self, name=None, inputPort=None, schema= CommonSchema.Python):
         if name is None:
-            name = self.getName() + "_OUT"+str(len(self.getOutputPorts()))
-        oport = OPort(name, self, len(self.getOutputPorts()))
+            name = self.name + "_OUT"+str(len(self.outputPorts))
+        oport = OPort(name, self, len(self.outputPorts), schema)
         self.outputPorts.append(oport)
 
         if not inputPort is None:
             oport.connect(inputPort)
         return oport
 
-    def getParameters(self):
-        return self.params
-
     def setParameters(self, params):
         for param in params:
             self.params[param] = params[param]
-
 
     def appendParameters(self, params):
         for param in params:
@@ -103,8 +90,8 @@ class SPLInvocation(object):
 
     def addInputPort(self, name=None, outputPort=None):
         if name is None:
-            name = self.getName() + "_IN"+ str(len(self.getInputPorts()))
-        iport = IPort(name, self, len(self.getInputPorts()))
+            name = self.name + "_IN"+ str(len(self.inputPorts))
+        iport = IPort(name, self, len(self.inputPorts))
         self.inputPorts.append(iport)
 
         if not outputPort is None:
@@ -112,21 +99,9 @@ class SPLInvocation(object):
         return iport
 
 
-    def getInputPorts(self):
-        return self.inputPorts
-
-
-    def getOutputPorts(self):
-        return self.outputPorts
-
-
-    def getName(self):
-        return self.name
-
-
     def generateSPLOperator(self):
         _op = {}
-        _op["name"] = self.getName()
+        _op["name"] = self.name
 
         _op["kind"] = self.kind
         _op["partitioned"] = False
@@ -154,6 +129,8 @@ class SPLInvocation(object):
         return _op
 
     def _addOperatorFunction(self, function):
+        if (function == None):
+            return None
         if not hasattr(function, "__call__"):
             raise "argument to _addOperatorFunction is not callable"
         self.params["functionName"] = function.__name__;
@@ -161,11 +138,53 @@ class SPLInvocation(object):
 
 
     def _printOperator(self):
-        print(self.getName()+":")
+        print(self.name+":")
         print("inputs:" + str(len(self.inputPorts)))
         for port in self.inputPorts:
-            print(port.getName())
+            print(port.name())
         print("outputs:" + str(len(self.outputPorts)))
         for port in self.outputPorts:
-            print(port.getName())
+            print(port.name)
 
+class IPort(object):
+    def __init__(self, name, operator, index):
+        self.name = name
+        self.operator = operator
+        self.index = index
+        self.outputPorts = []
+
+    def connect(self, oport):
+        if not oport in self.outputPorts:
+            self.outputPorts.append(oport)
+
+        if not self in oport.inputPorts:
+            oport.connect(self)
+
+    def getSPLInputPort(self):
+        _iport = {}
+        _iport["name"] = self.name
+        _iport["connections"] = [port.name for port in self.outputPorts]
+        return _iport
+
+class OPort(object):
+    def __init__(self, name, operator, index, schema):
+        self.name = name
+        self.operator = operator
+        self.schema = schema
+        self.index = index
+
+        self.inputPorts = []
+
+    def connect(self, iport):
+        if not iport in self.inputPorts:
+            self.inputPorts.append(iport)
+        
+        if not self in iport.outputPorts:
+            iport.connect(self)
+
+    def getSPLOutputPort(self):
+        _oport = {}
+        _oport["type"] = self.schema.schema()
+        _oport["name"] = self.name
+        _oport["connections"] = [port.name for port in self.inputPorts]
+        return _oport

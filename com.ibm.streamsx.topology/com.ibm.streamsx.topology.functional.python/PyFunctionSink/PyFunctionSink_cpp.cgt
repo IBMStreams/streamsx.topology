@@ -11,6 +11,17 @@
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
+<%
+ my $attr =  $model->getInputPortAt(0)->getAttributeAt(0);
+ my $pystyle = 'unk';
+ if ($attr->getName() eq '__spl_po') {
+    $pystyle = 'python';
+ } elsif ($attr->getName() eq 'string') {
+    $pystyle = 'string';
+ } elsif ($attr->getName() eq 'jsonString') {
+    $pystyle = 'json';
+ }
+%>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR()
@@ -48,6 +59,8 @@ MY_OPERATOR::MY_OPERATOR()
     PyObject * appFunction = 
       streamsx::topology::Splpy::loadFunction(<%=$module%>, <%=$functionName%>);
 
+<% if ($pystyle eq 'python') { %>
+
     PyObject * depickleInput = 
       streamsx::topology::Splpy::loadFunction("streamsx.runtime", "depickleInput");
 
@@ -58,6 +71,11 @@ MY_OPERATOR::MY_OPERATOR()
     // TODO error check
     Py_DECREF(depickleInput);
     Py_DECREF(funcArg);
+
+<%}%>
+<% if ($pystyle eq 'string') { %>
+    function_ = appFunction;
+<%}%>
 
     PyGILState_Release(gstate);
 }
@@ -93,28 +111,16 @@ void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
   IPort0Type const &ip = static_cast<IPort0Type const &>(tuple);
-  SPL::blob pyblob = ip.get___splpy_o();
-  long int sizeb = pyblob.getSize();
-  const unsigned char * pybytes = pyblob.getData();
 
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
+<% if ($pystyle eq 'python') { %>
+  SPL::blob value = ip.get___spl_po();
+<%}%>
 
-  PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
-  PyObject * pyTuple = PyTuple_New(1);
-  PyTuple_SetItem(pyTuple, 0, pyBytes);
+<% if ($pystyle eq 'string') { %>
+  SPL::rstring value = ip.get_string();
+<%}%>
 
-  PyObject * pyReturnVar = PyObject_CallObject(function_, pyTuple);
-  Py_DECREF(pyTuple);
-
-  if(pyReturnVar == 0){
-    PyErr_Print();
-     PyGILState_Release(gstate);
-    throw;
-  }
-
-  Py_DECREF(pyReturnVar);
-  PyGILState_Release(gstate);
+  streamsx::topology::Splpy::pyTupleSink(function_, value);
 }
 
 // Punctuation processing

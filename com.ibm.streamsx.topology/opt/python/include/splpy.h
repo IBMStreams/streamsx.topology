@@ -81,6 +81,55 @@ namespace streamsx {
         SPLAPPTRC(L_INFO, "Callable function: " << functionNameC, "python");
         return function;
       }
+    static void pyTupleSink(PyObject * function, SPL::blob & pyblob) {
+      long int sizeb = pyblob.getSize();
+      const unsigned char * pybytes = pyblob.getData();
+
+      PyGILState_STATE gstate;
+      gstate = PyGILState_Ensure();
+
+      PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
+      PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
+
+      if(pyReturnVar == 0){
+        PyErr_Print();
+        PyGILState_Release(gstate);
+        throw;
+      }
+
+      Py_DECREF(pyReturnVar);
+      PyGILState_Release(gstate);
+
+    }
+    static void pyTupleSink(PyObject * function, SPL::rstring & pyrstring) {
+      long int sizeb = pyrstring.length();
+      const char * pybytes = pyrstring.data();
+
+      PyGILState_STATE gstate;
+      gstate = PyGILState_Ensure();
+
+      PyObject * pyUnicode  = PyUnicode_FromStringAndSize(pybytes, sizeb);
+      PyObject * pyReturnVar = pyTupleFunc(function, pyUnicode);
+
+      if(pyReturnVar == 0){
+        PyErr_Print();
+        PyGILState_Release(gstate);
+        throw;
+      }
+
+      Py_DECREF(pyReturnVar);
+      PyGILState_Release(gstate);
+
+    }
+    static PyObject * pyTupleFunc(PyObject * function, PyObject * value) {
+      PyObject * pyTuple = PyTuple_New(1);
+      PyTuple_SetItem(pyTuple, 0, value);
+
+      PyObject * pyReturnVar = PyObject_CallObject(function, pyTuple);
+      Py_DECREF(pyTuple);
+
+      return pyReturnVar;
+    }
     };
   }
 }

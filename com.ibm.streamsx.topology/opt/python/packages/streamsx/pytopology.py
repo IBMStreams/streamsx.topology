@@ -10,20 +10,6 @@ class Topology(object):
         self.graph = graph.SPLGraph(name)
         self.files = []
 
-    def getName(self):
-        """
-        Returns the name of the topology
-        :return: The name of the topology.
-        """
-        return self.name
-
-    def getGraph(self):
-        """
-        Returns the underlying OperatorGraph object
-        :return: The OperatorGraphObject
-        """
-        return self.graph
-
     def source(self, func):
         """
         Takes a zero-argument function that returns an iterable.
@@ -35,6 +21,13 @@ class Topology(object):
         """
         op = self.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionSource", func)
         oport = op.addOutputPort()
+        return Stream(self, oport)
+
+    def subscribe(self, topic, schema):
+        op = self.graph.addOperator(kind=schema.subscribeOp())
+        oport = op.addOutputPort(schema=schema)
+        topicParam = {"topic": [topic]}
+        op.setParameters(topicParam)
         return Stream(self, oport)
 
 class Stream(object):
