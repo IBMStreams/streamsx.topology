@@ -37,8 +37,9 @@ def _submitUsingJava(ctxtype, fn):
     if streams_install is None:
        raise "Please set the STREAMS_INSTALL system variable"
 
-    # This is tk/opt/python/packages/streamsx
+    # This is tk/opt/python/packages/streamsx/topology
     dir = os.path.dirname(os.path.abspath(__file__))
+    dir = os.path.dirname(dir)
     dir = os.path.dirname(dir)
     dir = os.path.dirname(dir)
     dir = os.path.dirname(dir)

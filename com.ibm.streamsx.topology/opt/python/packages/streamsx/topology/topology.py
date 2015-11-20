@@ -1,7 +1,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015
 
-from streamsx import graph
+from streamsx.topology import graph
 
 class Topology(object):
     """Topology that contains graph + operators"""

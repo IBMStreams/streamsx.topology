@@ -4,7 +4,7 @@
 import uuid
 import json
 import inspect
-from streamsx.pyspl import CommonSchema
+from streamsx.topology.schema import CommonSchema
 
 class SPLGraph(object):
 
