@@ -23,7 +23,9 @@ public class StreamsContextSubmit {
             fis.close();
             
             StreamsContext<?> sc = StreamsContextFactory.getStreamsContext(context);
-            sc.submit(json);
+            Object rc = sc.submit(json).get();
+            if (rc instanceof Integer)
+            	System.exit((Integer) rc);
         }
     }
 }

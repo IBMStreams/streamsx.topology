@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -52,12 +53,10 @@ public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> 
     	File bundle = bundler.submit(json).get();
         InvokeStandalone invokeStandalone = new InvokeStandalone(bundle);
 
-        // TODO:
-        // preInvoke();
-        // Future<Integer> future = invokeStandalone.invoke(config);
+        preInvoke();
+        Map<String, Object> config = Collections.emptyMap();
+        Future<Integer> future = invokeStandalone.invoke(config);
 
-        // bundle.delete();
-        // return future;
-        return null;
+        return future;
     }
 }
