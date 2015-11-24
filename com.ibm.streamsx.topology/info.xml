@@ -31,13 +31,17 @@ provided that allow interchange with applications implemented
 in other languages.
 
 # Python - Experimental
-A Python function can be simply turned into an SPL operator to allow
+*Python functions as SPL operators* - A Python function can be simply turned into an SPL operator to allow
 tuple processing using Python.
+
+*Python Application API* - A module that allows the definition
+and execution of streaming applications implemented in Python.
+Applications use Python code to process tuples and tuples are Python objects.
 
 See the documentation under [namespace:com.ibm.streamsx.topology.python|com.ibm.streamsx.topology.python] for details.
 
     </description>
-    <version>1.2.0.experimental</version>
+    <version>1.2.1.experimental</version>
     <requiredProductVersion>4.0.0.0</requiredProductVersion>
     </identity>
   <dependencies/>
