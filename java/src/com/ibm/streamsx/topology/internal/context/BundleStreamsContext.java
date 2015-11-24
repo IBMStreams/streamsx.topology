@@ -57,17 +57,36 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         }
         config.put(ContextProperties.TOOLKIT_DIR, appDir.getAbsolutePath());
 
-        super.submit(app, config);
+        File appDirA = super.submit(app, config).get();
         
-        JSONObject jsonApp = app.builder().complete();
+        JSONObject jsonGraph = app.builder().complete();
+        
+        JSONObject submission = new JSONObject();
+        submission.put(SUBMISSION_DEPLOY, new JSONObject());
+        submission.put(SUBMISSION_GRAPH, jsonGraph);
+        
+        return doSPLCompile(appDirA, submission);
+    }
+    
+    @Override
+    public Future<File> submit(JSONObject submission) throws Exception {
+    	
+    	File appDir = super.submit(submission).get();
+    	return doSPLCompile(appDir,submission);
+    }
+    
+    private Future<File> doSPLCompile(File appDir, JSONObject submission) throws Exception {
+    	 	
+    	JSONObject deployInfo = (JSONObject)  submission.get(SUBMISSION_DEPLOY);
+    	JSONObject jsonGraph = (JSONObject) submission.get(SUBMISSION_GRAPH);
+    	
+        String namespace = (String) jsonGraph.get("namespace");
+        String name = (String) jsonGraph.get("name");
 
-        String namespace = (String) jsonApp.get("namespace");
-        String name = (String) jsonApp.get("name");
-
-        InvokeSc sc = new InvokeSc(config, standalone, namespace, name, appDir);
+        InvokeSc sc = new InvokeSc(deployInfo, standalone, namespace, name, appDir);
         
         // Add the toolkits
-        JSONObject graphConfig  = (JSONObject) jsonApp.get("config");
+        JSONObject graphConfig  = (JSONObject) jsonGraph.get("config");
         if (graphConfig != null) {
             JSONObject splConfig = (JSONObject) graphConfig.get("spl");
             if (splConfig != null) {
@@ -91,10 +110,7 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         Files.copy(bundle.toPath(), localBundle.toPath(),
                 StandardCopyOption.REPLACE_EXISTING);
 
-        deleteToolkit(appDir, config);
-
-        // app.splgraph().setBundle(localBundle);
-        config.put(ContextProperties.BUNDLE, localBundle);
+        deleteToolkit(appDir, deployInfo);
 
         trace.info("Streams Application Bundle produced: "
                 + localBundle.getName());
@@ -102,10 +118,10 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         return new CompletedFuture<File>(localBundle);
     }
 
-    private void deleteToolkit(File appDir, Map<String,Object> config) throws IOException {
+    private void deleteToolkit(File appDir, JSONObject deployConfig) throws IOException {
         Path tkdir = appDir.toPath();
         
-        Boolean keep = (Boolean) config.get(ContextProperties.KEEP_ARTIFACTS);
+        Boolean keep = (Boolean) deployConfig.get(ContextProperties.KEEP_ARTIFACTS);
         if (Boolean.TRUE.equals(keep)) {
             trace.info("Keeping toolkit at: " + tkdir.toString());
             return;

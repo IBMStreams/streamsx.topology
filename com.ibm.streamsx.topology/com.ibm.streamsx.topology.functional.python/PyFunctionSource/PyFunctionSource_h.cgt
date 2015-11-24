@@ -1,8 +1,4 @@
-/*
- * # Licensed Materials - Property of IBM
- * # Copyright IBM Corp. 2015  
- */
-
+/* Additional includes go here */
 #include <Python.h>
 
 <%SPL::CodeGen::headerPrologue($model);%>
@@ -19,7 +15,7 @@ public:
   // Notify port readiness
   void allPortsReady(); 
 
-  // Notify pending shutdown
+  // Notify termination
   void prepareToShutdown(); 
 
   // Processing for source and threaded operators   
@@ -33,6 +29,7 @@ public:
 
   // Punctuation processing
   void process(Punctuation const & punct, uint32_t port);
+
 private:
   // Members
     PyObject *function_;

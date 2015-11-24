@@ -5,9 +5,10 @@
 
 /**
 
-Support for Python in IBM Streams.
+Experimental support for Python in IBM Streams.
 
-This is an **experimental version** of `com.ibm.streamsx.topology` that adds the ability to easily convert Python functions to SPL operators.
+This is an **experimental version** of `com.ibm.streamsx.topology` allows
+use of Python in IBM Streams applications.
 
 # Python Support
 
@@ -186,6 +187,78 @@ python3 $HOME/toolkits/com.ibm.streamsx.topology/bin/spl-python-extract.py -i sa
 
 A toolkit with a number of decorated Python functions and SPL applications that invoke them is supplied under `samples/python/com.ibm.streamsx.topology.pysamples`.
 
++ Python Application API
+Develop IBM Streams applications with Python.
+
+**Very early experimental version, only very basic functionality**
+
+This is intended as a preview of the intended direction, functionality
+is limited.
+
+# Overview
+
+A functional api to develop streaming applications for IBM Streams
+using Python. Streams are defined, transformed and sinked (terminated)
+using Python functions. The return of a function determines the
+content of the stream. Tuples on a stream are Python objects,
+a stream may contain different types of objects.
+
+# Assumptions
+
+* Python 3 is assumed
+* Limited testing has been performed with Python 3.5
+* Python is installed in the default location (`/usr/local`)
+
+# Sample Application
+
+Example code that builds and then submits a Hello World topology.
+
+    import mymodule;
+    from streamsx.topology.topology import *
+    import streamsx.topology.context
+
+    topo = Topology("HelloWorld")
+    hw = topo.source(mymodule.hello_world)
+    hw.sink(print)
+    streamsx.topology.context.submit("STANDALONE", topo.graph)
+
+The `source` function is passed a function that returns an `Iterable`, in
+this case `mymodule.hello_world`.
+
+
+    def hello_world() :
+        return ["Hello", "World!"]
+
+The function will be called when the application starts, and the SPL runtime will create an iterator from the returned value. Then each value returned from the iterator will be sent on the stream.
+
+The `sink` function is passed a function that will be called for each tuple
+on the stream, in this case the builtin `print` function.
+
+The functions must be builtins or in a separate module to the module building
+the topology. The functions must not be dynamically created. The modules
+containing the function are copied into the Streams Application Bundle (sab file).
+
+When building the topology the directory `com.ibm.streamsx.topology/opt/python/packages` must be in `$PYTHONPATH`.
+
+Only submission to STANDALONE is supported, which converts the application
+to an SPL graph, compiles it and executes it as a IBM Streams standalone
+application.
+
+# Future Items
+
+Future items that need to be supported
+
+* `transform()` function on `Stream`
+* `filter()` function on `Stream`
+* DISTRIBUTED submission
+* lambda functions
+* dynamic functions
+* functions in packages
+* stateful transformations (maybe as classes)
+* IBM Streams application features, such as UDP, windowing etc.
+* ...
+
 */
 
 namespace com.ibm.streamsx.topology.python;
+

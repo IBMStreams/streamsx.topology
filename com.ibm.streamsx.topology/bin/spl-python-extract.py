@@ -127,6 +127,7 @@ def functionTupleOperator(dynm, name, fnname, funcTuple) :
     copyTemplateDir("common")
     copyTemplateDir("icons")
     copyPythonDir("packages")
+    copyPythonDir("include")
     copyCGT(opdir, ns, fnname, funcTuple)
     writeConfig(dynm, opdir, name, fnname, funcTuple)
 
