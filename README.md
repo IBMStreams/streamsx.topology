@@ -12,3 +12,9 @@ Please refer to the [getting started guide](http://ibmstreams.github.io/streamsx
 Scala support enables a developer to create streaming applications entirely in Scala for IBM Streams. Scala support requires the application calls into the Java Application API (as Java & Scala are both JVM languages), and includes implicit conversions to allow Scala anonymous functions to be used as the functional transformations.
 
 Please see this initial documentation: https://github.com/IBMStreams/streamsx.topology/wiki/Scala-Support
+
+## To learn more about Streams
+* [IBM Streams on Github](http://ibmstreams.github.io)
+* [Introduction to Streams Quick Start Edition](http://ibmstreams.github.io/streamsx.documentation/docs/4.1/qse-intro/)
+* [Streams Getting Started Guide](http://ibmstreams.github.io/streamsx.documentation/docs/4.1/qse-getting-started/)
+* [StreamsDev](https://developer.ibm.com/streamsdev/)
