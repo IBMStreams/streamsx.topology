@@ -6,8 +6,8 @@
   xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/operator operatorModel.xsd">
   <cppOperatorModel>
     <context> 
+      <description>Python functional sink. Each tuple results in a call to a function.</description>
       <!-- some optional elements
-      <description>Brief description of the operator</description>
       <metrics>
         <metric>
           <name>metricName</name>
@@ -17,13 +17,13 @@
       </metrics>-->
       <libraryDependencies>
         <library>
-          <cmn:description>SPL Python stuff</cmn:description>
+          <cmn:description>SPL Python includes</cmn:description>
           <cmn:managedLibrary>
             <cmn:includePath>../../opt/python/include</cmn:includePath>
           </cmn:managedLibrary>
         </library>
         <library>
-          <cmn:description>Python stuff</cmn:description>
+          <cmn:description>Python libraries</cmn:description>
           <cmn:managedLibrary>
             <cmn:lib>python3.5m</cmn:lib>
             <cmn:libPath>/usr/local/lib</cmn:libPath>
@@ -34,18 +34,25 @@
       <providesSingleThreadedContext>Always</providesSingleThreadedContext>
     </context>  
     <parameters>
-      <allowAny>true</allowAny>
-      <!-- some optional elements
+      <allowAny>false</allowAny>
       <parameter>
-        <name>paramName</name>
-        <description>brief description of the parameter</description>
-        <optional>true</optional>
+        <name>functionModule</name>
+        <description>Function's module </description>
+        <optional>false</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
         <type>rstring</type>
         <cardinality>1</cardinality>
       </parameter>
-      -->
+      <parameter>
+        <name>functionName</name>
+        <description>Function's name </description>
+        <optional>false</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+      </parameter>
     </parameters>
     <inputPorts>
       <inputPortSet>
