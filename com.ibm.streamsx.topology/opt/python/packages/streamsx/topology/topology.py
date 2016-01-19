@@ -46,3 +46,16 @@ class Stream(object):
         """
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionSink", func)
         op.addInputPort(outputPort=self.oport)
+
+    def filter(self, func):
+        """
+        Filters tuples from a stream using the supplied function.
+        For each tuple on the stream the function is called passing
+        the tuple, if the function return evalulates to true the
+        tuple will be present on the returned stream, otherwise
+        the tuple is filtered out.
+        """
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionFilter", func)
+        op.addInputPort(outputPort=self.oport)
+        oport = op.addOutputPort()
+        return Stream(self.topology, oport)

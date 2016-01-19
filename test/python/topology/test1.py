@@ -18,6 +18,13 @@ class TestTopologyMethods(unittest.TestCase):
      hw.sink(test_functions.check_hello_world)
      streamsx.topology.context.submit("STANDALONE", topo.graph)
 
+  def test_TopologyFilter(self):
+     topo = Topology("test_TopologyFilter")
+     hw = topo.source(test_functions.hello_world)
+     hwf = hw.filter(test_functions.filter);
+     hwf.sink(test_functions.check_hello_world_filter)
+     streamsx.topology.context.submit("STANDALONE", topo.graph)
+
   def test_TopologyStringSubscribe(self):
      topo = Topology("test_TopologyStringSubscribe")
      hw = topo.subscribe("python.test.topic1", schema.CommonSchema.String)
