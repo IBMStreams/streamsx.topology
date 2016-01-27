@@ -18,7 +18,10 @@ class SPLGraph(object):
     def addOperator(self, kind, function=None, name=None):
         if name is None:
             name = self.name + "_OP"+str(len(self.operators))
-        op = SPLInvocation(len(self.operators), kind, function, name, {}, self)
+        if (kind == "$Isolate"):
+            op = SPLMarker(len(self.operators), kind, name, {}, self)
+        else:
+            op = SPLInvocation(len(self.operators), kind, function, name, {}, self)
         self.operators.append(op)
         # TODO
         if not function is None:
@@ -188,3 +191,44 @@ class OPort(object):
         _oport["name"] = self.name
         _oport["connections"] = [port.name for port in self.inputPorts]
         return _oport
+
+class SPLMarker(object):
+
+    def __init__(self, index, kind, name, params, graph):
+        self.index = index
+        self.kind = kind
+        self.name = name
+        self.params = {}
+        self.setParameters(params)
+        self._addOperatorFunction(self.function)
+        self.graph = graph
+
+        self.inputPorts = []
+        self.outputPorts = []
+
+    def generateSPLOperator(self):
+        _op = {}
+        _op["name"] = self.name
+
+        _op["kind"] = self.kind
+        _op["partitioned"] = False
+
+        _op["marker"] = True
+        _op["model"] = "spl"
+        _op["language"] = "java"
+
+        _outputs = []
+        _inputs = []
+
+        for output in self.outputPorts:
+            _outputs.append(output.getSPLOutputPort())
+
+        for input in self.inputPorts:
+            _inputs.append(input.getSPLInputPort())
+        _op["outputs"] = _outputs
+        _op["inputs"] = _inputs
+        _op["config"] = {}
+
+        return _op
+
+    

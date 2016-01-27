@@ -59,3 +59,14 @@ class Stream(object):
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
+
+    def isolate(self):
+        """
+        Guarantees that the upstream operation will run in a separate process from the downstream operation
+        :param: None
+        :return: None
+        """
+        op = self.topology.graph.addOperator("$Isolate$")
+        op.addInputPort(outputPort=self.oport)
+        oport = op.addOutputPort()
+        return Stream(self.topology, oport)
