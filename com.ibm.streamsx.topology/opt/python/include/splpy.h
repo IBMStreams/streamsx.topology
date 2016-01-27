@@ -82,13 +82,11 @@ namespace streamsx {
         return function;
       }
     static void pyTupleSink(PyObject * function, SPL::blob & pyblob) {
-      long int sizeb = pyblob.getSize();
-      const unsigned char * pybytes = pyblob.getData();
 
       PyGILState_STATE gstate;
       gstate = PyGILState_Ensure();
 
-      PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
+      PyObject * pyBytes  = pyBlobToBytes(pyblob);
       PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
 
       if(pyReturnVar == 0){
@@ -121,6 +119,33 @@ namespace streamsx {
       PyGILState_Release(gstate);
 
     }
+
+    static int pyTupleFilter(PyObject * function, SPL::blob & pyblob) {
+
+      PyGILState_STATE gstate;
+      gstate = PyGILState_Ensure();
+
+      PyObject * pyBytes  = pyBlobToBytes(pyblob);
+      PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
+
+      if(pyReturnVar == 0){
+        PyErr_Print();
+        PyGILState_Release(gstate);
+        throw;
+      }
+
+      int ret = PyObject_IsTrue(pyReturnVar);
+
+      Py_DECREF(pyReturnVar);
+      PyGILState_Release(gstate);
+
+      return ret;
+    }
+
+    /**
+     * Call a Python function passing in the SPL tuple as 
+     * the single element of a Python tuple.
+    */
     static PyObject * pyTupleFunc(PyObject * function, PyObject * value) {
       PyObject * pyTuple = PyTuple_New(1);
       PyTuple_SetItem(pyTuple, 0, value);
@@ -130,6 +155,18 @@ namespace streamsx {
 
       return pyReturnVar;
     }
+
+    /**
+     * Convert a SPL blob into a Python Byte string 
+     */
+    static PyObject * pyBlobToBytes(SPL::blob & pyblob) {
+      long int sizeb = pyblob.getSize();
+      const unsigned char * pybytes = pyblob.getData();
+
+      PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
+      return pyBytes;
+    }
+
     };
   }
 }
