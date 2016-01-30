@@ -50,9 +50,9 @@ public class PublishSubscribeTest extends TestTopology {
         
         source = source.modify(new Delay<String>());
         
-        source.publish("/testPublishString");
+        source.publish("testPublishString");
         
-        TStream<String> subscribe = t.subscribe("/testPublishString", String.class);
+        TStream<String> subscribe = t.subscribe("testPublishString", String.class);
 
         completeAndValidate(subscribe, 20, "325", "457", "9325");
     }
@@ -62,15 +62,15 @@ public class PublishSubscribeTest extends TestTopology {
         final Topology t = new Topology();
         TStream<String> source = t.strings("325", "457", "9325");       
         source = source.modify(new Delay<String>());       
-        source.publish("/testPublishString");
+        source.publish("testPublishString");
         
         // A stream that should not be subscribed to!
         TStream<String> source2 = t.strings("999", "777", "8888");       
         source2 = source2.modify(new Delay<String>());       
-        source2.publish("/testPublishString2");
+        source2.publish("testPublishString2");
  
         
-        TStream<String> subscribe = t.subscribe("/testPublishString", String.class);
+        TStream<String> subscribe = t.subscribe("testPublishString", String.class);
 
         completeAndValidate(subscribe, 20, "325", "457", "9325");
     }
@@ -83,9 +83,9 @@ public class PublishSubscribeTest extends TestTopology {
         
         source = source.modify(new Delay<String>());
         
-        source.publish("/testPublishStringSPL");
+        source.publish("testPublishStringSPL");
         
-        SPLStream subscribe = SPLStreams.subscribe(t, "/testPublishStringSPL", SPLSchemas.STRING);        
+        SPLStream subscribe = SPLStreams.subscribe(t, "testPublishStringSPL", SPLSchemas.STRING);        
 
         completeAndValidate(subscribe.toStringStream(), 20, "hello", "SPL!");
     }
@@ -112,9 +112,9 @@ public class PublishSubscribeTest extends TestTopology {
                 return ValueFactory.newBlob(v.getBytes(StandardCharsets.UTF_8));
             }});
         
-        blobs.publish("/testPublishBlob");
+        blobs.publish("testPublishBlob");
         
-        TStream<Blob> subscribe = t.subscribe("/testPublishBlob", Blob.class);
+        TStream<Blob> subscribe = t.subscribe("testPublishBlob", Blob.class);
         
         TStream<String> strings = subscribe.transform(new Function<Blob,String>() {
 
@@ -151,9 +151,9 @@ public class PublishSubscribeTest extends TestTopology {
                 }
             }});
         
-        xml.publish("/testPublishXML");
+        xml.publish("testPublishXML");
         
-        TStream<XML> subscribe = t.subscribe("/testPublishXML", XML.class);
+        TStream<XML> subscribe = t.subscribe("testPublishXML", XML.class);
         
         TStream<String> strings = subscribe.transform(new Function<XML,String>() {
 
@@ -194,9 +194,9 @@ public class PublishSubscribeTest extends TestTopology {
                 return new SimpleString(v);
             }});
         
-        objects.publish("/testPublishJavaObject");
+        objects.publish("testPublishJavaObject");
         
-        TStream<SimpleString> subscribe = t.subscribe("/testPublishJavaObject", SimpleString.class);
+        TStream<SimpleString> subscribe = t.subscribe("testPublishJavaObject", SimpleString.class);
         
         TStream<String> strings = StringStreams.toString(subscribe);  
 
@@ -219,7 +219,7 @@ public class PublishSubscribeTest extends TestTopology {
         ints.add(new SimpleInt(3));
         TStream<SimpleInt> sints = t.constants(ints).asType(SimpleInt.class);
         sints = sints.modify(new Delay<SimpleInt>());
-        sints.publish("/testPublishJavaObjects");
+        sints.publish("testPublishJavaObjects");
         
         TStream<String> source = t.strings("publishing", "a", "java object");       
         source = source.modify(new Delay<String>());
@@ -231,9 +231,9 @@ public class PublishSubscribeTest extends TestTopology {
                 return new SimpleString(v);
             }}).asType(SimpleString.class);
         
-        objects.publish("/testPublishJavaObjects");
+        objects.publish("testPublishJavaObjects");
                 
-        TStream<SimpleString> subscribe = t.subscribe("/testPublishJavaObjects", SimpleString.class);
+        TStream<SimpleString> subscribe = t.subscribe("testPublishJavaObjects", SimpleString.class);
         
         TStream<String> strings = StringStreams.toString(subscribe);  
 
