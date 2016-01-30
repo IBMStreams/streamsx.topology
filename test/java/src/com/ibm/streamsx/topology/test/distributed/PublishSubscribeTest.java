@@ -58,6 +58,33 @@ public class PublishSubscribeTest extends TestTopology {
     }
     
     @Test
+    public void testPublishStringAllowingFilters() throws Exception {
+        final Topology t = new Topology();
+        TStream<String> source = t.strings("325", "457", "9325");
+        
+        source = source.modify(new Delay<String>());
+        
+        source.publish("testPublishStringAllowingFilters", true);
+        
+        TStream<String> subscribe = t.subscribe("testPublishStringAllowingFilters", String.class);
+
+        completeAndValidate(subscribe, 20, "325", "457", "9325");
+    }
+    @Test
+    public void testPublishStringExplicitlyNotAllowingFilters() throws Exception {
+        final Topology t = new Topology();
+        TStream<String> source = t.strings("325", "457", "9325");
+        
+        source = source.modify(new Delay<String>());
+        
+        source.publish("testPublishStringExplicitlyNotAllowingFilters", false);
+        
+        TStream<String> subscribe = t.subscribe("testPublishStringExplicitlyNotAllowingFilters", String.class);
+
+        completeAndValidate(subscribe, 20, "325", "457", "9325");
+    }
+    
+    @Test
     public void testPublishStringMultipleTopics() throws Exception {
         final Topology t = new Topology();
         TStream<String> source = t.strings("325", "457", "9325");       

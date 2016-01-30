@@ -358,11 +358,16 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public void publish(String topic) {
+    	publish(topic, false);
+    }
+    
+    @Override
+    public void publish(String topic, boolean allowFilter) {
         
         if (JSONObject.class.equals(getTupleType())) {
             @SuppressWarnings("unchecked")
             TStream<JSONObject> json = (TStream<JSONObject>) this;
-            JSONStreams.toSPL(json).publish(topic);
+            JSONStreams.toSPL(json).publish(topic, allowFilter);
             return;
         }
         
@@ -371,11 +376,18 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         if (Schemas.usesDirectSchema(getTupleType())
                  || ((TStream<T>) this) instanceof SPLStream) {
             // Publish as a stream consumable by SPL & Java/Scala
+        	Map<String,Object> publishParms = new HashMap<>();
+        	publishParms.put("topic", topic);
+        	publishParms.put("allowFilter", allowFilter);
+        	
             op = builder().addSPLOperator("Publish",
                     "com.ibm.streamsx.topology.topic::Publish",
-                    singletonMap("topic", topic));
+                    publishParms);
  
         } else if (getTupleClass() != null){
+        	if (allowFilter)
+        		throw new IllegalStateException("A TStream with a tuple type that contains a generic or unknown type cannot be published allowing filters.");
+        	
             // Publish as a stream consumable only by Java/Scala
             Map<String,Object> params = new HashMap<>();
             params.put("topic", topic);

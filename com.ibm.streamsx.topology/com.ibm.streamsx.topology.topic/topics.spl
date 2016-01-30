@@ -5,13 +5,13 @@ namespace com.ibm.streamsx.topology.topic ;
  * applications to subscribe to the input stream, including
  * those written in different languages.
  *
- * When `allowFilter` is `true` then any matching [SubscribeFilter]
+ * When `allowFilter` is `true` then any matching [FilteredSubscribe]
  * operator invocation will push its filter into the application
  * invoking this operator. This optimizes network performance by only
  * sendinf tuples the subcriber is interested in, at the expense
  * of processing in the publishing application.
  *
- * When `allowFilter` is `false` then any matching [SubscribeFilter]
+ * When `allowFilter` is `false` then any matching [FilteredSubscribe]
  * operator invocations will execute its filter in its own application.
  *
  * See [namespace:com.ibm.streamsx.topology.topic] for details.
@@ -32,10 +32,9 @@ public composite Publish(input In )
                 param
                   properties :
                   {
-                    __spl_exportVersion=1,
-                    __spl_exportType = "TOPIC",
+                    __spl_exportType = "topic",
                     __spl_topic = $topic,
-                    __spl_allowFilter = $allowFilter
+                    __spl_allowFilter = $allowFilter ? "true" : "false"
                   };
                   allowFilter: $allowFilter;
 		}
@@ -64,11 +63,8 @@ public composite Subscribe(output Topic )
 			param
 				subscription : 
         // Applications compiled with version 1.1.3
-        (__spl_exportType == "topic" && __spl_topic == $topic )
-        ||
-        // Applications compiled with version >= 1.1.4
-        (__spl_exportType >= 1 && __spl_exportType == "TOPIC"
-                && __spl_topic == $topic )
+        // Applications compiled with version >= 1.3
+        __spl_exportType == "topic" && __spl_topic == $topic;
 	}
 }
 
@@ -84,7 +80,7 @@ public composite Subscribe(output Topic )
  * If a matching [Publish] operator allows filter expressions
  * then the expression is pushed to the publishing application.
  * Otherwise the filter expression is executed within this
- * application by this operator.
+ * application.
  * 
  * See [namespace:com.ibm.streamsx.topology.topic] for details.
  
@@ -93,7 +89,7 @@ public composite Subscribe(output Topic )
  * @param filter Filter expression.
  * @param streamType Type of output stream `Topic`.
 */
-public composite SubscribeWithFilter(output Topic )
+public composite FilteredSubscribe(output Topic )
 {
 	param		
 		expression<rstring> $topic ;
@@ -107,13 +103,9 @@ public composite SubscribeWithFilter(output Topic )
           subscription : 
         // Applications compiled with version 1.1.3
         // (no filtering supported at all)
-        (__spl_exportType == "topic" && __spl_topic == $topic )
-        ||
-        // Applications compiled with version >= 1.1.4
-        (__spl_exportType >= 1 && __spl_exportType == "TOPIC"
-                && __spl_allowFilter == false
-                && __spl_topic == $topic )
-	}
+        ((__spl_exportType == "topic" && __spl_topic == $topic )
+             && !(__spl_allowFilter == "true"));
+        }
 
         // Apply the filter on this side
         stream<$streamType> FilteredAfterImport = Filter(NotFiltered) {
@@ -126,10 +118,10 @@ public composite SubscribeWithFilter(output Topic )
         {	
         param
           subscription : 
-        // Applications compiled with version >= 1.1.4
-        (__spl_exportType >= 1 && __spl_exportType == "TOPIC"
-                && __spl_allowFilter == true
-                && __spl_topic == $topic )
+        // Applications compiled with version >= 1.2
+        (__spl_exportType == "topic"
+                && __spl_allowFilter == "true"
+                && __spl_topic == $topic ) ;
 	}
 
         // Only needed as you cannot merge two streams into
@@ -144,11 +136,10 @@ public composite SubscribeWithFilter(output Topic )
        __spl_exportType = "topic"
        __spl_topic = $topic
 *
-* 1.1.4
+* 1.3
 *   Publish: 
-        __spl_exportVersion=1,
-        __spl_exportType = "TOPIC",
+        __spl_exportType = "topic",
         __spl_topic = $topic,
-        __spl_allowFilter = $allowFilter
+        __spl_allowFilter = $allowFilter as an rstring
 *
 */
