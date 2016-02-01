@@ -1,0 +1,25 @@
+namespace com.ibm.streamsx.topology.pysamples.apps;
+
+use com.ibm.streamsx.topology.pysamples.positional::noop ;
+
+public composite NoopSample
+{
+	graph
+		stream<rstring msg> NS = Beacon()
+		{
+			param
+                                iterations: 5;
+                                period: 0.5;
+                        output NS:
+                            msg = "Hello" + (rstring) IterationCount();
+		}
+
+		stream<NS> NSPY = noop(NS)
+		{
+		}
+
+                () as Python = Custom(NSPY) {
+                 logic onTuple NSPY: println(msg);
+                }
+}
+

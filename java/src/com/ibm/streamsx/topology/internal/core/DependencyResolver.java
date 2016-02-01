@@ -80,10 +80,10 @@ public class DependencyResolver {
      */
     private final Map<Path,String> previouslyCopiedDependencies = new HashMap<>();
 
-    private Topology parentTopology;
+    private Topology topology;
 
     public DependencyResolver(Topology parentTopology) {
-        this.parentTopology = parentTopology;
+        this.topology = parentTopology;
     }
     
     public void addJarDependency(String location) throws IllegalArgumentException{
@@ -196,7 +196,7 @@ public class DependencyResolver {
             jars.add("impl/lib/" + jarName);	    
         }	
         
-        List<BOperator> ops = parentTopology.builder().getOps();
+        List<BOperator> ops = topology.builder().getOps();
         if(jars.size() != 0){
             for (BOperator op : ops) {
                 if (op instanceof BOperatorInvocation) {
@@ -279,18 +279,27 @@ public class DependencyResolver {
      */
     private void resolveFileDependency(Artifact a, Map<String, Object> config)
             throws IOException {
+    	
+    	JSONArray includes = (JSONArray) topology.builder().getConfig().get("includes");
+    	if (includes == null)
+    		topology.builder().getConfig().put("includes", includes = new JSONArray());    	
+    	
         final File dstDir = new File((String) (config
                 .get(ContextProperties.TOOLKIT_DIR)), a.dstDirName);
         File absFile = a.absPath.toFile();
         try {
-            if (absFile.isFile()) {
+        	JSONObject include = new JSONObject();
+        	include.put("source", a.absPath.toString());
+        	include.put("target", a.dstDirName);
+            if (false && absFile.isFile()) {
                 Files.copy(a.absPath, 
                         new File(dstDir, absFile.getName()).toPath(),
                         StandardCopyOption.REPLACE_EXISTING);
             }
-            else if (absFile.isDirectory()) {
+            else if (false && absFile.isDirectory()) {
                 copyDirectoryToDirectory(absFile, dstDir);
             }
+            includes.add(include);
         } catch (IOException e) {
             throw new IOException("Error copying file dependency "+ a.absPath + ": " + e, e);
         }
