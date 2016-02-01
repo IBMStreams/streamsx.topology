@@ -36,7 +36,7 @@ class TestTopologyMethods(unittest.TestCase):
      topo = Topology("test_TopologyIsolatedFilter")
      hw = topo.source(test_functions.hello_world)
      iso1 = hw.isolate()
-     hwf = iso1.filter(test_functions.filter);
+     hwf = iso1.filter(test_functions.filter)
      iso2 = hwf.isolate()
      iso2.sink(test_functions.check_hello_world_filter)
      streamsx.topology.context.submit("STANDALONE", topo.graph)
