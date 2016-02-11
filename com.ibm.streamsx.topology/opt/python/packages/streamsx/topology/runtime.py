@@ -17,7 +17,7 @@ def pickleReturn(function) :
     return _pickleReturn;
 
 # Given a function F return a function
-# that depickes the input and then calls F
+# that depickles the input and then calls F
 def depickleInput(function) :
     def _pickleReturn(v):
         return function(pickle.loads(v))

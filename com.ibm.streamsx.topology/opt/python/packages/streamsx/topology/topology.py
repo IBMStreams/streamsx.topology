@@ -70,3 +70,27 @@ class Stream(object):
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
+
+    def lowlatency(self):
+        """
+	      The function is guaranteed to run in the same process as the
+        upstream Stream function. All streams that are created from the returned stream 
+        are also guaranteed to run in the same process until endlowlatency() 
+        is called.
+        """
+        op = self.topology.graph.addOperator("$LowLatency$")
+        op.addRegion()
+        op.addInputPort(outputPort=self.oport)
+        oport = op.addOutputPort()
+        return Stream(self.topology, oport)
+
+    def endlowlatency(self):
+        """
+        Return a Stream that is no longer guaranteed to run in the same process
+        as the calling stream. 
+        """
+        op = self.topology.graph.addOperator("$EndLowLatency$")
+        op.addInputPort(outputPort=self.oport)
+        oport = op.addOutputPort()
+        return Stream(self.topology, oport)
+
