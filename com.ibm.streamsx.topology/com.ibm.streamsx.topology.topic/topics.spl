@@ -7,16 +7,25 @@ namespace com.ibm.streamsx.topology.topic ;
  * See [namespace:com.ibm.streamsx.topology.topic] for details.
  * @input In Stream to be published as a topic.
  * @param topic Topic to publish stream to.
+ * @param allowFilter True if filters can be pushed from
+ *  subscribing SPL applications. Optional, defaults to `false`.
 */
 public composite Publish(input In )
 {
 	param
 		expression<rstring> $topic ;
+                expression<boolean> $allowFilter : false;
 	graph
 		() as ExportTopic = Export(In)
 		{
-			param
-				properties : { __spl_exportType = "topic", __spl_topic = $topic } ;
+                param
+                  properties :
+                  {
+                     __spl_exportType = "topic",
+                     __spl_topic = $topic,
+                     __spl_allowFilter = $allowFilter ? "true" : "false"
+                  };
+                  allowFilter: $allowFilter;
 		}
 
 }

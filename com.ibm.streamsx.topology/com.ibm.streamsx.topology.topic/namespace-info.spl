@@ -68,11 +68,11 @@
  *   * SPL : [com.ibm.streamsx.topology::Json]  
  *   * Java: `TStream<JSONObject>`.
        See [../../javadoc/com/ibm/streamsx/topology/json/package-summary.html#package_description|com.ibm.streamsx.topology.json].
- *   * Scala: `TStream[JSONObject]`
+ *   * Scala: `TStream\[JSONObject\]`
  * * String tuples
  *   * SPL : [com.ibm.streamsx.topology::String]
  *   * Java: `TStream<String>`
- *   * Scala: `TStream[String]`
+ *   * Scala: `TStream\[String\]`
  * * XML tuples
  *   * SPL : [com.ibm.streamsx.topology::XML]
  *   * Java: `TStream<com.ibm.streams.operator.types.XML>`
@@ -80,7 +80,7 @@
  * * Binary tuples
  *   * SPL : [com.ibm.streamsx.topology::Blob]
  *   * Java: `TStream<com.ibm.streams.operator.types.Blob>`
- *   * Scala: `TStream[com.ibm.streams.operator.types.Blob]`
+ *   * Scala: `TStream\[com.ibm.streams.operator.types.Blob\]`
  *
  * + Relationship to Export & Import
  * Publish-subscribe is a simplification of IBM Streams `Export` and `Import`.
@@ -91,9 +91,10 @@
  * # Details
  * [Publish] is a composite operator that invokes an `spl.adapter::Export` operator
  * using these stream properties:
- * * `__spl_exportType` : Set to the literal `topic` for SPL publish, `topic.java` for publishing by a Java class.
- * * `__spl_topic` : Set to the topic to publish to.
- * * `__spl_class` : Set to the Java class of the stream when `__spl_exportType` is `topic.java`, otherwise unset.
+ * * `rstring __spl_exportType` : Set to the literal `topic` for SPL publish, `topic.java` for publishing by a Java class.
+ * * `rstring __spl_topic` : Set to the topic to publish to.
+ * * `rstring __spl_allowFilter` : Set to `true` if the [Publish] operator allows filters, otherwise `false`. Earlier releases have the value missing indicating filters are allowed.
+ * * `rstring __spl_class` : Set to the Java class of the stream when `__spl_exportType` is `topic.java`, otherwise unset.
  *
  * [Subscribe] is a composite operator that invokes an `spl.adapter::Import` operator
  * using a subscription to match the published topics.
