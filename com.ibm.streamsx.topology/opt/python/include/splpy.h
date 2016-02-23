@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <memory>
 
 #include <SPL/Runtime/Operator/Operator.h>
 #include <SPL/Runtime/Operator/OperatorContext.h>
@@ -139,6 +140,34 @@ namespace streamsx {
       Py_DECREF(pyReturnVar);
       PyGILState_Release(gstate);
 
+      return ret;
+    }
+    
+    static std::auto_ptr<SPL::blob> pyTupleTransform(PyObject * function, PyObject * pickleObjectFunction, SPL::blob & pyblob) {
+
+      std::auto_ptr<SPL::blob> ret;
+      PyGILState_STATE gstate;
+      gstate = PyGILState_Ensure();
+
+      PyObject * pyBytes  = pyBlobToBytes(pyblob);
+      PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
+
+      if (pyReturnVar == Py_None){
+        Py_DECREF(pyReturnVar);
+        PyGILState_Release(gstate);
+        return ret;
+      } else if(pyReturnVar == 0){
+        PyErr_Print();
+        PyGILState_Release(gstate);
+        throw;
+      } 
+
+      PyObject * pyPickledReturnVar = pyTupleFunc(pickleObjectFunction, pyReturnVar);
+      long int size = PyBytes_Size(pyPickledReturnVar);
+      char * bytes = PyBytes_AsString(pyPickledReturnVar);          
+      ret.reset(new SPL::blob((const unsigned char *)bytes, size));
+      Py_DECREF(pyPickledReturnVar);
+      PyGILState_Release(gstate);
       return ret;
     }
 

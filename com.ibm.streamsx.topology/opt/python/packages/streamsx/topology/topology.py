@@ -60,6 +60,19 @@ class Stream(object):
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
 
+    def transform(self, func):
+        """
+        Transforms tuples from a stream using the supplied function.
+        For each tuple on this stream, the returned stream will contain a tuple
+        that is the result of the function when the return is not None.
+        If the function returns None then no tuple is submitted to the returned 
+        stream.
+        """
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionTransform", func)
+        op.addInputPort(outputPort=self.oport)
+        oport = op.addOutputPort()
+        return Stream(self.topology, oport)
+    
     def isolate(self):
         """
         Guarantees that the upstream operation will run in a separate process from the downstream operation

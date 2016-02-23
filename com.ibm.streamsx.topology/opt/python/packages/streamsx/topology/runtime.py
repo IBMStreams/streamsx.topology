@@ -10,6 +10,9 @@ def __splpy_addDirToPath(dir):
 def setupOperator(dir):
     pydir = os.path.join(dir, 'opt', 'python')
     __splpy_addDirToPath(os.path.join(pydir, 'modules'))
+
+def pickleObject(v):
+    return pickle.dumps(v)
      
 def pickleReturn(function) :
     def _pickleReturn(v):

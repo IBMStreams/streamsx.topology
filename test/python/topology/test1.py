@@ -49,7 +49,23 @@ class TestTopologyMethods(unittest.TestCase):
      hw = topo.subscribe("python.test.topic1", schema.CommonSchema.String)
      hw.sink(test_functions.check_hello_world)
      #streamsx.topology.context.submit("BUNDLE", topo.graph)
-
+     
+  def test_TopologyTransform(self):
+     topo = Topology("test_TopologyTransform")
+     source = topo.source(test_functions.int_strings_transform)
+     i1 = source.transform(test_functions.string_to_int)
+     i2 = i1.transform(test_functions.add17)
+     i2.sink(test_functions.check_int_strings_transform)
+     streamsx.topology.context.submit("STANDALONE", topo.graph)
+     
+  def test_TopologyTransformWithDrop(self):
+     topo = Topology("test_TopologyTransformWithDrop")
+     source = topo.source(test_functions.int_strings_transform_with_drop)
+     i1 = source.transform(test_functions.string_to_int_except68)
+     i2 = i1.transform(test_functions.add17)
+     i2.sink(test_functions.check_int_strings_transform_with_drop)
+     streamsx.topology.context.submit("STANDALONE", topo.graph)
+     
 if __name__ == '__main__':
     unittest.main()
 
