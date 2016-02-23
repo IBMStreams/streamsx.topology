@@ -11,7 +11,9 @@
     <ant dir="java" inheritAll="true"/>
     <ant dir="samples/java/functional" inheritAll="true"/>
     <ant dir="toolkit" inheritAll="true"/>
+    <ant dir="samples/python" inheritAll="true"/>
     <ant dir="test/java" inheritAll="true"/>
+    <ant dir="test/python" inheritAll="true"/>
   </target>
 
   <target name="clean" >
@@ -83,7 +85,7 @@
       <tstamp/>
       <property name="release.dir" location="${release.base}" />
       <mkdir dir="${release.dir}" />
-      <property name="releasefilename" value="${release.dir}/streamsx.topology-v1.1-${DSTAMP}-${TSTAMP}.tgz"/>
+      <property name="releasefilename" value="${release.dir}/streamsx.topology-v1.2-${DSTAMP}-${TSTAMP}.tgz"/>
       <tar compression="gzip" longfile="gnu" destfile="${releasefilename}"
          basedir="${basedir}"
          includes="com.ibm.streamsx.topology/** samples/**"

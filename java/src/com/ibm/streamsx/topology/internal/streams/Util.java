@@ -8,6 +8,8 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import com.ibm.json.java.JSONObject;
+
 public class Util {
     public static final String STREAMS_DOMAIN_ID = "STREAMS_DOMAIN_ID";
     public static final String STREAMS_INSTANCE_ID = "STREAMS_INSTANCE_ID";
@@ -38,11 +40,11 @@ public class Util {
      * Get a value for Streams install directory, using the value from
      * the config, defaulting to $STREAMS_INSTALL.
      */
-    public static String getStreamsInstall(Map<String,Object> config, String installKey) {
-        if (config == null || !config.containsKey(installKey))
+    public static String getStreamsInstall(JSONObject deployConfig, String installKey) {
+        if (deployConfig == null || !deployConfig.containsKey(installKey))
             return getStreamsInstall();
         
-        return verifyStreamsInstall(config.get(installKey).toString());
+        return verifyStreamsInstall(deployConfig.get(installKey).toString());
     }
     
     /**
