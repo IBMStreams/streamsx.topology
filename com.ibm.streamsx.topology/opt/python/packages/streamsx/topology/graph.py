@@ -17,11 +17,15 @@ class SPLGraph(object):
         self.operators = []
         self.modules = set()
 
-    def addOperator(self, kind, function=None, name=None):
+    def addOperator(self, kind, function=None, name=None, pwidth=None):
         if name is None:
             name = self.name + "_OP"+str(len(self.operators))
-        if (kind.startswith("$")):
-            op = Marker(len(self.operators), kind, name, {}, self)
+        if(kind.startswith("$")):
+            if(kind.startswith("$Parallel$")):
+                op = SPLInvocation(len(self.operators), kind, function, name, {}, self)             
+            else:    
+                op = Marker(len(self.operators), kind, name, {}, self)
+                           
         else:
             op = SPLInvocation(len(self.operators), kind, function, name, {}, self)
         self.operators.append(op)
@@ -71,10 +75,10 @@ class SPLInvocation(object):
         self.inputPorts = []
         self.outputPorts = []
 
-    def addOutputPort(self, name=None, inputPort=None, schema= CommonSchema.Python):
+    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python):
         if name is None:
             name = self.name + "_OUT"+str(len(self.outputPorts))
-        oport = OPort(name, self, len(self.outputPorts), schema)
+        oport = OPort(name, self, len(self.outputPorts), schema, oWidth)
         self.outputPorts.append(oport)
 
         if not inputPort is None:
@@ -184,11 +188,12 @@ class IPort(object):
         return _iport
 
 class OPort(object):
-    def __init__(self, name, operator, index, schema):
+    def __init__(self, name, operator, index, schema, width=None):
         self.name = name
         self.operator = operator
         self.schema = schema
         self.index = index
+        self.width = width
 
         self.inputPorts = []
 
@@ -207,6 +212,8 @@ class OPort(object):
         _oport["type"] = self.schema.schema()
         _oport["name"] = self.name
         _oport["connections"] = [port.name for port in self.inputPorts]
+        if not self.width is None:
+            _oport["width"] = int(self.width)
         return _oport
 
 class Marker(SPLInvocation):
@@ -221,6 +228,7 @@ class Marker(SPLInvocation):
 
         self.inputPorts = []
         self.outputPorts = []
+                   
 
     def generateSPLOperator(self):
         _op = {}

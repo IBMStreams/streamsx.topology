@@ -34,7 +34,8 @@ class Topology(object):
         oport = op.addOutputPort(schema=schema)
         topicParam = {"topic": [topic]}
         op.setParameters(topicParam)
-        return Stream(self, oport)
+        return Stream(self, oport)    
+    
 
 class Stream(object):
     """
@@ -159,4 +160,45 @@ class Stream(object):
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
+    
+    def parallel(self, width, func=None):
+        """
+        Marks operator as parallel output with width
+        :param: width
+        :returns: Stream
+        """
+        iop = self.isolate()
+               
+        op2 = self.topology.graph.addOperator("$Parallel$",func)
+        # addRegions()
+        op2.addInputPort(outputPort=iop.getOport())
+        oport = op2.addOutputPort(width)
+        return Stream(self.topology, oport)
 
+    def endParallel(self):
+        """
+        Marks end of operators as parallel output with width
+        :returns: Stream
+        """
+        op = self.topology.graph.addOperator("$EndParallel$")
+        # pop or addRegions()
+        op.addInputPort(outputPort=self.oport)
+        oport = op.addOutputPort()
+        endP = Stream(self.topology, oport)
+        return endP.isolate()
+
+    def union(self, streamList, schema=None):
+        """
+        The Union operator merges the streams that are connected to 
+        multiple input ports into a single stream.
+        :returns Stream
+        """        
+        op = self.topology.graph.addOperator("$Union$")
+        op.addInputPort(outputPort=self.getOport())
+        for stream in streamList:
+            op.addInputPort(outputPort=stream.getOport())
+        oport = op.addOutputPort()
+        return Stream(self.topology, oport)
+    
+    def getOport(self):
+        return self.oport

@@ -93,8 +93,12 @@ class OperatorGenerator {
         if (parallel != null && parallel) {
             sb.append("@parallel(width=");
             Object width = op.get("width");
-            if (width instanceof Integer)
+            if (width instanceof Integer) {
                 sb.append(Integer.toString((int) width));
+        	}
+        	else if (width instanceof Long) {
+            	sb.append(Long.toString((long) width));
+            }
             else {
                 JSONObject jo = (JSONObject) width;
                 String jsonType = (String) jo.get("type");
