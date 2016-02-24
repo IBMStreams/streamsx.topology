@@ -69,8 +69,6 @@ class SPLInvocation(object):
         self.inputPorts = []
         self.outputPorts = []
 
-        self.regions = []
-
     def addOutputPort(self, name=None, inputPort=None, schema= CommonSchema.Python):
         if name is None:
             name = self.name + "_OUT"+str(len(self.outputPorts))
@@ -93,19 +91,6 @@ class SPLInvocation(object):
                 for innerParam in param:
                     self.params[param].append(innerParam)
 
-    def getRegions(self):
-       return self.regions
-
-    def copyRegions(self, otherOperator):
-       _regions = otherOperator.getRegions() 
-       
-       for region in _regions:
-          self.regions.append(region) 
-       
-       # TODO should we pop the last region
-       # if (self.kind == "$EndLowLatency$"):
-       #     self.regions.pop()
-           
     def addInputPort(self, name=None, outputPort=None):
         if name is None:
             name = self.name + "_IN"+ str(len(self.inputPorts))
@@ -135,9 +120,6 @@ class SPLInvocation(object):
         _op["outputs"] = _outputs
         _op["inputs"] = _inputs
         _op["config"] = {}
-
-        if (self.regions.__len__()):
-            _op["regions"] = self.regions
 
         _params = {}
         for param in self.params:
@@ -206,8 +188,6 @@ class OPort(object):
         if not self in iport.outputPorts:
             iport.connect(self)
 
-        iport.getOperator().copyRegions(self.operator)
-
     def getOperator(self):
         return self.operator
 
@@ -230,8 +210,6 @@ class Marker(SPLInvocation):
 
         self.inputPorts = []
         self.outputPorts = []
-
-        self.regions = []
 
     def generateSPLOperator(self):
         _op = {}
@@ -256,11 +234,5 @@ class Marker(SPLInvocation):
         _op["inputs"] = _inputs
         _op["config"] = {}
 
-        if (len(self.regions)):
-            _op["regions"] = self.regions
-
         return _op
-
-    def addRegion(self):
-       self.regions.append(self.name)
 

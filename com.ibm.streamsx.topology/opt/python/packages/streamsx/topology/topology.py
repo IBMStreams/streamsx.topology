@@ -79,7 +79,6 @@ class Stream(object):
         is called.
         """
         op = self.topology.graph.addOperator("$LowLatency$")
-        op.addRegion()
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
