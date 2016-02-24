@@ -20,12 +20,8 @@ class SPLGraph(object):
     def addOperator(self, kind, function=None, name=None, pwidth=None):
         if name is None:
             name = self.name + "_OP"+str(len(self.operators))
-        if(kind.startswith("$")):
-            if(kind.startswith("$Parallel$")):
-                op = SPLInvocation(len(self.operators), kind, function, name, {}, self)             
-            else:    
-                op = Marker(len(self.operators), kind, name, {}, self)
-                           
+        if(kind.startswith("$")):    
+            op = Marker(len(self.operators), kind, name, {}, self)                           
         else:
             op = SPLInvocation(len(self.operators), kind, function, name, {}, self)
         self.operators.append(op)
