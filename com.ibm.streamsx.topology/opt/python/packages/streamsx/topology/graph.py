@@ -163,6 +163,9 @@ class IPort(object):
         if not self in oport.inputPorts:
             oport.connect(self)
 
+    def getOperator(self):
+        return self.operator
+
     def getSPLInputPort(self):
         _iport = {}
         _iport["name"] = self.name
@@ -184,6 +187,9 @@ class OPort(object):
         
         if not self in iport.outputPorts:
             iport.connect(self)
+
+    def getOperator(self):
+        return self.operator
 
     def getSPLOutputPort(self):
         _oport = {}
@@ -230,4 +236,3 @@ class Marker(SPLInvocation):
 
         return _op
 
-    

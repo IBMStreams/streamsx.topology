@@ -44,6 +44,17 @@ class TestTopologyMethods(unittest.TestCase):
      # be sumitted to a streams instance and run as 3 PEs
      # streamsx.topology.context.submit("BUNDLE", topo.graph)
 
+  def test_TopologyLowLatency(self):
+     topo = Topology("test_TopologyLowLatency")
+     hw = topo.source(test_functions.hello_world)
+     low1 = hw.lowlatency()
+     hwf1 = low1.filter(test_functions.filter)
+     hwf2 = hwf1.filter(test_functions.filter)
+     elow1 = hwf2.endlowlatency()
+     hwf3 = elow1.filter(test_functions.filter)
+     hwf3.sink(test_functions.check_hello_world_filter)
+     streamsx.topology.context.submit("BUNDLE", topo.graph)
+
   def test_TopologyStringSubscribe(self):
      topo = Topology("test_TopologyStringSubscribe")
      hw = topo.subscribe("python.test.topic1", schema.CommonSchema.String)
