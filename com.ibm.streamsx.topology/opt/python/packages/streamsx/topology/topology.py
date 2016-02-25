@@ -161,7 +161,7 @@ class Stream(object):
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
     
-    def parallel(self, width, func=None):
+    def parallel(self, width):
         """
         Marks operator as parallel output with width
         :param: width
@@ -169,8 +169,7 @@ class Stream(object):
         """
         iop = self.isolate()
                
-        op2 = self.topology.graph.addOperator("$Parallel$",func)
-        # addRegions()
+        op2 = self.topology.graph.addOperator("$Parallel$")
         op2.addInputPort(outputPort=iop.getOport())
         oport = op2.addOutputPort(width)
         return Stream(self.topology, oport)
@@ -181,21 +180,25 @@ class Stream(object):
         :returns: Stream
         """
         op = self.topology.graph.addOperator("$EndParallel$")
-        # pop or addRegions()
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         endP = Stream(self.topology, oport)
         return endP.isolate()
 
-    def union(self, streamList, schema=None):
+    def union(self, streamSet):
         """
-        The Union operator merges the streams that are connected to 
-        multiple input ports into a single stream.
+        The Union operator merges the outputs of the streams in the set 
+        into a single stream.
+        :param set of streams outputs to merge
         :returns Stream
-        """        
+        """
+        if(not isinstance(streamSet,set)) :
+            raise TypeError("The union operator parameter must be a set object")
+        if(len(streamSet) == 0):
+            return self        
         op = self.topology.graph.addOperator("$Union$")
         op.addInputPort(outputPort=self.getOport())
-        for stream in streamList:
+        for stream in streamSet:
             op.addInputPort(outputPort=stream.getOport())
         oport = op.addOutputPort()
         return Stream(self.topology, oport)

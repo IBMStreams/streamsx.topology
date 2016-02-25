@@ -96,8 +96,8 @@ class OperatorGenerator {
             if (width instanceof Integer) {
                 sb.append(Integer.toString((int) width));
         	}
-        	else if (width instanceof Long) {
-            	sb.append(Long.toString((long) width));
+        	else if (width instanceof Long) {        		
+            	sb.append(Integer.toString(((Long)width).intValue()));
             }
             else {
                 JSONObject jo = (JSONObject) width;
