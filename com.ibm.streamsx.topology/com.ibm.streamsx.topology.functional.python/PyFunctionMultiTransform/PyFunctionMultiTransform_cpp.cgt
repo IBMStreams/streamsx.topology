@@ -156,9 +156,11 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     PyObject * pyPickledReturnVar = PyObject_CallObject(pyIterator, NULL);
     if (pyPickledReturnVar == Py_None){
       Py_DECREF(pyPickledReturnVar);
+      Py_DECREF(pyIterator);
       break;
     } else if(pyReturnVar == 0){
       PyErr_Print();
+      Py_DECREF(pyIterator);
       PyGILState_Release(gstate);
       throw;
     }
