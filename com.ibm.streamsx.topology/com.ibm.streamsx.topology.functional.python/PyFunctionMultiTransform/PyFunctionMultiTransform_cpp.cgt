@@ -158,7 +158,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
       Py_DECREF(pyPickledReturnVar);
       Py_DECREF(pyIterator);
       break;
-    } else if(pyReturnVar == 0){
+    } else if(pyPickledReturnVar == 0){
       PyErr_Print();
       Py_DECREF(pyIterator);
       PyGILState_Release(gstate);
