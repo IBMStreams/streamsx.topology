@@ -27,7 +27,7 @@ in other languages.
 
 
     </description>
-    <version>1.1.3</version>
+    <version>1.3.0.alpha</version>
     <requiredProductVersion>4.0.0.0</requiredProductVersion>
     </identity>
   <dependencies/>
