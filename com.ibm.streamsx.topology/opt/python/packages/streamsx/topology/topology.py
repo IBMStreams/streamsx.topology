@@ -76,11 +76,12 @@ class Stream(object):
     def multiTransform(self, func):
         """
         Transforms each tuple from this stream into 0 or more tuples using the supplied function.
-        For each tuple on this stream, the returned stream will contain all non-None tuples in
-        the iterator that is the result of the supplied function.
-        Tuples will be added to the returned stream in the order the iterator
+        The supplied function must return an iterable, otherwise a TypeError is raised. 
+        For each tuple on this stream, the returned stream will contain all non-None tuples from
+        the iterable.
+        Tuples will be added to the returned stream in the order the iterable
         returns them.
-        If the return is None or an empty iterator then no tuples are added to
+        If the return is None or an empty iterable then no tuples are added to
         the returned stream.
         """     
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionMultiTransform", func)

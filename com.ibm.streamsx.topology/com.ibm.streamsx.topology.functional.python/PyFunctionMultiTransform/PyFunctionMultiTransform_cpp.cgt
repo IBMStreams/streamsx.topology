@@ -60,22 +60,16 @@ MY_OPERATOR::MY_OPERATOR()
     PyObject * appFunction = 
       streamsx::topology::Splpy::loadFunction(<%=$module%>, <%=$functionName%>);
 
+    iterableObjectFunction_ = NULL;
+    
 <% if ($pystyle eq 'python') { %>
 
-    PyObject * depickleInput = 
-      streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInput");
-
-    PyObject * funcArg = PyTuple_New(1);
-    PyTuple_SetItem(funcArg, 0, appFunction);
-
-    function_ = PyObject_CallObject(depickleInput, funcArg);
-    // TODO error check
-    Py_DECREF(depickleInput);
-    Py_DECREF(funcArg);
-    
-    iterableObjectFunction_ = 
+    PyObject * iterableObjectFunction = 
       streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "iterableObject");
-
+      
+    function_ = appFunction;
+    iterableObjectFunction_ = iterableObjectFunction;
+    
 <%}%>
 <% if ($pystyle eq 'string') { %>
     function_ = appFunction;
@@ -130,27 +124,28 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   SPL::rstring value = ip.get_string();
 <%}%>
 
-  std::auto_ptr<SPL::blob> pBlob;
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
 
-  // invoke python application function and get return value
+  // convert spl blob to bytes
   PyObject * pyBytes  = streamsx::topology::Splpy::pyBlobToBytes(value);
-  PyObject * pyReturnVar = streamsx::topology::Splpy::pyTupleFunc(function_, pyBytes);
 
-  if (pyReturnVar == Py_None){
-    Py_DECREF(pyReturnVar);
-    PyGILState_Release(gstate);
-    return;
-  } else if(pyReturnVar == 0){
+  // invoke python application function and get an iterator of pickled values
+  PyObject * funcArg = PyTuple_New(2);
+  // first argument is application function
+  Py_INCREF(function_);
+  PyTuple_SetItem(funcArg, 0, function_);
+  // second argument is spl blob in bytes
+  PyTuple_SetItem(funcArg, 1, pyBytes);
+  PyObject * pyIterator = PyObject_CallObject(iterableObjectFunction_, funcArg);
+  Py_DECREF(funcArg);
+  if (pyIterator == 0) {
     PyErr_Print();
     PyGILState_Release(gstate);
     throw;
-  } 
-
-  // change python return value into an iterator function
-  PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(iterableObjectFunction_, pyReturnVar);
+  }
   
+  std::vector<OPort0Type> output_tuples; 
   while (!getPE().getShutdownRequested()) {
     // call next() on the iterator, and get the pickled return value
     PyObject * pyPickledReturnVar = PyObject_CallObject(pyIterator, NULL);
@@ -165,19 +160,23 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
       throw;
     }
 
-    // construct spl blob
+    // construct spl blob and tuple from pickled return value
     long int size = PyBytes_Size(pyPickledReturnVar);
-    char * bytes = PyBytes_AsString(pyPickledReturnVar);          
-    pBlob.reset(new SPL::blob((const unsigned char *)bytes, size));
-    Py_DECREF(pyPickledReturnVar);
-            
-    // submit new tuple
-    OPort0Type otuple(*pBlob);
-    submit(otuple, 0);
+    char * bytes = PyBytes_AsString(pyPickledReturnVar);
+    Py_DECREF(pyPickledReturnVar); 
+    SPL::blob serializedObject((const unsigned char *)bytes, size);     
+    OPort0Type otuple(serializedObject);
+    output_tuples.push_back(otuple);
+   
   }
   
   PyGILState_Release(gstate);
-
+  
+  // submit tuples
+  for(int i = 0; i < output_tuples.size(); i++) {
+    submit(output_tuples[i], 0);
+  } 
+  
 }
 
 // Punctuation processing

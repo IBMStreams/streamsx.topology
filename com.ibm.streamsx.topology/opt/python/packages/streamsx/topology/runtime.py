@@ -43,12 +43,16 @@ def iterableSource(function) :
        return None
   return _sourceIterator
 
-# Given an iterable,
+# Given a function and tuple argument
+# that returns an iterable,
 # return a function that can be called
 # repeatedly by an operator returning
 # the next tuple in its pickled form
-def iterableObject(v) :
-   iterator = iter(v)
+def iterableObject(function, v) :
+   appRetVal = function(pickle.loads(v))
+   if appRetVal is None:
+      appRetVal = []
+   iterator = iter(appRetVal)
    def _iterableObject():
       try:
          while True:
