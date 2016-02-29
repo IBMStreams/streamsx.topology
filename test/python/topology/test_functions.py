@@ -93,7 +93,7 @@ def strings_multi_transform():
 global expected_strings_multi_transform
 expected_strings_multi_transform = ["mary", "had", "a", "little", "lamb", "its", "fleece", "was", "white", "as", "snow"]
 
-def splitWords(t):
+def split_words(t):
    return t.split()
  
 def check_strings_multi_transform(t):

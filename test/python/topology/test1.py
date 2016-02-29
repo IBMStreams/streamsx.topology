@@ -80,7 +80,7 @@ class TestTopologyMethods(unittest.TestCase):
   def test_TopologyMultiTransform(self):
       topo = Topology("test_TopologyMultiTransform")
       source = topo.source(test_functions.strings_multi_transform)
-      i1 = source.multiTransform(test_functions.splitWords)
+      i1 = source.multi_transform(test_functions.split_words)
       i1.sink(test_functions.check_strings_multi_transform)
       streamsx.topology.context.submit("STANDALONE", topo.graph)
          

@@ -73,7 +73,7 @@ class Stream(object):
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
      
-    def multiTransform(self, func):
+    def multi_transform(self, func):
         """
         Transforms each tuple from this stream into 0 or more tuples using the supplied function.
         The supplied function must return an iterable, otherwise a TypeError is raised. 
