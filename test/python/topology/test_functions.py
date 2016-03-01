@@ -86,4 +86,22 @@ def check_int_strings_transform_with_drop(t):
       _hwcount += 1
       return None
    raise AssertionError() 
+ 
+def strings_multi_transform():
+   return ["mary had a little lamb", "its fleece was white as snow"]
+   
+global expected_strings_multi_transform
+expected_strings_multi_transform = ["mary", "had", "a", "little", "lamb", "its", "fleece", "was", "white", "as", "snow"]
 
+def split_words(t):
+   return t.split()
+ 
+def check_strings_multi_transform(t):
+   print("TUPLE", t)
+   global _hwcount
+   assert (_hwcount < len(expected_strings_multi_transform)), \
+      ("Expected index=" + str(_hwcount) + " < " + str(len(expected_strings_multi_transform)))
+   assert (t == expected_strings_multi_transform[_hwcount]), \
+      ("Expected=" + expected_strings_multi_transform[_hwcount] +  ", actual=" + str(t))
+   _hwcount += 1
+   

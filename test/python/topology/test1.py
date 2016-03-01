@@ -77,6 +77,13 @@ class TestTopologyMethods(unittest.TestCase):
      i2.sink(test_functions.check_int_strings_transform_with_drop)
      streamsx.topology.context.submit("STANDALONE", topo.graph)
      
+  def test_TopologyMultiTransform(self):
+      topo = Topology("test_TopologyMultiTransform")
+      source = topo.source(test_functions.strings_multi_transform)
+      i1 = source.multi_transform(test_functions.split_words)
+      i1.sink(test_functions.check_strings_multi_transform)
+      streamsx.topology.context.submit("STANDALONE", topo.graph)
+         
 if __name__ == '__main__':
     unittest.main()
 

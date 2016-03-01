@@ -62,13 +62,29 @@ class Stream(object):
 
     def transform(self, func):
         """
-        Transforms tuples from a stream using the supplied function.
+        Transforms each tuple from this stream into 0 or 1 tuples using the supplied function.
         For each tuple on this stream, the returned stream will contain a tuple
         that is the result of the function when the return is not None.
         If the function returns None then no tuple is submitted to the returned 
         stream.
         """
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionTransform", func)
+        op.addInputPort(outputPort=self.oport)
+        oport = op.addOutputPort()
+        return Stream(self.topology, oport)
+     
+    def multi_transform(self, func):
+        """
+        Transforms each tuple from this stream into 0 or more tuples using the supplied function.
+        The supplied function must return an iterable, otherwise a TypeError is raised. 
+        For each tuple on this stream, the returned stream will contain all non-None tuples from
+        the iterable.
+        Tuples will be added to the returned stream in the order the iterable
+        returns them.
+        If the return is None or an empty iterable then no tuples are added to
+        the returned stream.
+        """     
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionMultiTransform", func)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
