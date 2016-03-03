@@ -1,5 +1,6 @@
 import os
 import pickle
+import base64
 import sys
 
 def __splpy_addDirToPath(dir):
@@ -22,11 +23,19 @@ def pickleReturn(function) :
 # Given a function F return a function
 # that depickles the input and then calls F
 def depickleInput(function) :
-    def _pickleReturn(v):
+    def _depickleInput(v):
         return function(pickle.loads(v))
-    return _pickleReturn
+    return _depickleInput
 
-
+# Given a callable object F that is pickled and 
+# base64 encoded, return a function that
+# depickles the input and then calls F
+def depickleInputForCallable(serializedCallable) :
+    callableObject = pickle.loads(base64.b64decode(serializedCallable))
+    def _depickleInputForCallable(v):
+        return callableObject(pickle.loads(v))
+    return _depickleInputForCallable
+ 
 # Given a function that returns an iterable
 # return a function that can be called
 # repeatably by a source operator returning
@@ -48,7 +57,9 @@ def iterableSource(function) :
 # return a function that can be called
 # repeatedly by an operator returning
 # the next tuple in its pickled form
-def iterableObject(function, v) :
+def iterableObject(function, v, isInputCallableClass) :
+   if isInputCallableClass:
+      function = pickle.loads(base64.b64decode(function))
    appRetVal = function(pickle.loads(v))
    if appRetVal is None:
       appRetVal = []

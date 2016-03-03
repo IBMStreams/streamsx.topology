@@ -120,6 +120,16 @@ namespace streamsx {
       PyGILState_Release(gstate);
 
     }
+    
+    // prints a string representation of the PyObject for debugging purposes
+    static void printPyObject(PyObject * pyObject) {
+      PyObject* pyRepr = PyObject_Repr(pyObject);
+      PyObject* pyStrBytes = PyUnicode_AsUTF8String(pyRepr);
+      const char* s = PyBytes_AsString(pyStrBytes);
+      std::cout << "pyObject=" << s << std::endl;
+      Py_DECREF(pyStrBytes);
+      Py_DECREF(pyRepr);
+    }
 
     static int pyTupleFilter(PyObject * function, SPL::blob & pyblob) {
 
@@ -149,7 +159,9 @@ namespace streamsx {
       PyGILState_STATE gstate;
       gstate = PyGILState_Ensure();
 
+      // convert spl blob to bytes
       PyObject * pyBytes  = pyBlobToBytes(pyblob);
+      // invoke python nested function that calls the application function
       PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
 
       if (pyReturnVar == Py_None){
@@ -162,7 +174,16 @@ namespace streamsx {
         throw;
       } 
 
+      // invoke python utliity function that pickles the return value from the
+      // application function
       PyObject * pyPickledReturnVar = pyTupleFunc(pickleObjectFunction, pyReturnVar);
+      if (pyPickledReturnVar == 0){
+        PyErr_Print();
+        PyGILState_Release(gstate);
+        throw;
+      }
+      
+       // construct spl blob from pickled return value
       long int size = PyBytes_Size(pyPickledReturnVar);
       char * bytes = PyBytes_AsString(pyPickledReturnVar);          
       ret.reset(new SPL::blob((const unsigned char *)bytes, size));

@@ -40,7 +40,7 @@
       <allowAny>false</allowAny>
       <parameter>
         <name>functionModule</name>
-        <description>Function's module </description>
+        <description>Function or callable class's module</description>
         <optional>false</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
@@ -49,8 +49,17 @@
       </parameter>
       <parameter>
         <name>functionName</name>
-        <description>Function's name </description>
+        <description>Function or callable class's name</description>
         <optional>false</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>serializedClass</name>
+        <description>Serialized representation of a callable class</description>
+        <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
         <type>rstring</type>

@@ -22,11 +22,13 @@
  } elsif ($attr->getName() eq 'jsonString') {
     $pystyle = 'json';
  }
+ my $serializedClass = $model->getParameterByName("serializedClass");
+ $serializedClass = $serializedClass->getValueAt(0)->getCppExpression() . '.c_str()' if $serializedClass;
 %>
 
 // Constructor
-MY_OPERATOR::MY_OPERATOR()
-{
+MY_OPERATOR::MY_OPERATOR() : function_(NULL), iterableObjectFunction_(NULL)
+{ 
   std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
   std::string streamsxDir = tkDir + "/opt/python/packages/streamsx/topology";
   std::string splpySetup = streamsxDir + "/splpy_setup.py";
@@ -59,8 +61,6 @@ MY_OPERATOR::MY_OPERATOR()
 
     PyObject * appFunction = 
       streamsx::topology::Splpy::loadFunction(<%=$module%>, <%=$functionName%>);
-
-    iterableObjectFunction_ = NULL;
     
 <% if ($pystyle eq 'python') { %>
 
@@ -130,13 +130,30 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   // convert spl blob to bytes
   PyObject * pyBytes  = streamsx::topology::Splpy::pyBlobToBytes(value);
 
-  // invoke python application function and get an iterator of pickled values
-  PyObject * funcArg = PyTuple_New(2);
-  // first argument is application function
-  Py_INCREF(function_);
-  PyTuple_SetItem(funcArg, 0, function_);
-  // second argument is spl blob in bytes
+  // prepare to call the python utility function that invokes
+  // the application function and returns an iterator
+  PyObject * funcArg = PyTuple_New(3);
+  
+  // first argument is application function or serialized callable class
+  <% if ($serializedClass) { %>
+    PyTuple_SetItem(funcArg, 0, Py_BuildValue("s", <%=$serializedClass%>));
+  <%} else {%>
+    Py_INCREF(function_);
+    PyTuple_SetItem(funcArg, 0, function_);
+  <%}%>
+  
+  // second argument is spl blob in bytes (pickled tuple)
   PyTuple_SetItem(funcArg, 1, pyBytes);
+  
+  // third argument is a boolean indication whether the first argument
+  // is a serialized callable class
+  <% if ($serializedClass) { %>
+    PyTuple_SetItem(funcArg, 2, Py_True);
+  <%} else {%>
+    PyTuple_SetItem(funcArg, 2, Py_False);
+  <%}%>
+    
+  // invoke python utility function and get an iterator of pickled values
   PyObject * pyIterator = PyObject_CallObject(iterableObjectFunction_, funcArg);
   Py_DECREF(funcArg);
   if (pyIterator == 0) {

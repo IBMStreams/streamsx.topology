@@ -24,7 +24,7 @@
 %>
 
 // Constructor
-MY_OPERATOR::MY_OPERATOR()
+MY_OPERATOR::MY_OPERATOR() : function_(NULL)
 {
   std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
   std::string streamsxDir = tkDir + "/opt/python/packages/streamsx/topology";
@@ -54,6 +54,8 @@ MY_OPERATOR::MY_OPERATOR()
 <%
  my $module =  $model->getParameterByName("functionModule")->getValueAt(0)->getCppExpression() . '.c_str()';
  my $functionName = $model->getParameterByName("functionName")->getValueAt(0)->getCppExpression() . '.c_str()';
+ my $serializedClass = $model->getParameterByName("serializedClass");
+ $serializedClass = $serializedClass->getValueAt(0)->getCppExpression() . '.c_str()' if $serializedClass;
 %>
 
     PyObject * appFunction = 
@@ -61,14 +63,27 @@ MY_OPERATOR::MY_OPERATOR()
 
 <% if ($pystyle eq 'python') { %>
 
-    PyObject * depickleInput = 
-      streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInput");
-
+    PyObject * depickleInput = NULL;
     PyObject * funcArg = PyTuple_New(1);
-    PyTuple_SetItem(funcArg, 0, appFunction);
+    
+    <% if ($serializedClass) { %>
+      depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInputForCallable");
+      PyTuple_SetItem(funcArg, 0, Py_BuildValue("s", <%=$serializedClass%>));
+      Py_DECREF(appFunction);
+    <%} else {%>
+      depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInput");
+      PyTuple_SetItem(funcArg, 0, appFunction);
+    <%}%>
 
     function_ = PyObject_CallObject(depickleInput, funcArg);
-    // TODO error check
+    if(function_ == 0){
+      PyErr_Print();
+      Py_DECREF(depickleInput);
+      Py_DECREF(funcArg);
+      PyGILState_Release(gstate);
+      throw;
+    }
+
     Py_DECREF(depickleInput);
     Py_DECREF(funcArg);
 
@@ -84,6 +99,9 @@ MY_OPERATOR::MY_OPERATOR()
 MY_OPERATOR::~MY_OPERATOR() 
 {
     // Finalization code goes here
+    if (function_) {
+      Py_DECREF(function_);
+    }
 }
 
 // Notify port readiness

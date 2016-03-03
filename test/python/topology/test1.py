@@ -21,8 +21,15 @@ class TestTopologyMethods(unittest.TestCase):
   def test_TopologyFilter(self):
      topo = Topology("test_TopologyFilter")
      hw = topo.source(test_functions.hello_world)
-     hwf = hw.filter(test_functions.filter);
+     hwf = hw.filter(test_functions.filter)
      hwf.sink(test_functions.check_hello_world_filter)
+     streamsx.topology.context.submit("STANDALONE", topo.graph)
+        
+  def test_TopologyLengthFilter(self):
+     topo = Topology("test_TopologyLengthFilter")
+     hw = topo.source(test_functions.strings_length_filter) 
+     hwf = hw.filter(test_functions.LengthFilter(5))
+     hwf.sink(test_functions.check_strings_length_filter)
      streamsx.topology.context.submit("STANDALONE", topo.graph)
 
   def test_TopologyIsolate(self):
@@ -83,7 +90,22 @@ class TestTopologyMethods(unittest.TestCase):
       i1 = source.multi_transform(test_functions.split_words)
       i1.sink(test_functions.check_strings_multi_transform)
       streamsx.topology.context.submit("STANDALONE", topo.graph)
-         
+      
+  def test_TopologyTransformCallableAddWithDrop(self):
+      topo = Topology("test_TopologyTransformCallableAddWithDrop")
+      source = topo.source(test_functions.int_strings_transform_with_drop)
+      i1 = source.transform(test_functions.string_to_int_except68)
+      i2 = i1.transform(test_functions.AddNum(17))
+      i2.sink(test_functions.check_int_strings_transform_with_drop)
+      streamsx.topology.context.submit("STANDALONE", topo.graph)
+
+  def test_TopologyMultiTransformCallableMaxSplit(self):
+      topo = Topology("test_TopologyMultiTransformCallableMaxSplit")
+      source = topo.source(test_functions.strings_multi_transform)
+      i1 = source.multi_transform(test_functions.MaxSplitWords(1))
+      i1.sink(test_functions.check_strings_multi_transform_max_split)
+      streamsx.topology.context.submit("STANDALONE", topo.graph)
+     
 if __name__ == '__main__':
     unittest.main()
 
