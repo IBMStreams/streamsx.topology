@@ -196,13 +196,13 @@ public class GraphUtilities {
                 }
             }
             
-            // Also get input name
-            String operatorInName="";
+            // Also get input names
+            List<String> operatorInNames = new ArrayList<String>();
             JSONArray operatorInputs = (JSONArray) iso.get("inputs");
             if(operatorInputs != null){
-                JSONObject operatorFirstInput = (JSONObject) operatorInputs.get(0);
-                if(operatorFirstInput != null){
-                    operatorInName = (String) operatorFirstInput.get("name");
+            	for( int i = 0; i < operatorInputs.size(); i++) {
+            		JSONObject in = (JSONObject) operatorInputs.get(i);
+                    operatorInNames.add((String) in.get("name"));
                 }
             }
 
@@ -247,7 +247,7 @@ public class GraphUtilities {
                             .get("connections");
                     for (Object connectionObj : connections) {
                         String connection = (String) connectionObj;
-                        if (connection.equals(operatorInName)) {
+                        if(operatorInNames.contains(connection)) {	
                             parentOutputPortNames.add((String) output
                                     .get("name"));
                             parentConnections.add(connections);
