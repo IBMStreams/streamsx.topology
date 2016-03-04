@@ -153,7 +153,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   // the application function and returns an iterator
   PyObject * funcArg = PyTuple_New(2);
   
-  // first argument is application function or serialized instance of callable class
+  // first argument is application function or deserialized instance of callable class
   Py_INCREF(function_);
   PyTuple_SetItem(funcArg, 0, function_);
   
