@@ -209,7 +209,7 @@ a stream may contain different types of objects.
 * Limited testing has been performed with Python 3.5
 * Python is installed in the default location (`/usr/local`)
 
-# Sample Application
+# Sample HelloWorld Application
 
 Example code that builds and then submits a Hello World topology.
 
@@ -238,18 +238,95 @@ The functions must be builtins or in a separate module to the module building
 the topology. The functions must not be dynamically created. The modules
 containing the function are copied into the Streams Application Bundle (sab file).
 
+# Newly supported items
+
+* `filter` function on `Stream`
+
+  Filters tuples from a stream using the supplied function.
+  For each tuple on the stream the function is called passing
+  the tuple, if the function return evalulates to true the
+  tuple will be present on the returned stream, otherwise
+  the tuple is filtered out.
+* transform` function on `Stream`
+
+  Transforms each tuple from this stream into 0 or 1 tuples using the supplied function.
+  For each tuple on this stream, the returned stream will contain a tuple
+  that is the result of the function when the return is not None.
+  If the function returns None then no tuple is submitted to the returned 
+  stream.
+* `multi_transform` function on `Stream`
+
+  Transforms each tuple from this stream into 0 or more tuples using the supplied function.
+  The supplied function must return an iterable, otherwise a TypeError is raised. 
+  For each tuple on this stream, the returned stream will contain all non-None tuples from
+  the iterable.
+  Tuples will be added to the returned stream in the order the iterable
+  returns them.
+  If the return is None or an empty iterable then no tuples are added to
+  the returned stream.
+* `isolate` function on `Stream`
+
+  Guarantees that the upstream operation will run in a separate process from the downstream operation
+* `lowlatency` and `endlowlatency` functions on `Stream`
+
+  The function is guaranteed to run in the same process as the
+  upstream Stream function. All streams that are created from the returned stream 
+  are also guaranteed to run in the same process until endlowlatency() 
+  is called.
+
+# Sample Transform Application
+
+Example code that builds and then submits a simple topology.
+
+    import mymodule;
+    from streamsx.topology.topology import *
+    import streamsx.topology.context
+
+    topo = Topology("Transform")
+    source = topo.source(test_functions.int_strings_transform)
+    i1 = source.transform(test_functions.string_to_int)
+    iso1 = i1.isolate()
+    i2 = iso1.transform(test_functions.add17)
+    iso2 = i2.isolate()
+    iso2.sink(test_functions.print)
+    streamsx.topology.context.submit("STANDALONE", topo.graph)
+
+The `source` function is passed a function that returns an `Iterable`, in
+this case `mymodule.int_strings_transform`.
+
+    def int_strings_transform():
+       return ["325", "457", "9325"]
+
+The first `transform` function is passed a function that returns an integer
+converted from the string object, in this case `mymodule.string_to_int`.
+
+    def string_to_int(t):
+       return int(t)
+
+The second `transform` function is passed a function that that adds 17 to the integer,
+in this case `mymodule.add17`. This function is isolated from its upstream and downstream function using 
+the isolate function.
+
+    def add17(t):
+       return t + 17
+
+
 When building the topology the directory `com.ibm.streamsx.topology/opt/python/packages` must be in `$PYTHONPATH`.
 
 Only submission to STANDALONE is supported, which converts the application
 to an SPL graph, compiles it and executes it as a IBM Streams standalone
 application.
 
+Limited testing has been performed to build an application using BUNDLE, which converts the application to 
+an SPL graph, compiles it and saves the Streams Application Bundle file (.sab). The .sab can then be submitted
+to a running Streams instance. 
+
 # Future Items
 
 Future items that need to be supported
 
-* `transform()` function on `Stream`
-* `filter()` function on `Stream`
+* `union()` function on `Stream`
+* `parallel()` function on `Stream`
 * DISTRIBUTED submission
 * lambda functions
 * dynamic functions
