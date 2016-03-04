@@ -240,23 +240,43 @@ containing the function are copied into the Streams Application Bundle (sab file
 
 # Streams functions 
 
-* `filter` function on `Stream`
+* `filter(self, func)` function on `Stream`
 
-  Filters tuples from a stream using the supplied function.
+  Filters tuples from a stream using the supplied callable `func`.
+  The callable input must be either 
+  * the name of a top-level function defined using `def` that takes a single parameter for the tuple, or
+  * an instance of a top-level callable class that implements the method `__call__(self, tuple)`.  Using a
+  callable class allows state information such as user-defined parameters to be stored during class 
+  initialization and utilized when the class is called.
+  
   For each tuple on the stream the function is called passing
   the tuple, if the function return evalulates to true the
   tuple will be present on the returned stream, otherwise
   the tuple is filtered out.
-* transform` function on `Stream`
+  
+* `transform(self, func)` function on `Stream`
 
-  Transforms each tuple from this stream into 0 or 1 tuples using the supplied function.
+  Transforms each tuple from this stream into 0 or 1 tuples using the supplied callable `func`.
+  The callable input must be either 
+  * the name of a top-level function defined using `def` that takes a single parameter for the tuple, or
+  * an instance of a top-level callable class that implements the method `__call__(self, tuple)`.  Using a
+  callable class allows state information such as user-defined parameters to be stored during class 
+  initialization and utilized when the class is called.
+  
   For each tuple on this stream, the returned stream will contain a tuple
   that is the result of the function when the return is not None.
   If the function returns None then no tuple is submitted to the returned 
   stream.
-* `multi_transform` function on `Stream`
+  
+* `multi_transform(self, func)` function on `Stream`
 
-  Transforms each tuple from this stream into 0 or more tuples using the supplied function.
+  Transforms each tuple from this stream into 0 or more tuples using the supplied callable `func`.
+  The callable input must be either 
+  * the name of a top-level function defined using `def` that takes a single parameter for the tuple, or
+  * an instance of a top-level callable class that implements the method `__call__(self, tuple)`.  Using a
+  callable class allows state information such as user-defined parameters to be stored during class 
+  initialization and utilized when the class is called.
+  
   The supplied function must return an iterable, otherwise a TypeError is raised. 
   For each tuple on this stream, the returned stream will contain all non-None tuples from
   the iterable.
@@ -264,6 +284,7 @@ containing the function are copied into the Streams Application Bundle (sab file
   returns them.
   If the return is None or an empty iterable then no tuples are added to
   the returned stream.
+  
 * `isolate` function on `Stream`
 
   Guarantees that the upstream operation will run in a separate process from the downstream operation
@@ -283,33 +304,37 @@ Example code that builds and then submits a simple topology.
     import streamsx.topology.context
 
     topo = Topology("Transform")
-    source = topo.source(test_functions.int_strings_transform)
-    i1 = source.transform(test_functions.string_to_int)
+    source = topo.source(mymodule.int_strings_transform)
+    i1 = source.transform(mymodule.string_to_int)
     iso1 = i1.isolate()
-    i2 = iso1.transform(test_functions.add17)
+    i2 = iso1.transform(mymodule.AddNum(17))
     iso2 = i2.isolate()
-    iso2.sink(test_functions.print)
+    iso2.sink(mymodule.print)
     streamsx.topology.context.submit("STANDALONE", topo.graph)
 
 The `source` function is passed a function that returns an `Iterable`, in
 this case `mymodule.int_strings_transform`.
 
     def int_strings_transform():
-       return ["325", "457", "9325"]
+        return ["325", "457", "9325"]
 
 The first `transform` function is passed a function that returns an integer
 converted from the string object, in this case `mymodule.string_to_int`.
 
     def string_to_int(t):
-       return int(t)
+        return int(t)
 
-The second `transform` function is passed a function that that adds 17 to the integer,
-in this case `mymodule.add17`. This function is isolated from its upstream and downstream function using 
+The second `transform` function is passed an instance of a callable class that adds 17 to the integer,
+in this case `mymodule.AddNum(17)`.
+
+    class AddNum:
+        def __init__(self, increment):
+            self.increment = increment  
+        def __call__(self, tuple):
+            return tuple + self.increment
+
+This function is isolated from its upstream and downstream function using 
 the isolate function.
-
-    def add17(t):
-       return t + 17
-
 
 When building the topology the directory `com.ibm.streamsx.topology/opt/python/packages` must be in `$PYTHONPATH`.
 
