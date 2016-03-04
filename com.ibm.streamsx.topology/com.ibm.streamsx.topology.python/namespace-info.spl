@@ -238,7 +238,7 @@ The functions must be builtins or in a separate module to the module building
 the topology. The functions must not be dynamically created. The modules
 containing the function are copied into the Streams Application Bundle (sab file).
 
-# Newly supported items
+# Streams methods 
 
 * `filter` function on `Stream`
 
