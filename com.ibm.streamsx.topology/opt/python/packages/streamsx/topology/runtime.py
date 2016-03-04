@@ -27,6 +27,11 @@ def depickleInput(function) :
         return function(pickle.loads(v))
     return _depickleInput
 
+# Given a callable object that is pickled and 
+# base64 encoded, deserialize and return the object
+def depickleCallable(serializedCallable):
+    return pickle.loads(base64.b64decode(serializedCallable))
+ 
 # Given a callable object F that is pickled and 
 # base64 encoded, return a function that
 # depickles the input and then calls F
@@ -57,9 +62,7 @@ def iterableSource(function) :
 # return a function that can be called
 # repeatedly by an operator returning
 # the next tuple in its pickled form
-def iterableObject(function, v, isInputCallableClass) :
-   if isInputCallableClass:
-      function = pickle.loads(base64.b64decode(function))
+def iterableObject(function, v) :
    appRetVal = function(pickle.loads(v))
    if appRetVal is None:
       appRetVal = []

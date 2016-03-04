@@ -58,7 +58,7 @@
       </parameter>
       <parameter>
         <name>serializedClass</name>
-        <description>Serialized representation of a callable class</description>
+        <description>Serialized instance of a callable class</description>
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
