@@ -142,22 +142,26 @@ class AddNum:
    def __call__(self, tuple):
       return tuple + self.increment
 
-class MaxSplitWords:
+class IncMaxSplitWords:
    def __init__(self, maxsplit):
       self.maxsplit = maxsplit  
    def __call__(self, tuple):
-      return tuple.split(None, self.maxsplit)
+      words = tuple.split(None, self.maxsplit)
+      # test mutable state, increase maxsplit by 1 for next tuple
+      self.maxsplit += 1
+      return words
 
-global EXPECTED_STRINGS_MULTI_TRANSFORM_MAX_SPLIT
-EXPECTED_STRINGS_MULTI_TRANSFORM_MAX_SPLIT = ["mary", "had a little lamb", "its", "fleece was white as snow"]
+global EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT
+EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT = ["mary", "had a little lamb", "its", "fleece", "was white as snow"]
  
-global _hwcount_multi_transform_max_split
-_hwcount_multi_transform_max_split = 0
-def check_strings_multi_transform_max_split(t):
+global _hwcount_multi_transform_inc_max_split
+_hwcount_multi_transform_inc_max_split = 0
+def check_strings_multi_transform_inc_max_split(t):
    print("TUPLE", t)
-   global _hwcount_multi_transform_max_split
-   assert (_hwcount_multi_transform_max_split < len(EXPECTED_STRINGS_MULTI_TRANSFORM_MAX_SPLIT)), \
-      ("Expected index=" + str(_hwcount_multi_transform_max_split) + " < " + str(len(EXPECTED_STRINGS_MULTI_TRANSFORM_MAX_SPLIT)))
-   assert (t == EXPECTED_STRINGS_MULTI_TRANSFORM_MAX_SPLIT[_hwcount_multi_transform_max_split]), \
-      ("Expected=" + EXPECTED_STRINGS_MULTI_TRANSFORM_MAX_SPLIT[_hwcount_multi_transform_max_split] +  ", actual=" + str(t))
-   _hwcount_multi_transform_max_split += 1
+   global _hwcount_multi_transform_inc_max_split
+   assert (_hwcount_multi_transform_inc_max_split < len(EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT)), \
+      ("Expected index=" + str(_hwcount_multi_transform_inc_max_split) + " < " + str(len(EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT)))
+   assert (t == EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT[_hwcount_multi_transform_inc_max_split]), \
+      ("Expected=" + EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT[_hwcount_multi_transform_inc_max_split] +  ", actual=" + str(t))
+   _hwcount_multi_transform_inc_max_split += 1
+

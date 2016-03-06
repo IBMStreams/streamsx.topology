@@ -146,7 +146,7 @@ class SPLInvocation(object):
             # operator is a callable class
             self.params["functionName"] = function.__class__.__name__
             # pickle format is binary; base64 encode so it is json serializable 
-            self.params["serializedClass"] = base64.b64encode(pickle.dumps(function)).decode("ascii")
+            self.params["serializedCallableInstance"] = base64.b64encode(pickle.dumps(function)).decode("ascii")
 
         self.params["functionModule"] = function.__module__
                     

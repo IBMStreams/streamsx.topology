@@ -50,11 +50,11 @@ class Stream(object):
     def filter(self, func):
         """
         Filters tuples from a stream using the supplied callable 'func'.
-        The callable input must be either 
-        1) the name of a top-level function defined using 'def' that takes a single parameter for the tuple, or
-        2) an instance of a top-level callable class that implements the method '__call__(self, tuple)'.  Using a
-        callable class allows state information such as user-defined parameters to be stored during class 
-        initialization and utilized when the class is called.
+        The callable input must be either
+        1) the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
+        2) an instance of a callable class defined at the top level of a module that implements the method '__call__(self, tuple)'.
+        Using a callable class allows state information such as user-defined parameters to be stored during class 
+        initialization and utilized when the instance is called.
         For each tuple on the stream the callable is called passing
         the tuple, if the callable return evalulates to true the
         tuple will be present on the returned stream, otherwise
@@ -69,10 +69,10 @@ class Stream(object):
         """
         Transforms each tuple from this stream into 0 or 1 tuples using the supplied callable 'func'.
         The callable input must be either 
-        1) the name of a top-level function defined using 'def' that takes a single parameter for the tuple, or
-        2) an instance of a top-level callable class that implements the method '__call__(self, tuple)'.  Using a
-        callable class allows state information such as user-defined parameters to be stored during class 
-        initialization and utilized when the class is called.
+        1) the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
+        2) an instance of a callable class defined at the top level of a module that implements the method '__call__(self, tuple)'.
+        Using a callable class allows state information such as user-defined parameters to be stored during class 
+        initialization and utilized when the instance is called.
         For each tuple on this stream, the returned stream will contain a tuple
         that is the result of the callable when the return is not None.
         If the callable returns None then no tuple is submitted to the returned 
@@ -87,10 +87,10 @@ class Stream(object):
         """
         Transforms each tuple from this stream into 0 or more tuples using the supplied callable 'func'.
         The callable input must be either 
-        1) the name of a top-level function defined using 'def' that takes a single parameter for the tuple, or
-        2) an instance of a top-level callable class that implements the method '__call__(self, tuple)'.  Using a
-        callable class allows state information such as user-defined parameters to be stored during class 
-        initialization and utilized when the class is called.
+        1) the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
+        2) an instance of a callable class defined at the top level of a module that implements the method '__call__(self, tuple)'.
+        Using a callable class allows state information such as user-defined parameters to be stored during class 
+        initialization and utilized when the instance is called.
         The callable must return an iterable, otherwise a TypeError is raised. 
         For each tuple on this stream, the returned stream will contain all non-None tuples from
         the iterable.

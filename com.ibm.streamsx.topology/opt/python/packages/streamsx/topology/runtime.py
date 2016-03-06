@@ -17,7 +17,7 @@ def pickleObject(v):
      
 def pickleReturn(function) :
     def _pickleReturn(v):
-        return pickle.dumps(function(v))
+        return pickleObject(function(v))
     return _pickleReturn
 
 # Given a function F return a function
@@ -27,19 +27,19 @@ def depickleInput(function) :
         return function(pickle.loads(v))
     return _depickleInput
 
-# Given a callable object that is pickled and 
-# base64 encoded, deserialize and return the object
-def depickleCallable(serializedCallable):
+# Given a serialized callable instance, 
+# deserialize and return the callable
+def depickleCallableInstance(serializedCallable):
     return pickle.loads(base64.b64decode(serializedCallable))
  
-# Given a callable object F that is pickled and 
-# base64 encoded, return a function that
-# depickles the input and then calls F
-def depickleInputForCallable(serializedCallable) :
-    callableObject = pickle.loads(base64.b64decode(serializedCallable))
-    def _depickleInputForCallable(v):
+# Given a serialized callable instance, 
+# deserialize the callable into F, return 
+# a function that depickles the input and then calls F
+def depickleInputForCallableInstance(serializedCallable) :
+    callableObject = depickleCallableInstance(serializedCallable)
+    def _depickleInputForCallableInstance(v):
         return callableObject(pickle.loads(v))
-    return _depickleInputForCallable
+    return _depickleInputForCallableInstance
  
 # Given a function that returns an iterable
 # return a function that can be called
@@ -52,7 +52,7 @@ def iterableSource(function) :
         while True:
             tuple = next(iterator)
             if not tuple is None:
-                return pickle.dumps(tuple)
+                return pickleObject(tuple)
      except StopIteration:
        return None
   return _sourceIterator
@@ -72,7 +72,7 @@ def iterableObject(function, v) :
          while True:
             tuple = next(iterator)
             if not tuple is None:
-               return pickle.dumps(tuple)
+               return pickleObject(tuple)
       except StopIteration:
          return None
    return _iterableObject

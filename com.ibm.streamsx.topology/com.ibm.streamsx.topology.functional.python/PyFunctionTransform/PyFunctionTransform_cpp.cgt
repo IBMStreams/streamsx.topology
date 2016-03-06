@@ -55,8 +55,8 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL), pickleObjectFunction_(NULL)
 <%
  my $module =  $model->getParameterByName("functionModule")->getValueAt(0)->getCppExpression() . '.c_str()';
  my $functionName = $model->getParameterByName("functionName")->getValueAt(0)->getCppExpression() . '.c_str()';
- my $serializedClass = $model->getParameterByName("serializedClass");
- $serializedClass = $serializedClass->getValueAt(0)->getCppExpression() . '.c_str()' if $serializedClass;
+ my $serializedCallableInstance = $model->getParameterByName("serializedCallableInstance");
+ $serializedCallableInstance = $serializedCallableInstance->getValueAt(0)->getCppExpression() . '.c_str()' if $serializedCallableInstance;
 %>
 
     PyObject * appFunction = 
@@ -67,9 +67,9 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL), pickleObjectFunction_(NULL)
     PyObject * depickleInput = NULL;
     PyObject * funcArg = PyTuple_New(1);
     
-    <% if ($serializedClass) { %>
-      depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInputForCallable");
-      PyTuple_SetItem(funcArg, 0, Py_BuildValue("s", <%=$serializedClass%>));
+    <% if ($serializedCallableInstance) { %>
+      depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInputForCallableInstance");
+      PyTuple_SetItem(funcArg, 0, Py_BuildValue("s", <%=$serializedCallableInstance%>));
       Py_DECREF(appFunction);
     <%} else {%>
       depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInput");

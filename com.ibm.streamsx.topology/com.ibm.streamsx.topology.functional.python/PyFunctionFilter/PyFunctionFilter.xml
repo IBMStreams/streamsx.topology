@@ -57,7 +57,7 @@
         <cardinality>1</cardinality>
       </parameter>
       <parameter>
-        <name>serializedClass</name>
+        <name>serializedCallableInstance</name>
         <description>Serialized instance of a callable class</description>
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>

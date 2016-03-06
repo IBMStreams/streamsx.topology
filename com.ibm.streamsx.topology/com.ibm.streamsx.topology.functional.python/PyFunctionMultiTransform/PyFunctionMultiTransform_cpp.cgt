@@ -55,8 +55,8 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL), iterableObjectFunction_(NULL)
 <%
  my $module =  $model->getParameterByName("functionModule")->getValueAt(0)->getCppExpression() . '.c_str()';
  my $functionName = $model->getParameterByName("functionName")->getValueAt(0)->getCppExpression() . '.c_str()';
- my $serializedClass = $model->getParameterByName("serializedClass");
- $serializedClass = $serializedClass->getValueAt(0)->getCppExpression() . '.c_str()' if $serializedClass;
+ my $serializedCallableInstance = $model->getParameterByName("serializedCallableInstance");
+ $serializedCallableInstance = $serializedCallableInstance->getValueAt(0)->getCppExpression() . '.c_str()' if $serializedCallableInstance;
 %>
 
     PyObject * appFunction = 
@@ -64,22 +64,22 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL), iterableObjectFunction_(NULL)
     
 <% if ($pystyle eq 'python') { %>
     
-    <% if ($serializedClass) { %>
+    <% if ($serializedCallableInstance) { %>
       Py_DECREF(appFunction);
       
       // deserialize class instance and store reference
-      PyObject * depickleCallable = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleCallable");
+      PyObject * depickleCallableInstance = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleCallableInstance");
       PyObject * funcArg = PyTuple_New(1);
-      PyTuple_SetItem(funcArg, 0, Py_BuildValue("s", <%=$serializedClass%>));
-      function_ = PyObject_CallObject(depickleCallable, funcArg);
+      PyTuple_SetItem(funcArg, 0, Py_BuildValue("s", <%=$serializedCallableInstance%>));
+      function_ = PyObject_CallObject(depickleCallableInstance, funcArg);
       if(function_ == 0){
         PyErr_Print();
-        Py_DECREF(depickleCallable);
+        Py_DECREF(depickleCallableInstance);
         Py_DECREF(funcArg);
         PyGILState_Release(gstate);
         throw;
       }
-      Py_DECREF(depickleCallable);
+      Py_DECREF(depickleCallableInstance);
       Py_DECREF(funcArg);
     <%} else {%>
       function_ = appFunction;
