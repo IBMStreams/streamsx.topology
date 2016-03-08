@@ -355,7 +355,6 @@ Future items that need to be supported
 * DISTRIBUTED submission
 * lambda functions
 * dynamic functions
-* generators
 * functions in packages
 * IBM Streams application features, such as UDP, windowing etc.
 * ...
