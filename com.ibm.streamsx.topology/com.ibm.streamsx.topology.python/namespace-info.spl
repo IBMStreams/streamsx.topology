@@ -205,7 +205,7 @@ a stream may contain different types of objects.
 
 # Assumptions
 
-* Python 3 is assumed
+* CPython 3 is assumed
 * Limited testing has been performed with Python 3.5
 * Python is installed in the default location (`/usr/local`)
 
