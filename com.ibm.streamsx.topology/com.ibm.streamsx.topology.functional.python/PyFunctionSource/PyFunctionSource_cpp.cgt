@@ -41,8 +41,8 @@ MY_OPERATOR::MY_OPERATOR()
     }
 
 <%
- my $module =  $model->getParameterByName("functionModule")->getValueAt(0)->getCppExpression() . '.c_str()';
- my $functionName = $model->getParameterByName("functionName")->getValueAt(0)->getCppExpression() . '.c_str()';
+ my $module =  $model->getParameterByName("pyModule")->getValueAt(0)->getCppExpression() . '.c_str()';
+ my $functionName = $model->getParameterByName("pyName")->getValueAt(0)->getCppExpression() . '.c_str()';
 %>
 
     PyObject * appFunction = 

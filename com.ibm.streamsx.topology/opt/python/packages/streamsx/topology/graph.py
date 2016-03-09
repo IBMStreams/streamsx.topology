@@ -140,15 +140,15 @@ class SPLInvocation(object):
             raise "argument to _addOperatorFunction is not callable"
                  
         if inspect.isroutine(function):
-            # operator is a function
-            self.params["functionName"] = function.__name__
+            # callable is a function
+            self.params["pyName"] = function.__name__
         else:
-            # operator is a callable class
-            self.params["functionName"] = function.__class__.__name__
+            # callable is a callable class instance
+            self.params["pyName"] = function.__class__.__name__
             # pickle format is binary; base64 encode so it is json serializable 
-            self.params["serializedCallableInstance"] = base64.b64encode(pickle.dumps(function)).decode("ascii")
+            self.params["pyCallable"] = base64.b64encode(pickle.dumps(function)).decode("ascii")
 
-        self.params["functionModule"] = function.__module__
+        self.params["pyModule"] = function.__module__
                     
 
     def _printOperator(self):

@@ -39,7 +39,7 @@
     <parameters>
       <allowAny>false</allowAny>
       <parameter>
-        <name>functionModule</name>
+        <name>pyModule</name>
         <description>Function or callable class's module</description>
         <optional>false</optional>
         <rewriteAllowed>true</rewriteAllowed>
@@ -48,7 +48,7 @@
         <cardinality>1</cardinality>
       </parameter>
       <parameter>
-        <name>functionName</name>
+        <name>pyName</name>
         <description>Function or callable class's name</description>
         <optional>false</optional>
         <rewriteAllowed>true</rewriteAllowed>
@@ -57,7 +57,7 @@
         <cardinality>1</cardinality>
       </parameter>
       <parameter>
-        <name>serializedCallableInstance</name>
+        <name>pyCallable</name>
         <description>Serialized instance of a callable class</description>
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
