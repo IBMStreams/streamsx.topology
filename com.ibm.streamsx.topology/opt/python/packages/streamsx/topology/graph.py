@@ -4,6 +4,8 @@
 import uuid
 import json
 import inspect
+import pickle
+import base64
 from streamsx.topology.schema import CommonSchema
 
 class SPLGraph(object):
@@ -136,9 +138,18 @@ class SPLInvocation(object):
             return None
         if not hasattr(function, "__call__"):
             raise "argument to _addOperatorFunction is not callable"
-        self.params["functionName"] = function.__name__;
-        self.params["functionModule"] = function.__module__;
+                 
+        if inspect.isroutine(function):
+            # callable is a function
+            self.params["pyName"] = function.__name__
+        else:
+            # callable is a callable class instance
+            self.params["pyName"] = function.__class__.__name__
+            # pickle format is binary; base64 encode so it is json serializable 
+            self.params["pyCallable"] = base64.b64encode(pickle.dumps(function)).decode("ascii")
 
+        self.params["pyModule"] = function.__module__
+                    
 
     def _printOperator(self):
         print(self.name+":")

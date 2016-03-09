@@ -39,8 +39,8 @@
     <parameters>
       <allowAny>false</allowAny>
       <parameter>
-        <name>functionModule</name>
-        <description>Function's module </description>
+        <name>pyModule</name>
+        <description>Function or callable class's module</description>
         <optional>false</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
@@ -48,9 +48,18 @@
         <cardinality>1</cardinality>
       </parameter>
       <parameter>
-        <name>functionName</name>
-        <description>Function's name </description>
+        <name>pyName</name>
+        <description>Function or callable class's name</description>
         <optional>false</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>pyCallable</name>
+        <description>Serialized instance of a callable class</description>
+        <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
         <type>rstring</type>

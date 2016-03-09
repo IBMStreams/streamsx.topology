@@ -20,7 +20,7 @@ def check_hello_world(t):
    raise AssertionError()
 
 def filter(t):
-   return "Wor" in t;
+   return "Wor" in t
 
 global _hwcount_filter
 _hwcount_filter = 0
@@ -52,56 +52,116 @@ def string_to_int_except68(t):
 def add17(t):
    return t + 17
 
+global _hwcount_transform
+_hwcount_transform = 0
 def check_int_strings_transform(t):
    print("TUPLE", t)
-   global _hwcount
-   if _hwcount == 0:
+   global _hwcount_transform
+   if _hwcount_transform == 0:
       if t != 342:
          raise AssertionError()
-      _hwcount += 1
+      _hwcount_transform += 1
       return None
-   if _hwcount == 1:
+   if _hwcount_transform == 1:
       if t != 474:
          raise AssertionError()
-      _hwcount += 1
+      _hwcount_transform += 1
       return None
-   if _hwcount == 2:
+   if _hwcount_transform == 2:
       if t != 9342:
          raise AssertionError()
-      _hwcount += 1
+      _hwcount_transform += 1
       return None
    raise AssertionError() 
 
+global _hwcount_transform_with_drop
+_hwcount_transform_with_drop = 0
 def check_int_strings_transform_with_drop(t):
    print("TUPLE", t)
-   global _hwcount
-   if _hwcount == 0:
+   global _hwcount_transform_with_drop
+   if _hwcount_transform_with_drop == 0:
       if t != 110:
          raise AssertionError()
-      _hwcount += 1
+      _hwcount_transform_with_drop += 1
       return None
-   if _hwcount == 1:
+   if _hwcount_transform_with_drop == 1:
       if t != 238:
          raise AssertionError()
-      _hwcount += 1
+      _hwcount_transform_with_drop += 1
       return None
    raise AssertionError() 
  
 def strings_multi_transform():
    return ["mary had a little lamb", "its fleece was white as snow"]
    
-global expected_strings_multi_transform
-expected_strings_multi_transform = ["mary", "had", "a", "little", "lamb", "its", "fleece", "was", "white", "as", "snow"]
+global EXPECTED_STRINGS_MULTI_TRANSFORM
+EXPECTED_STRINGS_MULTI_TRANSFORM = ["mary", "had", "a", "little", "lamb", "its", "fleece", "was", "white", "as", "snow"]
 
 def split_words(t):
    return t.split()
  
+global _hwcount_multi_transform
+_hwcount_multi_transform = 0
 def check_strings_multi_transform(t):
    print("TUPLE", t)
-   global _hwcount
-   assert (_hwcount < len(expected_strings_multi_transform)), \
-      ("Expected index=" + str(_hwcount) + " < " + str(len(expected_strings_multi_transform)))
-   assert (t == expected_strings_multi_transform[_hwcount]), \
-      ("Expected=" + expected_strings_multi_transform[_hwcount] +  ", actual=" + str(t))
-   _hwcount += 1
+   global _hwcount_multi_transform
+   assert (_hwcount_multi_transform < len(EXPECTED_STRINGS_MULTI_TRANSFORM)), \
+      ("Expected index=" + str(_hwcount_multi_transform) + " < " + str(len(EXPECTED_STRINGS_MULTI_TRANSFORM)))
+   assert (t == EXPECTED_STRINGS_MULTI_TRANSFORM[_hwcount_multi_transform]), \
+      ("Expected=" + EXPECTED_STRINGS_MULTI_TRANSFORM[_hwcount_multi_transform] +  ", actual=" + str(t))
+   _hwcount_multi_transform += 1
    
+def strings_length_filter():
+   return ["hello", "goodbye", "farewell"]
+
+class LengthFilter:
+   def __init__(self, upper):
+      self.upper = upper  
+   def __call__(self, tuple):
+      if len(tuple) > self.upper:
+         return True
+      return False
+
+global EXPECTED_STRINGS_LENGTH_FILTER
+EXPECTED_STRINGS_LENGTH_FILTER = ["goodbye", "farewell"]
+
+global _hwcount_length_filter
+_hwcount_length_filter = 0
+def check_strings_length_filter(t):
+   print("TUPLE", t)
+   global _hwcount_length_filter
+   assert (_hwcount_length_filter < len(EXPECTED_STRINGS_LENGTH_FILTER)), \
+      ("Expected index=" + str(_hwcount_length_filter) + " < " + str(len(EXPECTED_STRINGS_LENGTH_FILTER)))
+   assert (t == EXPECTED_STRINGS_LENGTH_FILTER[_hwcount_length_filter]), \
+      ("Expected=" + EXPECTED_STRINGS_LENGTH_FILTER[_hwcount_length_filter] +  ", actual=" + str(t))
+   _hwcount_length_filter += 1
+   
+class AddNum:
+   def __init__(self, increment):
+      self.increment = increment  
+   def __call__(self, tuple):
+      return tuple + self.increment
+
+class IncMaxSplitWords:
+   def __init__(self, maxsplit):
+      self.maxsplit = maxsplit  
+   def __call__(self, tuple):
+      words = tuple.split(None, self.maxsplit)
+      # test mutable state, increase maxsplit by 1 for next tuple
+      self.maxsplit += 1
+      return words
+
+global EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT
+EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT = ["mary", "had a little lamb", "its", "fleece", "was white as snow"]
+ 
+global _hwcount_multi_transform_inc_max_split
+_hwcount_multi_transform_inc_max_split = 0
+def check_strings_multi_transform_inc_max_split(t):
+   print("TUPLE", t)
+   global _hwcount_multi_transform_inc_max_split
+   assert (_hwcount_multi_transform_inc_max_split < len(EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT)), \
+      ("Expected index=" + str(_hwcount_multi_transform_inc_max_split) + " < " + str(len(EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT)))
+   assert (t == EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT[_hwcount_multi_transform_inc_max_split]), \
+      ("Expected=" + EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT[_hwcount_multi_transform_inc_max_split] +  ", actual=" + str(t))
+   _hwcount_multi_transform_inc_max_split += 1
+

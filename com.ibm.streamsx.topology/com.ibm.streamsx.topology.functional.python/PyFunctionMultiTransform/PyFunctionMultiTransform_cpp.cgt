@@ -25,8 +25,8 @@
 %>
 
 // Constructor
-MY_OPERATOR::MY_OPERATOR()
-{
+MY_OPERATOR::MY_OPERATOR() : callable_(NULL), iterableObjectFunction_(NULL)
+{ 
   std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
   std::string streamsxDir = tkDir + "/opt/python/packages/streamsx/topology";
   std::string splpySetup = streamsxDir + "/splpy_setup.py";
@@ -53,26 +53,45 @@ MY_OPERATOR::MY_OPERATOR()
     }
 
 <%
- my $module =  $model->getParameterByName("functionModule")->getValueAt(0)->getCppExpression() . '.c_str()';
- my $functionName = $model->getParameterByName("functionName")->getValueAt(0)->getCppExpression() . '.c_str()';
+ my $pyModule =  $model->getParameterByName("pyModule")->getValueAt(0)->getCppExpression() . '.c_str()';
+ my $pyCallableName = $model->getParameterByName("pyName")->getValueAt(0)->getCppExpression() . '.c_str()';
+ my $pyCallable = $model->getParameterByName("pyCallable");
+ $pyCallable = $pyCallable->getValueAt(0)->getCppExpression() . '.c_str()' if $pyCallable;
 %>
 
-    PyObject * appFunction = 
-      streamsx::topology::Splpy::loadFunction(<%=$module%>, <%=$functionName%>);
-
-    iterableObjectFunction_ = NULL;
+    PyObject * appCallable = 
+      streamsx::topology::Splpy::loadFunction(<%=$pyModule%>, <%=$pyCallableName%>);
     
 <% if ($pystyle eq 'python') { %>
+    
+    <% if ($pyCallable) { %>
+      Py_DECREF(appCallable);
+      
+      // deserialize class instance and store reference
+      PyObject * depickleCallableInstance = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleCallableInstance");
+      PyObject * funcArg = PyTuple_New(1);
+      PyTuple_SetItem(funcArg, 0, Py_BuildValue("s", <%=$pyCallable%>));
+      callable_ = PyObject_CallObject(depickleCallableInstance, funcArg);
+      if(callable_ == 0){
+        PyErr_Print();
+        Py_DECREF(depickleCallableInstance);
+        Py_DECREF(funcArg);
+        PyGILState_Release(gstate);
+        throw;
+      }
+      Py_DECREF(depickleCallableInstance);
+      Py_DECREF(funcArg);
+    <%} else {%>
+      callable_ = appCallable;
+    <%}%>
 
     PyObject * iterableObjectFunction = 
       streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "iterableObject");
-      
-    function_ = appFunction;
     iterableObjectFunction_ = iterableObjectFunction;
     
 <%}%>
 <% if ($pystyle eq 'string') { %>
-    function_ = appFunction;
+    callable_ = appCallable;
 <%}%>
 
     PyGILState_Release(gstate);
@@ -82,8 +101,8 @@ MY_OPERATOR::MY_OPERATOR()
 MY_OPERATOR::~MY_OPERATOR() 
 {
     // Finalization code goes here
-    if (function_) {
-      Py_DECREF(function_);
+    if (callable_) {
+      Py_DECREF(callable_);
     }
     if (iterableObjectFunction_) {
       Py_DECREF(iterableObjectFunction_);
@@ -130,13 +149,18 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   // convert spl blob to bytes
   PyObject * pyBytes  = streamsx::topology::Splpy::pyBlobToBytes(value);
 
-  // invoke python application function and get an iterator of pickled values
+  // prepare to call the python utility function that invokes
+  // the application function and returns an iterator
   PyObject * funcArg = PyTuple_New(2);
-  // first argument is application function
-  Py_INCREF(function_);
-  PyTuple_SetItem(funcArg, 0, function_);
-  // second argument is spl blob in bytes
+  
+  // first argument is application function or deserialized instance of callable class
+  Py_INCREF(callable_);
+  PyTuple_SetItem(funcArg, 0, callable_);
+  
+  // second argument is spl blob in bytes (pickled tuple)
   PyTuple_SetItem(funcArg, 1, pyBytes);
+    
+  // invoke python utility function and get an iterator of pickled values
   PyObject * pyIterator = PyObject_CallObject(iterableObjectFunction_, funcArg);
   Py_DECREF(funcArg);
   if (pyIterator == 0) {

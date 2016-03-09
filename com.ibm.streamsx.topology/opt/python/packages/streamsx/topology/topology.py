@@ -49,9 +49,14 @@ class Stream(object):
 
     def filter(self, func):
         """
-        Filters tuples from a stream using the supplied function.
-        For each tuple on the stream the function is called passing
-        the tuple, if the function return evalulates to true the
+        Filters tuples from a stream using the supplied callable 'func'.
+        The callable input must be either
+        1) the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
+        2) an instance of a callable class defined at the top level of a module that implements the method '__call__(self, tuple)'.
+        Using a callable class allows state information such as user-defined parameters to be stored during class 
+        initialization and utilized when the instance is called.
+        For each tuple on the stream the callable is called passing
+        the tuple, if the callable return evalulates to true the
         tuple will be present on the returned stream, otherwise
         the tuple is filtered out.
         """
@@ -62,10 +67,15 @@ class Stream(object):
 
     def transform(self, func):
         """
-        Transforms each tuple from this stream into 0 or 1 tuples using the supplied function.
+        Transforms each tuple from this stream into 0 or 1 tuples using the supplied callable 'func'.
+        The callable input must be either 
+        1) the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
+        2) an instance of a callable class defined at the top level of a module that implements the method '__call__(self, tuple)'.
+        Using a callable class allows state information such as user-defined parameters to be stored during class 
+        initialization and utilized when the instance is called.
         For each tuple on this stream, the returned stream will contain a tuple
-        that is the result of the function when the return is not None.
-        If the function returns None then no tuple is submitted to the returned 
+        that is the result of the callable when the return is not None.
+        If the callable returns None then no tuple is submitted to the returned 
         stream.
         """
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionTransform", func)
@@ -75,8 +85,13 @@ class Stream(object):
      
     def multi_transform(self, func):
         """
-        Transforms each tuple from this stream into 0 or more tuples using the supplied function.
-        The supplied function must return an iterable, otherwise a TypeError is raised. 
+        Transforms each tuple from this stream into 0 or more tuples using the supplied callable 'func'.
+        The callable input must be either 
+        1) the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
+        2) an instance of a callable class defined at the top level of a module that implements the method '__call__(self, tuple)'.
+        Using a callable class allows state information such as user-defined parameters to be stored during class 
+        initialization and utilized when the instance is called.
+        The callable must return an iterable, otherwise a TypeError is raised. 
         For each tuple on this stream, the returned stream will contain all non-None tuples from
         the iterable.
         Tuples will be added to the returned stream in the order the iterable
