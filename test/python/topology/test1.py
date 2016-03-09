@@ -7,7 +7,7 @@ from streamsx.topology import schema
 import streamsx.topology.context
 
 class TestTopologyMethods(unittest.TestCase):
-
+  
   def test_TopologyName(self):
      topo = Topology("test_TopologyName")
      self.assertEqual("test_TopologyName", topo.name)
@@ -105,7 +105,13 @@ class TestTopologyMethods(unittest.TestCase):
       i1 = source.multi_transform(test_functions.IncMaxSplitWords(1))
       i1.sink(test_functions.check_strings_multi_transform_inc_max_split)
       streamsx.topology.context.submit("STANDALONE", topo.graph)
-    
+  
+  def test_TopologySourceAndSinkCallable(self):
+      topo = Topology("test_TopologySourceAndSinkCallable")
+      hw = topo.source(test_functions.SourceTuplesAppendIndex(["a", "b", "c", "d"]))
+      hw.sink(test_functions.CheckTuples(["a0", "b1", "c2", "d3"]))
+      streamsx.topology.context.submit("STANDALONE", topo.graph)
+          
 if __name__ == '__main__':
     unittest.main()
 
