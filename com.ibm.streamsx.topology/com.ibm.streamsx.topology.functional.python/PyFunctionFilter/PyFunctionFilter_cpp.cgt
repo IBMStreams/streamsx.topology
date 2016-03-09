@@ -69,12 +69,12 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
     
     <% if ($pyCallable) { %>
       depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInputForCallableInstance");
-      # argument is the serialized callable instance
+      // argument is the serialized callable instance
       PyTuple_SetItem(funcArg, 0, Py_BuildValue("s", <%=$pyCallable%>));
       Py_DECREF(appCallable);
     <%} else {%>
       depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInput");
-      # argument is the application function
+      // argument is the application function
       PyTuple_SetItem(funcArg, 0, appCallable);
     <%}%>
 
