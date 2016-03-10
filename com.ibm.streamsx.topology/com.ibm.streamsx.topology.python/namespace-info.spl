@@ -405,8 +405,7 @@ to a running Streams instance.
 
 Future items that need to be supported
 
-* `union()` function on `Stream`
-* `parallel()` function on `Stream`
+* `parallel()` function on `Stream` utilizing hashed distribution
 * DISTRIBUTED submission
 * lambda functions
 * dynamic functions
