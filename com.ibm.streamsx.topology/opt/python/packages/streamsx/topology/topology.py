@@ -174,7 +174,7 @@ class Stream(object):
         oport = op2.addOutputPort(width)
         return Stream(self.topology, oport)
 
-    def endParallel(self):
+    def endparallel(self):
         """
         Marks end of operators as parallel output with width
         :returns: Stream
