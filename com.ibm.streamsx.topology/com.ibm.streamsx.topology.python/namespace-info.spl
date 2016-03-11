@@ -288,11 +288,11 @@ containing the function are copied into the Streams Application Bundle (sab file
 * `isolate` function on `Stream`
 
   Guarantees that the upstream operation will run in a separate process from the downstream operation
-* `lowlatency` and `endlowlatency` functions on `Stream`
+* `low_latency` and `end_low_latency` functions on `Stream`
 
   The function is guaranteed to run in the same process as the
   upstream Stream function. All streams that are created from the returned stream 
-  are also guaranteed to run in the same process until endlowlatency() 
+  are also guaranteed to run in the same process until end_low_latency() 
   is called.
 
 # Sample Transform Application
