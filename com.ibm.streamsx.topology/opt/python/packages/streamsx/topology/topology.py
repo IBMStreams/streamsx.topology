@@ -138,11 +138,11 @@ class Stream(object):
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
 
-    def lowlatency(self):
+    def low_latency(self):
         """
 	      The function is guaranteed to run in the same process as the
         upstream Stream function. All streams that are created from the returned stream 
-        are also guaranteed to run in the same process until endlowlatency() 
+        are also guaranteed to run in the same process until end_low_latency() 
         is called.
         """
         op = self.topology.graph.addOperator("$LowLatency$")
@@ -150,7 +150,7 @@ class Stream(object):
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
 
-    def endlowlatency(self):
+    def end_low_latency(self):
         """
         Return a Stream that is no longer guaranteed to run in the same process
         as the calling stream. 

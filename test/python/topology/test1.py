@@ -54,10 +54,10 @@ class TestTopologyMethods(unittest.TestCase):
   def test_TopologyLowLatency(self):
      topo = Topology("test_TopologyLowLatency")
      hw = topo.source(test_functions.hello_world)
-     low1 = hw.lowlatency()
+     low1 = hw.low_latency()
      hwf1 = low1.filter(test_functions.filter)
      hwf2 = hwf1.filter(test_functions.filter)
-     elow1 = hwf2.endlowlatency()
+     elow1 = hwf2.end_low_latency()
      hwf3 = elow1.filter(test_functions.filter)
      hwf3.sink(test_functions.check_hello_world_filter)
      streamsx.topology.context.submit("BUNDLE", topo.graph)
