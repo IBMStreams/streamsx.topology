@@ -32,7 +32,9 @@ public:
 
 private:
   // Members
-    PyObject *function_;
+  
+  // Python iterator of pickled tuples
+  PyObject *function_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

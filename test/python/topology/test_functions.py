@@ -165,3 +165,20 @@ def check_strings_multi_transform_inc_max_split(t):
       ("Expected=" + EXPECTED_STRINGS_MULTI_TRANSFORM_INC_MAX_SPLIT[_hwcount_multi_transform_inc_max_split] +  ", actual=" + str(t))
    _hwcount_multi_transform_inc_max_split += 1
 
+class SourceTuplesAppendIndex:
+   def __init__(self, tuples=[]):
+      self.tuples = tuples
+   def __call__(self):
+      for i in range(len(self.tuples)):
+          self.tuples[i] += str(i)
+      return self.tuples
+  
+class CheckTuples:
+   def __init__(self, tuples=[]):
+      self.tuples = tuples
+      self.index = 0
+   def __call__(self, t):
+      print("TUPLE", t)
+      assert (self.index < len(self.tuples)), ("Expected index=" + str(self.index) + " < " + str(len(self.tuples)))
+      assert (t == self.tuples[self.index]), ("Expected=" + self.tuples[self.index] +  ", actual=" + str(t))
+      self.index += 1

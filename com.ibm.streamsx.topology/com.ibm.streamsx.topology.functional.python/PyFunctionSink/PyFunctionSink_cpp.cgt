@@ -24,7 +24,7 @@
 %>
 
 // Constructor
-MY_OPERATOR::MY_OPERATOR()
+MY_OPERATOR::MY_OPERATOR(): function_(NULL)
 {
   std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
   std::string streamsxDir = tkDir + "/opt/python/packages/streamsx/topology";
@@ -52,29 +52,46 @@ MY_OPERATOR::MY_OPERATOR()
     }
 
 <%
- my $module =  $model->getParameterByName("pyModule")->getValueAt(0)->getCppExpression() . '.c_str()';
- my $functionName = $model->getParameterByName("pyName")->getValueAt(0)->getCppExpression() . '.c_str()';
+ my $pyModule =  $model->getParameterByName("pyModule")->getValueAt(0)->getCppExpression() . '.c_str()';
+ my $pyCallableName = $model->getParameterByName("pyName")->getValueAt(0)->getCppExpression() . '.c_str()';
+ my $pyCallable = $model->getParameterByName("pyCallable");
+ $pyCallable = $pyCallable->getValueAt(0)->getCppExpression() . '.c_str()' if $pyCallable;
 %>
 
-    PyObject * appFunction = 
-      streamsx::topology::Splpy::loadFunction(<%=$module%>, <%=$functionName%>);
+    PyObject * appCallable = 
+      streamsx::topology::Splpy::loadFunction(<%=$pyModule%>, <%=$pyCallableName%>);
 
 <% if ($pystyle eq 'python') { %>
 
-    PyObject * depickleInput = 
-      streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInput");
-
+    PyObject * depickleInput = NULL;
     PyObject * funcArg = PyTuple_New(1);
-    PyTuple_SetItem(funcArg, 0, appFunction);
+    
+    <% if ($pyCallable) { %>
+      depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInputForCallableInstance");
+      // argument is the serialized callable instance
+      PyTuple_SetItem(funcArg, 0, Py_BuildValue("s", <%=$pyCallable%>));
+      Py_DECREF(appCallable);
+    <%} else {%>
+      depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInput");
+      // argument is the application function
+      PyTuple_SetItem(funcArg, 0, appCallable);
+    <%}%>
 
     function_ = PyObject_CallObject(depickleInput, funcArg);
-    // TODO error check
+    if(function_ == 0){
+      PyErr_Print();
+      Py_DECREF(depickleInput);
+      Py_DECREF(funcArg);
+      PyGILState_Release(gstate);
+      throw;
+    }
+    
     Py_DECREF(depickleInput);
     Py_DECREF(funcArg);
 
 <%}%>
 <% if ($pystyle eq 'string') { %>
-    function_ = appFunction;
+    function_ = appCallable;
 <%}%>
 
     PyGILState_Release(gstate);
@@ -84,6 +101,9 @@ MY_OPERATOR::MY_OPERATOR()
 MY_OPERATOR::~MY_OPERATOR() 
 {
     // Finalization code goes here
+    if (function_) {
+      Py_DECREF(function_);
+    }
 }
 
 // Notify port readiness

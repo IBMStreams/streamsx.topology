@@ -20,11 +20,11 @@ def pickleReturn(function) :
         return pickleObject(function(v))
     return _pickleReturn
 
-# Given a function F return a function
-# that depickles the input and then calls F
-def depickleInput(function) :
+# Given a callable 'callable', return a function
+# that depickles the input and then calls 'callable'
+def depickleInput(callable) :
     def _depickleInput(v):
-        return function(pickle.loads(v))
+        return callable(pickle.loads(v))
     return _depickleInput
 
 # Given a serialized callable instance, 
@@ -33,13 +33,11 @@ def depickleCallableInstance(serializedCallable):
     return pickle.loads(base64.b64decode(serializedCallable))
  
 # Given a serialized callable instance, 
-# deserialize the callable into F, return 
-# a function that depickles the input and then calls F
+# deserialize the callable into 'callable', return 
+# a function that depickles the input and then calls 'callable'
 def depickleInputForCallableInstance(serializedCallable) :
-    callableObject = depickleCallableInstance(serializedCallable)
-    def _depickleInputForCallableInstance(v):
-        return callableObject(pickle.loads(v))
-    return _depickleInputForCallableInstance
+    callable = depickleCallableInstance(serializedCallable)
+    return depickleInput(callable)
  
 # Given a function that returns an iterable
 # return a function that can be called
@@ -56,6 +54,13 @@ def iterableSource(function) :
      except StopIteration:
        return None
   return _sourceIterator
+
+# Given a serialized callable instance, 
+# deserialize the callable into 'callable',
+# then call 'iterableSource'
+def iterableSourceForCallableInstance(serializedCallable) :
+  callable = depickleCallableInstance(serializedCallable)
+  return iterableSource(callable)
 
 # Given a function and tuple argument
 # that returns an iterable,
@@ -76,3 +81,4 @@ def iterableObject(function, v) :
       except StopIteration:
          return None
    return _iterableObject
+
