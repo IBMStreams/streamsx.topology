@@ -34,8 +34,7 @@ MY_OPERATOR::MY_OPERATOR() : callable_(NULL), iterableObjectFunction_(NULL)
 
   streamsx::topology::Splpy::loadCPython(spl_setup_py);
 
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
+  streamsx::topology::PyGILLock lock;
 
     PyObject *_module_;
     PyObject *_function_;
@@ -76,7 +75,6 @@ MY_OPERATOR::MY_OPERATOR() : callable_(NULL), iterableObjectFunction_(NULL)
         PyErr_Print();
         Py_DECREF(depickleCallableInstance);
         Py_DECREF(funcArg);
-        PyGILState_Release(gstate);
         throw;
       }
       Py_DECREF(depickleCallableInstance);
@@ -94,13 +92,13 @@ MY_OPERATOR::MY_OPERATOR() : callable_(NULL), iterableObjectFunction_(NULL)
     callable_ = appCallable;
 <%}%>
 
-    PyGILState_Release(gstate);
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
     // Finalization code goes here
+    streamsx::topology::PyGILLock lock;
     if (callable_) {
       Py_DECREF(callable_);
     }
@@ -142,62 +140,59 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 <% if ($pystyle eq 'string') { %>
   SPL::rstring value = ip.get_string();
 <%}%>
-
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
-
-  // convert spl blob to bytes
-  PyObject * pyBytes  = streamsx::topology::Splpy::pyBlobToBytes(value);
-
-  // prepare to call the python utility function that invokes
-  // the application function and returns an iterator
-  PyObject * funcArg = PyTuple_New(2);
-  
-  // first argument is application function or deserialized instance of callable class
-  Py_INCREF(callable_);
-  PyTuple_SetItem(funcArg, 0, callable_);
-  
-  // second argument is spl blob in bytes (pickled tuple)
-  PyTuple_SetItem(funcArg, 1, pyBytes);
-    
-  // invoke python utility function and get an iterator of pickled values
-  PyObject * pyIterator = PyObject_CallObject(iterableObjectFunction_, funcArg);
-  Py_DECREF(funcArg);
-  if (pyIterator == 0) {
-    PyErr_Print();
-    PyGILState_Release(gstate);
-    throw;
-  }
   
   std::vector<OPort0Type> output_tuples; 
-  while (!getPE().getShutdownRequested()) {
-    // call next() on the iterator, and get the pickled return value
-    PyObject * pyPickledReturnVar = PyObject_CallObject(pyIterator, NULL);
-    if (pyPickledReturnVar == Py_None){
-      Py_DECREF(pyPickledReturnVar);
-      Py_DECREF(pyIterator);
-      break;
-    } else if(pyPickledReturnVar == 0){
+  
+  {
+    streamsx::topology::PyGILLock lock;
+
+    // convert spl blob to bytes
+    PyObject * pyBytes  = streamsx::topology::Splpy::pyBlobToBytes(value);
+
+    // prepare to call the python utility function that invokes
+    // the application function and returns an iterator
+    PyObject * funcArg = PyTuple_New(2);
+  
+    // first argument is application function or deserialized instance of callable class
+    Py_INCREF(callable_);
+    PyTuple_SetItem(funcArg, 0, callable_);
+  
+    // second argument is spl blob in bytes (pickled tuple)
+    PyTuple_SetItem(funcArg, 1, pyBytes);
+    
+    // invoke python utility function and get an iterator of pickled values
+    PyObject * pyIterator = PyObject_CallObject(iterableObjectFunction_, funcArg);
+    Py_DECREF(funcArg);
+    if (pyIterator == 0) {
       PyErr_Print();
-      Py_DECREF(pyIterator);
-      PyGILState_Release(gstate);
       throw;
     }
-
-    // construct spl blob and tuple from pickled return value
-    long int size = PyBytes_Size(pyPickledReturnVar);
-    char * bytes = PyBytes_AsString(pyPickledReturnVar);
-    Py_DECREF(pyPickledReturnVar); 
-    SPL::blob serializedObject((const unsigned char *)bytes, size);     
-    OPort0Type otuple(serializedObject);
-    output_tuples.push_back(otuple);
-   
-  }
   
-  PyGILState_Release(gstate);
+    while (!getPE().getShutdownRequested()) {
+      // call next() on the iterator, and get the pickled return value
+      PyObject * pyPickledReturnVar = PyObject_CallObject(pyIterator, NULL);
+      if (pyPickledReturnVar == Py_None){
+        Py_DECREF(pyPickledReturnVar);
+        Py_DECREF(pyIterator);
+        break;
+      } else if(pyPickledReturnVar == 0){
+        PyErr_Print();
+        Py_DECREF(pyIterator);
+        throw;
+      }
+
+      // construct spl blob and tuple from pickled return value
+      long int size = PyBytes_Size(pyPickledReturnVar);
+      char * bytes = PyBytes_AsString(pyPickledReturnVar);
+      Py_DECREF(pyPickledReturnVar); 
+      SPL::blob serializedObject((const unsigned char *)bytes, size);     
+      OPort0Type otuple(serializedObject);
+      output_tuples.push_back(otuple);
+    }
+  } // end lock
   
   // submit tuples
-  for(int i = 0; i < output_tuples.size(); i++) {
+  for(int i = 0; i < output_tuples.size() && !getPE().getShutdownRequested(); i++) {
     submit(output_tuples[i], 0);
   } 
   

@@ -22,8 +22,7 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
 
   streamsx::topology::Splpy::loadCPython(spl_setup_py);
 
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
+  streamsx::topology::PyGILLock lock;
 
     PyObject *_module_;
     PyObject *_function_;
@@ -69,14 +68,12 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
       PyErr_Print();
       Py_DECREF(iterableSource);
       Py_DECREF(funcArg);
-      PyGILState_Release(gstate);
       throw;
     }
     
     Py_DECREF(iterableSource);
     Py_DECREF(funcArg);
 
-    PyGILState_Release(gstate);
 }
 
 // Destructor
@@ -84,6 +81,7 @@ MY_OPERATOR::~MY_OPERATOR()
 {
     // Finalization code goes here
     if (function_) {
+      streamsx::topology::PyGILLock lock;
       Py_DECREF(function_);
     }
 }
@@ -103,9 +101,9 @@ void MY_OPERATOR::prepareToShutdown()
 // Processing for source and threaded operators   
 void MY_OPERATOR::process(uint32_t idx)
 {
+  std::vector<OPort0Type> output_tuples; 
   while(!getPE().getShutdownRequested()) {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    streamsx::topology::PyGILLock lock;
     PyObject * pyReturnVar = PyObject_CallObject(function_, NULL);
     if(pyReturnVar == Py_None){
       Py_DECREF(pyReturnVar);
@@ -120,9 +118,12 @@ void MY_OPERATOR::process(uint32_t idx)
     SPL::blob serializedObject((const unsigned char *)bytes, size);
     Py_DECREF(pyReturnVar);
     OPort0Type op(serializedObject);
-
-    PyGILState_Release(gstate);
-    submit(op, 0);
+    output_tuples.push_back(op);
+  }
+  
+  // submit tuples
+  for(int i = 0; i < output_tuples.size() && !getPE().getShutdownRequested(); i++) {
+    submit(output_tuples[i], 0);
   }
 }
 
