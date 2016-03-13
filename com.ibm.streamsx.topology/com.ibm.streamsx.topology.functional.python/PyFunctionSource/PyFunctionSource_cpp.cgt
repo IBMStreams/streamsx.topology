@@ -101,30 +101,31 @@ void MY_OPERATOR::prepareToShutdown()
 // Processing for source and threaded operators   
 void MY_OPERATOR::process(uint32_t idx)
 {
-  std::vector<OPort0Type> output_tuples; 
   while(!getPE().getShutdownRequested()) {
-    streamsx::topology::PyGILLock lock;
-    PyObject * pyReturnVar = PyObject_CallObject(function_, NULL);
-    if(pyReturnVar == Py_None){
-      Py_DECREF(pyReturnVar);
-      break;
-    } else if(pyReturnVar == 0){
-      PyErr_Print();
-      throw;
-    }
+    long int size = 0;
+    char * bytes = NULL;
+    
+    { // start lock
+      streamsx::topology::PyGILLock lock;
+      PyObject * pyReturnVar = PyObject_CallObject(function_, NULL);
+      if(pyReturnVar == Py_None){
+        Py_DECREF(pyReturnVar);
+        break;
+      } else if(pyReturnVar == 0){
+        PyErr_Print();
+        throw;
+      }
 
-    long int size = PyBytes_Size(pyReturnVar);
-    char * bytes = PyBytes_AsString(pyReturnVar);
+      size = PyBytes_Size(pyReturnVar);
+      bytes = PyBytes_AsString(pyReturnVar);
+      Py_DECREF(pyReturnVar);
+    } // end lock
+    
     SPL::blob serializedObject((const unsigned char *)bytes, size);
-    Py_DECREF(pyReturnVar);
     OPort0Type op(serializedObject);
-    output_tuples.push_back(op);
+    submit(op, 0);
   }
-  
-  // submit tuples
-  for(int i = 0; i < output_tuples.size() && !getPE().getShutdownRequested(); i++) {
-    submit(output_tuples[i], 0);
-  }
+
 }
 
 // Tuple processing for mutating ports 
