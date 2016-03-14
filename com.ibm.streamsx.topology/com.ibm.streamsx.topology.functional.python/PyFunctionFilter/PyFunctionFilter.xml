@@ -74,6 +74,13 @@
         <cardinality>1</cardinality>
         <optional>false</optional>
       </inputPortSet>      
+    </parameters>
+    <inputPorts>
+	  <inputPortOpenSet>
+        <tupleMutationAllowed>false</tupleMutationAllowed>
+        <windowingMode>NonWindowed</windowingMode>
+        <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
+      </inputPortOpenSet>      
     </inputPorts>
     <outputPorts>
       <outputPortSet>

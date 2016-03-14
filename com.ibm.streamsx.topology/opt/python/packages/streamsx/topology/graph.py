@@ -30,6 +30,12 @@ class SPLGraph(object):
             if not inspect.isbuiltin(function):
                 self.modules.add(inspect.getmodule(function))
         return op
+    
+    def addPassThruOperator(self):
+        name = self.name + "_OP"+str(len(self.operators))
+        op = SPLInvocation(len(self.operators), "com.ibm.streamsx.topology.functional.python::PyFunctionPassThru", None, name, {}, self)
+        self.operators.append(op)
+        return op
 
     def generateSPLGraph(self):
         _graph = {}
