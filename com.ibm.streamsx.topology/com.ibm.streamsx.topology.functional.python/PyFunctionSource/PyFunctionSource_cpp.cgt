@@ -22,8 +22,7 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
 
   streamsx::topology::Splpy::loadCPython(spl_setup_py);
 
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
+  streamsx::topology::PyGILLock lock;
 
     PyObject *_module_;
     PyObject *_function_;
@@ -69,14 +68,12 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
       PyErr_Print();
       Py_DECREF(iterableSource);
       Py_DECREF(funcArg);
-      PyGILState_Release(gstate);
       throw;
     }
     
     Py_DECREF(iterableSource);
     Py_DECREF(funcArg);
 
-    PyGILState_Release(gstate);
 }
 
 // Destructor
@@ -84,6 +81,7 @@ MY_OPERATOR::~MY_OPERATOR()
 {
     // Finalization code goes here
     if (function_) {
+      streamsx::topology::PyGILLock lock;
       Py_DECREF(function_);
     }
 }
@@ -104,26 +102,30 @@ void MY_OPERATOR::prepareToShutdown()
 void MY_OPERATOR::process(uint32_t idx)
 {
   while(!getPE().getShutdownRequested()) {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-    PyObject * pyReturnVar = PyObject_CallObject(function_, NULL);
-    if(pyReturnVar == Py_None){
+    long int size = 0;
+    char * bytes = NULL;
+    
+    { // start lock
+      streamsx::topology::PyGILLock lock;
+      PyObject * pyReturnVar = PyObject_CallObject(function_, NULL);
+      if(pyReturnVar == Py_None){
+        Py_DECREF(pyReturnVar);
+        break;
+      } else if(pyReturnVar == 0){
+        PyErr_Print();
+        throw;
+      }
+
+      size = PyBytes_Size(pyReturnVar);
+      bytes = PyBytes_AsString(pyReturnVar);
       Py_DECREF(pyReturnVar);
-      break;
-    } else if(pyReturnVar == 0){
-      PyErr_Print();
-      throw;
-    }
-
-    long int size = PyBytes_Size(pyReturnVar);
-    char * bytes = PyBytes_AsString(pyReturnVar);
+    } // end lock
+    
     SPL::blob serializedObject((const unsigned char *)bytes, size);
-    Py_DECREF(pyReturnVar);
     OPort0Type op(serializedObject);
-
-    PyGILState_Release(gstate);
     submit(op, 0);
   }
+
 }
 
 // Tuple processing for mutating ports 

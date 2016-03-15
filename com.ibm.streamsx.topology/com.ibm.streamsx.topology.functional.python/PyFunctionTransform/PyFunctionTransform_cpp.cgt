@@ -34,8 +34,7 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL), pickleObjectFunction_(NULL)
 
   streamsx::topology::Splpy::loadCPython(spl_setup_py);
 
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
+  streamsx::topology::PyGILLock lock;
 
     PyObject *_module_;
     PyObject *_function_;
@@ -84,7 +83,6 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL), pickleObjectFunction_(NULL)
       PyErr_Print();
       Py_DECREF(depickleInput);
       Py_DECREF(funcArg);
-      PyGILState_Release(gstate);
       throw;
     }
 
@@ -99,18 +97,20 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL), pickleObjectFunction_(NULL)
     function_ = appCallable;
 <%}%>
 
-    PyGILState_Release(gstate);
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
     // Finalization code goes here
-    if (function_) {
-      Py_DECREF(function_);
-    }
-    if (pickleObjectFunction_) {
-      Py_DECREF(pickleObjectFunction_);
+    if (function_ || pickleObjectFunction_) {
+      streamsx::topology::PyGILLock lock;
+      if (function_) {
+        Py_DECREF(function_);
+      }
+      if (pickleObjectFunction_) {
+        Py_DECREF(pickleObjectFunction_);
+      }
     }
 }
 

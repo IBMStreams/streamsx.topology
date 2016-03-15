@@ -32,9 +32,8 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
   const char* spl_setup_py = splpySetup.c_str();
 
   streamsx::topology::Splpy::loadCPython(spl_setup_py);
-
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
+  
+    streamsx::topology::PyGILLock lock;
 
     PyObject *_module_;
     PyObject *_function_;
@@ -83,7 +82,6 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
       PyErr_Print();
       Py_DECREF(depickleInput);
       Py_DECREF(funcArg);
-      PyGILState_Release(gstate);
       throw;
     }
 
@@ -95,7 +93,6 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
     function_ = appCallable;
 <%}%>
 
-    PyGILState_Release(gstate);
 }
 
 // Destructor
@@ -103,6 +100,7 @@ MY_OPERATOR::~MY_OPERATOR()
 {
     // Finalization code goes here
     if (function_) {
+      streamsx::topology::PyGILLock lock;
       Py_DECREF(function_);
     }
 }

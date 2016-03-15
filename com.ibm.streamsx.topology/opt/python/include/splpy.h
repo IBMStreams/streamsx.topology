@@ -14,8 +14,23 @@
  * Functionality for executing Python within IBM Streams.
  */
 
+    
 namespace streamsx {
   namespace topology {
+    
+    class PyGILLock {
+      public:
+        PyGILLock() {
+          gstate_ = PyGILState_Ensure();
+        }
+        ~PyGILLock() {
+          PyGILState_Release(gstate_);
+        }
+        
+      private:
+        PyGILState_STATE gstate_;
+    };
+    
     class Splpy {
       public:
       /**
@@ -36,15 +51,12 @@ namespace streamsx {
                              "python");
            throw;   
        }
-       PyGILState_STATE gstate;
-       gstate = PyGILState_Ensure();
+       PyGILLock lock;
        if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
-         PyGILState_Release(gstate);
          SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
          PyErr_Print();
          throw;
        }
-       PyGILState_Release(gstate);
       }
 
     /*
@@ -84,41 +96,31 @@ namespace streamsx {
       }
     static void pyTupleSink(PyObject * function, SPL::blob & pyblob) {
 
-      PyGILState_STATE gstate;
-      gstate = PyGILState_Ensure();
-
+      PyGILLock lock;
       PyObject * pyBytes  = pyBlobToBytes(pyblob);
       PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
 
       if(pyReturnVar == 0){
         PyErr_Print();
-        PyGILState_Release(gstate);
         throw;
       }
 
       Py_DECREF(pyReturnVar);
-      PyGILState_Release(gstate);
-
     }
     static void pyTupleSink(PyObject * function, SPL::rstring & pyrstring) {
       long int sizeb = pyrstring.length();
       const char * pybytes = pyrstring.data();
 
-      PyGILState_STATE gstate;
-      gstate = PyGILState_Ensure();
-
+      PyGILLock lock;
       PyObject * pyUnicode  = PyUnicode_FromStringAndSize(pybytes, sizeb);
       PyObject * pyReturnVar = pyTupleFunc(function, pyUnicode);
 
       if(pyReturnVar == 0){
         PyErr_Print();
-        PyGILState_Release(gstate);
         throw;
       }
 
       Py_DECREF(pyReturnVar);
-      PyGILState_Release(gstate);
-
     }
     
     // prints a string representation of the PyObject for debugging purposes
@@ -133,31 +135,25 @@ namespace streamsx {
 
     static int pyTupleFilter(PyObject * function, SPL::blob & pyblob) {
 
-      PyGILState_STATE gstate;
-      gstate = PyGILState_Ensure();
-
+      PyGILLock lock;
       PyObject * pyBytes  = pyBlobToBytes(pyblob);
       PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
 
       if(pyReturnVar == 0){
         PyErr_Print();
-        PyGILState_Release(gstate);
         throw;
       }
 
       int ret = PyObject_IsTrue(pyReturnVar);
 
       Py_DECREF(pyReturnVar);
-      PyGILState_Release(gstate);
-
       return ret;
     }
     
     static std::auto_ptr<SPL::blob> pyTupleTransform(PyObject * function, PyObject * pickleObjectFunction, SPL::blob & pyblob) {
 
       std::auto_ptr<SPL::blob> ret;
-      PyGILState_STATE gstate;
-      gstate = PyGILState_Ensure();
+      PyGILLock lock;
 
       // convert spl blob to bytes
       PyObject * pyBytes  = pyBlobToBytes(pyblob);
@@ -166,11 +162,9 @@ namespace streamsx {
 
       if (pyReturnVar == Py_None){
         Py_DECREF(pyReturnVar);
-        PyGILState_Release(gstate);
         return ret;
       } else if(pyReturnVar == 0){
         PyErr_Print();
-        PyGILState_Release(gstate);
         throw;
       } 
 
@@ -179,7 +173,6 @@ namespace streamsx {
       PyObject * pyPickledReturnVar = pyTupleFunc(pickleObjectFunction, pyReturnVar);
       if (pyPickledReturnVar == 0){
         PyErr_Print();
-        PyGILState_Release(gstate);
         throw;
       }
       
@@ -188,7 +181,6 @@ namespace streamsx {
       char * bytes = PyBytes_AsString(pyPickledReturnVar);          
       ret.reset(new SPL::blob((const unsigned char *)bytes, size));
       Py_DECREF(pyPickledReturnVar);
-      PyGILState_Release(gstate);
       return ret;
     }
 
@@ -218,5 +210,6 @@ namespace streamsx {
     }
 
     };
+   
   }
 }
