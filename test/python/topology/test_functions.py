@@ -1,3 +1,36 @@
+def hello() :
+    return ["Hello",]
+
+def beautiful() :
+    return ["beautiful",]
+
+def crazy() :
+    return ["crazy",]
+
+def world() :
+    return ["World!",]
+
+global _hwcountU
+_hwcountU = 0
+
+def check_union_hello_world(t) :
+
+   global _hwcountU
+   print("TUPLE", t, "count", _hwcountU)
+   _hwcountU += 1
+   if t == "Hello":
+       return None 
+   elif t == "World!":
+       return None
+   elif t == "beautiful" :
+       return None
+   elif t == "crazy" :
+       return None
+   elif _hwcountU > 4:
+       raise AssertionError()
+   else :	
+       raise AssertionError()
+
 def hello_world() :
     return ["Hello", "World!"]
 

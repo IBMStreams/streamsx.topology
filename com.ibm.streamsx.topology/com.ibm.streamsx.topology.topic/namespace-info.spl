@@ -21,7 +21,7 @@
  * [http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/mqtt-v3r1.html#appendix-a|MQTT topic style]
  * is used, and that topic names do not
  * include wild-cards. Future versions may support subscription
- * by MQTT style wild cards (e.g. `/cdr/voice/\*`).
+ * by MQTT style wild cards (e.g. `cdr/voice/\*`).
  * 
  * Publish-subscribe is a many to many relationship,
  * any number of publishers can publish to the same topic

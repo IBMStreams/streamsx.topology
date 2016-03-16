@@ -110,6 +110,37 @@ class TestTopologyMethods(unittest.TestCase):
       topo = Topology("test_TopologySourceAndSinkCallable")
       hw = topo.source(test_functions.SourceTuplesAppendIndex(["a", "b", "c", "d"]))
       hw.sink(test_functions.CheckTuples(["a0", "b1", "c2", "d3"]))
+    
+  def test_TopologyParallel(self):
+      topo = Topology("test_TopologyParallel")
+      hw = topo.source(test_functions.hello_world)   
+      hwp = hw.parallel(4)
+      hwf = hwp.filter(test_functions.filter)
+      hwef = hwf.end_parallel()
+      hwef.sink(test_functions.check_hello_world_filter)
+      streamsx.topology.context.submit("STANDALONE", topo.graph)
+
+  def test_TopologyUnion(self):
+      topo = Topology("test_TopologyUnion")
+      h = topo.source(test_functions.hello)
+      b = topo.source(test_functions.beautiful)
+      c = topo.source(test_functions.crazy)
+      w = topo.source(test_functions.world)
+      streamSet = {h, w, b, c}
+      hwu = h.union(streamSet)
+      hwu.sink(test_functions.check_union_hello_world)
+      streamsx.topology.context.submit("STANDALONE", topo.graph) 
+      
+  def test_TopologyParallelUnion(self):
+      topo = Topology("test_TopologyParallelUnion")
+      hw = topo.source(test_functions.hello_world)
+      hwp = hw.parallel(3)
+      hwf = hwp.filter(test_functions.filter)
+      hwf2 = hwp.filter(test_functions.filter)    
+      streamSet = {hwf2}
+      hwu = hwf.union(streamSet)
+      hwup = hwu.end_parallel()
+      hwup.sink(test_functions.check_union_hello_world)
       streamsx.topology.context.submit("STANDALONE", topo.graph)
           
 if __name__ == '__main__':

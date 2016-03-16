@@ -340,6 +340,16 @@ containing the function are copied into the Streams Application Bundle (sab file
   are also guaranteed to run in the same process until end_low_latency() 
   is called.
 
+* `union` function on `Stream`
+
+  The Union operator merges the outputs of the streams in the set into a single stream.
+
+*  `parallel` and `end_parallel` functions on `Stream`
+
+  Marks operator as parallel output with width specified
+
+
+
 # Sample Transform Application
 
 Example code that builds and then submits a simple topology.
@@ -395,8 +405,7 @@ to a running Streams instance.
 
 Future items that need to be supported
 
-* `union()` function on `Stream`
-* `parallel()` function on `Stream`
+* `parallel()` function on `Stream` utilizing hashed distribution
 * DISTRIBUTED submission
 * lambda functions
 * dynamic functions

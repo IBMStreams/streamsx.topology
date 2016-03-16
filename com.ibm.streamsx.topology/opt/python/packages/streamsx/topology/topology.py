@@ -34,7 +34,8 @@ class Topology(object):
         oport = op.addOutputPort(schema=schema)
         topicParam = {"topic": [topic]}
         op.setParameters(topicParam)
-        return Stream(self, oport)
+        return Stream(self, oport)    
+    
 
 class Stream(object):
     """
@@ -159,4 +160,55 @@ class Stream(object):
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
+    
+    def parallel(self, width):
+        """
+        Marks operator as parallel output with width
+        :param: width
+        :returns: Stream
+        """
+        iop = self.isolate()
+               
+        op2 = self.topology.graph.addOperator("$Parallel$")
+        op2.addInputPort(outputPort=iop.getOport())
+        oport = op2.addOutputPort(width)
+        return Stream(self.topology, oport)
 
+    def end_parallel(self):
+        """
+        Marks end of operators as parallel output with width
+        :returns: Stream
+        """
+        lastOp = self.topology.graph.getLastOperator()
+        outport = self.oport
+        if (isinstance(lastOp, graph.Marker)):
+            if (lastOp.kind == "$Union$"):
+                pto = self.topology.graph.addPassThruOperator()
+                pto.addInputPort(outputPort=self.oport)
+                outport = pto.addOutputPort()
+        op = self.topology.graph.addOperator("$EndParallel$")
+        op.addInputPort(outputPort=outport)
+        oport = op.addOutputPort()
+        endP = Stream(self.topology, oport)
+        return endP.isolate()
+
+    def union(self, streamSet):
+        """
+        The Union operator merges the outputs of the streams in the set 
+        into a single stream.
+        :param set of streams outputs to merge
+        :returns Stream
+        """
+        if(not isinstance(streamSet,set)) :
+            raise TypeError("The union operator parameter must be a set object")
+        if(len(streamSet) == 0):
+            return self        
+        op = self.topology.graph.addOperator("$Union$")
+        op.addInputPort(outputPort=self.getOport())
+        for stream in streamSet:
+            op.addInputPort(outputPort=stream.getOport())
+        oport = op.addOutputPort()
+        return Stream(self.topology, oport)
+    
+    def getOport(self):
+        return self.oport
