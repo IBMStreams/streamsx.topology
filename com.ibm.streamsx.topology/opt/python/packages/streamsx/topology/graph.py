@@ -17,7 +17,7 @@ class SPLGraph(object):
         self.operators = []
         self.modules = set()
 
-    def addOperator(self, kind, function=None, name=None, pwidth=None):
+    def addOperator(self, kind, function=None, name=None):
         if name is None:
             name = self.name + "_OP"+str(len(self.operators))
         if(kind.startswith("$")):    
@@ -58,6 +58,9 @@ class SPLGraph(object):
            mf["source"] = module.__file__
            mf["target"] = "opt/python/modules"
            includes.append(mf)
+           
+    def getLastOperator(self):
+        return self.operators[len(self.operators) -1]      
         
     def printJSON(self):
       print(json.dumps(self.generateSPLGraph(), sort_keys=True, indent=4, separators=(',', ': ')))

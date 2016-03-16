@@ -38,42 +38,13 @@
     </context>  
     <parameters>
       <allowAny>false</allowAny>
-      <parameter>
-        <name>pyModule</name>
-        <description>Function or callable class's module</description>
-        <optional>false</optional>
-        <rewriteAllowed>true</rewriteAllowed>
-        <expressionMode>AttributeFree</expressionMode>
-        <type>rstring</type>
-        <cardinality>1</cardinality>
-      </parameter>
-      <parameter>
-        <name>pyName</name>
-        <description>Function or callable class's name</description>
-        <optional>false</optional>
-        <rewriteAllowed>true</rewriteAllowed>
-        <expressionMode>AttributeFree</expressionMode>
-        <type>rstring</type>
-        <cardinality>1</cardinality>
-      </parameter>
-      <parameter>
-        <name>pyCallable</name>
-        <description>Serialized instance of a callable class</description>
-        <optional>true</optional>
-        <rewriteAllowed>true</rewriteAllowed>
-        <expressionMode>AttributeFree</expressionMode>
-        <type>rstring</type>
-        <cardinality>1</cardinality>
-      </parameter>
     </parameters>
     <inputPorts>
-      <inputPortSet>
+	  <inputPortOpenSet>
         <tupleMutationAllowed>false</tupleMutationAllowed>
         <windowingMode>NonWindowed</windowingMode>
         <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
-        <cardinality>1</cardinality>
-        <optional>false</optional>
-      </inputPortSet>           
+      </inputPortOpenSet>      
     </inputPorts>
     <outputPorts>
       <outputPortSet>

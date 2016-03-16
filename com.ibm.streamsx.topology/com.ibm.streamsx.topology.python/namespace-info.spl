@@ -344,7 +344,7 @@ containing the function are copied into the Streams Application Bundle (sab file
 
   The Union operator merges the outputs of the streams in the set into a single stream.
 
-*  `parallel` and `endparallel` functions on `Stream`
+*  `parallel` and `end_parallel` functions on `Stream`
 
   Marks operator as parallel output with width specified
 

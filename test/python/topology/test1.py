@@ -116,7 +116,7 @@ class TestTopologyMethods(unittest.TestCase):
       hw = topo.source(test_functions.hello_world)   
       hwp = hw.parallel(4)
       hwf = hwp.filter(test_functions.filter)
-      hwef = hwf.endparallel()
+      hwef = hwf.end_parallel()
       hwef.sink(test_functions.check_hello_world_filter)
       streamsx.topology.context.submit("STANDALONE", topo.graph)
 
@@ -139,7 +139,7 @@ class TestTopologyMethods(unittest.TestCase):
       hwf2 = hwp.filter(test_functions.filter)    
       streamSet = {hwf2}
       hwu = hwf.union(streamSet)
-      hwup = hwu.endparallel()
+      hwup = hwu.end_parallel()
       hwup.sink(test_functions.check_union_hello_world)
       streamsx.topology.context.submit("STANDALONE", topo.graph)
           

@@ -174,13 +174,20 @@ class Stream(object):
         oport = op2.addOutputPort(width)
         return Stream(self.topology, oport)
 
-    def endparallel(self):
+    def end_parallel(self):
         """
         Marks end of operators as parallel output with width
         :returns: Stream
         """
+        lastOp = self.topology.graph.getLastOperator()
+        outport = self.oport
+        if (isinstance(lastOp, graph.Marker)):
+            if (lastOp.kind == "$Union$"):
+                pto = self.topology.graph.addPassThruOperator()
+                pto.addInputPort(outputPort=self.oport)
+                outport = pto.addOutputPort()
         op = self.topology.graph.addOperator("$EndParallel$")
-        op.addInputPort(outputPort=self.oport)
+        op.addInputPort(outputPort=outport)
         oport = op.addOutputPort()
         endP = Stream(self.topology, oport)
         return endP.isolate()
