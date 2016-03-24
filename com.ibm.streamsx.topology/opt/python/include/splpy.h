@@ -88,7 +88,7 @@ namespace streamsx {
        Py_DECREF(module);
     
        if (!PyCallable_Check(function)) {
-           SPLAPPLOG(L_ERROR, "Fatal error: function not callable: " << functionNameC, "python");
+           SPLAPPLOG(L_ERROR, "Fatal error: function " << functionNameC << " in module " << moduleNameC << " not callable", "python");
          throw;
         }
         SPLAPPTRC(L_INFO, "Callable function: " << functionNameC, "python");

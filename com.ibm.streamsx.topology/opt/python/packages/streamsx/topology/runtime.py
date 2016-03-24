@@ -6,11 +6,14 @@ import sys
 def __splpy_addDirToPath(dir):
     if os.path.isdir(dir):
         if dir not in sys.path:
+            #print ("Adding dir to sys.path", dir)
             sys.path.append(dir)
 
 def setupOperator(dir):
     pydir = os.path.join(dir, 'opt', 'python')
     __splpy_addDirToPath(os.path.join(pydir, 'modules'))
+    __splpy_addDirToPath(os.path.join(pydir, 'packages'))
+    #print("sys.path", sys.path)
 
 def pickleObject(v):
     return pickle.dumps(v)

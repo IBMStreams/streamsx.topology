@@ -6,6 +6,9 @@ import json
 import inspect
 import pickle
 import base64
+import os
+import sys
+import streamsx.topology.util
 from streamsx.topology.schema import CommonSchema
 
 class SPLGraph(object):
@@ -16,6 +19,8 @@ class SPLGraph(object):
         self.name = name
         self.operators = []
         self.modules = set()
+        self.packages = set()
+        self.processed_modules = set()
 
     def addOperator(self, kind, function=None, name=None):
         if name is None:
@@ -25,10 +30,9 @@ class SPLGraph(object):
         else:
             op = SPLInvocation(len(self.operators), kind, function, name, {}, self)
         self.operators.append(op)
-        # TODO
         if not function is None:
             if not inspect.isbuiltin(function):
-                self.modules.add(inspect.getmodule(function))
+                self._add_module_dependencies(inspect.getmodule(function))
         return op
     
     def addPassThruOperator(self):
@@ -36,6 +40,34 @@ class SPLGraph(object):
         op = SPLInvocation(len(self.operators), "com.ibm.streamsx.topology.functional.python::PyFunctionPassThru", None, name, {}, self)
         self.operators.append(op)
         return op
+    
+    # adds a module and its dependencies to the list of dependencies
+    def _add_module_dependencies(self, module):
+        # add the module as a dependency
+        self._add_module_dependency(module)
+        # recursively get the module's imports and add those as dependencies
+        imported_modules = streamsx.topology.util.get_imported_modules(module)
+        #print ("get_imported_modules for {0}: {1}".format(module.__name__, imported_modules))
+        for imported_module_name,imported_module in imported_modules.items():
+            if imported_module_name not in self.processed_modules:
+                self._add_module_dependencies(imported_module)
+    
+    # add a module to the list of dependencies
+    def _add_module_dependency(self, module):
+        package_name = streamsx.topology.util.get_package_name(module)
+        if package_name:
+            # module is part of a package
+            # get the top-level package
+            top_package_name = module.__name__.split('.')[0]
+            top_package = sys.modules[top_package_name]
+            top_package_path = list(top_package.__path__)[0]
+            #print ("Adding external package", top_package_path)
+            self.packages.add(top_package_path)
+        else:
+            # individual Python module
+            #print ("Adding external module", module.__file__)
+            self.modules.add(module.__file__)
+        self.processed_modules.add(module.__name__)
 
     def generateSPLGraph(self):
         _graph = {}
@@ -46,16 +78,24 @@ class SPLGraph(object):
         _graph["config"]["includes"] = []
         _ops = []
         self.addModules(_graph["config"]["includes"])
+        self.addPackages(_graph["config"]["includes"])
         for op in self.operators:
             _ops.append(op.generateSPLOperator())
 
         _graph["operators"] = _ops
         return _graph
+   
+    def addPackages(self, includes):
+        for package_path in self.packages:
+           mf = {}
+           mf["source"] = package_path
+           mf["target"] = "opt/python/packages"
+           includes.append(mf)
 
     def addModules(self, includes):
-        for module in self.modules:
+        for module_path in self.modules:
            mf = {}
-           mf["source"] = module.__file__
+           mf["source"] = module_path
            mf["target"] = "opt/python/modules"
            includes.append(mf)
            
@@ -157,8 +197,7 @@ class SPLInvocation(object):
             # pickle format is binary; base64 encode so it is json serializable 
             self.params["pyCallable"] = base64.b64encode(pickle.dumps(function)).decode("ascii")
 
-        self.params["pyModule"] = function.__module__
-                    
+        self.params["pyModule"] = streamsx.topology.util.get_module_name(function)          
 
     def _printOperator(self):
         print(self.name+":")
