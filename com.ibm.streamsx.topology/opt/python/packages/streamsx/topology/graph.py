@@ -8,6 +8,7 @@ import pickle
 import base64
 import os
 import sys
+import zipfile
 import streamsx.topology.util
 from streamsx.topology.schema import CommonSchema
 
@@ -49,7 +50,7 @@ class SPLGraph(object):
         imported_modules = streamsx.topology.util.get_imported_modules(module)
         #print ("get_imported_modules for {0}: {1}".format(module.__name__, imported_modules))
         for imported_module_name,imported_module in imported_modules.items():
-            if imported_module_name not in self.processed_modules:
+            if imported_module not in self.processed_modules:
                 self._add_module_dependencies(imported_module)
     
     # add a module to the list of dependencies
@@ -60,14 +61,25 @@ class SPLGraph(object):
             # get the top-level package
             top_package_name = module.__name__.split('.')[0]
             top_package = sys.modules[top_package_name]
-            top_package_path = list(top_package.__path__)[0]
-            #print ("Adding external package", top_package_path)
-            self.packages.add(top_package_path)
+            # for regular packages, there is one top-level directory
+            # for namespace packages, there can be more than one.
+            # they will be merged in the bundle.  collisions are not allowed
+            for top_package_path in list(top_package.__path__):
+                top_package_path = os.path.abspath(top_package_path)
+                # don't need to bundle streamsx or system modules
+                if not streamsx.topology.util.is_streamsx_module(top_package_path) and \
+                   not streamsx.topology.util.is_system_module(top_package_path):
+                    # special handling if package is a zip file
+                    if os.path.dirname(top_package_path) and \
+                       zipfile.is_zipfile(os.path.dirname(top_package_path)):
+                       top_package_path = os.path.dirname(top_package_path)
+                    #print ("Adding external package", top_package_path)
+                    self.packages.add(top_package_path)
         else:
             # individual Python module
-            #print ("Adding external module", module.__file__)
-            self.modules.add(module.__file__)
-        self.processed_modules.add(module.__name__)
+            #print ("Adding external module", os.path.abspath(module.__file__))
+            self.modules.add(os.path.abspath(module.__file__))
+        self.processed_modules.add(module)
 
     def generateSPLGraph(self):
         _graph = {}

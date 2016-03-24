@@ -39,8 +39,8 @@ def get_module_name(function):
 # Gets imported modules for a given module
 # The following modules are excluded: 
 # * built-in modules
-# * modules that have "com.ibm.streamsx.topology" in the path
-# * other system modules whose paths start with sys.prefix or sys.exec_prefix 
+# * modules that have "com.ibm.streamsx.topology" in __file__
+# * other system modules whose __file__ start with sys.prefix or sys.exec_prefix 
 #   that are not inside a site package
 def get_imported_modules(module):
     imported_modules = {}
@@ -56,14 +56,16 @@ def get_imported_modules(module):
 def _is_builtin_module(module):
     return module.__name__ in sys.builtin_module_names
 
+def is_streamsx_module(module_path):
+    return "com.ibm.streamsx.topology" in module_path
+
 def _is_streamsx_module(module):
     if hasattr(module, '__file__'):
-        module_path = module.__file__
-    elif hasattr(module, '__path__'):
-        module_path = list(module.__path__)[0]
+        return is_streamsx_module(module.__file__)
     else:
+        # for namespace packages that have no __file__, return False for now
+        # case is handled later when dependencies are computed 
         return False
-    return "com.ibm.streamsx.topology" in module_path
 
 # returns True if the given path starts with a path of a site package, False otherwise
 def _inside_site_package(path):
@@ -71,14 +73,19 @@ def _inside_site_package(path):
         if path.startswith(site_package):
             return True
     return False
-          
+
+def is_system_module(module_path):
+    return not _inside_site_package(module_path) and \
+           (module_path.startswith((sys.prefix, sys.exec_prefix)) or \
+            (hasattr(sys, 'real_prefix') and module_path.startswith(sys.real_prefix)))
+                     
 def _is_system_module(module):
     if hasattr(module, '__file__'):
-        module_path = module.__file__
-    elif hasattr(module, '__path__'):
-        module_path = list(module.__path__)[0]
+        return is_system_module(module.__file__)
     else:
+        # for namespace packages that have no __file__, return False for now
+        # case is handled later when dependencies are computed
         return False
-    return not _inside_site_package(module_path) and \
-           (module_path.startswith(sys.prefix) or module_path.startswith(sys.exec_prefix))
-              
+
+
+           

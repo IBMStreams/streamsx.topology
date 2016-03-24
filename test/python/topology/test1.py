@@ -1,4 +1,5 @@
 import unittest
+import sys
 
 import test_functions
 import test_functions2
@@ -16,7 +17,7 @@ def filter_main(t):
     return "Wor" in t
 
 class TestTopologyMethods(unittest.TestCase):
-  
+    
   def test_TopologyName(self):
      topo = Topology("test_TopologyName")
      self.assertEqual("test_TopologyName", topo.name)
@@ -161,7 +162,7 @@ class TestTopologyMethods(unittest.TestCase):
       hwf = hw.filter(test_package.test_subpackage.test_module.filter)
       hwf.sink(test_package.test_subpackage.test_module.CheckTuples(["Hello"]))
       streamsx.topology.context.submit("STANDALONE", topo.graph)
-    
+      
   # test using input functions from an implicit namespace package, that doesn't have a __init__.py
   # test using input functions that are qualified using a module alias  e.g. 'test_ns_module'
   # test using input functions from a mix of packages and individual modules
@@ -187,7 +188,22 @@ class TestTopologyMethods(unittest.TestCase):
       hwf = hw.filter(filter_main)
       hwf.sink(test_functions.CheckTuples(["World!"]))
       streamsx.topology.context.submit("STANDALONE", topo.graph)
-          
+  
+  # test using input functions from a regular package that is zipped
+  # (uncompressed zip; zlib not installed by default)
+  def test_TopologyImportPackageFromZip(self):
+      sys.path.append('test_zipped_package.zip')
+      import test_zipped_package.test_subpackage.test_module
+      try:
+          topo = Topology("test_TopologyImportPackageFromZip")
+          hw = topo.source(test_zipped_package.test_subpackage.test_module.SourceTuples(["Hello", "World!"]))
+          hwf = hw.filter(test_zipped_package.test_subpackage.test_module.filter)
+          hwf.sink(test_zipped_package.test_subpackage.test_module.CheckTuples(["Hello"]))
+          streamsx.topology.context.submit("STANDALONE", topo.graph)
+      finally:
+          sys.path.remove('test_zipped_package.zip')
+          del test_zipped_package.test_subpackage.test_module
+      
 if __name__ == '__main__':
     unittest.main()
 
