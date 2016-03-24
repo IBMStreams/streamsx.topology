@@ -580,6 +580,10 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * <LI>
      * {@code com.ibm.streamsx.topology.topic::Subscribe} operator for SPL
      * Streams applications.</LI>
+     * <LI>
+     * {@code com.ibm.streamsx.topology.topic::FilteredSubscribe} operator for SPL
+     * Streams applications subscribing to a subset of the published tuples.</LI>
+
      * </UL>
      * <BR>
      * A subscriber matches to a publisher if:
@@ -597,11 +601,88 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * For {@link SPLStream SPL streams} the {@link SPLStream#getSchema() SPL
      * schema} is an exact match.</LI>
      * </UL>
+     * <BR>
+     * This method is identical to {@link #publish(String, boolean) publish(topic, false)}.
+     * 
+     * @param topic Topic to publish tuples to.
      * 
      * @see Topology#subscribe(String, Class)
      * @see com.ibm.streamsx.topology.spl.SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
      */
     void publish(String topic);
+    
+    /**
+     * Publish tuples from this stream for consumption by other IBM Streams applications.
+     * 
+     * Applications consume published streams using:
+     * <UL>
+     * <LI>
+     * {@link Topology#subscribe(String, Class)} for Java Streams applications.</LI>
+     * <LI>
+     * {@code com.ibm.streamsx.topology.topic::Subscribe} operator for SPL
+     * Streams applications.</LI>
+     * </UL>
+     * These tuple types allow publish-subscribe across IBM Streams applications
+     * implemented in different languages:
+     * <UL>
+     * <LI>{@code TStream<JSONObject>} - JSON tuples,
+     * SPL schema of {@link com.ibm.streamsx.topology.spl.SPLSchemas#JSON Json}.</LI>
+     * <LI>{@code TStream<String>} - String tuples,
+     * SPL schema of {@link com.ibm.streamsx.topology.spl.SPLSchemas#String String}.</LI>
+     * <LI>{@code TStream<com.ibm.streams.operator.types.XML>},
+     * SPL schema of {@link com.ibm.streamsx.topology.spl.SPLSchemas#XML Xml}. </LI>
+     * <LI>{@code TStream<com.ibm.streams.operator.types.Blob>},
+     * SPL schema of {@link com.ibm.streamsx.topology.spl.SPLSchemas#BLOB Blob}. </LI>
+     * </UL>
+     * <P>
+     * <BR>
+     * A subscriber matches to a publisher if:
+     * <UL>
+     * <LI>
+     * The topic is an exact match, and:</LI>
+     * <LI>
+     * For JSON streams ({@code TStream<JSONObject>}) the subscription is to
+     * a JSON stream.
+     * </LI>
+     * <LI>
+     * For Java streams ({@code TStream<T>}) the declared Java type ({@code T}
+     * ) of the stream is an exact match.</LI>
+     * <LI>
+     * For {@link SPLStream SPL streams} the {@link SPLStream#getSchema() SPL
+     * schema} is an exact match.</LI>
+     * </UL>
+     * </P>
+     * <P>
+     * {@code allowFilter} specifies if SPL filters can be pushed from a subscribing
+     * application to the publishing application. Executing filters on the publishing
+     * side reduces network communication between the publisher and the subscriber.
+     * <BR>
+     * When {@code allowFilter} is {@code false} SPL filters cannot be pushed to
+     * the publishing application.
+     * <BR>
+     * When {@code allowFilter} is {@code true} SPL filters are executed in the
+     * publishing applications.
+     * <BR>
+     * Regardless of the setting of {@code allowFilter} an invocation of
+     * {@link Topology#subscribe(String, Class)} or
+     * {@code com.ibm.streamsx.topology.topic::Subscribe}
+     * subscribes to all published tuples.
+     * <BR>
+     * {@code allowFilter} can only be set to true for:
+     * <UL>
+     * <LI>This stream is an instance of {@link com.ibm.streamsx.topology.spl.SPLStream}.</LI>
+     * <LI>This stream is an instance of {@code TStream<String>}.</LI>
+     * </UL>
+     * </P>
+     * 
+     * @param topic Topic to publish tuples to.
+     * @param allowFilter Allow SPL filters specified by SPL application to be executed
+     * in the publishing application.
+     * 
+     * @see Topology#subscribe(String, Class)
+     * @see com.ibm.streamsx.topology.spl.SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
+     */
+    void publish(String topic, boolean allowFilter);
 
     /**
      * Parallelizes the stream into a a fixed

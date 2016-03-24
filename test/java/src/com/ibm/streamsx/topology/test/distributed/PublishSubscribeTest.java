@@ -17,6 +17,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.types.Blob;
 import com.ibm.streams.operator.types.ValueFactory;
 import com.ibm.streams.operator.types.XML;
@@ -30,6 +31,7 @@ import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
+import com.ibm.streamsx.topology.test.spl.SPLStreamsTest;
 
 /**
  * Test publish/subscribe. These tests just use publish/subscribe
@@ -285,5 +287,46 @@ public class PublishSubscribeTest extends TestTopology {
         public String toString() {
             return "SimpleInt:" + value;
         }
+    }
+
+    @Test
+    public void testSPLPublishNoFilterWithSubscribe() throws Exception {
+        final Topology t = new Topology();
+        
+        SPLStream source = SPLStreamsTest.testTupleStream(t);
+                
+        source = source.modify(new Delay<Tuple>());
+        
+        source.publish("testSPLPublishNoFilterSFilteredSubscribe", false);
+        
+        SPLStream sub = SPLStreams.subscribe(t, "testSPLPublishNoFilterSFilteredSubscribe", source.getSchema());
+        
+        TStream<String> subscribe = sub.transform(new GetTupleId());
+
+        completeAndValidate(subscribe, 20, "SPL:0", "SPL:1", "SPL:2", "SPL:3");
+    } 
+    @Test
+    public void testSPLPublishAllowFilterWithSubscribe() throws Exception {
+        final Topology t = new Topology();
+        
+        SPLStream source = SPLStreamsTest.testTupleStream(t);
+                
+        source = source.modify(new Delay<Tuple>());
+        
+        source.publish("testSPLPublishAllowFilterWithSubscribe", true);
+        
+        SPLStream sub = SPLStreams.subscribe(t, "testSPLPublishAllowFilterWithSubscribe", source.getSchema());
+        
+        TStream<String> subscribe = sub.transform(new GetTupleId());
+
+        completeAndValidate(subscribe, 20, "SPL:0", "SPL:1", "SPL:2", "SPL:3");
+    }
+
+    public static class GetTupleId implements Function<Tuple,String> {
+    	private static final long serialVersionUID = 1L;
+		@Override
+		public String apply(Tuple v) {
+			return "SPL:" + v.getString("id");
+		}	
     }
 }
