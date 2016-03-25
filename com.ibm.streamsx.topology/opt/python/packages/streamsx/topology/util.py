@@ -31,9 +31,9 @@ def get_module_name(function):
         # special handling to allow importing functions from __main__ module
         # get the main module object of the function
         main_module = inspect.getmodule(function)
-        # get the module name from __file__ by removing the .py extension
+        # get the module name from __file__ by getting the base name and removing the .py extension
         # e.g. test1.py => test1
-        module_name = os.path.splitext(main_module.__file__)[0]
+        module_name = os.path.splitext(os.path.basename(main_module.__file__))[0]
     return module_name
 
 # Gets imported modules for a given module
