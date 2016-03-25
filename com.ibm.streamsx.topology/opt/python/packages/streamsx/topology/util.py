@@ -31,41 +31,44 @@ def get_module_name(function):
         # special handling to allow importing functions from __main__ module
         # get the main module object of the function
         main_module = inspect.getmodule(function)
-        # get the module name from __file__ by getting the base name and removing the .py extension
+        # get the module name from __file__ removing the .py extension
         # e.g. test1.py => test1
-        module_name = os.path.splitext(os.path.basename(main_module.__file__))[0]
+        module_name = os.path.splitext(main_module.__file__)[0]
     return module_name
 
 # Gets imported modules for a given module
 # The following modules are excluded: 
 # * built-in modules
-# * modules that have "com.ibm.streamsx.topology" in __file__
-# * other system modules whose __file__ start with sys.prefix or sys.exec_prefix 
+# * modules that have "com.ibm.streamsx.topology" in the path
+# * other system modules whose paths start with sys.prefix or sys.exec_prefix 
 #   that are not inside a site package
 def get_imported_modules(module):
     imported_modules = {}
     #print ("vars(module)", vars(module))
     for alias, val in vars(module).items():
         if isinstance(val, types.ModuleType):
-            if not _is_builtin_module(val) and \
-               not _is_streamsx_module(val) and \
-               not _is_system_module(val):
+            if not is_builtin_module(val) and \
+               not is_streamsx_module(val) and \
+               not is_system_module(val):
                 imported_modules[val.__name__] = val
     return imported_modules
 
-def _is_builtin_module(module):
+def is_builtin_module(module):
     return module.__name__ in sys.builtin_module_names
 
-def is_streamsx_module(module_path):
+def _is_streamsx_module(module_path):
     return "com.ibm.streamsx.topology" in module_path
 
-def _is_streamsx_module(module):
+def is_streamsx_module(module):
     if hasattr(module, '__file__'):
-        return is_streamsx_module(module.__file__)
-    else:
-        # for namespace packages that have no __file__, return False for now
-        # case is handled later when dependencies are computed 
-        return False
+        # module or regular package
+        return _is_streamsx_module(module.__file__)
+    elif hasattr(module, '__path__'):
+        # namespace package. assume streamsx package if any path evaluates to true
+        for module_path in list(module.__path__):
+            if _is_streamsx_module(module_path):
+                return True
+    return False
 
 # returns True if the given path starts with a path of a site package, False otherwise
 def _inside_site_package(path):
@@ -74,18 +77,18 @@ def _inside_site_package(path):
             return True
     return False
 
-def is_system_module(module_path):
+def _is_system_module(module_path):
     return not _inside_site_package(module_path) and \
            (module_path.startswith((sys.prefix, sys.exec_prefix)) or \
             (hasattr(sys, 'real_prefix') and module_path.startswith(sys.real_prefix)))
                      
-def _is_system_module(module):
+def is_system_module(module):
     if hasattr(module, '__file__'):
-        return is_system_module(module.__file__)
-    else:
-        # for namespace packages that have no __file__, return False for now
-        # case is handled later when dependencies are computed
-        return False
-
-
-           
+        # module or regular package
+        return _is_system_module(module.__file__)
+    elif hasattr(module, '__path__'):
+        # namespace package.  assume system package if any path evaluates to true
+        for module_path in list(module.__path__):
+            if _is_system_module(module_path):
+                return True
+    return False

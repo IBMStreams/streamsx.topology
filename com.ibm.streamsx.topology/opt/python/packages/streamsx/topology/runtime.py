@@ -10,7 +10,7 @@ def __splpy_addDirToPath(dir):
             #print ("Adding dir to sys.path", dir)
             sys.path.append(dir)
 
-def __splpy_addZipToPath(dir):
+def __splpy_addZipFilesToPath(dir):
     if os.path.isdir(dir):
         for file in os.listdir(dir):
             abs_file_path = os.path.join(dir, file)
@@ -22,7 +22,7 @@ def setupOperator(dir):
     pydir = os.path.join(dir, 'opt', 'python')
     __splpy_addDirToPath(os.path.join(pydir, 'modules'))
     __splpy_addDirToPath(os.path.join(pydir, 'packages'))
-    __splpy_addZipToPath(os.path.join(pydir, 'packages'))
+    __splpy_addZipFilesToPath(os.path.join(pydir, 'packages'))
     #print("sys.path", sys.path)
 
 def pickleObject(v):

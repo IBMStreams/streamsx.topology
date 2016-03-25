@@ -63,18 +63,15 @@ class SPLGraph(object):
             top_package = sys.modules[top_package_name]
             # for regular packages, there is one top-level directory
             # for namespace packages, there can be more than one.
-            # they will be merged in the bundle.  collisions are not allowed
+            # they will be merged in the bundle.  file name collisions are not allowed
             for top_package_path in list(top_package.__path__):
                 top_package_path = os.path.abspath(top_package_path)
-                # don't need to bundle streamsx or system modules
-                if not streamsx.topology.util.is_streamsx_module(top_package_path) and \
-                   not streamsx.topology.util.is_system_module(top_package_path):
-                    # special handling if package is a zip file
-                    if os.path.dirname(top_package_path) and \
-                       zipfile.is_zipfile(os.path.dirname(top_package_path)):
-                       top_package_path = os.path.dirname(top_package_path)
-                    #print ("Adding external package", top_package_path)
-                    self.packages.add(top_package_path)
+                # special handling if package is a zip file
+                if os.path.dirname(top_package_path) and \
+                   zipfile.is_zipfile(os.path.dirname(top_package_path)):
+                   top_package_path = os.path.dirname(top_package_path)
+                #print ("Adding external package", top_package_path)
+                self.packages.add(top_package_path)
         else:
             # individual Python module
             #print ("Adding external module", os.path.abspath(module.__file__))
