@@ -54,7 +54,9 @@ def get_imported_modules(module):
     return imported_modules
 
 def is_builtin_module(module):
-    return module.__name__ in sys.builtin_module_names
+    return module.__name__ in sys.builtin_module_names and \
+           not hasattr(module, '__file__') and \
+           not hasattr(module, '__path__')
 
 def _is_streamsx_module(module_path):
     return "com.ibm.streamsx.topology" in module_path

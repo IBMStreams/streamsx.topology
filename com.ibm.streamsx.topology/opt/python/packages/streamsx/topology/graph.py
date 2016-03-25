@@ -53,7 +53,7 @@ class SPLGraph(object):
             if imported_module not in self.processed_modules:
                 self._add_module_dependencies(imported_module)
     
-    # add a module to the list of dependencies
+    # adds a module to the list of dependencies
     def _add_module_dependency(self, module):
         package_name = streamsx.topology.util.get_package_name(module)
         if package_name:
