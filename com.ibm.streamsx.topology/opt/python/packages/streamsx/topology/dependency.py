@@ -23,7 +23,7 @@ class DependencyResolver(object):
             if imported_module not in self.processed_modules:
                 self.add_dependencies(imported_module)
     
-    # get the list of module dependencies
+    # gets the list of module dependencies
     def get_module_dependencies(self):
         return frozenset(self.modules)
     
