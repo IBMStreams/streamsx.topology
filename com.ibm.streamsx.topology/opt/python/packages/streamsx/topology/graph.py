@@ -6,10 +6,7 @@ import json
 import inspect
 import pickle
 import base64
-import os
-import sys
-import zipfile
-import streamsx.topology.util
+import streamsx.topology.dependency
 from streamsx.topology.schema import CommonSchema
 
 class SPLGraph(object):
@@ -19,9 +16,7 @@ class SPLGraph(object):
             name = str(uuid.uuid1()).replace("-", "")
         self.name = name
         self.operators = []
-        self.modules = set()
-        self.packages = set()
-        self.processed_modules = set()
+        self.resolver = streamsx.topology.dependency.DependencyResolver()
 
     def addOperator(self, kind, function=None, name=None):
         if name is None:
@@ -33,7 +28,7 @@ class SPLGraph(object):
         self.operators.append(op)
         if not function is None:
             if not inspect.isbuiltin(function):
-                self._add_module_dependencies(inspect.getmodule(function))
+                self.resolver.add_dependencies(inspect.getmodule(function))
         return op
     
     def addPassThruOperator(self):
@@ -41,42 +36,6 @@ class SPLGraph(object):
         op = SPLInvocation(len(self.operators), "com.ibm.streamsx.topology.functional.python::PyFunctionPassThru", None, name, {}, self)
         self.operators.append(op)
         return op
-    
-    # adds a module and its dependencies to the list of dependencies
-    def _add_module_dependencies(self, module):
-        # add the module as a dependency
-        self._add_module_dependency(module)
-        # recursively get the module's imports and add those as dependencies
-        imported_modules = streamsx.topology.util.get_imported_modules(module)
-        #print ("get_imported_modules for {0}: {1}".format(module.__name__, imported_modules))
-        for imported_module_name,imported_module in imported_modules.items():
-            if imported_module not in self.processed_modules:
-                self._add_module_dependencies(imported_module)
-    
-    # adds a module to the list of dependencies
-    def _add_module_dependency(self, module):
-        package_name = streamsx.topology.util.get_package_name(module)
-        if package_name:
-            # module is part of a package
-            # get the top-level package
-            top_package_name = module.__name__.split('.')[0]
-            top_package = sys.modules[top_package_name]
-            # for regular packages, there is one top-level directory
-            # for namespace packages, there can be more than one.
-            # they will be merged in the bundle.  file name collisions are not allowed
-            for top_package_path in list(top_package.__path__):
-                top_package_path = os.path.abspath(top_package_path)
-                # special handling if package is a zip file
-                if os.path.dirname(top_package_path) and \
-                   zipfile.is_zipfile(os.path.dirname(top_package_path)):
-                   top_package_path = os.path.dirname(top_package_path)
-                #print ("Adding external package", top_package_path)
-                self.packages.add(top_package_path)
-        else:
-            # individual Python module
-            #print ("Adding external module", os.path.abspath(module.__file__))
-            self.modules.add(os.path.abspath(module.__file__))
-        self.processed_modules.add(module)
 
     def generateSPLGraph(self):
         _graph = {}
@@ -95,14 +54,14 @@ class SPLGraph(object):
         return _graph
    
     def addPackages(self, includes):
-        for package_path in self.packages:
+        for package_path in self.resolver.get_package_dependencies():
            mf = {}
            mf["source"] = package_path
            mf["target"] = "opt/python/packages"
            includes.append(mf)
 
     def addModules(self, includes):
-        for module_path in self.modules:
+        for module_path in self.resolver.get_module_dependencies():
            mf = {}
            mf["source"] = module_path
            mf["target"] = "opt/python/modules"
@@ -206,7 +165,7 @@ class SPLInvocation(object):
             # pickle format is binary; base64 encode so it is json serializable 
             self.params["pyCallable"] = base64.b64encode(pickle.dumps(function)).decode("ascii")
 
-        self.params["pyModule"] = streamsx.topology.util.get_module_name(function)          
+        self.params["pyModule"] = streamsx.topology.dependency.get_module_name(function)          
 
     def _printOperator(self):
         print(self.name+":")

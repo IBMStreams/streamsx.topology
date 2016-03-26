@@ -1,9 +1,77 @@
-import os
+import os.path
 import sys
 import site
 import inspect
 import types
+import zipfile
 
+class DependencyResolver(object):
+
+    def __init__(self):
+        self.modules = set()
+        self.packages = set()
+        self.processed_modules = set()
+        
+    # adds a module and its dependencies to the list of dependencies
+    def add_dependencies(self, module):
+        # add the module as a dependency
+        self._add_dependency(module)
+        # recursively get the module's imports and add those as dependencies
+        imported_modules = get_imported_modules(module)
+        #print ("get_imported_modules for {0}: {1}".format(module.__name__, imported_modules))
+        for imported_module_name,imported_module in imported_modules.items():
+            if imported_module not in self.processed_modules:
+                self.add_dependencies(imported_module)
+    
+    # get the list of module dependencies
+    def get_module_dependencies(self):
+        return frozenset(self.modules)
+    
+    # gets the list of package dependencies
+    def get_package_dependencies(self):
+        return frozenset(self.packages)
+    
+    # adds a module to the list of dependencies
+    def _add_dependency(self, module):
+        package_name = get_package_name(module)
+        if package_name:
+            # module is part of a package
+            # get the top-level package
+            top_package_name = module.__name__.split('.')[0]
+            top_package = sys.modules[top_package_name]
+            # for regular packages, there is one top-level directory
+            # for namespace packages, there can be more than one.
+            # they will be merged in the bundle.  file name collisions are not allowed
+            for top_package_path in list(top_package.__path__):
+                top_package_path = os.path.abspath(top_package_path)
+                if is_parentdir_zip(top_package_path):
+                   # special handling if package is in a zip file
+                   top_package_path = os.path.dirname(top_package_path)
+                self._add_package(top_package_path)
+        else:
+            # individual Python module
+            module_path = os.path.abspath(module.__file__)
+            if is_parentdir_zip(module_path):
+                # special handling if module is in a zip file
+                self._add_package(os.path.dirname(module_path))
+            else:
+                # module is not in a zip file
+                self._add_module(module_path)
+            
+        self.processed_modules.add(module)
+
+    def _add_package(self, path):
+        #print ("Adding external package", path)
+        self.packages.add(path)
+    
+    def _add_module(self, path):
+        #print ("Adding external module", path)
+        self.modules.add(path)
+
+#####################
+# Utility functions #
+#####################
+    
 # Gets the package name given a module object
 # Returns None or '' if the module does not belong to a package            
 def get_package_name(module):
@@ -94,3 +162,7 @@ def is_system_module(module):
             if _is_system_module(module_path):
                 return True
     return False
+
+# Returns True if the parent directory in path is a zip file; False otherwise
+def is_parentdir_zip(path):
+    return os.path.dirname(path) and zipfile.is_zipfile(os.path.dirname(path))
