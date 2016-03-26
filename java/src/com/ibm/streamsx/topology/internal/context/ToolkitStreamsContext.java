@@ -232,7 +232,8 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
             public FileVisitResult visitFile(final Path file,
                     final BasicFileAttributes attrs) throws IOException {
                 Files.copy(file,
-                        targetPath.resolve(sourcePath.relativize(file)));
+                        targetPath.resolve(sourcePath.relativize(file)),
+                        StandardCopyOption.REPLACE_EXISTING);
                 return FileVisitResult.CONTINUE;
             }
         });

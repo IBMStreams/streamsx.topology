@@ -41,8 +41,8 @@ class DependencyResolver(object):
             top_package = sys.modules[top_package_name]
             # for regular packages, there is one top-level directory
             # for namespace packages, there can be more than one.
-            # they will be merged in the bundle.  file name collisions are not allowed
-            for top_package_path in list(top_package.__path__):
+            # they will be merged in the bundle
+            for top_package_path in reversed(list(top_package.__path__)):
                 top_package_path = os.path.abspath(top_package_path)
                 if is_parentdir_zip(top_package_path):
                    # special handling if package is in a zip file
