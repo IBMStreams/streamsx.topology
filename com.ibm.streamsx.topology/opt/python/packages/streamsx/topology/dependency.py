@@ -4,12 +4,14 @@ import site
 import inspect
 import types
 import zipfile
-
+import collections
+    
+# finds dependencies given a module object
 class DependencyResolver(object):
 
     def __init__(self):
         self.modules = set()
-        self.packages = set()
+        self.packages = collections.OrderedDict() # need an ordered set when merging namespace directories
         self.processed_modules = set()
         
     # adds a module and its dependencies to the list of dependencies
@@ -29,7 +31,7 @@ class DependencyResolver(object):
     
     # gets the list of package dependencies
     def get_package_dependencies(self):
-        return frozenset(self.packages)
+        return frozenset(self.packages.keys())
     
     # adds a module to the list of dependencies
     def _add_dependency(self, module):
@@ -62,7 +64,7 @@ class DependencyResolver(object):
 
     def _add_package(self, path):
         #print ("Adding external package", path)
-        self.packages.add(path)
+        self.packages[path] = None
     
     def _add_module(self, path):
         #print ("Adding external module", path)

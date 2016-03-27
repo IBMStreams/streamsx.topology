@@ -177,7 +177,7 @@ class TestTopologyMethods(unittest.TestCase):
           streamsx.topology.context.submit("STANDALONE", topo.graph)
       finally:
           del test_ns_module
-    
+
   # test using input functions from a namespace package that merges separate packages into a
   # common namespace    
   def test_TopologyImportCommonNamespacePackage(self):
@@ -193,9 +193,8 @@ class TestTopologyMethods(unittest.TestCase):
       finally:
           sys.path.remove('test_common_namespace/package1')
           sys.path.remove('test_common_namespace/package2')
-          del common_namespace.module1
-          del common_namespace.module2
-  
+          del common_namespace.module1, common_namespace.module2
+
   # test using input functions from a module that imports another module
   def test_TopologyImportModuleWithDependencies(self):
       import test_functions2
@@ -230,8 +229,7 @@ class TestTopologyMethods(unittest.TestCase):
           streamsx.topology.context.submit("STANDALONE", topo.graph)
       finally:
           sys.path.remove('test_zipped_package.zip')
-          del test_zipped_module
-          del test_zipped_package.test_subpackage.test_module
+          del test_zipped_module, test_zipped_package.test_subpackage.test_module
 
 if __name__ == '__main__':
     unittest.main()
