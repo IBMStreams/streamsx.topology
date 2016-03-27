@@ -31,7 +31,7 @@ class DependencyResolver(object):
     
     # gets the list of package dependencies
     def get_package_dependencies(self):
-        return self.packages.keys()
+        return tuple(self.packages.keys())
     
     # adds a module to the list of dependencies
     def _add_dependency(self, module):
