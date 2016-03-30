@@ -28,16 +28,12 @@ class DependencyResolver(object):
     # property to get the list of module dependencies
     def _get_modules(self):
         return frozenset(self._modules)
-    def _set_modules(self, value):
-        self._modules = value
-    modules = property(_get_modules, _set_modules)
+    modules = property(_get_modules)
     
     # property to get the list of package dependencies
     def _get_packages(self):
         return tuple(self._packages.keys())
-    def _set_packages(self, value):
-        self._packages = value
-    packages = property(_get_packages, _set_packages)   
+    packages = property(_get_packages)   
     
     # adds a module to the list of dependencies
     def _add_dependency(self, module):
