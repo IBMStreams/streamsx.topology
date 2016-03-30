@@ -10,9 +10,9 @@ import collections
 class DependencyResolver(object):
 
     def __init__(self):
-        self.modules = set()
-        self.packages = collections.OrderedDict() # need an ordered set when merging namespace directories
-        self.processed_modules = set()
+        self._modules = set()
+        self._packages = collections.OrderedDict() # need an ordered set when merging namespace directories
+        self._processed_modules = set()
         
     # adds a module and its dependencies to the list of dependencies
     def add_dependencies(self, module):
@@ -22,16 +22,22 @@ class DependencyResolver(object):
         imported_modules = get_imported_modules(module)
         #print ("get_imported_modules for {0}: {1}".format(module.__name__, imported_modules))
         for imported_module_name,imported_module in imported_modules.items():
-            if imported_module not in self.processed_modules:
+            if imported_module not in self._processed_modules:
                 self.add_dependencies(imported_module)
     
-    # gets the list of module dependencies
-    def get_module_dependencies(self):
-        return frozenset(self.modules)
+    # property to get the list of module dependencies
+    def _get_modules(self):
+        return frozenset(self._modules)
+    def _set_modules(self, value):
+        self._modules = value
+    modules = property(_get_modules, _set_modules)
     
-    # gets the list of package dependencies
-    def get_package_dependencies(self):
-        return tuple(self.packages.keys())
+    # property to get the list of package dependencies
+    def _get_packages(self):
+        return tuple(self._packages.keys())
+    def _set_packages(self, value):
+        self._packages = value
+    packages = property(_get_packages, _set_packages)   
     
     # adds a module to the list of dependencies
     def _add_dependency(self, module):
@@ -60,15 +66,15 @@ class DependencyResolver(object):
                 # module is not in a zip file
                 self._add_module(module_path)
             
-        self.processed_modules.add(module)
+        self._processed_modules.add(module)
 
     def _add_package(self, path):
         #print ("Adding external package", path)
-        self.packages[path] = None
+        self._packages[path] = None
     
     def _add_module(self, path):
         #print ("Adding external module", path)
-        self.modules.add(path)
+        self._modules.add(path)
 
 #####################
 # Utility functions #

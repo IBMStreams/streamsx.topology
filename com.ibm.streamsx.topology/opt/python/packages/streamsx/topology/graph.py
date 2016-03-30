@@ -54,14 +54,14 @@ class SPLGraph(object):
         return _graph
    
     def addPackages(self, includes):
-        for package_path in self.resolver.get_package_dependencies():
+        for package_path in self.resolver.packages:
            mf = {}
            mf["source"] = package_path
            mf["target"] = "opt/python/packages"
            includes.append(mf)
 
     def addModules(self, includes):
-        for module_path in self.resolver.get_module_dependencies():
+        for module_path in self.resolver.modules:
            mf = {}
            mf["source"] = module_path
            mf["target"] = "opt/python/modules"
