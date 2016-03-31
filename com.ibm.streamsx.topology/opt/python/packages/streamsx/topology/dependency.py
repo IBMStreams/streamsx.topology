@@ -105,7 +105,8 @@ def get_module_name(function):
         main_module = inspect.getmodule(function)
         # get the module name from __file__ by getting the base name and removing the .py extension
         # e.g. test1.py => test1
-        module_name = os.path.splitext(os.path.basename(main_module.__file__))[0]
+        if hasattr(main_module, '__file__'):
+            module_name = os.path.splitext(os.path.basename(main_module.__file__))[0]
     return module_name
 
 # Gets imported modules for a given module
