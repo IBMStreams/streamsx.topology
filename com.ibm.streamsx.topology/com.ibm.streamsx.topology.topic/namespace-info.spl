@@ -76,7 +76,7 @@
  * * XML tuples
  *   * SPL : [com.ibm.streamsx.topology::XML]
  *   * Java: `TStream<com.ibm.streams.operator.types.XML>`
- *   * Java: `TStream[com.ibm.streams.operator.types.XML]`
+ *   * Java: `TStream\[com.ibm.streams.operator.types.XML\]`
  * * Binary tuples
  *   * SPL : [com.ibm.streamsx.topology::Blob]
  *   * Java: `TStream<com.ibm.streams.operator.types.Blob>`

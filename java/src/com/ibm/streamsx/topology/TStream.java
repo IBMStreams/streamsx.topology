@@ -628,7 +628,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * <LI>{@code TStream<JSONObject>} - JSON tuples,
      * SPL schema of {@link com.ibm.streamsx.topology.spl.SPLSchemas#JSON Json}.</LI>
      * <LI>{@code TStream<String>} - String tuples,
-     * SPL schema of {@link com.ibm.streamsx.topology.spl.SPLSchemas#String String}.</LI>
+     * SPL schema of {@link com.ibm.streamsx.topology.spl.SPLSchemas#STRING String}.</LI>
      * <LI>{@code TStream<com.ibm.streams.operator.types.XML>},
      * SPL schema of {@link com.ibm.streamsx.topology.spl.SPLSchemas#XML Xml}. </LI>
      * <LI>{@code TStream<com.ibm.streams.operator.types.Blob>},

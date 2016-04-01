@@ -12,11 +12,13 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.types.Blob;
 import com.ibm.streams.operator.types.ValueFactory;
@@ -289,6 +291,10 @@ public class PublishSubscribeTest extends TestTopology {
         }
     }
 
+    /**
+     * Test that with publish allow filter set to false
+     * a subscriber without a filter gets the full set of data.
+     */
     @Test
     public void testSPLPublishNoFilterWithSubscribe() throws Exception {
         final Topology t = new Topology();
@@ -305,6 +311,10 @@ public class PublishSubscribeTest extends TestTopology {
 
         completeAndValidate(subscribe, 20, "SPL:0", "SPL:1", "SPL:2", "SPL:3");
     } 
+    /**
+     * Test that with publish allow filter set to false
+     * a subscriber without a filter gets the full set of data.
+     */
     @Test
     public void testSPLPublishAllowFilterWithSubscribe() throws Exception {
         final Topology t = new Topology();
@@ -328,5 +338,35 @@ public class PublishSubscribeTest extends TestTopology {
 		public String apply(Tuple v) {
 			return "SPL:" + v.getString("id");
 		}	
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testFilterOnJava() throws Exception {
+        final Topology t = new Topology();
+       
+        TStream<Integer> ints = t.constants(Collections.<Integer>emptyList()).asType(Integer.class);
+        ints.publish("sometopic", true);
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testFilterOnXML() throws Exception {
+        final Topology t = new Topology();
+       
+        TStream<XML> xmls = t.constants(Collections.<XML>emptyList()).asType(XML.class);;
+        xmls.publish("sometopic", true);
+    }
+    @Test(expected=IllegalArgumentException.class)
+    public void testFilterOnBlob() throws Exception {
+        final Topology t = new Topology();
+       
+        TStream<Blob> blobs = t.constants(Collections.<Blob>emptyList()).asType(Blob.class);
+        blobs.publish("sometopic", true);
+    }
+    @Test(expected=IllegalArgumentException.class)
+    public void testFilterOnJson() throws Exception {
+        final Topology t = new Topology();
+       
+        TStream<JSONObject> json = t.constants(Collections.<JSONObject>emptyList()).asType(JSONObject.class);;
+        json.publish("sometopic", true);
     }
 }
