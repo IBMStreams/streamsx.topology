@@ -184,6 +184,31 @@ namespace streamsx {
       return ret;
     }
 
+    static std::auto_ptr<SPL::blob> pySubscribeString(PyObject * pickleObjectFunction, SPL::rstring &tuple) {
+
+      std::auto_ptr<SPL::blob> ret;
+      PyGILLock lock;
+
+      // convert rstring to Python string
+      PyObject* pyString = pyRstringToPyString(tuple);
+      // invoke python utliity function that pickles the return value from the
+      // application function
+      PyObject * pyPickledReturnVar = pyTupleFunc(pickleObjectFunction, pyString);
+      if (pyPickledReturnVar == 0){
+        Py_DECREF(pyString);
+        PyErr_Print();
+        throw;
+      }
+      
+       // construct spl blob from pickled return value
+      long int size = PyBytes_Size(pyPickledReturnVar);
+      char * bytes = PyBytes_AsString(pyPickledReturnVar);          
+      ret.reset(new SPL::blob((const unsigned char *)bytes, size));
+      Py_DECREF(pyString);
+      Py_DECREF(pyPickledReturnVar);
+      return ret;
+    }
+
     /**
      * Call a Python function passing in the SPL tuple as 
      * the single element of a Python tuple.
@@ -207,6 +232,18 @@ namespace streamsx {
 
       PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
       return pyBytes;
+    }
+
+    /**
+     * Convert a SPL rstring into a Python string 
+     */
+    static PyObject * pyRstringToPyString(const SPL::rstring & pyrstring) {
+      long int sizeb = pyrstring.length();
+      const char * pybytes = pyrstring.data();
+
+      PyObject * pyString  = PyBytes_FromStringAndSize(pybytes, sizeb);
+
+      return pyString;
     }
 
     };

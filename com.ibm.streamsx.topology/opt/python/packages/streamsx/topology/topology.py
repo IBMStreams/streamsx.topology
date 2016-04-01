@@ -34,7 +34,10 @@ class Topology(object):
         oport = op.addOutputPort(schema=schema)
         topicParam = {"topic": [topic]}
         op.setParameters(topicParam)
-        return Stream(self, oport)    
+        op2 = self.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionSubscribeString", None)
+        op2.addInputPort(outputPort=oport)
+        oport2 = op2.addOutputPort()
+        return Stream(self, oport2)    
     
 
 class Stream(object):

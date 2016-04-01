@@ -1,0 +1,121 @@
+/* Additional includes go here */
+
+#include <Python.h>
+#include <string>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdio.h>
+
+#include <SPL/Runtime/Function/UtilFunctions.h>
+#
+#include "splpy.h"
+
+<%SPL::CodeGen::implementationPrologue($model);%>
+
+<%
+ my $attr =  $model->getInputPortAt(0)->getAttributeAt(0);
+ my $pystyle = 'unk';
+ if ($attr->getName() eq '__spl_po') {
+    $pystyle = 'python';
+ } elsif ($attr->getName() eq 'string') {
+    $pystyle = 'string';
+ } elsif ($attr->getName() eq 'jsonString') {
+    $pystyle = 'json';
+ }
+%>
+
+// Constructor
+MY_OPERATOR::MY_OPERATOR() : pickleObjectFunction_(NULL)
+{
+  std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
+  std::string streamsxDir = tkDir + "/opt/python/packages/streamsx/topology";
+  std::string splpySetup = streamsxDir + "/splpy_setup.py";
+  const char* spl_setup_py = splpySetup.c_str();
+
+  streamsx::topology::Splpy::loadCPython(spl_setup_py);
+  
+    streamsx::topology::PyGILLock lock;
+
+    std::string appDirSetup = "import streamsx.topology.runtime\n";
+    appDirSetup += "streamsx.topology.runtime.setupOperator(\"";
+    appDirSetup += ProcessingElement::pe().getApplicationDirectory();
+    appDirSetup += "\")\n";
+
+    const char* spl_setup_appdir = appDirSetup.c_str();
+    if (PyRun_SimpleString(spl_setup_appdir) != 0) {
+         SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
+         PyErr_Print();
+         throw;
+    }
+
+
+
+    pickleObjectFunction_ = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "pickleObject");
+    if (pickleObjectFunction_ == 0) {
+      PyErr_Print();
+      throw;
+    }
+
+
+}
+
+// Destructor
+MY_OPERATOR::~MY_OPERATOR() 
+{
+    // Finalization code goes here
+    if (pickleObjectFunction_) {
+      streamsx::topology::PyGILLock lock;
+      Py_DECREF(pickleObjectFunction_);
+    }
+}
+
+// Notify port readiness
+void MY_OPERATOR::allPortsReady() 
+{
+}
+ 
+// Notify pending shutdown
+void MY_OPERATOR::prepareToShutdown() 
+{
+    // This is an asynchronous call
+}
+
+// Processing for source and threaded operators   
+void MY_OPERATOR::process(uint32_t idx)
+{
+}
+
+// Tuple processing for mutating ports 
+void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
+{
+}
+
+// Tuple processing for non-mutating ports
+void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
+{
+  IPort0Type const &ip = static_cast<IPort0Type const &>(tuple);
+
+  SPL::rstring value = ip.get_string();
+      // SPL::Functions::Utility::printStringLn("SubscribeOp:"+value);
+      // SPL::Functions::Utility::flushStdio(); 
+
+  // streamsx::topology::PyGILLock lock;
+
+  // make Python string object from rstring contents
+  // PyObject* pyUniString = streamsx::topology::Splpy::pyRstringToUniString(value);
+  //  streamsx::topology::Splpy::printPyObject(pyUniString);
+
+  std::auto_ptr<SPL::blob> out_blob = streamsx::topology::Splpy::pySubscribeString(pickleObjectFunction_, value);
+  if (out_blob.get()) {
+    OPort0Type otuple(*out_blob);
+    submit(otuple, 0);
+  }
+  // Py_DECREF(pyUniString);
+}
+
+// Punctuation processing
+void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
+{
+}
+<%SPL::CodeGen::implementationEpilogue($model);%>
