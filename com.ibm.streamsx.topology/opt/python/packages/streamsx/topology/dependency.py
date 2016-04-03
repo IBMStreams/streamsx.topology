@@ -48,19 +48,11 @@ class DependencyResolver(object):
             # they will be merged in the bundle
             for top_package_path in reversed(list(top_package.__path__)):
                 top_package_path = os.path.abspath(top_package_path)
-                if is_parentdir_zip(top_package_path):
-                   # special handling if package is in a zip file
-                   top_package_path = os.path.dirname(top_package_path)
                 self._add_package(top_package_path)
         else:
             # individual Python module
             module_path = os.path.abspath(module.__file__)
-            if is_parentdir_zip(module_path):
-                # special handling if module is in a zip file
-                self._add_package(os.path.dirname(module_path))
-            else:
-                # module is not in a zip file
-                self._add_module(module_path)
+            self._add_module(module_path)
             
         self._processed_modules.add(module)
 
@@ -100,7 +92,6 @@ def get_package_name(module):
 def get_module_name(function):
     module_name = function.__module__
     if module_name == '__main__':
-        # special handling to allow importing functions from __main__ module
         # get the main module object of the function
         main_module = inspect.getmodule(function)
         # get the module name from __file__ by getting the base name and removing the .py extension
@@ -131,18 +122,10 @@ def is_builtin_module(module):
            not hasattr(module, '__file__') and \
            not hasattr(module, '__path__')
 
-def _is_streamsx_module(module_path):
-    return "com.ibm.streamsx.topology" in module_path
 
 def is_streamsx_module(module):
-    if hasattr(module, '__file__'):
-        # module or regular package
-        return _is_streamsx_module(module.__file__)
-    elif hasattr(module, '__path__'):
-        # namespace package. assume streamsx package if any path evaluates to true
-        for module_path in list(module.__path__):
-            if _is_streamsx_module(module_path):
-                return True
+    if hasattr(module, '__name__'):
+        return module.__name__.startswith('streamsx.topology')
     return False
 
 # returns True if the given path starts with a path of a site package, False otherwise

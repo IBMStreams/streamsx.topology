@@ -237,7 +237,7 @@ on the stream, in this case the builtin `print` function.
 The callable input must be one of the following:
   * the name of a built-in function
   * the name of a function defined at the top level of a module that takes no arguments
-  * an instance of a callable class defined at the top level of a module that implements the method `__call__(self)`.
+  * an instance of a callable class defined at the top level of a module that implements the method `__call__(self)` and is picklable
   
 Using a callable class allows state information such as user-defined parameters to be stored during class 
 initialization and utilized when the instance is called.
@@ -246,10 +246,10 @@ The modules containing the callables are copied into the Streams Application Bun
 
 Limitations on callable inputs to operations:
 * Callables must be defined in a module file.
-* Callables must not be dynamically created or anonymous.
-* When the input is an instance of a callable class, the class must not be defined in the `__main__` module.
-* Importing modules with importlib is unsupported.  The PYTHONPATH or sys.path must contain the directory where modules to import are located.
-* When importing modules from zip archives in different locations, the zip archives must not have the same name, and must not contain modules with conflicting names.
+* Callables must not be dynamically created nor anonymous.
+* Callables must not be defined in the `__main__` module.  They must be defined in a separate module.
+* Importing modules that contain user-defined functions with importlib is unsupported.  The PYTHONPATH or sys.path must contain the directory where modules to import are located.
+* Importing modules that contain user-defined functions from zip/egg/wheel files is unsupported.
 
 To avoid name conflicts, do not create modules with the same name as 
 * `streamsx` which is used by the Python Application API

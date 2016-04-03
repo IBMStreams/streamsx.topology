@@ -165,7 +165,9 @@ class SPLInvocation(object):
             # pickle format is binary; base64 encode so it is json serializable 
             self.params["pyCallable"] = base64.b64encode(pickle.dumps(function)).decode("ascii")
 
-        self.params["pyModule"] = streamsx.topology.dependency.get_module_name(function)          
+        # note: functions in the __main__ module cannot be used as input to operations 
+        # function.__module__ will be '__main__', so C++ operators cannot import the module
+        self.params["pyModule"] = function.__module__          
 
     def _printOperator(self):
         print(self.name+":")

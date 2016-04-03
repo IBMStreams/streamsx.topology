@@ -2,27 +2,17 @@ import os
 import pickle
 import base64
 import sys
-import zipfile
 
 def __splpy_addDirToPath(dir):
     if os.path.isdir(dir):
         if dir not in sys.path:
             #print ("Adding dir to sys.path", dir)
             sys.path.append(dir)
-
-def __splpy_addZipFilesToPath(dir):
-    if os.path.isdir(dir):
-        for file in os.listdir(dir):
-            abs_file_path = os.path.join(dir, file)
-            if zipfile.is_zipfile(abs_file_path) and abs_file_path not in sys.path:
-                #print ("Adding zip to sys.path", abs_file_path)
-                sys.path.append(abs_file_path)
                 
 def setupOperator(dir):
     pydir = os.path.join(dir, 'opt', 'python')
     __splpy_addDirToPath(os.path.join(pydir, 'modules'))
     __splpy_addDirToPath(os.path.join(pydir, 'packages'))
-    __splpy_addZipFilesToPath(os.path.join(pydir, 'packages'))
     #print("sys.path", sys.path)
 
 def pickleObject(v):

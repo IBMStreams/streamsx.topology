@@ -7,11 +7,6 @@ from streamsx.topology.topology import *
 from streamsx.topology import schema
 import streamsx.topology.context
 
-def hello_world_main():
-    return ["Hello", "World!"]
-
-def filter_main(t):
-    return "Wor" in t
 
 class TestTopologyMethods(unittest.TestCase):
 
@@ -206,30 +201,7 @@ class TestTopologyMethods(unittest.TestCase):
           streamsx.topology.context.submit("STANDALONE", topo.graph)
       finally:
           del test_functions2
-     
-  # test using local input functions from the __main__ module    
-  def test_TopologyImportFromMain(self):
-      topo = Topology("test_TopologyImportFromMain")
-      hw = topo.source(hello_world_main)
-      hwf = hw.filter(filter_main)
-      hwf.sink(test_functions.CheckTuples(["World!"]))
-      streamsx.topology.context.submit("STANDALONE", topo.graph)
-  
-  # test using input functions from a module and a package inside a zip archive
-  # (uncompressed zip; zlib not installed by default)
-  def test_TopologyImportFromZip(self):
-      sys.path.append('test_zipped_package.zip')
-      import test_zipped_module
-      import test_zipped_package.test_subpackage.test_module
-      try:
-          topo = Topology("test_TopologyImportFromZip")
-          hw = topo.source(test_zipped_module.SourceTuples(["Hello", "World!"]))
-          hwf = hw.filter(test_zipped_package.test_subpackage.test_module.filter)
-          hwf.sink(test_zipped_package.test_subpackage.test_module.CheckTuples(["Hello"]))
-          streamsx.topology.context.submit("STANDALONE", topo.graph)
-      finally:
-          sys.path.remove('test_zipped_package.zip')
-          del test_zipped_module, test_zipped_package.test_subpackage.test_module
+
 
 if __name__ == '__main__':
     unittest.main()
