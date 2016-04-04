@@ -19,7 +19,7 @@ class Topology(object):
         :param func: A zero-argument callable that returns an iterable of tuples.
         The callable must be either 
         * the name of a function defined at the top level of a module that takes no arguments, or
-        * an instance of a callable class defined at the top level of a module that implements the method `__call__(self)` and is picklable.
+        * an instance of a callable class defined at the top level of a module that implements the method `__call__(self)` and be picklable.
         Using a callable class allows state information such as user-defined parameters to be stored during class 
         initialization and utilized when the instance is called.
         A tuple is represented as a Python object that must be picklable.
@@ -52,7 +52,7 @@ class Stream(object):
         :param func: A callable that takes a single parameter for the tuple and returns None.
         The callable must be either 
         * the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
-        * an instance of a callable class defined at the top level of a module that implements the method `__call__(self, tuple)` and is picklable.
+        * an instance of a callable class defined at the top level of a module that implements the method `__call__(self, tuple)` and be picklable.
         Using a callable class allows state information such as user-defined parameters to be stored during class 
         initialization and utilized when the instance is called.
         The callable is invoked for each incoming tuple.  
@@ -72,7 +72,7 @@ class Stream(object):
         If True, the tuple is included on the returned stream.  If False, the tuple is filtered out.
         The callable must be either
         * the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
-        * an instance of a callable class defined at the top level of a module that implements the method `__call__(self, tuple)` and is picklable.
+        * an instance of a callable class defined at the top level of a module that implements the method `__call__(self, tuple)` and be picklable.
         Using a callable class allows state information such as user-defined parameters to be stored during class 
         initialization and utilized when the instance is called.
         The callable is invoked for each incoming tuple.
@@ -93,7 +93,7 @@ class Stream(object):
         :param func: A callable that takes a single parameter for the tuple, and returns a tuple or None.
         The callable must be either
         * the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
-        * an instance of a callable class defined at the top level of a module that implements the method `__call__(self, tuple)` and is picklable.
+        * an instance of a callable class defined at the top level of a module that implements the method `__call__(self, tuple)` and be picklable.
         Using a callable class allows state information such as user-defined parameters to be stored during class 
         initialization and utilized when the instance is called.
         The callable is invoked for each incoming tuple.
@@ -117,7 +117,7 @@ class Stream(object):
         The callable must return an iterable or None, otherwise a TypeError is raised.
         The callable must be either
         * the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
-        * an instance of a callable class defined at the top level of a module that implements the method `__call__(self, tuple)` and is picklable.
+        * an instance of a callable class defined at the top level of a module that implements the method `__call__(self, tuple)` and be picklable.
         Using a callable class allows state information such as user-defined parameters to be stored during class 
         initialization and utilized when the instance is called.
         The callable is invoked for each incoming tuple.
