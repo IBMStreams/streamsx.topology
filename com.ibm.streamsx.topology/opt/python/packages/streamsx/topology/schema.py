@@ -24,6 +24,7 @@ class CommonSchema(enum.Enum):
     Json = StreamSchema("tuple<rstring jsonString>")
     String = StreamSchema("tuple<rstring string>")
     Binary = StreamSchema("tuple<blob binary>")
+    PythonHash = StreamSchema("tuple<blob __spl_po,int32 __spl_hash>")
 
     def schema(self):
         return self.value.schema();

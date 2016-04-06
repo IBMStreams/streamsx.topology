@@ -5,6 +5,8 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <memory>
+#include <iostream>
+#include <cstdio>
 
 #include <SPL/Runtime/Operator/Operator.h>
 #include <SPL/Runtime/Operator/OperatorContext.h>
@@ -187,6 +189,37 @@ namespace streamsx {
       Py_DECREF(pyReturnVar);
       return ret;
     }
+
+    static std::auto_ptr<SPL::int32> pyTupleHash(PyObject * function, PyObject * pickleObjectFunction, SPL::blob & pyblob) {
+
+      std::auto_ptr<SPL::int32> ret;
+      PyGILLock lock;
+
+      // convert spl blob to bytes
+      PyObject * pyBytes  = pyBlobToBytes(pyblob);
+      // invoke python nested function that calls the application function
+      PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
+      if (pyReturnVar == Py_None){
+        Py_DECREF(pyReturnVar);
+        return ret;
+      } else if(pyReturnVar == 0){
+        PyErr_Print();
+        throw;
+      } 
+     
+       // construct integer from  return value
+      if(PyLong_Check(pyReturnVar)) {
+        SPL::int32 retval = PyLong_AsLong(pyReturnVar);          
+        ret.reset( new SPL::int32(retval));
+        Py_DECREF(pyReturnVar);		
+        return ret;
+      } else {
+		Py_DECREF(pyReturnVar);
+		PyErr_Print();
+        throw;
+	  }
+
+   }
 
     /**
      * Call a Python function passing in the SPL tuple as 
