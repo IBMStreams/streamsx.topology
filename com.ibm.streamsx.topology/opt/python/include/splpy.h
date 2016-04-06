@@ -5,8 +5,6 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <memory>
-#include <iostream>
-#include <cstdio>
 
 #include <SPL/Runtime/Operator/Operator.h>
 #include <SPL/Runtime/Operator/OperatorContext.h>

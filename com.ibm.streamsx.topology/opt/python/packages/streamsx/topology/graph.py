@@ -9,7 +9,6 @@ import base64
 import streamsx.topology.dependency
 from streamsx.topology.schema import CommonSchema
 
-
 class SPLGraph(object):
 
     def __init__(self, name=None):

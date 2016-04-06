@@ -176,7 +176,7 @@ class Stream(object):
             Stream
         """
         op = self.topology.graph.addOperator("$Isolate$")
-        op.addInputPort(outputPort=self.oport)   
+        op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
 
@@ -255,7 +255,9 @@ class Stream(object):
         elif(routing == Routing.HASH_PARTITIONED or routing == Routing.KEY_PARTITIONED) :
             if (routing == Routing.HASH_PARTITIONED) :
                 op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder", PyHashAdder.process)
-            else : 
+            else :
+                if(func is None) :
+                    raise TypeError("Function must be provided with Routing type KEY_PARTITIONED")   
                 op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder",func)           
             parentOp = op.addOutputPort(schema=schema.CommonSchema.PythonHash)
             op.addInputPort(outputPort=self.oport)

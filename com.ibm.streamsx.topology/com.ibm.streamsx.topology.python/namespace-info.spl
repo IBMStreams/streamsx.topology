@@ -363,13 +363,13 @@ To avoid name conflicts, do not create modules with the same name as
 
 * `union(self, streamSet)` function on `Stream`
 
-  Creates a stream that is a union of this stream and other streams
-
-  param `streamSet`: a set of Stream objects to merge with this stream
+  The Union operator merges the outputs of the streams in the set into a single stream.
   
-  return: Stream
+  param `set` - Set of streams outputs to merge
+  
+  returns: Stream
         
-* `parallel(self, width)` function on `Stream`
+* `parallel(self, width, routing=None, func=None)` function on `Stream`
 
   Parallelizes the stream into `width` parallel channels.
   Tuples are routed to parallel channels such that an even distribution is maintained.
@@ -388,6 +388,13 @@ To avoid name conflicts, do not create modules with the same name as
   Every call to `end_parallel` must have a call to `parallel` preceding it.
      
   param `width`: degree of parallelism
+
+  param: `routing` - denotes what type of tuple routing to use. 
+  * ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators (Default)
+  * HASH_PARTIONED: delivers to downstream operators based on the hash of the tuples being sent
+  * KEY_PARTIONED: delivers to downstream operators based on a hash provided by the user function provided
+  
+  param: `func` - User defined function called when KEY_PARTIONED routing is specified. The function provides an int32 value to be used as the hash that determines the tuple routing to downstream operators
   
   return: Stream whose subsequent processing will occur on `width` channels.
         
@@ -396,6 +403,7 @@ To avoid name conflicts, do not create modules with the same name as
   Ends a parallel region by merging the channels into a single stream
   
   return: A Stream for which subsequent transformations are no longer parallelized
+
 * `publish(self, topic, schema=schema.CommonSchema.Python)` function on `Stream`
 
   Publish this stream on a topic for other Streams applications to subscribe to.
@@ -407,6 +415,7 @@ To avoid name conflicts, do not create modules with the same name as
 
   param `topic`: Topic to publish this stream to.
   param: `schema`: Schema to publish. Defaults to CommonSchema.Python representing Python objects.
+
 
   return: None
 
@@ -471,10 +480,11 @@ Limited testing has been performed to build an application using DISTRIBUTED and
 
 Future items that need to be supported
 
-* `parallel()` function on `Stream` utilizing hashed distribution
+* DISTRIBUTED submission
 * lambda functions
 * dynamic functions
-* IBM Streams application features, such as UDP, windowing etc.
+* functions in packages
+* IBM Streams application features, such as windowing, etc.
 * ...
 
 */
