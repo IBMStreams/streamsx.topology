@@ -237,7 +237,7 @@ on the stream, in this case the builtin `print` function.
 The callable input must be one of the following:
   * the name of a built-in function
   * the name of a function defined at the top level of a module that takes no arguments
-  * an instance of a callable class defined at the top level of a module that implements the method `__call__(self)` and is picklable
+  * an instance of a callable class defined at the top level of a module that implements the method `__call__` and is picklable
   
 Using a callable class allows state information such as user-defined parameters to be stored during class 
 initialization and utilized when the instance is called.
