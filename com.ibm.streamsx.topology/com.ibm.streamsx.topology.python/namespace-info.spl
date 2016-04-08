@@ -222,21 +222,38 @@ Example code that builds and then submits a Hello World topology.
     hw.sink(print)
     streamsx.topology.context.submit("STANDALONE", topo.graph)
 
-The `source` function is passed a function that returns an `Iterable`, in
+The `source` function is passed a callable that returns an `Iterable`, in
 this case `mymodule.hello_world`.
 
 
     def hello_world() :
         return ["Hello", "World!"]
 
-The function will be called when the application starts, and the SPL runtime will create an iterator from the returned value. Then each value returned from the iterator will be sent on the stream.
+The callable will be called when the application starts, and the SPL runtime will create an iterator from the returned value. Then each value returned from the iterator will be sent on the stream.
 
-The `sink` function is passed a function that will be called for each tuple
+The `sink` function is passed a callable that will be called for each tuple
 on the stream, in this case the builtin `print` function.
 
-The functions must be builtins or in a separate module to the module building
-the topology. The functions must not be dynamically created. The modules
-containing the function are copied into the Streams Application Bundle (sab file).
+The callable input must be one of the following:
+  * the name of a built-in function
+  * the name of a function defined at the top level of a module that takes no arguments
+  * an instance of a callable class defined at the top level of a module that implements the method `__call__` and is picklable
+  
+Using a callable class allows state information such as user-defined parameters to be stored during class 
+initialization and utilized when the instance is called.
+
+The modules containing the callables are copied into the Streams Application Bundle (sab file).
+
+Limitations on callable inputs to operations:
+* Callables must be defined in a module file.
+* Callables must not be dynamically created nor anonymous.
+* Callables must not be defined in the `__main__` module.  They must be defined in a separate module.
+* Importing modules that contain user-defined functions with importlib is unsupported.  The PYTHONPATH or sys.path must contain the directory where modules to import are located.
+* Importing modules that contain user-defined functions from zip/egg/wheel files is unsupported.
+
+To avoid name conflicts, do not create modules with the same name as 
+* `streamsx` which is used by the Python Application API
+* built-in or standard library module names
 
 # Streams functions 
 
@@ -248,11 +265,6 @@ containing the function are copied into the Streams Application Bundle (sab file
   from iter(func()) is present on the returned stream.
 
   param `func`: A zero-argument callable that returns an iterable of tuples.
-  The callable must be either 
-  * the name of a function defined at the top level of a module that takes no arguments, or
-  * an instance of a callable class defined at the top level of a module that implements the method `__call__(self)`.
-  Using a callable class allows state information such as user-defined parameters to be stored during class 
-  initialization and utilized when the instance is called.
   A tuple is represented as a Python object that must be picklable.
 
   return: A stream whose tuples are the result of the output obtained by invoking the provided callable.
@@ -263,11 +275,6 @@ containing the function are copied into the Streams Application Bundle (sab file
   Takes a user provided callable that does not return a value.
 
   param `func`: A callable that takes a single parameter for the tuple and returns None.
-  The callable must be either 
-  * the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
-  * an instance of a callable class defined at the top level of a module that implements the method `__call__(self, tuple)`.
-  Using a callable class allows state information such as user-defined parameters to be stored during class 
-  initialization and utilized when the instance is called.
   The callable is invoked for each incoming tuple.  
   
   return: None
@@ -282,11 +289,6 @@ containing the function are copied into the Streams Application Bundle (sab file
   
   param `func`: A callable that takes a single parameter for the tuple, and returns True or False.
   If True, the tuple is included on the returned stream.  If False, the tuple is filtered out.
-  The callable must be either
-  * the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
-  * an instance of a callable class defined at the top level of a module that implements the method `__call__(self, tuple)`.
-  Using a callable class allows state information such as user-defined parameters to be stored during class 
-  initialization and utilized when the instance is called.
   The callable is invoked for each incoming tuple.
   
   return: A stream containing tuples that have not been filtered out.
@@ -300,11 +302,6 @@ containing the function are copied into the Streams Application Bundle (sab file
   stream.
  
   param `func`: A callable that takes a single parameter for the tuple, and returns a tuple or None.
-  The callable must be either
-  * the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
-  * an instance of a callable class defined at the top level of a module that implements the method `__call__(self, tuple)`.
-  Using a callable class allows state information such as user-defined parameters to be stored during class 
-  initialization and utilized when the instance is called.
   The callable is invoked for each incoming tuple.
  
   return: A stream containing transformed tuples.
@@ -321,11 +318,6 @@ containing the function are copied into the Streams Application Bundle (sab file
 
   param `func`: A callable that takes a single parameter for the tuple, and returns an iterable of tuples or None.
   The callable must return an iterable or None, otherwise a TypeError is raised.
-  The callable must be either
-  * the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
-  * an instance of a callable class defined at the top level of a module that implements the method `__call__(self, tuple)`.
-  Using a callable class allows state information such as user-defined parameters to be stored during class 
-  initialization and utilized when the instance is called.
   The callable is invoked for each incoming tuple.
 
   return: A stream containing transformed tuples.
@@ -409,7 +401,6 @@ Future items that need to be supported
 * DISTRIBUTED submission
 * lambda functions
 * dynamic functions
-* functions in packages
 * IBM Streams application features, such as UDP, windowing etc.
 * ...
 

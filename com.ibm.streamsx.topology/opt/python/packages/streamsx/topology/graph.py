@@ -6,6 +6,7 @@ import json
 import inspect
 import pickle
 import base64
+import streamsx.topology.dependency
 from streamsx.topology.schema import CommonSchema
 
 class SPLGraph(object):
@@ -15,7 +16,7 @@ class SPLGraph(object):
             name = str(uuid.uuid1()).replace("-", "")
         self.name = name
         self.operators = []
-        self.modules = set()
+        self.resolver = streamsx.topology.dependency.DependencyResolver()
 
     def addOperator(self, kind, function=None, name=None):
         if name is None:
@@ -25,10 +26,9 @@ class SPLGraph(object):
         else:
             op = SPLInvocation(len(self.operators), kind, function, name, {}, self)
         self.operators.append(op)
-        # TODO
         if not function is None:
             if not inspect.isbuiltin(function):
-                self.modules.add(inspect.getmodule(function))
+                self.resolver.add_dependencies(inspect.getmodule(function))
         return op
     
     def addPassThruOperator(self):
@@ -46,16 +46,24 @@ class SPLGraph(object):
         _graph["config"]["includes"] = []
         _ops = []
         self.addModules(_graph["config"]["includes"])
+        self.addPackages(_graph["config"]["includes"])
         for op in self.operators:
             _ops.append(op.generateSPLOperator())
 
         _graph["operators"] = _ops
         return _graph
+   
+    def addPackages(self, includes):
+        for package_path in self.resolver.packages:
+           mf = {}
+           mf["source"] = package_path
+           mf["target"] = "opt/python/packages"
+           includes.append(mf)
 
     def addModules(self, includes):
-        for module in self.modules:
+        for module_path in self.resolver.modules:
            mf = {}
-           mf["source"] = module.__file__
+           mf["source"] = module_path
            mf["target"] = "opt/python/modules"
            includes.append(mf)
            
@@ -157,8 +165,9 @@ class SPLInvocation(object):
             # pickle format is binary; base64 encode so it is json serializable 
             self.params["pyCallable"] = base64.b64encode(pickle.dumps(function)).decode("ascii")
 
-        self.params["pyModule"] = function.__module__
-                    
+        # note: functions in the __main__ module cannot be used as input to operations 
+        # function.__module__ will be '__main__', so C++ operators cannot import the module
+        self.params["pyModule"] = function.__module__          
 
     def _printOperator(self):
         print(self.name+":")

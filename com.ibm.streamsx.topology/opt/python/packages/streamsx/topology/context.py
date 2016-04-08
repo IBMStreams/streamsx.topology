@@ -3,6 +3,7 @@
 
 import tempfile
 import os
+import os.path
 import json
 import subprocess
 
@@ -16,7 +17,12 @@ import subprocess
 def submit(ctxtype, graph):
     fj = _createFullJSON(graph)
     fn = _createJSONFile(fj)
-    _submitUsingJava(ctxtype, fn)
+    try:
+       _submitUsingJava(ctxtype, fn)
+    finally:
+       # remove splpytmp json file from /tmp
+       if os.path.isfile(fn):
+          os.remove(fn)    
     
 
 def _createFullJSON(graph):

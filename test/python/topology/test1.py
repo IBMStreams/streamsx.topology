@@ -1,4 +1,5 @@
 import unittest
+import sys
 
 import test_functions
 
@@ -6,8 +7,9 @@ from streamsx.topology.topology import *
 from streamsx.topology import schema
 import streamsx.topology.context
 
+
 class TestTopologyMethods(unittest.TestCase):
-  
+
   def test_TopologyName(self):
      topo = Topology("test_TopologyName")
      self.assertEqual("test_TopologyName", topo.name)
@@ -110,6 +112,7 @@ class TestTopologyMethods(unittest.TestCase):
       topo = Topology("test_TopologySourceAndSinkCallable")
       hw = topo.source(test_functions.SourceTuplesAppendIndex(["a", "b", "c", "d"]))
       hw.sink(test_functions.CheckTuples(["a0", "b1", "c2", "d3"]))
+      streamsx.topology.context.submit("STANDALONE", topo.graph)
     
   def test_TopologyParallel(self):
       topo = Topology("test_TopologyParallel")
@@ -142,7 +145,64 @@ class TestTopologyMethods(unittest.TestCase):
       hwup = hwu.end_parallel()
       hwup.sink(test_functions.check_union_hello_world)
       streamsx.topology.context.submit("STANDALONE", topo.graph)
-          
+
+  # test using input functions from a regular package that has __init__.py
+  # test using input functions that are fully qualified
+  def test_TopologyImportPackage(self):
+      import test_package.test_subpackage.test_module
+      try:
+          topo = Topology("test_TopologyImportPackage")
+          hw = topo.source(test_package.test_subpackage.test_module.SourceTuples(["Hello", "World!"]))
+          hwf = hw.filter(test_package.test_subpackage.test_module.filter)
+          hwf.sink(test_package.test_subpackage.test_module.CheckTuples(["Hello"]))
+          streamsx.topology.context.submit("STANDALONE", topo.graph)
+      finally:
+          del test_package.test_subpackage.test_module
+      
+  # test using input functions from an implicit namespace package that doesn't have a __init__.py
+  # test using input functions that are qualified using a module alias  e.g. 'test_ns_module'
+  # test using input functions from a mix of packages and individual modules
+  def test_TopologyImportNamespacePackage(self):
+      from test_namespace_package.test_subpackage import test_module as test_ns_module
+      try:
+          topo = Topology("test_TopologyImportNamespacePackage")
+          hw = topo.source(test_ns_module.SourceTuples(["Hello", "World!"]))
+          hwf = hw.filter(test_functions.filter)
+          hwf.sink(test_ns_module.CheckTuples(["World!"]))
+          streamsx.topology.context.submit("STANDALONE", topo.graph)
+      finally:
+          del test_ns_module
+
+  # test using input functions from a namespace package that merges separate packages into a
+  # common namespace    
+  def test_TopologyImportCommonNamespacePackage(self):
+      sys.path.extend(['test_common_namespace/package1', 'test_common_namespace/package2'])
+      import common_namespace.module1
+      import common_namespace.module2
+      try:
+          topo = Topology("test_TopologyImportCommonNamespacePackage")
+          hw = topo.source(common_namespace.module1.SourceTuples(["Hello", "World!"]))
+          hwf = hw.filter(common_namespace.module2.filter)
+          hwf.sink(common_namespace.module2.CheckTuples(["World!"]))
+          streamsx.topology.context.submit("STANDALONE", topo.graph)
+      finally:
+          sys.path.remove('test_common_namespace/package1')
+          sys.path.remove('test_common_namespace/package2')
+          del common_namespace.module1, common_namespace.module2
+
+  # test using input functions from a module that imports another module
+  def test_TopologyImportModuleWithDependencies(self):
+      import test_functions2
+      try:
+          topo = Topology("test_TopologyImportModuleWithDependencies")
+          hw = topo.source(test_functions2.hello_world)
+          hwf = hw.filter(test_functions2.filter)
+          hwf.sink(test_functions2.check_hello_world_filter)
+          streamsx.topology.context.submit("STANDALONE", topo.graph)
+      finally:
+          del test_functions2
+
+
 if __name__ == '__main__':
     unittest.main()
 
