@@ -64,31 +64,29 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL), pickleObjectFunction_(NULL)
 
 <% if ($pystyle eq 'python') { %>
 
-    PyObject * depickleInput = NULL;
-    PyObject * funcArg = PyTuple_New(1);
+    // The object to be called is either appCallable for
+    // a function passed into the operator
+    // or a pickled encoded class instance
+    // represented as a string in parameter pyCallable
     
     <% if ($pyCallable) { %>
-      depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInputForCallableInstance");
+    //   depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInputForCallableInstance");
       // argument is the serialized callable instance
-      PyTuple_SetItem(funcArg, 0, Py_BuildValue("s", <%=$pyCallable%>));
       Py_DECREF(appCallable);
-    <%} else {%>
-      depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInput");
-      // argument is the application function
-      PyTuple_SetItem(funcArg, 0, appCallable);
+      appCallable = Py_BuildValue("s", <%=$pyCallable%>);
     <%}%>
 
+     PyObject * depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleInputPickleReturn");
+    PyObject * funcArg = PyTuple_New(1);
+    PyTuple_SetItem(funcArg, 0, appCallable);
     function_ = PyObject_CallObject(depickleInput, funcArg);
+    Py_DECREF(depickleInput);
+    Py_DECREF(funcArg);
     if(function_ == 0){
       PyErr_Print();
-      Py_DECREF(depickleInput);
-      Py_DECREF(funcArg);
       throw;
     }
 
-    Py_DECREF(depickleInput);
-    Py_DECREF(funcArg);
-    
     pickleObjectFunction_ = 
       streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "pickleObject"); 
 

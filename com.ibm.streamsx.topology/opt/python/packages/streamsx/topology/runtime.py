@@ -25,10 +25,42 @@ def pickleReturn(function) :
 
 # Given a callable 'callable', return a function
 # that depickles the input and then calls 'callable'
+# returning the callable's return
 def depickleInput(callable) :
+    callable = _getCallable(callable)
     def _depickleInput(v):
         return callable(pickle.loads(v))
     return _depickleInput
+
+# Get the callable from the value
+# passed into the SPL PyFunction operator.
+#
+# It is either something that is callable
+# and is used directly or is string
+# that is a encoded pickled class instance
+#
+# TODO throw exception
+def _getCallable(f):
+    if callable(f):
+        return f
+    if isinstance(f, str):
+        ci = pickle.loads(base64.b64decode(f))
+        if callable(ci):
+            return ci
+    return None
+
+# Given a callable 'callable', return a function
+# that depickles the input and then calls 'callable'
+# returning the callable's return already pickled.
+# If the return is None then it is not pickled.
+def depickleInputPickleReturn(callable):
+    ac = _getCallable(callable)
+    def _depickleInputPickleReturn(v):
+        rv = ac(pickle.loads(v))
+        if rv is None:
+            return None
+        return pickle.dumps(rv)
+    return _depickleInputPickleReturn
 
 # Given a serialized callable instance, 
 # deserialize and return the callable
