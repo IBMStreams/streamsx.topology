@@ -5,9 +5,9 @@
 
 /**
 
-Experimental support for Python in IBM Streams.
+Alpha support for Python in IBM Streams.
 
-This is an **experimental version** of `com.ibm.streamsx.topology` allows
+This is an **alpha version** of `com.ibm.streamsx.topology` allows
 use of Python in IBM Streams applications.
 
 # Python Support
@@ -190,7 +190,7 @@ A toolkit with a number of decorated Python functions and SPL applications that 
 + Python Application API
 Develop IBM Streams applications with Python.
 
-**Very early experimental version, only very basic functionality**
+**Alpha version, basic functionality**
 
 This is intended as a preview of the intended direction, functionality
 is limited.
@@ -205,8 +205,8 @@ a stream may contain different types of objects.
 
 # Assumptions
 
-* CPython 3 is assumed
-* Limited testing has been performed with Python 3.5
+* CPython 3.5 is assumed
+* Limited testing has been performed with CPython 3.5.1
 * Python is installed in the default location (`/usr/local`)
 
 # Sample HelloWorld Application
@@ -324,7 +324,9 @@ To avoid name conflicts, do not create modules with the same name as
   
 * `isolate` function on `Stream`
 
-  Guarantees that the upstream operation will run in a separate process from the downstream operation
+  Guarantees that the upstream operation will run in a separate process from the downstream operation when 
+  the application is executed in distributed mode.
+  
 * `low_latency` and `end_low_latency` functions on `Stream`
 
   The function is guaranteed to run in the same process as the
@@ -346,33 +348,31 @@ To avoid name conflicts, do not create modules with the same name as
 
 Example code that builds and then submits a simple topology.
 
-    import mymodule;
-    from streamsx.topology.topology import *
+    from streamsx.topology.topology import Topology
     import streamsx.topology.context
+    import transform_sample_functions;
 
-    topo = Topology("Transform")
-    source = topo.source(mymodule.int_strings_transform)
-    i1 = source.transform(mymodule.string_to_int)
-    iso1 = i1.isolate()
-    i2 = iso1.transform(mymodule.AddNum(17))
-    iso2 = i2.isolate()
-    iso2.sink(mymodule.print)
+    topo = Topology("transform_sample")
+    source = topo.source(transform_sample_functions.int_strings_transform)
+    i1 = source.transform(transform_sample_functions.string_to_int)
+    i2 = i1.transform(transform_sample_functions.AddNum(17))
+    i2.sink(print)
     streamsx.topology.context.submit("STANDALONE", topo.graph)
 
 The `source` function is passed a function that returns an `Iterable`, in
-this case `mymodule.int_strings_transform`.
+this case `transform_sample_functions.int_strings_transform`.
 
     def int_strings_transform():
         return ["325", "457", "9325"]
 
 The first `transform` function is passed a function that returns an integer
-converted from the string object, in this case `mymodule.string_to_int`.
+converted from the string object, in this case `transform_sample_functions.string_to_int`.
 
     def string_to_int(t):
         return int(t)
 
 The second `transform` function is passed an instance of a callable class that adds 17 to the integer,
-in this case `mymodule.AddNum(17)`.
+in this case `transform_sample_functions.AddNum(17)`.
 
     class AddNum:
         def __init__(self, increment):
@@ -380,18 +380,20 @@ in this case `mymodule.AddNum(17)`.
         def __call__(self, tuple):
             return tuple + self.increment
 
-This function is isolated from its upstream and downstream function using 
-the isolate function.
-
 When building the topology the directory `com.ibm.streamsx.topology/opt/python/packages` must be in `$PYTHONPATH`.
 
-Only submission to STANDALONE is supported, which converts the application
-to an SPL graph, compiles it and executes it as a IBM Streams standalone
-application.
+The sample `transform_sample.py` can be found under `samples/python/topology/simple`.
+After setting the PYTHONPATH, the sample can be executed using `python3 transform_sample.py`.
+Sample output:
+    342
+    474
+    9342
 
-Limited testing has been performed to build an application using BUNDLE, which converts the application to 
-an SPL graph, compiles it and saves the Streams Application Bundle file (.sab). The .sab can then be submitted
-to a running Streams instance. 
+Only submission using the STANDALONE or BUNDLE context type are supported.
+* The STANDALONE context type converts the application to an SPL graph, compiles it and executes it as an IBM Streams standalone application.  The standalone execution is spawned as a separate process.
+* The BUNDLE context type converts the application to an SPL graph and compiles it, producing a SPL application bundle (.sab file).  The application is executed separately by submitting the bundle to an IBM Streams instance as a distributed application.  A bundle can be submitted to an IBM Streams instance using `streamtool submitjob`, the IBM Streams Console, or IBM Streams JMX API.
+
+Limited testing has been performed to build an application using BUNDLE.
 
 # Future Items
 
