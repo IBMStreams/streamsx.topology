@@ -27,9 +27,9 @@ def pickleReturn(function) :
 # that depickles the input and then calls 'callable'
 # returning the callable's return
 def depickleInput(callable) :
-    callable = _getCallable(callable)
+    ac = _getCallable(callable)
     def _depickleInput(v):
-        return callable(pickle.loads(v))
+        return ac(pickle.loads(v))
     return _depickleInput
 
 # Get the callable from the value
