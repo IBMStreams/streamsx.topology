@@ -73,9 +73,6 @@ def int_strings_transform():
 def int_strings_transform_with_drop():
    return ["93", "68", "221"]
 
-def string_to_int(t):
-   return int(t)
-
 def string_to_int_except68(t):
    if t == "68":
       return None

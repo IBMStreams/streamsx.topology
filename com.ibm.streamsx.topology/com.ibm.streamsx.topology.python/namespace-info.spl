@@ -242,7 +242,10 @@ The callable input must be one of the following:
 Using a callable class allows state information such as user-defined parameters to be stored during class 
 initialization and utilized when the instance is called.
 
-The modules containing the callables are copied into the Streams Application Bundle (sab file).
+The modules containing the callables, along with third-party libraries required by the modules, are copied into the Streams Application Bundle (sab file).
+* Dependent libraries can be individual modules or packages.
+* Dependent libraries can be installed in site packages, or not installed and simply reside in a directory in the Python search path
+* Platform-dependent (native) libaries in lib-dynload are not copied into the bundle
 
 Limitations on callable inputs to operations:
 * Callables must be defined in a module file.
