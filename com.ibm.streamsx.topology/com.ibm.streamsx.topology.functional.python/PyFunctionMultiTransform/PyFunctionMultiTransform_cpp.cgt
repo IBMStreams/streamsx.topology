@@ -13,15 +13,10 @@
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 <%
- my $attr =  $model->getInputPortAt(0)->getAttributeAt(0);
- my $pystyle = 'unk';
- if ($attr->getName() eq '__spl_po') {
-    $pystyle = 'python';
- } elsif ($attr->getName() eq 'string') {
-    $pystyle = 'string';
- } elsif ($attr->getName() eq 'jsonString') {
-    $pystyle = 'json';
- }
+  # determine which tuple stype is being used
+  my $fpdir = $model->getContext()->getToolkitDirectory()."/com.ibm.streamsx.topology.functional.python";
+ require $fpdir."/pyfunction.pm";
+ my $pystyle = splpy_tuplestyle($model->getInputPortAt(0));
 %>
 
 // Constructor
