@@ -49,7 +49,7 @@ class DependencyResolver(object):
             for top_package_path in reversed(list(top_package.__path__)):
                 top_package_path = os.path.abspath(top_package_path)
                 self._add_package(top_package_path)
-        else:
+        elif hasattr(module, '__file__'):
             # individual Python module
             module_path = os.path.abspath(module.__file__)
             self._add_module(module_path)
@@ -108,13 +108,23 @@ def get_module_name(function):
 #   that are not inside a site package
 def get_imported_modules(module):
     imported_modules = {}
-    #print ("vars(module)", vars(module))
+    #print ("vars({0}): {1}".format(module.__name__, vars(module)))
     for alias, val in vars(module).items():
+        vars_module = None
+        # module type
         if isinstance(val, types.ModuleType):
-            if not is_builtin_module(val) and \
-               not is_streamsx_module(val) and \
-               not is_system_module(val):
-                imported_modules[val.__name__] = val
+            vars_module = val
+        # class type, find module of class
+        elif isinstance(val, type) and hasattr(val, '__module__') \
+            and val.__module__ in sys.modules:
+            vars_module = sys.modules[val.__module__]
+        # if we found a module, determine if it should be included
+        # in the list of dependencies
+        if vars_module:    
+            if not is_builtin_module(vars_module) and \
+               not is_streamsx_module(vars_module) and \
+               not is_system_module(vars_module):
+                imported_modules[vars_module.__name__] = vars_module
     return imported_modules
 
 def is_builtin_module(module):
