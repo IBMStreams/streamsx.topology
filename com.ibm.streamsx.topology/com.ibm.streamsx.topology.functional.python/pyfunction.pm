@@ -32,4 +32,20 @@ sub splpy_tuplestyle{
 
  return $pystyle;
 }
+
+# Give a style return a string containing
+# the C++ code to get the value
+# from an input tuple ip, that will
+# be converted to Python and passed to the function.
+#
+sub splpy_inputtuple2value{
+ my ($pystyle) = @_;
+ if ($pystyle eq 'python') {
+  return 'SPL::blob value = ip.get___spl_po();';
+ }
+
+ if ($pystyle eq 'string') {
+  return 'SPL::rstring value = ip.get_string();';
+ }
+}
 1;
