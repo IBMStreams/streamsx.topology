@@ -22,7 +22,6 @@ test/spl/testtk
 test/python/topology/tk*
 test/spl/testtk
 test/java
-com.ibm.streamsx.topology/opt/python/packages/streamsx
 com.ibm.streamsx.topology/toolkit.xml
 samples/python/com.ibm.streamsx.topology.pysamples/com.ibm.streamsx.topology.pysamples.mail/
 samples/python/com.ibm.streamsx.topology.pysamples/com.ibm.streamsx.topology.pysamples.positional/

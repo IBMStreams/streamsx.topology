@@ -150,7 +150,7 @@ namespace streamsx {
       return ret;
     }
     
-    static std::auto_ptr<SPL::blob> pyTupleTransform(PyObject * function, PyObject * pickleObjectFunction, SPL::blob & pyblob) {
+    static std::auto_ptr<SPL::blob> pyTupleTransform(PyObject * function, SPL::blob & pyblob) {
 
       std::auto_ptr<SPL::blob> ret;
       PyGILLock lock;
@@ -168,19 +168,11 @@ namespace streamsx {
         throw;
       } 
 
-      // invoke python utliity function that pickles the return value from the
-      // application function
-      PyObject * pyPickledReturnVar = pyTupleFunc(pickleObjectFunction, pyReturnVar);
-      if (pyPickledReturnVar == 0){
-        PyErr_Print();
-        throw;
-      }
-      
-       // construct spl blob from pickled return value
-      long int size = PyBytes_Size(pyPickledReturnVar);
-      char * bytes = PyBytes_AsString(pyPickledReturnVar);          
+      // construct spl blob from pickled return value
+      long int size = PyBytes_Size(pyReturnVar);
+      char * bytes = PyBytes_AsString(pyReturnVar);          
       ret.reset(new SPL::blob((const unsigned char *)bytes, size));
-      Py_DECREF(pyPickledReturnVar);
+      Py_DECREF(pyReturnVar);
       return ret;
     }
 
