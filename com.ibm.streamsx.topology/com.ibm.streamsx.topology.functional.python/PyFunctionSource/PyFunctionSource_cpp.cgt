@@ -102,9 +102,9 @@ void MY_OPERATOR::prepareToShutdown()
 void MY_OPERATOR::process(uint32_t idx)
 {
   while(!getPE().getShutdownRequested()) {
-    long int size = 0;
-    char * bytes = NULL;
     
+    SPL::blob serializedObject;
+
     { // start lock
       streamsx::topology::PyGILLock lock;
       PyObject * pyReturnVar = PyObject_CallObject(function_, NULL);
@@ -116,13 +116,13 @@ void MY_OPERATOR::process(uint32_t idx)
         throw;
       }
 
-      size = PyBytes_Size(pyReturnVar);
-      bytes = PyBytes_AsString(pyReturnVar);
+      long int size = PyBytes_Size(pyReturnVar);
+      char * bytes = PyBytes_AsString(pyReturnVar);
+      serializedObject.setData((const unsigned char *)bytes, size);
       Py_DECREF(pyReturnVar);
 
     } // end lock
 
-    SPL::blob serializedObject((const unsigned char *)bytes, size);
     OPort0Type op(serializedObject);
     submit(op, 0);
   }
