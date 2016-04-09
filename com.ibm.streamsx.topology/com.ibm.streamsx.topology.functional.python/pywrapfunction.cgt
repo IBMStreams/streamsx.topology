@@ -14,8 +14,6 @@
     PyObject * appCallable = 
       streamsx::topology::Splpy::loadFunction(<%=$pyModule%>, <%=$pyCallableName%>);
 
-<% if ($pystyle eq 'python') { %>
-
     // The object to be called is either appCallable for
     // a function passed into the operator
     // or a pickled encoded class instance
@@ -37,8 +35,3 @@
       PyErr_Print();
       throw;
     }
-
-<%}%>
-<% if ($pystyle eq 'string') { %>
-    function_ = appCallable;
-<%}%>
