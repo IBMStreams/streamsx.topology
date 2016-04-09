@@ -150,7 +150,7 @@ namespace streamsx {
       return ret;
     }
     
-    static std::auto_ptr<SPL::blob> pyTupleTransform(PyObject * function, PyObject * pickleObjectFunction, SPL::blob & pyblob) {
+    static std::auto_ptr<SPL::blob> pyTupleTransform(PyObject * function, SPL::blob & pyblob) {
 
       std::auto_ptr<SPL::blob> ret;
       PyGILLock lock;
