@@ -78,8 +78,9 @@ def depickleInputForCallableInstance(serializedCallable) :
 # return a function that can be called
 # repeatably by a source operator returning
 # the next tuple in its pickled form
-def iterableSource(function) :
-  iterator = iter(function())
+def iterableSource(callable) :
+  ac = _getCallable(callable)
+  iterator = iter(ac())
   def _sourceIterator():
      try:
         while True:
@@ -89,13 +90,6 @@ def iterableSource(function) :
      except StopIteration:
        return None
   return _sourceIterator
-
-# Given a serialized callable instance, 
-# deserialize the callable into 'callable',
-# then call 'iterableSource'
-def iterableSourceForCallableInstance(serializedCallable) :
-  callable = depickleCallableInstance(serializedCallable)
-  return iterableSource(callable)
 
 # Given a function and tuple argument
 # that returns an iterable,
