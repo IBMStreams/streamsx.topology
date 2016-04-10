@@ -114,7 +114,7 @@ def get_imported_modules(module):
         # module type
         if isinstance(val, types.ModuleType):
             vars_module = val
-        # has __module__ attr, find module of class
+        # has __module__ attr, find module
         elif hasattr(val, '__module__') \
             and val.__module__ in sys.modules:
             vars_module = sys.modules[val.__module__]
