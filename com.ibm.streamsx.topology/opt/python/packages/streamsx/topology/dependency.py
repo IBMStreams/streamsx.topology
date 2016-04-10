@@ -114,8 +114,8 @@ def get_imported_modules(module):
         # module type
         if isinstance(val, types.ModuleType):
             vars_module = val
-        # class type, find module of class
-        elif isinstance(val, type) and hasattr(val, '__module__') \
+        # has __module__ attr, find module
+        elif hasattr(val, '__module__') \
             and val.__module__ in sys.modules:
             vars_module = sys.modules[val.__module__]
         # if we found a module, determine if it should be included
@@ -138,12 +138,9 @@ def is_streamsx_module(module):
         return module.__name__.startswith('streamsx.topology')
     return False
 
-# returns True if the given path starts with a path of a site package, False otherwise
+# returns True if the given path is for a site package, False otherwise
 def _inside_site_package(path):
-    for site_package in site.getsitepackages():
-        if path.startswith(site_package):
-            return True
-    return False
+    return 'site-packages' in path
 
 def _is_system_module(module_path):
     return not _inside_site_package(module_path) and \
