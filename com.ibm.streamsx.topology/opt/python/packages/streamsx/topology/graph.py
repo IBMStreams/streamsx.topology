@@ -20,7 +20,13 @@ class SPLGraph(object):
 
     def addOperator(self, kind, function=None, name=None):
         if name is None:
-            name = self.name + "_OP"+str(len(self.operators))
+            if function is not None:
+               if hasattr(function, '__name__'):
+                   name = function.__name__ + "_" + str(len(self.operators))
+               elif hasattr(function, '__class__'):
+                   name = function.__class__.__name__ + "_" + str(len(self.operators))
+            else:
+               name = self.name + "_OP"+str(len(self.operators))
         if(kind.startswith("$")):    
             op = Marker(len(self.operators), kind, name, {}, self)                           
         else:
