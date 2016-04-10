@@ -62,18 +62,6 @@ def depickleInputPickleReturn(callable):
         return pickle.dumps(rv)
     return _depickleInputPickleReturn
 
-# Given a serialized callable instance, 
-# deserialize and return the callable
-def depickleCallableInstance(serializedCallable):
-    return pickle.loads(base64.b64decode(serializedCallable))
- 
-# Given a serialized callable instance, 
-# deserialize the callable into 'callable', return 
-# a function that depickles the input and then calls 'callable'
-def depickleInputForCallableInstance(serializedCallable) :
-    callable = depickleCallableInstance(serializedCallable)
-    return depickleInput(callable)
- 
 # Given a function that returns an iterable
 # return a function that can be called
 # repeatably by a source operator returning
@@ -122,24 +110,3 @@ def depickleInputPickleIterator(callable):
             return None
         return _PickleIterator(irv)
     return _depickleInputPickleIterator
-
-# Given a function and tuple argument
-# that returns an iterable,
-# return a function that can be called
-# repeatedly by an operator returning
-# the next tuple in its pickled form
-def iterableObject(function, v) :
-   appRetVal = function(pickle.loads(v))
-   if appRetVal is None:
-      appRetVal = []
-   iterator = iter(appRetVal)
-   def _iterableObject():
-      try:
-         while True:
-            tuple = next(iterator)
-            if not tuple is None:
-               return pickleObject(tuple)
-      except StopIteration:
-         return None
-   return _iterableObject
-
