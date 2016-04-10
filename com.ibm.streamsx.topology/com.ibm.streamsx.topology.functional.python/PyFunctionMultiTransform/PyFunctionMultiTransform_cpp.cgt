@@ -20,7 +20,7 @@
 %>
 
 // Constructor
-MY_OPERATOR::MY_OPERATOR() : callable_(NULL), iterableObjectFunction_(NULL)
+MY_OPERATOR::MY_OPERATOR() : function_(NULL)
 { 
   std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
   std::string streamsxDir = tkDir + "/opt/python/packages/streamsx/topology";
@@ -46,60 +46,18 @@ MY_OPERATOR::MY_OPERATOR() : callable_(NULL), iterableObjectFunction_(NULL)
          throw;
     }
 
-<%
- my $pyModule =  $model->getParameterByName("pyModule")->getValueAt(0)->getCppExpression() . '.c_str()';
- my $pyCallableName = $model->getParameterByName("pyName")->getValueAt(0)->getCppExpression() . '.c_str()';
- my $pyCallable = $model->getParameterByName("pyCallable");
- $pyCallable = $pyCallable->getValueAt(0)->getCppExpression() . '.c_str()' if $pyCallable;
-%>
-
-    PyObject * appCallable = 
-      streamsx::topology::Splpy::loadFunction(<%=$pyModule%>, <%=$pyCallableName%>);
-    
-<% if ($pystyle eq 'python') { %>
-    
-    <% if ($pyCallable) { %>
-      Py_DECREF(appCallable);
-      
-      // deserialize class instance and store reference
-      PyObject * depickleCallableInstance = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "depickleCallableInstance");
-      PyObject * funcArg = PyTuple_New(1);
-      PyTuple_SetItem(funcArg, 0, Py_BuildValue("s", <%=$pyCallable%>));
-      callable_ = PyObject_CallObject(depickleCallableInstance, funcArg);
-      if(callable_ == 0){
-        PyErr_Print();
-        Py_DECREF(depickleCallableInstance);
-        Py_DECREF(funcArg);
-        throw;
-      }
-      Py_DECREF(depickleCallableInstance);
-      Py_DECREF(funcArg);
-    <%} else {%>
-      callable_ = appCallable;
-    <%}%>
-
-    PyObject * iterableObjectFunction = 
-      streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "iterableObject");
-    iterableObjectFunction_ = iterableObjectFunction;
-    
-<%}%>
-<% if ($pystyle eq 'string') { %>
-    callable_ = appCallable;
-<%}%>
-
+<% my $pywrapfunc='depickleInputPickleIterator'; %>
+@include "../pywrapfunction.cgt"
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
     // Finalization code goes here
-    if (callable_ || iterableObjectFunction_) {
+    if (function_) {
       streamsx::topology::PyGILLock lock;
-      if (callable_) {
-        Py_DECREF(callable_);
-      }
-      if (iterableObjectFunction_) {
-        Py_DECREF(iterableObjectFunction_);
+      if (function_) {
+        Py_DECREF(function_);
       }
     }
 }
@@ -146,46 +104,30 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     // convert spl blob to bytes
     PyObject * pyBytes  = streamsx::topology::Splpy::pyBlobToBytes(value);
 
-    // prepare to call the python utility function that invokes
-    // the application function and returns an iterator
-    PyObject * funcArg = PyTuple_New(2);
-  
-    // first argument is application function or deserialized instance of callable class
-    Py_INCREF(callable_);
-    PyTuple_SetItem(funcArg, 0, callable_);
-  
-    // second argument is spl blob in bytes (pickled tuple)
-    PyTuple_SetItem(funcArg, 1, pyBytes);
-    
-    // invoke python utility function and get an iterator of pickled values
-    PyObject * pyIterator = PyObject_CallObject(iterableObjectFunction_, funcArg);
-    Py_DECREF(funcArg);
+    PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyBytes);
+
     if (pyIterator == 0) {
       PyErr_Print();
       throw;
     }
-  
-    while (!getPE().getShutdownRequested()) {
-      // call next() on the iterator, and get the pickled return value
-      PyObject * pyPickledReturnVar = PyObject_CallObject(pyIterator, NULL);
-      if (pyPickledReturnVar == Py_None){
-        Py_DECREF(pyPickledReturnVar);
+    if (pyIterator == Py_None) {
         Py_DECREF(pyIterator);
-        break;
-      } else if(pyPickledReturnVar == 0){
-        PyErr_Print();
-        Py_DECREF(pyIterator);
-        throw;
-      }
+        return;
+    }
+        
+    PyObject * item;
+    while (!getPE().getShutdownRequested()
+          &&  ((item = PyIter_Next(pyIterator)) != NULL) ) {
 
       // construct spl blob and tuple from pickled return value
-      long int size = PyBytes_Size(pyPickledReturnVar);
-      char * bytes = PyBytes_AsString(pyPickledReturnVar);
-      Py_DECREF(pyPickledReturnVar); 
+      long int size = PyBytes_Size(item);
+      char * bytes = PyBytes_AsString(item);
       SPL::blob serializedObject((const unsigned char *)bytes, size);     
+      Py_DECREF(item); 
       OPort0Type otuple(serializedObject);
       output_tuples.push_back(otuple);
     }
+    Py_DECREF(pyIterator);
   } // end lock
   
   // submit tuples

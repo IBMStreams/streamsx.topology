@@ -33,13 +33,10 @@ public:
 private:
     // Members
     
-    // Python application function or deserialized instance of a callable class
-    PyObject * callable_;
-    
-    // Python utility function that takes the application function and tuple,
-    // at process() time, and returns an iterator of pickled values
-    PyObject * iterableObjectFunction_;
-    
+    // Python function that processes the input value
+    // and calls the application function
+    // and returns a suitable value
+    PyObject * function_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

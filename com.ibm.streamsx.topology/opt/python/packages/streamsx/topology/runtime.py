@@ -91,6 +91,38 @@ def iterableSource(callable) :
        return None
   return _sourceIterator
 
+# Iterator that wraps another iterator
+# to discard any values that are None
+# and pickle any returned value.
+class _PickleIterator:
+   def __init__(self, it):
+       self.it = iter(it)
+   def __iter__(self):
+       return self
+   def __next__(self):
+       nv = next(self.it)
+       while nv is None:
+          nv = next(self.it)
+       return pickle.dumps(nv)
+
+# Return a function that depickles
+# the input tuple calls callable
+# that is expected to return
+# an Iterable. If callable returns
+# None then the function will return
+# None, otherwise it returns
+# an instance of _PickleIterator
+# wrapping an iterator from the iterable
+# Used by PyFunctionMultiTransform
+def depickleInputPickleIterator(callable):
+    ac =_getCallable(callable)
+    def _depickleInputPickleIterator(v):
+        irv = ac(pickle.loads(v))
+        if irv is None:
+            return None
+        return _PickleIterator(irv)
+    return _depickleInputPickleIterator
+
 # Given a function and tuple argument
 # that returns an iterable,
 # return a function that can be called
