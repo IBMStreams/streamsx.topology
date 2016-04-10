@@ -1,10 +1,10 @@
-import test_functions2_dep
+from test_functions2_dep import filter2
 
 def hello_world() :
     return ["Hello", "World!"]
 
 def filter(t):
-   return test_functions2_dep.filter(t) 
+   return filter2(t) 
 
 global _hwcount_filter
 _hwcount_filter = 0
