@@ -39,41 +39,8 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
          throw;
     }
 
-<%
- my $pyModule =  $model->getParameterByName("pyModule")->getValueAt(0)->getCppExpression() . '.c_str()';
- my $pyCallableName = $model->getParameterByName("pyName")->getValueAt(0)->getCppExpression() . '.c_str()';
- my $pyCallable = $model->getParameterByName("pyCallable");
- $pyCallable = $pyCallable->getValueAt(0)->getCppExpression() . '.c_str()' if $pyCallable;
-%>
-
-    PyObject * appCallable = 
-      streamsx::topology::Splpy::loadFunction(<%=$pyModule%>, <%=$pyCallableName%>);
-
-    PyObject * iterableSource = NULL;
-    PyObject * funcArg = PyTuple_New(1);
-    
-    <% if ($pyCallable) { %>
-      iterableSource = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "iterableSourceForCallableInstance");
-      // argument is the serialized callable instance
-      PyTuple_SetItem(funcArg, 0, Py_BuildValue("s", <%=$pyCallable%>));
-      Py_DECREF(appCallable);
-    <%} else {%>
-      iterableSource = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "iterableSource");
-      // argument is the application function
-      PyTuple_SetItem(funcArg, 0, appCallable);
-    <%}%>    
-
-    function_ = PyObject_CallObject(iterableSource, funcArg);
-    if(function_ == 0){
-      PyErr_Print();
-      Py_DECREF(iterableSource);
-      Py_DECREF(funcArg);
-      throw;
-    }
-    
-    Py_DECREF(iterableSource);
-    Py_DECREF(funcArg);
-
+<% my $pywrapfunc='iterableSource'; %>
+@include "../pywrapfunction.cgt"
 }
 
 // Destructor

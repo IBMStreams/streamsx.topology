@@ -27,9 +27,9 @@ def pickleReturn(function) :
 # that depickles the input and then calls 'callable'
 # returning the callable's return
 def depickleInput(callable) :
-    callable = _getCallable(callable)
+    ac = _getCallable(callable)
     def _depickleInput(v):
-        return callable(pickle.loads(v))
+        return ac(pickle.loads(v))
     return _depickleInput
 
 # Get the callable from the value
@@ -62,24 +62,13 @@ def depickleInputPickleReturn(callable):
         return pickle.dumps(rv)
     return _depickleInputPickleReturn
 
-# Given a serialized callable instance, 
-# deserialize and return the callable
-def depickleCallableInstance(serializedCallable):
-    return pickle.loads(base64.b64decode(serializedCallable))
- 
-# Given a serialized callable instance, 
-# deserialize the callable into 'callable', return 
-# a function that depickles the input and then calls 'callable'
-def depickleInputForCallableInstance(serializedCallable) :
-    callable = depickleCallableInstance(serializedCallable)
-    return depickleInput(callable)
- 
 # Given a function that returns an iterable
 # return a function that can be called
 # repeatably by a source operator returning
 # the next tuple in its pickled form
-def iterableSource(function) :
-  iterator = iter(function())
+def iterableSource(callable) :
+  ac = _getCallable(callable)
+  iterator = iter(ac())
   def _sourceIterator():
      try:
         while True:
@@ -90,30 +79,34 @@ def iterableSource(function) :
        return None
   return _sourceIterator
 
-# Given a serialized callable instance, 
-# deserialize the callable into 'callable',
-# then call 'iterableSource'
-def iterableSourceForCallableInstance(serializedCallable) :
-  callable = depickleCallableInstance(serializedCallable)
-  return iterableSource(callable)
+# Iterator that wraps another iterator
+# to discard any values that are None
+# and pickle any returned value.
+class _PickleIterator:
+   def __init__(self, it):
+       self.it = iter(it)
+   def __iter__(self):
+       return self
+   def __next__(self):
+       nv = next(self.it)
+       while nv is None:
+          nv = next(self.it)
+       return pickle.dumps(nv)
 
-# Given a function and tuple argument
-# that returns an iterable,
-# return a function that can be called
-# repeatedly by an operator returning
-# the next tuple in its pickled form
-def iterableObject(function, v) :
-   appRetVal = function(pickle.loads(v))
-   if appRetVal is None:
-      appRetVal = []
-   iterator = iter(appRetVal)
-   def _iterableObject():
-      try:
-         while True:
-            tuple = next(iterator)
-            if not tuple is None:
-               return pickleObject(tuple)
-      except StopIteration:
-         return None
-   return _iterableObject
-
+# Return a function that depickles
+# the input tuple calls callable
+# that is expected to return
+# an Iterable. If callable returns
+# None then the function will return
+# None, otherwise it returns
+# an instance of _PickleIterator
+# wrapping an iterator from the iterable
+# Used by PyFunctionMultiTransform
+def depickleInputPickleIterator(callable):
+    ac =_getCallable(callable)
+    def _depickleInputPickleIterator(v):
+        irv = ac(pickle.loads(v))
+        if irv is None:
+            return None
+        return _PickleIterator(irv)
+    return _depickleInputPickleIterator
