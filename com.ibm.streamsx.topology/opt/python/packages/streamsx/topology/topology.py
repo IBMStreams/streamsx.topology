@@ -204,18 +204,18 @@ class Stream(object):
         As such, each parallelized stream function are separate instances and operate independently 
         from one another.
         
-        `parallel` will only parallelize the stream operations performed after the call to `parallel` and 
-        before the call to `end_parallel`
+        parallel() will only parallelize the stream operations performed after the call to parallel() and 
+        before the call to end_parallel().
         
         Parallel regions aren't required to have an output stream, and thus may be used as sinks.
-        In other words, a parallel sink is created by calling `parallel` and creating a sink operation.
-        It is not necessary to invoke `end_parallel` on parallel sinks.
+        In other words, a parallel sink is created by calling parallel() and creating a sink operation.
+        It is not necessary to invoke end_parallel() on parallel sinks.
         
         Nested parallelism is not currently supported.
-        A call to `parallel` should never be made immediately after another call to `parallel` without 
-        having an `end_parallel` in between.
+        A call to parallel() should never be made immediately after another call to parallel() without 
+        having an end_parallel() in between.
         
-        Every call to `end_parallel` must have a call to `parallel` preceding it.
+        Every call to end_parallel() must have a call to parallel() preceding it.
         
         Args:
             width (int): degree of parallelism
