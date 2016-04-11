@@ -198,10 +198,27 @@ class Stream(object):
     
     def parallel(self, width):
         """
-        Marks operator as parallel output with specified width
+        Parallelizes the stream into `width` parallel channels.
+        Tuples are routed to parallel channels such that an even distribution is maintained.
+        Each parallel channel can be thought of as being assigned its own thread.
+        As such, each parallelized stream function are separate instances and operate independently 
+        from one another.
+        
+        `parallel` will only parallelize the stream operations performed after the call to `parallel` and 
+        before the call to `end_parallel`
+        
+        Parallel regions aren't required to have an output stream, and thus may be used as sinks.
+        In other words, a parallel sink is created by calling `parallel` and creating a sink operation.
+        It is not necessary to invoke `end_parallel` on parallel sinks.
+        
+        Nested parallelism is not currently supported.
+        A call to `parallel` should never be made immediately after another call to `parallel` without 
+        having an `end_parallel` in between.
+        
+        Every call to `end_parallel` must have a call to `parallel` preceding it.
         
         Args:
-            width (int): width
+            width (int): degree of parallelism
         Returns:
             Stream
         """
@@ -214,12 +231,12 @@ class Stream(object):
 
     def end_parallel(self):
         """
-        Marks end of operators as parallel output
+        Ends a parallel region by merging the channels into a single stream
         
         Args:
             None
         Returns:
-            Stream
+            A Stream for which subsequent transformations are no longer parallelized
         """
         lastOp = self.topology.graph.getLastOperator()
         outport = self.oport
@@ -236,11 +253,10 @@ class Stream(object):
 
     def union(self, streamSet):
         """
-        Merges the outputs of the streams in the set 
-        into a single stream.
+        Creates a stream that is a union of this stream and other streams
         
         Args:
-            streamSet: a set of Stream objects to merge
+            streamSet: a set of Stream objects to merge with this stream
         Returns:
             Stream
         """

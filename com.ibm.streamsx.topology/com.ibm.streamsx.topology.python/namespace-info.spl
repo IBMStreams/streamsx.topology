@@ -208,7 +208,7 @@ a stream may contain different types of objects.
 * Install and configure IBM Streams Version 4.0.0 (or later).
 * Install CPython 3.5.0 (or later).  Testing has been performed with Python 3.5.1.  Python is assumed to be installed in the default location (`/usr/local`).
 * Download and extract the IBM Streams Topology Toolkit, which includes the Python Application API.
-  Set the PYTHONPATH environment variable to the fully qualified path of the `com.ibm.streamsx.topology/opt/python/packages` directory.
+  Include the fully qualified path of the `com.ibm.streamsx.topology/opt/python/packages` directory in the PYTHONPATH environment variable.
 
 # Sample HelloWorld Application
 
@@ -350,25 +350,39 @@ To avoid name conflicts, do not create modules with the same name as
 
 * `union(self, streamSet)` function on `Stream`
 
-  Merges the outputs of the streams in the set into a single stream.
+  Creates a stream that is a union of this stream and other streams
 
-  param `streamSet`: a set of Stream objects to merge
+  param `streamSet`: a set of Stream objects to merge with this stream
   
   return: Stream
         
 * `parallel(self, width)` function on `Stream`
 
-  Marks operator as parallel output with specified width
-
-  param `width`: width
+  Parallelizes the stream into `width` parallel channels.
+  Tuples are routed to parallel channels such that an even distribution is maintained.
+  Each parallel channel can be thought of as being assigned its own thread.
+  As such, each parallelized stream function are separate instances and operate independently from one another.
+  
+  `parallel` will only parallelize the stream operations performed after the call to `parallel` and before the call to `end_parallel`
+  
+  Parallel regions aren't required to have an output stream, and thus may be used as sinks.
+  In other words, a parallel sink is created by calling `parallel` and creating a sink operation.
+  It is not necessary to invoke `end_parallel` on parallel sinks.
+  
+  Nested parallelism is not currently supported.
+  A call to `parallel` should never be made immediately after another call to `parallel` without having an `end_parallel` in between.
+  
+  Every call to `end_parallel` must have a call to `parallel` preceding it.
+     
+  param `width`: degree of parallelism
   
   return: Stream
         
 * `end_parallel(self)` function on `Stream`
 
-  Marks end of operators as parallel output
+  Ends a parallel region by merging the channels into a single stream
   
-  return: Stream
+  return: A Stream for which subsequent transformations are no longer parallelized
 
 # Sample Transform Application
 
@@ -411,7 +425,7 @@ in this case `transform_sample_functions.AddNum(17)`.
 When building the topology the directory `com.ibm.streamsx.topology/opt/python/packages` must be in `$PYTHONPATH`.
 
 The sample `transform_sample.py` can be found under `samples/python/topology/simple`.
-After setting the PYTHONPATH, the sample can be executed using `python3 transform_sample.py`.
+After updating the PYTHONPATH, the sample can be executed using `python3 transform_sample.py`.
 
 Sample output:
     342

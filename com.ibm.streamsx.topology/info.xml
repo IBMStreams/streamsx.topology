@@ -41,7 +41,7 @@ Applications use Python code to process tuples and tuples are Python objects.
 See the documentation under [namespace:com.ibm.streamsx.topology.python|com.ibm.streamsx.topology.python] for details.
 
     </description>
-    <version>1.2.1.alpha</version>
+    <version>1.2.5.alpha</version>
     <requiredProductVersion>4.0.0.0</requiredProductVersion>
     </identity>
   <dependencies/>
