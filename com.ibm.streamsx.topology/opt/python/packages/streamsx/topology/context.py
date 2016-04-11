@@ -15,6 +15,19 @@ import subprocess
 #
 
 def submit(ctxtype, graph):
+    """
+    Submits a topology with the specified context type.
+    
+    Args:
+        ctxtype (string): context type.  Values include:
+        * STANDALONE - the topology is executed directly as an Streams standalone application.
+          The standalone execution is spawned as a separate process
+        * BUNDLE - execution of the topology produces an SPL application bundle
+          (.sab file) that can be submitted to an IBM Streams instance as a distributed application.
+        graph: a Topology.graph object
+    Returns:
+        None
+    """    
     fj = _createFullJSON(graph)
     fn = _createJSONFile(fj)
     try:

@@ -24,6 +24,7 @@
     <delete dir="${tk}/doc/javadoc"/>
     <delete dir="${tk}/doc/spldoc"/>
     <delete dir="${tk}/doc/scaladoc"/>
+    <delete dir="${tk}/doc/pydoc"/>
     <delete dir="${release.base}"/>
   </target>
 
@@ -79,8 +80,23 @@
        </javadoc>
        <ant dir="toolkit" target="spldoc"/>
        <ant dir="scala" target="scaladoc"/>
-
+       <antcall target="pydoc"/>
   </target>
+  
+  <target name="pydoc">
+       <mkdir dir="${tk}/doc/pydoc"/>
+	   <exec executable="pydoc3" dir="${tk}/doc/pydoc">
+	     <env key="PYTHONPATH" value="${tk}/opt/python/packages"/>
+	     <arg value="-w"/>
+	     <arg value="streamsx.topology.topology"/>
+	     <arg value="streamsx.topology.context"/>
+	   </exec>
+	   <!-- pydoc has absolute path file links; remove them !-->
+	   <replaceregexp match="\&lt;a href=\&quot;file:(.*?)\&lt;/a\&gt;" replace="" flags="g">
+         <fileset dir="${tk}/doc/pydoc" includes="**/*.html"/>
+       </replaceregexp>
+  </target>
+       
   <target name="create_release_bundle">
       <tstamp/>
       <property name="release.dir" location="${release.base}" />

@@ -203,11 +203,12 @@ using Python functions. The return of a function determines the
 content of the stream. Tuples on a stream are Python objects,
 a stream may contain different types of objects.
 
-# Assumptions
+# Prerequites
 
-* CPython 3.5 is assumed
-* Limited testing has been performed with CPython 3.5.1
-* Python is installed in the default location (`/usr/local`)
+* Install and configure IBM Streams Version 4.0.0 (or later).
+* Install CPython 3.5.0 (or later).  Testing has been performed with Python 3.5.1.  Python is assumed to be installed in the default location (`/usr/local`).
+* Download and extract the IBM Streams Topology Toolkit, which includes the Python Application API.
+  Include the fully qualified path of the `com.ibm.streamsx.topology/opt/python/packages` directory in the PYTHONPATH environment variable.
 
 # Sample HelloWorld Application
 
@@ -234,13 +235,12 @@ The callable will be called when the application starts, and the SPL runtime wil
 The `sink` function is passed a callable that will be called for each tuple
 on the stream, in this case the builtin `print` function.
 
-The callable input must be one of the following:
+# User-supplied functions to operations
+
+Operations such as `source` and `sink` accept a callable as input.  The callable must be one of the following:
   * the name of a built-in function
-  * the name of a function defined at the top level of a module that takes no arguments
-  * an instance of a callable class defined at the top level of a module that implements the method `__call__` and is picklable
-  
-Using a callable class allows state information such as user-defined parameters to be stored during class 
-initialization and utilized when the instance is called.
+  * the name of a function defined at the top level of a module
+  * an instance of a callable class defined at the top level of a module that implements the method `__call__` and is picklable.  Using a callable class allows state information such as user-defined parameters to be stored during class initialization and utilized when the instance is called.
 
 The modules containing the callables, along with third-party libraries required by the modules, are copied into the Streams Application Bundle (sab file).
 * Dependent libraries can be individual modules or packages.
@@ -270,7 +270,7 @@ To avoid name conflicts, do not create modules with the same name as
   param `func`: A zero-argument callable that returns an iterable of tuples.
   A tuple is represented as a Python object that must be picklable.
 
-  return: A stream whose tuples are the result of the output obtained by invoking the provided callable.
+  return: A Stream whose tuples are the result of the output obtained by invoking the provided callable.
 
 * `sink(self, func)` function on `Stream`
 
@@ -294,7 +294,7 @@ To avoid name conflicts, do not create modules with the same name as
   If True, the tuple is included on the returned stream.  If False, the tuple is filtered out.
   The callable is invoked for each incoming tuple.
   
-  return: A stream containing tuples that have not been filtered out.
+  return: A Stream containing tuples that have not been filtered out.
   
 * `transform(self, func)` function on `Stream`
 
@@ -307,7 +307,7 @@ To avoid name conflicts, do not create modules with the same name as
   param `func`: A callable that takes a single parameter for the tuple, and returns a tuple or None.
   The callable is invoked for each incoming tuple.
  
-  return: A stream containing transformed tuples.
+  return: A Stream containing transformed tuples.
   
 * `multi_transform(self, func)` function on `Stream`
 
@@ -323,29 +323,66 @@ To avoid name conflicts, do not create modules with the same name as
   The callable must return an iterable or None, otherwise a TypeError is raised.
   The callable is invoked for each incoming tuple.
 
-  return: A stream containing transformed tuples.
+  return: A Stream containing transformed tuples.
   
-* `isolate` function on `Stream`
+* `isolate(self)` function on `Stream`
 
   Guarantees that the upstream operation will run in a separate process from the downstream operation when 
   the application is executed in distributed mode.
   
-* `low_latency` and `end_low_latency` functions on `Stream`
+  return: Stream
+  
+* `low_latency(self)` function on `Stream`
 
   The function is guaranteed to run in the same process as the
   upstream Stream function. All streams that are created from the returned stream 
   are also guaranteed to run in the same process until end_low_latency() 
   is called.
+  
+  return: Stream
+  
+* `end_low_latency(self)` function on `Stream`
 
-* `union` function on `Stream`
+  Returns a Stream that is no longer guaranteed to run in the same process
+  as the calling stream.
+  
+  return: Stream
 
-  The Union operator merges the outputs of the streams in the set into a single stream.
+* `union(self, streamSet)` function on `Stream`
 
-*  `parallel` and `end_parallel` functions on `Stream`
+  Creates a stream that is a union of this stream and other streams
 
-  Marks operator as parallel output with width specified
+  param `streamSet`: a set of Stream objects to merge with this stream
+  
+  return: Stream
+        
+* `parallel(self, width)` function on `Stream`
 
+  Parallelizes the stream into `width` parallel channels.
+  Tuples are routed to parallel channels such that an even distribution is maintained.
+  Each parallel channel can be thought of as being assigned its own thread.
+  As such, each parallelized stream function are separate instances and operate independently from one another.
+  
+  `parallel` will only parallelize the stream operations performed after the call to `parallel` and before the call to `end_parallel`
+  
+  Parallel regions aren't required to have an output stream, and thus may be used as sinks.
+  In other words, a parallel sink is created by calling `parallel` and creating a sink operation.
+  It is not necessary to invoke `end_parallel` on parallel sinks.
+  
+  Nested parallelism is not currently supported.
+  A call to `parallel` should never be made immediately after another call to `parallel` without having an `end_parallel` in between.
+  
+  Every call to `end_parallel` must have a call to `parallel` preceding it.
+     
+  param `width`: degree of parallelism
+  
+  return: Stream
+        
+* `end_parallel(self)` function on `Stream`
 
+  Ends a parallel region by merging the channels into a single stream
+  
+  return: A Stream for which subsequent transformations are no longer parallelized
 
 # Sample Transform Application
 
@@ -383,21 +420,26 @@ in this case `transform_sample_functions.AddNum(17)`.
         def __call__(self, tuple):
             return tuple + self.increment
 
+# Running the Sample Transform Application
+
 When building the topology the directory `com.ibm.streamsx.topology/opt/python/packages` must be in `$PYTHONPATH`.
 
 The sample `transform_sample.py` can be found under `samples/python/topology/simple`.
-After setting the PYTHONPATH, the sample can be executed using `python3 transform_sample.py`.
+After updating the PYTHONPATH, the sample can be executed using `python3 transform_sample.py`.
+
 Sample output:
     342
     474
     9342
+
+# Context Types
 
 Only submission using `DISTRIBUTED`, `BUNDLE` and `STANDALONE` context type are supported.
 * `DISTRIBUTED` converts the application to an SPL graph, compiles it and submits it as a Streams application bundle to a Streams instance. The bundle is submitted using `streamtool` which must be setup to submit without requiring authentication input.
 * `BUNDLE` converts the application to an SPL graph and compiles it, producing a SPL application bundle (.sab file).  The application is executed separately by submitting the bundle to an IBM Streams instance as a distributed application.  A bundle can be submitted to an IBM Streams instance using `streamtool submitjob`, the IBM Streams Console, or IBM Streams JMX API.
 * `STANDALONE` converts the application to an SPL graph, compiles it and executes it as an IBM Streams standalone application.  The standalone execution is spawned as a separate process.
 
-Limited testing has been performed to build an application using DISTIRBUTED and BUNDLE.
+Limited testing has been performed to build an application using DISTRIBUTED and BUNDLE.
 
 # Future Items
 
