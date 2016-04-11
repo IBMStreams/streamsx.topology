@@ -215,11 +215,12 @@ class Stream(object):
         Prints each tuple to stdout flushing after each tuple.
         :returns: None
         """
-       self.sink(_print_flush)
-
-    # Print function that flushes
-    def _print_flush(v):
-        print(v, flush=True)
+        self.sink(_print_flush)
 
     def getOport(self):
         return self.oport
+
+# Print function that flushes
+def _print_flush(v):
+    print(v, flush=True)
+
