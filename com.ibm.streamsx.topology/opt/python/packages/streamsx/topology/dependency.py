@@ -23,6 +23,7 @@ class DependencyResolver(object):
         #print ("get_imported_modules for {0}: {1}".format(module.__name__, imported_modules))
         for imported_module_name,imported_module in imported_modules.items():
             if imported_module not in self._processed_modules:
+                #print ("add_dependencies for {0} {1}".format(imported_module.__name__, imported_module))
                 self.add_dependencies(imported_module)
     
     # property to get the list of module dependencies
@@ -43,12 +44,17 @@ class DependencyResolver(object):
             # get the top-level package
             top_package_name = module.__name__.split('.')[0]
             top_package = sys.modules[top_package_name]
-            # for regular packages, there is one top-level directory
-            # for namespace packages, there can be more than one.
-            # they will be merged in the bundle
-            for top_package_path in reversed(list(top_package.__path__)):
-                top_package_path = os.path.abspath(top_package_path)
-                self._add_package(top_package_path)
+            if top_package.__path__:
+                # for regular packages, there is one top-level directory
+                # for namespace packages, there can be more than one.
+                # they will be merged in the bundle
+                for top_package_path in reversed(list(top_package.__path__)):
+                    top_package_path = os.path.abspath(top_package_path)
+                    self._add_package(top_package_path)
+            elif hasattr(top_package, '__file__'):
+                # package that is an individual python file with empty __path__
+                #print ("Adding package that is an individual file", top_package)
+                self._add_package(os.path.abspath(top_package.__file__))
         elif hasattr(module, '__file__'):
             # individual Python module
             module_path = os.path.abspath(module.__file__)
