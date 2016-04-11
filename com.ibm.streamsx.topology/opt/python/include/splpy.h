@@ -54,10 +54,22 @@ namespace streamsx {
        PyGILLock lock;
        if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
          SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
-         PyErr_Print();
+         flush_PyErr_Print();
          throw;
        }
       }
+    /*
+    * Call PyErr_Print() and then flush stderr.
+    * This is because CPython buffers stderr (and stdout)
+    * when it is not connected to a terminal.
+    * Without the flush output is lost in distributed
+    * (since stderr is conncted to a file) and
+    * makes diagnosing errors impossible.
+    */
+    static void flush_PyErr_Print() {
+        PyErr_Print();
+        PyRun_SimpleString("sys.stderr.flush()");
+    }
 
     /*
      * Import a module, returning the reference to the module.
@@ -69,8 +81,8 @@ namespace streamsx {
       PyObject * module = PyImport_Import(moduleName);
       Py_DECREF(moduleName);
       if (module == NULL) {
-        PyErr_Print();
         SPLAPPLOG(L_ERROR, "Fatal error: missing module: " << moduleNameC, "python");
+        flush_PyErr_Print();
         throw;
       }
       SPLAPPTRC(L_INFO, "Imported  module: " << moduleNameC, "python");
@@ -101,7 +113,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
 
       if(pyReturnVar == 0){
-        PyErr_Print();
+        flush_PyErr_Print();
         throw;
       }
 
@@ -116,7 +128,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pyTupleFunc(function, pyUnicode);
 
       if(pyReturnVar == 0){
-        PyErr_Print();
+        flush_PyErr_Print();
         throw;
       }
 
@@ -140,7 +152,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
 
       if(pyReturnVar == 0){
-        PyErr_Print();
+        flush_PyErr_Print();
         throw;
       }
 
@@ -164,7 +176,7 @@ namespace streamsx {
         Py_DECREF(pyReturnVar);
         return ret;
       } else if(pyReturnVar == 0){
-        PyErr_Print();
+        flush_PyErr_Print();
         throw;
       } 
 
