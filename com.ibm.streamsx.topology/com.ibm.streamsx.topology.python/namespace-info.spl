@@ -392,18 +392,18 @@ Sample output:
     474
     9342
 
-Only submission using the STANDALONE or BUNDLE context type are supported.
-* The STANDALONE context type converts the application to an SPL graph, compiles it and executes it as an IBM Streams standalone application.  The standalone execution is spawned as a separate process.
-* The BUNDLE context type converts the application to an SPL graph and compiles it, producing a SPL application bundle (.sab file).  The application is executed separately by submitting the bundle to an IBM Streams instance as a distributed application.  A bundle can be submitted to an IBM Streams instance using `streamtool submitjob`, the IBM Streams Console, or IBM Streams JMX API.
+Only submission using `DISTRIBUTED`, `BUNDLE` and `STANDALONE` context type are supported.
+* `DISTRIBUTED` converts the application to an SPL graph, compiles it and submits it as a Streams application bundle to a Streams instance. The bundle is submitted using `streamtool` which must be setup to submit without requiring authentication input.
+* `BUNDLE` converts the application to an SPL graph and compiles it, producing a SPL application bundle (.sab file).  The application is executed separately by submitting the bundle to an IBM Streams instance as a distributed application.  A bundle can be submitted to an IBM Streams instance using `streamtool submitjob`, the IBM Streams Console, or IBM Streams JMX API.
+* `STANDALONE` converts the application to an SPL graph, compiles it and executes it as an IBM Streams standalone application.  The standalone execution is spawned as a separate process.
 
-Limited testing has been performed to build an application using BUNDLE.
+Limited testing has been performed to build an application using DISTIRBUTED and BUNDLE.
 
 # Future Items
 
 Future items that need to be supported
 
 * `parallel()` function on `Stream` utilizing hashed distribution
-* DISTRIBUTED submission
 * lambda functions
 * dynamic functions
 * IBM Streams application features, such as UDP, windowing etc.
