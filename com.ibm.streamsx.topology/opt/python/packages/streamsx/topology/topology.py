@@ -201,7 +201,7 @@ class Stream(object):
         Marks operator as parallel output with specified width
         
         Args:
-            width: width (integer)
+            width (int): width
         Returns:
             Stream
         """

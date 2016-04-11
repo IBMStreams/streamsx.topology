@@ -19,7 +19,7 @@ def submit(ctxtype, graph):
     Submits a topology with the specified context type.
     
     Args:
-        ctxtype: context type (string).  Values include:
+        ctxtype (string): context type.  Values include:
         * STANDALONE - the topology is executed directly as an Streams standalone application.
           The standalone execution is spawned as a separate process
         * BUNDLE - execution of the topology produces an SPL application bundle
