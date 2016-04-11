@@ -270,6 +270,22 @@ class Stream(object):
             op.addInputPort(outputPort=stream.getOport())
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
-    
+
+    def print(self):
+        """
+        Prints each tuple to stdout flushing after each tuple.
+        :returns: None
+        """
+        self.sink(print_flush)
+
     def getOport(self):
         return self.oport
+
+# Print function that flushes
+def print_flush(v):
+    """
+    Prints argument to stdout flushing after each tuple.
+    :returns: None
+    """
+    print(v, flush=True)
+
