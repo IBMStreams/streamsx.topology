@@ -147,13 +147,19 @@ class SPLInvocation(object):
         _op["config"] = {}
 
         _params = {}
-        for param in self.params:
-            _value = {}
-            _value["value"] = self.params[param]
-            _params[param] = _value
-
+        # Add parameters as their string representation
+        # unless they value has a spl_json() function,
+        # then use that
+        _params = {}
+        for name in self.params:
+            param = self.params[name]
+            try:
+                _params[name] = param.spl_json()
+            except:
+                _value = {}
+                _value["value"] = param
+                _params[name] = _value
         _op["parameters"] = _params
-
         return _op
 
     def _addOperatorFunction(self, function):
