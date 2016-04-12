@@ -55,6 +55,14 @@
  * A Java application uses [../../javadoc/com/ibm/streamsx/topology/TStream.html#publish(java.lang.String)|TStream.publish(topic)]
  * to publish streams.
  * 
+ * # Python Publish-Subscribe
+ * A Python application uses `Stream.publish(topic)` to publish
+ * streams and `Topology.subscribe(topic)` to subscribe to published
+ * streams.
+ *
+ * Python only supports publishing and subscribing to streams
+ * containing Python objects.
+ *
  * # Interchangeable Stream Types
  * 
  * Published streams can be subscribed to by IBM Streams applications

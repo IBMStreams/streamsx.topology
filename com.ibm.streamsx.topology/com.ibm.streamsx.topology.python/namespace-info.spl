@@ -272,6 +272,19 @@ To avoid name conflicts, do not create modules with the same name as
 
   return: A Stream whose tuples are the result of the output obtained by invoking the provided callable.
 
+* `subscribe(self, topic, schema=CommonSchema.Python)` function on `Topology`
+
+  Subscribe to a topic published by other Streams applications.
+  A Streams application may publish a stream to allow other
+  applications to subscribe to it. A subscriber matches a
+  publisher if the topic and schema match.
+
+  See [namespace:com.ibm.streamsx.topology.topic] for more details.
+
+  param `topic`: Topic to subscribe to.
+  param `schema`: Schema to subscriber to. Defaults to CommonSchema.Python representing Python objects.
+  return: A Stream whose tuples have been published to the topic by other Streams applications.
+
 * `sink(self, func)` function on `Stream`
 
   Sends information as a stream to an external system.
@@ -376,13 +389,26 @@ To avoid name conflicts, do not create modules with the same name as
      
   param `width`: degree of parallelism
   
-  return: Stream
+  return: Stream whose subsequent processing will occur on `width` channels.
         
 * `end_parallel(self)` function on `Stream`
 
   Ends a parallel region by merging the channels into a single stream
   
   return: A Stream for which subsequent transformations are no longer parallelized
+* `publish(self, topic, schema=schema.CommonSchema.Python)` function on `Stream`
+
+  Publish this stream on a topic for other Streams applications to subscribe to.
+  A Streams application may publish a stream to allow other
+  applications to subscribe to it. A subscriber matches a
+  publisher if the topic and schema match.
+
+  See [namespace:com.ibm.streamsx.topology.topic] for more details.
+
+  param `topic`: Topic to publish this stream to.
+  param: `schema`: Schema to publish. Defaults to CommonSchema.Python representing Python objects.
+
+  return: None
 
 # Sample Transform Application
 
