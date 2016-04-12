@@ -2,6 +2,7 @@
 # Copyright IBM Corp. 2015
 
 from streamsx.topology import graph
+from streamsx.topology import schema
 
 class Topology(object):
     """Topology that contains graph + operators"""
@@ -33,11 +34,23 @@ class Topology(object):
         oport = op.addOutputPort()
         return Stream(self, oport)
 
-    def subscribe(self, topic, schema):
-        op = self.graph.addOperator(kind=schema.subscribeOp())
+    def subscribe(self, topic, schema=schema.CommonSchema.Python):
+        """
+        Subscribe to a topic published by other Streams applications.
+        A Streams application may publish a stream to allow other
+        applications to subscribe to it. A subscriber matches a
+        publisher if the topic and schema match.
+
+        Args:
+            topic: Topic to subscribe to.
+            schema: Schema to subscriber to. Defaults to CommonSchema.Python representing Python objects.
+        Returns:
+            A Stream whose tuples have been published to the topic by other Streams applications.
+        """
+        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe")
         oport = op.addOutputPort(schema=schema)
-        topicParam = {"topic": [topic]}
-        op.setParameters(topicParam)
+        subscribeParams = {'topic': [topic], 'streamType': schema}
+        op.setParameters(subscribeParams)
         return Stream(self, oport)    
     
 
@@ -277,6 +290,24 @@ class Stream(object):
         :returns: None
         """
         self.sink(print_flush)
+
+    def publish(self, topic, schema=schema.CommonSchema.Python):
+        """
+        Publish this stream on a topic for other Streams applications to subscribe to.
+        A Streams application may publish a stream to allow other
+        applications to subscribe to it. A subscriber matches a
+        publisher if the topic and schema match.
+
+        Args:
+            topic: Topic to publish this stream to.
+            schema: Schema to publish. Defaults to CommonSchema.Python representing Python objects.
+        Returns:
+            None.
+        """
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish")
+        op.addInputPort(outputPort=self.oport)
+        publishParams = {'topic': [topic]}
+        op.setParameters(publishParams)
 
     def getOport(self):
         return self.oport

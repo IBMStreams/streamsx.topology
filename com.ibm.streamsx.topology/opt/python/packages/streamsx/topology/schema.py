@@ -30,7 +30,3 @@ class CommonSchema(enum.Enum):
 
     def spl_json(self):
         return self.value.spl_json()
-
-    def subscribeOp(self):
-        if (self == CommonSchema.String):
-            return "com.ibm.streamsx.topology.topic::SubscribeString"
