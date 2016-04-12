@@ -47,25 +47,3 @@ public composite Subscribe(output Topic )
 		}
 
 }
-
-/**
- * Subscribe to a topic that is a stream of `String` tuples.
- * Generates a stream that is subscribed, through
- * IBM Streams dynamic connections, to all streams
- * published to the same `topic` with type [String].
- * See [namespace:com.ibm.streamsx.topology.topic] for details.
- 
- * @output Topic Subscription to `topic`.
- * @param topic Topic to subscribe to.
-*/
-public composite SubscribeString(output stream<String> Topic)
-{
-	param		
-		expression<rstring> $topic ;
-        graph
-             stream<String> Topic = Subscribe() {
-                 param
-                      topic: $topic;
-                      streamType: String;
-             }
-}
