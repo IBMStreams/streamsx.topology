@@ -102,10 +102,17 @@
       <property name="release.dir" location="${release.base}" />
       <mkdir dir="${release.dir}" />
       <property name="releasefilename" value="${release.dir}/streamsx.topology-v1.2-${DSTAMP}-${TSTAMP}.tgz"/>
-      <tar compression="gzip" longfile="gnu" destfile="${releasefilename}"
-         basedir="${basedir}"
-         includes="com.ibm.streamsx.topology/** samples/**"
-         excludes="**/.gitignore" />
+      <tar compression="gzip" longfile="gnu" destfile="${releasefilename}">
+         <tarfileset dir="${basedir}" filemode="755" >
+           <include name="com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python/pyversion.sh"/>
+         </tarfileset>
+         <tarfileset dir="${basedir}" >
+           <include name="com.ibm.streamsx.topology/**"/>
+           <include name="samples/**"/>
+           <exclude name="**/.gitignore"/>
+           <exclude name="com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python/pyversion.sh"/>
+         </tarfileset>
+      </tar>
       <checksum file="${releasefilename}"/>
       <checksum algorithm="sha1" file="${releasefilename}"/>
   </target>
