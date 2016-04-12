@@ -195,15 +195,8 @@ namespace streamsx {
 
       // convert spl blob to bytes
       PyObject * pyBytes  = pyBlobToBytes(pyblob);
-      // invoke python nested function that calls the application function
-      PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
-      if (pyReturnVar == Py_None){
-        Py_DECREF(pyReturnVar);
-        return ret;
-      } else if(pyReturnVar == 0){
-        PyErr_Print();
-        throw;
-      } 
+      // invoke python nested function that generates the int32 hash
+      PyObject * pyReturnVar = pyTupleFunc(function, pyBytes); 
      
        // construct integer from  return value
       if(PyLong_Check(pyReturnVar)) {

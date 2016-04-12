@@ -39,7 +39,7 @@ class SPLGraph(object):
     
     def addPassThruOperator(self):
         name = self.name + "_OP"+str(len(self.operators))
-        op = SPLInvocation(len(self.operators), "com.ibm.streamsx.topology.functional.python::PyFunctionPassThru", None, name, {}, self)
+        op = SPLInvocation(len(self.operators), "spl.relational::Functor", None, name, {}, self)
         self.operators.append(op)
         return op
 

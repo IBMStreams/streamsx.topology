@@ -1,2 +1,3 @@
-def process(t) :
+def hashTuple(t) :
     return hash(t) & 0xffffffff
+

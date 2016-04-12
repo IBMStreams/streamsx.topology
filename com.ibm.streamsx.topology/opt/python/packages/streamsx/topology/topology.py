@@ -4,7 +4,7 @@
 from streamsx.topology import graph
 from streamsx.topology import schema
 from enum import Enum
-from streamsx.topology.internal.functional.ops import PyHashAdder
+from streamsx.topology.internal.functional.ops import PyInternalFunctions
 
 
 class Topology(object):
@@ -254,7 +254,7 @@ class Stream(object):
             return Stream(self.topology, oport)
         elif(routing == Routing.HASH_PARTITIONED or routing == Routing.KEY_PARTITIONED) :
             if (routing == Routing.HASH_PARTITIONED) :
-                op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder", PyHashAdder.process)
+                op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder", PyInternalFunctions.hashTuple)
             else :
                 if(func is None) :
                     raise TypeError("Function must be provided with Routing type KEY_PARTITIONED")   
@@ -266,8 +266,9 @@ class Stream(object):
             iop.addInputPort(outputPort=parentOp)        
             op2 = self.topology.graph.addOperator("$Parallel$")
             op2.addInputPort(outputPort=oport)
-            o2port = op2.addOutputPort(oWidth=width, schema=schema.CommonSchema.PythonHash, partitioned=True) 
-            hrop = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashRemover")
+            o2port = op2.addOutputPort(oWidth=width, schema=schema.CommonSchema.PythonHash, partitioned=True)
+            # use the Functor passthru operator to effectively remove the hash attribute by removing it from output port schema 
+            hrop = self.topology.graph.addPassThruOperator()
             hrop.addInputPort(outputPort=o2port)
             hrOport = hrop.addOutputPort(schema=schema.CommonSchema.Python)
             return Stream(self.topology, hrOport)
