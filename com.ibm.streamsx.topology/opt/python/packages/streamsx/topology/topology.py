@@ -253,9 +253,8 @@ class Stream(object):
             return Stream(self.topology, oport)
         elif(routing == Routing.HASH_PARTITIONED ) :
             if (func is None) :
-                op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder", hash)
-            else :   
-                op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder",func)           
+                func = hash   
+            op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder",func)           
             parentOp = op.addOutputPort(schema=schema.StreamSchema("tuple<blob __spl_po,int32 __spl_hash>"))
             op.addInputPort(outputPort=self.oport)
             iop = self.topology.graph.addOperator("$Isolate$")    
