@@ -365,7 +365,7 @@ To avoid name conflicts, do not create modules with the same name as
 
   The Union operator merges the outputs of the streams in the set into a single stream.
   
-  param `set` - Set of streams outputs to merge
+  param `streamSet` - Set of streams outputs to merge
   
   returns: Stream
         
@@ -391,10 +391,9 @@ To avoid name conflicts, do not create modules with the same name as
 
   param: `routing` - denotes what type of tuple routing to use. 
   * ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators (Default)
-  * HASH_PARTIONED: delivers to downstream operators based on the hash of the tuples being sent
-  * KEY_PARTIONED: delivers to downstream operators based on a hash provided by the user function provided
+  * HASH_PARTIONED: delivers to downstream operators based on the hash of the tuples being sent or if a function is provided the function will be called to provide the hash
   
-  param: `func` - User defined function called when KEY_PARTIONED routing is specified. The function provides an int32 value to be used as the hash that determines the tuple routing to downstream operators
+  param: `func` - (Optional) Function called when HASH_PARTIONED routing is specified. The function provides an int32 value to be used as the hash that determines the tuple routing to downstream operators
   
   return: Stream whose subsequent processing will occur on `width` channels.
         
@@ -480,7 +479,6 @@ Limited testing has been performed to build an application using DISTRIBUTED and
 
 Future items that need to be supported
 
-* DISTRIBUTED submission
 * lambda functions
 * dynamic functions
 * functions in packages

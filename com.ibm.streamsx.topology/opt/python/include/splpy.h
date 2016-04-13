@@ -188,9 +188,8 @@ namespace streamsx {
       return ret;
     }
 
-    static std::auto_ptr<SPL::int32> pyTupleHash(PyObject * function, PyObject * pickleObjectFunction, SPL::blob & pyblob) {
+    static SPL::int32 pyTupleHash(PyObject * function, SPL::blob & pyblob) {
 
-      std::auto_ptr<SPL::int32> ret;
       PyGILLock lock;
 
       // convert spl blob to bytes
@@ -201,12 +200,11 @@ namespace streamsx {
        // construct integer from  return value
       if(PyLong_Check(pyReturnVar)) {
         SPL::int32 retval = PyLong_AsLong(pyReturnVar);          
-        ret.reset( new SPL::int32(retval));
         Py_DECREF(pyReturnVar);		
-        return ret;
+        return retval;
       } else {
 		Py_DECREF(pyReturnVar);
-		PyErr_Print();
+		flush_PyErr_Print();
         throw;
 	  }
 

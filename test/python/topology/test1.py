@@ -123,10 +123,10 @@ class TestTopologyMethods(unittest.TestCase):
       hwef.sink(test_functions.SeedSinkRR())
       streamsx.topology.context.submit("STANDALONE", topo.graph)
       
-  def test_TopologyKeyedParallel(self):
-      topo = Topology("test_TopologyKeyedParallel")
+  def test_TopologyHashedFuncParallel(self):
+      topo = Topology("test_TopologyHashedFuncParallel")
       hw = topo.source(test_functions.seedSource)   
-      hwp = hw.parallel(4,Routing.KEY_PARTITIONED,test_functions.produceHash)
+      hwp = hw.parallel(4,Routing.HASH_PARTITIONED,test_functions.produceHash)
       hwf = hwp.transform(test_functions.ProgramedSeed())
       hwef = hwf.end_parallel()
       hwef.sink(test_functions.SeedSinkHashOrKey())
@@ -136,7 +136,7 @@ class TestTopologyMethods(unittest.TestCase):
   def test_TopologyHashedParallel(self):
       topo = Topology("test_TopologyHashedParallel")
       hw = topo.source(test_functions.seedSource)   
-      hwp = hw.parallel(4,Routing.HASH_PARTITIONED,test_functions.produceHash)
+      hwp = hw.parallel(4,Routing.HASH_PARTITIONED)
       hwf = hwp.transform(test_functions.ProgramedSeed())
       hwef = hwf.end_parallel()
       hwef.sink(test_functions.SeedSinkHashOrKey())

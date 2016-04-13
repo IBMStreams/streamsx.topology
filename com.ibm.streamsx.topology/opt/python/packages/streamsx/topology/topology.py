@@ -4,7 +4,6 @@
 from streamsx.topology import graph
 from streamsx.topology import schema
 from enum import Enum
-from streamsx.topology.internal.functional.ops import PyInternalFunctions
 
 
 class Topology(object):
@@ -238,8 +237,8 @@ class Stream(object):
             routing - denotes what type of tuple routing to use. 
                 ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators
                 HASH_PARTIONED: delivers to downstream operators based on the hash of the tuples being sent
-                KEY_PARTIONED: delivers to downstream operators based on a hash provided by the user function provided
-            func - User defined function called when KEY_PARTIONED routing is specified.  The function provides an
+                or if a function is provided the function will be called to provide the hash
+            func - Optional function called when HASH_PARTIONED routing is specified.  The function provides an
                 int32 value to be used as the hash that determines the tuple routing to downstream operators
 
         Returns:
@@ -252,21 +251,19 @@ class Stream(object):
             op2.addInputPort(outputPort=iop.getOport())
             oport = op2.addOutputPort(width)
             return Stream(self.topology, oport)
-        elif(routing == Routing.HASH_PARTITIONED or routing == Routing.KEY_PARTITIONED) :
-            if (routing == Routing.HASH_PARTITIONED) :
-                op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder", PyInternalFunctions.hashTuple)
-            else :
-                if(func is None) :
-                    raise TypeError("Function must be provided with Routing type KEY_PARTITIONED")   
+        elif(routing == Routing.HASH_PARTITIONED ) :
+            if (func is None) :
+                op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder", hash)
+            else :   
                 op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder",func)           
-            parentOp = op.addOutputPort(schema=schema.CommonSchema.PythonHash)
+            parentOp = op.addOutputPort(schema=schema.StreamSchema("tuple<blob __spl_po,int32 __spl_hash>"))
             op.addInputPort(outputPort=self.oport)
             iop = self.topology.graph.addOperator("$Isolate$")    
-            oport = iop.addOutputPort(schema=schema.CommonSchema.PythonHash)
+            oport = iop.addOutputPort(schema=schema.StreamSchema("tuple<blob __spl_po,int32 __spl_hash>"))
             iop.addInputPort(outputPort=parentOp)        
             op2 = self.topology.graph.addOperator("$Parallel$")
             op2.addInputPort(outputPort=oport)
-            o2port = op2.addOutputPort(oWidth=width, schema=schema.CommonSchema.PythonHash, partitioned=True)
+            o2port = op2.addOutputPort(oWidth=width, schema=schema.StreamSchema("tuple<blob __spl_po,int32 __spl_hash>"), partitioned=True)
             # use the Functor passthru operator to effectively remove the hash attribute by removing it from output port schema 
             hrop = self.topology.graph.addPassThruOperator()
             hrop.addInputPort(outputPort=o2port)
