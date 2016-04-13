@@ -9,6 +9,13 @@ def main():
     * uses `transform` to perform addition on the integer tuples
     * prints the stream to stdout
     * submits the topology in standalone mode (compiles and executes it as a standalone application)
+    
+    Example:
+        > python3 transform_sample.py
+    Output:
+        342
+        474
+        9342
     """
     
     # create the container for the topology that will hold the streams

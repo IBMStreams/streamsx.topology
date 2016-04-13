@@ -18,7 +18,7 @@ class AddNum:
     """
     A callable class that performs addition
     Args:
-        increment (int): number to add
+        increment: value to add
     """
     def __init__(self, increment):
         self.increment = increment  
@@ -26,8 +26,8 @@ class AddNum:
         """
         Performs addition on the input value
         Args:
-            tuple (int): tuple
+            tuple: tuple
         Returns:
-            int
+            result of addition
         """
         return tuple + self.increment
