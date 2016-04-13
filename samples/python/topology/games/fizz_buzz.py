@@ -30,7 +30,7 @@ def main():
     """
     topo = Topology("fizz_buzz")
     
-    # Declare an stream of int values
+    # Declare a stream of int values
     counting = topo.source(fizz_buzz_functions.int_tuples)
     
     # Print the tuples to standard output
