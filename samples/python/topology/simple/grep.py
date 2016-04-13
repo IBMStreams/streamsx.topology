@@ -2,7 +2,7 @@ import sys
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
 import grep_functions
-
+import util_functions
 
 def main():
     """
@@ -44,7 +44,7 @@ def main():
     # For each input file, DirectoryWatcher opens the file and reads its contents 
     # as a text file, producing a tuple for each line of the file. The tuple contains
     # the contents of the line, as a string.
-    lines = topo.source(grep_functions.DirectoryWatcher(directory))
+    lines = topo.source(util_functions.DirectoryWatcher(directory))
     
     # Filter out non-matching lines. FilterLine is a callable class 
     # that will be executed for each tuple on lines, that is each line

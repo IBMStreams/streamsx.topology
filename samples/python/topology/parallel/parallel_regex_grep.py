@@ -2,7 +2,7 @@ import sys
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
 import parallel_regex_grep_functions
-
+import util_functions
 
 def main():
     """
@@ -19,6 +19,9 @@ def main():
         search_pattern (string): a search pattern
         
     Example:
+        * In addition to including the `com.ibm.streamsx.topology/opt/python/packages`
+          directory in the PYTHONPATH environment variable, also include the
+          `samples/python/topology/simple` directory.
         * Create a subdirectory "dir"
         * Create file1.txt in subdirectory "dir" with the following contents:
             file1 line1
@@ -59,7 +62,7 @@ def main():
     # Declare a stream with tuples that are string objects
     # All files in a directory are read, resulting in lines of text
     # Each line is a tuple in the stream
-    lines = topo.source(parallel_regex_grep_functions.DirectoryWatcher(directory))
+    lines = topo.source(util_functions.DirectoryWatcher(directory))
     
     # Count the total number of lines before they are split between
     # different parallel channels.
