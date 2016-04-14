@@ -134,7 +134,13 @@ class Stream(object):
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
-     
+
+    def map(self, func):
+        """
+        Equivalent to calling the transform() function
+        """
+        return self.transform(func)
+             
     def multi_transform(self, func):
         """
         Transforms each tuple from this stream into 0 or more tuples using the supplied callable `func`. 
@@ -165,6 +171,12 @@ class Stream(object):
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
     
+    def flat_map(self, func):
+        """
+        Equivalent to calling the multi_transform() function
+        """
+        return self.multi_transform(func)
+
     def isolate(self):
         """
         Guarantees that the upstream operation will run in a separate process from the downstream operation

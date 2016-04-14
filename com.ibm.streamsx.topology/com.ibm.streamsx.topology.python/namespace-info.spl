@@ -309,7 +309,7 @@ To avoid name conflicts, do not create modules with the same name as
   
   return: A Stream containing tuples that have not been filtered out.
   
-* `transform(self, func)` function on `Stream`
+* `transform(self, func)` or `map(self, func)` function on `Stream`
 
   Transforms each tuple from this stream into 0 or 1 tuples using the supplied callable `func`.
   For each tuple on this stream, the returned stream will contain a tuple
@@ -322,7 +322,7 @@ To avoid name conflicts, do not create modules with the same name as
  
   return: A Stream containing transformed tuples.
   
-* `multi_transform(self, func)` function on `Stream`
+* `multi_transform(self, func)` or `flat_map(self, func)` function on `Stream`
 
   Transforms each tuple from this stream into 0 or more tuples using the supplied callable `func`. 
   For each tuple on this stream, the returned stream will contain all non-None tuples from
