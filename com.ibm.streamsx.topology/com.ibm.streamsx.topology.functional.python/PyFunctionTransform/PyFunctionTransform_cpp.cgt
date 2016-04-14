@@ -99,7 +99,10 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
   std::auto_ptr<SPL::blob> out_blob = streamsx::topology::Splpy::pyTupleTransform(function_, value);
   if (out_blob.get()) {
-    OPort0Type otuple(*out_blob);
+    uint64_t out_size = 0;
+    unsigned char* out_data = out_blob->releaseData(out_size);
+    OPort0Type otuple;
+    otuple.get___spl_po().adoptData(out_data, out_size);
     submit(otuple, 0);
   }
 }
