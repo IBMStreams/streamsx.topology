@@ -22,7 +22,7 @@
 <div class="body refbody">
 <div class="section">
 <p class="p">
-<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.2.1.experimental</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.topic.html">com.ibm.streamsx.topology.topic</a> &gt; Publish-subscribe Overview</p>
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.2.5.alpha</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.topic.html">com.ibm.streamsx.topology.topic</a> &gt; Publish-subscribe Overview</p>
 
 </div>
 
@@ -34,7 +34,7 @@
 <p class="p">A subscriber matches a publisher if their topic and stream type are an exact match to that of the publisher. It is recommended that a single stream type is used for a topic.
 </p>
 
-<p class="p">A topic is a <tt class="ph tt">rstring</tt> value (encoded with UTF-8), it is recommended that the <a class="xref" href="http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/mqtt-v3r1.html#appendix-a">MQTT topic style</a> is used, and that topic names do not include wild-cards. Future versions may support subscription by MQTT style wild cards (e.g. <tt class="ph tt">/cdr/voice/*</tt>).
+<p class="p">A topic is a <tt class="ph tt">rstring</tt> value (encoded with UTF-8), it is recommended that the <a class="xref" href="http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/mqtt-v3r1.html#appendix-a">MQTT topic style</a> is used, and that topic names do not include wild-cards. Future versions may support subscription by MQTT style wild cards (e.g. <tt class="ph tt">cdr/voice/*</tt>).
 </p>
 
 <p class="p">Publish-subscribe is a many to many relationship, any number of publishers can publish to the same topic and stream type, and there can be many subscribers to a topic.
@@ -63,6 +63,17 @@
 </h2>
 
 <p class="p">A Java application uses <a class="xref" href="../../../javadoc/com/ibm/streamsx/topology/TStream.html#publish(java.lang.String)">TStream.publish(topic)</a> to publish streams.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Python Publish-Subscribe
+</h2>
+
+<p class="p">A Python application uses <tt class="ph tt">Stream.publish(topic)</tt> to publish streams and <tt class="ph tt">Topology.subscribe(topic)</tt> to subscribe to published streams.
+</p>
+
+<p class="p">Python only supports publishing and subscribing to streams containing Python objects.
 </p>
 
 </div>

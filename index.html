@@ -72,7 +72,7 @@
 	  <div class="col-sm-10">
 	    <div class="jumbotron">
               <h1>streamsx.topology</h1>
-              <p>The streamsx.topology project provides the Java Application API -- a way of writing millisecond latency IBM Streams applications entirely in Java and Scala.</p>
+              <p>Write millisecond latency IBM Streams applications entirely in Java, Scala or Python(alpha).</p>
 	  </div>
 	  <div class="col-sm-1">
 	  </div>
@@ -105,22 +105,25 @@
 	      </div>
 	    </div>
 	  <p>Please refer to the <a href="gettingstarted.html">getting started guide</a>, <a href="FAQ.html">FAQ</a> page, and <a href="doc.html">documentation</a> for help.</p>
-<h3>Experimental Python Support</h3>
-<a href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.2.2_experimental"> 1.2.2_experimental release</a> - 2015/11/24
+<h3>Alpha Python Support</h3>
+<a href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.2.5_alpha"> 1.2.5_alpha release</a> - 2016/04/14
 <p>
-This is an <b>experimental version</b> of the com.ibm.streamsx.topology SPL toolkit that adds the ability to easily convert Python functions to SPL operators.
-<BR>
-SPL operators that call a Python function are created by decorators provided by this toolkit.
-<BR>
-bin/spl-python-extract.py is a Python script that creates SPL operators from Python functions contained in modules in a toolkit. The resulting operators embed the Python runtime to allow stream processing using Python.
-<BR>
+This is an <b>alpha release</b> of the com.ibm.streamsx.topology SPL toolkit that adds the ability implement IBM Streams applications in Python.
+<UL>
+<LI>
+Python Application API - allows an application to be built using Python in a similar approach to the Java Application API, but with Python so that streams are created, processed and sinked using Python functions and tuples are Python objects.
+</LI>
+<LI>
+Python functions as SPL operators - the ability to easily convert Python functions to SPL operators for IBM Streams (4.0 or higher).
+</LI>
+</UL>
 For details see the SPLDOC for <a href="experimental/python/doc/spldoc/html/tk$com.ibm.streamsx.topology/ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> namesapce.
 
 </p>
-	</section>
-	    
+</section>
+    
 
-	    
-  </body>
+    
+</body>
 </html>
 
