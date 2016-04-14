@@ -220,15 +220,16 @@ namespace streamsx {
       PyObject * pyReturnVar = pyTupleFunc(function, pyBytes); 
      
        // construct integer from  return value
-      if(PyLong_Check(pyReturnVar)) {
-        SPL::int32 retval = PyLong_AsLong(pyReturnVar);          
-        Py_DECREF(pyReturnVar);		
-        return retval;
-      } else {
-		Py_DECREF(pyReturnVar);
-		flush_PyErr_Print();
+      SPL::int32 retval=0;
+      try {
+      	retval = PyLong_AsLong(pyReturnVar);
+      } catch(...) {
+        Py_DECREF(pyReturnVar);
+        flush_PyErr_Print();
         throw;
-	  }
+      }  	 
+      Py_DECREF(pyReturnVar);		
+      return retval;
 
    }
 
