@@ -139,7 +139,7 @@ class Stream(object):
         """
         Equivalent to calling the transform() function
         """
-        self.transform(func)
+        return self.transform(func)
              
     def multi_transform(self, func):
         """
@@ -175,7 +175,7 @@ class Stream(object):
         """
         Equivalent to calling the multi_transform() function
         """
-        self.multi_transform(func)
+        return self.multi_transform(func)
 
     def isolate(self):
         """
