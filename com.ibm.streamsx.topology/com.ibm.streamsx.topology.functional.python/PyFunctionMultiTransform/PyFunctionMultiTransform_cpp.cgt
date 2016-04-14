@@ -122,9 +122,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
       // construct spl blob and tuple from pickled return value
       long int size = PyBytes_Size(item);
       char * bytes = PyBytes_AsString(item);
-      SPL::blob serializedObject((const unsigned char *)bytes, size);     
+      OPort0Type otuple;
+      otuple.get___spl_po().setData((const unsigned char *)bytes, size);
       Py_DECREF(item); 
-      OPort0Type otuple(serializedObject);
       output_tuples.push_back(otuple);
     }
     Py_DECREF(pyIterator);
