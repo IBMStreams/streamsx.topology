@@ -144,6 +144,11 @@ def check_strings_multi_transform(t):
 def strings_length_filter():
    return ["hello", "goodbye", "farewell"]
 
+def produceHash(t) :
+    print("TUPLE",t)
+    print("Hash value: ",hash(t)& 0xffffffff)
+    return hash(t) & 0xffffffff
+
 class LengthFilter:
    def __init__(self, upper):
       self.upper = upper  
@@ -171,6 +176,53 @@ class AddNum:
       self.increment = increment  
    def __call__(self, tuple):
       return tuple + self.increment
+
+def seedSource():
+   return [1, 2, 3, 4, 1, 1, 1, 1,]
+
+
+class SeedSinkRR:
+   def __init__(self):
+      self.goodresult = [1, 2, 3, 4, 2, 3, 4, 5,]
+   def __call__(self, tuple):
+      print("SINK TUPLE", tuple)
+      if( tuple in self.goodresult) :
+         self.goodresult.remove(tuple)
+         return None
+      raise AssertionError()
+
+class SeedSinkRRPU:
+   def __init__(self):
+      self.goodresult = [1, 1, 2, 2, 3, 3, 4, 4, 2, 2, 3, 3, 4, 4, 5, 5,]
+   def __call__(self, tuple):
+      print("SINK TUPLE", tuple)
+      if( tuple in self.goodresult) :
+         self.goodresult.remove(tuple)
+         return None
+      raise AssertionError()
+
+class SeedSinkHashOrKey:
+   def __init__(self):
+      self.goodresult = [1, 2, 3, 4, 2, 2, 2, 2,]
+   def __call__(self, tuple):
+      print("SINK TUPLE", tuple)
+      if( tuple in self.goodresult) :
+         self.goodresult.remove(tuple)
+         return None
+      raise AssertionError()
+
+class ProgramedSeed:
+   def __init__(self):
+      self.first = True 
+      self.seed = 0
+   def __call__(self, tuple):
+      if(self.first):
+         self.first = False
+         print("SEEDED" , tuple)
+         self.seed = tuple
+         return tuple
+      print("Passing", tuple + self.seed)		
+      return (tuple + self.seed)
 
 class IncMaxSplitWords:
    def __init__(self, maxsplit):

@@ -39,7 +39,7 @@ class SPLGraph(object):
     
     def addPassThruOperator(self):
         name = self.name + "_OP"+str(len(self.operators))
-        op = SPLInvocation(len(self.operators), "com.ibm.streamsx.topology.functional.python::PyFunctionPassThru", None, name, {}, self)
+        op = SPLInvocation(len(self.operators), "spl.relational::Functor", None, name, {}, self)
         self.operators.append(op)
         return op
 
@@ -94,10 +94,10 @@ class SPLInvocation(object):
         self.inputPorts = []
         self.outputPorts = []
 
-    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python):
+    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned=None):
         if name is None:
             name = self.name + "_OUT"+str(len(self.outputPorts))
-        oport = OPort(name, self, len(self.outputPorts), schema, oWidth)
+        oport = OPort(name, self, len(self.outputPorts), schema, oWidth, partitioned)
         self.outputPorts.append(oport)
 
         if not inputPort is None:
@@ -119,7 +119,10 @@ class SPLInvocation(object):
     def addInputPort(self, name=None, outputPort=None):
         if name is None:
             name = self.name + "_IN"+ str(len(self.inputPorts))
-        iport = IPort(name, self, len(self.inputPorts))
+        iPortSchema = CommonSchema.Python    
+        if(not outputPort is None) :
+            iPortSchema = outputPort.getSchema()         
+        iport = IPort(name, self, len(self.inputPorts),iPortSchema)
         self.inputPorts.append(iport)
 
         if not outputPort is None:
@@ -191,10 +194,11 @@ class SPLInvocation(object):
             print(port.name)
 
 class IPort(object):
-    def __init__(self, name, operator, index):
+    def __init__(self, name, operator, index, schema):
         self.name = name
         self.operator = operator
         self.index = index
+        self.schema = schema
         self.outputPorts = []
 
     def connect(self, oport):
@@ -211,15 +215,17 @@ class IPort(object):
         _iport = {}
         _iport["name"] = self.name
         _iport["connections"] = [port.name for port in self.outputPorts]
+        _iport["type"] = self.schema.schema()
         return _iport
 
 class OPort(object):
-    def __init__(self, name, operator, index, schema, width=None):
+    def __init__(self, name, operator, index, schema, width=None, partitioned=None):
         self.name = name
         self.operator = operator
         self.schema = schema
         self.index = index
         self.width = width
+        self.partitioned =  partitioned
 
         self.inputPorts = []
 
@@ -232,6 +238,9 @@ class OPort(object):
 
     def getOperator(self):
         return self.operator
+    
+    def getSchema(self):
+        return self.schema
 
     def getSPLOutputPort(self):
         _oport = {}
@@ -240,6 +249,11 @@ class OPort(object):
         _oport["connections"] = [port.name for port in self.inputPorts]
         if not self.width is None:
             _oport["width"] = int(self.width)
+        if not self.partitioned is None:
+            if self.partitioned is True :
+                _oport["partitioned"] = True
+            else :
+                _oport["partitioned"] = False        
         return _oport
 
 class Marker(SPLInvocation):

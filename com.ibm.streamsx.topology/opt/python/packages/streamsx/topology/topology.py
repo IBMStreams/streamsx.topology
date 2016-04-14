@@ -3,6 +3,8 @@
 
 from streamsx.topology import graph
 from streamsx.topology import schema
+from enum import Enum
+
 
 class Topology(object):
     """Topology that contains graph + operators"""
@@ -209,7 +211,7 @@ class Stream(object):
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
     
-    def parallel(self, width):
+    def parallel(self, width, routing=None, func=None):
         """
         Parallelizes the stream into `width` parallel channels.
         Tuples are routed to parallel channels such that an even distribution is maintained.
@@ -232,15 +234,42 @@ class Stream(object):
         
         Args:
             width (int): degree of parallelism
+            routing - denotes what type of tuple routing to use. 
+                ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators
+                HASH_PARTIONED: delivers to downstream operators based on the hash of the tuples being sent
+                or if a function is provided the function will be called to provide the hash
+            func - Optional function called when HASH_PARTIONED routing is specified.  The function provides an
+                int32 value to be used as the hash that determines the tuple routing to downstream operators
+
         Returns:
             Stream
+
         """
-        iop = self.isolate()
-               
-        op2 = self.topology.graph.addOperator("$Parallel$")
-        op2.addInputPort(outputPort=iop.getOport())
-        oport = op2.addOutputPort(width)
-        return Stream(self.topology, oport)
+        if (routing == None or routing == Routing.ROUND_ROBIN) :
+            iop = self.isolate()                  
+            op2 = self.topology.graph.addOperator("$Parallel$")
+            op2.addInputPort(outputPort=iop.getOport())
+            oport = op2.addOutputPort(width)
+            return Stream(self.topology, oport)
+        elif(routing == Routing.HASH_PARTITIONED ) :
+            if (func is None) :
+                func = hash   
+            op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder",func)           
+            parentOp = op.addOutputPort(schema=schema.StreamSchema("tuple<blob __spl_po,int32 __spl_hash>"))
+            op.addInputPort(outputPort=self.oport)
+            iop = self.topology.graph.addOperator("$Isolate$")    
+            oport = iop.addOutputPort(schema=schema.StreamSchema("tuple<blob __spl_po,int32 __spl_hash>"))
+            iop.addInputPort(outputPort=parentOp)        
+            op2 = self.topology.graph.addOperator("$Parallel$")
+            op2.addInputPort(outputPort=oport)
+            o2port = op2.addOutputPort(oWidth=width, schema=schema.StreamSchema("tuple<blob __spl_po,int32 __spl_hash>"), partitioned=True)
+            # use the Functor passthru operator to effectively remove the hash attribute by removing it from output port schema 
+            hrop = self.topology.graph.addPassThruOperator()
+            hrop.addInputPort(outputPort=o2port)
+            hrOport = hrop.addOutputPort(schema=schema.CommonSchema.Python)
+            return Stream(self.topology, hrOport)
+        else :
+            raise TypeError("Invalid routing type supplied to the parallel operator")    
 
     def end_parallel(self):
         """
@@ -319,4 +348,10 @@ def print_flush(v):
     :returns: None
     """
     print(v, flush=True)
+
+    
+class Routing(Enum):
+    ROUND_ROBIN=1
+    KEY_PARTITIONED=2
+    HASH_PARTITIONED=3    
 

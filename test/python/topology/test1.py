@@ -116,12 +116,31 @@ class TestTopologyMethods(unittest.TestCase):
     
   def test_TopologyParallel(self):
       topo = Topology("test_TopologyParallel")
-      hw = topo.source(test_functions.hello_world)   
+      hw = topo.source(test_functions.seedSource)   
       hwp = hw.parallel(4)
-      hwf = hwp.filter(test_functions.filter)
+      hwf = hwp.transform(test_functions.ProgramedSeed())
       hwef = hwf.end_parallel()
-      hwef.sink(test_functions.check_hello_world_filter)
+      hwef.sink(test_functions.SeedSinkRR())
       streamsx.topology.context.submit("STANDALONE", topo.graph)
+      
+  def test_TopologyHashedFuncParallel(self):
+      topo = Topology("test_TopologyHashedFuncParallel")
+      hw = topo.source(test_functions.seedSource)   
+      hwp = hw.parallel(4,Routing.HASH_PARTITIONED,test_functions.produceHash)
+      hwf = hwp.transform(test_functions.ProgramedSeed())
+      hwef = hwf.end_parallel()
+      hwef.sink(test_functions.SeedSinkHashOrKey())
+      streamsx.topology.context.submit("STANDALONE", topo.graph) 
+
+      
+  def test_TopologyHashedParallel(self):
+      topo = Topology("test_TopologyHashedParallel")
+      hw = topo.source(test_functions.seedSource)   
+      hwp = hw.parallel(4,Routing.HASH_PARTITIONED)
+      hwf = hwp.transform(test_functions.ProgramedSeed())
+      hwef = hwf.end_parallel()
+      hwef.sink(test_functions.SeedSinkHashOrKey())
+      streamsx.topology.context.submit("STANDALONE", topo.graph)      
 
   def test_TopologyUnion(self):
       topo = Topology("test_TopologyUnion")
@@ -136,14 +155,14 @@ class TestTopologyMethods(unittest.TestCase):
       
   def test_TopologyParallelUnion(self):
       topo = Topology("test_TopologyParallelUnion")
-      hw = topo.source(test_functions.hello_world)
-      hwp = hw.parallel(3)
-      hwf = hwp.filter(test_functions.filter)
-      hwf2 = hwp.filter(test_functions.filter)    
+      hw = topo.source(test_functions.seedSource)
+      hwp = hw.parallel(4)
+      hwf = hwp.transform(test_functions.ProgramedSeed())
+      hwf2 = hwp.transform(test_functions.ProgramedSeed())    
       streamSet = {hwf2}
       hwu = hwf.union(streamSet)
       hwup = hwu.end_parallel()
-      hwup.sink(test_functions.check_union_hello_world)
+      hwup.sink(test_functions.SeedSinkRRPU())
       streamsx.topology.context.submit("STANDALONE", topo.graph)
 
   # test using input functions from a regular package that has __init__.py

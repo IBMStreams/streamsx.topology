@@ -188,6 +188,28 @@ namespace streamsx {
       return ret;
     }
 
+    static SPL::int32 pyTupleHash(PyObject * function, SPL::blob & pyblob) {
+
+      PyGILLock lock;
+
+      // convert spl blob to bytes
+      PyObject * pyBytes  = pyBlobToBytes(pyblob);
+      // invoke python nested function that generates the int32 hash
+      PyObject * pyReturnVar = pyTupleFunc(function, pyBytes); 
+     
+       // construct integer from  return value
+      if(PyLong_Check(pyReturnVar)) {
+        SPL::int32 retval = PyLong_AsLong(pyReturnVar);          
+        Py_DECREF(pyReturnVar);		
+        return retval;
+      } else {
+		Py_DECREF(pyReturnVar);
+		flush_PyErr_Print();
+        throw;
+	  }
+
+   }
+
     /**
      * Call a Python function passing in the SPL tuple as 
      * the single element of a Python tuple.

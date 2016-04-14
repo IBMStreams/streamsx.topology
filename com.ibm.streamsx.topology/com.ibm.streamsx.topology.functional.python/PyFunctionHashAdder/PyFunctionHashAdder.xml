@@ -6,9 +6,9 @@
   xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/operator operatorModel.xsd">
   <cppOperatorModel>
     <context> 
-      <description>Python functional filter.</description>
-      <iconUri size="16">../opt/icons/filter_16.gif</iconUri>
-      <iconUri size="32">f../opt/icons/ilter_32.gif</iconUri>
+      <description>Python functional transform.</description>
+      <iconUri size="16">../opt/icons/transform_16.gif</iconUri>
+      <iconUri size="32">f../opt/icons/transform_32.gif</iconUri>
 
       <!-- some optional elements
       <metrics>
@@ -38,13 +38,42 @@
     </context>  
     <parameters>
       <allowAny>false</allowAny>
+      <parameter>
+        <name>pyModule</name>
+        <description>Function or callable class's module</description>
+        <optional>false</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>pyName</name>
+        <description>Function or callable class's name</description>
+        <optional>false</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>pyCallable</name>
+        <description>Serialized instance of a callable class</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+      </parameter>
     </parameters>
     <inputPorts>
-	  <inputPortOpenSet>
+      <inputPortSet>
         <tupleMutationAllowed>false</tupleMutationAllowed>
         <windowingMode>NonWindowed</windowingMode>
         <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
-      </inputPortOpenSet>      
+        <cardinality>1</cardinality>
+        <optional>false</optional>
+      </inputPortSet>      
     </inputPorts>
     <outputPorts>
       <outputPortSet>
