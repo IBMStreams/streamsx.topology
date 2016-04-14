@@ -191,6 +191,7 @@ namespace streamsx {
     /**
      * Call a Python function passing in the SPL tuple as 
      * the single element of a Python tuple.
+     * Steals the reference to value.
     */
     static PyObject * pyTupleFunc(PyObject * function, PyObject * value) {
       PyObject * pyTuple = PyTuple_New(1);
