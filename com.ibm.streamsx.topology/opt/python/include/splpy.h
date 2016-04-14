@@ -173,6 +173,18 @@ namespace streamsx {
 
       return _pyTupleTransform(function, pyBytes);
     }
+    
+    // Call the function with argument converting the SPL rstring
+    // to a Python Unicode string and return the result as a blob
+    static std::auto_ptr<SPL::blob> pyTupleTransform(PyObject * function, SPL::rstring & pyrstring) {
+
+      PyGILLock lock;
+
+      // convert spl rstring to bytes assuming UTF-8
+      PyObject * pyBytes  = pyRstringToBytes(pyrstring);
+
+      return _pyTupleTransform(function, pyBytes);
+    }
 
     // Call the function with argument and return the result as a blob
     static std::auto_ptr<SPL::blob> _pyTupleTransform(PyObject * function, PyObject * arg) {
@@ -222,6 +234,17 @@ namespace streamsx {
 
       PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
       return pyBytes;
+    }
+
+    /**
+     * Convert a SPL rstring into a Python Unicode string 
+     */
+    static PyObject * pyRstringToBytes(SPL::rstring & pyrstring) {
+      long int sizeb = pyrstring.size();
+      const char * pybytes = pyrstring.data();
+
+      PyObject * pyString  = PyUnicode_FromStringAndSize(pybytes, sizeb);
+      return pyString;
     }
 
     };
