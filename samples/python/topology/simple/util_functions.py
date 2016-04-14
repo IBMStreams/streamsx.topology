@@ -41,7 +41,10 @@ def _read_files(file_names):
     """
     all_lines = []
     for file_name in file_names:
-        with open(file_name) as f:
-            lines = f.read().splitlines()
-        all_lines.extend(lines)
+        try:
+            with open(file_name) as f:
+                lines = f.read().splitlines()
+            all_lines.extend(lines)
+        except Exception as e:
+            print("Skipping: {0}".format(file_name))
     return all_lines

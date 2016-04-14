@@ -81,8 +81,8 @@ class TestTopologyMethods(unittest.TestCase):
   def test_TopologyTransformWithDrop(self):
      topo = Topology("test_TopologyTransformWithDrop")
      source = topo.source(test_functions.int_strings_transform_with_drop)
-     i1 = source.transform(test_functions.string_to_int_except68)
-     i2 = i1.transform(test_functions.add17)
+     i1 = source.map(test_functions.string_to_int_except68)
+     i2 = i1.map(test_functions.add17)
      i2.sink(test_functions.check_int_strings_transform_with_drop)
      streamsx.topology.context.submit("STANDALONE", topo.graph)
      
@@ -104,7 +104,7 @@ class TestTopologyMethods(unittest.TestCase):
   def test_TopologyMultiTransformCallableIncMaxSplit(self):
       topo = Topology("test_TopologyMultiTransformCallableIncMaxSplit")
       source = topo.source(test_functions.strings_multi_transform)
-      i1 = source.multi_transform(test_functions.IncMaxSplitWords(1))
+      i1 = source.flat_map(test_functions.IncMaxSplitWords(1))
       i1.sink(test_functions.check_strings_multi_transform_inc_max_split)
       streamsx.topology.context.submit("STANDALONE", topo.graph)
   
