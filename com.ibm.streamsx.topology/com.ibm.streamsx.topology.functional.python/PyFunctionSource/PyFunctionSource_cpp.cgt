@@ -70,7 +70,7 @@ void MY_OPERATOR::process(uint32_t idx)
 {
   while(!getPE().getShutdownRequested()) {
     
-    SPL::blob serializedObject;
+    OPort0Type otuple;
 
     { // start lock
       streamsx::topology::PyGILLock lock;
@@ -85,13 +85,12 @@ void MY_OPERATOR::process(uint32_t idx)
 
       long int size = PyBytes_Size(pyReturnVar);
       char * bytes = PyBytes_AsString(pyReturnVar);
-      serializedObject.setData((const unsigned char *)bytes, size);
+      otuple.get___spl_po().setData((const unsigned char *)bytes, size);
       Py_DECREF(pyReturnVar);
 
     } // end lock
 
-    OPort0Type op(serializedObject);
-    submit(op, 0);
+    submit(otuple, 0);
   }
 
 }
