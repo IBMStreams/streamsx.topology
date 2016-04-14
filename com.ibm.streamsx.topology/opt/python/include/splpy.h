@@ -162,15 +162,25 @@ namespace streamsx {
       return ret;
     }
     
+    // Call the function with argument converting the SPL blob
+    // to a Python byte string and return the result as a blob
     static std::auto_ptr<SPL::blob> pyTupleTransform(PyObject * function, SPL::blob & pyblob) {
 
-      std::auto_ptr<SPL::blob> ret;
       PyGILLock lock;
 
       // convert spl blob to bytes
       PyObject * pyBytes  = pyBlobToBytes(pyblob);
+
+      return _pyTupleTransform(function, pyBytes);
+    }
+
+    // Call the function with argument and return the result as a blob
+    static std::auto_ptr<SPL::blob> _pyTupleTransform(PyObject * function, PyObject * arg) {
+
       // invoke python nested function that calls the application function
-      PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
+      PyObject * pyReturnVar = pyTupleFunc(function, arg);
+
+      std::auto_ptr<SPL::blob> ret;
 
       if (pyReturnVar == Py_None){
         Py_DECREF(pyReturnVar);
