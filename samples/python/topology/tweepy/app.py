@@ -9,6 +9,18 @@ import tweets
 #
 # python3 app.py Food GlutenFree
 #
+#
+# Requires tweepy to be installed
+#
+# pip3 install tweepy
+#
+# http://www.tweepy.org/
+#
+# You must create Twitter application authentication tokens
+# and set them in the mykeys.py module.
+# Note this is only intended as a simple sample,
+#
+
 def main():
   terms = sys.argv[1:]
   topo = Topology("TweetsUsingTweepy")
