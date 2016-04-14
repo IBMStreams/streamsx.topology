@@ -162,15 +162,37 @@ namespace streamsx {
       return ret;
     }
     
+    // Call the function with argument converting the SPL blob
+    // to a Python byte string and return the result as a blob
     static std::auto_ptr<SPL::blob> pyTupleTransform(PyObject * function, SPL::blob & pyblob) {
 
-      std::auto_ptr<SPL::blob> ret;
       PyGILLock lock;
 
       // convert spl blob to bytes
       PyObject * pyBytes  = pyBlobToBytes(pyblob);
+
+      return _pyTupleTransform(function, pyBytes);
+    }
+    
+    // Call the function with argument converting the SPL rstring
+    // to a Python Unicode string and return the result as a blob
+    static std::auto_ptr<SPL::blob> pyTupleTransform(PyObject * function, SPL::rstring & pyrstring) {
+
+      PyGILLock lock;
+
+      // convert spl rstring to bytes assuming UTF-8
+      PyObject * pyBytes  = pyRstringToBytes(pyrstring);
+
+      return _pyTupleTransform(function, pyBytes);
+    }
+
+    // Call the function with argument and return the result as a blob
+    static std::auto_ptr<SPL::blob> _pyTupleTransform(PyObject * function, PyObject * arg) {
+
       // invoke python nested function that calls the application function
-      PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
+      PyObject * pyReturnVar = pyTupleFunc(function, arg);
+
+      std::auto_ptr<SPL::blob> ret;
 
       if (pyReturnVar == Py_None){
         Py_DECREF(pyReturnVar);
@@ -213,6 +235,7 @@ namespace streamsx {
     /**
      * Call a Python function passing in the SPL tuple as 
      * the single element of a Python tuple.
+     * Steals the reference to value.
     */
     static PyObject * pyTupleFunc(PyObject * function, PyObject * value) {
       PyObject * pyTuple = PyTuple_New(1);
@@ -233,6 +256,17 @@ namespace streamsx {
 
       PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
       return pyBytes;
+    }
+
+    /**
+     * Convert a SPL rstring into a Python Unicode string 
+     */
+    static PyObject * pyRstringToBytes(SPL::rstring & pyrstring) {
+      long int sizeb = pyrstring.size();
+      const char * pybytes = pyrstring.data();
+
+      PyObject * pyString  = PyUnicode_FromStringAndSize(pybytes, sizeb);
+      return pyString;
     }
 
     };
