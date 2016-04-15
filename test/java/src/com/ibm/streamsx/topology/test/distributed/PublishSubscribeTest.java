@@ -7,13 +7,16 @@ package com.ibm.streamsx.topology.test.distributed;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,6 +31,7 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.UnaryOperator;
+import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLSchemas;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
@@ -332,14 +336,48 @@ public class PublishSubscribeTest extends TestTopology {
         completeAndValidate(subscribe, 20, "SPL:0", "SPL:1", "SPL:2", "SPL:3");
     }
 
-    public static class GetTupleId implements Function<Tuple,String> {
-    	private static final long serialVersionUID = 1L;
-		@Override
-		public String apply(Tuple v) {
-			return "SPL:" + v.getString("id");
-		}	
+    public static class GetTupleId implements Function<Tuple, String> {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String apply(Tuple v) {
+            return "SPL:" + v.getString("id");
+        }
     }
-    
+
+    @Test
+    public void testSPLPublishAllowFilterWithFilteredSubscribe() throws Exception {
+        _testSPLPublishFilteredSubscribe(
+              "testSPLPublishAllowFilterWithFilteredSubscribe", true);
+  }
+    @Test
+    public void testSPLPublishNoFilterWithFilteredSubscribe() throws Exception {
+        _testSPLPublishFilteredSubscribe(
+              "testSPLPublishNoFilterWithFilteredSubscribe", true);
+  }
+  private void _testSPLPublishFilteredSubscribe(String topic, boolean allowFilters) throws Exception {
+        final Topology t = new Topology();
+        
+        SPL.addToolkit(t, new File(getTestRoot(), "spl/testtk"));
+        
+        SPLStream source = SPLStreamsTest.testTupleStream(t);
+                
+        source = source.modify(new Delay<Tuple>());
+        
+        source.publish(topic, allowFilters);
+        
+        // Filter on the vi attribute, passing the value 321.
+        Map<String,Object> params = new HashMap<>();
+        params.put("topic", topic);
+        params.put("value", 43675232L);        
+  
+        SPLStream sub = SPL.invokeSource(t, "testspl::Int64SubscribeFilter", params, source.getSchema());
+        
+        TStream<String> subscribe = sub.transform(new GetTupleId());
+
+        completeAndValidate(subscribe, 20, "SPL:1");
+    } 
+  
     @Test(expected=IllegalArgumentException.class)
     public void testFilterOnJava() throws Exception {
         final Topology t = new Topology();
