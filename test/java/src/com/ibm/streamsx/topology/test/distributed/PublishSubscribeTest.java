@@ -256,12 +256,19 @@ public class PublishSubscribeTest extends TestTopology {
     public static class Delay<T> implements UnaryOperator<T> {
         
         private boolean first = true;
+        private long delay = 5000;
+        
+        public Delay(int delay) {
+            this.delay = delay * 1000;
+        }
+        public Delay() {
+        }
 
         @Override
         public T apply(T v)  {
             if (first) {
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(delay);
                 } catch (InterruptedException e) {
                     return null;
                 }
