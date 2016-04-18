@@ -6,6 +6,7 @@ import os
 import os.path
 import json
 import subprocess
+import threading
 
 #
 # Submission of a python graph using the Java Application API
@@ -51,6 +52,27 @@ def _createJSONFile(fj) :
     tf.close()
     return tf.name
 
+def print_process_stdout(process):
+    try:
+        while True:
+            line = process.stdout.readline()
+            if line == '' and process.poll() != None:
+                break
+            print(line.strip().decode("utf=8"))
+    except:
+        sys.err.write("Error reading from process stdout")
+
+def print_process_stderr(process):
+    try:
+        while True:
+            line = process.stderr.readline()
+            if line == '' and process.poll() != None:
+                break
+            print(line.strip().decode("utf=8"))
+    except:
+        sys.err.write("Error reading from process stderr")
+
+
 def _submitUsingJava(ctxtype, fn):
     streams_install = os.environ.get('STREAMS_INSTALL')
     if streams_install is None:
@@ -69,4 +91,15 @@ def _submitUsingJava(ctxtype, fn):
     cp = jaa_lib + ":" + joa_lib
     args = [ jvm, "-classpath", cp,
     "com.ibm.streamsx.topology.context.StreamsContextSubmit", ctxtype, fn]
-    subprocess.run(args, check=True)
+    with subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0) as process:
+        try:
+            
+            stdout_thread = threading.Thread(target=print_process_stdout, args=([process]))
+            stderr_thread = threading.Thread(target=print_process_stderr, args=([process]))
+            stdout_thread.daemon = True
+            stderr_thread.daemon = True
+            stdout_thread.start()
+            stderr_thread.start()
+            process.wait()
+        except:
+            sys.err.write("Error starting java subprocess for submission")
