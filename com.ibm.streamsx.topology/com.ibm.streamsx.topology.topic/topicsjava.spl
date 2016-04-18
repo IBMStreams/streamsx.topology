@@ -17,8 +17,17 @@ public composite PublishJava(input In )
 	graph
 		() as ExportTopic = Export(In)
 		{
-			param
-				properties : { __spl_exportType = "topic.java", __spl_topic = $topic, __spl_class = $class } ;
+                   param
+                     properties :
+                    {
+                      __spl_version = 2,
+                      __spl_exportType = "topic.java",
+                      __spl_topic = $topic,
+                      __spl_class = $class,
+                      __spl_allowFilter = "false",
+                      __spl_channel = getChannel(),
+                      __spl_maxChannels = getMaxChannels()
+                    } ;
 		}
 }
 
@@ -28,7 +37,7 @@ public composite PublishJava(input In )
  * IBM Streams dynamic connections, to all streams
  * published to the same `topic` and `streamType`.
  * See [namespace:com.ibm.streamsx.topology.topic] for details.
- 
+ *
  * @output Topic Subscription to `topic`.
  * @param topic Topic to subscribe to.
  * @param streamType Type of output stream `Topic`.
@@ -41,10 +50,25 @@ public composite SubscribeJava(output Topic )
 		expression<rstring> $class ;
 		type $streamType ;
 	graph
-		stream<$streamType> Topic = Import()
-		{
-			param
-				subscription : __spl_exportType == "topic.java" && __spl_topic == $topic && __spl_class == $class ;
-		}
+         stream<$streamType> TopicImport = Import()
+         {
+           param
+              // Initially match nothing, the initialization
+              // of the no-op Filter sets the expression.
+              subscription : __spl_exportType == "none";
+         }
 
+         // Use a Filter to dynamically set the subscription
+         // expression based upon the UDP state of this invocation.
+         stream<TopicImport> Topic = Filter(TopicImport) {
+             logic state:
+               int32 rc = setSubscribeSubscription(getTopicJavaSubscription($topic, $class));
+         }
+}
+
+/*
+ * @exclude
+*/
+rstring getTopicJavaSubscription(rstring topic, rstring class) {
+     return "( __spl_exportType == \"topic.java\" ) && ( __spl_topic == \"" + topic + "\" ) && ( __spl_class == \"" + class + "\" )";
 }
