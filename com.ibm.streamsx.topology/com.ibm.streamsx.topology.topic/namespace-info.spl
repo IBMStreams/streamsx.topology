@@ -85,7 +85,7 @@
  * # Behavior with parallel regions
  * 
  * Topic publish-subscribe model was changed for releases 1.1.X
- * to have intuitive behavior when the publisher or subscriber
+ * to have intuitive and defined behavior when the publisher or subscriber
  * is in a parallel region (with width > 1).
  * 
  * *It is recommended that if either publisher or subscriber is
@@ -93,6 +93,7 @@
  * released versions of this toolkit*:
  *  * 1.1.x with x >= 6
  *  * 1.2.x with x >= 6
+ *  * or any new version in future
  *
  * The intuitive case is that parallel regions are used to partition tuple processing across the channels,
  * so that each channel processes a subset of the tuples, and each tuple is processed by a single channel.
@@ -103,12 +104,25 @@
  * will have two subscribing channels. Each published channel must connect to a single subscribing channel,
  * and in this case one subscriber channel will connect to two published channels and the other to the remaining published channel.
  *
+ * --- Publish-Subscribe with Parallel Regions
+ * -----------------------------------------------
  * | Publisher | Subscriber | Behavior |
- * | ------------ | -------------|-----------
+ * |===|
  * | *not-parallel* | *not-parallel* | Single connection between the publisher and subscriber containing all the tuples |
+ * |----|----|    |
+ * | *parallel(1)*  | *parallel(1)*  |     |
+ * |----|----|----|
  * | *not-parallel* | *parallel(N)* | One and only one of the N subscribers connects to the single publisher and thus the subscriber region correctly processes the tuples once.  Note that which subscriber channel processes the single published channel is not defined, it could be any of 0,1,...,N-1. |
+ * |----|    |    |
+ * | *parallel(1)*  |   *N > 1*     |    |
+ * |-----|-----|-----|
  * | *parallel(M)* | *not-parallel* | Single subscriber connects to each of the M publishers so that the subscriber region will process all the the published tuples once. |
+ * |    |----|    |
+ * | *M > 1*       | *parallel(1)*  |    |
+ * |-----|-----|-----|
  * | *parallel(M)* | *parallel(N)* | Each published channel is connected to a single subscribe channel with channel number `publish channel % N`. Thus the subscriber region processes the tuples once. |
+ * | *M > 1*       | *N > 1*       |                                                                                                                                                                    |
+ * -----------------------------------------------
 
  * **Note** *It's important to remember there may be multiple applications publishing and/or subscribing to the same topic and thus publish/subscribe must work in all combinations,
  * e.g. there may be a publishers to the same topic of non-parallel, parallel(5) and parallel(3), and subscribers of non-parallel and parallel(7). This is especially true in a microservices style
