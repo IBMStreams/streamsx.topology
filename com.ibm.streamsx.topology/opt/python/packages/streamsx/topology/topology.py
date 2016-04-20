@@ -260,7 +260,7 @@ class Stream(object):
         if (routing == None or routing == Routing.ROUND_ROBIN) :
             iop = self.isolate()                  
             op2 = self.topology.graph.addOperator("$Parallel$")
-            op2.addInputPort(outputPort=iop.getOport())
+            op2.addInputPort(outputPort=iop._get_oport())
             oport = op2.addOutputPort(width)
             return Stream(self.topology, oport)
         elif(routing == Routing.HASH_PARTITIONED ) :
@@ -319,9 +319,9 @@ class Stream(object):
         if(len(streamSet) == 0):
             return self        
         op = self.topology.graph.addOperator("$Union$")
-        op.addInputPort(outputPort=self.getOport())
+        op.addInputPort(outputPort=self._get_oport())
         for stream in streamSet:
-            op.addInputPort(outputPort=stream.getOport())
+            op.addInputPort(outputPort=stream._get_oport())
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
 
@@ -350,7 +350,7 @@ class Stream(object):
         publishParams = {'topic': [topic]}
         op.setParameters(publishParams)
 
-    def getOport(self):
+    def _get_oport(self):
         return self.oport
 
 # Print function that flushes
