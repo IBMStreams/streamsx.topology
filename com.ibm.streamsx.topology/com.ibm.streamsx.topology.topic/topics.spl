@@ -72,7 +72,7 @@ public composite Subscribe(output Topic )
  *  
  * @param topic Topic to subscribe to.
 */
-rstring getTopicSubscription(rstring topic) {
+public rstring getTopicSubscription(rstring topic) {
   return "( __spl_exportType == \"topic\" ) && ( __spl_topic == \"" + topic + "\" )";
 }
 
@@ -82,7 +82,7 @@ rstring getTopicSubscription(rstring topic) {
  *  
  * @param subscription Base subscription.
 */
-rstring addUDPSubscription(rstring subscription) {
+public rstring addUDPSubscription(rstring subscription) {
     mutable rstring udpSub = subscription + " && ";
 
     // Subscribe to non-udp if channel 0
@@ -107,12 +107,12 @@ rstring addUDPSubscription(rstring subscription) {
 
 /**
  * Set a subscription expression adding in UDP
- * partition based matching if the subscriber
- * is in a UDP channel.
+ * channel based matching if the subscriber
+ * is in a paralel region.
  * @param subscription Subscription to be set on input port
  * connected to `Import` operator.
 */
-stateful int32 setSubscribeSubscription(rstring subscription) {
+public stateful int32 setSubscribeSubscription(rstring subscription) {
     // None-UDP or a single width
     mutable rstring actualSub = "";
 
