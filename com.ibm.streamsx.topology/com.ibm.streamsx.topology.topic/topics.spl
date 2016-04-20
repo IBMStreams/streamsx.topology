@@ -14,16 +14,19 @@ public composite Publish(input In )
 {
 	param
 		expression<rstring> $topic ;
-                expression<boolean> $allowFilter : false;
+        expression<boolean> $allowFilter : false;
 	graph
 		() as ExportTopic = Export(In)
 		{
                 param
                   properties :
                   {
+                     __spl_version = 2,
                      __spl_exportType = "topic",
                      __spl_topic = $topic,
-                     __spl_allowFilter = $allowFilter ? "true" : "false"
+                     __spl_allowFilter = $allowFilter ? "true" : "false",
+                     __spl_channel = getChannel(),
+                     __spl_maxChannels = getMaxChannels()
                   };
                   allowFilter: $allowFilter;
 		}
@@ -47,10 +50,83 @@ public composite Subscribe(output Topic )
 		expression<rstring> $topic ;
 		type $streamType ;
 	graph
-		stream<$streamType> Topic = Import()
-		{
-			param
-				subscription : __spl_exportType == "topic" && __spl_topic == $topic ;
-		}
+         stream<$streamType> TopicImport = Import()
+         {
+           param
+              // Initially match nothing, the initialization
+              // of the no-op Filter sets the expression.
+              subscription : __spl_exportType == "none";
+         }
 
+         // Use a Filter to dynamically set the subscription
+         // expression based upon the UDP state of this invocation.
+         stream<TopicImport> Topic = Filter(TopicImport) {
+             logic state:
+               int32 rc = setSubscribeSubscription(getTopicSubscription($topic));
+         }
+}
+
+/**
+ * Get the subscription that matches a topic for
+ * topic based subscription.
+ *  
+ * @param topic Topic to subscribe to.
+*/
+public rstring getTopicSubscription(rstring topic) {
+  return "( __spl_exportType == \"topic\" ) && ( __spl_topic == \"" + topic + "\" )";
+}
+
+/**
+ * Take a subscription and modify it to account for
+ * parallel regions in the publisher or subscriber.
+ *  
+ * @param subscription Base subscription.
+*/
+public rstring addUDPSubscription(rstring subscription) {
+    mutable rstring udpSub = subscription + " && ";
+
+    // Subscribe to non-udp if channel 0
+    if (getChannel() == 0)
+          udpSub = udpSub + "( (  __spl_channel == -1 ) || ";
+
+     // subscribe to channel
+     udpSub = udpSub 
+                 // Publisher is UDP
+                 + "( "
+                 + "  __spl_channel % "
+                 + (rstring) getMaxChannels()
+                 + " == " 
+                 + (rstring) getChannel()
+                 + " )";
+
+     if (getChannel() == 0)
+       udpSub = udpSub + " )";
+
+     return udpSub;
+}
+
+/**
+ * Set a subscription expression adding in UDP
+ * channel based matching if the subscriber
+ * is in a paralel region.
+ * @param subscription Subscription to be set on input port
+ * connected to `Import` operator.
+*/
+public stateful int32 setSubscribeSubscription(rstring subscription) {
+    // None-UDP or a single width
+    mutable rstring actualSub = "";
+
+    // Subsriber is not UDP, subscribe to all publishers
+    if (getMaxChannels() == 0 || getMaxChannels() == 1)
+        actualSub = subscription;
+    else 
+        actualSub = addUDPSubscription(subscription);
+
+    int32 rc = setInputPortImportSubscription(actualSub, 0u);
+    if (rc != 0) {
+       appLog(spl::Log.error, "Failed subscription (" + (rstring) rc
+       + "):" + actualSub);
+    }
+    
+    return rc;
 }
