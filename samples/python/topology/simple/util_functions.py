@@ -20,7 +20,9 @@ class DirectoryWatcher:
             current_files = set()
             # get a list of files currently in the directory
             for file in os.listdir(self.directory):
-                current_files.add(os.path.abspath(os.path.join(self.directory, file)))
+                file_path = os.path.abspath(os.path.join(self.directory, file))
+                if os.path.isfile(file_path):
+                    current_files.add(file_path)
             # get a list of new files
             new_files = current_files.difference(self.files)
             # read content of new files

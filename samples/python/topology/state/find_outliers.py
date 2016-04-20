@@ -27,11 +27,11 @@ def main():
     # Filters the values based on calculating the mean and standard
     # deviation from the incoming data. In this case only outliers are
     # present in the output stream outliers. An outlier is defined as 
-    # more than (threshold*standard deviation) from the mean.  The
+    # more than (threshold * standard deviation) from the mean.  The
     # threshold in this example is 2.0.
     # This demonstrates a functional logic class that is
-    # stateful. The threshold and list of tuples maintain their values across
-    # multiple invocations.
+    # stateful. The threshold, sum_x, and sum_x_squared maintain 
+    # their values across multiple invocations.
     outliers = values.filter(find_outliers_functions.IsOutlier(2.0))
     
     outliers.print()
