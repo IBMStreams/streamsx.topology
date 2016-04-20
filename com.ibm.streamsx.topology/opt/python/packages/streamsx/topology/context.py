@@ -61,7 +61,7 @@ def print_process_stdout(process):
                 break
             print(line.strip().decode("utf=8"))
     except:
-        sys.err.write("Error reading from process stdout")
+        sys.stderr.write("Error reading from process stdout")
 
 def print_process_stderr(process):
     try:
@@ -71,7 +71,7 @@ def print_process_stderr(process):
                 break
             print(line.strip().decode("utf=8"))
     except:
-        sys.err.write("Error reading from process stderr")
+        sys.stderr.write("Error reading from process stderr")
 
 
 def _submitUsingJava(ctxtype, fn):
@@ -103,4 +103,4 @@ def _submitUsingJava(ctxtype, fn):
             stderr_thread.start()
             process.wait()
         except:
-            sys.err.write("Error starting java subprocess for submission")
+            sys.stderr.write("Error starting java subprocess for submission")
