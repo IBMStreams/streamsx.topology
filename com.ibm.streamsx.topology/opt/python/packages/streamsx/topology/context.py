@@ -7,6 +7,7 @@ import os.path
 import json
 import subprocess
 import threading
+import sys
 
 #
 # Submission of a python graph using the Java Application API
