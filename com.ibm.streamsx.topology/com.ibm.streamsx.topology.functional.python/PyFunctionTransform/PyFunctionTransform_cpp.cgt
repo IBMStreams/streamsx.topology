@@ -89,13 +89,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
   IPort0Type const &ip = static_cast<IPort0Type const &>(tuple);
 
-<% if ($pystyle eq 'python') { %>
-  SPL::blob value = ip.get___spl_po();
-<%}%>
-
-<% if ($pystyle eq 'string') { %>
-  SPL::rstring value = ip.get_string();
-<%}%>
+<%
+print splpy_inputtuple2value($pystyle);
+%>
 
   std::auto_ptr<SPL::blob> out_blob = streamsx::topology::Splpy::pyTupleTransform(function_, value);
   if (out_blob.get()) {
