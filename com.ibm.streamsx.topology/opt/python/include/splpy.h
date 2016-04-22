@@ -235,14 +235,30 @@ namespace streamsx {
       return ret;
     }
 
+    // Hash passing an SPL Blob
     static SPL::int32 pyTupleHash(PyObject * function, SPL::blob & pyblob) {
-
       PyGILLock lock;
 
       // convert spl blob to bytes
       PyObject * pyBytes  = pyBlobToBytes(pyblob);
+
+      return _pyTupleHash(function, pyBytes);
+    }
+    //
+    // Hash passing an SPL Blob
+    static SPL::int32 pyTupleHash(PyObject * function, SPL::rstring & pyrstring) {
+      PyGILLock lock;
+ 
+      // convert spl rstring to Python Unicode String assuming UTF-8
+      PyObject * pyString  = pyRstringToUnicode(pyrstring);
+
+      return _pyTupleHash(function, pyString);
+    }
+
+    // Hash passing a PyObject *
+    static SPL::int32 _pyTupleHash(PyObject * function, PyObject * arg) {
       // invoke python nested function that generates the int32 hash
-      PyObject * pyReturnVar = pyTupleFunc(function, pyBytes); 
+      PyObject * pyReturnVar = pyTupleFunc(function, arg); 
      
        // construct integer from  return value
       SPL::int32 retval=0;
@@ -255,7 +271,6 @@ namespace streamsx {
       }  	 
       Py_DECREF(pyReturnVar);		
       return retval;
-
    }
 
     /**
