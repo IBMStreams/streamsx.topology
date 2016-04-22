@@ -107,7 +107,7 @@ class Stream(object):
         """
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionFilter", func)
         op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
     def transform(self, func):
