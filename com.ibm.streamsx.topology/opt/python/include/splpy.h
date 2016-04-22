@@ -106,26 +106,31 @@ namespace streamsx {
         SPLAPPTRC(L_INFO, "Callable function: " << functionNameC, "python");
         return function;
       }
+
+    // Call the function passing an SPL blob and
+    // discard the return 
     static void pyTupleSink(PyObject * function, SPL::blob & pyblob) {
 
       PyGILLock lock;
       PyObject * pyBytes  = pyBlobToBytes(pyblob);
-      PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
 
-      if(pyReturnVar == 0){
-        flush_PyErr_Print();
-        throw;
-      }
-
-      Py_DECREF(pyReturnVar);
+      _pyTupleSink(function, pyBytes);
     }
+
+    // Call the function passing an SPL blob and
+    // discard the return 
     static void pyTupleSink(PyObject * function, SPL::rstring & pyrstring) {
-      long int sizeb = pyrstring.length();
-      const char * pybytes = pyrstring.data();
 
       PyGILLock lock;
-      PyObject * pyUnicode  = PyUnicode_FromStringAndSize(pybytes, sizeb);
-      PyObject * pyReturnVar = pyTupleFunc(function, pyUnicode);
+      PyObject * pyString  = pyRstringToUnicode(pyrstring);
+
+      _pyTupleSink(function, pyString);
+    }
+
+    // Call the function passing a PyObject and
+    // discard the return 
+    static void _pyTupleSink(PyObject * function, PyObject * arg) {
+      PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
       if(pyReturnVar == 0){
         flush_PyErr_Print();
@@ -145,11 +150,31 @@ namespace streamsx {
       Py_DECREF(pyRepr);
     }
 
+    // Call the function passing an SPL blob and
+    // treat the return as a boolean
     static int pyTupleFilter(PyObject * function, SPL::blob & pyblob) {
 
       PyGILLock lock;
       PyObject * pyBytes  = pyBlobToBytes(pyblob);
-      PyObject * pyReturnVar = pyTupleFunc(function, pyBytes);
+
+      return _pyTupleFilter(function, pyBytes);
+    }
+    //
+    // Call the function passing an SPL rstring and
+    // treat the return as a boolean
+    static int pyTupleFilter(PyObject * function, SPL::rstring & pyrstring) {
+
+      PyGILLock lock;
+      PyObject * pyString  = pyRstringToUnicode(pyrstring);
+
+      return _pyTupleFilter(function, pyString);
+    }
+
+    // Call the function passing a PyObject and
+    // treat the return as a boolean
+    static int _pyTupleFilter(PyObject * function, PyObject * arg) {
+
+      PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
       if(pyReturnVar == 0){
         flush_PyErr_Print();
@@ -180,10 +205,10 @@ namespace streamsx {
 
       PyGILLock lock;
 
-      // convert spl rstring to bytes assuming UTF-8
-      PyObject * pyBytes  = pyRstringToBytes(pyrstring);
+      // convert spl rstring to Python Unicode String assuming UTF-8
+      PyObject * pyString  = pyRstringToUnicode(pyrstring);
 
-      return _pyTupleTransform(function, pyBytes);
+      return _pyTupleTransform(function, pyString);
     }
 
     // Call the function with argument and return the result as a blob
@@ -262,7 +287,7 @@ namespace streamsx {
     /**
      * Convert a SPL rstring into a Python Unicode string 
      */
-    static PyObject * pyRstringToBytes(SPL::rstring & pyrstring) {
+    static PyObject * pyRstringToUnicode(SPL::rstring & pyrstring) {
       long int sizeb = pyrstring.size();
       const char * pybytes = pyrstring.data();
 
