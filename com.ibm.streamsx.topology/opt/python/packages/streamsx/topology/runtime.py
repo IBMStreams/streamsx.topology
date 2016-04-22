@@ -2,6 +2,7 @@ import os
 import pickle
 import base64
 import sys
+import json
 
 def __splpy_addDirToPath(dir):
     if os.path.isdir(dir):
@@ -32,6 +33,15 @@ def depickleInput(callable) :
         return ac(pickle.loads(v))
     return _depickleInput
 
+# Given a callable 'callable', return a function
+# that loads an object from the serialized JSON input
+# and then calls 'callable' returning the callable's return
+def jsonInput(callable) :
+    ac = _getCallable(callable)
+    def _jsonInput(v):
+        return ac(json.loads(v))
+    return _jsonInput
+
 # Get the callable from the value
 # passed into the SPL PyFunction operator.
 #
@@ -61,6 +71,20 @@ def depickleInputPickleReturn(callable):
             return None
         return pickle.dumps(rv)
     return _depickleInputPickleReturn
+
+# Given a callable 'callable', return a function
+# that loads an object from the serialized JSON input
+# and then calls 'callable'
+# returning the callable's return already pickled.
+# If the return is None then it is not pickled.
+def jsonInputPickleReturn(callable):
+    ac = _getCallable(callable)
+    def _jsonInputPickleReturn(v):
+        rv = ac(json.loads(v))
+        if rv is None:
+            return None
+        return pickle.dumps(rv)
+    return _jsonInputPickleReturn
 
 # Given a function that returns an iterable
 # return a function that can be called
