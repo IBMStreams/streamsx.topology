@@ -6,7 +6,7 @@
  * Java application API for IBM Streams.
  * 
  * This API is used to generate streaming topologies for
- * execution by IBM Streams 4.0 or later. An instance
+ * execution by IBM Streams 4.0.1 or later. An instance
  * of {@link com.ibm.streamsx.topology.Topology} is created
  * that then is used to build a topology (or graph) of
  * streams, represented by {@link com.ibm.streamsx.topology.TStream}
