@@ -134,3 +134,12 @@ def depickleInputPickleIterator(callable):
             return None
         return _PickleIterator(irv)
     return _depickleInputPickleIterator
+
+def jsonInputPickleIterator(callable):
+    ac =_getCallable(callable)
+    def _depickleInputPickleIterator(v):
+        irv = ac(json.loads(v))
+        if irv is None:
+            return None
+        return _PickleIterator(irv)
+    return _depickleInputPickleIterator
