@@ -20,11 +20,14 @@ def submit(ctxtype, graph):
     
     Args:
         ctxtype (string): context type.  Values include:
+        * DISTRIBUTED - the topology is submitted to a Streams instance.
+          The bundle is submitted using `streamtool` which must be setup to submit without requiring authentication input.
         * STANDALONE - the topology is executed directly as an Streams standalone application.
           The standalone execution is spawned as a separate process
         * BUNDLE - execution of the topology produces an SPL application bundle
           (.sab file) that can be submitted to an IBM Streams instance as a distributed application.
         graph: a Topology.graph object
+        
     Returns:
         None
     """    

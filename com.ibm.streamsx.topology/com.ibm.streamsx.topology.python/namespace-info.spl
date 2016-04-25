@@ -245,7 +245,7 @@ Operations such as `source` and `sink` accept a callable as input.  The callable
 The modules containing the callables, along with third-party libraries required by the modules, are copied into the Streams Application Bundle (sab file).
 * Dependent libraries can be individual modules or packages.
 * Dependent libraries can be installed in site packages, or not installed and simply reside in a directory in the Python search path
-* Platform-dependent (native) libaries in lib-dynload are not copied into the bundle
+* Dependent native libaries outside of the package directory are not copied into the bundle
 
 Limitations on callable inputs to operations:
 * Callables must be defined in a module file.
