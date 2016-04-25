@@ -8,7 +8,7 @@ import collections
 
 class _DependencyResolver(object):
     """
-    finds dependencies given a module object
+    Finds dependencies given a module object
     """
     
     def __init__(self):
@@ -18,7 +18,7 @@ class _DependencyResolver(object):
         
     def add_dependencies(self, module):
         """
-        adds a module and its dependencies to the list of dependencies
+        Adds a module and its dependencies to the list of dependencies
         """
         # add the module as a dependency
         self._add_dependency(module)
@@ -33,20 +33,20 @@ class _DependencyResolver(object):
     @property
     def modules(self):
         """
-        property to get the list of module dependencies
+        Property to get the list of module dependencies
         """
         return frozenset(self._modules)
     
     @property
     def packages(self):
         """
-        property to get the list of package dependencies
+        Property to get the list of package dependencies
         """
         return tuple(self._packages.keys())   
     
     def _add_dependency(self, module):
         """
-        adds a module to the list of dependencies
+        Adds a module to the list of dependencies
         """
         package_name = _get_package_name(module)
         if package_name:
