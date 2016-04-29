@@ -15,9 +15,15 @@
   <property name="test.dir" location="../java/unittests"/>
   <property name="jarname" location="../java/streamsx.topology.test.jar"/>
 
+  <property name="topology.toolkit.jar" location="${topology.toolkit.release}/lib/com.ibm.streamsx.topology.jar"/>
+  <property name="topology.samples.jar" location="${topology.toolkit.release}/../samples/java/functional/functionalsamples.jar"/>
+
+   <echo message="Topology toolkit jar: ${topology.toolkit.jar}"/>
+   <echo message="Topology toolkit samples jar: ${topology.samples.jar}"/>
+
   <path id="compile.classpath">
     <path refid="streams.classpath"/>
-    <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
+    <pathelement location="${topology.toolkit.jar}" />
     <pathelement location="${scala-library.jar}"/>
     <pathelement location="${classes}"/>
     <pathelement location="${junit.jar}"/>
@@ -25,7 +31,7 @@
   <path id="test.classpath">
     <pathelement location="${jarname}" />
     <path refid="streams.classpath"/>
-    <pathelement location="${tk.lib}/com.ibm.streamsx.topology.jar" />
+    <pathelement location="${topology.toolkit.jar}" />
     <pathelement location="${scala-library.jar}"/>
     <pathelement location="${junit.jar}"/>
   </path>
@@ -65,7 +71,8 @@
 
      <!-- Can be overridden by setting -D topology.install.compile on cmd line -->
 
-    <echo message="INSALL: ${topology.install.compile}"/>
+    <echo message="INSTALL: ${topology.install.compile}"/>
+    <echo message="TOOLKIT: ${topology.toolkit.release}"/>
      
    <jacoco:coverage enabled="${topology.test.coverage}">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="no"

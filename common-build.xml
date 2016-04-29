@@ -20,8 +20,8 @@
   <fileset  id="junit.path" dir="${user.home}/.ant/lib" includes="junit-*.jar" erroronmissingdir="no"/>
   <pathconvert property="junit.jar" refid="junit.path"/>
 
-  <property name="ant.build.javac.source" value="7"/>
-  <property name="ant.build.javac.target" value="7"/>
+  <property name="ant.build.javac.source" value="8"/>
+  <property name="ant.build.javac.target" value="8"/>
 
   <property name="topology.test.root" location="${streamsx.topology}/test"/>
 

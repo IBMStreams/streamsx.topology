@@ -76,20 +76,66 @@
  *   * SPL : [com.ibm.streamsx.topology::Json]  
  *   * Java: `TStream<JSONObject>`.
        See [../../javadoc/com/ibm/streamsx/topology/json/package-summary.html#package_description|com.ibm.streamsx.topology.json].
- *   * Scala: `TStream[JSONObject]`
+ *   * Scala: `TStream\[JSONObject\]`
  * * String tuples
  *   * SPL : [com.ibm.streamsx.topology::String]
  *   * Java: `TStream<String>`
- *   * Scala: `TStream[String]`
+ *   * Scala: `TStream\[String\]`
  * * XML tuples
  *   * SPL : [com.ibm.streamsx.topology::XML]
  *   * Java: `TStream<com.ibm.streams.operator.types.XML>`
- *   * Java: `TStream[com.ibm.streams.operator.types.XML]`
+ *   * Java: `TStream\[com.ibm.streams.operator.types.XML\]`
  * * Binary tuples
  *   * SPL : [com.ibm.streamsx.topology::Blob]
  *   * Java: `TStream<com.ibm.streams.operator.types.Blob>`
- *   * Scala: `TStream[com.ibm.streams.operator.types.Blob]`
+ *   * Scala: `TStream\[com.ibm.streams.operator.types.Blob\]`
  *
+ * # Behavior with parallel regions
+ * 
+ * Topic publish-subscribe model was changed for releases 1.1.X
+ * to have intuitive and defined behavior when the publisher or subscriber
+ * is in a parallel region (with width > 1).
+ * 
+ * *It is recommended that if either publisher or subscriber is
+ * in a parallel region then applications should be compiled against
+ * released versions of this toolkit*:
+ *  * 1.1.x with x >= 6
+ *  * 1.2.x with x >= 6
+ *  * or any new version in future
+ *
+ * The intuitive case is that parallel regions are used to partition tuple processing across the channels,
+ * so that each channel processes a subset of the tuples, and each tuple is processed by a single channel.
+ * 
+ * Any subscriber connecting to a publisher must then process the complete output from the publisher
+ * and only process each published tuple only once. For example if a publisher is in a parallel region
+ * with width three, then there are three published channels. A connecting subscriber with width two
+ * will have two subscribing channels. Each published channel must connect to a single subscribing channel,
+ * and in this case one subscriber channel will connect to two published channels and the other to the remaining published channel.
+ *
+ * --- Publish-Subscribe with Parallel Regions
+ * -----------------------------------------------
+ * | Publisher | Subscriber | Behavior |
+ * |===|
+ * | *not-parallel* | *not-parallel* | Single connection between the publisher and subscriber containing all the tuples |
+ * |----|----|    |
+ * | *parallel(1)*  | *parallel(1)*  |     |
+ * |----|----|----|
+ * | *not-parallel* | *parallel(N)* | One and only one of the N subscribers connects to the single publisher and thus the subscriber region correctly processes the tuples once.  Note that which subscriber channel processes the single published channel is not defined, it could be any of 0,1,...,N-1. |
+ * |----|    |    |
+ * | *parallel(1)*  |   *N > 1*     |    |
+ * |-----|-----|-----|
+ * | *parallel(M)* | *not-parallel* | Single subscriber connects to each of the M publishers so that the subscriber region will process all the the published tuples once. |
+ * |    |----|    |
+ * | *M > 1*       | *parallel(1)*  |    |
+ * |-----|-----|-----|
+ * | *parallel(M)* | *parallel(N)* | Each published channel is connected to a single subscribe channel with channel number `publish channel % N`. Thus the subscriber region processes the tuples once. |
+ * | *M > 1*       | *N > 1*       |                                                                                                                                                                    |
+ * -----------------------------------------------
+
+ * **Note** *It's important to remember there may be multiple applications publishing and/or subscribing to the same topic and thus publish/subscribe must work in all combinations,
+ * e.g. there may be a publishers to the same topic of non-parallel, parallel(5) and parallel(3), and subscribers of non-parallel and parallel(7). This is especially true in a microservices style
+ * architecture where analytic applications may come and go and there may not be pre-assigned agreement that publisher and subscribers will have matching channel numbers.*
+ * 
  * + Relationship to Export & Import
  * Publish-subscribe is a simplification of IBM Streams `Export` and `Import`.
  * 
@@ -99,9 +145,18 @@
  * # Details
  * [Publish] is a composite operator that invokes an `spl.adapter::Export` operator
  * using these stream properties:
- * * `__spl_exportType` : Set to the literal `topic` for SPL publish, `topic.java` for publishing by a Java class.
- * * `__spl_topic` : Set to the topic to publish to.
- * * `__spl_class` : Set to the Java class of the stream when `__spl_exportType` is `topic.java`, otherwise unset.
+ * * `int64 __spl_version`: Version of the publish properties scheme, set to.
+ *   * unset - Initial version - 1.1.2 release
+ *   * `2` - Second version: `__spl_version >= 2`
+ * * `rstring __spl_exportType` : Set to the literal `topic` for SPL publish, `topic.java` for publishing by a Java class.
+ * * `rstring __spl_topic` : Set to the topic to publish to.
+ * * `rstring __spl_allowFilter` : Set to `true` if the [Publish] operator allows filters, otherwise `false`. Earlier releases have the value missing indicating filters are allowed.
+ *   * Set if:`__spl_version >= 2`
+ * * `rstring __spl_class` : Set to the Java class of the stream when `__spl_exportType` is `topic.java`, otherwise unset.
+ * * `int64 __spl_channel` : Set to the publisher's parallel channel index returned by `getChannel()`.
+ *   * Set if:`__spl_version >= 2`
+ * * `int64 __spl_maxChannels` : Set to the publisher's maximum number of parallel channels returned by `getMaxChannels()`.
+ *   * Set if:`__spl_version >= 2`
  *
  * [Subscribe] is a composite operator that invokes an `spl.adapter::Import` operator
  * using a subscription to match the published topics.

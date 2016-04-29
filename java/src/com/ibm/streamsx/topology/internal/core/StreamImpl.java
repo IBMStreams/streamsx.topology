@@ -7,7 +7,6 @@ package com.ibm.streamsx.topology.internal.core;
 import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.logic.Logic.notKeyed;
 import static com.ibm.streamsx.topology.logic.Value.of;
-import static java.util.Collections.singletonMap;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -21,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
+import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
@@ -358,24 +358,49 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public void publish(String topic) {
+    	publish(topic, false);
+    }
+    
+    private static void filtersNotAllowed(boolean allowFilter) {
+    	if (allowFilter)
+    		throw new IllegalArgumentException("TStream tuple type cannot be published allowing filters.");
+    }
+    
+    @Override
+    public void publish(String topic, boolean allowFilter) {
+    	
+    	Type tupleType = getTupleType();
         
-        if (JSONObject.class.equals(getTupleType())) {
+        if (JSONObject.class.equals(tupleType)) {
+        	filtersNotAllowed(allowFilter);
+        	
             @SuppressWarnings("unchecked")
             TStream<JSONObject> json = (TStream<JSONObject>) this;
-            JSONStreams.toSPL(json).publish(topic);
+            JSONStreams.toSPL(json).publish(topic, allowFilter);
             return;
         }
         
         
         BOperatorInvocation op;
-        if (Schemas.usesDirectSchema(getTupleType())
+        if (Schemas.usesDirectSchema(tupleType)
                  || ((TStream<T>) this) instanceof SPLStream) {
+        	// Don't allow filtering against schemas that Streams
+        	// would not allow a filter against.
+        	if (String.class != tupleType && !(((TStream<T>) this) instanceof SPLStream))
+        		filtersNotAllowed(allowFilter);
+        	
             // Publish as a stream consumable by SPL & Java/Scala
+        	Map<String,Object> publishParms = new HashMap<>();
+        	publishParms.put("topic", topic);
+        	publishParms.put("allowFilter", allowFilter);
+        	
             op = builder().addSPLOperator("Publish",
                     "com.ibm.streamsx.topology.topic::Publish",
-                    singletonMap("topic", topic));
+                    publishParms);
  
         } else if (getTupleClass() != null){
+        	filtersNotAllowed(allowFilter);
+        	
             // Publish as a stream consumable only by Java/Scala
             Map<String,Object> params = new HashMap<>();
             params.put("topic", topic);
