@@ -3,42 +3,52 @@ import sys
 import site
 import inspect
 import types
-import zipfile
 import collections
     
-# finds dependencies given a module object
-class DependencyResolver(object):
 
+class _DependencyResolver(object):
+    """
+    Finds dependencies given a module object
+    """
+    
     def __init__(self):
         self._modules = set()
         self._packages = collections.OrderedDict() # need an ordered set when merging namespace directories
         self._processed_modules = set()
         
-    # adds a module and its dependencies to the list of dependencies
     def add_dependencies(self, module):
+        """
+        Adds a module and its dependencies to the list of dependencies
+        """
         # add the module as a dependency
         self._add_dependency(module)
         # recursively get the module's imports and add those as dependencies
-        imported_modules = get_imported_modules(module)
-        #print ("get_imported_modules for {0}: {1}".format(module.__name__, imported_modules))
+        imported_modules = _get_imported_modules(module)
+        #print ("_get_imported_modules for {0}: {1}".format(module.__name__, imported_modules))
         for imported_module_name,imported_module in imported_modules.items():
             if imported_module not in self._processed_modules:
                 #print ("add_dependencies for {0} {1}".format(imported_module.__name__, imported_module))
                 self.add_dependencies(imported_module)
     
-    # property to get the list of module dependencies
     @property
     def modules(self):
+        """
+        Property to get the list of module dependencies
+        """
         return frozenset(self._modules)
     
-    # property to get the list of package dependencies
     @property
     def packages(self):
+        """
+        Property to get the list of package dependencies
+        """
         return tuple(self._packages.keys())   
     
-    # adds a module to the list of dependencies
     def _add_dependency(self, module):
-        package_name = get_package_name(module)
+        """
+        Adds a module to the list of dependencies
+        """
+        package_name = _get_package_name(module)
         if package_name:
             # module is part of a package
             # get the top-level package
@@ -74,9 +84,14 @@ class DependencyResolver(object):
 # Utility functions #
 #####################
     
-# Gets the package name given a module object
-# Returns None or '' if the module does not belong to a package            
-def get_package_name(module):
+def _get_package_name(module):
+    """
+    Gets the package name given a module object
+    
+    Returns:
+        str: If the module belongs to a package, the package name.  
+             if the module does not belong to a package, None or ''.
+    """
     try:
         # if __package__ is defined, use it
         package_name = module.__package__
@@ -93,9 +108,13 @@ def get_package_name(module):
            
     return package_name
     
-# Gets the function's module name
-# Resolves the __main__ module to an actual module name
-def get_module_name(function):
+def _get_module_name(function):
+    """
+    Gets the function's module name
+    Resolves the __main__ module to an actual module name
+    Returns:
+        str: the function's module name
+    """
     module_name = function.__module__
     if module_name == '__main__':
         # get the main module object of the function
@@ -106,13 +125,18 @@ def get_module_name(function):
             module_name = os.path.splitext(os.path.basename(main_module.__file__))[0]
     return module_name
 
-# Gets imported modules for a given module
-# The following modules are excluded: 
-# * built-in modules
-# * modules that have "com.ibm.streamsx.topology" in the path
-# * other system modules whose paths start with sys.prefix or sys.exec_prefix 
-#   that are not inside a site package
-def get_imported_modules(module):
+
+def _get_imported_modules(module):
+    """
+    Gets imported modules for a given module
+    The following modules are excluded: 
+    * built-in modules
+    * modules that have "com.ibm.streamsx.topology" in the path
+    * other system modules whose paths start with sys.prefix or sys.exec_prefix 
+      that are not inside a site package
+    Returns:
+        a dictionary of module names => modules
+    """
     imported_modules = {}
     #print ("vars({0}): {1}".format(module.__name__, vars(module)))
     for alias, val in vars(module).items():
@@ -127,43 +151,41 @@ def get_imported_modules(module):
         # if we found a module, determine if it should be included
         # in the list of dependencies
         if vars_module:    
-            if not is_builtin_module(vars_module) and \
-               not is_streamsx_module(vars_module) and \
-               not is_system_module(vars_module):
+            if not _is_builtin_module(vars_module) and \
+               not _is_streamsx_module(vars_module) and \
+               not _is_system_module(vars_module):
                 imported_modules[vars_module.__name__] = vars_module
     return imported_modules
 
-def is_builtin_module(module):
+def _is_builtin_module(module):
     return module.__name__ in sys.builtin_module_names and \
            not hasattr(module, '__file__') and \
            not hasattr(module, '__path__')
 
-
-def is_streamsx_module(module):
+def _is_streamsx_module(module):
     if hasattr(module, '__name__'):
         return module.__name__.startswith('streamsx.topology')
     return False
 
-# returns True if the given path is for a site package, False otherwise
 def _inside_site_package(path):
+    """
+    Returns:
+        True if the given path is for a site package, False otherwise
+    """
     return 'site-packages' in path
 
-def _is_system_module(module_path):
+def _is_system_modulex(module_path):
     return not _inside_site_package(module_path) and \
            (module_path.startswith((sys.prefix, sys.exec_prefix)) or \
             (hasattr(sys, 'real_prefix') and module_path.startswith(sys.real_prefix)))
                      
-def is_system_module(module):
+def _is_system_module(module):
     if hasattr(module, '__file__'):
         # module or regular package
-        return _is_system_module(module.__file__)
+        return _is_system_modulex(module.__file__)
     elif hasattr(module, '__path__'):
         # namespace package.  assume system package if any path evaluates to true
         for module_path in list(module.__path__):
-            if _is_system_module(module_path):
+            if _is_system_modulex(module_path):
                 return True
     return False
-
-# Returns True if the parent directory in path is a zip file; False otherwise
-def is_parentdir_zip(path):
-    return os.path.dirname(path) and zipfile.is_zipfile(os.path.dirname(path))

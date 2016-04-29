@@ -16,7 +16,7 @@ class SPLGraph(object):
             name = str(uuid.uuid1()).replace("-", "")
         self.name = name
         self.operators = []
-        self.resolver = streamsx.topology.dependency.DependencyResolver()
+        self.resolver = streamsx.topology.dependency._DependencyResolver()
 
     def addOperator(self, kind, function=None, name=None):
         if name is None:
