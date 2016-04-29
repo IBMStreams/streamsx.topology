@@ -107,7 +107,7 @@ class Stream(object):
         """
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionFilter", func)
         op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
     def transform(self, func):
@@ -267,18 +267,19 @@ class Stream(object):
             if (func is None) :
                 func = hash   
             op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder",func)           
-            parentOp = op.addOutputPort(schema=schema.StreamSchema("tuple<blob __spl_po,int32 __spl_hash>"))
+            hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int32 __spl_hash>"))
+            parentOp = op.addOutputPort(schema=hash_schema)
             op.addInputPort(outputPort=self.oport)
             iop = self.topology.graph.addOperator("$Isolate$")    
-            oport = iop.addOutputPort(schema=schema.StreamSchema("tuple<blob __spl_po,int32 __spl_hash>"))
+            oport = iop.addOutputPort(schema=hash_schema)
             iop.addInputPort(outputPort=parentOp)        
             op2 = self.topology.graph.addOperator("$Parallel$")
             op2.addInputPort(outputPort=oport)
-            o2port = op2.addOutputPort(oWidth=width, schema=schema.StreamSchema("tuple<blob __spl_po,int32 __spl_hash>"), partitioned=True)
+            o2port = op2.addOutputPort(oWidth=width, schema=hash_schema, partitioned=True)
             # use the Functor passthru operator to effectively remove the hash attribute by removing it from output port schema 
             hrop = self.topology.graph.addPassThruOperator()
             hrop.addInputPort(outputPort=o2port)
-            hrOport = hrop.addOutputPort(schema=schema.CommonSchema.Python)
+            hrOport = hrop.addOutputPort(schema=self.oport.schema)
             return Stream(self.topology, hrOport)
         else :
             raise TypeError("Invalid routing type supplied to the parallel operator")    

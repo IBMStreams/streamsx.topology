@@ -4,7 +4,7 @@ class StreamSchema(object) :
     """SPL stream schema"""
 
     def __init__(self, schema):
-        self.__schema=schema
+        self.__schema=schema.strip()
 
     def schema(self):
         return self.__schema;
@@ -14,6 +14,13 @@ class StreamSchema(object) :
         _splj["type"] = 'spltype'
         _splj["value"] = self.schema()
         return _splj
+
+    # Extend a schema by another
+    def extend(self, schema):
+        base = self.schema()
+        extends = schema.schema()
+        new_schema = base[:-1] + ',' + extends[6:]
+        return StreamSchema(new_schema)
 
 # XML = StreamSchema("tuple<xml document>")
 
@@ -30,3 +37,6 @@ class CommonSchema(enum.Enum):
 
     def spl_json(self):
         return self.value.spl_json()
+
+    def extend(self, schema):
+        return self.value.extend(schema)

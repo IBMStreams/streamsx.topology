@@ -47,7 +47,17 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
          throw;
     }
 
-<% my $pywrapfunc='depickleInputPickleReturn'; %>
+<%
+ # Select the Python wrapper function
+ my $pywrapfunc= '_unknown_';
+ if ($pystyle eq 'python') {
+   $pywrapfunc = 'depickleInputPickleReturn';
+ }
+ if ($pystyle eq 'json') {
+   $pywrapfunc = 'jsonInputPickleReturn';
+ }
+%>
+
 @include "../pywrapfunction.cgt"
 }
 

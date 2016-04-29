@@ -46,7 +46,16 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
          throw;
     }
 
-<% my $pywrapfunc='depickleInputPickleIterator'; %>
+<%
+ # Select the Python wrapper function
+ my $pywrapfunc= '_unknown_';
+ if ($pystyle eq 'python') {
+   $pywrapfunc = 'depickleInputPickleIterator';
+ }
+ if ($pystyle eq 'json') {
+   $pywrapfunc = 'jsonInputPickleIterator';
+ }
+%>
 @include "../pywrapfunction.cgt"
 }
 
@@ -97,10 +106,22 @@ print splpy_inputtuple2value($pystyle);
   {
     streamsx::topology::PyGILLock lock;
 
+<%
+ if ($pystyle eq 'python') {
+%>
     // convert spl blob to bytes
-    PyObject * pyBytes  = streamsx::topology::Splpy::pyBlobToBytes(value);
+    PyObject * pyArg = streamsx::topology::Splpy::pyBlobToBytes(value);
+<%
+ }
+ if ($pystyle eq 'json') {
+%>
+    // convert spl rstring to Python Unicode string
+    PyObject * pyArg = streamsx::topology::Splpy::pyRstringToUnicode(value);
+<%
+ }
+%>
 
-    PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyBytes);
+    PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyArg);
 
     if (pyIterator == 0) {
       streamsx::topology::Splpy::flush_PyErr_Print();
