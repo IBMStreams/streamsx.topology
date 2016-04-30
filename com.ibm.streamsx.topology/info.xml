@@ -27,7 +27,7 @@ in other languages.
 
 
     </description>
-    <version>1.1.6</version>
+    <version>1.3.0</version>
     <!-- Require Java 8 so minimium is 4.0.1.0 -->
     <requiredProductVersion>4.0.1.0</requiredProductVersion>
     </identity>

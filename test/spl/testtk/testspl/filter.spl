@@ -1,5 +1,7 @@
 namespace testspl;
 
+use com.ibm.streamsx.topology.topic::*;
+
 /**
   Simple filter to test testing of
   an SPL composite.
@@ -61,37 +63,18 @@ public composite Int64SubscribeFilter(output stream<TestType> Out) {
         expression<rstring> $topic;
         expression<int64> $value;
     graph
-        // Import with no filtering applied.
-        stream<TestType> NotFiltered = Import()
-        {
-        param
-        // Applications with filtering disabled
-          subscription :
-        (__spl_exportType == "topic" && __spl_topic == $topic )
-             &&
-             (__spl_allowFilter == "false");
-        }
 
-        // Apply the filter on this side
-        stream<TestType> FilteredAfterImport = Filter(NotFiltered) {
+     stream<TestType> Out = FilteredSubscribe()
+     {
         param
-             filter: vl == $value;
-        }
+          topic: $topic;
+          streamType: TestType;
+          remoteFilter: equalsFilter("vl", $value);
+          localFilterFunction: testspl::testvl;
+          localFilterParameter: $value;
+     }
+}
 
-        // Import with filtering sent to the Exporter
-        stream<TestType> FilteredByExport = Import()
-        {
-        param
-          subscription :
-        // Applications compiled with version >= 1.2
-        (__spl_exportType == "topic"
-                && __spl_allowFilter == "true"
-                && __spl_topic == $topic ) ;
-          filter: vl == $value;
-        }
-
-        // Only needed as you cannot merge two streams into
-        // a composite output port
-        stream<TestType> Out = Filter(FilteredAfterImport,FilteredByExport) {
-        }
+public boolean testvl(TestType t, int64 v) {
+   return t.vl == v;
 }

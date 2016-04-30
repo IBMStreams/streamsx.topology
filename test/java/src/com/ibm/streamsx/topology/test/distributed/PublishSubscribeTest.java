@@ -360,7 +360,7 @@ public class PublishSubscribeTest extends TestTopology {
     @Test
     public void testSPLPublishNoFilterWithFilteredSubscribe() throws Exception {
         _testSPLPublishFilteredSubscribe(
-              "testSPLPublishNoFilterWithFilteredSubscribe", true);
+              "testSPLPublishNoFilterWithFilteredSubscribe", false);
   }
   private void _testSPLPublishFilteredSubscribe(String topic, boolean allowFilters) throws Exception {
         final Topology t = new Topology();
