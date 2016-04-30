@@ -1,0 +1,115 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016
+ */
+namespace com.ibm.streamsx.topology.topic ;
+
+/**
+ * Subscribe to a topic.
+ * Generates a stream that is subscribed, through
+ * IBM Streams dynamic connections, to all streams
+ * published to the same `topic` and `streamType`.
+ * See [namespace:com.ibm.streamsx.topology.topic] for details.
+ 
+ * @output Topic Subscription to `topic`.
+ * @param topic Topic to subscribe to.
+ * @param streamType Type of output stream `Topic`.
+*/
+public composite FilteredSubscribe(output TopicFiltered)
+{
+	param		
+		expression<rstring> $topic ;
+		type $streamType ;
+                expression<rstring> $remoteFilter;
+                function $localFilterFunction;
+                expression $localFilterParameter : 0;
+	graph
+         stream<$streamType> FilterImport = Import()
+         {
+           param
+              // Initially match nothing, the initialization
+              // of the no-op Filter sets the expression.
+              subscription : __spl_exportType == "none";
+         }
+
+         // Use a Filter to dynamically set the subscription
+         // expression based upon the UDP state of this invocation.
+         stream<$streamType> Filtered = Filter(FilterImport) {
+             logic state:
+             {
+               int32 rcs = setSubscribeSubscription(getTopicSubscription($topic, true));
+               int32 rcf = setSubscribeFilter($remoteFilter);
+             }
+         }
+
+         stream<$streamType> AllImport = Import()
+         {
+           param
+              // Initially match nothing, the initialization
+              // of the no-op Filter sets the expression.
+              subscription : __spl_exportType == "none";
+         }
+
+         // Use a Filter to dynamically set the subscription
+         // expression based upon the UDP state of this invocation.
+         stream<$streamType> All = Filter(AllImport) {
+             logic state:
+             {
+               int32 rcs = setSubscribeSubscription(getTopicSubscription($topic, false));
+             }
+         }
+
+         (stream<$streamType> TopicFiltered) as LocalFilter = Filter(Filtered,All as In) {
+             param
+                filter: $localFilterFunction(In, $localFilterParameter);
+         }
+}
+
+public rstring getTopicSubscription(rstring topic, boolean allowFilter) {
+   rstring ts = getTopicSubscription(topic);
+
+   return ts + " && ( __spl_allowFilter == " +
+         (allowFilter ? "\"true\"" : "\"false\"") + " )";
+}
+
+public rstring andFilter(rstring cond1, rstring cond2) {
+   return "( " + cond1 + " && " + cond2 + " )";
+}
+
+public rstring equalsFilter(rstring name, int64 value) {
+    return "(" + name + "==" + ((rstring) value) +  ")" ;
+}
+public rstring equalsFilter(rstring name, rstring value) {
+    return "(" + name + "==" + makeRStringLiteral(value) +  ")" ;
+}
+public rstring equalsFilter(rstring name, float64 value) {
+    return "(" + name + "==" + ((rstring) value) +  ")" ;
+}
+
+public rstring inFilter(rstring name, list<rstring> values) {
+    if (size(values) == 0)
+          return "( name != \"\" )";
+
+    if (size(values) == 1)
+        return equalsFilter(name, values[0]);
+
+    mutable rstring ft = "( ";
+    for (int32 i in range(values)) {
+       if (i != 0)
+          ft += " || ";
+       ft += equalsFilter(name, values[i]); 
+    }
+    ft += " )";
+    return ft;
+}
+
+public stateful int32 setSubscribeFilter(rstring filter) {
+    appLog(spl::Log.error, "Setting filter:" + filter);
+    int32 rc = setInputPortImportFilterExpression(filter, 0u);
+    if (rc != 0) {
+       appLog(spl::Log.error, "Failed filter (" + (rstring) rc
+       + "):" + filter);
+    }
+    return rc;
+}
+

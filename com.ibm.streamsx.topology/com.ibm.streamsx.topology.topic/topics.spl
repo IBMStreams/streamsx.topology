@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015,2016
+ */
 namespace com.ibm.streamsx.topology.topic ;
 
 /**
@@ -73,7 +77,7 @@ public composite Subscribe(output Topic )
  * @param topic Topic to subscribe to.
 */
 public rstring getTopicSubscription(rstring topic) {
-  return "( __spl_exportType == \"topic\" ) && ( __spl_topic == \"" + topic + "\" )";
+  return "( __spl_exportType == \"topic\" ) && ( __spl_topic == " + makeRStringLiteral(topic) + " )";
 }
 
 /**
