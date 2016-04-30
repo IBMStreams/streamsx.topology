@@ -73,6 +73,11 @@ public composite Subscribe(output Topic )
 /**
  * Get the subscription that matches a topic for
  * topic based subscription.
+ *
+ * This is a low-level function that allows applications
+ * to build custom composites with functionality similar
+ * to [Subscribe]. The preference should be to
+ * use [Subscribe] where possible.
  *  
  * @param topic Topic to subscribe to.
 */
@@ -83,6 +88,11 @@ public rstring getTopicSubscription(rstring topic) {
 /**
  * Take a subscription and modify it to account for
  * parallel regions in the publisher or subscriber.
+ *
+ * This is a low-level function that allows applications
+ * to build custom composites with functionality similar
+ * to [Subscribe] or [FilteredSubscribe]. The preference should be to
+ * use [Subscribe] or [FilteredSubscribe] where possible.
  *  
  * @param subscription Base subscription.
 */
@@ -130,6 +140,7 @@ public stateful int32 setSubscribeSubscription(rstring subscription) {
     if (rc != 0) {
        appLog(spl::Log.error, "Failed subscription (" + (rstring) rc
        + "):" + actualSub);
+       assert(rc != 0, "Failed subscription (" + (rstring) rc + "):" + actualSub);
     }
     
     return rc;
