@@ -72,17 +72,17 @@ public class PublishSubscribeUDPTest extends TestTopology {
         final Topology t = new Topology();
         TStream<String> source = t.strings("325", "457", "9325", "hello", "udp");        
         source = source.parallel(4);      
-        source = source.modify(new Delay<String>(10));     
+        source = source.modify(new Delay<String>(20));     
         source.publish(topic);
         
         TStream<String> source2 = t.strings("non-udp", "single", "346");
-        source2 = source2.modify(new Delay<String>(10));     
+        source2 = source2.modify(new Delay<String>(20));     
         source2.publish(topic);        
         
         
         TStream<String> subscribe = t.subscribe(topic, String.class);
 
-        completeAndValidateUnordered(subscribe, 20, "325", "457", "9325", "hello", "udp", "non-udp", "single", "346");
+        completeAndValidateUnordered(subscribe, 40, "325", "457", "9325", "hello", "udp", "non-udp", "single", "346");
     }
     
     @Test
@@ -135,7 +135,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
         final Topology t = new Topology();
         TStream<BigDecimal> source = t.constants(data);        
         source = source.parallel(4);      
-        source = source.modify(new Delay<BigDecimal>(10));     
+        source = source.modify(new Delay<BigDecimal>(20));     
         source.asType(BigDecimal.class).publish(topic);
         
         List<BigDecimal> data2 = new ArrayList<>(10);
@@ -144,7 +144,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
 
         
         TStream<BigDecimal> source2 = t.constants(data2);
-        source2 = source2.modify(new Delay<BigDecimal>(10));     
+        source2 = source2.modify(new Delay<BigDecimal>(20));     
         source2.asType(BigDecimal.class).publish(topic);   
         
         
@@ -157,7 +157,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
         for (BigDecimal d : data2)
             expected.add(d.toString());
 
-        completeAndValidateUnordered(strings, 20, expected.toArray(new String[0]));
+        completeAndValidateUnordered(strings, 40, expected.toArray(new String[0]));
     }
     
     public void completeAndValidateUnordered(
