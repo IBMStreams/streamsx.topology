@@ -35,24 +35,32 @@ public composite Publish(input In )
 }
 
 stateful int32 setTopicNameProperties(rstring topicName, boolean allowFilter) {
-   appLog(spl::Log.error, "Setting Topic name:" + topicName);
+   appTrc(spl::Trace.debug, "Setting Topic name:" + topicName);
    if (!checkTopicName(topicName)) {
        appLog(spl::Log.error, "Topic name is invalid:" + topicName);
+       appTrc(spl::Trace.error, "Topic name is invalid:" + topicName);
        assert(true, "Topic name is invalid:" + topicName);
        return -1;
    }
-   appLog(spl::Log.error, "About to Setting Topic name:" + topicName);
+   list<rstring> levels = tokenize(topicName, "/", true);
    
    int32 rc = setOutputPortExportProperties(
                   {
-                     __spl_version = 2l,
+                     __spl_version = 3l,
                      __spl_exportType = "topic",
                      __spl_topic = topicName,
+                     __spl_topicLevels = levels,
+                     __spl_topicLevelCount = (int64) size(levels),
                      __spl_allowFilter = allowFilter ? "true" : "false",
                      __spl_channel = (int64) getChannel(),
                      __spl_maxChannels = (int64) getMaxChannels()
                   }, 0u);
-   appLog(spl::Log.error, "Set Topic name:" + topicName + " = " + (rstring) rc);
+
+   appTrc(spl::Trace.debug, "Set Topic name:" + topicName + " = " + (rstring) rc);
+   if (rc != 0) {
+       appLog(spl::Log.error, "Setting topic name failed:" + topicName + " rc=" + (rstring) rc);
+       assert(true, "Setting topic name failed:" + topicName + " rc=" + (rstring) rc);
+   }
 
    return rc;
 }
@@ -102,13 +110,66 @@ public composite Subscribe(output Topic )
  * @param topic Topic to subscribe to.
 */
 public rstring getTopicSubscription(rstring topic) {
+  appTrc(spl::Trace.debug, "Topic filter:" + topic);
   if (!checkTopicFilter(topic)) {
        appLog(spl::Log.error, "Topic filter is invalid:" + topic);
        assert(true, "Topic filter is invalid:" + topic);
        return "invalid topic filter:" + topic;
   }
+
+  // Wildcard expression is more complicated
+  if (findFirst(topic, "+") != -1 || findFirst(topic, "#") != -1) {
+      return wildcardExpression(topic);
+  }
        
   return "( __spl_exportType == \"topic\" ) && ( __spl_topic == " + makeRStringLiteral(topic) + " )";
+}
+
+rstring wildcardExpression(rstring filter) {
+
+    appTrc(spl::Trace.debug, "Wildcard topic filter:" + filter);
+
+    list<rstring> tokens = tokenize(filter, "/", true);
+    
+    boolean hasHash = findFirst(filter, "#") != -1;
+    
+    mutable rstring tw = "( ( __spl_exportType == \"topic\" )";
+    
+    // If there is not a hash wildcard then the topic name
+    // must have the same number of levels as the filter
+    if (!hasHash) {
+       tw += "&& ( __spl_topicLevelCount == " + (rstring) size(tokens) + " )";
+    }
+
+    // Single plus, single level, the level count check is sufficient.
+    if (filter == "+") {
+      tw += ")";
+      return tw;
+    }
+
+    for (int32 i in range(tokens)) {
+      rstring level = tokens[i];
+      
+      // match anything at this level
+      if (level == "+")
+          continue;
+          
+       tw += " && ";
+
+       if (hasHash) {
+           tw += "( ";
+           tw += "( __spl_topicLevelCount > " + (rstring) i + " )";
+           tw += " && ";
+       }
+       tw += "( __spl_topicLevels["+((rstring) i)+"] == " + makeRStringLiteral(level) + " )";
+       if (hasHash) {
+           tw += " )";
+       }
+       
+    }
+    tw += " )";
+    
+    return tw;
 }
 
 /**
@@ -224,7 +285,7 @@ public boolean checkTopicFilter(rstring topic) {
     for (rstring token in tokens) {
        if (token == "+")
            continue;
-       if (findFirst(topic, "+") != -1)
+       if (findFirst(token, "+") != -1)
            return false;
     }
       
