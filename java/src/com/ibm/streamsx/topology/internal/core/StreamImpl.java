@@ -429,13 +429,12 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         if (topic.isEmpty()
                 || topic.indexOf('\u0000') != -1
-                || topic.indexOf('*') != -1
+                || topic.indexOf('+') != -1
                 || topic.indexOf('#') != -1
                 )
         {
             throw new IllegalArgumentException("Invalid topic name:" + topic);
         }
-        
     }
     
     @Override
