@@ -20,21 +20,41 @@ public composite Publish(input In )
 		expression<rstring> $topic ;
         expression<boolean> $allowFilter : false;
 	graph
-		() as ExportTopic = Export(In)
+		() as ExportTopic = Export(TopicProperties)
 		{
                 param
                   properties :
                   {
-                     __spl_version = 2,
-                     __spl_exportType = "topic",
-                     __spl_topic = $topic,
-                     __spl_allowFilter = $allowFilter ? "true" : "false",
-                     __spl_channel = getChannel(),
-                     __spl_maxChannels = getMaxChannels()
+                     __spl_exportType = "__setup__"
                   };
                   allowFilter: $allowFilter;
 		}
+                stream<In> TopicProperties = Filter(In) {
+                   logic state: int32 rc = setTopicNameProperties($topic, $allowFilter);
+                }
+}
 
+stateful int32 setTopicNameProperties(rstring topicName, boolean allowFilter) {
+   appLog(spl::Log.error, "Setting Topic name:" + topicName);
+   if (!checkTopicName(topicName)) {
+       appLog(spl::Log.error, "Topic name is invalid:" + topicName);
+       assert(true, "Topic name is invalid:" + topicName);
+       return -1;
+   }
+   appLog(spl::Log.error, "About to Setting Topic name:" + topicName);
+   
+   int32 rc = setOutputPortExportProperties(
+                  {
+                     __spl_version = 2l,
+                     __spl_exportType = "topic",
+                     __spl_topic = topicName,
+                     __spl_allowFilter = allowFilter ? "true" : "false",
+                     __spl_channel = (int64) getChannel(),
+                     __spl_maxChannels = (int64) getMaxChannels()
+                  }, 0u);
+   appLog(spl::Log.error, "Set Topic name:" + topicName + " = " + (rstring) rc);
+
+   return rc;
 }
 
 /**
@@ -82,6 +102,12 @@ public composite Subscribe(output Topic )
  * @param topic Topic to subscribe to.
 */
 public rstring getTopicSubscription(rstring topic) {
+  if (!checkTopicFilter(topic)) {
+       appLog(spl::Log.error, "Topic filter is invalid:" + topic);
+       assert(true, "Topic filter is invalid:" + topic);
+       return "invalid topic filter:" + topic;
+  }
+       
   return "( __spl_exportType == \"topic\" ) && ( __spl_topic == " + makeRStringLiteral(topic) + " )";
 }
 
@@ -145,3 +171,63 @@ public stateful int32 setSubscribeSubscription(rstring subscription) {
     
     return rc;
 }
+
+/**
+  Check a topic name is valid.
+*/
+public boolean checkTopicName(rstring topic) {
+    if (!checkNoNul(topic))
+        return false;
+        
+    // Check no wildcards
+    if (findFirst(topic, "+") != -1)
+         return false;
+        
+    if (findFirst(topic, "#") != -1)
+         return false;
+    
+    return true;
+}
+
+boolean checkNoNul(rstring topic) {
+   return (findFirst(topic, "\u0000") == -1)
+          && (length(topic) !=  0);
+}
+
+/**
+  Check a topic filter is valid.
+*/
+public boolean checkTopicFilter(rstring topic) {
+
+    if (!checkNoNul(topic))
+        return false;
+            
+    // Must be the last character
+    if (findFirst(topic, "#") != -1) {
+       if (topic == "#")
+           return true;
+           
+       if (findFirst(topic, "#") != length(topic) - 1)
+           return false;
+       
+       if (findFirst(topic, "/#") != length(topic) - 2)
+           return false;
+    }
+    
+    if (findFirst(topic, "+") == -1)
+        return true;
+        
+    if (topic == "+")
+        return true;
+
+    list<rstring> tokens = tokenize(topic, "/", false);
+    for (rstring token in tokens) {
+       if (token == "+")
+           continue;
+       if (findFirst(topic, "+") != -1)
+           return false;
+    }
+      
+    return true;
+}
+
