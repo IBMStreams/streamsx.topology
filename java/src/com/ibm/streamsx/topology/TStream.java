@@ -589,7 +589,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * A subscriber matches to a publisher if:
      * <UL>
      * <LI>
-     * The topic is an exact match, and:</LI>
+     * The topic name is an exact match, and:</LI>
      * <LI>
      * For JSON streams ({@code TStream<JSONObject>}) the subscription is to
      * a JSON stream.
@@ -603,8 +603,25 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * </UL>
      * <BR>
      * This method is identical to {@link #publish(String, boolean) publish(topic, false)}.
+     * <P>
+     * A topic name:
+     * <UL>
+     * <LI>must not be zero length</LI>
+     * <LI>must not contain the nul character ({@code \u0000})</LI>
+     * <LI>must not contain wild card characters number sign ({@code ‘#’ \u0023})
+     * or the plus sign ({@code ‘+’ \u002B})</LI>
+     * </UL>
+     * The forward slash ({@code ‘/’ \u002F}) is used to separate each level within a topic
+     * tree and provide a hierarchical structure to the topic names.
+     * The use of the topic level separator is significant when either of the
+     * two wildcard characters is encountered in topic filters specified
+     * by subscribing applications. Topic level separators can appear anywhere
+     * in a topic filter or topic name. Adjacent topic level separators indicate
+     * a zero length topic level.
      * 
-     * @param topic Topic to publish tuples to.
+     * </P>
+     * 
+     * @param topic Topic name to publish tuples to.
      * 
      * @see Topology#subscribe(String, Class)
      * @see com.ibm.streamsx.topology.spl.SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
@@ -639,7 +656,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * A subscriber matches to a publisher if:
      * <UL>
      * <LI>
-     * The topic is an exact match, and:</LI>
+     * The topic name is an exact match, and:</LI>
      * <LI>
      * For JSON streams ({@code TStream<JSONObject>}) the subscription is to
      * a JSON stream.
@@ -674,8 +691,25 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * <LI>This stream is an instance of {@code TStream<String>}.</LI>
      * </UL>
      * </P>
+     * <P>
+     * A topic name:
+     * <UL>
+     * <LI>must not be zero length</LI>
+     * <LI>must not contain the nul character ({@code \u0000})</LI>
+     * <LI>must not contain wild card characters number sign ({@code ‘#’ \u0023})
+     * or the plus sign ({@code ‘+’ \u002B})</LI>
+     * </UL>
+     * The forward slash ({@code ‘/’ \u002F}) is used to separate each level within a topic
+     * tree and provide a hierarchical structure to the topic names.
+     * The use of the topic level separator is significant when either of the
+     * two wildcard characters is encountered in topic filters specified
+     * by subscribing applications. Topic level separators can appear anywhere
+     * in a topic filter or topic name. Adjacent topic level separators indicate
+     * a zero length topic level.
+     * </P>
+
      * 
-     * @param topic Topic to publish tuples to.
+     * @param topic Topic name to publish tuples to.
      * @param allowFilter Allow SPL filters specified by SPL application to be executed
      * in the publishing application.
      * 
