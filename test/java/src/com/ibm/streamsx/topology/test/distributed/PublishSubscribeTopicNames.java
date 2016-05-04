@@ -10,8 +10,8 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.test.TestTopology;
 
 /**
- * Test publish/subscribe. These tests just use publish/subscribe
- * within a single job, but the expected use case is across jobs.
+ * Test publish/subscribe invalid topic names
+ * and filters.
  *
  */
 public class PublishSubscribeTopicNames extends TestTopology {
@@ -65,5 +65,44 @@ public class PublishSubscribeTopicNames extends TestTopology {
        
         t.strings().publish("#", true);
     }
+    
+    @Test(expected=NullPointerException.class)
+    public void testNullTopicFilter() throws Exception {
+        new Topology().subscribe(null, String.class);
+    }
+    @Test(expected=IllegalArgumentException.class)
+    public void testNulTopicFilter() throws Exception {
+        new Topology().subscribe("a\u0000c", String.class);
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testWildcardPlus1TopicFilter() throws Exception {
+        new Topology().subscribe("a+", String.class);
+    }
+    @Test(expected=IllegalArgumentException.class)
+    public void testWildcardPlus2TopicFilter() throws Exception {
+        new Topology().subscribe("a/+/+b", String.class);
+    }
+    @Test(expected=IllegalArgumentException.class)
+    public void testWildcardHash1TopicFilter() throws Exception {
+        new Topology().subscribe("a#", String.class);
+    }
+    @Test(expected=IllegalArgumentException.class)
+    public void testWildcardHash2TopicFilter() throws Exception {
+        new Topology().subscribe("a/b#", String.class);
+    }
+    @Test(expected=IllegalArgumentException.class)
+    public void testWildcardHash3TopicFilter() throws Exception {
+        new Topology().subscribe("a/#/b", String.class);
+    }
+    @Test(expected=IllegalArgumentException.class)
+    public void testWildcardHash4TopicFilter() throws Exception {
+        new Topology().subscribe("a/#b/c", String.class);
+    }
+    @Test(expected=IllegalArgumentException.class)
+    public void testWildcardHash5TopicFilter() throws Exception {
+        new Topology().subscribe("a/#/c/#", String.class);
+    }
+    
     
 }

@@ -66,14 +66,15 @@ stateful int32 setTopicNameProperties(rstring topicName, boolean allowFilter) {
 }
 
 /**
- * Subscribe to a topic.
+ * Subscribe to topics using a filter.
  * Generates a stream that is subscribed, through
  * IBM Streams dynamic connections, to all streams
- * published to the same `topic` and `streamType`.
+ * published to topics that match the topic filter `topic`
+ * and are an exact stream type match to `streamType`.
  * See [namespace:com.ibm.streamsx.topology.topic] for details.
  
  * @output Topic Subscription to `topic`.
- * @param topic Topic to subscribe to.
+ * @param topic Topic filter to subscribe to.
  * @param streamType Type of output stream `Topic`.
 */
 public composite Subscribe(output Topic )
@@ -125,6 +126,13 @@ public rstring getTopicSubscription(rstring topic) {
   return "( __spl_exportType == \"topic\" ) && ( __spl_topic == " + makeRStringLiteral(topic) + " )";
 }
 
+/**
+  Create the subscription expression for supporting
+  wildcards. Assumes that:
+  1) the filter has been checked to be valid.
+  2) the filter does contain a wildcard. If there is no
+     wildcard then the simpler direct equality on topic is used.
+*/
 rstring wildcardExpression(rstring filter) {
 
     appTrc(spl::Trace.debug, "Wildcard topic filter:" + filter);
@@ -142,9 +150,21 @@ rstring wildcardExpression(rstring filter) {
     }
 
     // Single plus, single level, the level count check is sufficient.
-    if (filter == "+") {
+    // Single hash every topic is matched, just have the exportType check
+    if (filter == "+" || filter == "#") {
       tw += ")";
       return tw;
+    }
+
+    // If hashHash is true:
+    // This must be a '/#' wildcard at the end of the filter
+    // so we need to make sure we have at least the required
+    // number of levels, at least to cover a/+/# as the
+    // code below will not add any checks for the + sign.
+    // Note that a/+/# matches the parent as well, so
+    // there must be at least 2 levels (not 3).
+    if (hasHash) {
+       tw += "&& ( __spl_topicLevelCount >= " + (rstring) (size(tokens) - 1) + " )";
     }
 
     for (int32 i in range(tokens)) {
@@ -153,6 +173,10 @@ rstring wildcardExpression(rstring filter) {
       // match anything at this level
       if (level == "+")
           continue;
+
+      // must be the last element
+      if (level == "#")
+          break;
           
        tw += " && ";
 
@@ -209,7 +233,7 @@ public rstring addUDPSubscription(rstring subscription) {
 /**
  * Set a subscription expression adding in UDP
  * channel based matching if the subscriber
- * is in a paralel region.
+ * is in a parallel region.
  * @param subscription Subscription to be set on input port
  * connected to `Import` operator.
 */

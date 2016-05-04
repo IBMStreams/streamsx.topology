@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -431,6 +432,8 @@ public class Topology implements TopologyElement {
      * @see SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
      */
     public <T> TStream<T> subscribe(String topic, Class<T> tupleTypeClass) {
+        checkTopicFilter(topic);
+        
         if (JSONObject.class.equals(tupleTypeClass)) {
             
             @SuppressWarnings("unchecked")
@@ -460,6 +463,52 @@ public class Topology implements TopologyElement {
         }
 
         return new StreamImpl<T>(this, splImport.output(), tupleTypeClass);
+    }
+    
+    /**
+     * Topic filter:
+     *  - must not be zero length
+     *  - must not contain nul
+     * @param filter
+     */
+    private void checkTopicFilter(String filter) {
+        
+        boolean badFilter = false;
+        if (filter.isEmpty() || filter.indexOf('\u0000') != -1)
+        {
+            badFilter = true;
+        }
+        
+        // Test # position.
+        if (!badFilter && filter.indexOf('#') != -1) {
+            // # by itself is ok
+            if ("#".equals(filter))
+                ;
+            else {
+                // must end with /# and only have one # at the end
+                if (filter.indexOf('#') != filter.length() - 1)
+                    badFilter = true;
+                else if (!filter.endsWith("/#"))
+                    badFilter = true;
+            }
+        }
+        
+        // Test + positions - must be at a level by themselves.
+        if (!badFilter && filter.indexOf('+') != -1) {
+            StringTokenizer st = new StringTokenizer(filter, "/");
+            while (st.hasMoreTokens()) {
+                String token = st.nextToken();
+                if (token.indexOf('+') == -1)
+                    continue;
+                // If + exists it must be by itself
+                if ("+".equals(token))
+                    continue;
+                badFilter = true;
+            }
+        }
+        
+        if (badFilter)
+            throw new IllegalArgumentException("Invalid topic filter:" + filter);
     }
 
     /**
