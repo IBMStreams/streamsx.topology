@@ -16,9 +16,24 @@ namespace com.ibm.streamsx.topology.topic ;
 */
 public composite Publish(input In )
 {
+    param
+      expression<rstring> $topic ;
+      expression<boolean> $allowFilter : false;
+
+    graph
+    () as PublishTopic = _Publish(In) {
+       param
+          topic: $topic;
+          allowFilter: $allowFilter;
+    }
+}
+
+composite _Publish(input In) {
 	param
-		expression<rstring> $topic ;
-        expression<boolean> $allowFilter : false;
+          expression<rstring> $exportType : "topic";
+          expression<rstring> $topic ;
+          expression<boolean> $allowFilter;
+          expression<rstring> $class : "";
 	graph
 		() as ExportTopic = Export(TopicProperties)
 		{
@@ -30,11 +45,11 @@ public composite Publish(input In )
                   allowFilter: $allowFilter;
 		}
                 stream<In> TopicProperties = Filter(In) {
-                   logic state: int32 rc = setTopicNameProperties($topic, $allowFilter);
+                   logic state: int32 rc = setTopicNameProperties($exportType, $topic, $allowFilter, $class);
                 }
 }
 
-stateful int32 setTopicNameProperties(rstring topicName, boolean allowFilter) {
+stateful int32 setTopicNameProperties(rstring exportType, rstring topicName, boolean allowFilter, rstring class) {
    appTrc(spl::Trace.debug, "Setting Topic name:" + topicName);
    if (!checkTopicName(topicName)) {
        appLog(spl::Log.error, "Topic name is invalid:" + topicName);
@@ -47,13 +62,14 @@ stateful int32 setTopicNameProperties(rstring topicName, boolean allowFilter) {
    int32 rc = setOutputPortExportProperties(
                   {
                      __spl_version = 3l,
-                     __spl_exportType = "topic",
+                     __spl_exportType = exportType,
                      __spl_topic = topicName,
                      __spl_topicLevels = levels,
                      __spl_topicLevelCount = (int64) size(levels),
                      __spl_allowFilter = allowFilter ? "true" : "false",
                      __spl_channel = (int64) getChannel(),
-                     __spl_maxChannels = (int64) getMaxChannels()
+                     __spl_maxChannels = (int64) getMaxChannels(),
+                     __spl_class = class
                   }, 0u);
 
    appTrc(spl::Trace.debug, "Set Topic name:" + topicName + " = " + (rstring) rc);
@@ -111,6 +127,10 @@ public composite Subscribe(output Topic )
  * @param topic Topic to subscribe to.
 */
 public rstring getTopicSubscription(rstring topic) {
+    return getTopicSubscription("topic", topic);
+}
+
+rstring getTopicSubscription(rstring exportType, rstring topic) {
   appTrc(spl::Trace.debug, "Topic filter:" + topic);
   if (!checkTopicFilter(topic)) {
        appLog(spl::Log.error, "Topic filter is invalid:" + topic);
@@ -120,10 +140,11 @@ public rstring getTopicSubscription(rstring topic) {
 
   // Wildcard expression is more complicated
   if (findFirst(topic, "+") != -1 || findFirst(topic, "#") != -1) {
-      return wildcardExpression(topic);
+      return wildcardExpression(exportType, topic);
   }
        
-  return "( __spl_exportType == \"topic\" ) && ( __spl_topic == " + makeRStringLiteral(topic) + " )";
+  return "( __spl_exportType == " + makeRStringLiteral(exportType)
+         + ") && ( __spl_topic == " + makeRStringLiteral(topic) + " )";
 }
 
 /**
@@ -133,7 +154,7 @@ public rstring getTopicSubscription(rstring topic) {
   2) the filter does contain a wildcard. If there is no
      wildcard then the simpler direct equality on topic is used.
 */
-rstring wildcardExpression(rstring filter) {
+rstring wildcardExpression(rstring exportType, rstring filter) {
 
     appTrc(spl::Trace.debug, "Wildcard topic filter:" + filter);
 
@@ -141,7 +162,7 @@ rstring wildcardExpression(rstring filter) {
     
     boolean hasHash = findFirst(filter, "#") != -1;
     
-    mutable rstring tw = "( ( __spl_exportType == \"topic\" )";
+    mutable rstring tw = "( ( __spl_exportType ==" + makeRStringLiteral(exportType) + " )";
     
     // If there is not a hash wildcard then the topic name
     // must have the same number of levels as the filter

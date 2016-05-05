@@ -19,19 +19,13 @@ public composite PublishJava(input In )
 		expression<rstring> $topic ;
 		expression<rstring> $class ;
 	graph
-		() as ExportTopic = Export(In)
+		() as PublishTopic = _Publish(In)
 		{
                    param
-                     properties :
-                    {
-                      __spl_version = 2,
-                      __spl_exportType = "topic.java",
-                      __spl_topic = $topic,
-                      __spl_class = $class,
-                      __spl_allowFilter = "false",
-                      __spl_channel = getChannel(),
-                      __spl_maxChannels = getMaxChannels()
-                    } ;
+                     exportType: "topic.java";
+                     topic: $topic;
+                     allowFilter: false;
+                     class: $class;
 		}
 }
 
@@ -74,5 +68,6 @@ public composite SubscribeJava(output Topic )
  * @exclude
 */
 rstring getTopicJavaSubscription(rstring topic, rstring class) {
-     return "( __spl_exportType == \"topic.java\" ) && ( __spl_topic == \"" + topic + "\" ) && ( __spl_class == \"" + class + "\" )";
+     return getTopicSubscription("topic.java", topic) 
+        + " && ( __spl_class == " + makeRStringLiteral(class) + " )";
 }
