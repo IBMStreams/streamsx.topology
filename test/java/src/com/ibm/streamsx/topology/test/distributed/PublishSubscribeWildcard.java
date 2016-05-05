@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.test.distributed;
 
 import static org.junit.Assume.assumeTrue;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -17,6 +18,7 @@ import org.junit.Test;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
+import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 
 /**
@@ -35,7 +37,7 @@ public class PublishSubscribeWildcard extends TestTopology {
     
     @Test
     public void testNoFilter() throws Exception {
-        wildcardSingle("a/b/c", "a/b/c");
+        wildcardSingle("a/b/c", "a/b/c", "a/b/d", "a/b/c/d");
     }
     
     @Test
@@ -119,9 +121,9 @@ public class PublishSubscribeWildcard extends TestTopology {
         
         Topology t = new Topology();
         
-        List<String> data = publish(t, topicName, "P");
+        List<String> data = publish(t, topicName, "P", nonMatchTopics.length);
         for (String nonMatchTopic : nonMatchTopics) {
-            publishPoll(t, nonMatchTopic, "X");
+            publishPoll(t, nonMatchTopic);
         }
         
         TStream<String> subscribe = t.subscribe(topicFilter, String.class);
@@ -129,8 +131,7 @@ public class PublishSubscribeWildcard extends TestTopology {
         completeAndValidate(subscribe, 30, data.toArray(new String[0]));
     }
     
-    
-    private List<String> publish(Topology t, String topic, String leadIn) {
+    private List<String> publish(Topology t, String topic, String leadIn, int count) {
         int base = sbase;
         sbase +=200;
         List<String> data = new ArrayList<>(10);
@@ -138,15 +139,85 @@ public class PublishSubscribeWildcard extends TestTopology {
             data.add(leadIn + base + rand.nextInt(100));
         }
         
-        t.constants(data).asType(String.class).modify(new PublishSubscribeTest.Delay<>()).publish(topic);
+        t.constants(data).asType(String.class).modify(new PublishSubscribeTest.Delay<>((1+count)*5)).publish(topic);
         return data;
     }
-    private void publishPoll(Topology t, String topic, String leadIn) {
-        final int base = sbase;
-        sbase +=200;
-        final String tuple = leadIn + base + rand.nextInt(100);
+    private void publishPoll(Topology t, String topic) {
+
+        final String tuple = "X" + rand.nextInt(100);
 
         t.periodicSource(() -> tuple, 200, TimeUnit.MILLISECONDS).asType(String.class).publish(topic);
 
+    }
+    
+    public static class WrapString implements Serializable{
+        private static final long serialVersionUID = 1L;
+        private final String s;
+        public WrapString(String s) {
+            this.s = s;
+        }
+        @Override
+        public String toString() {
+            return s;
+        }
+    }
+    
+    private List<String> publishJava(Topology t, String topic, String leadIn, int count) {
+        int base = sbase;
+        sbase +=200;
+        List<String> data = new ArrayList<>(10);
+        for (int i = 0; i < 10; i++) {
+            data.add(leadIn + base + rand.nextInt(100));
+        }
+        
+                
+        t.constants(data).transform(WrapString::new).asType(WrapString.class).modify(new PublishSubscribeTest.Delay<>((1+count)*5)).publish(topic);
+        return data;
+    }
+    private void publishPollJava(Topology t, String topic) {
+        final String tuple = "X" + rand.nextInt(100);
+
+        t.periodicSource(() -> tuple, 200, TimeUnit.MILLISECONDS).transform(WrapString::new).asType(WrapString.class).publish(topic);
+
+    }
+    
+    private void wildcardSingleJava(String topicName, String topicFilter, String ...nonMatchTopics) throws Exception {
+        
+        Topology t = new Topology();
+        
+        List<String> data = publishJava(t, topicName, "J", nonMatchTopics.length);
+        for (String nonMatchTopic : nonMatchTopics) {
+            publishPollJava(t, nonMatchTopic);
+        }
+        
+        TStream<String> subscribe = StringStreams.toString(t.subscribe(topicFilter, WrapString.class));
+        
+        completeAndValidate(subscribe, 30, data.toArray(new String[0]));
+    }
+    
+    // Java uses the same SPL subscription code under the covers so just have a few basic java tests
+    
+    @Test
+    public void testNoFilterJava() throws Exception {
+        wildcardSingleJava("a/b/c", "a/b/c", "a/b/d", "a/b/c/d");
+    }
+    
+    @Test
+    public void testPlusFilter1Java() throws Exception {
+        wildcardSingleJava("a", "+", "a/b");
+    }
+    
+    @Test
+    public void testPlusFilter7Java() throws Exception {
+        wildcardSingleJava("d/e/f", "+/e/+", "d/a/f");
+    }
+    
+    @Test
+    public void testHashAllFilter1Java() throws Exception {
+        wildcardSingleJava("a", "#");
+    }
+    @Test
+    public void testHashFilter1Java() throws Exception {
+        wildcardSingleJava("a/b/c", "a/#", "/", "d", "d/f");
     }
 }
