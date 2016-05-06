@@ -84,9 +84,12 @@ def copyCGT(opdir, ns, name, funcTuple):
      shutil.copy(optemplate + '_h.cgt', os.path.join(opdir, name + '_h.cgt'))
      opmodel_xml = os.path.join(opdir, name + '.xml')
      shutil.copy(optemplate + '.xml', opmodel_xml)
-     replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", funcTuple.__doc__);
      replaceTokenInFile(opmodel_xml, "__SPLPY__MAJOR_VERSION__SPLPY__", str(sys.version_info[0]));
      replaceTokenInFile(opmodel_xml, "__SPLPY__MINOR_VERSION__SPLPY__", str(sys.version_info[1]));
+     _funcdoc_ = funcTuple.__doc__
+     if _funcdoc_ is None:
+         _funcdoc_ = 'Python function ' + funcTuple.__name__ + ' (module ' + funcTuple.__module__ + ')'
+     replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", _funcdoc_);
 
 def writeParameterInfo(cfgfile, funcTuple):
         sig = inspect.signature(funcTuple)
