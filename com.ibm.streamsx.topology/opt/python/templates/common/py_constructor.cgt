@@ -8,10 +8,10 @@
     
     streamsx::topology::Splpy::loadCPython(spl_setup_py);
     
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    {
+    streamsx::topology::PyGILLock lock;
 
     // Set the function the operator will call as a member field
     function_ =
       streamsx::topology::Splpy::loadFunction("<%=$module%>", "<%=$functionName%>");   
-    PyGILState_Release(gstate);
+    }

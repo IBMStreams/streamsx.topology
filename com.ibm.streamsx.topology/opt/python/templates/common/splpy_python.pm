@@ -20,9 +20,9 @@ sub cppToPythonPrimitiveConversion{
     } elsif(SPL::CodeGen::Type::isFloatingpoint($type)) {
 	return "PyFloat_FromDouble($convert_from_string)";
     } elsif (SPL::CodeGen::Type::isRString($type) || SPL::CodeGen::Type::isBString($type)) {
-	return "PyUnicode_FromString(" . $convert_from_string . ".c_str())";
+	return rstring2python($convert_from_string);
     } elsif (SPL::CodeGen::Type::isUString($type)) {
-	return 'PyUnicode_DecodeUTF16((const char*)  (' . $convert_from_string . ".getBuffer()), " . $convert_from_string . ".length()*2, NULL, NULL)";
+	return ustring2python($convert_from_string);
     } elsif(SPL::CodeGen::Type::isBoolean($type)) {
 	return "$convert_from_string ? Py_True : Py_False; Py_INCREF(pyValue)";
     } elsif (SPL::CodeGen::Type::isComplex32($type) || SPL::CodeGen::Type::isComplex64($type)) {
@@ -31,6 +31,15 @@ sub cppToPythonPrimitiveConversion{
     else{
 	SPL::CodeGen::errorln("An unknown type was encountered when converting to python types."); 
     }
+}
+
+sub rstring2python {
+    my ($convert_from_string) = @_;
+    return 'PyUnicode_DecodeUTF8((const char*)  (' . $convert_from_string . ".data()), " . $convert_from_string . ".size(), NULL)";
+}
+sub ustring2python {
+    my ($convert_from_string) = @_;
+    return 'PyUnicode_DecodeUTF16((const char*)  (' . $convert_from_string . ".getBuffer()), " . $convert_from_string . ".length()*2, NULL, NULL)";
 }
 
 # This function is identical to the cppToPythonPrimitiveConversion,
@@ -51,8 +60,8 @@ sub stringBasedCppToPythonPrimitiveConversion{
       case ['int8', 'int16', 'int32', 'int64'] { return "PyLong_FromLong($convert_from_string)";}
       case ['uint8', 'uint16', 'uint32', 'uint64'] { return "PyLong_FromUnsignedLong($convert_from_string)";}
       case ['float32', 'float64'] { return "PyFloat_FromDouble($convert_from_string)";}
-      case 'rstring' { return "PyUnicode_FromString(" . $convert_from_string . ".c_str())";}
-      case 'ustring' {return 'PyUnicode_DecodeUTF16((const char*)  (' . $convert_from_string . ".getBuffer()), " . $convert_from_string . ".length()*2, NULL, NULL)";}
+      case 'rstring' { return rstring2python($convert_from_string);}
+      case 'ustring' { return ustring2python($convert_from_string);}
       case 'boolean' { return "$convert_from_string ? Py_True : Py_False; Py_INCREF(pyValue)";}
       case ['complex32', 'complex64'] { return "PyComplex_FromDoubles(". $convert_from_string . ".real(), ". $convert_from_string . ".imag())";}
       else { SPL::CodeGen::errorln("An unknown type was encountered when converting to python types: $type"); }

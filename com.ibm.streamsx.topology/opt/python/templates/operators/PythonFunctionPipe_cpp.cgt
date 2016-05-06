@@ -80,8 +80,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
    IPort0Type const & <%=$ituple%> = static_cast<IPort0Type const &>(tuple);
 
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+   std::vector<OPort0Type> output_tuples;  
+   {
+    streamsx::topology::PyGILLock lock;
 
     PyObject * pyTuple = PyTuple_New(<%=$inputAttrs2Py%>); 
     PyObject *pyValue;
@@ -90,11 +91,10 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
          print convertToPythonValue($ituple, $i, $itypes[$i], $inames[$i]);
      }
 %>
-       std::vector<OPort0Type> output_tuples;  
 
  @include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
    
-   PyGILState_Release(gstate);
+    }
  for(int i = 0; i < output_tuples.size();i++)
    submit(output_tuples[i], 0);   
 }
