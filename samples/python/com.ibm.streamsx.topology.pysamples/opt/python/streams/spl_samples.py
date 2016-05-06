@@ -138,3 +138,7 @@ def ReturnList(a,b,c):
     "Demonstrate returning a list of values, each value is submitted as a tuple" 
     return [(a+1,b+1,c+1),(a+2,b+2,c+2),(a+3,b+3,c+3),(a+4,b+4,c+4)]
 
+@spl.sink
+def PrintTuple(*tuple):
+    "Print each tuple to standard out"
+    print(tuple, flush=True)
