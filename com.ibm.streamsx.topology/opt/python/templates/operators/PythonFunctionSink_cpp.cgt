@@ -21,9 +21,8 @@
  use Switch;
  require $cmnDir."/splpy_python.pm";
 
- // must be a C++ expression
- my $module =  '"' . splpy_Module() . '"';
- my $functionName = '"' . splpy_FunctionName() . '"';
+ my $module = splpy_Module();
+ my $functionName = splpy_FunctionName();
  my $fixedParam = splpy_FixedParam();
  
  my $iport = $model->getInputPortAt(0);

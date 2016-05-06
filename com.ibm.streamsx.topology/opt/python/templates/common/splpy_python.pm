@@ -21,6 +21,8 @@ sub cppToPythonPrimitiveConversion{
 	return "PyFloat_FromDouble($convert_from_string)";
     } elsif (SPL::CodeGen::Type::isRString($type) || SPL::CodeGen::Type::isBString($type)) {
 	return "PyUnicode_FromString(" . $convert_from_string . ".c_str())";
+    } elsif (SPL::CodeGen::Type::isUString($type)) {
+	return 'PyUnicode_DecodeUTF16((const char*)  (' . $convert_from_string . ".getBuffer()), " . $convert_from_string . ".length()*2, NULL, NULL)";
     } elsif(SPL::CodeGen::Type::isBoolean($type)) {
 	return "$convert_from_string ? Py_True : Py_False; Py_INCREF(pyValue)";
     } elsif (SPL::CodeGen::Type::isComplex32($type) || SPL::CodeGen::Type::isComplex64($type)) {
@@ -45,21 +47,15 @@ sub stringBasedCppToPythonPrimitiveConversion{
 # (or the equivalent for this function)
 
     my ($convert_from_string, $type) = @_;
-    if($type eq "int32" || $type eq "int64") {
-	return "PyLong_FromLong($convert_from_string)";
-    } elsif($type eq "uint32" || $type eq "uint64") {
-	return "PyLong_FromUnsignedLong($convert_from_string)";
-    } elsif($type eq "float32" || $type eq "float64") {
-	return "PyFloat_FromDouble($convert_from_string)";
-    } elsif ($type eq "rstring") {
-	return "PyUnicode_FromString(" . $convert_from_string . ".c_str())";
-    } elsif($type eq "boolean") {
-	return "$convert_from_string ? Py_True : Py_False; Py_INCREF(pyValue)";
-    } elsif ($type eq "complex32" || $type eq "complex64") {
-	return "PyComplex_FromDoubles(". $convert_from_string . ".real(), ". $convert_from_string . ".imag())";
-    }
-    else{
-	SPL::CodeGen::errorln("An unknown type was encountered when converting to python types: $type"); 
+    switch ($type) {
+      case ['int8', 'int16', 'int32', 'int64'] { return "PyLong_FromLong($convert_from_string)";}
+      case ['uint8', 'uint16', 'uint32', 'uint64'] { return "PyLong_FromUnsignedLong($convert_from_string)";}
+      case ['float32', 'float64'] { return "PyFloat_FromDouble($convert_from_string)";}
+      case 'rstring' { return "PyUnicode_FromString(" . $convert_from_string . ".c_str())";}
+      case 'ustring' {return 'PyUnicode_DecodeUTF16((const char*)  (' . $convert_from_string . ".getBuffer()), " . $convert_from_string . ".length()*2, NULL, NULL)";}
+      case 'boolean' { return "$convert_from_string ? Py_True : Py_False; Py_INCREF(pyValue)";}
+      case ['complex32', 'complex64'] { return "PyComplex_FromDoubles(". $convert_from_string . ".real(), ". $convert_from_string . ".imag())";}
+      else { SPL::CodeGen::errorln("An unknown type was encountered when converting to python types: $type"); }
     }
 }
 
@@ -74,6 +70,7 @@ sub pythonToCppPrimitiveConversion{
   my ($convert_from_string, $type) = @_;
     switch ($type) {
              case 'rstring' {return "SPL::rstring( PyUnicode_AsUTF8($convert_from_string))";}
+             case 'ustring' {return "SPL::ustring::fromUTF8( PyUnicode_AsUTF8($convert_from_string))";}
              case 'int8' {return "(int8_t) PyLong_AsLong($convert_from_string)";}
              case 'int16' {return "(int16_t) PyLong_AsLong($convert_from_string)";}
              case 'int32' {return "(int32_t) PyLong_AsLong($convert_from_string)";}
