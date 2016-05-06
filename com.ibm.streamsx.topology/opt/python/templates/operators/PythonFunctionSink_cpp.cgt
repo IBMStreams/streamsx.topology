@@ -74,9 +74,8 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
    IPort0Type const & <%=$ituple%> = static_cast<IPort0Type const &>(tuple);
 
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-  
+   streamsx::topology::PyGILLock lock;
+   
     PyObject * pyTuple = PyTuple_New(<%=$inputAttrs2Py%>); 
     PyObject *pyValue;
 <%
@@ -90,11 +89,11 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     Py_DECREF(pyTuple);
     if (pyReturnNone == NULL) {
         SPLAPPLOG(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
+        streamsx::topology::Splpy::flush_PyErr_Print();
         throw;
     }
 
     Py_DECREF(pyReturnNone);
-    PyGILState_Release(gstate); 
 }
 
 // Punctuation processing

@@ -7,18 +7,17 @@
     Py_DECREF(pyTuple);
     if (pyReturnVar == NULL) {
         SPLAPPLOG(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
-        PyGILState_Release(gstate);
+       
+        streamsx::topology::Splpy::flush_PyErr_Print();
         throw;
     }
 
     if (pyReturnVar == Py_None) {
          Py_DECREF(pyReturnVar);
-         PyGILState_Release(gstate);
          return;
     }
 if (!PyTuple_Check(pyReturnVar) && !PyList_Check(pyReturnVar)) {
         SPLAPPLOG(L_ERROR, "Fatal error: function must return a Python Tuple or a Python List: " << "<%=$functionName%>", "python");
-        PyGILState_Release(gstate);
         throw;
     }
 
