@@ -1,6 +1,6 @@
 namespace com.ibm.streamsx.topology.pysamples.apps;
 
-use com.ibm.streamsx.topology.pysamples.positional::noop ;
+use com.ibm.streamsx.topology.pysamples.positional::Noop ;
 
 public composite NoopSample
 {
@@ -14,7 +14,7 @@ public composite NoopSample
                             msg = "Hello" + (rstring) IterationCount();
 		}
 
-		stream<NS> NSPY = noop(NS)
+		stream<NS> NSPY = Noop(NS)
 		{
 		}
 
