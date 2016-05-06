@@ -6,25 +6,7 @@ import os
 import os.path
 import json
 import subprocess
-import threading
-import sys, traceback
 
-#
-# Utilities
-#
-
-def print_exception(msg):
-    sys.stderr.write(msg + "\n")
-    exc_type, exc_value, exc_traceback = sys.exc_info()
-    traceback.print_tb(exc_traceback, limit=1, file=sys.stderr)
-    traceback.print_exception(exc_type, exc_value, exc_traceback,
-                              limit=2, file=sys.stderr)
-
-def delete_json(fn):
-    if os.path.isfile(fn):
-        os.remove(fn)
-
-    
 #
 # Submission of a python graph using the Java Application API
 # The JAA is reused to have a single set of code that creates
@@ -52,10 +34,12 @@ def submit(ctxtype, graph):
     fj = _createFullJSON(graph)
     fn = _createJSONFile(fj)
     try:
-        return _submitUsingJava(ctxtype, fn)
-    except:
-        print_exception("Error submitting with java")
-        delete_json(fn)
+       _submitUsingJava(ctxtype, fn)
+    finally:
+       # remove splpytmp json file from /tmp
+       if os.path.isfile(fn):
+          os.remove(fn)    
+    
 
 def _createFullJSON(graph):
     fj = {}
@@ -70,37 +54,7 @@ def _createJSONFile(fj) :
     tf.close()
     return tf.name
 
-    
-def delete_json_when_complete(process, fn):
-    try:
-        process.wait()
-    finally:
-        delete_json(fn)
-
-def print_process_stdout(process):
-    try:
-        while True:
-            line = process.stderr.readline().strip().decode("utf-8")
-            if line == '':
-                break
-            print(line)
-    except:
-        print_exception("Error reading from process stdout")
-
-def print_process_stderr(process):
-    try:
-        while True:
-            line = process.stderr.readline().strip().decode("utf-8")
-            if line == '':
-                break
-            print(line)
-    except:
-        print_exception("Error reading from process stderr")
-
 def _submitUsingJava(ctxtype, fn):
-    ctxtype_was = ctxtype
-    if ctxtype == "JUPYTER":
-        ctxtype = "STANDALONE"
     streams_install = os.environ.get('STREAMS_INSTALL')
     if streams_install is None:
        raise "Please set the STREAMS_INSTALL system variable"
@@ -118,22 +72,4 @@ def _submitUsingJava(ctxtype, fn):
     cp = jaa_lib + ":" + joa_lib
     args = [ jvm, "-classpath", cp,
     "com.ibm.streamsx.topology.context.StreamsContextSubmit", ctxtype, fn]
-    process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
-    try:
-        stderr_thread = threading.Thread(target=delete_json_when_complete, args=([process, fn]))
-        stderr_thread.daemon = True            
-        stderr_thread.start()
-        
-        stderr_thread = threading.Thread(target=print_process_stderr, args=([process]))
-        stderr_thread.daemon = True            
-        stderr_thread.start()
-        if not ctxtype_was == "JUPYTER":
-            stdout_thread = threading.Thread(target=print_process_stdout, args=([process]))
-            stdout_thread.daemon = True
-            stdout_thread.start()                
-            return None
-        else:            
-            return process.stdout
-    except:
-        print_exception("Error starting java subprocess for submission")
-        
+    subprocess.run(args, check=True)
