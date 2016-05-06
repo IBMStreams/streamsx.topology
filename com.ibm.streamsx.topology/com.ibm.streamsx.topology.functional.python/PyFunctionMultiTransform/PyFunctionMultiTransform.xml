@@ -29,7 +29,6 @@
           <cmn:description>Python libraries</cmn:description>
           <cmn:managedLibrary>
             <cmn:lib>python3.5m</cmn:lib>
-            <cmn:libPath>/usr/local/lib</cmn:libPath>
             <cmn:command>../pyversion.sh</cmn:command>
           </cmn:managedLibrary>
         </library>

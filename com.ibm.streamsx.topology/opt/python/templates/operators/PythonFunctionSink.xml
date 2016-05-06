@@ -22,8 +22,7 @@
           <cmn:description>Python libraries.</cmn:description>
           <cmn:managedLibrary>
             <cmn:lib>python__SPLPY__MAJOR_VERSION__SPLPY__.__SPLPY__MINOR_VERSION__SPLPY__m</cmn:lib>
-            <cmn:libPath>/usr/local/lib</cmn:libPath>
-            <cmn:includePath>/usr/local/include/python__SPLPY__MAJOR_VERSION__SPLPY__.__SPLPY__MINOR_VERSION__SPLPY__m</cmn:includePath>
+            <cmn:command>../../opt/.__splpy/common/pyversion.sh</cmn:command>
           </cmn:managedLibrary>
         </library>
       </libraryDependencies>
