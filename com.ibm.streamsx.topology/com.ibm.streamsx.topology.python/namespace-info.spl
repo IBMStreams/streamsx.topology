@@ -87,6 +87,26 @@ When a returned tuple has less values than attributes in the SPL output schema t
 
 When a returned tuple has more values than attributes in the SPL output schema then the additional values are ignored.
 
+# Supported SPL types
+
+A limited set of SPL types are supported.
+
+ * **Primitive types**
+  * `boolean`
+  * `int8`, `int16`, `int32`, `int64`
+  * `uint8`, `uint16`, `uint32`, `uint64`
+  * `float32`, `float64`
+  * `rstring`, `ustring`
+ * **Collection types**
+  * `list<P>` where `P` is one of the supported primitive types. Passed into Python as a list.
+  * `map<K,V>` where `K` and `V` are supported primitive types. Passed into Python as a dictionary.
+
+For an input port all the above types are supported.
+
+For an output port only primitive types are supported.
+
+ 
+
 ++ \@spl.pipe
 Decorator to create a pipe SPL operator.
 When a Python function is decorated with `@spl.pipe`
