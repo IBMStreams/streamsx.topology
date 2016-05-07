@@ -174,7 +174,7 @@ public composite FilteredSubscribe(output FilteredTopic)
  * `false` to match those that do not allow filters.
  *
 */
-public rstring getTopicSubscription(rstring topic, boolean allowFilter) {
+public stateful rstring getTopicSubscription(rstring topic, boolean allowFilter) {
    rstring ts = getTopicSubscription(topic);
 
    return ts + " && ( __spl_allowFilter == " +
@@ -254,7 +254,7 @@ public rstring equalsFilter(rstring name, float64 value) {
 */
 public rstring inFilter(rstring name, list<rstring> values) {
     if (size(values) == 0)
-          return "( name != \"\" )";
+          return "( " + name + " != \"\" )";
 
     if (size(values) == 1)
         return equalsFilter(name, values[0]);
@@ -279,7 +279,8 @@ public stateful int32 setSubscribeFilter(rstring filter) {
     if (rc != 0) {
        appLog(spl::Log.error, "Failed filter (" + (rstring) rc
        + "):" + filter);
-       assert(rc != 0, "Failed filter (" + (rstring) rc + "):" + filter);
+       assert(true, "Failed filter (" + (rstring) rc + "):" + filter);
+       abort();
     }
     return rc;
 }
