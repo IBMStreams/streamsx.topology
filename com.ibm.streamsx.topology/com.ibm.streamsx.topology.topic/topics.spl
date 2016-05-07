@@ -55,6 +55,7 @@ stateful int32 setTopicNameProperties(rstring exportType, rstring topicName, boo
        appLog(spl::Log.error, "Topic name is invalid:" + topicName);
        appTrc(spl::Trace.error, "Topic name is invalid:" + topicName);
        assert(true, "Topic name is invalid:" + topicName);
+       abort();
        return -1;
    }
    list<rstring> levels = tokenize(topicName, "/", true);
@@ -76,6 +77,7 @@ stateful int32 setTopicNameProperties(rstring exportType, rstring topicName, boo
    if (rc != 0) {
        appLog(spl::Log.error, "Setting topic name failed:" + topicName + " rc=" + (rstring) rc);
        assert(true, "Setting topic name failed:" + topicName + " rc=" + (rstring) rc);
+       abort();
    }
 
    return rc;
@@ -126,15 +128,16 @@ public composite Subscribe(output Topic )
  *  
  * @param topic Topic to subscribe to.
 */
-public rstring getTopicSubscription(rstring topic) {
+public stateful rstring getTopicSubscription(rstring topic) {
     return getTopicSubscription("topic", topic);
 }
 
-rstring getTopicSubscription(rstring exportType, rstring topic) {
+stateful rstring getTopicSubscription(rstring exportType, rstring topic) {
   appTrc(spl::Trace.debug, "Topic filter:" + topic);
   if (!checkTopicFilter(topic)) {
        appLog(spl::Log.error, "Topic filter is invalid:" + topic);
        assert(true, "Topic filter is invalid:" + topic);
+       abort();
        return "invalid topic filter:" + topic;
   }
 
@@ -273,6 +276,7 @@ public stateful int32 setSubscribeSubscription(rstring subscription) {
        appLog(spl::Log.error, "Failed subscription (" + (rstring) rc
        + "):" + actualSub);
        assert(rc != 0, "Failed subscription (" + (rstring) rc + "):" + actualSub);
+       abort();
     }
     
     return rc;

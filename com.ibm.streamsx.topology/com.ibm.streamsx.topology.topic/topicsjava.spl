@@ -67,7 +67,7 @@ public composite SubscribeJava(output Topic )
 /*
  * @exclude
 */
-rstring getTopicJavaSubscription(rstring topic, rstring class) {
+stateful rstring getTopicJavaSubscription(rstring topic, rstring class) {
      return getTopicSubscription("topic.java", topic) 
         + " && ( __spl_class == " + makeRStringLiteral(class) + " )";
 }
