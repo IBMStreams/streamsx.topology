@@ -1,1 +1,0 @@
-Index.PACKAGES = {"com.ibm.streamsx.topology.functions" : [{"object" : "com\/ibm\/streamsx\/topology\/functions\/FunctionConversions$.html", "name" : "com.ibm.streamsx.topology.functions.FunctionConversions"}], "com.ibm.streamsx.topology" : [], "com.ibm.streamsx" : [], "com.ibm" : [], "com" : []};
