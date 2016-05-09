@@ -83,7 +83,7 @@
       <tstamp/>
       <property name="release.dir" location="${release.base}" />
       <mkdir dir="${release.dir}" />
-      <property name="releasefilename" value="${release.dir}/streamsx.topology-v1.1-${DSTAMP}-${TSTAMP}.tgz"/>
+      <property name="releasefilename" value="${release.dir}/streamsx.topology-v1.3-${DSTAMP}-${TSTAMP}.tgz"/>
       <tar compression="gzip" longfile="gnu" destfile="${releasefilename}"
          basedir="${basedir}"
          includes="com.ibm.streamsx.topology/** samples/**"
