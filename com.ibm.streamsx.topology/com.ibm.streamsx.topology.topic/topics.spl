@@ -70,6 +70,7 @@ stateful int32 setTopicNameProperties(rstring exportType, rstring topicName, boo
                      __spl_allowFilter = allowFilter ? "true" : "false",
                      __spl_channel = (int64) getChannel(),
                      __spl_maxChannels = (int64) getMaxChannels(),
+                     __spl_randomId = (int64) (random() * 2147483647.0),
                      __spl_class = class
                   }, 0u);
 
@@ -232,24 +233,46 @@ rstring wildcardExpression(rstring exportType, rstring filter) {
  * @param subscription Base subscription.
 */
 public rstring addUDPSubscription(rstring subscription) {
-    mutable rstring udpSub = subscription + " && ";
+    mutable rstring udpSub = subscription + " && ( ";
 
-    // Subscribe to non-udp if channel 0
+    // My (subscriber) channel info
+    rstring maxChan = (rstring) getMaxChannels();
+    rstring chan = (rstring) getChannel();
+
+    //
+    // Subscribe to non-udp publisher and udp publisher
+    // with width one the same.
+    // Ideally we use the random number to
+    // randomly assign the sole publish channel
+    // to one of the subscriber channels.
+    //
+    // If the publisher is at the older version (2)
+    // then the single channel is always sent to
+    // subscriber zero
+
+    // getMaxChannels() returns 0 for non-udp
+    udpSub = udpSub + "((__spl_maxChannels <= 1) && ";
+
     if (getChannel() == 0)
-          udpSub = udpSub + "( (  __spl_channel == -1 ) || ";
+            udpSub = udpSub + "( ";
 
-     // subscribe to channel
+    udpSub = udpSub
+            + " ((__spl_version >= 3) && (__spl_randomId % " +maxChan+ " == " +chan+ "))";
+
+    if (getChannel() == 0) 
+       udpSub = udpSub
+            + " || "
+            + " (__spl_version == 2))";
+
+     udpSub = udpSub + ")";
+
+     //
+     // Now expression to handle publisher with UDP width >= 2
+     //
      udpSub = udpSub 
-                 // Publisher is UDP
-                 + "( "
-                 + "  __spl_channel % "
-                 + (rstring) getMaxChannels()
-                 + " == " 
-                 + (rstring) getChannel()
-                 + " )";
+                 + " || ((__spl_maxChannels >=2) && (__spl_channel % " +maxChan+ " == " +chan+ "))";
 
-     if (getChannel() == 0)
-       udpSub = udpSub + " )";
+     udpSub = udpSub + ")";
 
      return udpSub;
 }

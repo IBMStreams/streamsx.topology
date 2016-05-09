@@ -4,7 +4,8 @@
  */
  
 /**
- * Topic based publish-subscribe model for streams.
+ * Topic based publish-subscribe model supporting a
+ * microservice architecture style for Streams applications.
  * + Publish-subscribe Overview
  * Applications can publish streams to a topic name which
  * can then be subscribed to by other applications
@@ -49,6 +50,9 @@
  *
  * **Note:** *a publish-subscribe match requires the stream type
  * to match as well as the topic filter matching the topic name.*
+ *
+ * **Note:** *For correct wildcard matching both pblisher and
+ * subscriber must have been compiled with version 1.3.0 or later.*
  *
  * Publish-subscribe is a many to many relationship,
  * any number of publishers can publish to the same topic
@@ -180,6 +184,8 @@
  * * `list<rstring> __spl_topicLevels` : list of the levels within the topic.
  *   * Set if:`__spl_version >= 3`
  * * `int64 __spl_topicLevelCount` : count of the levels within the topic.
+ *   * Set if:`__spl_version >= 3`
+ * * `int64 __spl_randomId` : Random value between 0 and 2147483647. Note a new random value is generated when the PE restarts. Used when a subscriber is in a parallel region to randomly distribute non-parallel or single channel publishers across the subscriber channels.
  *   * Set if:`__spl_version >= 3`
  *
  * [Subscribe] is a composite operator that invokes an `spl.adapter::Import` operator

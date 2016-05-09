@@ -7,9 +7,12 @@ package com.ibm.streamsx.topology.test.distributed;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -19,6 +22,9 @@ import org.junit.Test;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
+import com.ibm.streamsx.topology.internal.spljava.Schemas;
+import com.ibm.streamsx.topology.spl.SPL;
+import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.test.distributed.PublishSubscribeTest.Delay;
@@ -35,6 +41,11 @@ public class PublishSubscribeUDPTest extends TestTopology {
     @Before
     public void checkIsDistributed() {
         assumeTrue(getTesterType() == Type.DISTRIBUTED_TESTER);
+    }
+    
+    @Test
+    public void testPublishNonUDPSubscribeNonUDP() throws Exception {
+        testPublishUDPSubscribeNonUDP(0);
     }
 
     @Test
@@ -53,7 +64,8 @@ public class PublishSubscribeUDPTest extends TestTopology {
         final Topology t = new Topology();
         TStream<String> source = t.strings("325", "457", "9325", "hello", "udp");
         
-        source = source.parallel(width);
+        if (width > 0)
+            source = source.parallel(width);
         
         source = source.modify(new Delay<String>());
         
@@ -62,6 +74,55 @@ public class PublishSubscribeUDPTest extends TestTopology {
         TStream<String> subscribe = t.subscribe(topic, String.class);
 
         completeAndValidateUnordered(subscribe, 20, "325", "457", "9325", "hello", "udp");
+    }
+    
+    @Test
+    public void testPublishNonUDPUDP1() throws Exception {
+        testPublishUDPSubscribeUDP(0, 1);
+    }
+    @Test
+    public void testPublishNonUDPUDP3() throws Exception {
+        testPublishUDPSubscribeUDP(0, 3);
+    }
+    @Test
+    public void testPublishUDP1UDP3() throws Exception {
+        testPublishUDPSubscribeUDP(1, 3);
+    }
+    @Test
+    public void testPublishUDP4UDP3() throws Exception {
+        testPublishUDPSubscribeUDP(4, 3);
+    }
+    
+    private void testPublishUDPSubscribeUDP(int pwidth, int swidth) throws Exception {
+        
+        
+        String topic = "testPublishUDPSubscribeUDP/" + pwidth;
+        
+        String[] data = new String[100];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = "SubUDP" + i;
+        }
+    
+        final Topology t = new Topology();
+        
+        SPL.addToolkit(t, new File(getTestRoot(), "spl/testtk"));
+               
+        TStream<String> source = t.strings(data);
+        
+        if (pwidth > 0)
+            source = source.parallel(pwidth);
+        
+        source = source.modify(new Delay<String>());
+        
+        source.publish(topic);
+        
+        Map<String,Object> params = new HashMap<>();
+        params.put("width", swidth);
+        params.put("topic", topic);
+        
+        SPLStream subscribe = SPL.invokeSource(t, "testspl::UDPStringSub", params, Schemas.STRING);
+        
+        completeAndValidateUnordered(subscribe.toStringStream(), 30, data);
     }
     
     @Test
@@ -86,6 +147,11 @@ public class PublishSubscribeUDPTest extends TestTopology {
     }
     
     @Test
+    public void testObjectPublishNonUDPSubscribeNonUDP() throws Exception {
+        testObjectPublishUDPSubscribeNonUDP(0);
+    }
+    
+    @Test
     public void testObjectPublishUDP1SubscribeNonUDP() throws Exception {
         testObjectPublishUDPSubscribeNonUDP(1);
     }
@@ -106,7 +172,8 @@ public class PublishSubscribeUDPTest extends TestTopology {
         final Topology t = new Topology();
         TStream<BigDecimal> source = t.constants(data);
         
-        source = source.parallel(width);
+        if (width > 0)
+            source = source.parallel(width);
         
         source = source.modify(new Delay<BigDecimal>());
         
@@ -175,5 +242,5 @@ public class PublishSubscribeUDPTest extends TestTopology {
 
         assertTrue(expectedContents.toString(), expectedContents.valid());
     }
-    
+ 
 }
