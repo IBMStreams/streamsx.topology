@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
@@ -368,6 +367,8 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     @Override
     public void publish(String topic, boolean allowFilter) {
+        
+        checkTopicName(topic);
     	
     	Type tupleType = getTupleType();
         
@@ -414,6 +415,25 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         SourceInfo.setSourceInfo(op, SPL.class);
         this.connectTo(op, false, null);
+    }
+    
+    /**
+     * Topic name:
+     *  - must not be zero length
+     *  - must not contain nul
+     *  - must not contain wildcard characters
+     * @param topic
+     */
+    private void checkTopicName(String topic) {
+        
+        if (topic.isEmpty()
+                || topic.indexOf('\u0000') != -1
+                || topic.indexOf('+') != -1
+                || topic.indexOf('#') != -1
+                )
+        {
+            throw new IllegalArgumentException("Invalid topic name:" + topic);
+        }
     }
     
     @Override
