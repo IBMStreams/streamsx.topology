@@ -1,0 +1,19 @@
+namespace testspl;
+
+use com.ibm.streamsx.topology::*;
+use com.ibm.streamsx.topology.topic::*;
+
+
+public composite UDPStringSub(output Out) {
+   param
+       expression<int32> $width;
+       expression<rstring> $topic;
+
+   graph 
+      @parallel(width=$width)
+      stream<String> Out = Subscribe() {
+        param
+          topic: $topic;
+          streamType: String;
+      }
+}

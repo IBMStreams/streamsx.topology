@@ -34,14 +34,14 @@
    <mkdir dir="${tk}/license"/>
    <copy file="${streamsx.topology}/LICENSE" todir="${tk}/license"/>
 
-   <exec executable="${streams.install}/bin/spl-make-toolkit">
+   <exec executable="${streams.install}/bin/spl-make-toolkit" failonerror="true">
      <arg value="-i"/>
      <arg value="${tk}"/>
    </exec>
    </target>
 
    <target name="spldoc" depends="all">
-   <exec executable="${streams.install}/bin/spl-make-doc">
+   <exec executable="${streams.install}/bin/spl-make-doc" failonerror="true">
      <arg value="-i"/>
      <arg value="${tk}"/>
    </exec>
