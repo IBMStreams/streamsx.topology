@@ -180,6 +180,7 @@
        <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
        <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
        <sysproperty key="topology.test.resource_dir" file="resources"/>
+       <sysproperty key="log4j.configuration" file="${basedir}/log4j.properties"/>
        
        <classpath>
          <path refid="test.classpath"/>
