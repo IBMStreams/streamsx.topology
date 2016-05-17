@@ -6,7 +6,6 @@ package com.ibm.streamsx.topology.test;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 
@@ -22,7 +21,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 
 import com.ibm.streams.operator.version.Product;
-import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
@@ -204,13 +202,13 @@ public class TestTopology {
         
         switch (vrmf.length) {
         case 4:
-            assumeFalse(Product.getVersion().getFix() == vrmf[3]);
+            assumeTrue(Product.getVersion().getFix() != vrmf[3]);
         case 3:
-            assumeFalse(Product.getVersion().getMod() == vrmf[2]);
+            assumeTrue(Product.getVersion().getMod() != vrmf[2]);
         case 2:
-            assumeFalse(Product.getVersion().getRelease() == vrmf[1]);
+            assumeTrue(Product.getVersion().getRelease() != vrmf[1]);
         case 1:
-            assumeFalse(Product.getVersion().getVersion() == vrmf[0]);
+            assumeTrue(Product.getVersion().getVersion() != vrmf[0]);
             break;
         default:
             fail("Invalid version supplied!");
