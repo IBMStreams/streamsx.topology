@@ -47,7 +47,7 @@ public class AutoTypeTest extends TestTopology {
     }
     
     private static void _testAutoTransform() {
-        Topology t = new Topology();
+        Topology t = newTopology();
         
         TStream<Integer> ints = t.strings("3").transform(new Function<String, Integer>() {
 
@@ -65,7 +65,7 @@ public class AutoTypeTest extends TestTopology {
     }
     
     private static void _testAutoEndlessSourceClass() {
-        Topology t = new Topology();
+        Topology t = newTopology();
         
         TStream<Integer> ints = t.endlessSource(new Supplier<Integer>() {
 
@@ -83,7 +83,7 @@ public class AutoTypeTest extends TestTopology {
     }
     
     private static void _testAutoSourceClass() {
-        Topology t = new Topology();
+        Topology t = newTopology();
         
         TStream<String> stream = t.source(new Supplier<Iterable<String>>() {
 
@@ -101,7 +101,7 @@ public class AutoTypeTest extends TestTopology {
     }
     
     private static void _testAutoSourceList() {
-        Topology t = new Topology();
+        Topology t = newTopology();
         
         TStream<List<String>> stream = t.source(new Supplier<Iterable<List<String>>>() {
 
@@ -121,7 +121,7 @@ public class AutoTypeTest extends TestTopology {
     }
     
     private static void _testAutoEndlessSourceSet() {
-        Topology t = new Topology();
+        Topology t = newTopology();
         
         TStream<Set<Integer>> stream = t.endlessSource(new Supplier<Set<Integer>>() {
 
@@ -141,7 +141,7 @@ public class AutoTypeTest extends TestTopology {
     }
     
     private static void _testAutoLimitedSourceClass() {
-        Topology t = new Topology();
+        Topology t = newTopology();
         
         TStream<BeaconTuple> stream = t.limitedSource(new Supplier<BeaconTuple>() {
 
@@ -159,7 +159,7 @@ public class AutoTypeTest extends TestTopology {
         _testListTuples();
     }
     private static TStream<List<String>> _testListTuples() {
-        Topology t = new Topology();
+        Topology t = newTopology();
         
         TStream<String> strings = t.strings("a", "b");
         
@@ -190,7 +190,7 @@ public class AutoTypeTest extends TestTopology {
     }
     
     private static void _testAutoMultiTransform() {
-        Topology t = new Topology();
+        Topology t = newTopology();
         
         TStream<Integer> ints = t.strings("3").multiTransform(new Function<String, Iterable<Integer>>() {
 
@@ -205,7 +205,7 @@ public class AutoTypeTest extends TestTopology {
     
     @Test
     public void testStringConstants() throws Exception {
-        Topology t = new Topology();
+        Topology t = newTopology();
         TStream<String> strings = t.strings("a", "b", "c");
         assertEquals(String.class, strings.getTupleClass());
         assertEquals(String.class, strings.getTupleType());
@@ -213,7 +213,7 @@ public class AutoTypeTest extends TestTopology {
     
     @Test
     public void testStringListTyped() throws Exception {
-        Topology t = new Topology();
+        Topology t = newTopology();
         TStream<String> strings = t.constants(Collections.nCopies(10, "hello")).asType(String.class);
         assertEquals(String.class, strings.getTupleClass());
         assertEquals(String.class, strings.getTupleType());
@@ -221,7 +221,7 @@ public class AutoTypeTest extends TestTopology {
     
     @Test
     public void testStringListUnTyped() throws Exception {
-        Topology t = new Topology();
+        Topology t = newTopology();
         TStream<String> strings = t.constants(Collections.nCopies(10, "hello"));
         assertNull( strings.getTupleClass());
         assertNotNull(strings.getTupleType());
@@ -234,7 +234,7 @@ public class AutoTypeTest extends TestTopology {
     
     private static void _testStringListAutoTypedByFilter() {
     
-        Topology t = new Topology();
+        Topology t = newTopology();
         TStream<String> strings = t.constants(Collections.nCopies(10, "hello"));
         strings = strings.filter(new Predicate<String>() {
 
@@ -249,7 +249,7 @@ public class AutoTypeTest extends TestTopology {
     // @Test
     public void _testStringsUnion() throws Exception {
         assumeTrue(isEmbedded());
-        Topology t = new Topology();
+        Topology t = newTopology();
         TStream<String> strings0 = t.strings("a", "b", "c");
         TStream<String> strings1 = t.constants(Collections.nCopies(10, "hello"));
         

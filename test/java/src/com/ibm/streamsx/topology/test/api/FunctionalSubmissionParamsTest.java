@@ -53,7 +53,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
 
     @Test
     public void FilterTest() throws Exception {
-        Topology topology = new Topology("FilterTest");
+        Topology topology = newTopology("FilterTest");
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         Supplier<Integer> threshold = topology.createSubmissionParameter("threshold", Integer.class);
@@ -86,7 +86,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
 
     @Test
     public void SourceTest() throws Exception {
-        Topology topology = new Topology("SourceTest");
+        Topology topology = newTopology("SourceTest");
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         Supplier<Integer> someInt = topology.createSubmissionParameter("someInt", Integer.class);
@@ -118,7 +118,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
 
     @Test
     public void PeriodicSourceTest() throws Exception {
-        Topology topology = new Topology("PeriodicSourceTest");
+        Topology topology = newTopology("PeriodicSourceTest");
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         Supplier<Integer> someInt = topology.createSubmissionParameter("someInt", Integer.class);
@@ -166,7 +166,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
     @Test
     @Ignore("Suddenly started failing on jenkins streamsx.topology - but only there (expected 100 got 0). Get the build working again.")
     public void OthersTest() throws Exception {
-        Topology topology = new Topology("OthersTest");
+        Topology topology = newTopology("OthersTest");
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         // FunctionFilter op is based on FunctionFunctor and the
@@ -266,7 +266,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
 
     @Test
     public void AllTypesTest() throws Exception {
-        Topology topology = new Topology("AllTypesTest");
+        Topology topology = newTopology("AllTypesTest");
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         // verify functional with all SP types

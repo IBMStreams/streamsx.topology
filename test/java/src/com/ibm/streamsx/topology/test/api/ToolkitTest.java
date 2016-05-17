@@ -32,7 +32,7 @@ public class ToolkitTest extends TestTopology {
     @Test
     public void testParallel() throws Exception {
 
-        final Topology topology = new Topology("TKParallel");
+        final Topology topology = newTopology("TKParallel");
         TStream<Number> s1 = topology.numbers(1, 2, 3, 94, 5, 6).parallel(6)
                 .filter(new AllowAll<Number>()).endParallel();
         @SuppressWarnings("unused")

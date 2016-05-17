@@ -35,7 +35,7 @@ public class TopologyTest extends TestTopology {
     @Test
     public void testBasics() {
         assumeTrue(isMainRun());
-        final Topology f = new Topology("F123");
+        final Topology f = newTopology("F123");
         assertEquals("F123", f.getName());
         assertSame(f, f.topology());
         assertNotNull(f.graph());
@@ -44,7 +44,7 @@ public class TopologyTest extends TestTopology {
     @Test
     public void testDefaultName() {
         assumeTrue(isMainRun());
-        final Topology f = new Topology();
+        final Topology f = newTopology();
         assertSame(f, f.topology());
         assertEquals("testDefaultName", f.getName());
     }
@@ -56,7 +56,7 @@ public class TopologyTest extends TestTopology {
     @Test(expected=IllegalArgumentException.class)
     public void testNonStaticContext() {
         assumeTrue(isMainRun());
-        final Topology t = new Topology();
+        final Topology t = newTopology();
         
         // This captures a reference to the instance
         // of TopologyTest running the test, which is
@@ -78,7 +78,7 @@ public class TopologyTest extends TestTopology {
     @Test
     public void main() {
         assumeTrue(isMainRun());
-        final Topology f = new Topology();
+        final Topology f = newTopology();
         assertSame(f, f.topology());
         assertEquals("TopologyTest", f.getName());
     }
@@ -87,7 +87,7 @@ public class TopologyTest extends TestTopology {
     @Test
     public void testStringStreamPrint() throws Exception {
         assumeTrue(isEmbedded());  // checkPrint() forces embedded context
-        final Topology f = new Topology("Simple");
+        final Topology f = newTopology("Simple");
         TStream<String> source = f.strings("a", "b", "c");
         assertNotNull(source);
         source.print();

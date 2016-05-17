@@ -32,7 +32,7 @@ public class AutoClosableTest extends TestTopology {
      */
     @Test
     public void testCloseIsCalled() throws Exception {
-        Topology topology = new Topology();
+        Topology topology = newTopology();
         
         TStream<String> stream = topology.source(new CloseSupplier());
         stream = stream.filter(new ClosePredicate()) ;

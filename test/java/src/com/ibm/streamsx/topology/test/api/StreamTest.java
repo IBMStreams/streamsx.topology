@@ -49,7 +49,7 @@ public class StreamTest extends TestTopology {
     @Test
     public void testBasics() throws Exception {
         assumeTrue(isMainRun());
-        final Topology topology = new Topology("BasicStream");
+        final Topology topology = newTopology("BasicStream");
         
         assertEquals("BasicStream", topology.getName());
         assertSame(topology, topology.topology());
@@ -62,7 +62,7 @@ public class StreamTest extends TestTopology {
 
     @Test
     public void testStringFilter() throws Exception {
-        final Topology f = new Topology("StringFilter");
+        final Topology f = newTopology("StringFilter");
         TStream<String> source = f.strings("hello", "goodbye", "farewell");
         assertStream(f, source);
 
@@ -84,7 +84,7 @@ public class StreamTest extends TestTopology {
 
     @Test
     public void testTransform() throws Exception {
-        final Topology f = new Topology("TransformStream");
+        final Topology f = newTopology("TransformStream");
         TStream<String> source = f.strings("325", "457", "9325");
         assertStream(f, source);
 
@@ -95,7 +95,7 @@ public class StreamTest extends TestTopology {
 
     @Test
     public void testTransformWithDrop() throws Exception {
-        final Topology f = new Topology("TransformStream");
+        final Topology f = newTopology("TransformStream");
         TStream<String> source = f.strings("93", "68", "221");
         assertStream(f, source);
 
@@ -107,7 +107,7 @@ public class StreamTest extends TestTopology {
 
     @Test
     public void testMultiTransform() throws Exception {
-        final Topology topology = new Topology("MultiTransformStream");
+        final Topology topology = newTopology("MultiTransformStream");
         TStream<String> source = topology.strings("mary had a little lamb",
                 "its fleece was white as snow");
         assertStream(topology, source);
@@ -122,7 +122,7 @@ public class StreamTest extends TestTopology {
     @Test
     public void testUnionNops() throws Exception {
         assumeTrue(isMainRun());
-        final Topology f = new Topology("Union");
+        final Topology f = newTopology("Union");
         TStream<String> s1 = f.strings("A1", "B1", "C1", "D1");
 
         Set<TStream<String>> empty = Collections.emptySet();
@@ -133,7 +133,7 @@ public class StreamTest extends TestTopology {
 
     @Test
     public void testUnion() throws Exception {
-        final Topology topology = new Topology("Union");
+        final Topology topology = newTopology("Union");
         TStream<String> s1 = topology.strings("A1", "B1", "C1", "D1");
         TStream<String> s2 = topology.strings("A2", "B2", "C2", "D2");
         List<String> l3 = new ArrayList<>();
@@ -184,7 +184,7 @@ public class StreamTest extends TestTopology {
 
     @Test
     public void testUnionSet() throws Exception {
-        final Topology topology = new Topology("Union");
+        final Topology topology = newTopology("Union");
         TStream<String> s1 = topology.strings("A1", "B1", "C1");
         TStream<String> s2 = topology.strings("A2", "B2", "C2", "D2");
         TStream<String> s3 = topology.strings("A3", "B3", "C3");
@@ -212,7 +212,7 @@ public class StreamTest extends TestTopology {
     @Test
     public void testSimpleParallel() throws Exception {
 
-        final Topology topology = new Topology("EmbeddedParallel");
+        final Topology topology = newTopology("EmbeddedParallel");
         TStream<Number> s1 = topology.numbers(1, 2, 3, 94, 5, 6).parallel(6)
                 .filter(new AllowAll<Number>()).endParallel();
 
@@ -233,7 +233,7 @@ public class StreamTest extends TestTopology {
     
     @Test
     public void testSplit() throws Exception {
-        final Topology topology = new Topology("testSplit");
+        final Topology topology = newTopology("testSplit");
         
         TStream<String> s1 = topology.strings("ch0", "ch1", "ch2", "omit",
                     "another-ch2", "another-ch1", "another-ch0", "another-omit");
@@ -332,7 +332,7 @@ public class StreamTest extends TestTopology {
         
         assumeTrue(getTesterType() != Type.DISTRIBUTED_TESTER);
         
-        Topology t = new Topology();
+        Topology t = newTopology();
         TStream<Map<String, Object>> values = BeaconStreams.single(t).transform(new ExtractFunctionContext());
         TStream<String> strings = StringStreams.toString(CollectionStreams.flattenMap(values));
                 

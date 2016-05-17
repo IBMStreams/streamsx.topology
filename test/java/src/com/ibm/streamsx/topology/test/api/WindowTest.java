@@ -64,7 +64,7 @@ public class WindowTest extends TestTopology {
     @Test
     public void testBasicCount() throws Exception {
         assumeTrue(isMainRun());
-        final Topology f = new Topology("CountWindow");
+        final Topology f = newTopology("CountWindow");
         TStream<String> source = f.strings("a", "b", "c");
         TWindow<String,?> window = source.last(10);
         assertNotNull(window);
@@ -74,7 +74,7 @@ public class WindowTest extends TestTopology {
     @Test
     public void testBasicTime() throws Exception {
         assumeTrue(isMainRun());
-        final Topology f = new Topology("TimeWindow");
+        final Topology f = newTopology("TimeWindow");
         TStream<String> source = f.strings("a", "b", "c");
         TWindow<String,?> window = source.last(10, TimeUnit.SECONDS);
         assertNotNull(window);
@@ -84,7 +84,7 @@ public class WindowTest extends TestTopology {
     @Test(expected=IllegalArgumentException.class)
     public void testZeroTimeWindow() throws Exception {
         assumeTrue(isMainRun());
-        final Topology f = new Topology("ZeroTimeWindow");
+        final Topology f = newTopology("ZeroTimeWindow");
         TStream<String> source = f.strings("a", "b", "c");
         source.last(0, TimeUnit.DAYS);
     } 
@@ -92,7 +92,7 @@ public class WindowTest extends TestTopology {
     @Test(expected=IllegalArgumentException.class)
     public void testZeroTimeAggregate() throws Exception {
         assumeTrue(isMainRun());
-        final Topology f = new Topology("ZeroTimeWindow");
+        final Topology f = newTopology("ZeroTimeWindow");
         TStream<Number> source = f.numbers(1, 2, 3, 4, 5, 6, 7);
         source.last(1, TimeUnit.DAYS).aggregate(new SumInt(), 0, TimeUnit.HOURS);
     }
@@ -100,7 +100,7 @@ public class WindowTest extends TestTopology {
 
     @Test
     public void testCountAggregate() throws Exception {
-        final Topology f = new Topology("CountAggregate");
+        final Topology f = newTopology("CountAggregate");
         TStream<Number> source = f.numbers(1, 2, 3, 4, 5, 6, 7);
         TWindow<Number,?> window = source.last(3);
         TStream<Integer> aggregate = window.aggregate(new SumInt());
@@ -120,7 +120,7 @@ public class WindowTest extends TestTopology {
     
     private static TStream<StockPrice> _testKeyedAggregate() throws Exception {
 
-        final Topology f = new Topology("PartitionedAggregate");
+        final Topology f = newTopology("PartitionedAggregate");
         TStream<StockPrice> source = f.constants(Arrays.asList(PRICES)).asType(StockPrice.class);
 
         TStream<StockPrice> aggregate = source.last(2).key(new Function<StockPrice,String>() {
@@ -161,7 +161,7 @@ public class WindowTest extends TestTopology {
     
     private static TStream<StockPrice> _testStreamKeyedAggregate() throws Exception {
 
-        final Topology f = new Topology("KeyedStreamAggregate");
+        final Topology f = newTopology("KeyedStreamAggregate");
 
         TStream<StockPrice> source = f.constants(Arrays.asList(PRICES)).asType(StockPrice.class);        
 
@@ -231,7 +231,7 @@ public class WindowTest extends TestTopology {
      */
     @Test
     public void testContinuousAggregateLastSeconds() throws Exception {
-        final Topology t = new Topology();
+        final Topology t = newTopology();
         TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);
         
         TStream<JSONObject> aggregate = source.last(3, TimeUnit.SECONDS).aggregate(new AggregateStrings());
@@ -278,7 +278,7 @@ public class WindowTest extends TestTopology {
      */
     @Test
     public void testPeriodicAggregateLastSeconds() throws Exception {
-        final Topology t = new Topology();
+        final Topology t = newTopology();
         TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);
         
         TStream<JSONObject> aggregate = source.last(3, TimeUnit.SECONDS).aggregate(
@@ -334,7 +334,7 @@ public class WindowTest extends TestTopology {
         // Embedded doesn't support window sizes < 1ms (see issue #211)
         assumeTrue(!isEmbedded());        
         
-        final Topology t = new Topology();
+        final Topology t = newTopology();
         TStream<String> source = t.periodicSource(new PeriodicStrings(), 10, TimeUnit.MILLISECONDS);
         
         TStream<JSONObject> aggregate = source.last(3, TimeUnit.MICROSECONDS).aggregate(

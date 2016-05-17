@@ -24,7 +24,7 @@ public class VMArgTest extends TestTopology {
         
         assumeTrue(!isEmbedded());
         
-        final Topology topology = new Topology("testSettingSystemProperty");
+        final Topology topology = newTopology("testSettingSystemProperty");
         
         final String propertyName = "tester.property.921421";
         final String propertyValue = "abcdef832124";

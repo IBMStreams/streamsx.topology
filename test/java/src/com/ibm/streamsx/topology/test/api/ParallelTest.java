@@ -58,7 +58,7 @@ public class ParallelTest extends TestTopology {
     @Test(expected=IllegalStateException.class)
     public void fanoutEndParallelException() throws Exception {
         checkUdpSupported();
-        Topology topology = new Topology("testFanout");
+        Topology topology = newTopology("testFanout");
         TStream<String> fanOut = topology.strings("hello").parallel(5)
                 .filter(new AllowAll<String>());
         fanOut.print();
@@ -79,7 +79,7 @@ public class ParallelTest extends TestTopology {
         List<String> stringList = getListOfUniqueStrings(800);
         String stringArray[] = new String[800];
         stringArray = stringList.toArray(stringArray);
-        Topology topology = new Topology("testAdj");
+        Topology topology = newTopology("testAdj");
 
         TStream<String> out0 = topology.strings(stringArray).parallel(of(20),
                 TStream.Routing.HASH_PARTITIONED);
@@ -101,7 +101,6 @@ public class ParallelTest extends TestTopology {
 
 	complete(tester, assertFinished, 60, TimeUnit.SECONDS);
 
-	System.out.println(expectedCount.getResult());
         assertTrue(expectedCount.valid());
 	assertTrue(assertFinished.valid());
     }
@@ -113,7 +112,7 @@ public class ParallelTest extends TestTopology {
         List<String> stringList = getListOfUniqueStrings(800);
         String stringArray[] = new String[800];
         stringArray = stringList.toArray(stringArray);
-        Topology topology = new Topology("testAdj");
+        Topology topology = newTopology("testAdj");
 
         TStream<String> out0 = topology.strings(stringArray).parallel(of(20),
                 TStream.Routing.HASH_PARTITIONED);
@@ -135,15 +134,15 @@ public class ParallelTest extends TestTopology {
 
 	complete(tester, assertFinished, 60, TimeUnit.SECONDS);
 
-        assertTrue(expectedCount.valid());
-	assertTrue(assertFinished.valid());
+        assertTrue(expectedCount.getResult().toString(), expectedCount.valid());
+	assertTrue(assertFinished.getResult().toString(), assertFinished.valid());
     }
 
     @Test
     public void testParallelNonPartitioned() throws Exception {
         checkUdpSupported();
 
-        Topology topology = new Topology("testParallel");
+        Topology topology = newTopology("testParallel");
         final int count = new Random().nextInt(1000) + 37;
 
         TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
@@ -167,7 +166,7 @@ public class ParallelTest extends TestTopology {
     public void testParallelWidthSupplier() throws Exception {
         checkUdpSupported();
 
-        Topology topology = new Topology("testParallelWidthValue");
+        Topology topology = newTopology("testParallelWidthValue");
         final int count = new Random().nextInt(1000) + 37;
         String submissionWidthName = "width";
         final Integer submissionWidth = 5;
@@ -207,7 +206,7 @@ public class ParallelTest extends TestTopology {
     public void testParallelSubmissionParam() throws Exception {
         checkUdpSupported();
 
-        Topology topology = new Topology("testParallelSubmissionParam");
+        Topology topology = newTopology("testParallelSubmissionParam");
         final int count = new Random().nextInt(1000) + 37;
         String submissionWidthName = "width";
         Integer submissionWidth = 5;
@@ -239,7 +238,7 @@ public class ParallelTest extends TestTopology {
     public void testParallelSubmissionParamInner() throws Exception {
         checkUdpSupported();
 
-        Topology topology = new Topology("testParallelSubmissionParamInner");
+        Topology topology = newTopology("testParallelSubmissionParamInner");
         final int count = new Random().nextInt(1000) + 37;
         String submissionWidthName = "width";
         Integer submissionWidth = 5;
@@ -337,7 +336,7 @@ public class ParallelTest extends TestTopology {
     public void testParallelSubmissionParamDefault() throws Exception {
         checkUdpSupported();
 
-        Topology topology = new Topology("testParallelSubmissionParamDefault");
+        Topology topology = newTopology("testParallelSubmissionParamDefault");
         final int count = new Random().nextInt(1000) + 37;
         String submissionWidthName = "width";
         Integer submissionWidth = 5;
@@ -371,7 +370,7 @@ public class ParallelTest extends TestTopology {
         
         checkUdpSupported();
                
-        Topology topology = new Topology("testParallelPartition");
+        Topology topology = newTopology("testParallelPartition");
         final int count = new Random().nextInt(10) + 37;
 
         TStream<BeaconTuple> kb = topology.source(
@@ -407,7 +406,7 @@ public class ParallelTest extends TestTopology {
     public void testObjectHashPartition() throws Exception {
         checkUdpSupported();
         
-        Topology topology = new Topology("testObjectHashPartition");
+        Topology topology = newTopology("testObjectHashPartition");
         final int count = new Random().nextInt(10) + 37;
 
         TStream<String> kb = topology.source(
@@ -601,7 +600,7 @@ public class ParallelTest extends TestTopology {
         // parallel().split() is an interesting case because split()
         // has >1 oports.
         
-        final Topology topology = new Topology("testParallelSplit");
+        final Topology topology = newTopology("testParallelSplit");
         
         // Order the tuples based on their expected/required
         // delivery path given an n-ch round-robin parallel region
@@ -694,7 +693,7 @@ public class ParallelTest extends TestTopology {
     @Test
     @Ignore("Issue #131")
     public void testParallelPreFanOut() throws Exception {
-        Topology topology = new Topology();
+        Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("A", "B", "C", "D", "E");
         strings.print();
@@ -715,7 +714,7 @@ public class ParallelTest extends TestTopology {
     
     @Test
     public void testUnionUnparallel() throws Exception {
-        Topology topology = new Topology();
+        Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("A", "B", "C", "D", "E");
         TStream<String> stringsP = strings.parallel(3);
@@ -739,7 +738,7 @@ public class ParallelTest extends TestTopology {
     public void testParallelIsolate() throws Exception {
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
       
-        Topology topology = new Topology();
+        Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("A", "B", "C", "D", "E", "F", "G", "H", "I");
         TStream<String> stringsP = strings.parallel(3);
