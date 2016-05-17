@@ -18,6 +18,8 @@
   <property name="topology.toolkit.jar" location="${topology.toolkit.release}/lib/com.ibm.streamsx.topology.jar"/>
   <property name="topology.samples.jar" location="${topology.toolkit.release}/../samples/java/functional/functionalsamples.jar"/>
 
+  <makeurl file="${basedir}/../java/log4j.properties" property="topology.log4j"/>
+
    <echo message="Topology toolkit jar: ${topology.toolkit.jar}"/>
    <echo message="Topology toolkit samples jar: ${topology.samples.jar}"/>
 
@@ -84,6 +86,7 @@
        <sysproperty key="topology.test.resource_dir" file="resources"/>
 
        <sysproperty key="topology.install.compile" value="${topology.install.compile}"/>
+       <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
        
        <classpath>
          <path refid="test.classpath"/>
