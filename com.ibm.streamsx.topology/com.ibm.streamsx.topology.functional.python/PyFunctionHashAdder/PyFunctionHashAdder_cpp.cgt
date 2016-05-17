@@ -49,13 +49,7 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
 
 <%
  # Select the Python wrapper function
- my $pywrapfunc= '_unknown_';
- if ($pystyle eq 'python') {
-   $pywrapfunc = 'depickleInput';
- }
- if ($pystyle eq 'json') {
-   $pywrapfunc = 'jsonInput';
- }
+ my $pywrapfunc= $pystyle . '_in';
 %>
 @include "../pywrapfunction.cgt"
 }

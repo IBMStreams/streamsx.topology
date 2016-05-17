@@ -18,12 +18,12 @@
 
 sub splpy_tuplestyle{
 
- my ($inputPort) = @_;
+ my ($port) = @_;
 
- my $attr =  $inputPort->getAttributeAt(0);
+ my $attr =  $port->getAttributeAt(0);
  my $pystyle = 'unk';
  if ($attr->getName() eq '__spl_po') {
-    $pystyle = 'python';
+    $pystyle = 'pickle';
  } elsif ($attr->getName() eq 'string') {
     $pystyle = 'string';
  } elsif ($attr->getName() eq 'jsonString') {
@@ -40,7 +40,7 @@ sub splpy_tuplestyle{
 #
 sub splpy_inputtuple2value{
  my ($pystyle) = @_;
- if ($pystyle eq 'python') {
+ if ($pystyle eq 'pickle') {
   return 'SPL::blob value = ip.get___spl_po();';
  }
 

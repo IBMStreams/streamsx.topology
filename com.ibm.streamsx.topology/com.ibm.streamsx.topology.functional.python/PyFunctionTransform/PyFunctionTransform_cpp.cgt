@@ -14,10 +14,11 @@
 
 
 <%
-  # determine which tuple stype is being used
+  # determine which tuple style is being used
   my $fpdir = $model->getContext()->getToolkitDirectory()."/com.ibm.streamsx.topology.functional.python";
  require $fpdir."/pyfunction.pm";
  my $pystyle = splpy_tuplestyle($model->getInputPortAt(0));
+ my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
 %>
 
 // Constructor
@@ -49,13 +50,9 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
 
 <%
  # Select the Python wrapper function
- my $pywrapfunc= '_unknown_';
- if ($pystyle eq 'python') {
-   $pywrapfunc = 'depickleInputPickleReturn';
- }
- if ($pystyle eq 'json') {
-   $pywrapfunc = 'jsonInputPickleReturn';
- }
+
+ my $pywrapfunc= $pystyle . '_in__' . $pyoutstyle . '_out';
+ 
 %>
 
 @include "../pywrapfunction.cgt"
@@ -100,7 +97,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   IPort0Type const &ip = static_cast<IPort0Type const &>(tuple);
 
 <%
-print splpy_inputtuple2value($pystyle);
+print splpy_inputtuple2value($pystyle, $pyoutstyle);
 %>
 
   std::auto_ptr<SPL::blob> out_blob = streamsx::topology::Splpy::pyTupleTransform(function_, value);
