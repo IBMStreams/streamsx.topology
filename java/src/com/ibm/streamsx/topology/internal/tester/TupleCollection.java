@@ -476,12 +476,11 @@ public class TupleCollection implements Tester {
         long totalWait = unit.toMillis(timeout);
         
         if (context.getType() != Type.EMBEDDED_TESTER)
-            totalWait += TimeUnit.SECONDS.toMillis(60); // allow extra time for SPL compile
-        
-        
-        final long start = System.currentTimeMillis();
+            totalWait += TimeUnit.SECONDS.toMillis(30); // allow extra time for execution setup              
         
         Future<?> future = context.submit(topology, config);
+        
+        final long start = System.currentTimeMillis();
         
         while ((System.currentTimeMillis() - start) < totalWait) {
             long wait = Math.min(1000, totalWait);
@@ -494,8 +493,10 @@ public class TupleCollection implements Tester {
                 }
             }   
         }
-        if (!future.isDone())
+        if (!future.isDone()) {
+            Topology.TOPOLOGY_LOGGER.warning(topology.getName() + " timed out waiting for condition");
             future.cancel(true);
+        }
               
         return endCondition.valid();
     }
