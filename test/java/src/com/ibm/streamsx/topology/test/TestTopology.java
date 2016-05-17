@@ -14,7 +14,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 import org.junit.Before;
@@ -98,7 +100,24 @@ public class TestTopology {
         }
     }
     
+
+    private static final AtomicInteger topoCounter = new AtomicInteger();
+    private static final String baseName = UUID.randomUUID().toString().replace('-', '_');
     
+    /**
+     * Create a new topology with a unique name.
+     */
+    protected static Topology newTopology() {
+        Topology t = new Topology();
+        return newTopology(t.getName());
+    }
+    
+    /**
+     * Create a new topology with a unique name based upon the passed in name.
+     */
+    protected static Topology newTopology(String name) {
+        return new Topology(name + "_" + topoCounter.getAndIncrement() + "_" + baseName);
+    }   
 
     /**
      * Get the default tester type.
