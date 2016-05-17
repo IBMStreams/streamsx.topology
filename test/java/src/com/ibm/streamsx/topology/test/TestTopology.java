@@ -5,7 +5,10 @@
 package com.ibm.streamsx.topology.test;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
+
 
 import java.io.File;
 import java.util.ArrayList;
@@ -18,6 +21,8 @@ import java.util.logging.Level;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
+import com.ibm.streams.operator.version.Product;
+import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
@@ -172,6 +177,44 @@ public class TestTopology {
     protected void assumeSPLOk() {       
         assumeTrue(getTesterType() != StreamsContext.Type.EMBEDDED_TESTER);
         assumeTrue(SC_OK);
+    }
+        
+    /**
+     * Only run a test at a specific minimum version or higher.
+     */
+    protected void checkMinimumVersion(String reason, int ...vrmf) {
+        switch (vrmf.length) {
+        case 4:
+            assumeTrue(Product.getVersion().getFix() >= vrmf[3]);
+        case 3:
+            assumeTrue(Product.getVersion().getMod() >= vrmf[2]);
+        case 2:
+            assumeTrue(Product.getVersion().getRelease() >= vrmf[1]);
+        case 1:
+            assumeTrue(Product.getVersion().getVersion() >= vrmf[0]);
+            break;
+        default:
+            fail("Invalid version supplied!");
+        }    }
+    
+    /**
+     * Allow a test to be skipped for a specific version.
+     */
+    protected void skipVersion(String reason, int ...vrmf) {
+        
+        switch (vrmf.length) {
+        case 4:
+            assumeFalse(Product.getVersion().getFix() == vrmf[3]);
+        case 3:
+            assumeFalse(Product.getVersion().getMod() == vrmf[2]);
+        case 2:
+            assumeFalse(Product.getVersion().getRelease() == vrmf[1]);
+        case 1:
+            assumeFalse(Product.getVersion().getVersion() == vrmf[0]);
+            break;
+        default:
+            fail("Invalid version supplied!");
+        }
     }
     
     public void completeAndValidate(TStream<?> output, int seconds, String...contents) throws Exception {
