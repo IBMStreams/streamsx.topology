@@ -34,6 +34,8 @@ public class IsolateTest extends TestTopology {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
         
+        skipVersion("isolate", 4, 2);
+        
         Topology topology = newTopology("simpleIsolationTest");
 
         // Construct topology
