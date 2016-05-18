@@ -34,7 +34,6 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.FunctionContext;
@@ -94,15 +93,15 @@ public class ParallelTest extends TestTopology {
 
         Tester tester = topology.getTester();
 
-        Condition<List<String>> assertFinished = tester
-                .stringContentsUnordered(numRegions, "20", "5");
+        Condition<List<String>> assertFinished = tester.stringContentsUnordered(numRegions, "20", "5");
 
         Condition<Long> expectedCount = tester.tupleCount(out2, 800);
+       
 
-	complete(tester, assertFinished, 60, TimeUnit.SECONDS);
+        complete(tester, allConditions(assertFinished, expectedCount), 60, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.valid());
-	assertTrue(assertFinished.valid());
+        assertTrue(assertFinished.valid());
     }
     
     @Test
@@ -132,7 +131,7 @@ public class ParallelTest extends TestTopology {
 
         Condition<Long> expectedCount = tester.tupleCount(out2, 1600);
 
-	complete(tester, assertFinished, 60, TimeUnit.SECONDS);
+	complete(tester, allConditions(assertFinished, expectedCount), 60, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.getResult().toString(), expectedCount.valid());
 	assertTrue(assertFinished.getResult().toString(), assertFinished.valid());
@@ -157,7 +156,7 @@ public class ParallelTest extends TestTopology {
         Condition<Long> expectedCount = tester.tupleCount(numRegions, 1);
         Condition<List<String>> regionCount = tester.stringContents(numRegions, "5");
 
-	complete(tester, regionCount, 10, TimeUnit.SECONDS);
+	complete(tester, allConditions(regionCount, expectedCount), 10, TimeUnit.SECONDS);
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
     }
@@ -196,7 +195,7 @@ public class ParallelTest extends TestTopology {
         params.put(submissionWidthName, submissionWidth);
         getConfig().put(ContextProperties.SUBMISSION_PARAMS, params);
 
-	complete(tester, regionCount, 10, TimeUnit.SECONDS);
+        complete(tester, allConditions(regionCount, expectedCount), 10, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
@@ -228,7 +227,7 @@ public class ParallelTest extends TestTopology {
         params.put(submissionWidthName, submissionWidth);
         getConfig().put(ContextProperties.SUBMISSION_PARAMS, params);
 
-	complete(tester, regionCount, 10, TimeUnit.SECONDS);
+        complete(tester, allConditions(regionCount, regionCount), 10, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
@@ -292,8 +291,8 @@ public class ParallelTest extends TestTopology {
         params.put(submissionThresholdName, submissionThreshold);
         getConfig().put(ContextProperties.SUBMISSION_PARAMS, params);
 	
-	complete(tester, regionCount, 10, TimeUnit.SECONDS);
-	
+        complete(tester, allConditions(expectedCount, regionCount), 10, TimeUnit.SECONDS);
+
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
     }
@@ -354,7 +353,7 @@ public class ParallelTest extends TestTopology {
         Condition<Long> expectedCount = tester.tupleCount(numRegions, 1);
         Condition<List<String>> regionCount = tester.stringContents(numRegions, submissionWidth.toString());
 
-	complete(tester, regionCount, 10, TimeUnit.SECONDS);
+        complete(tester, allConditions(regionCount, expectedCount) , 10, TimeUnit.SECONDS);
         assertTrue(expectedCount.valid());
         assertTrue(regionCount.valid());
     }
@@ -385,7 +384,7 @@ public class ParallelTest extends TestTopology {
         Condition<Long> expectedCount = tester.tupleCount(valid_count, 1);
         Condition<List<String>> validCount = tester.stringContents(valid_count, "5");
         
-        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
+        complete(tester, allConditions(expectedCount, validCount), 10, TimeUnit.SECONDS);
 
          assertTrue(expectedCount.valid());
          assertTrue(validCount.valid());
@@ -421,7 +420,7 @@ public class ParallelTest extends TestTopology {
         Condition<Long> expectedCount = tester.tupleCount(valid_count, 1);
         Condition<List<String>> validCount = tester.stringContents(valid_count, "5");
         
-        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
+        complete(tester, allConditions(expectedCount, validCount), 10, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.valid());
         assertTrue(validCount.valid());
@@ -655,7 +654,7 @@ public class ParallelTest extends TestTopology {
         Condition<Long> uCount = tester.tupleCount(dupAll, strsExpected.length); 
         Condition<List<String>> contents = tester.stringContentsUnordered(dupAll, strsExpected);
 
-        complete(tester, uCount, 10, TimeUnit.SECONDS);
+        complete(tester, allConditions(uCount, contents), 10, TimeUnit.SECONDS);
 
         assertTrue("contents: "+contents, contents.valid());
     }
@@ -707,7 +706,7 @@ public class ParallelTest extends TestTopology {
         
         Condition<List<String>> contents = tester.stringContentsUnordered(stringsP, "A", "B", "C", "D", "E");
         
-        complete(tester, fiveTuples, 10, TimeUnit.SECONDS);
+        complete(tester, allConditions(fiveTuples, contents), 10, TimeUnit.SECONDS);
 
         assertTrue("contents: "+contents, contents.valid());
     }
@@ -729,7 +728,7 @@ public class ParallelTest extends TestTopology {
         
         Condition<List<String>> contents = tester.stringContentsUnordered(stringsP, "A", "B", "C", "D", "E");
         
-        complete(tester, fiveTuples, 10, TimeUnit.SECONDS);
+        complete(tester, allConditions(fiveTuples, contents), 10, TimeUnit.SECONDS);
 
         assertTrue("contents: "+contents, contents.valid());
     }
@@ -753,7 +752,7 @@ public class ParallelTest extends TestTopology {
         
         Condition<List<String>> contents = tester.stringContents(result, "true");
         
-        complete(tester, singleResult, 10, TimeUnit.SECONDS);
+        complete(tester, allConditions(singleResult,contents), 10, TimeUnit.SECONDS);
 
         assertTrue("contents: "+contents, contents.valid());
     }

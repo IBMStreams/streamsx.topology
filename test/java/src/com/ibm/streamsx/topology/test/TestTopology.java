@@ -252,4 +252,28 @@ public class TestTopology {
 
         assertTrue(expectedContents.toString(), expectedContents.valid());
     }
+    
+    /**
+     * Return a condition that is true if all conditions are valid.
+     * The result is a Boolean that indicates if the condition is valid.
+     * @param conditions
+     * @return
+     */
+    public static Condition<Boolean> allConditions(final Condition<?> ...conditions) {
+        return new Condition<Boolean>() {
+
+            @Override
+            public boolean valid() {
+                for (Condition<?> condition : conditions) {
+                    if (!condition.valid())
+                        return false;
+                }
+                return true;
+            }
+
+            @Override
+            public Boolean getResult() {
+                return valid();
+            }};
+    }
 }
