@@ -49,7 +49,7 @@ public class StreamTest extends TestTopology {
     @Test
     public void testBasics() throws Exception {
         assumeTrue(isMainRun());
-        final Topology topology = newTopology("BasicStream");
+        final Topology topology = new Topology("BasicStream");
         
         assertEquals("BasicStream", topology.getName());
         assertSame(topology, topology.topology());
