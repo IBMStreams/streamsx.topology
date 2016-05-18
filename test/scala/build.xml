@@ -7,6 +7,8 @@
 
   <import file="../../common-build.xml"/>
 
+  <property name="topology.test.threads" value="4"/>
+
   <property name="scala.home" value="${env.SCALA_HOME}"/>
   <property name="scala-library.jar"
             value="${scala.home}/lib/scala-library.jar"/>
@@ -78,6 +80,7 @@
      
    <jacoco:coverage enabled="${topology.test.coverage}">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="no"
+           threads="${topology.test.threads}"
            haltonfailure="yes" failureproperty="topology.tests.failed">
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>

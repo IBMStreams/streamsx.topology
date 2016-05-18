@@ -10,6 +10,7 @@
 
   <property name="topology.test.showoutput" value="no"/>
   <property name="topology.test.haltonfailure" value="yes"/>
+  <property name="topology.test.threads" value="4"/>
 	
   <property name="classes" location="classes"/>
   <property name="jarname" value="streamsx.topology.test.jar"/>
@@ -19,6 +20,7 @@
   <property name="samples.src.dir" location="../../samples/java/functional/src"/>
   <property name="testtk" location="../spl/testtk"/>
   <property name="testtk.java" location="${testtk}/impl/java"/>
+
 
   <makeurl file="${basedir}/log4j.properties" property="topology.log4j"/>
 
@@ -164,7 +166,7 @@
   </target>
 
   <!-- Allow the pattern of tests to run be set
-       ant -Dtopology.tes.base.pattern='**/WindowTest.java'
+       ant -Dtopology.test.base.pattern='**/WindowTest.java'
   -->
   <property name="topology.test.base.pattern" value="**/*Test.java"/>
 
@@ -178,6 +180,7 @@
      <property name="topology.test.resource_dir" location="resources"/>
    <jacoco:coverage enabled="${topology.test.coverage}">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
+           threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>
@@ -202,6 +205,7 @@
    </jacoco:coverage>
    <jacoco:coverage enabled="${topology.test.coverage}">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes"
+           threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>
