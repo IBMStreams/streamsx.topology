@@ -35,7 +35,7 @@ public class TopologyTest extends TestTopology {
     @Test
     public void testBasics() {
         assumeTrue(isMainRun());
-        final Topology f = newTopology("F123");
+        final Topology f = new Topology("F123");
         assertEquals("F123", f.getName());
         assertSame(f, f.topology());
         assertNotNull(f.graph());
@@ -44,7 +44,7 @@ public class TopologyTest extends TestTopology {
     @Test
     public void testDefaultName() {
         assumeTrue(isMainRun());
-        final Topology f = newTopology();
+        final Topology f = new Topology();
         assertSame(f, f.topology());
         assertEquals("testDefaultName", f.getName());
     }
@@ -78,7 +78,7 @@ public class TopologyTest extends TestTopology {
     @Test
     public void main() {
         assumeTrue(isMainRun());
-        final Topology f = newTopology();
+        final Topology f = new Topology();
         assertSame(f, f.topology());
         assertEquals("TopologyTest", f.getName());
     }
