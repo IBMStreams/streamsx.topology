@@ -736,6 +736,8 @@ public class ParallelTest extends TestTopology {
     @Test
     public void testParallelIsolate() throws Exception {
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+        
+        skipVersion("isolate", 4, 2);
       
         Topology topology = newTopology();
         
