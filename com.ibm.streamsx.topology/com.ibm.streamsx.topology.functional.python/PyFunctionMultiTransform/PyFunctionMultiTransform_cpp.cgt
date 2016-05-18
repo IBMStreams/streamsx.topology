@@ -48,13 +48,7 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
 
 <%
  # Select the Python wrapper function
- my $pywrapfunc= '_unknown_';
- if ($pystyle eq 'python') {
-   $pywrapfunc = 'depickleInputPickleIterator';
- }
- if ($pystyle eq 'json') {
-   $pywrapfunc = 'jsonInputPickleIterator';
- }
+ my $pywrapfunc= $pystyle . '_in__pickle_iter';
 %>
 @include "../pywrapfunction.cgt"
 }
@@ -107,7 +101,7 @@ print splpy_inputtuple2value($pystyle);
     streamsx::topology::PyGILLock lock;
 
 <%
- if ($pystyle eq 'python') {
+ if ($pystyle eq 'pickle') {
 %>
     // convert spl blob to bytes
     PyObject * pyArg = streamsx::topology::Splpy::pyBlobToBytes(value);

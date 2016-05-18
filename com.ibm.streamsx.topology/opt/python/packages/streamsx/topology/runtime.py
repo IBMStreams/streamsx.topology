@@ -27,20 +27,20 @@ def pickleReturn(function) :
 # Given a callable 'callable', return a function
 # that depickles the input and then calls 'callable'
 # returning the callable's return
-def depickleInput(callable) :
+def pickle_in(callable) :
     ac = _getCallable(callable)
-    def _depickleInput(v):
+    def _pickle_in(v):
         return ac(pickle.loads(v))
-    return _depickleInput
+    return _pickle_in
 
 # Given a callable 'callable', return a function
 # that loads an object from the serialized JSON input
 # and then calls 'callable' returning the callable's return
-def jsonInput(callable) :
+def json_in(callable) :
     ac = _getCallable(callable)
-    def _jsonInput(v):
+    def _json_in(v):
         return ac(json.loads(v))
-    return _jsonInput
+    return _json_in
 
 # Get the callable from the value
 # passed into the SPL PyFunction operator.
@@ -63,28 +63,28 @@ def _getCallable(f):
 # that depickles the input and then calls 'callable'
 # returning the callable's return already pickled.
 # If the return is None then it is not pickled.
-def depickleInputPickleReturn(callable):
+def pickle_in__pickle_out(callable):
     ac = _getCallable(callable)
-    def _depickleInputPickleReturn(v):
+    def _pickle_in__pickle_out(v):
         rv = ac(pickle.loads(v))
         if rv is None:
             return None
         return pickle.dumps(rv)
-    return _depickleInputPickleReturn
+    return _pickle_in__pickle_out
 
 # Given a callable 'callable', return a function
 # that loads an object from the serialized JSON input
 # and then calls 'callable'
 # returning the callable's return already pickled.
 # If the return is None then it is not pickled.
-def jsonInputPickleReturn(callable):
+def json_in__pickle_out(callable):
     ac = _getCallable(callable)
-    def _jsonInputPickleReturn(v):
+    def _json_in__pickle_out(v):
         rv = ac(json.loads(v))
         if rv is None:
             return None
         return pickle.dumps(rv)
-    return _jsonInputPickleReturn
+    return _json_in__pickle_out
 
 # Given a function that returns an iterable
 # return a function that can be called
@@ -126,20 +126,20 @@ class _PickleIterator:
 # an instance of _PickleIterator
 # wrapping an iterator from the iterable
 # Used by PyFunctionMultiTransform
-def depickleInputPickleIterator(callable):
+def pickle_in__pickle_iter(callable):
     ac =_getCallable(callable)
-    def _depickleInputPickleIterator(v):
+    def _pickle_in__pickle_iter(v):
         irv = ac(pickle.loads(v))
         if irv is None:
             return None
         return _PickleIterator(irv)
-    return _depickleInputPickleIterator
+    return _pickle_in__pickle_iter
 
-def jsonInputPickleIterator(callable):
+def json_in__pickle_iter(callable):
     ac =_getCallable(callable)
-    def _depickleInputPickleIterator(v):
+    def _json_in__pickle_iter(v):
         irv = ac(json.loads(v))
         if irv is None:
             return None
         return _PickleIterator(irv)
-    return _depickleInputPickleIterator
+    return _json_in__pickle_iter
