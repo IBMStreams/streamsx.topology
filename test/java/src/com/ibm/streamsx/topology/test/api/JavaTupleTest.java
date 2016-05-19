@@ -23,7 +23,7 @@ public class JavaTupleTest extends TestTopology {
 
     @Test
     public void testNumberConstant() throws Exception {
-        final Topology topology = new Topology("Simple");
+        final Topology topology = newTopology("Simple");
         TStream<Number> source = topology.numbers(8, 32L, 4, new BigInteger("99392"),
                 new BigDecimal("45.224452"));
         assertNotNull(source);
@@ -32,7 +32,7 @@ public class JavaTupleTest extends TestTopology {
 
     @Test
     public void testFilterByObjectType() throws Exception {
-        final Topology f = new Topology("SimpleFilter");
+        final Topology f = newTopology("SimpleFilter");
         TStream<Number> source = f.numbers(8, 32L, 4, new BigInteger("99392"),
                 new BigDecimal("45.224452"));
         TStream<Number> filtered = source.filter(new InstanceFilter());
@@ -61,7 +61,7 @@ public class JavaTupleTest extends TestTopology {
     	nas.add(new NAŇÃ("two"));
     	nas.add(new NAŇÃ("three"));
     	
-        final Topology topology = new Topology();
+        final Topology topology = newTopology();
         TStream<NAŇÃ> source = topology.constants(nas).asType(NAŇÃ.class);
             
         completeAndValidate(source, 10,  "one-NAŇÃ", "two-NAŇÃ", "three-NAŇÃ");
@@ -84,7 +84,7 @@ public class JavaTupleTest extends TestTopology {
     	naas.add(new NAÃÃ("two"));
     	naas.add(new NAÃÃ("three"));
   	
-        final Topology topology = new Topology();
+        final Topology topology = newTopology();
         @SuppressWarnings("unused")
         TStream<NAŇÃ> sourceNAŇÃ = topology.constants(nas).asType(NAŇÃ.class);
         TStream<NAÃÃ> sourceNAÃÃ = topology.constants(naas).asType(NAÃÃ.class);

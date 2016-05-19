@@ -7,6 +7,8 @@
 
   <import file="../../common-build.xml"/>
 
+  <property name="topology.test.threads" value="4"/>
+
   <property name="scala.home" value="${env.SCALA_HOME}"/>
   <property name="scala-library.jar"
             value="${scala.home}/lib/scala-library.jar"/>
@@ -17,6 +19,8 @@
 
   <property name="topology.toolkit.jar" location="${topology.toolkit.release}/lib/com.ibm.streamsx.topology.jar"/>
   <property name="topology.samples.jar" location="${topology.toolkit.release}/../samples/java/functional/functionalsamples.jar"/>
+
+  <makeurl file="${basedir}/../java/log4j.properties" property="topology.log4j"/>
 
    <echo message="Topology toolkit jar: ${topology.toolkit.jar}"/>
    <echo message="Topology toolkit samples jar: ${topology.samples.jar}"/>
@@ -76,6 +80,7 @@
      
    <jacoco:coverage enabled="${topology.test.coverage}">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="no"
+           threads="${topology.test.threads}"
            haltonfailure="yes" failureproperty="topology.tests.failed">
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>
@@ -84,6 +89,7 @@
        <sysproperty key="topology.test.resource_dir" file="resources"/>
 
        <sysproperty key="topology.install.compile" value="${topology.install.compile}"/>
+       <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
        
        <classpath>
          <path refid="test.classpath"/>

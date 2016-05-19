@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.test.api;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.Arrays;
@@ -34,7 +34,9 @@ public class IsolateTest extends TestTopology {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
         
-        Topology topology = new Topology("simpleIsolationTest");
+        skipVersion("isolate", 4, 2);
+        
+        Topology topology = newTopology("simpleIsolationTest");
 
         // Construct topology
         TStream<String> ss = topology.strings("hello");
@@ -60,14 +62,14 @@ public class IsolateTest extends TestTopology {
 
         m.add(result1);
         m.add(result2);
-        assertTrue(m.size() == 2);
+        assertEquals(2, m.size());
     }
     
     @Test
     public void isolateIsEndOfStreamTest() throws Exception {
         assumeTrue(SC_OK);
         assumeTrue(isMainRun());
-        Topology topology = new Topology("isolateIsEndOfStreamTest");
+        Topology topology = newTopology("isolateIsEndOfStreamTest");
 
         // Construct topology
         TStream<String> ss = topology.strings("hello");
@@ -82,7 +84,7 @@ public class IsolateTest extends TestTopology {
     public void multipleIsolationTest() throws Exception {
         assumeTrue(SC_OK);
         assumeTrue(isMainRun());
-        Topology topology = new Topology("multipleIsolationTest");
+        Topology topology = newTopology("multipleIsolationTest");
 
         TStream<String> ss = topology.strings("hello", "world");
         TStream<String> ss0 = ss.isolate();
@@ -113,7 +115,7 @@ public class IsolateTest extends TestTopology {
     public void multipleIsolationExceptionTest() throws Exception {
         assumeTrue(SC_OK);
         assumeTrue(isMainRun());
-        Topology topology = new Topology("multipleIsolationExceptionTest");
+        Topology topology = newTopology("multipleIsolationExceptionTest");
 
         TStream<String> ss = topology.strings("hello", "world");
         TStream<String> ss0 = ss.isolate();
@@ -139,7 +141,7 @@ public class IsolateTest extends TestTopology {
     public void islandIsolationTest() throws Exception {
         assumeTrue(SC_OK);
         assumeTrue(isMainRun());
-        Topology topology = new Topology("islandIsolationTest");
+        Topology topology = newTopology("islandIsolationTest");
 
         TStream<String> ss = topology.strings("hello", "world");
         ss.transform(getContainerId()).isolate()
@@ -157,7 +159,7 @@ public class IsolateTest extends TestTopology {
     public void unionIsolateTest() throws Exception {
         assumeTrue(SC_OK);
         assumeTrue(isMainRun());
-        Topology topology = new Topology("unionIsolateTest");
+        Topology topology = newTopology("unionIsolateTest");
 
         TStream<String> s1 = topology.strings("1");
         TStream<String> s2 = topology.strings("2");
@@ -195,7 +197,7 @@ public class IsolateTest extends TestTopology {
 
         /** lowLatency -> ... isolate ... -> endLowLatency */
         
-        final Topology topology = new Topology("lowLatencyViolationTest");
+        final Topology topology = newTopology("lowLatencyViolationTest");
         
         topology.strings("a")
                 .lowLatency()

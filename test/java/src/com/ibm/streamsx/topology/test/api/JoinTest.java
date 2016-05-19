@@ -27,7 +27,7 @@ public class JoinTest extends TestTopology {
 
     @Test
     public void testJoin() throws Exception {
-        final Topology t = new Topology();
+        final Topology t = newTopology();
         TStream<String> strings = t.strings("a", "b", "c", "d", "e");
         
         TWindow<String,?> window = strings.last(3);
@@ -43,7 +43,7 @@ public class JoinTest extends TestTopology {
     
     @Test
     public void testEmptyJoin() throws Exception {
-        final Topology t = new Topology();
+        final Topology t = newTopology();
         TStream<String> strings = t.strings();
         
         TWindow<String,?> window = strings.last(3);
@@ -86,7 +86,7 @@ public class JoinTest extends TestTopology {
 
     @Test
     public void testJoinLast() throws Exception {
-        final Topology t = new Topology();
+        final Topology t = newTopology();
         TStream<String> strings = t.strings("a", "b", "c", "d", "e");
         
         TStream<Number> main = t.numbers(0,134,76);
@@ -100,7 +100,7 @@ public class JoinTest extends TestTopology {
     
     @Test
     public void testEmptyJoinLast() throws Exception {
-        final Topology t = new Topology();
+        final Topology t = newTopology();
         TStream<String> strings = t.strings();
         
         TStream<Number> main = t.numbers(0,134,76);
@@ -139,7 +139,7 @@ public class JoinTest extends TestTopology {
     
     @Test
     public void testKeyedJoin() throws Exception {
-        final Topology t = new Topology();
+        final Topology t = newTopology();
         TStream<String> strings = t.strings("a", "b", "c", "a", "a", "c");
         
         TStream<String> main = delayedList(t, "a", "b", "c", "d");
@@ -196,7 +196,7 @@ public class JoinTest extends TestTopology {
     
     @Test
     public void testKeyedJoinLast() throws Exception {
-        final Topology t = new Topology();
+        final Topology t = newTopology();
         TStream<String> strings = t.strings("a1", "b1", "c1", "a2", "a3", "c2");
         
         TStream<String> main = delayedList(t, "a", "b", "c", "d");

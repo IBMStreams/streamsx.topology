@@ -13,7 +13,7 @@ public class ThirdPartyTest extends TestTopology {
     public void includeThirdPartyJar() throws Exception {
 	String resourceDir = System.getProperty("topology.test.resource_dir");
 
-        final Topology topology = new Topology("BasicStream");
+        final Topology topology = newTopology("BasicStream");
         topology.addJarDependency(resourceDir + "/ThirdPartyResource.jar");
         TStream<String> source = topology.strings("1", "2", "3");
         TStream<String> thirdPartyOutput = source.transform(thirdPartyStaticTransform());
@@ -26,7 +26,7 @@ public class ThirdPartyTest extends TestTopology {
 
     @Test
     public void includeThirdPartyClass() throws Exception {
-        final Topology topology = new Topology("BasicStream");
+        final Topology topology = newTopology("BasicStream");
         topology.addClassDependency(ThirdPartyResource.class);
         TStream<String> source = topology.strings("1", "2", "3");
         TStream<String> thirdPartyOutput = source.transform(thirdPartyTransform());

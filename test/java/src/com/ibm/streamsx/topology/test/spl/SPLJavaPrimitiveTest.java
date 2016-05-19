@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
@@ -46,6 +47,8 @@ public class SPLJavaPrimitiveTest extends TestTopology {
         assumeTrue(SC_OK);
         assumeTrue(!isEmbedded());
         
+        skipVersion("vmargs", 4, 2);
+                
         // the SPL compiler catches/enforces that all fused Java ops
         // have the same vmArgs.  Since this java op invocation
         // specifies a vmArg value and it's fused with other
@@ -73,6 +76,8 @@ public class SPLJavaPrimitiveTest extends TestTopology {
         // isolation only works in DISTRIBUTED
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
         assumeTrue(SC_OK);
+        
+        skipVersion("isolate", 4, 2);
 
         Topology t = new Topology("testIsolatedVmArgs1"); 
         SPL.addToolkit(t, new File(getTestRoot(), "spl/testtk"));

@@ -50,7 +50,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testSimpleTagsStream() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s = t.strings("3");
         testSimpleTags(s);
     }
@@ -58,7 +58,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testSimpleTagsSink() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s = t.strings("3");
         testSimpleTags(s.print());
     }
@@ -95,7 +95,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testTagThenFuseStream() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         testTagThenFuse(s1, s2);
@@ -104,7 +104,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testTagThenFuseSink() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         testTagThenFuse(s1.print(), s2.print());
@@ -113,7 +113,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testTagThenFuseStreamSink() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         testTagThenFuse(s1, s2.print());
@@ -146,7 +146,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testTagBothThenFuseStream() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         testTagBothThenFuse(s1, s2);
@@ -154,7 +154,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testTagBothThenFuseSink() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         testTagBothThenFuse(s1.print(), s2.print());
@@ -162,7 +162,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testTagBothThenFuseSinkStream() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         testTagBothThenFuse(s1.print(), s2);
@@ -188,7 +188,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testFuseThenTagStream() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         testFuseThenTag(s1, s2);
@@ -196,7 +196,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testFuseThenTagSink() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         testFuseThenTag(s1.print(), s2.print());
@@ -204,7 +204,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testFuseThenTagStreamSink() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         testFuseThenTag(s1, s2.print());
@@ -233,7 +233,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testFusing() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         TStream<String> snf = t.strings("3");
@@ -272,7 +272,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testNonplaceable() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();
+        Topology t = newTopology();
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         
@@ -323,7 +323,7 @@ public class PlaceableTest extends TestTopology {
     @Test
     public void testTags() {
         assumeTrue(isMainRun());
-        Topology t = new Topology();        
+        Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         TStream<String> s3 = t.strings("3");
@@ -377,7 +377,7 @@ public class PlaceableTest extends TestTopology {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
         
-        Topology t = new Topology();
+        Topology t = newTopology();
         
         TStream<String> sa = t.strings("a");
         TStream<String> sb = t.strings("b");
@@ -413,7 +413,7 @@ public class PlaceableTest extends TestTopology {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
         
-        Topology t = new Topology();
+        Topology t = newTopology();
         
         TStream<String> sa = t.strings("a");
        
@@ -437,7 +437,7 @@ public class PlaceableTest extends TestTopology {
         
         // test current behavior of a not-placeable construct
         
-        Topology t = new Topology("testColocateLowLatancyNotPlaceable1");
+        Topology t = newTopology("testColocateLowLatancyNotPlaceable1");
         
         TStream<String> s1 = 
                 t.strings("a")
@@ -462,7 +462,7 @@ public class PlaceableTest extends TestTopology {
         
         // test current behavior of a not-placeable construct
         
-        Topology t = new Topology("testColocateLowLatancyNotPlaceable2");
+        Topology t = newTopology("testColocateLowLatancyNotPlaceable2");
         
         TStream<String> s1 = 
                 t.strings("a")
@@ -488,7 +488,7 @@ public class PlaceableTest extends TestTopology {
         
         // test colocate doesn't violate low latency as well as does colocate
         
-        final Topology topology = new Topology("testColocateLowLatancy");
+        final Topology topology = newTopology("testColocateLowLatancy");
         Tester tester = topology.getTester();
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
@@ -533,7 +533,7 @@ public class PlaceableTest extends TestTopology {
         // ensure colocating two low latency regions doesn't break lowLatancy
         // and colocating is achieved.
         
-        Topology t = new Topology("testColocateLowLatencyRegions");
+        Topology t = newTopology("testColocateLowLatencyRegions");
         Tester tester = t.getTester();
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
@@ -587,7 +587,7 @@ public class PlaceableTest extends TestTopology {
        
         // verify s1.isolate().modify().colocate(s1) is disallowed
         
-        Topology t = new Topology("testColocateIsolateViolation");
+        Topology t = newTopology("testColocateIsolateViolation");
         
         TStream<String> s1 = t.strings("a");
         s1.isolate()

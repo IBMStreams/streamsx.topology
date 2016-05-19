@@ -29,27 +29,27 @@ public class TopologySourceTest extends TestTopology {
     @Test (expected = NullPointerException.class)
     public void testConstantsNullData() throws Exception {
         assumeTrue(isMainRun());
-        Topology t = new Topology("testConstantsNullData");
+        Topology t = newTopology("testConstantsNullData");
         t.constants(null);  // throw NPE
     }
     
     @Test (expected = IllegalArgumentException.class)
     public void testLimitedSourceNNegCount() throws Exception {
         assumeTrue(isMainRun());
-        Topology t = new Topology("testLimitedSourceNNegCount");
+        Topology t = newTopology("testLimitedSourceNNegCount");
         t.limitedSourceN(new FunctionalSource(), -1);  // throw IAE
     }
     
     @Test (expected = IllegalArgumentException.class)
     public void testLimitedSourceNegCount() throws Exception {
         assumeTrue(isMainRun());
-        Topology t = new Topology("testLimitedSourceNegCount");
+        Topology t = newTopology("testLimitedSourceNegCount");
         t.limitedSource(new Value<String>("s"), -1);  // throw IAE
     }
 
     @Test
     public void testLimitedSource() throws Exception {
-        Topology topology = new Topology("testLimitedSource");
+        Topology topology = newTopology("testLimitedSource");
 
         TStream<String> ts = topology.limitedSource(new SupplierSource(), 4);
 
@@ -73,7 +73,7 @@ public class TopologySourceTest extends TestTopology {
 
     @Test
     public void testLimitedSourceN() throws Exception {
-        Topology topology = new Topology("testLimitedSourceN");
+        Topology topology = newTopology("testLimitedSourceN");
 
         TStream<String> ts = topology.limitedSourceN(new FunctionalSource(), 3);
 
@@ -95,7 +95,7 @@ public class TopologySourceTest extends TestTopology {
     
     @Test
     public void testPeriodicSource() throws Exception {
-        Topology topology = new Topology();
+        Topology topology = newTopology();
 
         TStream<Long> timestamps = topology.periodicSource(new PeriodicSourceTester(), 500, TimeUnit.MILLISECONDS);
         TStream<String> st = StringStreams.toString(timestamps);
@@ -133,7 +133,7 @@ public class TopologySourceTest extends TestTopology {
     
     @Test
     public void testPeriodicMultiSource() throws Exception {
-        Topology topology = new Topology();
+        Topology topology = newTopology();
 
         TStream<String> ms = topology.periodicMultiSource(new PeriodicMultiSourceTester(),
                 500, TimeUnit.MILLISECONDS);
@@ -187,7 +187,7 @@ public class TopologySourceTest extends TestTopology {
     public void testExceptionSource() throws Exception {
         assumeTrue(isEmbedded());
         
-        Topology topology = new Topology();
+        Topology topology = newTopology();
 
         TStream<String> ts = topology.limitedSource(new ExceptionSource(), 4);
 
@@ -201,7 +201,7 @@ public class TopologySourceTest extends TestTopology {
     public void testExceptionPeriodicSource() throws Exception {
         assumeTrue(isEmbedded());
         
-        Topology topology = new Topology();
+        Topology topology = newTopology();
 
         TStream<String> ts = topology.periodicSource(new ExceptionSource(), 1, TimeUnit.MILLISECONDS);
 

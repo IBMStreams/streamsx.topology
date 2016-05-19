@@ -39,7 +39,7 @@ public class CollectionTupleTest extends TestTopology {
     }
     
     private static TStream<List<String>> _listSource() throws Exception {
-        final Topology topology = new Topology();
+        final Topology topology = newTopology();
         TStream<String> source = topology.strings("mary had a little lamb", "its fleece was white as snow");
 
         TStream<List<String>> words = source.transform(new Function<String,List<String>>() {
@@ -82,7 +82,7 @@ public class CollectionTupleTest extends TestTopology {
     }
     
     private static TStream<String> _testMap() throws Exception {
-        final Topology topology = new Topology();
+        final Topology topology = newTopology();
         
         List<Map<String,Integer>> tuples = new ArrayList<>();
         

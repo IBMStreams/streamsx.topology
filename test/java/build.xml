@@ -7,8 +7,10 @@
 
   <import file="../../common-build.xml"/>
 
+
   <property name="topology.test.showoutput" value="no"/>
   <property name="topology.test.haltonfailure" value="yes"/>
+  <property name="topology.test.threads" value="4"/>
 	
   <property name="classes" location="classes"/>
   <property name="jarname" value="streamsx.topology.test.jar"/>
@@ -18,6 +20,10 @@
   <property name="samples.src.dir" location="../../samples/java/functional/src"/>
   <property name="testtk" location="../spl/testtk"/>
   <property name="testtk.java" location="${testtk}/impl/java"/>
+
+
+  <makeurl file="${basedir}/log4j.properties" property="topology.log4j"/>
+
 
 <!-- 
      This section allows the tests to be run against different
@@ -160,7 +166,7 @@
   </target>
 
   <!-- Allow the pattern of tests to run be set
-       ant -Dtopology.tes.base.pattern='**/WindowTest.java'
+       ant -Dtopology.test.base.pattern='**/WindowTest.java'
   -->
   <property name="topology.test.base.pattern" value="**/*Test.java"/>
 
@@ -174,12 +180,15 @@
      <property name="topology.test.resource_dir" location="resources"/>
    <jacoco:coverage enabled="${topology.test.coverage}">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
+           threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>
        <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
        <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
        <sysproperty key="topology.test.resource_dir" file="resources"/>
+       <sysproperty key="topology.install.compile" value="${topology.install.compile}"/>
+       <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
        
        <classpath>
          <path refid="test.classpath"/>
@@ -196,11 +205,15 @@
    </jacoco:coverage>
    <jacoco:coverage enabled="${topology.test.coverage}">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes"
+           threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>
        <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
        <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
+       <sysproperty key="topology.install.compile" value="${topology.install.compile}"/>
+       <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
+
        <classpath>
          <path refid="test.sample.classpath"/>
        </classpath>
@@ -277,6 +290,8 @@
        <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
        <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
        <sysproperty key="topology.test.resource_dir" file="resources"/>
+       <sysproperty key="topology.install.compile" value="${topology.install.compile}"/>
+       <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
        
        <classpath>
          <path refid="test.classpath"/>

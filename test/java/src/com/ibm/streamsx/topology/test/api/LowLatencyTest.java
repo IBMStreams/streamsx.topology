@@ -36,7 +36,7 @@ public class LowLatencyTest extends TestTopology {
     public void simpleLowLatencyTest() throws Exception{
         assumeTrue(SC_OK);
         assumeTrue(isMainRun());
-        Topology topology = new Topology("lowLatencyTest");
+        Topology topology = newTopology("lowLatencyTest");
 
         // Construct topology
         TStream<String> ss = topology.strings("hello");
@@ -51,7 +51,7 @@ public class LowLatencyTest extends TestTopology {
     public void multipleRegionLowLatencyTest() throws Exception{
         assumeTrue(SC_OK);
         assumeTrue(isMainRun());
-        Topology topology = new Topology("lowLatencyTest");
+        Topology topology = newTopology("lowLatencyTest");
 
         // Construct topology
         TStream<String> ss = topology.strings("hello")
@@ -70,7 +70,7 @@ public class LowLatencyTest extends TestTopology {
     @Test
     public void threadedPortTest() throws Exception{
         assumeTrue(isMainRun());
-        Topology topology = new Topology("lowLatencyTest");
+        Topology topology = newTopology("lowLatencyTest");
 
         // Construct topology
         TStream<String> ss = topology.strings("hello").lowLatency();
@@ -106,7 +106,7 @@ public class LowLatencyTest extends TestTopology {
         // lowLatency().split() is an interesting case because split()
         // has >1 oports.
         
-        final Topology topology = new Topology("testLowLatencySplit");
+        final Topology topology = newTopology("testLowLatencySplit");
         
         int splitWidth = 3;
         String[] strs = {"ch0", "ch1", "ch2"};
@@ -179,7 +179,7 @@ public class LowLatencyTest extends TestTopology {
         
         // ensure nested low latency yields all fns in the same container
         
-        final Topology topology = new Topology("nestedTest");
+        final Topology topology = newTopology("nestedTest");
         final Tester tester = topology.getTester();
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
