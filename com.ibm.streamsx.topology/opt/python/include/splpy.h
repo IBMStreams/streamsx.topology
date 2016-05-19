@@ -39,6 +39,11 @@ namespace streamsx {
        * script splpy_setup.py at the given path.
       */
       static void loadCPython(const char* spl_setup_py) {
+      	// If the Python runtime is being embedded in a shared library
+      	// (as is the case with IBM Streams), there is a bug where the 
+      	// symbols from libpython*.*.so are not resolved properly. As
+      	// as workaround, it's necessary to manually rediscover the
+      	// symbols by calling dlopen().
 	if(NULL == dlopen("libpython3.5m.so", RTLD_LAZY |
 			  RTLD_GLOBAL)){
 	  SPLAPPLOG(L_ERROR, "Fatal error: could not open libpython3.5m.so", "python");
