@@ -80,7 +80,7 @@ def delete_json_when_complete(process, fn):
 def print_process_stdout(process):
     try:
         while True:
-            line = process.stderr.readline().strip().decode("utf-8")
+            line = process.stdout.readline().strip().decode("utf-8")
             if line == '':
                 break
             print(line)
