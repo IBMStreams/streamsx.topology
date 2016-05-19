@@ -47,7 +47,6 @@ namespace streamsx {
 	if(NULL == dlopen("libpython3.5m.so", RTLD_LAZY |
 			  RTLD_GLOBAL)){
 	  SPLAPPLOG(L_ERROR, "Fatal error: could not open libpython3.5m.so", "python");
-	  flush_PyErr_Print();
 	  throw;
 	}
 
