@@ -131,6 +131,7 @@ def _submitUsingJava(ctxtype, fn):
             stdout_thread = threading.Thread(target=print_process_stdout, args=([process]))
             stdout_thread.daemon = True
             stdout_thread.start()                
+            process.wait()
             return None
         else:            
             return process.stdout
