@@ -5,19 +5,24 @@
 package com.ibm.streamsx.topology.test;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
+
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
 
+import com.ibm.streams.operator.version.Product;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
@@ -95,7 +100,24 @@ public class TestTopology {
         }
     }
     
+
+    private static final AtomicInteger topoCounter = new AtomicInteger();
+    private static final String baseName = UUID.randomUUID().toString().replace('-', '_');
     
+    /**
+     * Create a new topology with a unique name.
+     */
+    protected static Topology newTopology() {
+        Topology t = new Topology();
+        return newTopology(t.getName());
+    }
+    
+    /**
+     * Create a new topology with a unique name based upon the passed in name.
+     */
+    protected static Topology newTopology(String name) {
+        return new Topology(name + "_" + topoCounter.getAndIncrement() + "_" + baseName);
+    }   
 
     /**
      * Get the default tester type.
@@ -173,6 +195,44 @@ public class TestTopology {
         assumeTrue(getTesterType() != StreamsContext.Type.EMBEDDED_TESTER);
         assumeTrue(SC_OK);
     }
+        
+    /**
+     * Only run a test at a specific minimum version or higher.
+     */
+    protected void checkMinimumVersion(String reason, int ...vrmf) {
+        switch (vrmf.length) {
+        case 4:
+            assumeTrue(Product.getVersion().getFix() >= vrmf[3]);
+        case 3:
+            assumeTrue(Product.getVersion().getMod() >= vrmf[2]);
+        case 2:
+            assumeTrue(Product.getVersion().getRelease() >= vrmf[1]);
+        case 1:
+            assumeTrue(Product.getVersion().getVersion() >= vrmf[0]);
+            break;
+        default:
+            fail("Invalid version supplied!");
+        }    }
+    
+    /**
+     * Allow a test to be skipped for a specific version.
+     */
+    protected void skipVersion(String reason, int ...vrmf) {
+        
+        switch (vrmf.length) {
+        case 4:
+            assumeTrue(Product.getVersion().getFix() != vrmf[3]);
+        case 3:
+            assumeTrue(Product.getVersion().getMod() != vrmf[2]);
+        case 2:
+            assumeTrue(Product.getVersion().getRelease() != vrmf[1]);
+        case 1:
+            assumeTrue(Product.getVersion().getVersion() != vrmf[0]);
+            break;
+        default:
+            fail("Invalid version supplied!");
+        }
+    }
     
     public void completeAndValidate(TStream<?> output, int seconds, String...contents) throws Exception {
         completeAndValidate(getConfig(), output, seconds, contents);
@@ -191,5 +251,29 @@ public class TestTopology {
                 contents);
 
         assertTrue(expectedContents.toString(), expectedContents.valid());
+    }
+    
+    /**
+     * Return a condition that is true if all conditions are valid.
+     * The result is a Boolean that indicates if the condition is valid.
+     * @param conditions
+     * @return
+     */
+    public static Condition<Boolean> allConditions(final Condition<?> ...conditions) {
+        return new Condition<Boolean>() {
+
+            @Override
+            public boolean valid() {
+                for (Condition<?> condition : conditions) {
+                    if (!condition.valid())
+                        return false;
+                }
+                return true;
+            }
+
+            @Override
+            public Boolean getResult() {
+                return valid();
+            }};
     }
 }

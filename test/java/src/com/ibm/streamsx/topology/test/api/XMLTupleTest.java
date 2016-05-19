@@ -29,7 +29,7 @@ public class XMLTupleTest extends TestTopology {
     @Test
     public void testConstant() throws Exception {
         
-        final Topology topology = new Topology();
+        final Topology topology = newTopology();
         String sdata = "<book><title>Dracula</title><author>Bram Stoker</author></book>";
         byte[] data = sdata.getBytes(StandardCharsets.UTF_8);
         XML xml = ValueFactory.newXML(new ByteArrayInputStream(data));

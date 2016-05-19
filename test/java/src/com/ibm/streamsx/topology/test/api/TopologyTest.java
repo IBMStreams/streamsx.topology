@@ -56,7 +56,7 @@ public class TopologyTest extends TestTopology {
     @Test(expected=IllegalArgumentException.class)
     public void testNonStaticContext() {
         assumeTrue(isMainRun());
-        final Topology t = new Topology();
+        final Topology t = newTopology();
         
         // This captures a reference to the instance
         // of TopologyTest running the test, which is
@@ -87,7 +87,7 @@ public class TopologyTest extends TestTopology {
     @Test
     public void testStringStreamPrint() throws Exception {
         assumeTrue(isEmbedded());  // checkPrint() forces embedded context
-        final Topology f = new Topology("Simple");
+        final Topology f = newTopology("Simple");
         TStream<String> source = f.strings("a", "b", "c");
         assertNotNull(source);
         source.print();

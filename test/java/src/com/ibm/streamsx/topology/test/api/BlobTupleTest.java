@@ -20,7 +20,7 @@ public class BlobTupleTest extends TestTopology {
    
     @Test
     public void testConstant() throws Exception {
-        final Topology topology = new Topology();
+        final Topology topology = newTopology();
         String sdata = "YY" + BlobTupleTest.class.getName();
         byte[] data = sdata.getBytes(StandardCharsets.UTF_8);
         Blob blob = ValueFactory.newBlob(data, 0, data.length);

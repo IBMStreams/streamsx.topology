@@ -120,7 +120,7 @@ public class JobPropertiesTest extends TestTopology {
                 + " propName="+ propName
                 + " value=" + value); 
         try {
-            Topology topology = new Topology(topologyName);
+            Topology topology = newTopology(topologyName);
             TStream<String> source = topology.strings("tuple1", "tuple2");
 
             // fyi using DISTRIBUTED_TESTER directly instead of

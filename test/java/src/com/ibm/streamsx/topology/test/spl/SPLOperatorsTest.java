@@ -26,6 +26,7 @@ import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.spl.SPL;
@@ -246,6 +247,11 @@ public class SPLOperatorsTest extends TestTopology {
 
     @Test
     public void testSubmissionParamsWithoutDefault() throws Exception {
+        
+        if (getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER) {
+            skipVersion("streamtool: see commit 24763a8c5ebb5ccee4acd65c2cb5256a9f212208", 4, 2);
+        }
+           
         // Test operator parameters with submission time values without defaults
         testOpParams("testSubmissionParamsWithoutDefault", new OpParamAdder() {
             void put(String opParamName, Object opParamValue) {
