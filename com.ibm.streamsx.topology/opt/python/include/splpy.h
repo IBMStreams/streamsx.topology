@@ -66,11 +66,11 @@ namespace streamsx {
     /**
      * Convert a SPL rstring into a Python Unicode string 
      */
-    static PyObject * pyAttributeToPyObject(SPL::rstring & attr) {
+    inline PyObject * pyAttributeToPyObject(SPL::rstring & attr) {
       long int sizeb = attr.size();
       const char * pybytes = attr.data();
 
-      return PyUnicode_FromStringAndSize(pybytes, sizeb);
+      return PyUnicode_DecodeUTF8(pybytes, sizeb, NULL);
     }
     
     class Splpy {
@@ -276,17 +276,6 @@ namespace streamsx {
       Py_DECREF(pyTuple);
 
       return pyReturnVar;
-    }
-
-    /**
-     * Convert a SPL rstring into a Python Unicode string 
-     */
-    static PyObject * pyRstringToUnicode(SPL::rstring & pyrstring) {
-      long int sizeb = pyrstring.size();
-      const char * pybytes = pyrstring.data();
-
-      PyObject * pyString  = PyUnicode_FromStringAndSize(pybytes, sizeb);
-      return pyString;
     }
 
     };
