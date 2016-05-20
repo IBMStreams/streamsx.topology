@@ -102,7 +102,7 @@ print splpy_inputtuple2value($pystyle, $pyoutstyle);
 
     OPort0Type otuple;
     if (streamsx::topology::Splpy::pyTupleTransform(function_, value,
-         otuple.get___spl_po()))
+         otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>()))
        submit(otuple, 0);
 }
 

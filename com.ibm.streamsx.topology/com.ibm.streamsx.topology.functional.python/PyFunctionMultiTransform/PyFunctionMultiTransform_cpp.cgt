@@ -100,20 +100,8 @@ print splpy_inputtuple2value($pystyle);
   {
     streamsx::topology::PyGILLock lock;
 
-<%
- if ($pystyle eq 'pickle') {
-%>
-    // convert spl blob to bytes
+    // convert spl attribute to python object
     PyObject * pyArg = streamsx::topology::pyAttributeToPyObject(value);
-<%
- }
- if ($pystyle eq 'json') {
-%>
-    // convert spl rstring to Python Unicode string
-    PyObject * pyArg = streamsx::topology::Splpy::pyRstringToUnicode(value);
-<%
- }
-%>
 
     PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyArg);
 
