@@ -86,6 +86,19 @@ def json_in__pickle_out(callable):
         return pickle.dumps(rv)
     return _json_in__pickle_out
 
+#
+# JSON to JSON for transform
+#
+def json_in__json_out(callable):
+    ac = _getCallable(callable)
+    def _json_in__json_out(v):
+        rv = ac(json.loads(v))
+        if rv is None:
+            return None
+        jrv = json.dumps(rv, ensure_ascii=False)
+        return jrv
+    return _json_in__json_out
+
 # Given a function that returns an iterable
 # return a function that can be called
 # repeatably by a source operator returning
