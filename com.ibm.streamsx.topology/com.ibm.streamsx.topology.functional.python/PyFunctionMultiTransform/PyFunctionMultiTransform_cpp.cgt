@@ -104,7 +104,7 @@ print splpy_inputtuple2value($pystyle);
  if ($pystyle eq 'pickle') {
 %>
     // convert spl blob to bytes
-    PyObject * pyArg = streamsx::topology::Splpy::pyBlobToBytes(value);
+    PyObject * pyArg = streamsx::topology::pyAttributeToPyObject(value);
 <%
  }
  if ($pystyle eq 'json') {

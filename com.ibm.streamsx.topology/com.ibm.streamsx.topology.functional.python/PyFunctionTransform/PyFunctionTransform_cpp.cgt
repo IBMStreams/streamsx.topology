@@ -100,14 +100,10 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 print splpy_inputtuple2value($pystyle, $pyoutstyle);
 %>
 
-  std::auto_ptr<SPL::blob> out_blob = streamsx::topology::Splpy::pyTupleTransform(function_, value);
-  if (out_blob.get()) {
-    uint64_t out_size = 0;
-    unsigned char* out_data = out_blob->releaseData(out_size);
     OPort0Type otuple;
-    otuple.get___spl_po().adoptData(out_data, out_size);
-    submit(otuple, 0);
-  }
+    if (streamsx::topology::Splpy::pyTupleTransform(function_, value,
+         otuple.get___spl_po()))
+       submit(otuple, 0);
 }
 
 // Punctuation processing
