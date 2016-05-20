@@ -87,6 +87,19 @@ def json_in__pickle_out(callable):
     return _json_in__pickle_out
 
 #
+# Pickle to JSON for transform
+#
+def pickle_in__json_out(callable):
+    ac = _getCallable(callable)
+    def _pickle_in__json_out(v):
+        rv = ac(pickle.loads(v))
+        if rv is None:
+            return None
+        jrv = json.dumps(rv, ensure_ascii=False)
+        return jrv
+    return _pickle_in__json_out
+
+#
 # JSON to JSON for transform
 #
 def json_in__json_out(callable):

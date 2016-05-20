@@ -110,6 +110,12 @@ class Stream(object):
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
+    def _map(self, func, schema):
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionTransform", func)
+        op.addInputPort(outputPort=self.oport)
+        oport = op.addOutputPort(schema=schema)
+        return Stream(self.topology, oport)
+
     def transform(self, func):
         """
         Transforms each tuple from this stream into 0 or 1 tuples using the supplied callable `func`.
@@ -130,10 +136,7 @@ class Stream(object):
         Returns:
             A Stream containing transformed tuples.
         """
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionTransform", func)
-        op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort()
-        return Stream(self.topology, oport)
+        return self._map(func, schema=schema.CommonSchema.Python)
 
     def map(self, func):
         """
@@ -346,6 +349,10 @@ class Stream(object):
         Returns:
             None.
         """
+        if self.oport.schema.schema() != schema.schema():
+            self._map(_tuple_identity,schema=schema).publish(topic, schema=schema);
+            return None
+
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish")
         op.addInputPort(outputPort=self.oport)
         publishParams = {'topic': [topic]}
@@ -358,6 +365,13 @@ def print_flush(v):
     :returns: None
     """
     print(v, flush=True)
+
+def identity(t):
+    """
+    Returns its single argument.
+    :returns: Its argument.
+    """
+    return t;
 
     
 class Routing(Enum):

@@ -39,11 +39,26 @@ namespace streamsx {
     template <class T>
     inline void pyAttributeFromPyObject(T & attr, PyObject *);
     
+    /*
+    ** Convert to a SPL blob from a Python bytes object.
+    */
     inline void pyAttributeFromPyObject(SPL::blob & attr, PyObject * value) {
-      // construct spl blob from pickled value
       long int size = PyBytes_Size(value);
       char * bytes = PyBytes_AsString(value);          
       attr.setData((const unsigned char *)bytes, size);
+    }
+
+    /*
+    ** Convert to a SPL rstring from a Python string object.
+    */
+    inline void pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
+      Py_ssize_t size = 0;
+      char * bytes = PyUnicode_AsUTF8AndSize(value, &size);          
+      if (bytes == 0) {
+         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
+         throw;
+      }
+      attr.assign((const char *)bytes, (size_t) size);
     }
 
     /*
