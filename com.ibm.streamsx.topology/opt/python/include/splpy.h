@@ -203,29 +203,16 @@ namespace streamsx {
       Py_DECREF(pyRepr);
     }
 
-    // Call the function passing an SPL blob and
-    // treat the return as a boolean
-    static int pyTupleFilter(PyObject * function, SPL::blob & pyblob) {
+    /*
+    * Call a function passing the SPL attribute value of type T
+    * and return the function return as a boolean
+    */
+    template <class T>
+    static int pyTupleFilter(PyObject * function, T & splVal) {
 
       PyGILLock lock;
-      PyObject * pyBytes  = pyAttributeToPyObject(pyblob);
 
-      return _pyTupleFilter(function, pyBytes);
-    }
-    //
-    // Call the function passing an SPL rstring and
-    // treat the return as a boolean
-    static int pyTupleFilter(PyObject * function, SPL::rstring & pyrstring) {
-
-      PyGILLock lock;
-      PyObject * pyString  = pyRstringToUnicode(pyrstring);
-
-      return _pyTupleFilter(function, pyString);
-    }
-
-    // Call the function passing a PyObject and
-    // treat the return as a boolean
-    static int _pyTupleFilter(PyObject * function, PyObject * arg) {
+      PyObject * arg = pyAttributeToPyObject(splVal);
 
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
@@ -243,11 +230,9 @@ namespace streamsx {
     /*
     * Call a function passing the SPL attribute value of type T
     * and fill in the SPL attribute of type R with its result.
-    * Returns 0 if the function returned Py_None otherwise
-    * returns 1.
     */
     template <class T, class R>
-    static int32_t pyTupleTransform(PyObject * function, T & splVal, R & retSplVal) {
+    static int pyTupleTransform(PyObject * function, T & splVal, R & retSplVal) {
       PyGILLock lock;
 
       PyObject * arg = pyAttributeToPyObject(splVal);
@@ -269,28 +254,14 @@ namespace streamsx {
       return 1;
     }
 
-    // Hash passing an SPL Blob
-    static SPL::int32 pyTupleHash(PyObject * function, SPL::blob & pyblob) {
+    // Python hash of an SPL attribute
+    template <class T>
+    static SPL::int32 pyTupleHash(PyObject * function, T & splVal) {
+
       PyGILLock lock;
 
-      // convert spl blob to bytes
-      PyObject * pyBytes  = pyAttributeToPyObject(pyblob);
+      PyObject * arg = pyAttributeToPyObject(splVal);
 
-      return _pyTupleHash(function, pyBytes);
-    }
-    //
-    // Hash passing an SPL Blob
-    static SPL::int32 pyTupleHash(PyObject * function, SPL::rstring & pyrstring) {
-      PyGILLock lock;
- 
-      // convert spl rstring to Python Unicode String assuming UTF-8
-      PyObject * pyString  = pyRstringToUnicode(pyrstring);
-
-      return _pyTupleHash(function, pyString);
-    }
-
-    // Hash passing a PyObject *
-    static SPL::int32 _pyTupleHash(PyObject * function, PyObject * arg) {
       // invoke python nested function that generates the int32 hash
       PyObject * pyReturnVar = pyTupleFunc(function, arg); 
      
