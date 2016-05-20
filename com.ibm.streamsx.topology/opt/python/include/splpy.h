@@ -160,29 +160,14 @@ namespace streamsx {
         return function;
       }
 
-    // Call the function passing an SPL blob and
-    // discard the return 
-    static void pyTupleSink(PyObject * function, SPL::blob & pyblob) {
-
+    // Call the function passing an SPL attribute
+    // converted to a Python object and discard the return 
+    template <class T>
+    static void pyTupleSink(PyObject * function, T & splVal) {
       PyGILLock lock;
-      PyObject * pyBytes  = pyAttributeToPyObject(pyblob);
 
-      _pyTupleSink(function, pyBytes);
-    }
+      PyObject * arg = pyAttributeToPyObject(splVal);
 
-    // Call the function passing an SPL blob and
-    // discard the return 
-    static void pyTupleSink(PyObject * function, SPL::rstring & pyrstring) {
-
-      PyGILLock lock;
-      PyObject * pyString  = pyRstringToUnicode(pyrstring);
-
-      _pyTupleSink(function, pyString);
-    }
-
-    // Call the function passing a PyObject and
-    // discard the return 
-    static void _pyTupleSink(PyObject * function, PyObject * arg) {
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
       if(pyReturnVar == 0){
