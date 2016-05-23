@@ -55,7 +55,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
    	    	
         TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
         
-        source = source.modify(new Delay<JSONObject>()).asType(JSONObject.class);
+        source = source.modify(new Delay<JSONObject>(10)).asType(JSONObject.class);
         
         source.publish("pytest/json/map");
         
@@ -95,7 +95,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
    	    	
         TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
         
-        source = source.modify(new Delay<JSONObject>()).asType(JSONObject.class);
+        source = source.modify(new Delay<JSONObject>(10)).asType(JSONObject.class);
         
         source.publish("pytest/json/filter");
         

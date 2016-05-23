@@ -29,7 +29,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
    	    	
         TStream<String> source = t.strings("wasJava", "457", "CrystalPalace");
         
-        source = source.modify(new Delay<String>());
+        source = source.modify(new Delay<String>(10));
         
         source.publish("pytest/string/map");
         
@@ -50,7 +50,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
    	    	
         TStream<String> source = t.strings("ABC", "DEF", "4372", "34", "24234XXX");
         
-        source = source.modify(new Delay<String>());
+        source = source.modify(new Delay<String>(10));
         
         source.publish("pytest/string/filter");
         
