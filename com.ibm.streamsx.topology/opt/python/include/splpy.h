@@ -18,7 +18,7 @@
     
 namespace streamsx {
   namespace topology {
-    
+
     class PyGILLock {
       public:
         PyGILLock() {
@@ -31,6 +31,62 @@ namespace streamsx {
       private:
         PyGILState_STATE gstate_;
     };
+
+    /*
+    ** Conversion of Python objects to SPL attributes.
+    */
+
+    template <class T>
+    inline void pyAttributeFromPyObject(T & attr, PyObject *);
+    
+    /*
+    ** Convert to a SPL blob from a Python bytes object.
+    */
+    inline void pyAttributeFromPyObject(SPL::blob & attr, PyObject * value) {
+      long int size = PyBytes_Size(value);
+      char * bytes = PyBytes_AsString(value);          
+      attr.setData((const unsigned char *)bytes, size);
+    }
+
+    /*
+    ** Convert to a SPL rstring from a Python string object.
+    */
+    inline void pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
+      Py_ssize_t size = 0;
+      char * bytes = PyUnicode_AsUTF8AndSize(value, &size);          
+      if (bytes == 0) {
+         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
+         throw;
+      }
+      attr.assign((const char *)bytes, (size_t) size);
+    }
+
+    /*
+    ** Conversion of SPL attributes to Python objects
+    */
+
+    template <class T>
+    inline PyObject * pyAttributeToPyObject(T & attr);
+
+    /**
+     * Convert a SPL blob into a Python Byte string 
+     */
+    inline PyObject * pyAttributeToPyObject(SPL::blob & attr) {
+      long int sizeb = attr.getSize();
+      const unsigned char * bytes = attr.getData();
+
+      return PyBytes_FromStringAndSize((const char *)bytes, sizeb);
+    }
+
+    /**
+     * Convert a SPL rstring into a Python Unicode string 
+     */
+    inline PyObject * pyAttributeToPyObject(SPL::rstring & attr) {
+      long int sizeb = attr.size();
+      const char * pybytes = attr.data();
+
+      return PyUnicode_DecodeUTF8(pybytes, sizeb, NULL);
+    }
     
     class Splpy {
       public:
@@ -119,29 +175,14 @@ namespace streamsx {
         return function;
       }
 
-    // Call the function passing an SPL blob and
-    // discard the return 
-    static void pyTupleSink(PyObject * function, SPL::blob & pyblob) {
-
+    // Call the function passing an SPL attribute
+    // converted to a Python object and discard the return 
+    template <class T>
+    static void pyTupleSink(PyObject * function, T & splVal) {
       PyGILLock lock;
-      PyObject * pyBytes  = pyBlobToBytes(pyblob);
 
-      _pyTupleSink(function, pyBytes);
-    }
+      PyObject * arg = pyAttributeToPyObject(splVal);
 
-    // Call the function passing an SPL blob and
-    // discard the return 
-    static void pyTupleSink(PyObject * function, SPL::rstring & pyrstring) {
-
-      PyGILLock lock;
-      PyObject * pyString  = pyRstringToUnicode(pyrstring);
-
-      _pyTupleSink(function, pyString);
-    }
-
-    // Call the function passing a PyObject and
-    // discard the return 
-    static void _pyTupleSink(PyObject * function, PyObject * arg) {
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
       if(pyReturnVar == 0){
@@ -162,29 +203,16 @@ namespace streamsx {
       Py_DECREF(pyRepr);
     }
 
-    // Call the function passing an SPL blob and
-    // treat the return as a boolean
-    static int pyTupleFilter(PyObject * function, SPL::blob & pyblob) {
+    /*
+    * Call a function passing the SPL attribute value of type T
+    * and return the function return as a boolean
+    */
+    template <class T>
+    static int pyTupleFilter(PyObject * function, T & splVal) {
 
       PyGILLock lock;
-      PyObject * pyBytes  = pyBlobToBytes(pyblob);
 
-      return _pyTupleFilter(function, pyBytes);
-    }
-    //
-    // Call the function passing an SPL rstring and
-    // treat the return as a boolean
-    static int pyTupleFilter(PyObject * function, SPL::rstring & pyrstring) {
-
-      PyGILLock lock;
-      PyObject * pyString  = pyRstringToUnicode(pyrstring);
-
-      return _pyTupleFilter(function, pyString);
-    }
-
-    // Call the function passing a PyObject and
-    // treat the return as a boolean
-    static int _pyTupleFilter(PyObject * function, PyObject * arg) {
+      PyObject * arg = pyAttributeToPyObject(splVal);
 
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
@@ -198,77 +226,42 @@ namespace streamsx {
       Py_DECREF(pyReturnVar);
       return ret;
     }
-    
-    // Call the function with argument converting the SPL blob
-    // to a Python byte string and return the result as a blob
-    static std::auto_ptr<SPL::blob> pyTupleTransform(PyObject * function, SPL::blob & pyblob) {
 
+    /*
+    * Call a function passing the SPL attribute value of type T
+    * and fill in the SPL attribute of type R with its result.
+    */
+    template <class T, class R>
+    static int pyTupleTransform(PyObject * function, T & splVal, R & retSplVal) {
       PyGILLock lock;
 
-      // convert spl blob to bytes
-      PyObject * pyBytes  = pyBlobToBytes(pyblob);
-
-      return _pyTupleTransform(function, pyBytes);
-    }
-    
-    // Call the function with argument converting the SPL rstring
-    // to a Python Unicode string and return the result as a blob
-    static std::auto_ptr<SPL::blob> pyTupleTransform(PyObject * function, SPL::rstring & pyrstring) {
-
-      PyGILLock lock;
-
-      // convert spl rstring to Python Unicode String assuming UTF-8
-      PyObject * pyString  = pyRstringToUnicode(pyrstring);
-
-      return _pyTupleTransform(function, pyString);
-    }
-
-    // Call the function with argument and return the result as a blob
-    static std::auto_ptr<SPL::blob> _pyTupleTransform(PyObject * function, PyObject * arg) {
+      PyObject * arg = pyAttributeToPyObject(splVal);
 
       // invoke python nested function that calls the application function
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
-      std::auto_ptr<SPL::blob> ret;
-
       if (pyReturnVar == Py_None){
         Py_DECREF(pyReturnVar);
-        return ret;
+        return 0;
       } else if(pyReturnVar == 0){
         flush_PyErr_Print();
         throw;
       } 
 
-      // construct spl blob from pickled return value
-      long int size = PyBytes_Size(pyReturnVar);
-      char * bytes = PyBytes_AsString(pyReturnVar);          
-      ret.reset(new SPL::blob((const unsigned char *)bytes, size));
+      pyAttributeFromPyObject(retSplVal, pyReturnVar);
       Py_DECREF(pyReturnVar);
-      return ret;
+
+      return 1;
     }
 
-    // Hash passing an SPL Blob
-    static SPL::int32 pyTupleHash(PyObject * function, SPL::blob & pyblob) {
+    // Python hash of an SPL attribute
+    template <class T>
+    static SPL::int32 pyTupleHash(PyObject * function, T & splVal) {
+
       PyGILLock lock;
 
-      // convert spl blob to bytes
-      PyObject * pyBytes  = pyBlobToBytes(pyblob);
+      PyObject * arg = pyAttributeToPyObject(splVal);
 
-      return _pyTupleHash(function, pyBytes);
-    }
-    //
-    // Hash passing an SPL Blob
-    static SPL::int32 pyTupleHash(PyObject * function, SPL::rstring & pyrstring) {
-      PyGILLock lock;
- 
-      // convert spl rstring to Python Unicode String assuming UTF-8
-      PyObject * pyString  = pyRstringToUnicode(pyrstring);
-
-      return _pyTupleHash(function, pyString);
-    }
-
-    // Hash passing a PyObject *
-    static SPL::int32 _pyTupleHash(PyObject * function, PyObject * arg) {
       // invoke python nested function that generates the int32 hash
       PyObject * pyReturnVar = pyTupleFunc(function, arg); 
      
@@ -298,28 +291,6 @@ namespace streamsx {
       Py_DECREF(pyTuple);
 
       return pyReturnVar;
-    }
-
-    /**
-     * Convert a SPL blob into a Python Byte string 
-     */
-    static PyObject * pyBlobToBytes(SPL::blob & pyblob) {
-      long int sizeb = pyblob.getSize();
-      const unsigned char * pybytes = pyblob.getData();
-
-      PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
-      return pyBytes;
-    }
-
-    /**
-     * Convert a SPL rstring into a Python Unicode string 
-     */
-    static PyObject * pyRstringToUnicode(SPL::rstring & pyrstring) {
-      long int sizeb = pyrstring.size();
-      const char * pybytes = pyrstring.data();
-
-      PyObject * pyString  = PyUnicode_FromStringAndSize(pybytes, sizeb);
-      return pyString;
     }
 
     };

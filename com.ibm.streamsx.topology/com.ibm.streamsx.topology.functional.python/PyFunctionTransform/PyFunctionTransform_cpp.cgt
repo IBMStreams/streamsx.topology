@@ -38,7 +38,7 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
 
     std::string appDirSetup = "import streamsx.topology.runtime\n";
     appDirSetup += "streamsx.topology.runtime.setupOperator(\"";
-    appDirSetup += ProcessingElement::pe().getApplicationDirectory();
+    appDirSetup += <%=$model->getParameterByName("toolkitDir")->getValueAt(0)->getCppExpression()%>;
     appDirSetup += "\")\n";
 
     const char* spl_setup_appdir = appDirSetup.c_str();
@@ -100,14 +100,10 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 print splpy_inputtuple2value($pystyle, $pyoutstyle);
 %>
 
-  std::auto_ptr<SPL::blob> out_blob = streamsx::topology::Splpy::pyTupleTransform(function_, value);
-  if (out_blob.get()) {
-    uint64_t out_size = 0;
-    unsigned char* out_data = out_blob->releaseData(out_size);
     OPort0Type otuple;
-    otuple.get___spl_po().adoptData(out_data, out_size);
-    submit(otuple, 0);
-  }
+    if (streamsx::topology::Splpy::pyTupleTransform(function_, value,
+         otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>()))
+       submit(otuple, 0);
 }
 
 // Punctuation processing

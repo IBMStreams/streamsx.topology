@@ -7,6 +7,7 @@ import inspect
 import pickle
 import base64
 import streamsx.topology.dependency
+import streamsx.topology.param
 from streamsx.topology.schema import CommonSchema
 
 class SPLGraph(object):
@@ -18,7 +19,7 @@ class SPLGraph(object):
         self.operators = []
         self.resolver = streamsx.topology.dependency._DependencyResolver()
 
-    def addOperator(self, kind, function=None, name=None):
+    def addOperator(self, kind, function=None, name=None, params={}):
         if name is None:
             if function is not None:
                if hasattr(function, '__name__'):
@@ -30,7 +31,9 @@ class SPLGraph(object):
         if(kind.startswith("$")):    
             op = Marker(len(self.operators), kind, name, {}, self)                           
         else:
-            op = SPLInvocation(len(self.operators), kind, function, name, {}, self)
+            if function is not None:
+                params['toolkitDir'] = streamsx.topology.param.toolkit_dir()
+            op = SPLInvocation(len(self.operators), kind, function, name, params, self)
         self.operators.append(op)
         if not function is None:
             if not inspect.isbuiltin(function):

@@ -25,6 +25,7 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
+import com.ibm.streamsx.topology.internal.streams.InvokeMakeToolkit;
 
 public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
@@ -88,7 +89,13 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         makeDirectoryStructure(toolkitRoot,
         		jsonGraph.get("namespace").toString());
 
-        return createToolkitFromGraph(toolkitRoot, jsonGraph);
+        Future<File> future = createToolkitFromGraph(toolkitRoot, jsonGraph);
+        
+        // Invoke spl-make-toolkit
+        InvokeMakeToolkit imt = new InvokeMakeToolkit(deployInfo, toolkitRoot);
+        imt.invoke();
+        
+        return future;
     }
 
     protected void addConfigToJSON(JSONObject graphConfig, Map<String,Object> config) {

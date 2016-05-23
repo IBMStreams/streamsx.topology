@@ -36,7 +36,7 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
 
     std::string appDirSetup = "import streamsx.topology.runtime\n";
     appDirSetup += "streamsx.topology.runtime.setupOperator(\"";
-    appDirSetup += ProcessingElement::pe().getApplicationDirectory();
+    appDirSetup += <%=$model->getParameterByName("toolkitDir")->getValueAt(0)->getCppExpression()%>;
     appDirSetup += "\")\n";
 
     const char* spl_setup_appdir = appDirSetup.c_str();
@@ -100,20 +100,8 @@ print splpy_inputtuple2value($pystyle);
   {
     streamsx::topology::PyGILLock lock;
 
-<%
- if ($pystyle eq 'pickle') {
-%>
-    // convert spl blob to bytes
-    PyObject * pyArg = streamsx::topology::Splpy::pyBlobToBytes(value);
-<%
- }
- if ($pystyle eq 'json') {
-%>
-    // convert spl rstring to Python Unicode string
-    PyObject * pyArg = streamsx::topology::Splpy::pyRstringToUnicode(value);
-<%
- }
-%>
+    // convert spl attribute to python object
+    PyObject * pyArg = streamsx::topology::pyAttributeToPyObject(value);
 
     PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyArg);
 

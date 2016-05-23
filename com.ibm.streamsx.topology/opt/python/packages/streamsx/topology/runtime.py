@@ -29,18 +29,25 @@ def pickleReturn(function) :
 # returning the callable's return
 def pickle_in(callable) :
     ac = _getCallable(callable)
-    def _pickle_in(v):
+    def _wf(v):
         return ac(pickle.loads(v))
-    return _pickle_in
+    return _wf
 
 # Given a callable 'callable', return a function
 # that loads an object from the serialized JSON input
 # and then calls 'callable' returning the callable's return
 def json_in(callable) :
     ac = _getCallable(callable)
-    def _json_in(v):
+    def _wf(v):
         return ac(json.loads(v))
-    return _json_in
+    return _wf
+
+def string_in(callable) :
+    ac = _getCallable(callable)
+    def _wf(v):
+        return ac(v)
+    return _wf
+
 
 # Get the callable from the value
 # passed into the SPL PyFunction operator.
@@ -59,32 +66,97 @@ def _getCallable(f):
             return ci
     return None
 
-# Given a callable 'callable', return a function
-# that depickles the input and then calls 'callable'
-# returning the callable's return already pickled.
-# If the return is None then it is not pickled.
+##
+## Set of functions that wrap the application's Python callable
+## with a function that correctly handles the input and output
+## (return) value. The input is from the SPL operator, i.e.
+## a value obtained from a tuple attribute as a Python object.
+## The output is the value (as a Python object) to be returned
+## to the SPL operator to be set as a tuple attribute.
+##
+## The style is one of:
+##
+## pickle - Object is a Python byte string representing a picked object.
+##          The object is depicked/pickled before being passed to/return from
+##          the application function.
+##
+## json - Object is a Python unicode string representing a serialized
+##          Json object. The object is deserialized/serialized before
+##          being passed to/return from the application function.
+##
+## string - Object is a Python unicode string representing a string
+##          to be passed directly to the Python application function.
+##          For output the function return is converted to a unicode
+##          string using str(value).
+##
+##
+
+###
+# Currently there are only these cases to handle for transform
+#
+#  {pickle,json,string} -> {pickle}
+#  {pickle} ->  {json,string}
+#
+#  Typically the use case is {pickle} -> {pickle}
+#  The other cases are only introduced with publish or subscribe.
+#
+###
+
+## 
+## {pickle,json,string} -> {pickle}
+##
+
 def pickle_in__pickle_out(callable):
     ac = _getCallable(callable)
-    def _pickle_in__pickle_out(v):
+    def _wf(v):
         rv = ac(pickle.loads(v))
         if rv is None:
             return None
         return pickle.dumps(rv)
-    return _pickle_in__pickle_out
+    return _wf
 
-# Given a callable 'callable', return a function
-# that loads an object from the serialized JSON input
-# and then calls 'callable'
-# returning the callable's return already pickled.
-# If the return is None then it is not pickled.
 def json_in__pickle_out(callable):
     ac = _getCallable(callable)
-    def _json_in__pickle_out(v):
+    def _wf(v):
         rv = ac(json.loads(v))
         if rv is None:
             return None
         return pickle.dumps(rv)
-    return _json_in__pickle_out
+    return _wf
+
+def string_in__pickle_out(callable):
+    ac = _getCallable(callable)
+    def _wf(v):
+        rv = ac(v)
+        if rv is None:
+            return None
+        return pickle.dumps(rv)
+    return _wf
+
+##################################################
+
+##
+##  {pickle} ->  {json,string}
+##
+
+def pickle_in__json_out(callable):
+    ac = _getCallable(callable)
+    def _wf(v):
+        rv = ac(pickle.loads(v))
+        if rv is None:
+            return None
+        jrv = json.dumps(rv, ensure_ascii=False)
+        return jrv
+    return _wf
+
+def pickle_in__string_out(callable):
+    ac = _getCallable(callable)
+    def _wf(v):
+        rv = ac(pickle.loads(v))
+        if rv is None:
+            return None
+        return str(rv)
+    return _wf
 
 # Given a function that returns an iterable
 # return a function that can be called
@@ -93,7 +165,7 @@ def json_in__pickle_out(callable):
 def iterableSource(callable) :
   ac = _getCallable(callable)
   iterator = iter(ac())
-  def _sourceIterator():
+  def _wf():
      try:
         while True:
             tuple = next(iterator)
@@ -101,7 +173,7 @@ def iterableSource(callable) :
                 return pickleObject(tuple)
      except StopIteration:
        return None
-  return _sourceIterator
+  return _wf
 
 # Iterator that wraps another iterator
 # to discard any values that are None
@@ -128,18 +200,18 @@ class _PickleIterator:
 # Used by PyFunctionMultiTransform
 def pickle_in__pickle_iter(callable):
     ac =_getCallable(callable)
-    def _pickle_in__pickle_iter(v):
+    def _wf(v):
         irv = ac(pickle.loads(v))
         if irv is None:
             return None
         return _PickleIterator(irv)
-    return _pickle_in__pickle_iter
+    return _wf
 
 def json_in__pickle_iter(callable):
     ac =_getCallable(callable)
-    def _json_in__pickle_iter(v):
+    def _wf(v):
         irv = ac(json.loads(v))
         if irv is None:
             return None
         return _PickleIterator(irv)
-    return _json_in__pickle_iter
+    return _wf

@@ -1,0 +1,110 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015  
+ */
+package com.ibm.streamsx.topology.test.python;
+
+import java.util.Arrays;
+import java.util.Random;
+
+import org.junit.Test;
+
+import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.test.distributed.PublishSubscribeTest.Delay;
+
+/**
+ * Test publish/subscribe. These tests just use publish/subscribe
+ * within a single job, but the expected use case is across jobs.
+ *
+ */
+public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
+
+	/**
+	 * Json Subscribe feeding a map
+	 */
+    @Test
+    public void testPublishMap() throws Exception {
+    	
+    	Random r = new Random();
+        final Topology t = new Topology();
+        
+        JSONObject j1 = new JSONObject();
+        j1.put("a", r.nextLong());
+        j1.put("b", "Hello:" + r.nextInt(200));
+
+        JSONObject j2 = new JSONObject();
+        j2.put("a", r.nextLong());
+        j2.put("b", "Goodbye:" + r.nextInt(200));
+
+        JSONObject j3 = new JSONObject();
+        j3.put("a", r.nextLong());
+        j3.put("b", "So long:" + r.nextInt(200));
+        
+        String s1 = "R" + j1.get("a") + "X" + j1.get("b") + "X" +
+             (((Long) j1.get("a")) + 235L);
+        String s2 = "R" + j2.get("a") + "X" + j2.get("b") + "X" +
+                (((Long) j2.get("a")) + 235L);
+        String s3 = "R" + j3.get("a") + "X" + j3.get("b") + "X" +
+                (((Long) j3.get("a")) + 235L);
+
+        
+  	
+    	includePythonApp(t, "json_map_json.py", "json_map_json::json_map_json");
+   	    	
+        TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
+        
+        source = source.modify(new Delay<JSONObject>(10)).asType(JSONObject.class);
+        
+        source.publish("pytest/json/map");
+        
+        TStream<JSONObject> subscribe = t.subscribe("pytest/json/map/result", JSONObject.class);
+        
+        TStream<String> asString = subscribe.transform(
+        		j -> "R" + j.get("a") + "X" + j.get("b") + "X" + j.get("c"));
+
+        completeAndValidate(asString, 20, s1, s2, s3);
+    }
+    
+	/**
+	 * Json Subscribe feeding a filter
+	 */
+    @Test
+    public void testPublishFilter() throws Exception {
+    	
+    	Random r = new Random();
+    	
+        final Topology t = new Topology();
+  	
+    	includePythonApp(t, "json_filter_json.py", "json_filter_json::json_filter_json");
+    	
+        JSONObject j1 = new JSONObject();
+        j1.put("a", 23523L);
+        j1.put("b", "Hello:" + r.nextInt(200));
+
+        JSONObject j2 = new JSONObject();
+        j2.put("a", 7L);
+        j2.put("b", "Goodbye:" + r.nextInt(200));
+
+        JSONObject j3 = new JSONObject();
+        j3.put("a", 101L);
+        j3.put("b", "So long:" + r.nextInt(200));
+        
+        String s2 = "R" + j2.get("a") + "X" + j2.get("b");
+   	    	
+        TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
+        
+        source = source.modify(new Delay<JSONObject>(10)).asType(JSONObject.class);
+        
+        source.publish("pytest/json/filter");
+        
+        TStream<JSONObject> subscribe = t.subscribe("pytest/json/filter/result", JSONObject.class);
+        
+        TStream<String> asString = subscribe.transform(
+        		j -> "R" + j.get("a") + "X" + j.get("b"));
+
+        completeAndValidate(asString, 20, s2);
+    }
+
+}

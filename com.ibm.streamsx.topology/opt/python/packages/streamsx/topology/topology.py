@@ -3,6 +3,7 @@
 
 from streamsx.topology import graph
 from streamsx.topology import schema
+import streamsx.topology.functions
 from enum import Enum
 
 
@@ -110,6 +111,12 @@ class Stream(object):
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
+    def _map(self, func, schema):
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionTransform", func)
+        op.addInputPort(outputPort=self.oport)
+        oport = op.addOutputPort(schema=schema)
+        return Stream(self.topology, oport)
+
     def transform(self, func):
         """
         Transforms each tuple from this stream into 0 or 1 tuples using the supplied callable `func`.
@@ -130,10 +137,7 @@ class Stream(object):
         Returns:
             A Stream containing transformed tuples.
         """
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionTransform", func)
-        op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort()
-        return Stream(self.topology, oport)
+        return self._map(func, schema=schema.CommonSchema.Python)
 
     def map(self, func):
         """
@@ -331,7 +335,7 @@ class Stream(object):
         Prints each tuple to stdout flushing after each tuple.
         :returns: None
         """
-        self.sink(print_flush)
+        self.sink(streamsx.topology.functions.print_flush)
 
     def publish(self, topic, schema=schema.CommonSchema.Python):
         """
@@ -346,20 +350,14 @@ class Stream(object):
         Returns:
             None.
         """
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish")
-        op.addInputPort(outputPort=self.oport)
+        if self.oport.schema.schema() != schema.schema():
+            self._map(streamsx.topology.functions.identity,schema=schema).publish(topic, schema=schema);
+            return None
+
         publishParams = {'topic': [topic]}
-        op.setParameters(publishParams)
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params=publishParams)
+        op.addInputPort(outputPort=self.oport)
 
-# Print function that flushes
-def print_flush(v):
-    """
-    Prints argument to stdout flushing after each tuple.
-    :returns: None
-    """
-    print(v, flush=True)
-
-    
 class Routing(Enum):
     ROUND_ROBIN=1
     KEY_PARTITIONED=2
