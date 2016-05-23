@@ -106,5 +106,48 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
 
         completeAndValidate(asString, 20, s2);
     }
+    
+	/**
+	 * Json Subscribe feeding a flat map
+	 */
+    @Test
+    public void testPublishFlatMap() throws Exception {
+    	
+    	Random r = new Random();
+        final Topology t = new Topology();
+        
+        JSONObject j1 = new JSONObject();
+        j1.put("a", r.nextLong());
+        j1.put("b", "Hello:" + r.nextInt(200));
+
+        JSONObject j2 = new JSONObject();
+        j2.put("a", r.nextLong());
+        j2.put("b", "Goodbye:" + r.nextInt(200));
+
+        JSONObject j3 = new JSONObject();
+        j3.put("a", r.nextLong());
+        j3.put("b", "So long:" + r.nextInt(200));
+        
+        String s1a = j1.get("a").toString();
+        String s1b = j1.get("b").toString();
+
+        String s2a = j2.get("a").toString();
+        String s2b = j2.get("b").toString();
+
+        String s3a = j3.get("a").toString();
+        String s3b = j3.get("b").toString();
+  	
+    	includePythonApp(t, "json_flatmap_string.py", "json_flatmap_str::json_flatmap_str");
+   	    	
+        TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
+        
+        source = source.modify(new Delay<JSONObject>(10)).asType(JSONObject.class);
+        
+        source.publish("pytest/json/flatmap");
+        
+        TStream<String> subscribe = t.subscribe("pytest/json/flatmap/result", String.class);
+
+        completeAndValidate(subscribe, 20, s1a, s1b, s2a, s2b, s3a, s3b);
+    }
 
 }

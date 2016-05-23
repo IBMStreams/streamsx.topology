@@ -59,4 +59,22 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
         completeAndValidate(subscribe, 20, "ABC", "DEF", "34");
     }
 
+    @Test
+    public void testPublishFlatMap() throws Exception {
+    	
+        final Topology t = new Topology();
+  	
+    	includePythonApp(t, "string_flatmap_string.py", "str_flatmap_str::str_flatmap_str");
+   	    	
+        TStream<String> source = t.strings("mary had a little lamb", "If you can keep your head when all about you");
+        
+        source = source.modify(new Delay<String>(10));
+        
+        source.publish("pytest/string/flatmap");
+        
+        TStream<String> subscribe = t.subscribe("pytest/string/flatmap/result", String.class);
+
+        completeAndValidate(subscribe, 30,
+        		"mary", "had", "a", "little", "lamb", "If", "you", "can", "keep", "your", "head", "when", "all", "about", "you");
+    }
 }
