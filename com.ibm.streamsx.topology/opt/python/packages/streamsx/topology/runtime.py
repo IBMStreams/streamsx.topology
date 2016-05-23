@@ -29,18 +29,25 @@ def pickleReturn(function) :
 # returning the callable's return
 def pickle_in(callable) :
     ac = _getCallable(callable)
-    def _pickle_in(v):
+    def _wf(v):
         return ac(pickle.loads(v))
-    return _pickle_in
+    return _wf
 
 # Given a callable 'callable', return a function
 # that loads an object from the serialized JSON input
 # and then calls 'callable' returning the callable's return
 def json_in(callable) :
     ac = _getCallable(callable)
-    def _json_in(v):
+    def _wf(v):
         return ac(json.loads(v))
-    return _json_in
+    return _wf
+
+def string_in(callable) :
+    ac = _getCallable(callable)
+    def _wf(v):
+        return ac(v)
+    return _wf
+
 
 # Get the callable from the value
 # passed into the SPL PyFunction operator.
