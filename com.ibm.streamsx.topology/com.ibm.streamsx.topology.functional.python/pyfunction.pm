@@ -26,6 +26,8 @@ sub splpy_tuplestyle{
     $pystyle = 'pickle';
  } elsif ($attr->getName() eq 'string') {
     $pystyle = 'string';
+ } elsif ($attr->getName() eq 'message') {
+    $pystyle = 'message';
  } elsif ($attr->getName() eq 'jsonString') {
     $pystyle = 'json';
  }
@@ -47,7 +49,11 @@ sub splpy_inputtuple2value{
  if ($pystyle eq 'string') {
   return 'SPL::rstring value = ip.get_string();';
  }
-
+ 
+ if ($pystyle eq 'message') {
+  return 'SPL::rstring value = ip.get_message();';
+ }
+ 
  if ($pystyle eq 'json') {
   return 'SPL::rstring value = ip.get_jsonString();';
  }

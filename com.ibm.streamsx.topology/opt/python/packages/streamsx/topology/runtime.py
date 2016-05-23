@@ -18,6 +18,9 @@ def setupOperator(dir):
 
 def pickleObject(v):
     return pickle.dumps(v)
+
+def depickleObject(v):
+    return pickle.loads(v)
      
 def pickleReturn(function) :
     def _pickleReturn(v):
