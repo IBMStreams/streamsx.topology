@@ -32,7 +32,7 @@ def delete_json(fn):
 # environment
 #
 
-def submit(ctxtype, graph):
+def submit(ctxtype, graph, config={}):
     """
     Submits a topology with the specified context type.
     
@@ -49,7 +49,7 @@ def submit(ctxtype, graph):
     Returns:
         None
     """    
-    fj = _createFullJSON(graph)
+    fj = _createFullJSON(graph, config)
     fn = _createJSONFile(fj)
     try:
         return _submitUsingJava(ctxtype, fn)
@@ -57,9 +57,9 @@ def submit(ctxtype, graph):
         print_exception("Error submitting with java")
         delete_json(fn)
 
-def _createFullJSON(graph):
+def _createFullJSON(graph, config):
     fj = {}
-    fj["deploy"] = {}
+    fj["deploy"] = config
     fj["graph"] = graph.generateSPLGraph()
     return fj
    
