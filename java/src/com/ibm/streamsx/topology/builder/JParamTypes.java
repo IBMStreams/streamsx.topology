@@ -24,4 +24,9 @@ public interface JParamTypes {
 	
 	 /** operator parameter type for submission parameter value */
     String TYPE_SUBMISSION_PARAMETER = "submissionParameter";
+    
+    /**
+     * An SPL expression.
+     */
+    String TYPE_SPL_EXPRESSION = "splexpr";
 }

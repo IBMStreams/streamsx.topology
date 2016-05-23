@@ -401,6 +401,7 @@ class OperatorGenerator {
         PARAM_TYPES_TOSTRING.add(JParamTypes.TYPE_ENUM);
         PARAM_TYPES_TOSTRING.add(JParamTypes.TYPE_SPLTYPE);
         PARAM_TYPES_TOSTRING.add(JParamTypes.TYPE_ATTRIBUTE);
+        PARAM_TYPES_TOSTRING.add(JParamTypes.TYPE_SPL_EXPRESSION);      
     }
 
     private void parameterValue(JSONObject param, StringBuilder sb) {

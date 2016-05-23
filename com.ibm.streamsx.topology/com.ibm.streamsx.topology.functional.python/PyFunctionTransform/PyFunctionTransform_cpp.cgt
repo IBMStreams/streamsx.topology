@@ -38,7 +38,7 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
 
     std::string appDirSetup = "import streamsx.topology.runtime\n";
     appDirSetup += "streamsx.topology.runtime.setupOperator(\"";
-    appDirSetup += ProcessingElement::pe().getApplicationDirectory();
+    appDirSetup += <%=$model->getParameterByName("toolkitDir")->getValueAt(0)->getCppExpression()%>;
     appDirSetup += "\")\n";
 
     const char* spl_setup_appdir = appDirSetup.c_str();

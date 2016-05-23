@@ -35,6 +35,15 @@
     <parameters>
       <allowAny>false</allowAny>
       <parameter>
+        <name>toolkitDir</name>
+        <description>Toolkit the operator was invoked from.</description>
+        <optional>false</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
         <name>pyModule</name>
         <description>Function's module </description>
         <optional>false</optional>

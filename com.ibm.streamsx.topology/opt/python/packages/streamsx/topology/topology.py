@@ -350,13 +350,12 @@ class Stream(object):
             None.
         """
         if self.oport.schema.schema() != schema.schema():
-            self._map(_tuple_identity,schema=schema).publish(topic, schema=schema);
+            self._map(identity,schema=schema).publish(topic, schema=schema);
             return None
 
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish")
-        op.addInputPort(outputPort=self.oport)
         publishParams = {'topic': [topic]}
-        op.setParameters(publishParams)
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params=publishParams)
+        op.addInputPort(outputPort=self.oport)
 
 # Print function that flushes
 def print_flush(v):
