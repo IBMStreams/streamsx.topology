@@ -53,14 +53,12 @@ public class InvokeMakeToolkit {
         // Set STREAMS_INSTALL in case it was overriden for compilation
         pb.environment().put("STREAMS_INSTALL", installDir);
                
-        // pb.directory(applicationDir);
-
-        Process scProcess = pb.start();
-        ProcessOutputToLogger.log(trace, scProcess);
-        scProcess.getOutputStream().close();
-        int rc = scProcess.waitFor();
+        Process mtProcess = pb.start();
+        ProcessOutputToLogger.log(trace, mtProcess);
+        mtProcess.getOutputStream().close();
+        int rc = mtProcess.waitFor();
         trace.info("spl-make-toolkit complete: return code=" + rc);
         if (rc != 0)
-            throw new Exception("spl-make-toolkit compilation failed!");
+            throw new Exception("spl-make-toolkit failed!");
     }
 }
