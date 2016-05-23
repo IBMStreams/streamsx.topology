@@ -4,8 +4,8 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
-import static com.ibm.streamsx.topology.internal.core.SubmissionParameter.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_NAMES;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_VALUES;
 
@@ -21,6 +21,7 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindow.Type;
 import com.ibm.streamsx.topology.builder.JOperator;
+import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
@@ -397,9 +398,9 @@ class OperatorGenerator {
     // Set of "type"s where the "value" in the JSON is printed as-is.
     private static final Set<String> PARAM_TYPES_TOSTRING = new HashSet<>();
     static {
-        PARAM_TYPES_TOSTRING.add("enum");
-        PARAM_TYPES_TOSTRING.add("spltype");
-        PARAM_TYPES_TOSTRING.add("attribute");
+        PARAM_TYPES_TOSTRING.add(JParamTypes.TYPE_ENUM);
+        PARAM_TYPES_TOSTRING.add(JParamTypes.TYPE_SPLTYPE);
+        PARAM_TYPES_TOSTRING.add(JParamTypes.TYPE_ATTRIBUTE);
     }
 
     private void parameterValue(JSONObject param, StringBuilder sb) {

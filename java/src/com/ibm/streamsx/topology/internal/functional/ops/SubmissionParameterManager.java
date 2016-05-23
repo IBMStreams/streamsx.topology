@@ -15,7 +15,8 @@ import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue;
-import static com.ibm.streamsx.topology.internal.core.SubmissionParameter.TYPE_SUBMISSION_PARAMETER;
+
+import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 
 /**
  * A manager for making a submission parameter Supplier usable

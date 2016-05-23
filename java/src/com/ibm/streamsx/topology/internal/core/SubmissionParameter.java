@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,9 +41,6 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
     private transient final Topology top;
     private transient T value;
     private transient boolean initialized;
-
-    /** operator parameter type for submission parameter value */
-    public static final String TYPE_SUBMISSION_PARAMETER = "submissionParameter";
     
     private static MetaType getMetaType(Class<?> valueClass) {
         MetaType metaType = toMetaType.get(valueClass);
