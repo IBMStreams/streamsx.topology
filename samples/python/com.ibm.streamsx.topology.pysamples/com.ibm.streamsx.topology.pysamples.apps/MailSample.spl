@@ -1,0 +1,24 @@
+namespace com.ibm.streamsx.topology.pysamples.apps;
+
+use com.ibm.streamsx.topology.pysamples.mail::simplesendmail ;
+
+public composite MailSample
+{
+	graph
+		(stream<rstring f, rstring t, rstring msg> Beacon_1_out0) as Beacon_1 = Beacon()
+		{
+		param
+		iterations:1;
+		output Beacon_1_out0:
+		     f = getSubmissionTimeValue("from"),
+		     t = getSubmissionTimeValue("to"),
+		     msg = "Hello from a Python function running in IBM Streams!";
+		}
+
+		() as simplesendmail_2 =
+			simplesendmail(Beacon_1_out0)
+		{
+		}
+
+}
+

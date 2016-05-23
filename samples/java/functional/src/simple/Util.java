@@ -43,7 +43,6 @@ public class Util {
     public static Map<String,Object> createConfig(String[] args) {
         String[] cfgItems = {
                 ContextProperties.APP_DIR,  // String
-                ContextProperties.BUNDLE,   // File
                 ContextProperties.KEEP_ARTIFACTS, // Boolean
                 ContextProperties.TOOLKIT_DIR,  // String
                 ContextProperties.TRACING_LEVEL,  // java.util.logging.Level
@@ -65,9 +64,7 @@ public class Util {
                     if (toks[0].equals(item)) {
                         String valStr = toks[1];
                         Object value = valStr;
-                        if (item.equals(ContextProperties.BUNDLE))
-                            value = new File(valStr);
-                        else if (item.equals(ContextProperties.TRACING_LEVEL))
+                        if (item.equals(ContextProperties.TRACING_LEVEL))
                             value = toTracingLevel(valStr);
                         else if (item.equals(ContextProperties.KEEP_ARTIFACTS))
                             value = Boolean.valueOf(valStr);

@@ -5,9 +5,11 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.streams.InvokeStandalone;
 
@@ -42,5 +44,18 @@ public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> 
     }
 
     void preInvoke() {
+    }
+    
+    @Override
+    public Future<Integer> submit(JSONObject json) throws Exception {
+
+    	File bundle = bundler.submit(json).get();
+        InvokeStandalone invokeStandalone = new InvokeStandalone(bundle);
+
+        preInvoke();
+        Map<String, Object> config = Collections.emptyMap();
+        Future<Integer> future = invokeStandalone.invoke(config);
+
+        return future;
     }
 }

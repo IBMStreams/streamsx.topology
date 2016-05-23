@@ -4,6 +4,8 @@
  */
 namespace com.ibm.streamsx.topology.topic ;
 
+use com.ibm.streamsx.topology::String;
+
 /**
  * Publish a stream to a topic. Allows other IBM Streams
  * applications to subscribe to the input stream, including

@@ -1,0 +1,42 @@
+<project name="streamsx.topology.test.python" default="all"
+    xmlns:jacoco="antlib:org.jacoco.ant"
+    >
+    <description>
+        Build the Streams Python tests.
+    </description>
+	
+	<property name="testtk" location="spl/testtkpy"/>
+	<property name="topology" location="topology"/>
+
+  <import file="../../common-build.xml"/>
+
+  <target name="all" depends="test.toolkit"/> 
+	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/spl_samples.py"
+	  	toDir="${testtk}/opt/python/streams"/>
+	  <target name="test.toolkit">
+		   <exec executable="python3" dir="${testtk}">
+		     <arg value="${tk}/bin/spl-python-extract.py"/>
+		     <arg value="--directory"/>
+		     <arg value="${testtk}"/>
+		   </exec>
+	   <exec executable="${streams.install}/bin/spl-make-toolkit">
+	     <arg value="-i"/>
+	     <arg value="${testtk}"/>
+	   </exec>
+	   </target>
+
+	  <target name="test.application.api">
+		   <exec executable="python3" dir="${topology}" failonerror="true">
+		     <env key="PYTHONPATH" value="${tk}/opt/python/packages"/>
+		     <arg value="test1.py"/>
+		   </exec>
+	   </target>
+	   
+	  <target name="test.mqtt.application.api">
+		   <exec executable="python3" dir="${topology}" failonerror="true">
+		     <env key="PYTHONPATH" value="${tk}/opt/python/packages"/>
+		     <arg value="mqtest1.py"/>
+		   </exec>
+	   </target>	   
+
+</project>
