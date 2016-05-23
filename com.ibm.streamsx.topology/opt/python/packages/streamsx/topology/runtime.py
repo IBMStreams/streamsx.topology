@@ -215,3 +215,12 @@ def json_in__pickle_iter(callable):
             return None
         return _PickleIterator(irv)
     return _wf
+
+def string_in__pickle_iter(callable):
+    ac =_getCallable(callable)
+    def _wf(v):
+        irv = ac(v)
+        if irv is None:
+            return None
+        return _PickleIterator(irv)
+    return _wf

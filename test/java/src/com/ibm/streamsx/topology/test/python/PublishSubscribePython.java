@@ -46,7 +46,6 @@ abstract class PublishSubscribePython extends TestTopology {
     	
     	Path pyPackages = Paths.get(System.getProperty("topology.toolkit.release"),
     			"opt", "python", "packages").toAbsolutePath();
-    	System.out.println("PYPAckAGES: " + pyPackages.toString());
     	    	
 		ProcessBuilder pb = new ProcessBuilder("python3", module, pyTk.toAbsolutePath().toString());		
 		pb.redirectOutput(Redirect.INHERIT);
