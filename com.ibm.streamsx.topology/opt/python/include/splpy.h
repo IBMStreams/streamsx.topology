@@ -354,6 +354,53 @@ namespace streamsx {
       return pyReturnVar;
     }
 
+    /**
+     * Convert a SPL blob into a Python Byte string 
+     */
+    static PyObject * pyBlobToBytes(SPL::blob & pyblob) {
+      long int sizeb = pyblob.getSize();
+      const unsigned char * pybytes = pyblob.getData();
+
+      PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
+      return pyBytes;
+    }
+
+    /**
+     * Convert a SPL rstring into a Python Unicode string 
+     */
+    static PyObject * pyRstringToUnicode(SPL::rstring & pyrstring) {
+      long int sizeb = pyrstring.size();
+      const char * pybytes = pyrstring.data();
+
+      PyObject * pyString  = PyUnicode_FromStringAndSize(pybytes, sizeb);
+      return pyString;
+    }
+	
+    /*This function converts some basic Python types to a string based on its
+    * python type.
+    */
+    static SPL::rstring pythonToCppPrimitiveStringConversion(PyObject * convert_from_object) {
+
+    SPL::rstring retVal ;
+	char temp[1024];
+	char * ptemp = temp;
+	
+    if (PyUnicode_Check(convert_from_object) ) {
+		retVal  = SPL::rstring( PyUnicode_AsUTF8(convert_from_object));
+    } else if ( PyLong_Check(convert_from_object)) {
+		PyOS_snprintf(ptemp,1024,"%ld",PyLong_AsLong(convert_from_object));
+		retVal = SPL::rstring(temp);
+    } else if (PyFloat_Check(convert_from_object)) {
+		PyOS_snprintf(ptemp,1024,"%g",PyFloat_AsDouble(convert_from_object));
+		retVal = SPL::rstring(temp);		
+    } else {
+		SPLAPPTRC(L_ERROR, "An unknown type was encountered when converting message to string", "python");
+		flush_PyErr_Print();
+        throw;
+    }
+    return retVal;
+}
+
     };
    
   }
