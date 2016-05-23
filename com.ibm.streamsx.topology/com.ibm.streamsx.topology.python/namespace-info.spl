@@ -500,7 +500,7 @@ Limited testing has been performed to build an application using DISTRIBUTED and
  string tuples to MQTT topics, and
  subscribing to MQTT topics and creating streams.
  
-* `mqtt_streams(self, topic, config)` MQTT Connector 
+* `mqtt_streams(self, config)` MQTT Connector 
 
 A connector is for a specific MQTT Broker as specified in
 the configuration object config. Any number of  publish()and  subscribe()
@@ -511,7 +511,7 @@ connections may be created from a single mqtt_streams connector.
   Publish this stream (src_op) on a topic to an MQTT server for applications to subscribe to.
   A Streams application may publish a stream to an MQTT server to allow other
   applications to subscribe to it. A subscriber matches a
-  publisher if the topics and server URI match.  The schema of the stream to publish must be SPL::rstring
+  publisher if the topics and server URI match.  The schema of the stream to publish must be tuple<rstring message>
 
   param: `src_op`: Stream to publish to MQTT server.
   param `topic`: Topic to publish this stream to.
@@ -524,7 +524,7 @@ connections may be created from a single mqtt_streams connector.
   Subscribe to a topic published to a MQTT server.
   A Streams application may subscribe to a stream published to a MQTT server. 
   A subscriber matches a publisher if the topic matches.
-  The schema of the MQTT server stream is SPL::rstring
+  The schema of the stream returned from the MQTT server is tuple<rstring message>
 
 
   param `topic`: Topic to subscribe to.
