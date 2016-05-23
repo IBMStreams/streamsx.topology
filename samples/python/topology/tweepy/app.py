@@ -1,5 +1,6 @@
 from streamsx.topology.topology import *
 import streamsx.topology.context
+from streamsx.topology.schema import *
 import sys
 import tweets
 
@@ -29,12 +30,15 @@ def main():
   # Each tuple is a dictionary containing
   # the full tweet (converted from JSON)
   ts = topo.source(tweets.tweets(terms))
+
+  # Publish the full tweets to a topic as JSON
+  ts.publish("tweets/full", schema=CommonSchema.Json)
   
   # get the text of the tweet
   ts = ts.transform(tweets.text)
 
-  # just print it
-  ts.print()
+  # Publish just the test of tweets to a topic as String
+  ts.publish("tweets/text", schema=CommonSchema.String)
 
   streamsx.topology.context.submit("DISTRIBUTED", topo.graph)
 
