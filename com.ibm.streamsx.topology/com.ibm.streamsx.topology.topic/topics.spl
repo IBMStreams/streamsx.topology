@@ -2,6 +2,17 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2016
  */
+
+/**
+ * Topic based publish-subscribe model for streams.
+ * Supports a microservice architecture for IBM Streams
+ * applications where streams are published to topics
+ * and can be subscribed to be independent applications.
+ * Use of interchange schema types allows applications
+ * to be implemented in different langauges, including
+ * SPL, Python, Java & Scala.
+*/
+
 namespace com.ibm.streamsx.topology.topic ;
 
 use com.ibm.streamsx.topology::String;
@@ -87,7 +98,7 @@ stateful int32 setTopicNameProperties(rstring exportType, rstring topicName, boo
 }
 
 /**
- * Subscribe to topics using a filter.
+ * Subscribe to topics using a topic filter.
  * Generates a stream that is subscribed, through
  * IBM Streams dynamic connections, to all streams
  * published to topics that match the topic filter `topic`
