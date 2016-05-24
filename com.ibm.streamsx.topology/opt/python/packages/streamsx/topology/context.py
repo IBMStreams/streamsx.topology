@@ -44,10 +44,12 @@ def submit(ctxtype, graph, config={}):
           The standalone execution is spawned as a separate process
         * BUNDLE - execution of the topology produces an SPL application bundle
           (.sab file) that can be submitted to an IBM Streams instance as a distributed application.
+        * JUPYTER - the topology is run in standalone mode, and context.submit returns a stdout streams of bytes which 
+          can be read from to visualize the output of the application.
         graph: a Topology.graph object
         
     Returns:
-        None
+        An output stream of bytes if submitting with JUPYTER, otherwise returns None.
     """    
     fj = _createFullJSON(graph, config)
     fn = _createJSONFile(fj)
@@ -69,14 +71,7 @@ def _createJSONFile(fj) :
     tf.write(json.dumps(fj, sort_keys=True, indent=2, separators=(',', ': ')))
     tf.close()
     return tf.name
-
     
-def delete_json_when_complete(process, fn):
-    try:
-        process.wait()
-    finally:
-        delete_json(fn)
-
 def print_process_stdout(process):
     try:
         while True:
@@ -87,13 +82,15 @@ def print_process_stdout(process):
     except:
         print_exception("Error reading from process stdout")
 
-def print_process_stderr(process):
+def print_process_stderr(process, fn):
     try:
         while True:
             line = process.stderr.readline().strip().decode("utf-8")
             if line == '':
                 break
             print(line)
+            if "com.ibm.streamsx.topology.internal.streams.InvokeSc getToolkitPath" in line:
+                delete_json(fn)
     except:
         print_exception("Error reading from process stderr")
 
@@ -120,11 +117,7 @@ def _submitUsingJava(ctxtype, fn):
     "com.ibm.streamsx.topology.context.StreamsContextSubmit", ctxtype, fn]
     process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
     try:
-        stderr_thread = threading.Thread(target=delete_json_when_complete, args=([process, fn]))
-        stderr_thread.daemon = True            
-        stderr_thread.start()
-        
-        stderr_thread = threading.Thread(target=print_process_stderr, args=([process]))
+        stderr_thread = threading.Thread(target=print_process_stderr, args=([process, fn]))
         stderr_thread.daemon = True            
         stderr_thread.start()
         if not ctxtype_was == "JUPYTER":
