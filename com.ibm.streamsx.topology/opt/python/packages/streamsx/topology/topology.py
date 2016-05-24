@@ -41,12 +41,24 @@ class Topology(object):
         """
         Subscribe to a topic published by other Streams applications.
         A Streams application may publish a stream to allow other
-        applications to subscribe to it. A subscriber matches a
+        Streams applications to subscribe to it. A subscriber matches a
         publisher if the topic and schema match.
+
+        By default a stream is subscribed as Python objects (schema.CommonSchema.Python)
+        which connects to streams published to topic by Python Streams applications.
+
+        JSON streams are subscribed to using schema.CommonSchema.Json. 
+        Each tuple on the returned stream will be a Python dictionary
+        object created by json.loads(tuple).
+        Any publishing Streams application may have been implemented in any language.
+       
+        String streams are subscribed to using schema.CommonSchema.String .
+        Each tuple on the returned stream will be a Python string object.
+        Any publishing Streams application may have been implemented in any language.
 
         Args:
             topic: Topic to subscribe to.
-            schema: Schema to subscriber to. Defaults to CommonSchema.Python representing Python objects.
+            schema: schema.StreamSchema to subscribe to. Defaults to schema.CommonSchema.Python representing Python objects.
         Returns:
             A Stream whose tuples have been published to the topic by other Streams applications.
         """
@@ -341,8 +353,22 @@ class Stream(object):
         """
         Publish this stream on a topic for other Streams applications to subscribe to.
         A Streams application may publish a stream to allow other
-        applications to subscribe to it. A subscriber matches a
-        publisher if the topic and schema match.
+        Streams applications to subscribe to it. A subscriber
+        matches a publisher if the topic and schema match.
+
+        By default a stream is published as Python objects (CommonSchema.Python)
+        which allows other Streams Python applications to subscribe to
+        the stream using the same topic.
+
+        If a stream is published with CommonSchema.Json then it is published
+        as JSON, other Streams applications may subscribe to it regardless
+        of their implementation language. A Python tuple is converted to
+        JSON using json.dumps(tuple, ensure_ascii=False).
+
+        If a stream is published with CommonSchema.String then it is published
+        as strings, other Streams applications may subscribe to it regardless
+        of their implementation language. A Python tuple is converted to
+        a string using str(tuple).
 
         Args:
             topic: Topic to publish this stream to.

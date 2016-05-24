@@ -225,7 +225,7 @@ a stream may contain different types of objects.
 
 # Prerequites
 
-* Install and configure IBM Streams Version 4.0.0 (or later).
+* Install and configure IBM Streams Version 4.0.1 (or later).
 * Install CPython 3.5.0 (or later).  Testing has been performed with Python 3.5.1.  Python is assumed to be installed in the default location (`/usr/local`).
 * Download and extract the IBM Streams Topology Toolkit, which includes the Python Application API.
   Include the fully qualified path of the `com.ibm.streamsx.topology/opt/python/packages` directory in the PYTHONPATH environment variable.
