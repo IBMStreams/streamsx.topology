@@ -263,6 +263,8 @@ namespace streamsx {
       PyObject * arg = pyAttributeToPyObject(splVal);
 
       // invoke python nested function that generates the int32 hash
+      // clear any indication of an error
+      PyErr_Clear();
       PyObject * pyReturnVar = pyTupleFunc(function, arg); 
      
        // construct integer from  return value
@@ -274,7 +276,12 @@ namespace streamsx {
         flush_PyErr_Print();
         throw;
       }  	 
-      Py_DECREF(pyReturnVar);		
+      if (PyErr_Occurred()) {
+        flush_PyErr_Print();
+      }
+      else {
+        Py_DECREF(pyReturnVar);		
+      }
       return retval;
    }
 

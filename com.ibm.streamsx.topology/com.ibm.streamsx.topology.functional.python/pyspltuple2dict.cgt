@@ -1,0 +1,13 @@
+
+// process the attributes in the spl tuple
+// into a python dictionary object
+  streamsx::topology::PyGILLock lockdict;
+  PyObject * pyTuple = PyTuple_New(<%=$pynumattrs%>); 
+  PyObject *pyValue;
+  PyObject *pyDict = PyDict_New();
+<%
+     for (my $i = 0; $i < $pynumattrs; ++$i) {
+         print convertToPythonValue($pytuple, $i, $pyatypes[$i], $pyanames[$i]);
+     }
+%>
+

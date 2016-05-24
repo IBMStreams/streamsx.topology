@@ -49,6 +49,15 @@ def string_in(callable) :
     return _wf
 
 
+# Given a callable 'callable', return a function
+# that calls 'callable' with a python dictionary object 
+# form of an spltuple returning the callable's return
+def spltuple_in(callable) :
+    ac = _getCallable(callable)
+    def _wf(v):
+        return ac(v)
+    return _wf
+
 # Get the callable from the value
 # passed into the SPL PyFunction operator.
 #
@@ -158,6 +167,20 @@ def pickle_in__string_out(callable):
         return str(rv)
     return _wf
 
+# Given a callable 'callable', return a function
+# that calls 'callable' with a python dictionary object 
+# form of an spltuple 
+# returning the callable's return already pickled.
+# If the return is None then it is not pickled.
+def spltuple_in__pickle_out(callable):
+    ac = _getCallable(callable)
+    def _wf(v):
+        rv = ac(v)
+        if rv is None:
+            return None
+        return pickle.dumps(rv)
+    return _wf
+
 # Given a function that returns an iterable
 # return a function that can be called
 # repeatably by a source operator returning
@@ -217,6 +240,15 @@ def json_in__pickle_iter(callable):
     return _wf
 
 def string_in__pickle_iter(callable):
+    ac =_getCallable(callable)
+    def _wf(v):
+        irv = ac(v)
+        if irv is None:
+            return None
+        return _PickleIterator(irv)
+    return _wf
+
+def spltuple_in__pickle_iter(callable):
     ac =_getCallable(callable)
     def _wf(v):
         irv = ac(v)
