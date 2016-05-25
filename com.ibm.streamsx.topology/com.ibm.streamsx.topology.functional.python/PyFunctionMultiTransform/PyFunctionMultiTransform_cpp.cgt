@@ -101,20 +101,15 @@ print splpy_inputtuple2value($pystyle);
   std::vector<OPort0Type> output_tuples; 
   
   {
-<%if ($pystyle eq 'spltuple') {%>
- // GIL lock is constructed and taken here in the included cgt
+<%if ($pystyle eq 'spltupleDict') {%>
 @include "../pyspltuple2dict.cgt"
-  PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyDict);
-  Py_DECREF(pyDict);
 <%}%>
 
-<%if ($pystyle ne 'spltuple') {%>
     streamsx::topology::PyGILLock lock;
     // convert spl attribute to python object
     PyObject * pyArg = streamsx::topology::pyAttributeToPyObject(value);
 
     PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyArg);
-<%}%>
 
     if (pyIterator == 0) {
       streamsx::topology::Splpy::flush_PyErr_Print();

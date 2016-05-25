@@ -103,21 +103,13 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 print splpy_inputtuple2value($pystyle, $pyoutstyle);
 %>
 
-<%if ($pystyle eq 'spltuple') {%>
+<%if ($pystyle eq 'spltupleDict') {%>
 @include "../pyspltuple2dict.cgt"
-  OPort0Type otuple;
-  if (streamsx::topology::Splpy::pyTupleTransform(function_, pyDict,
-       otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>()))
-     submit(otuple, 0);
-  Py_DECREF(pyDict);
 <%}%>
-<%if ($pystyle ne 'spltuple') {%>
-  std::auto_ptr<SPL::blob> out_blob = streamsx::topology::Splpy::pyTupleTransform(function_, value);
   OPort0Type otuple;
   if (streamsx::topology::Splpy::pyTupleTransform(function_, value,
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>()))
      submit(otuple, 0);
-<%}%>
 }
 
 // Punctuation processing

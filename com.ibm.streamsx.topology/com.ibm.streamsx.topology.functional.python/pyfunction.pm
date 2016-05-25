@@ -32,7 +32,7 @@ sub splpy_tuplestyle{
     $pystyle = 'json';
  }
  else {
-    $pystyle = 'spltuple';
+    $pystyle = 'spltupleDict';
  }
 
  return $pystyle;
@@ -57,7 +57,7 @@ sub splpy_inputtuple2value{
   return 'SPL::rstring value = ip.get_jsonString();';
  }
 
- if ($pystyle eq 'spltuple') {
+ if ($pystyle eq 'spltupleDict') {
   # nothing done here for spltuple style 
  }
 }

@@ -95,18 +95,12 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 print splpy_inputtuple2value($pystyle);
 %>
 
-<%if ($pystyle eq 'spltuple') {%>
+<%if ($pystyle eq 'spltupleDict') {%>
 @include "../pyspltuple2dict.cgt"
-  if (streamsx::topology::Splpy::pyTupleFilter(function_, pyDict)) {
-      submit(tuple, 0);
-  }
-  Py_DECREF(pyDict);
 <%}%>
-<%if ($pystyle ne 'spltuple') {%>
   if (streamsx::topology::Splpy::pyTupleFilter(function_, value)) {
       submit(tuple, 0);
   }
-<%}%>
 }
 
 // Punctuation processing

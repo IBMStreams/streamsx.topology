@@ -52,7 +52,7 @@ def string_in(callable) :
 # Given a callable 'callable', return a function
 # that calls 'callable' with a python dictionary object 
 # form of an spltuple returning the callable's return
-def spltuple_in(callable) :
+def spltupleDict_in(callable) :
     ac = _getCallable(callable)
     def _wf(v):
         return ac(v)
@@ -172,7 +172,7 @@ def pickle_in__string_out(callable):
 # form of an spltuple 
 # returning the callable's return already pickled.
 # If the return is None then it is not pickled.
-def spltuple_in__pickle_out(callable):
+def spltupleDict_in__pickle_out(callable):
     ac = _getCallable(callable)
     def _wf(v):
         rv = ac(v)
@@ -248,7 +248,7 @@ def string_in__pickle_iter(callable):
         return _PickleIterator(irv)
     return _wf
 
-def spltuple_in__pickle_iter(callable):
+def spltupleDict_in__pickle_iter(callable):
     ac =_getCallable(callable)
     def _wf(v):
         irv = ac(v)
