@@ -106,7 +106,7 @@ print splpy_inputtuple2value($pystyle, $pyoutstyle);
 <%if ($pystyle eq 'spltuple') {%>
 @include "../pyspltuple2dict.cgt"
   OPort0Type otuple;
-  if (streamsx::topology::Splpy::pyTupleTransform(_function_, pyDict,
+  if (streamsx::topology::Splpy::pyTupleTransform(function_, pyDict,
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>()))
      submit(otuple, 0);
   Py_DECREF(pyDict);

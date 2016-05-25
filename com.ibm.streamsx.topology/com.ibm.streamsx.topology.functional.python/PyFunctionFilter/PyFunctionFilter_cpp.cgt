@@ -97,7 +97,7 @@ print splpy_inputtuple2value($pystyle);
 
 <%if ($pystyle eq 'spltuple') {%>
 @include "../pyspltuple2dict.cgt"
-  if (streamsx::topology::Splpy::_pyTupleFilter(function_, pyDict)) {
+  if (streamsx::topology::Splpy::pyTupleFilter(function_, pyDict)) {
       submit(tuple, 0);
   }
   Py_DECREF(pyDict);

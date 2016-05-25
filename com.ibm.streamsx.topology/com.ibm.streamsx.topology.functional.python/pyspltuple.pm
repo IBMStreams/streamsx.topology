@@ -13,9 +13,6 @@ sub cppToPythonPrimitiveConversion{
 # (or the equivalent for this function)
 
     my ($convert_from_string, $type) = @_;
-# SPL::CodeGen::errorln($convert_from_string . " :  " . $type ); 
-# SPL::CodeGen::errorln(SPL::CodeGen::Type::isRString($type)); 
-# SPL::CodeGen::errorln(SPL::CodeGen::Type::isUnsigned($type));
     if(SPL::CodeGen::Type::isSigned($type)) {
       return "PyLong_FromLong($convert_from_string)";
     } 
@@ -210,16 +207,6 @@ sub convertToPythonValue {
       $loop = $loop . "}";
       $get = $get . $loop;
   }
-  elsif ($type eq "SMDph") {
-      my $size = $iv . ".size()";
-      my $loop = "for(int i = 0; i < $size; i++){\n";
-      $get = "pyValue = PySet_New($size);\n";
-      my $element_type = SPL::CodeGen::Type::getElementType($type);
-      $loop = $loop . "PyObject *o =" . cppToPythonPrimitiveConversion("($iv)[i]", $element_type) . ";\n";      
-      $loop = $loop . "PySet_SetItem(pyValue, i, o);\n";
-      $loop = $loop . "}\n";
-      $get = $get . $loop;
-  }
   # If the type is a map, again, get the key and value types, then
   # iterate through the map to copy its contents.
   elsif(SPL::CodeGen::Type::isMap($type)){      
@@ -243,12 +230,6 @@ sub convertToPythonValue {
     my $value_type = SPL::CodeGen::Type::getValueType($type);
 
     my $assign = undef;
-# $assign = $assign . "PyObject *k = " . stringBasedCppToPythonPrimitiveConversion(key_type, $name, $type) . ";\n";
-# $assign = $assign . "PyObject *k = " . stringBasedCppToPythonPrimitiveConversion($key_type, $name) . ";\n";
-# $assign = $assign . "PyObject *v = " . stringBasedCppToPythonPrimitiveConversion($value_type, $type) . ";\n";
-#
-# only convert as if primitive type for now
-# $getkey = "PyObject *k = " . "PyUnicode_AsUTF8( (char *) " . '"' . $name . '"' . ");\n";
     $getval = "  pyValue = " . cppToPythonPrimitiveConversion($iv, $type) . ";\n";
   }
   $getkey = 'PyUnicode_DecodeUTF8((const char*)  "' . $name . '", ((int)(sizeof("' . $name . '")))-1 , NULL)';

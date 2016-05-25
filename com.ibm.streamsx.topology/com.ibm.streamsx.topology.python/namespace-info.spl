@@ -299,6 +299,23 @@ To avoid name conflicts, do not create modules with the same name as
   applications to subscribe to it. A subscriber matches a
   publisher if the topic and schema match.
 
+  When subscribing to a topic published by an Streams SPL application 
+  tuples will be transformed into a Python dictionary object (based on the schema).
+  Each tuple attribute will be converted into an appropriate Python type and added to the 
+  Python dictionary object using the name of the attribute as the dictionary key value. 
+
+  Supported SPL types and resulatant Python types are: 
+    signed ints : int
+    unsigned ints : int
+    float : float
+    rstring : str
+    ustring : str
+    boolean : boolean
+    list : list
+    set : set
+    map : dictionary
+
+
   See [namespace:com.ibm.streamsx.topology.topic] for more details.
 
   param `topic`: Topic to subscribe to.

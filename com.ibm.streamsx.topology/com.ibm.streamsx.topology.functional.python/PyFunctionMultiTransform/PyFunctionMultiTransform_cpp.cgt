@@ -102,19 +102,17 @@ print splpy_inputtuple2value($pystyle);
   
   {
 <%if ($pystyle eq 'spltuple') {%>
- // GIL lock is constructed and taken here 
+ // GIL lock is constructed and taken here in the included cgt
 @include "../pyspltuple2dict.cgt"
   PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyDict);
   Py_DECREF(pyDict);
 <%}%>
+
 <%if ($pystyle ne 'spltuple') {%>
     streamsx::topology::PyGILLock lock;
-<%}%>
-
     // convert spl attribute to python object
     PyObject * pyArg = streamsx::topology::pyAttributeToPyObject(value);
 
-<%if ($pystyle ne 'spltuple') {%>
     PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyArg);
 <%}%>
 

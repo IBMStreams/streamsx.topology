@@ -193,6 +193,21 @@ namespace streamsx {
       Py_DECREF(pyReturnVar);
     }
     
+    // Call the function passing a Python object
+    // and discard the return 
+    // nb. the GIL lock must be held
+    static void pyTupleSink(PyObject * function, PyObject * arg) {
+
+      PyObject * pyReturnVar = pyTupleFunc(function, arg);
+
+      if(pyReturnVar == 0){
+        flush_PyErr_Print();
+        throw;
+      }
+
+      Py_DECREF(pyReturnVar);
+    }
+    
     // prints a string representation of the PyObject for debugging purposes
     static void printPyObject(PyObject * pyObject) {
       PyObject* pyRepr = PyObject_Repr(pyObject);
@@ -213,6 +228,26 @@ namespace streamsx {
       PyGILLock lock;
 
       PyObject * arg = pyAttributeToPyObject(splVal);
+
+      PyObject * pyReturnVar = pyTupleFunc(function, arg);
+
+      if(pyReturnVar == 0){
+        flush_PyErr_Print();
+        throw;
+      }
+
+      int ret = PyObject_IsTrue(pyReturnVar);
+
+      Py_DECREF(pyReturnVar);
+      return ret;
+    }
+
+    /*
+    * Call a function passing a Python object
+    * and return the function return as a boolean
+    * nb. the GILLock must be held
+    */
+    static int pyTupleFilter(PyObject * function, PyObject * arg) {
 
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
@@ -254,6 +289,30 @@ namespace streamsx {
       return 1;
     }
 
+    /*
+    * Call a function passing a Python object
+    * and fill in the SPL attribute of type R with its result.
+    */
+    template<class R>
+    static int pyTupleTransform(PyObject * function, PyObject * arg, R & retSplVal) {
+
+      // invoke python nested function that calls the application function
+      PyObject * pyReturnVar = pyTupleFunc(function, arg);
+
+      if (pyReturnVar == Py_None){
+        Py_DECREF(pyReturnVar);
+        return 0;
+      } else if(pyReturnVar == 0){
+        flush_PyErr_Print();
+        throw;
+      } 
+
+      pyAttributeFromPyObject(retSplVal, pyReturnVar);
+      Py_DECREF(pyReturnVar);
+
+      return 1;
+    }
+
     // Python hash of an SPL attribute
     template <class T>
     static SPL::int32 pyTupleHash(PyObject * function, T & splVal) {
@@ -263,7 +322,8 @@ namespace streamsx {
       PyObject * arg = pyAttributeToPyObject(splVal);
 
       // invoke python nested function that generates the int32 hash
-      // clear any indication of an error
+      // clear any indication of an error and then check later for an 
+      // error
       PyErr_Clear();
       PyObject * pyReturnVar = pyTupleFunc(function, arg); 
      
@@ -276,6 +336,37 @@ namespace streamsx {
         flush_PyErr_Print();
         throw;
       }  	 
+      // PyLong_AsLong will return an error without 
+      // throwing an error, so check if an error happened
+      if (PyErr_Occurred()) {
+        flush_PyErr_Print();
+      }
+      else {
+        Py_DECREF(pyReturnVar);		
+      }
+      return retval;
+   }
+
+    // Python hash of a Python Object
+    static SPL::int32 pyTupleHash(PyObject * function, PyObject * arg) {
+
+      // invoke python nested function that generates the int32 hash
+      // clear any indication of an error and then check later for an 
+      // error
+      PyErr_Clear();
+      PyObject * pyReturnVar = pyTupleFunc(function, arg); 
+     
+       // construct integer from  return value
+      SPL::int32 retval=0;
+      try {
+      	retval = PyLong_AsLong(pyReturnVar);
+      } catch(...) {
+        Py_DECREF(pyReturnVar);
+        flush_PyErr_Print();
+        throw;
+      }  	 
+      // PyLong_AsLong will return an error without 
+      // throwing an error, so check if an error happened
       if (PyErr_Occurred()) {
         flush_PyErr_Print();
       }
