@@ -43,6 +43,8 @@ public class CheckpointTest extends TestTopology {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
 
+        skipVersion("isolate", 4, 2);
+
         final Topology topology = new Topology();
         topology.checkpointPeriod(period, TimeUnit.SECONDS);
         
