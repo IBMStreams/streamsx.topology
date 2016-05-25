@@ -33,7 +33,7 @@ class TestTopologyMethods(unittest.TestCase):
     config['trustStorePassword'] = "woohoo"
     config['keyStore'] = "/tmp/no-such-keyStore"
     config['keyStorePassword'] = "woohoo"
-    mqstream = mqtt_streams(topo,config)
+    mqstream = MqttStreams(topo,config)
     topic = "python.topic1"
     src = topo.source(test_functions.mqtt_publish)
     mqstream.publish(src, topic) 
@@ -59,7 +59,7 @@ class TestTopologyMethods(unittest.TestCase):
     config['trustStorePassword'] = "woohoo"
     config['keyStore'] = "/tmp/no-such-keyStore"
     config['keyStorePassword'] = "woohoo"
-    mqstream = mqtt_streams(topo,config)
+    mqstream = MqttStreams(topo,config)
     topic = ["python.topic1", "python.topic2", ]
     mqs = mqstream.subscribe(topic) 
     mqs.print()
@@ -85,7 +85,7 @@ class TestTopologyMethods(unittest.TestCase):
     config['trustStorePassword'] = "woohoo"
     config['keyStore'] = "/tmp/no-such-keyStore"
     config['keyStorePassword'] = "woohoo"
-    mqstream = mqtt_streams(topo,config)
+    mqstream = MqttStreams(topo,config)
     topic = "python.class.topic1"
     src = topo.source(test_functions.mqtt_publish_class)
     mqstream.publish(src, topic) 
@@ -111,7 +111,7 @@ class TestTopologyMethods(unittest.TestCase):
     config['trustStorePassword'] = "woohoo"
     config['keyStore'] = "/tmp/no-such-keyStore"
     config['keyStorePassword'] = "woohoo"
-    mqstream = mqtt_streams(topo,config)
+    mqstream = MqttStreams(topo,config)
     topic = ["python.class.topic1", ]
     mqs = mqstream.subscribe(topic) 
     mqs.print()

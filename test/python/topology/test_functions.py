@@ -66,7 +66,7 @@ def check_hello_world(t):
 def mqtt_subscribe(t):
     print("String tuple",t)
     sys.stdout.flush()
-    if t not in ["123", "2.344", "4.0", "Garbage text", "1.234e+15",] :
+    if t not in ["123", "2.344", "4.0", "Garbage text", "1234000000000000.0",] :
         print("Invalid Tuple", t)
         raise AssertionError()	 
     return None

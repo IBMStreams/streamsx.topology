@@ -5,7 +5,7 @@ from streamsx.topology import schema
 from enum import Enum
 
 
-class mqtt_streams(object):
+class MqttStreams(object):
  #
  # A simple connector to a MQTT broker for publishing
  # string tuples to MQTT topics, and
@@ -155,36 +155,28 @@ class mqtt_streams(object):
         self.config = config.copy()
         self.opCnt = 0
         
-    def publish(self,src_op,topic=None) :
-        if topic is None:
-            raise TypeError("No topic provided to MqttStreams.publish")
+    def publish(self,src_op,topic) :
         parms = self.config.copy()
         #parms['reconnectionBound'] = int(-1) (needs to be int vs long)
         #parms['qos'] = int(0) (needs to be int vs long)
         #del parms['messageQueueSize']
-        if topic is None :
-            parms['topicOutAttrName'] = "topic"
-        else :
-            parms['topic'] = topic
+        parms['topic'] = topic
         parms['dataAttributeName'] = "message"
         if (++self.opCnt > 1) :
             # each op requires its own clientID
-            clientId =  params['clientID']
-            if (clientId is None and len(clientId) > 0) :
-                params['clientID'] = opCnt+"-"+clientId
+            clientId =  parms['clientID']
+            if (clientId is not None and len(clientId) > 0) :
+                parms['clientID'] = clientId+"-"+str(id(self))+"-"+str(self.opCnt)
         # convert src_op outputport schema from spl po to spl rstring type
-        forOp = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionFormat")
-        forOp.addInputPort(outputPort=src_op.oport)
-        forOport = forOp.addOutputPort(schema=schema.StreamSchema("tuple<rstring message>"))                
+        forOp = src_op._map(streamsx.topology.functions.identity,schema.StreamSchema("tuple<rstring message>"))                
         op = self.topology.graph.addOperator(kind="com.ibm.streamsx.messaging.mqtt::MQTTSink")
-        oport = op.addOutputPort(schema=schema.StreamSchema("tuple<rstring message>"))
-        op.addInputPort(outputPort=forOport)
+        op.addInputPort(outputPort=forOp.oport)
+        #remove toolkitDir param since MQTTSink fails if set
+        del op.params['toolkitDir']
         op.setParameters(parms)
         return None
     
-    def subscribe(self,topic=None) :
-        if topic is None:
-            raise TypeError("No topic provided to MqttStreasm.subscribe")
+    def subscribe(self,topic) :
         parms = self.config.copy()
         #parms['reconnectionBound'] = int(-1) (needs to be int vs long)
         #parms['qos'] = int(0) (needs to be int vs long)
@@ -195,11 +187,13 @@ class mqtt_streams(object):
         parms['dataAttributeName'] = "message"
         if (++self.opCnt > 1) :
             # each op requires its own clientID
-            clientId =  params['clientID']
-            if (clientId is None and len(clientId) > 0) :
-                params['clientID'] = opCnt+"-"+clientId
+            clientId =  parms['clientID']
+            if (clientId is not None and len(clientId) > 0) :
+                parms['clientID'] = clientId+"-"+str(id(self))+"-"+str(self.opCnt)
         op = self.topology.graph.addOperator(kind="com.ibm.streamsx.messaging.mqtt::MQTTSource")
         oport = op.addOutputPort(schema=schema.StreamSchema("tuple<rstring topic, rstring message>"))
+        #remove toolkitDir param since MQTTSource fails if set
+        del op.params['toolkitDir']
         op.setParameters(parms)
         pop = self.topology.graph.addPassThruOperator()
         pop.addInputPort(outputPort=oport)

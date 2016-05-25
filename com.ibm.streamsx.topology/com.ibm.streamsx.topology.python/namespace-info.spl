@@ -517,11 +517,11 @@ Limited testing has been performed to build an application using DISTRIBUTED and
  string tuples to MQTT topics, and
  subscribing to MQTT topics and creating streams.
  
-* `mqtt_streams(self, config)` MQTT Connector 
+* `MqttStreams(self, config)` MQTT Connector 
 
 A connector is for a specific MQTT Broker as specified in
 the configuration object config. Any number of  publish()and  subscribe()
-connections may be created from a single mqtt_streams connector.
+connections may be created from a single MqttStreams connector.
 
 * `publish(self, src_op, topic)` function on MQTT Conector
 
@@ -573,7 +573,7 @@ connections may be created from a single mqtt_streams connector.
 	config[' password'] = "user1passwrd"
 	
 	// create the connector
-	mqstream = mqtt_streams(topo,config)
+	mqstream = MqttStreams(topo,config)
 	
 	// publish a python source stream to the topic "python.topic1"
 	topic = "python.topic1"

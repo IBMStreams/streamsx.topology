@@ -375,31 +375,6 @@ namespace streamsx {
       PyObject * pyString  = PyUnicode_FromStringAndSize(pybytes, sizeb);
       return pyString;
     }
-	
-    /*This function converts some basic Python types to a string based on its
-    * python type.
-    */
-    static SPL::rstring pythonToCppPrimitiveStringConversion(PyObject * convert_from_object) {
-
-    SPL::rstring retVal ;
-	char temp[1024];
-	char * ptemp = temp;
-	
-    if (PyUnicode_Check(convert_from_object) ) {
-		retVal  = SPL::rstring( PyUnicode_AsUTF8(convert_from_object));
-    } else if ( PyLong_Check(convert_from_object)) {
-		PyOS_snprintf(ptemp,1024,"%ld",PyLong_AsLong(convert_from_object));
-		retVal = SPL::rstring(temp);
-    } else if (PyFloat_Check(convert_from_object)) {
-		PyOS_snprintf(ptemp,1024,"%g",PyFloat_AsDouble(convert_from_object));
-		retVal = SPL::rstring(temp);		
-    } else {
-		SPLAPPTRC(L_ERROR, "An unknown type was encountered when converting message to string", "python");
-		flush_PyErr_Print();
-        throw;
-    }
-    return retVal;
-}
 
     };
    
