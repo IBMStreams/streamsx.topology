@@ -354,27 +354,6 @@ namespace streamsx {
       return pyReturnVar;
     }
 
-    /**
-     * Convert a SPL blob into a Python Byte string 
-     */
-    static PyObject * pyBlobToBytes(SPL::blob & pyblob) {
-      long int sizeb = pyblob.getSize();
-      const unsigned char * pybytes = pyblob.getData();
-
-      PyObject * pyBytes  = PyBytes_FromStringAndSize((const char *)pybytes, sizeb);
-      return pyBytes;
-    }
-
-    /**
-     * Convert a SPL rstring into a Python Unicode string 
-     */
-    static PyObject * pyRstringToUnicode(SPL::rstring & pyrstring) {
-      long int sizeb = pyrstring.size();
-      const char * pybytes = pyrstring.data();
-
-      PyObject * pyString  = PyUnicode_FromStringAndSize(pybytes, sizeb);
-      return pyString;
-    }
 
     };
    

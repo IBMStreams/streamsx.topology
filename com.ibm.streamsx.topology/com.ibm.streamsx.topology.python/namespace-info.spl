@@ -523,14 +523,14 @@ A connector is for a specific MQTT Broker as specified in
 the configuration object config. Any number of  publish()and  subscribe()
 connections may be created from a single MqttStreams connector.
 
-* `publish(self, src_op, topic)` function on MQTT Conector
+* `publish(self, pub_stream, topic)` function on MQTT Conector
 
-  Publish this stream (src_op) on a topic to an MQTT server for applications to subscribe to.
+  Publish this stream (pub_stream) on a topic to an MQTT server for applications to subscribe to.
   A Streams application may publish a stream to an MQTT server to allow other
   applications to subscribe to it. A subscriber matches a
   publisher if the topics and server URI match.  The schema of the stream to publish must be tuple<rstring message>
 
-  param: `src_op`: Stream to publish to MQTT server.
+  param: `pub_stream`: Stream to publish to MQTT server.
   param `topic`: Topic to publish this stream to.
 
 

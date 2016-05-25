@@ -69,12 +69,11 @@ class TestTopologyMethods(unittest.TestCase):
   def test_MQTTpublishClass(self):
     topo = Topology("test_TopologyMQTTpublishClass")
     config = {} 
-    #config['defaultQOS'] = 1  (needs to be int vs long)
     #config['qos'] = int("1") #(needs to be int vs long)
     #config['keepAliveInterval'] = int(20) (needs to be int vs long)
-    #config['commandTimeoutMsec'] = 30000 (needs to be int vs long)
-    #config['reconnectDelayMsec'] = 5000 (needs to be int vs long)
-    #config['receiveBufferSize'] = 10 (needs to be int vs long)
+    #config['commandTimeout'] = 30000 (needs to be int vs long)
+    #config['period'] = 5000 (needs to be int vs long)
+    #config['messageQueueSize'] = 10 (needs to be int vs long)
     config['clientID'] = "test_MQTTpublishClassClient"
     config['serverURI'] = "tcp://localhost:1883"
     #config['reconnectionBound'] = int(20)

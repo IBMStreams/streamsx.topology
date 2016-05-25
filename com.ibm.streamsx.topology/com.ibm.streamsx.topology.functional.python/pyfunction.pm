@@ -53,10 +53,6 @@ sub splpy_inputtuple2value{
   return 'SPL::rstring value = ip.get_string();';
  }
  
- if ($pystyle eq 'message') {
-  return 'SPL::rstring value = ip.get_message();';
- }
- 
  if ($pystyle eq 'json') {
   return 'SPL::rstring value = ip.get_jsonString();';
  }
