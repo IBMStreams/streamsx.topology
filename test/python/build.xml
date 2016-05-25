@@ -32,25 +32,4 @@
 		   </exec>
 	   </target>
 
-	  <target name="SMD4f">
-		   <exec executable="python3" dir="${topology}" failonerror="true">
-		     <env key="PYTHONPATH" value="${tk}/opt/python/packages"/>
-		     <arg value="testSMD4f.py"/>
-		   </exec>
-	   </target>
-
-	  <target name="SMD5m">
-		   <exec executable="python3" dir="${topology}" failonerror="true">
-		     <env key="PYTHONPATH" value="${tk}/opt/python/packages"/>
-		     <arg value="testSMD5m.py"/>
-		   </exec>
-	   </target>
-
-	  <target name="SMDH">
-		   <exec executable="python3" dir="${topology}" failonerror="true">
-		     <env key="PYTHONPATH" value="${tk}/opt/python/packages"/>
-		     <arg value="testSMDH.py"/>
-		   </exec>
-	   </target>
-
 </project>
