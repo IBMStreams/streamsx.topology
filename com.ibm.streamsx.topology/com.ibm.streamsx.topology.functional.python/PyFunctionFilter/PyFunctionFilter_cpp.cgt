@@ -15,8 +15,11 @@
   # determine which tuple stype is being used
   my $fpdir = $model->getContext()->getToolkitDirectory()."/com.ibm.streamsx.topology.functional.python";
  require $fpdir."/pyfunction.pm";
+ require $fpdir."/pyspltuple.pm";
  my $pystyle = splpy_tuplestyle($model->getInputPortAt(0));
 %>
+
+@include "../pyspltuple.cgt"
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() : function_(NULL)
@@ -92,6 +95,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 print splpy_inputtuple2value($pystyle);
 %>
 
+<%if ($pystyle eq 'spltupleDict') {%>
+@include "../pyspltuple2dict.cgt"
+<%}%>
   if (streamsx::topology::Splpy::pyTupleFilter(function_, value)) {
       submit(tuple, 0);
   }

@@ -16,8 +16,11 @@
   # determine which tuple stype is being used
   my $fpdir = $model->getContext()->getToolkitDirectory()."/com.ibm.streamsx.topology.functional.python";
  require $fpdir."/pyfunction.pm";
+ require $fpdir."/pyspltuple.pm";
  my $pystyle = splpy_tuplestyle($model->getInputPortAt(0));
 %>
+
+@include "../pyspltuple.cgt"
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() : function_(NULL)
@@ -98,8 +101,11 @@ print splpy_inputtuple2value($pystyle);
   std::vector<OPort0Type> output_tuples; 
   
   {
-    streamsx::topology::PyGILLock lock;
+<%if ($pystyle eq 'spltupleDict') {%>
+@include "../pyspltuple2dict.cgt"
+<%}%>
 
+    streamsx::topology::PyGILLock lock;
     // convert spl attribute to python object
     PyObject * pyArg = streamsx::topology::pyAttributeToPyObject(value);
 

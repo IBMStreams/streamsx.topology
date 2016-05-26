@@ -22,18 +22,23 @@ sub splpy_tuplestyle{
 
  my $attr =  $port->getAttributeAt(0);
  my $pystyle = 'unk';
- if ($attr->getName() eq '__spl_po') {
+ my $itupleType = $port->getSPLTupleType();
+ my $numattrs = $port->getNumberOfAttributes();
+ if (($numattrs == 1) && ($attr->getName() eq '__spl_po')) {
     $pystyle = 'pickle';
- } elsif ($attr->getName() eq 'string') {
+ } elsif (($numattrs == 1) && ($attr->getName() eq 'string')) {
     $pystyle = 'string';
- } elsif ($attr->getName() eq 'jsonString') {
+ } elsif (($numattrs == 1) && ($attr->getName() eq 'jsonString')) {
     $pystyle = 'json';
+ }
+ else {
+    $pystyle = 'spltupleDict';
  }
 
  return $pystyle;
 }
 
-# Give a style return a string containing
+# Given a style return a string containing
 # the C++ code to get the value
 # from an input tuple ip, that will
 # be converted to Python and passed to the function.
@@ -50,6 +55,10 @@ sub splpy_inputtuple2value{
 
  if ($pystyle eq 'json') {
   return 'SPL::rstring value = ip.get_jsonString();';
+ }
+
+ if ($pystyle eq 'spltupleDict') {
+  # nothing done here for spltuple style 
  }
 }
 1;

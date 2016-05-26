@@ -88,7 +88,17 @@ namespace streamsx {
       return PyUnicode_DecodeUTF8(pybytes, sizeb, NULL);
     }
     
+    /**
+     * Convert a PyObject to a PyObject by simply returning the value
+     * nb. that if object has it ref count decremented to 0 the 
+     * "copied" pointer is no longer valid
+     */
+    inline PyObject * pyAttributeToPyObject(PyObject * object) {
+      return object;
+    }
+
     class Splpy {
+
       public:
       /**
        * Load the C Python runtime and execute a setup
@@ -263,6 +273,9 @@ namespace streamsx {
       PyObject * arg = pyAttributeToPyObject(splVal);
 
       // invoke python nested function that generates the int32 hash
+      // clear any indication of an error and then check later for an 
+      // error
+      PyErr_Clear();
       PyObject * pyReturnVar = pyTupleFunc(function, arg); 
      
        // construct integer from  return value
@@ -274,7 +287,14 @@ namespace streamsx {
         flush_PyErr_Print();
         throw;
       }  	 
-      Py_DECREF(pyReturnVar);		
+      // PyLong_AsLong will return an error without 
+      // throwing an error, so check if an error happened
+      if (PyErr_Occurred()) {
+        flush_PyErr_Print();
+      }
+      else {
+        Py_DECREF(pyReturnVar);		
+      }
       return retval;
    }
 
