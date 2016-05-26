@@ -165,8 +165,6 @@ class MqttStreams(object):
         forOp = pub_stream._map(streamsx.topology.functions.identity,schema.CommonSchema.String)                
         op = self.topology.graph.addOperator(kind="com.ibm.streamsx.messaging.mqtt::MQTTSink")
         op.addInputPort(outputPort=forOp.oport)
-        #remove toolkitDir param since MQTTSink fails if set
-        del op.params['toolkitDir']
         op.setParameters(parms)
         return None
     
@@ -184,8 +182,6 @@ class MqttStreams(object):
                 parms['clientID'] = clientId+"-"+str(id(self))+"-"+str(self.opCnt)
         op = self.topology.graph.addOperator(kind="com.ibm.streamsx.messaging.mqtt::MQTTSource")
         oport = op.addOutputPort(schema=schema.StreamSchema("tuple<rstring topic, rstring string>"))
-        #remove toolkitDir param since MQTTSource fails if set
-        del op.params['toolkitDir']
         op.setParameters(parms)
         pop = self.topology.graph.addPassThruOperator()
         pop.addInputPort(outputPort=oport)

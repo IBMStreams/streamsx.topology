@@ -34,6 +34,7 @@ class SPLGraph(object):
             if function is not None:
                 params['toolkitDir'] = streamsx.topology.param.toolkit_dir()
             op = SPLInvocation(len(self.operators), kind, function, name, params, self)
+            params.clear()
         self.operators.append(op)
         if not function is None:
             if not inspect.isbuiltin(function):

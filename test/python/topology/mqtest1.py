@@ -5,7 +5,7 @@ import test_functions
 from streamsx.topology.topology import *
 from streamsx.topology import schema
 import streamsx.topology.context
-from streamsx.topology.mqtt_streams import *
+from streamsx.topology.mqtt import *
 
 class TestTopologyMethods(unittest.TestCase):
 
