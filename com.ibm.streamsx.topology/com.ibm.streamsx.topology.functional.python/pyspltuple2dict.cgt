@@ -2,6 +2,7 @@
 // process the attributes in the spl tuple
 // into a python dictionary object
   PyObject * pyTuple = 0;
+  PyObject *pyDictKey = 0;
   PyObject *pyValue = 0;
   PyObject *pyDict = 0;
   PyObject *value = 0;
@@ -11,9 +12,8 @@
   pyDict = PyDict_New();
 <%
      for (my $i = 0; $i < $pynumattrs; ++$i) {
-         print convertToPythonValue($pytuple, $i, $pyatypes[$i], $pyanames[$i]);
+         print convertToPythonDictionaryObject($pytuple, $i, $pyatypes[$i], $pyanames[$i]);
      }
 %>
   value = pyDict;
-  // Py_DECREF(pyDict);
   }
