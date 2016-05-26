@@ -20,6 +20,8 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
+import com.ibm.streamsx.topology.jobconfig.JobConfig;
+import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
 
 public class InvokeSubmit {
 
@@ -50,32 +52,30 @@ public class InvokeSubmit {
         File jobidFile = Files.createTempFile("streamsjobid", "txt").toFile();
 
         List<String> commands = new ArrayList<String>();
+        
+        final JobConfig jobConfig = JobConfig.fromProperties(config);
 
         commands.add(sj.getAbsolutePath());
         commands.add("submitjob");
         commands.add("--outfile");
         commands.add(jobidFile.getAbsolutePath());
         if (config.containsKey(ContextProperties.TRACING_LEVEL)) {
-            Level level = (Level) Util.getConfigEntry(config, 
+            Level level = Util.getConfigEntry(config, 
                                 ContextProperties.TRACING_LEVEL,
                                 Level.class);
             commands.add("--config");
             commands.add("tracing="+toTracingLevel(level));
         }
-        if (config.containsKey(JobProperties.NAME)) {
-            String name = (String) Util.getConfigEntry(config, 
-                                    JobProperties.NAME, String.class);
+        if (jobConfig.getJobName() != null) {
             commands.add("--jobname");
-            commands.add(name);
+            commands.add(jobConfig.getJobName());
         }
-        if (config.containsKey(JobProperties.GROUP)) {
-            String group = (String) Util.getConfigEntry(config, 
-                                    JobProperties.GROUP, String.class);
+        if (jobConfig.getJobGroup() != null) {
             commands.add("--jobgroup");
-            commands.add(group);
+            commands.add(jobConfig.getJobGroup());
         }
         if (config.containsKey(JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION)) {
-            Boolean override = (Boolean) Util.getConfigEntry(config, 
+            Boolean override = Util.getConfigEntry(config, 
                                 JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION,
                                 Boolean.class);
             if (override) {
@@ -84,31 +84,26 @@ public class InvokeSubmit {
             }
         }
         if (config.containsKey(JobProperties.PRELOAD_APPLICATION_BUNDLES)) {
-            Boolean value = (Boolean) Util.getConfigEntry(config,
+            Boolean value = Util.getConfigEntry(config,
                                 JobProperties.PRELOAD_APPLICATION_BUNDLES,
                                 Boolean.class);
             commands.add("--config");
             commands.add("preloadApplicationBundles="+value);
         }
-        if (config.containsKey(JobProperties.DATA_DIRECTORY)) {
-            String value = (String) Util.getConfigEntry(config,
-                                JobProperties.DATA_DIRECTORY,
-                                String.class);
+        if (jobConfig.getDataDirectory() != null) {
             commands.add("--config");
-            commands.add("data-directory="+value);
+            commands.add("data-directory="+jobConfig.getDataDirectory());
         }
-        if (config.containsKey(ContextProperties.SUBMISSION_PARAMS)) {
-            @SuppressWarnings("unchecked")
-            Map<String,Object> params = (Map<String,Object>) config.get(ContextProperties.SUBMISSION_PARAMS); 
-            for(Map.Entry<String,Object> e :  params.entrySet()) {
-                // note: this "streamtool" execution path does NOT correctly
+        if (jobConfig.hasSubmissionParameters()) {
+            for (SubmissionParameter param : jobConfig.getSubmissionParameters()) {
+                 // note: this "streamtool" execution path does NOT correctly
                 // handle / preserve the semantics of escaped \t and \n.
                 // e.g., "\\n" is treated as a newline 
                 // rather than the two char '\','n'
                 // This seems to be happening internal to streamtool.
                 // Adjust accordingly.
                 commands.add("-P");
-                commands.add(e.getKey()+"="+e.getValue().toString()
+                commands.add(param.getName()+"="+param.getValue()
                                                 .replace("\\", "\\\\\\"));
             }
         }

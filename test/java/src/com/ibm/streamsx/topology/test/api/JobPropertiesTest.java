@@ -4,10 +4,19 @@
  */
 package com.ibm.streamsx.topology.test.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeNotNull;
+import static org.junit.Assume.assumeTrue;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -15,17 +24,21 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
-import static org.junit.Assume.assumeNotNull;
-
+import com.ibm.streams.operator.OutputTuple;
+import com.ibm.streams.operator.ProcessingElement;
+import com.ibm.streams.operator.StreamingData.Punctuation;
+import com.ibm.streams.operator.model.OutputPortSet;
+import com.ibm.streams.operator.model.PrimitiveOperator;
+import com.ibm.streams.operator.samples.patterns.ProcessTupleProducer;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.internal.spljava.Schemas;
+import com.ibm.streamsx.topology.spl.JavaPrimitive;
+import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.test.TestTopology;
+import com.ibm.streamsx.topology.tester.Condition;
 
 /**
  * N.B. one or more of the tests require the STREAMSX_TOPOLOGY_DEFAULT_JOB_GROUP
@@ -36,15 +49,24 @@ public class JobPropertiesTest extends TestTopology {
 
     @Test
     public void testNameProperty() throws Exception {
-        testIt("testNameProperty", JobProperties.NAME,
+        List<String> result = testItDirect("testNameProperty", JobProperties.NAME,
                 "JobPropertiesTestJobName");
+        
+        assertFalse(result.get(0).isEmpty()); // job id
+        assertEquals("JobPropertiesTestJobName", result.get(1));
+        assertFalse(result.get(2).isEmpty()); // job group
+        assertEquals("<empty>", result.get(3)); // data-directory
     }
 
     @Test
     public void testGroupPropertyDefault() throws Exception {
-        testIt("testGroupProperty", JobProperties.GROUP,
+        List<String> result = testItDirect("testGroupProperty", JobProperties.GROUP,
                 // lame, but otherwise need a real pre-existing non-default one.
                 "default");
+        assertFalse(result.get(0).isEmpty()); // job id
+        assertFalse(result.get(1).isEmpty()); // job name
+        assertEquals("default", result.get(2)); // job group
+        assertEquals("<empty>", result.get(3)); // data-directory
     }
 
     @Test
@@ -54,19 +76,28 @@ public class JobPropertiesTest extends TestTopology {
         // Skip the test if it's not set.
         String group = System.getenv("STREAMSX_TOPOLOGY_DEFAULT_JOB_GROUP");
         assumeNotNull(group);
-        testIt("testGroupProperty", JobProperties.GROUP, group);
+        List<String> result = testItDirect("testGroupProperty", JobProperties.GROUP, group);
+        assertFalse(result.get(0).isEmpty()); // job id
+        assertFalse(result.get(1).isEmpty()); // job name
+        assertEquals(group, result.get(2)); // job group
+        assertEquals("<empty>", result.get(3)); // data-directory
     }
 
-    @Test
+    @Test(expected=Exception.class)
     public void testGroupPropertyNeg() throws Exception {
-        testIt("testGroupProperty", JobProperties.GROUP,
+        testItDirect("testGroupProperty", JobProperties.GROUP,
                 "myJobGroup-"+((long)(Math.random() + 10000)));
     }
 
     @Test
     public void testDataDirectoryProperty() throws Exception {
-        testIt("testDataDirectoryProperty", JobProperties.DATA_DIRECTORY,
+        List<String> result = testItDirect("testDataDirectoryProperty", JobProperties.DATA_DIRECTORY,
                 "/no/such/path");
+        
+        assertFalse(result.get(0).isEmpty()); // job id
+        assertFalse(result.get(1).isEmpty()); // job name
+        assertFalse(result.get(2).isEmpty());  // job group
+        assertEquals("/no/such/path", result.get(3)); // data-directory
     }
 
     @Test
@@ -80,6 +111,29 @@ public class JobPropertiesTest extends TestTopology {
         testIt("testPreloadApplicationBundlesProperty",
                 JobProperties.PRELOAD_APPLICATION_BUNDLES, true);
     }
+    
+    private List<String> testItDirect(String topologyName, String propName, Object value)
+            throws Exception {
+
+        // JobProperties only apply to DISTRIBUTED submit
+        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+        assumeTrue(SC_OK);
+        
+        getConfig().put(propName, value);
+
+        Topology topology = newTopology(topologyName);
+        topology.addClassDependency(JobPropertiesTestOp.class);
+        SPLStream sourceSPL = JavaPrimitive.invokeJavaPrimitiveSource(topology, JobPropertiesTestOp.class,
+                Schemas.STRING, null);
+        TStream<String> source = sourceSPL.toStringStream();
+
+        Condition<Long> end = topology.getTester().tupleCount(source, 4);
+        Condition<List<String>> result = topology.getTester().stringContents(source);
+        complete(topology.getTester(), end, 10, TimeUnit.SECONDS);
+        
+        return result.getResult();
+    }
+    
     
     private void testIt(String topologyName, String propName, Object value)
             throws Exception {
@@ -122,12 +176,6 @@ public class JobPropertiesTest extends TestTopology {
         try {
             Topology topology = newTopology(topologyName);
             TStream<String> source = topology.strings("tuple1", "tuple2");
-
-            // fyi using DISTRIBUTED_TESTER directly instead of
-            // completeAndValidate() currently dies w/NPE.
-            // We're using DISTRIBUTED_TESTER (and not just DISTRIBUTED)
-            // because it's currently the only thing that can/does cancel
-            // a submitted job.
             
             // The "negative" tests will cause a submitjob failure.
             // But we can still validate that we passed the right thing
@@ -261,5 +309,36 @@ public class JobPropertiesTest extends TestTopology {
         public void close() throws SecurityException {
             lines.clear();
         }
+    }
+    
+    @PrimitiveOperator
+    @OutputPortSet(cardinality=1)
+    public static class JobPropertiesTestOp extends ProcessTupleProducer {
+
+        @Override
+        protected void process() throws Exception {
+            
+            ProcessingElement pe = getOperatorContext().getPE();
+            
+            OutputTuple out = getOutput(0).newTuple();
+            out.setString("string", pe.getJobId().toString());
+            getOutput(0).submit(out);
+            
+            out.setString("string", pe.getJobName());
+            getOutput(0).submit(out);
+            
+            try {
+                out.setString("string", pe.getJobGroup());
+            } catch (AbstractMethodError e) {
+                out.setString("string", "Streams401");
+            }
+            getOutput(0).submit(out);           
+            
+            out.setString("string", pe.hasDataDirectory() ? pe.getDataDirectory().toString() : "<empty>");
+            getOutput(0).submit(out);
+                           
+            getOutput(0).punctuate(Punctuation.FINAL_MARKER);
+        }
+        
     }
 }

@@ -19,6 +19,8 @@ import java.util.logging.Level;
 
 import com.ibm.streams.operator.logging.TraceLevel;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.jobconfig.JobConfig;
+import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
 
 public class InvokeStandalone {
 
@@ -33,6 +35,8 @@ public class InvokeStandalone {
             throws Exception, InterruptedException {
         String si = System.getProperty("java.home");
         File jvm = new File(si, "bin/java");
+        
+        JobConfig jc = JobConfig.fromProperties(config);
 
         List<String> commands = new ArrayList<String>();
         commands.add(jvm.getAbsolutePath());
@@ -64,15 +68,13 @@ public class InvokeStandalone {
                 tls = "5";
             commands.add(tls);
         }
-        if (config.containsKey(ContextProperties.SUBMISSION_PARAMS)) {
-            @SuppressWarnings("unchecked")
-            Map<String,Object> params = (Map<String,Object>) config.get(ContextProperties.SUBMISSION_PARAMS); 
-            for(Map.Entry<String,Object> e :  params.entrySet()) {
+        if (jc.hasSubmissionParameters()) {
+            for(SubmissionParameter param : jc.getSubmissionParameters()) {
                 // note: this execution path does correctly
                 // handle / preserve the semantics of escaped \t and \n.
                 // e.g., "\\n" is NOT treated as a newline 
                 // rather it's the two char '\','n'
-                commands.add(e.getKey()+"="+e.getValue().toString());
+                commands.add(param.getName()+"="+param.getValue());
             }
         }
 

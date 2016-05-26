@@ -76,8 +76,8 @@ public class Util {
      * @return the value associated with the key
      * @throws IllegalArgumentException if value is null or isn't instanceof requiredClass
      */
-    public static Object getConfigEntry(Map<String,? extends Object> map, String key, 
-            Class<?> requiredClass) {
+    public static <T> T getConfigEntry(Map<String,? extends Object> map, String key, 
+            Class<T> requiredClass) {
         Object val = map.get(key);
         if (val==null)
             throw new IllegalArgumentException("config item "+key+" value is null");
@@ -86,7 +86,7 @@ public class Util {
                                         + " value is "+val.getClass()
                                         + " but require instanceof "+requiredClass);
         }
-        return val;
+        return requiredClass.cast(val);
     }
 
     /**
