@@ -127,6 +127,8 @@ def _submitUsingJava(ctxtype, fn):
             stdout_thread.daemon = True
             stdout_thread.start()                
             process.wait()
+            process.stdout.close()
+            process.stderr.close()
             return None
         else:            
             return process.stdout
