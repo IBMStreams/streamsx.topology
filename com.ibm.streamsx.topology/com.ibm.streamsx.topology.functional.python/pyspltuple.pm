@@ -165,7 +165,7 @@ sub convertToPythonValue {
   return $get . $assign ;
 }
 
-sub convertToPythonValue {
+sub convertToPythonDictionaryObject {
   my $ituple = $_[0];
   my $i = $_[1];
   my $type = $_[2];
@@ -219,7 +219,10 @@ sub convertToPythonValue {
       $loop = $loop . "it!=$iv.end(); it++){\n";
       $loop = $loop . "PyObject *k = " . cppToPythonPrimitiveConversion("it->first", $key_type) . ";\n";
       $loop = $loop . "PyObject *v = " . cppToPythonPrimitiveConversion("it->second", $value_type) . ";\n";
+      # Note PyDict_SetItem does not steal the referenceis to the key and value
       $loop = $loop . "PyDict_SetItem(pyValue, k, v);\n";
+      $loop = $loop . "Py_DECREF(k);\n";
+      $loop = $loop . "Py_DECREF(v);\n";
       $loop = $loop . "}";
       $get = $get . $loop;
   }
@@ -232,12 +235,14 @@ sub convertToPythonValue {
     my $assign = undef;
     $getval = "  pyValue = " . cppToPythonPrimitiveConversion($iv, $type) . ";\n";
   }
-  $getkey = 'PyUnicode_DecodeUTF8((const char*)  "' . $name . '", ((int)(sizeof("' . $name . '")))-1 , NULL)';
+  $getkey = 'pyDictKey = PyUnicode_DecodeUTF8((const char*)  "' . $name . '", ((int)(sizeof("' . $name . '")))-1 , NULL);'."\n";
 
-# Note PyTuple_SetItem steals the reference to the value
-  $setdict =  "  PyDict_SetItem(pyDict," . $getkey . " , pyValue);\n";
+# Note PyDict_SetItem does not steal the references to the key and value
+  $setdict =  "  PyDict_SetItem(pyDict, pyDictKey, pyValue);\n";
+  $setdict =  $setdict . "  Py_DECREF(pyDictKey);\n";
+  $setdict =  $setdict . "  Py_DECREF(pyValue);\n";
 
-  return $get . $assign . $getval . $setdict ;
+  return $get . $assign . $getval . $getkey . $setdict ;
 }
 
 1;
