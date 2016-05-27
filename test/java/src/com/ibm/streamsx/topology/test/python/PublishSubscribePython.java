@@ -62,7 +62,7 @@ abstract class PublishSubscribePython extends TestTopology {
     	return pyTk;
     }
     
-    void includePythonApp(Topology topology, String module, String composite) throws Exception {
+    public void includePythonApp(Topology topology, String module, String composite) throws Exception {
     	Path pyTk = genPythonToolkit(module);
     	    	    	
     	SPL.addToolkit(topology, pyTk.toFile());
