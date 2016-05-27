@@ -41,6 +41,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     		  "uint8 u8, uint16 u16, uint32 u32, uint64 u64," +
     		  "float32 f32, float64 f64," +
     		  "rstring r," +
+    		  "complex32 c32," +
     		  "complex64 c64," +
     		  "list<rstring> lr," +
     		  "list<int32> li32," +
@@ -64,7 +65,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     		  "map<rstring,float64> mrf64>");
 
     
-    private static final int TUPLE_COUNT = 1000;
+    public static final int TUPLE_COUNT = 1000;
     
     @Before
     public void runSpl() {
