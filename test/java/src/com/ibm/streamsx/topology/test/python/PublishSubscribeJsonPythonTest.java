@@ -64,7 +64,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
         TStream<String> asString = subscribe.transform(
         		j -> "R" + j.get("a") + "X" + j.get("b") + "X" + j.get("c"));
 
-        completeAndValidate(asString, 20, s1, s2, s3);
+        completeAndValidate(asString, 30, s1, s2, s3);
     }
     
 	/**
@@ -104,7 +104,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
         TStream<String> asString = subscribe.transform(
         		j -> "R" + j.get("a") + "X" + j.get("b"));
 
-        completeAndValidate(asString, 20, s2);
+        completeAndValidate(asString, 30, s2);
     }
     
 	/**
@@ -147,7 +147,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
         
         TStream<String> subscribe = t.subscribe("pytest/json/flatmap/result", String.class);
 
-        completeAndValidate(subscribe, 20, s1a, s1b, s2a, s2b, s3a, s3b);
+        completeAndValidate(subscribe, 30, s1a, s1b, s2a, s2b, s3a, s3b);
     }
 
 }

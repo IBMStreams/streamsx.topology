@@ -7,34 +7,21 @@ package com.ibm.streamsx.topology.test.python;
 import static com.ibm.streamsx.topology.test.splpy.PythonFunctionalOperatorsTest.TUPLE_COUNT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
-import java.io.File;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.ibm.json.java.JSON;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streams.operator.OutputTuple;
-import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
-import com.ibm.streams.operator.Type;
-import com.ibm.streams.operator.meta.TupleType;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
-import com.ibm.streamsx.topology.spl.SPLStreams;
-import com.ibm.streamsx.topology.streams.BeaconStreams;
-import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.test.distributed.PublishSubscribeTest.Delay;
 import com.ibm.streamsx.topology.test.splpy.PythonFunctionalOperatorsTest;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -59,7 +46,7 @@ public class SubscribeSPLDictTest extends PublishSubscribePython {
        
         TStream<JSONObject> viaPythonJson = topology.subscribe("pytest/spl/map/result", JSONObject.class);
                 
-        SPLStream viaPythonJsonSpl = JSONStreams.toSPL(viaPythonJson);
+        SPLStream viaPythonJsonSpl = JSONStreams.toSPL(viaPythonJson.isolate());
         Tester tester = topology.getTester();
         
         Condition<Long> expectedCount = tester.tupleCount(viaPythonJsonSpl, TUPLE_COUNT);
@@ -68,7 +55,7 @@ public class SubscribeSPLDictTest extends PublishSubscribePython {
         Condition<List<Tuple>> viaSPLResult = tester.tupleContents(viaSPL);
         Condition<List<Tuple>> viaPythonResult = tester.tupleContents(viaPythonJsonSpl);
         
-        complete(tester, allConditions(expectedCount, expectedCountSpl), 60, TimeUnit.SECONDS);
+        complete(tester, allConditions(expectedCount, expectedCountSpl), 600, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.valid());
         assertTrue(expectedCountSpl.valid());
