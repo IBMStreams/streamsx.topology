@@ -55,33 +55,6 @@ sub ustring2python {
     return 'PyUnicode_DecodeUTF16((const char*)  (' . $convert_from_string . ".getBuffer()), " . $convert_from_string . ".length()*2, NULL, NULL)";
 }
 
-# This function is identical to the cppToPythonPrimitiveConversion,
-# except the type of the object to be converted is passed as a string,
-# instead of an SPL::CodeGen type. This is necessary because there are
-# functions in the CodeGen API that return strings and not a CodeGen
-# types, such as OutputPort::getAttributeAt().
-#
-sub stringBasedCppToPythonPrimitiveConversion{
-# TODO: do error checking for the conversions. E.g., 
-# char * str = PyUnicode_AsUTF8(pyAttrValue)
-# if(str==NULL) exit(0);
-#
-# (or the equivalent for this function)
-
-    my ($convert_from_string, $type) = @_;
- SPL::CodeGen::errorln("smd2 -- " . $convert_from_string . " : " . $type);
-    switch ($type) {
-      case ['int8', 'int16', 'int32', 'int64'] { return "PyLong_FromLong($convert_from_string)";}
-      case ['uint8', 'uint16', 'uint32', 'uint64'] { return "PyLong_FromUnsignedLong($convert_from_string)";}
-      case ['float32', 'float64'] { return "PyFloat_FromDouble($convert_from_string)";}
-      case 'rstring' { return rstring2python($convert_from_string);}
-      case 'ustring' { return ustring2python($convert_from_string);}
-      case 'boolean' { return "$convert_from_string ? Py_True : Py_False; Py_INCREF(pyValue)";}
-      case ['complex32', 'complex64'] { return "PyComplex_FromDoubles(". $convert_from_string . ".real(), ". $convert_from_string . ".imag())";}
-      else { SPL::CodeGen::errorln("SMD2 An unknown type was encountered when converting to python types: $type"); }
-    }
-}
-
 # This function does the reverse, converting a Python type back to a
 # c++ type based on the $type argument which is a string literal.
 #
@@ -139,7 +112,7 @@ sub convertToPythonValue {
       my $loop = "for(int i = 0; i < $size; i++){\n";
       $get = "pyValue = PyList_New($size);\n";
       my $element_type = SPL::CodeGen::Type::getElementType($type);
-      $loop = $loop . "PyObject *o =" . stringBasedCppToPythonPrimitiveConversion("($iv)[i]", $element_type) . ";\n";      
+      $loop = $loop . "PyObject *o =" . cppToPythonPrimitiveConversion("($iv)[i]", $element_type) . ";\n";      
       $loop = $loop . "PyList_SetItem(pyValue, i, o);\n";
       $loop = $loop . "}\n";
       $get = $get . $loop;
@@ -155,8 +128,8 @@ sub convertToPythonValue {
 
       my $loop = "for(std::tr1::unordered_map<SPL::$key_type,SPL::$value_type>::const_iterator it = $iv.begin();\n";
       $loop = $loop . "it!=$iv.end(); it++){\n";
-      $loop = $loop . "PyObject *k = " . stringBasedCppToPythonPrimitiveConversion("it->first", $key_type) . ";\n";
-      $loop = $loop . "PyObject *v = " . stringBasedCppToPythonPrimitiveConversion("it->second", $value_type) . ";\n";
+      $loop = $loop . "PyObject *k = " . cppToPythonPrimitiveConversion("it->first", $key_type) . ";\n";
+      $loop = $loop . "PyObject *v = " . cppToPythonPrimitiveConversion("it->second", $value_type) . ";\n";
       $loop = $loop . "PyDict_SetItem(pyValue, k, v);\n";
       $loop = $loop . "}";
       $get = $get . $loop;
