@@ -91,8 +91,9 @@ sub pythonToCppPrimitiveConversion{
              case 'float32' {return "(float) PyFloat_AsDouble($convert_from_string)";}
              case 'float64' {return "PyFloat_AsDouble($convert_from_string)";}
              case 'boolean' {return "PyObject_IsTrue($convert_from_string)";}
+             case 'complex32' { return "SPL::complex32((SPL::float32) PyComplex_RealAsDouble($convert_from_string), (SPL::float32) PyComplex_ImagAsDouble($convert_from_string))";}
              case 'complex64' { return "SPL::complex64(PyComplex_RealAsDouble($convert_from_string), PyComplex_ImagAsDouble($convert_from_string))";}
-	     else {SPL::CodeGen::exitln("An unknown type $type was encountered when converting to back to cpp types: $type. Did you supply sufficient variables?"); }
+	     else {SPL::CodeGen::exitln("An unknown type $type was encountered when converting to back to cpp types."); }
     }
 }
 

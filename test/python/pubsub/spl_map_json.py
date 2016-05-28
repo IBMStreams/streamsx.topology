@@ -13,7 +13,7 @@ def main():
 
   ts = topo.subscribe("pytest/spl/map", schema=pytest_schema.all_spl_types)
 
-  ts = ts.map(pytest_funcs.remove_complex)
+  ts = ts.isolate().map(pytest_funcs.remove_complex).isolate()
 
   ts.publish("pytest/spl/map/result", schema=CommonSchema.Json)
 

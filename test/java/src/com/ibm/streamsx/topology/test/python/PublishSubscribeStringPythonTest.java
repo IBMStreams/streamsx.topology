@@ -35,7 +35,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
         
         TStream<String> subscribe = t.subscribe("pytest/string/map/result", String.class);
 
-        completeAndValidate(subscribe, 20, "wasJava_Python234", "457_Python234", "CrystalPalace_Python234");
+        completeAndValidate(subscribe, 30, "wasJava_Python234", "457_Python234", "CrystalPalace_Python234");
     }
     
 	/**
@@ -56,7 +56,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
         
         TStream<String> subscribe = t.subscribe("pytest/string/filter/result", String.class);
 
-        completeAndValidate(subscribe, 20, "ABC", "DEF", "34");
+        completeAndValidate(subscribe, 30, "ABC", "DEF", "34");
     }
 
     @Test

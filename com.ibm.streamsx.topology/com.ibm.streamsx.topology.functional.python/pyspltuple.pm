@@ -13,6 +13,9 @@ sub cppToPythonPrimitiveConversion{
 # (or the equivalent for this function)
 
     my ($convert_from_string, $type) = @_;
+
+    my $supported = 0;
+
     if(SPL::CodeGen::Type::isSigned($type)) {
       return "PyLong_FromLong($convert_from_string)";
     } 
@@ -20,22 +23,26 @@ sub cppToPythonPrimitiveConversion{
       return "PyLong_FromUnsignedLong($convert_from_string)";
     } 
     elsif(SPL::CodeGen::Type::isFloatingpoint($type)) {
-      return "PyFloat_FromDouble($convert_from_string)";
+      $supported = 1;
     } 
     elsif (SPL::CodeGen::Type::isRString($type) || SPL::CodeGen::Type::isBString($type)) {
-      return rstring2python($convert_from_string);
+      $supported = 1;
     } 
     elsif (SPL::CodeGen::Type::isUString($type)) {
-      return ustring2python($convert_from_string);
+      $supported = 1;
     } 
     elsif(SPL::CodeGen::Type::isBoolean($type)) {
-      return "$convert_from_string ? Py_True : Py_False; Py_INCREF(pyValue)";
+      $supported = 1;
     } 
     elsif (SPL::CodeGen::Type::isComplex32($type) || SPL::CodeGen::Type::isComplex64($type)) {
-      return "PyComplex_FromDoubles(". $convert_from_string . ".real(), ". $convert_from_string . ".imag())";
+      $supported = 1;
+    }
+
+    if ($supported == 1) {
+      return "streamsx::topology::pyAttributeToPyObject($convert_from_string)";
     }
     else{
-      SPL::CodeGen::errorln("SMD1 An unknown type was encountered when converting to python types." . $type ); 
+      SPL::CodeGen::errorln("An unknown type was encountered when converting to python types." . $type ); 
     }
 }
 
@@ -98,8 +105,9 @@ sub pythonToCppPrimitiveConversion{
              case 'float32' {return "(float) PyFloat_AsDouble($convert_from_string)";}
              case 'float64' {return "PyFloat_AsDouble($convert_from_string)";}
              case 'boolean' {return "PyObject_IsTrue($convert_from_string)";}
+             case 'complex32' { return "SPL::complex32((float32_t) PyComplex_RealAsDouble($convert_from_string), (float32_t) PyComplex_ImagAsDouble($convert_from_string))";}
              case 'complex64' { return "SPL::complex64(PyComplex_RealAsDouble($convert_from_string), PyComplex_ImagAsDouble($convert_from_string))";}
-	     else {SPL::CodeGen::exitln("SMD3 An unknown type $type was encountered when converting to back to cpp types: $type. Did you supply sufficient variables?"); }
+	     else {SPL::CodeGen::exitln("An unknown type $type was encountered when converting to back to cpp types."); }
     }
 }
 

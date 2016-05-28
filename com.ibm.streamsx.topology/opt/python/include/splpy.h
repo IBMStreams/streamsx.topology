@@ -61,17 +61,17 @@ namespace streamsx {
       attr.assign((const char *)bytes, (size_t) size);
     }
 
+    /**************************************************************/
+
     /*
     ** Conversion of SPL attributes to Python objects
     */
 
-    template <class T>
-    inline PyObject * pyAttributeToPyObject(T & attr);
 
     /**
      * Convert a SPL blob into a Python Byte string 
      */
-    inline PyObject * pyAttributeToPyObject(SPL::blob & attr) {
+    inline PyObject * pyAttributeToPyObject(const SPL::blob & attr) {
       long int sizeb = attr.getSize();
       const unsigned char * bytes = attr.getData();
 
@@ -81,13 +81,41 @@ namespace streamsx {
     /**
      * Convert a SPL rstring into a Python Unicode string 
      */
-    inline PyObject * pyAttributeToPyObject(SPL::rstring & attr) {
+    inline PyObject * pyAttributeToPyObject(const SPL::rstring & attr) {
       long int sizeb = attr.size();
       const char * pybytes = attr.data();
 
       return PyUnicode_DecodeUTF8(pybytes, sizeb, NULL);
     }
-    
+    /**
+     * Convert a SPL ustring into a Python Unicode string 
+     */
+    inline PyObject * pyAttributeToPyObject(const SPL::ustring & attr) {
+      long int sizeb = attr.length() * 2; // Need number of bytes
+      const char * pybytes =  (const char*) (attr.getBuffer());
+
+      return PyUnicode_DecodeUTF16(pybytes, sizeb, NULL, NULL);
+    }
+
+    inline PyObject * pyAttributeToPyObject(const SPL::complex32 & attr) {
+       return PyComplex_FromDoubles(attr.real(), attr.imag());
+    }
+    inline PyObject * pyAttributeToPyObject(const SPL::complex64 & attr) {
+       return PyComplex_FromDoubles(attr.real(), attr.imag());
+    }
+
+    inline PyObject * pyAttributeToPyObject(const SPL::boolean & attr) {
+       PyObject * value = attr ? Py_True : Py_False;
+       Py_INCREF(value);
+       return value;
+    }
+    inline PyObject * pyAttributeToPyObject(const SPL::float32 & attr) {
+       return PyFloat_FromDouble(attr);
+    }
+    inline PyObject * pyAttributeToPyObject(const SPL::float64 & attr) {
+       return PyFloat_FromDouble(attr);
+    }
+
     /**
      * Convert a PyObject to a PyObject by simply returning the value
      * nb. that if object has it ref count decremented to 0 the 
@@ -96,6 +124,19 @@ namespace streamsx {
     inline PyObject * pyAttributeToPyObject(PyObject * object) {
       return object;
     }
+
+/*
+
+    template <class T>
+    inline PyObject * pyAttributeToPyObjectT(T & attr);
+
+    inline PyObject * pyAttributeToPyObjectT(SPL::blob & attr) {
+        return pyAttributeToPyObject(attr);
+    }
+    inline PyObject * pyAttributeToPyObjectT(SPL::rstring & attr) {
+        return pyAttributeToPyObject(attr);
+    }
+*/
 
     class Splpy {
 
