@@ -46,15 +46,6 @@ sub cppToPythonPrimitiveConversion{
     }
 }
 
-sub rstring2python {
-    my ($convert_from_string) = @_;
-    return 'PyUnicode_DecodeUTF8((const char*)  (' . $convert_from_string . ".data()), " . $convert_from_string . ".size(), NULL)";
-}
-sub ustring2python {
-    my ($convert_from_string) = @_;
-    return 'PyUnicode_DecodeUTF16((const char*)  (' . $convert_from_string . ".getBuffer()), " . $convert_from_string . ".length()*2, NULL, NULL)";
-}
-
 # This function does the reverse, converting a Python type back to a
 # c++ type based on the $type argument which is a string literal.
 #
