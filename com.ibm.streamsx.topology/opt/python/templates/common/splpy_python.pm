@@ -13,33 +13,37 @@ sub cppToPythonPrimitiveConversion{
 # (or the equivalent for this function)
 
     my ($convert_from_string, $type) = @_;
+
+    my $supported = 0;
+
     if(SPL::CodeGen::Type::isSigned($type)) {
-	return "PyLong_FromLong($convert_from_string)";
-    } elsif(SPL::CodeGen::Type::isUnsigned($type)) {
-	return "PyLong_FromUnsignedLong($convert_from_string)";
-    } elsif(SPL::CodeGen::Type::isFloatingpoint($type)) {
-	return "PyFloat_FromDouble($convert_from_string)";
-    } elsif (SPL::CodeGen::Type::isRString($type) || SPL::CodeGen::Type::isBString($type)) {
-	return rstring2python($convert_from_string);
-    } elsif (SPL::CodeGen::Type::isUString($type)) {
-	return ustring2python($convert_from_string);
-    } elsif(SPL::CodeGen::Type::isBoolean($type)) {
-	return "$convert_from_string ? Py_True : Py_False; Py_INCREF(pyValue)";
-    } elsif (SPL::CodeGen::Type::isComplex32($type) || SPL::CodeGen::Type::isComplex64($type)) {
-	return "PyComplex_FromDoubles(". $convert_from_string . ".real(), ". $convert_from_string . ".imag())";
+      return "PyLong_FromLong($convert_from_string)";
+    } 
+    elsif(SPL::CodeGen::Type::isUnsigned($type)) {
+      return "PyLong_FromUnsignedLong($convert_from_string)";
+    } 
+    elsif(SPL::CodeGen::Type::isFloatingpoint($type)) {
+      $supported = 1;
+    } 
+    elsif (SPL::CodeGen::Type::isRString($type) || SPL::CodeGen::Type::isBString($type)) {
+      $supported = 1;
+    } 
+    elsif (SPL::CodeGen::Type::isUString($type)) {
+      $supported = 1;
+    } 
+    elsif(SPL::CodeGen::Type::isBoolean($type)) {
+      $supported = 1;
+    } 
+    elsif (SPL::CodeGen::Type::isComplex32($type) || SPL::CodeGen::Type::isComplex64($type)) {
+      $supported = 1;
+    }
+
+    if ($supported == 1) {
+      return "streamsx::topology::pyAttributeToPyObject($convert_from_string)";
     }
     else{
-	SPL::CodeGen::errorln("An unknown type was encountered when converting to python types."); 
+      SPL::CodeGen::errorln("An unknown type was encountered when converting to python types." . $type ); 
     }
-}
-
-sub rstring2python {
-    my ($convert_from_string) = @_;
-    return 'PyUnicode_DecodeUTF8((const char*)  (' . $convert_from_string . ".data()), " . $convert_from_string . ".size(), NULL)";
-}
-sub ustring2python {
-    my ($convert_from_string) = @_;
-    return 'PyUnicode_DecodeUTF16((const char*)  (' . $convert_from_string . ".getBuffer()), " . $convert_from_string . ".length()*2, NULL, NULL)";
 }
 
 # This function does the reverse, converting a Python type back to a
