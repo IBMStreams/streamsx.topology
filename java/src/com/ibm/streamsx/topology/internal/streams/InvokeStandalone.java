@@ -42,8 +42,7 @@ public class InvokeStandalone {
         commands.add(jvm.getAbsolutePath());
         commands.add("-jar");
         commands.add(bundle.getAbsolutePath());
-        Level traceLevel = (Level) config
-                .get(ContextProperties.TRACING_LEVEL);
+        Level traceLevel = jc.getTracing();
         if (traceLevel != null) {
             commands.add("-t");
 

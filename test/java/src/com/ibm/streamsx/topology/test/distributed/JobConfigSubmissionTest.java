@@ -54,6 +54,20 @@ public class JobConfigSubmissionTest extends TestTopology {
         assertEquals("<empty>", result.get(3)); // data-directory
     }
     
+    @Test
+    public void testDataDirJobConfig() throws Exception {
+        
+        JobConfig config = new JobConfig();
+        config.setJobName("nameDD");
+        config.setDataDirectory("/tmp/some/dir");
+        List<String> result = testItDirect("testNameJobConfig", config);
+        
+        assertFalse(result.get(0).isEmpty()); // job id
+        assertEquals("nameDD", result.get(1)); // job name
+        assertEquals("default", result.get(2)); // job group
+        assertEquals("/tmp/some/dir", result.get(3)); // data-directory
+    }
+    
     private List<String> testItDirect(String topologyName, JobConfig config)
             throws Exception {
 

@@ -45,6 +45,8 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
+import com.ibm.streamsx.topology.jobconfig.JobConfig;
+import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
 
 public class AnalyticsServiceStreamsContext extends
         BundleUserStreamsContext<BigInteger> {
@@ -239,17 +241,26 @@ public class AnalyticsServiceStreamsContext extends
     private JSONObject getBluemixSubmitConfig( Map<String, Object> config) throws IOException {
         JSONObject submitConfig = new JSONObject();
         
-        addSubmitValue(submitConfig, config, JobProperties.NAME, "jobName");
-        addSubmitValue(submitConfig, config, JobProperties.GROUP, "jobGroup");
-        addSubmitValue(submitConfig, config, JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION, "overrideResourceLoadProtection");
-        addSubmitValue(submitConfig, config, ContextProperties.SUBMISSION_PARAMS, "submissionParameters");
+        JobConfig jc = JobConfig.fromProperties(config);
+        addSubmitValue(submitConfig, jc.getJobName(), "jobName");
+        addSubmitValue(submitConfig, jc.getJobGroup(), "jobGroup");
+        addSubmitValue(submitConfig, jc.getDataDirectory(), "data-directory");
+        if (jc.hasSubmissionParameters()) {
+            JSONObject joParams = new JSONObject();
+            for(SubmissionParameter param :  jc.getSubmissionParameters()) {
+                joParams.put(param.getName(), param.getValue());
+            }
+            addSubmitValue(submitConfig, joParams, "submissionParameters");
+        }
+
+        addSubmitValue(submitConfig, jc.getOverrideResourceLoadProtection(),
+                "overrideResourceLoadProtection");
         
         JSONObject submitConfigConfig = new JSONObject();
-        addSubmitValue(submitConfigConfig, config, JobProperties.DATA_DIRECTORY, "data-directory");
-        addSubmitValue(submitConfigConfig, config, JobProperties.PRELOAD_APPLICATION_BUNDLES, "preloadApplicationBundles");
-        if (config.containsKey(ContextProperties.TRACING_LEVEL)) {
-            Level traceLevel = (Level) config.get(ContextProperties.TRACING_LEVEL);
-            submitConfigConfig.put("tracing", InvokeSubmit.toTracingLevel(traceLevel));
+        if (jc.getPreloadApplicationBundles())
+            addSubmitValue(submitConfigConfig, jc.getPreloadApplicationBundles().toString(), "preloadApplicationBundles");
+        if (jc.getTracing() != null) {
+            submitConfigConfig.put("tracing", jc.getStreamsTracing());
         }
         if (!submitConfigConfig.isEmpty())
             submitConfig.put("configurationSettings", submitConfigConfig);
@@ -259,27 +270,9 @@ public class AnalyticsServiceStreamsContext extends
         return submitConfig;
     }
     
-    private static void addSubmitValue(JSONObject json, Map<String, Object> config, String key, String jsonKey) {
-        Object value = config.get(key);
-        if (value == null)
-            return;
-        if (value instanceof String && value.toString().isEmpty())
-            return;
-        
-        // Streams REST service requires a String value
-        if (JobProperties.PRELOAD_APPLICATION_BUNDLES.equals(key))
-            value = value.toString();
-        else if (ContextProperties.SUBMISSION_PARAMS.equals(key)) {
-            JSONObject jo = new JSONObject();
-            @SuppressWarnings("unchecked")
-            Map<String,Object> m = (Map<String,Object>) value;
-            for(Map.Entry<String,Object> e :  m.entrySet()) {
-                jo.put(e.getKey(), e.getValue().toString());
-            }
-            value = jo;
-        }
-        
-        json.put(jsonKey, value);
+    private static void addSubmitValue(JSONObject json, Object value, String jsonKey) {
+        if (value != null)
+            json.put(jsonKey, value);
     }
     
     private BigInteger submitJobToService(File bundle, Map<String, Object> config) throws IOException {

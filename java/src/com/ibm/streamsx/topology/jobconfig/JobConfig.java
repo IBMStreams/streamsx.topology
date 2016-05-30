@@ -1,18 +1,24 @@
 package com.ibm.streamsx.topology.jobconfig;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.SUBMISSION_PARAMS;
+import static com.ibm.streamsx.topology.context.ContextProperties.TRACING_LEVEL;
 import static com.ibm.streamsx.topology.context.JobProperties.CONFIG;
 import static com.ibm.streamsx.topology.context.JobProperties.DATA_DIRECTORY;
 import static com.ibm.streamsx.topology.context.JobProperties.GROUP;
 import static com.ibm.streamsx.topology.context.JobProperties.NAME;
+import static com.ibm.streamsx.topology.context.JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION;
+import static com.ibm.streamsx.topology.context.JobProperties.PRELOAD_APPLICATION_BUNDLES;
 import static com.ibm.streamsx.topology.internal.streams.Util.getConfigEntry;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
+import com.ibm.streams.operator.logging.TraceLevel;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.JobProperties;
+import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
@@ -26,8 +32,11 @@ public class JobConfig {
     private String jobName;
     private String jobGroup;
     private String dataDirectory;
+    private Boolean overrideResourceLoadProtection;
     private Boolean preloadApplicationBundles;
     private List<SubmissionParameter> submissionParameters;
+    private transient Level _tracing;
+    private String tracing;
 
     /**
      * An empty job configuration.
@@ -98,6 +107,44 @@ public class JobConfig {
      */
     public void setDataDirectory(String dataDirectory) {
         this.dataDirectory = dataDirectory;
+    }
+    
+    public Boolean getOverrideResourceLoadProtection() {
+        return overrideResourceLoadProtection;
+    }
+
+    public void setOverrideResourceLoadProtection(Boolean overrideResourceLoadProtection) {
+        this.overrideResourceLoadProtection = overrideResourceLoadProtection;
+    }
+
+    /**
+     * @return the tracing
+     */
+    public Level getTracing() {
+        return _tracing;
+    }
+    
+    public String getStreamsTracing() {
+        return tracing;
+    }
+
+    /**
+     * @param tracing the tracing to set
+     */
+    public void setTracing(Level tracing) {
+        if (tracing == null)
+            this.tracing = null;
+        else
+            this.tracing = toTracingLevel(tracing);
+        this._tracing = tracing;
+    }
+
+    public Boolean getPreloadApplicationBundles() {
+        return preloadApplicationBundles;
+    }
+
+    public void setPreloadApplicationBundles(Boolean preloadApplicationBundles) {
+        this.preloadApplicationBundles = preloadApplicationBundles;
     }
 
     /**
@@ -170,6 +217,39 @@ public class JobConfig {
             }
         }
         
+        if (config.containsKey(OVERRIDE_RESOURCE_LOAD_PROTECTION))
+            jc.setOverrideResourceLoadProtection(Util.getConfigEntry(config, 
+                    OVERRIDE_RESOURCE_LOAD_PROTECTION, Boolean.class));
+
+        if (config.containsKey(PRELOAD_APPLICATION_BUNDLES))
+            jc.setPreloadApplicationBundles(Util.getConfigEntry(config, 
+                    PRELOAD_APPLICATION_BUNDLES, Boolean.class));
+        
+        if (config.containsKey(TRACING_LEVEL))
+            jc.setTracing(Util.getConfigEntry(config, TRACING_LEVEL, Level.class));
+
         return jc;
+    }
+    
+    private static String toTracingLevel(Level level) {
+        int tli = level.intValue();
+        String tls;
+        if (tli == Level.OFF.intValue())
+            tls = "off";
+        else if (tli == Level.ALL.intValue())
+            tls = "debug";
+        else if (tli >= TraceLevel.ERROR.intValue())
+            tls = "error";
+        else if (tli >= TraceLevel.WARN.intValue())
+            tls = "warn";
+        else if (tli >= TraceLevel.INFO.intValue())
+            tls = "info";
+        else if (tli >= TraceLevel.DEBUG.intValue())
+            tls = "debug";
+        else if (tli >= TraceLevel.TRACE.intValue())
+            tls = "trace";
+        else
+            tls = "trace";
+        return tls;
     }
 }

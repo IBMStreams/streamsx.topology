@@ -12,13 +12,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.ibm.streams.operator.logging.TraceLevel;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.ContextProperties;
-import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
@@ -59,12 +55,9 @@ public class InvokeSubmit {
         commands.add("submitjob");
         commands.add("--outfile");
         commands.add(jobidFile.getAbsolutePath());
-        if (config.containsKey(ContextProperties.TRACING_LEVEL)) {
-            Level level = Util.getConfigEntry(config, 
-                                ContextProperties.TRACING_LEVEL,
-                                Level.class);
+        if (jobConfig.getTracing() != null) {
             commands.add("--config");
-            commands.add("tracing="+toTracingLevel(level));
+            commands.add("tracing="+jobConfig.getStreamsTracing());
         }
         if (jobConfig.getJobName() != null) {
             commands.add("--jobname");
@@ -74,21 +67,16 @@ public class InvokeSubmit {
             commands.add("--jobgroup");
             commands.add(jobConfig.getJobGroup());
         }
-        if (config.containsKey(JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION)) {
-            Boolean override = Util.getConfigEntry(config, 
-                                JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION,
-                                Boolean.class);
-            if (override) {
+        if (jobConfig.getOverrideResourceLoadProtection() != null) {
+            
+            if (jobConfig.getOverrideResourceLoadProtection()) {
                 commands.add("--override");
                 commands.add("HostLoadProtection");
             }
         }
-        if (config.containsKey(JobProperties.PRELOAD_APPLICATION_BUNDLES)) {
-            Boolean value = Util.getConfigEntry(config,
-                                JobProperties.PRELOAD_APPLICATION_BUNDLES,
-                                Boolean.class);
+        if (jobConfig.getPreloadApplicationBundles() != null) {
             commands.add("--config");
-            commands.add("preloadApplicationBundles="+value);
+            commands.add("preloadApplicationBundles="+jobConfig.getPreloadApplicationBundles());
         }
         if (jobConfig.getDataDirectory() != null) {
             commands.add("--config");
@@ -136,27 +124,5 @@ public class InvokeSubmit {
         } finally {
             jobidFile.delete();
         }
-    }
-    
-    public static String toTracingLevel(Level level) {
-        int tli = level.intValue();
-        String tls;
-        if (tli == Level.OFF.intValue())
-            tls = "off";
-        else if (tli == Level.ALL.intValue())
-            tls = "debug";
-        else if (tli >= TraceLevel.ERROR.intValue())
-            tls = "error";
-        else if (tli >= TraceLevel.WARN.intValue())
-            tls = "warn";
-        else if (tli >= TraceLevel.INFO.intValue())
-            tls = "info";
-        else if (tli >= TraceLevel.DEBUG.intValue())
-            tls = "debug";
-        else if (tli >= TraceLevel.TRACE.intValue())
-            tls = "trace";
-        else
-            tls = "trace";
-        return tls;
     }
 }
