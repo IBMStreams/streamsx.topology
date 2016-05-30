@@ -1,9 +1,11 @@
 <%
  my $tkdir = $model->getContext()->getToolkitDirectory();
+ my $cmndir = $tkdir."/opt/python/templates/common";
  my $fpdir = $tkdir."/com.ibm.streamsx.topology.functional.python";
 
  require $fpdir."/pyfunction.pm";
  require $fpdir."/pyspltuple.pm";
+ require $cmndir."/splpy_python.pm";
 
  # setup the variables used when processing spltuples
  my $pyport = $model->getInputPortAt(0);
