@@ -141,13 +141,13 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
    	    	
         TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
         
-        source = source.modify(new Delay<JSONObject>(10)).asType(JSONObject.class);
+        source = source.modify(new Delay<JSONObject>(15)).asType(JSONObject.class);
         
         source.publish("pytest/json/flatmap");
         
         TStream<String> subscribe = t.subscribe("pytest/json/flatmap/result", String.class);
 
-        completeAndValidate(subscribe, 30, s1a, s1b, s2a, s2b, s3a, s3b);
+        completeAndValidate(subscribe, 60, s1a, s1b, s2a, s2b, s3a, s3b);
     }
 
 }

@@ -68,13 +68,13 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
    	    	
         TStream<String> source = t.strings("mary had a little lamb", "If you can keep your head when all about you");
         
-        source = source.modify(new Delay<String>(10));
+        source = source.modify(new Delay<String>(15));
         
         source.publish("pytest/string/flatmap");
         
         TStream<String> subscribe = t.subscribe("pytest/string/flatmap/result", String.class);
 
-        completeAndValidate(subscribe, 30,
+        completeAndValidate(subscribe, 60,
         		"mary", "had", "a", "little", "lamb", "If", "you", "can", "keep", "your", "head", "when", "all", "about", "you");
     }
 }
