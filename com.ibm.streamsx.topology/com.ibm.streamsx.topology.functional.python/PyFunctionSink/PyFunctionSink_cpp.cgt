@@ -11,14 +11,6 @@
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
-<%
-  # determine which tuple stype is being used
-  my $fpdir = $model->getContext()->getToolkitDirectory()."/com.ibm.streamsx.topology.functional.python";
- require $fpdir."/pyfunction.pm";
- require $fpdir."/pyspltuple.pm";
- my $pystyle = splpy_tuplestyle($model->getInputPortAt(0));
-%>
-
 @include "../pyspltuple.cgt"
 
 // Constructor
