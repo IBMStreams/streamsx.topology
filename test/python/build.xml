@@ -31,5 +31,12 @@
 		     <arg value="test1.py"/>
 		   </exec>
 	   </target>
+	   
+	  <target name="test.mqtt.application.api">
+		   <exec executable="python3" dir="${topology}" failonerror="true">
+		     <env key="PYTHONPATH" value="${tk}/opt/python/packages"/>
+		     <arg value="mqtest1.py"/>
+		   </exec>
+	   </target>	   
 
 </project>

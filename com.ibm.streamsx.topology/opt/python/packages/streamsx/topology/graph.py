@@ -19,7 +19,9 @@ class SPLGraph(object):
         self.operators = []
         self.resolver = streamsx.topology.dependency._DependencyResolver()
 
-    def addOperator(self, kind, function=None, name=None, params={}):
+    def addOperator(self, kind, function=None, name=None, params=None):
+        if(params is None):
+            params = {}
         if name is None:
             if function is not None:
                if hasattr(function, '__name__'):
