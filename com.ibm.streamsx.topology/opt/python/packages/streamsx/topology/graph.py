@@ -19,7 +19,9 @@ class SPLGraph(object):
         self.operators = []
         self.resolver = streamsx.topology.dependency._DependencyResolver()
 
-    def addOperator(self, kind, function=None, name=None, params={}):
+    def addOperator(self, kind, function=None, name=None, params=None):
+        if(params is None):
+            params = {}
         if name is None:
             if function is not None:
                if hasattr(function, '__name__'):
@@ -34,7 +36,6 @@ class SPLGraph(object):
             if function is not None:
                 params['toolkitDir'] = streamsx.topology.param.toolkit_dir()
             op = SPLInvocation(len(self.operators), kind, function, name, params, self)
-            params.clear()
         self.operators.append(op)
         if not function is None:
             if not inspect.isbuiltin(function):
