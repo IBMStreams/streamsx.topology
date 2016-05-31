@@ -4,19 +4,41 @@
  */
 package com.ibm.streamsx.topology.context;
 
+import com.ibm.streamsx.topology.jobconfig.JobConfig;
+
 /**
- * Job properties specific to a {@link StreamsContext.Type#DISTRIBUTED}
- * context.
+ * Job properties specific to distributed contexts.
+ * <BR>
+ * The preferred mechanism is to supply a job configuration
+ * object using {@link #CONFIG} rather than the individual values.
+ * 
  * @see StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)
  * @see ContextProperties
+ * @see StreamsContext.Type#DISTRIBUTED
+ * @see StreamsContext.Type#ANALYTICS_SERVICE
  */
 public interface JobProperties {
+    
+    /**
+     * Configuration for a submitted application.
+     * This single property contains the full submission
+     * time configuration for the application.
+     * This property overrides all other {@code JobProperties}
+     * such as {@link #NAME} and {@link #GROUP}.
+     * <BR>
+     * Argument is a {@link JobConfig} object.
+     * <p>
+     * Setting a job configuration is optional.
+     * </p>
+     */
+    String CONFIG = "job.config";
     
     /**
      * Name for a submitted  application.
      * Argument is a String.
      * <p>
      * Specifying a job name is optional.
+     * </p>
      */
     String NAME = "job.name";
     
@@ -27,6 +49,7 @@ public interface JobProperties {
      * Specifying a job group is optional.  
      * When specified an existing Job Group must be supplied.
      * By default a Job is added to the job group "default".
+     * </p>
      */
     String GROUP = "job.group";
     
@@ -36,6 +59,7 @@ public interface JobProperties {
      * <p>
      * Specifies whether to submit the job regardless of the load settings
      * for the target resources.
+     * </p>
      */
     String OVERRIDE_RESOURCE_LOAD_PROTECTION = "job.overrideResourceLoadProtection";
     
