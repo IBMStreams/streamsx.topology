@@ -4,14 +4,14 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static com.ibm.streamsx.topology.internal.core.SubmissionParameter.TYPE_SUBMISSION_PARAMETER;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;

@@ -1,0 +1,24 @@
+<%
+ my $tkdir = $model->getContext()->getToolkitDirectory();
+ my $cmndir = $tkdir."/opt/python/templates/common";
+ my $fpdir = $tkdir."/com.ibm.streamsx.topology.functional.python";
+
+ require $fpdir."/pyfunction.pm";
+ require $fpdir."/pyspltuple.pm";
+ require $cmndir."/splpy_python.pm";
+
+ # setup the variables used when processing spltuples
+ my $pyport = $model->getInputPortAt(0);
+ my $pytupleType = $pyport->getSPLTupleType();
+ my @pyanames = SPL::CodeGen::Type::getAttributeNames($pytupleType);
+ my @pyatypes = SPL::CodeGen::Type::getAttributeTypes($pytupleType);
+
+ my $pynumattrs = $pyport->getNumberOfAttributes();
+ 
+ my $pytuple = $pyport->getCppTupleName();
+
+ # determine which input tuple style is being used
+
+ my $pystyle = splpy_tuplestyle($model->getInputPortAt(0));
+%>
+

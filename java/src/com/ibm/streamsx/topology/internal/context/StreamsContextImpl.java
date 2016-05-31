@@ -5,8 +5,10 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Future;
 
+import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 
@@ -25,5 +27,11 @@ abstract class StreamsContextImpl<T> implements StreamsContext<T> {
     public boolean isSupported(Topology topology) {
         return true;
     }
+    
+    @Override
+    public Future<T> submit(JSONObject json) throws Exception {
+    	throw new UnsupportedOperationException();
+    }
+    
     
 }

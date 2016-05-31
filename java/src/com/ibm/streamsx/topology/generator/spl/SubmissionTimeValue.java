@@ -5,7 +5,7 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor.FUNCTIONAL_LOGIC_PARAM;
-import static com.ibm.streamsx.topology.internal.core.SubmissionParameter.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 
 import java.util.HashMap;
 import java.util.Map;

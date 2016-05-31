@@ -185,10 +185,10 @@ public class BOperatorInvocation extends BOperator {
         } else if (value instanceof Enum) {
             op.setCustomLiteralParameter(name, (Enum<?>) value);
             jsonValue = ((Enum<?>) value).name();
-            jsonType = "enum";
+            jsonType = JParamTypes.TYPE_ENUM;
         } else if (value instanceof StreamSchema) {
             jsonValue = ((StreamSchema) value).getLanguageType();
-            jsonType = "spltype";
+            jsonType = JParamTypes.TYPE_SPLTYPE;
         } else if (value instanceof String[]) {
             String[] sa = (String[]) value;
             JSONArray a = new JSONArray(sa.length);
@@ -199,7 +199,7 @@ public class BOperatorInvocation extends BOperator {
         } else if (value instanceof Attribute) {
             Attribute attr = (Attribute) value;
             jsonValue = attr.getName();
-            jsonType = "attribute";
+            jsonType = JParamTypes.TYPE_ATTRIBUTE;
             op.setAttributeParameter(name, attr.getName());
         } else if (value instanceof JSONObject) {
             JSONObject jo = (JSONObject) value;

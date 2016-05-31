@@ -86,6 +86,16 @@
  * A Java application uses [../../javadoc/com/ibm/streamsx/topology/TStream.html#publish(java.lang.String)|TStream.publish(topic)]
  * to publish streams.
  * 
+ * # Python Publish-Subscribe
+ * A Python application uses `Stream.publish(topic)` to publish
+ * streams and `Topology.subscribe(topic)` to subscribe to published
+ * streams.
+ *
+ * Python only supports publishing and subscribing to streams
+ * containing Python, [com.ibm.streamsx.topology::Json|JSON]
+ * or [com.ibm.streamsx.topology::String|String] objects.
+igy
+ *
  * # Interchangeable Stream Types
  * 
  * Published streams can be subscribed to by IBM Streams applications
@@ -100,10 +110,12 @@
  *   * Java: `TStream<JSONObject>`.
        See [../../javadoc/com/ibm/streamsx/topology/json/package-summary.html#package_description|com.ibm.streamsx.topology.json].
  *   * Scala: `TStream\[JSONObject\]`
+ *   * Python: `schema.CommonSchema.Json` - Tuples are Python dictionary objects converted to from JSON using `json.loads` and `json.dumps`.
  * * String tuples
  *   * SPL : [com.ibm.streamsx.topology::String]
  *   * Java: `TStream<String>`
  *   * Scala: `TStream\[String\]`
+ *   * Python: `schema.CommonSchema.String` - Tuples are Python string objects. Python object tuples are converted to strings using `str()` when publishing as `String`
  * * XML tuples
  *   * SPL : [com.ibm.streamsx.topology::XML]
  *   * Java: `TStream<com.ibm.streams.operator.types.XML>`

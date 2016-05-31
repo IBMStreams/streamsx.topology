@@ -33,8 +33,6 @@ public interface ContextProperties {
      */
     String TOOLKIT_DIR = "topology.toolkitDir";
 
-    String BUNDLE = "topology.bundle";
-
     /**
      * Argument is a List of Strings.
      */

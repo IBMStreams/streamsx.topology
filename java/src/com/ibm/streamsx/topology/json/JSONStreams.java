@@ -68,7 +68,7 @@ public class JSONStreams {
                 wrapper.put(PAYLOAD, artifact);
                 return wrapper;
             } catch (IOException e) {
-                return null;
+                throw new RuntimeException(e);
             }
         }
     }

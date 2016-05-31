@@ -1,0 +1,602 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015  
+ */
+
+/**
+
+Alpha support for Python in IBM Streams.
+
+This is an **alpha version** of `com.ibm.streamsx.topology` allows
+use of Python in IBM Streams applications.
+
+# Python Support
+
++ Decorating Python Functions as SPL Operators
+SPL operators that call a Python function are created by
+decorators provided by this toolkit.
+
+`bin/spl-python-extract.py` is a Python script that creates SPL operators from
+Python functions contained in modules in a toolkit.
+The resulting operators embed the Python runtime to
+allow stream processing using Python.
+
+To create SPL operators from Python functions one or more Python
+modules are created in the `opt/python/streams` directory
+of an SPL toolkit.
+
+Each module must import the `streamsx.spl`
+package which is located in the `opt/packages` directory of this toolkit.
+It contains the decorators use to create SPL operators from Python functions.
+The module must also define a function `splNamespace` that returns a string
+containing the SPL namespace the operators for that module will be placed in.
+
+For example:
+
+
+    # Import the SPL decorators
+    from streamsx.spl import spl
+
+    # Defines the SPL namespace for any functions in this module
+    # Multiple modules can map to the same namespace
+    def splNamespace():
+       return "com.ibm.streamsx.topology.pysamples.mail"
+
+Any Python docstring for the function is copied into the SPL operator's description field in its operator model, providing a description for IDE developers using the toolkit.
+
+Functions in the modules that are not decorated, decorated with `@spl.ignore` or start with `spl` are ignored and will not result in any SPL operator.
+
+++ Conversion between SPL and Python tuples.
+SPL attributes map to Python tuples by position.
+# SPL Tuple passed into a Python function
+When an SPL tuple is passed into a Python function through its SPL operator
+its attributes are passed by position. The first attribute is
+the first positional parameter in the Python function. For example:
+    # SPL input schema: tuple<int32 id, float64 reading>
+    ＠spl.sink
+    def myfunc(a,b):
+      # a is set to: id
+      # b is set to: reading
+
+If more SPL attributes exist than specified parameters then the additional attributes are ignored.
+
+A Python variable argument can be used to capture all of the remaining attributes, for example:
+    # SPL input schema: tuple<int32 id, float64 reading, float lat, float lon>
+    ＠spl.sink
+    def myvarargfunc(a, *values)
+      # a is set to: id
+      # values is set to the values of: reading, lat, lon
+
+# Python function return conversion to SPL Tuples
+A Python function must return `None`, a Python tuple or a list of Python tuples.
+When `None` is return then no tuple will be submitted to the operator's output port. When a single tuple is returned is is converted to an SPL tuple and submitted to the output port. When a list of tuples is returned, each tuple is converted to a tuple and submitted to the output port, in order of the list starting with the first tuple (position 0).
+
+The values of a Python tuple are assigned to an output SPL tuple by position, so the first value in the Python tuple is assigned to the first attribute in the SPL tuple.
+
+    # SPL output schema: tuple<int32 x, float64 y, float32 z>
+    ＠spl.pipe
+    def myfunc(a,b):
+       return a,b,a+b
+
+    # The SPL output will be:
+    # x is set to: a
+    # y is set to: b 
+    # z is set to: a+b
+
+When a returned tuple has less values than attributes in the SPL output schema the attributes not set by the Python function will be set to their SPL default or copied from the input tuple, depending on the operator type.
+
+When a returned tuple has more values than attributes in the SPL output schema then the additional values are ignored.
+
+# Supported SPL types
+
+A limited set of SPL types are supported.
+
+ * **Primitive types**
+  * `boolean`
+  * `int8`, `int16`, `int32`, `int64`
+  * `uint8`, `uint16`, `uint32`, `uint64`
+  * `float32`, `float64`
+  * `rstring`, `ustring`
+ * **Collection types**
+  * `list<P>` where `P` is one of the supported primitive types. Passed into Python as a list.
+  * `map<K,V>` where `K` and `V` are supported primitive types. Passed into Python as a dictionary.
+
+For an input port all the above types are supported.
+
+For an output port only primitive types are supported.
+
+ 
+
+++ \@spl.pipe
+Decorator to create a pipe SPL operator.
+When a Python function is decorated with `@spl.pipe`
+a pipe SPL operator is created with a single input port
+and single output port.  For each input tuple the function is called,
+and its return value is used to submit zero or more tuples on the output port. 
+
+When the function returns a tuple containing less values than attributes
+in the SPL output schema then the remaining attributes are copied from
+the input tuple if a matching attribute is found, otherwise they are set
+to the SPL default value.
+
+# Examples
+
+Simple `Noop` pipe operator that passes the input SPL tuple onto its output using a variable argument.
+
+    ＠spl.pipe
+    def Noop(*tuple):
+      "Pass the tuple along without any change"
+      return tuple
+
+Simple filter, note that no return statement is equivalent to returning `None`:
+    ＠spl.pipe
+    def SimpleFilter(a,b):
+      "Filter tuples only allowing output if the first attribute is less than the second. Returns the sum of the first two attributes."
+      if (a < b):
+         return a+b,
+
+Demonstration of returning multiple tuples as a list.
+    ＠spl.pipe
+    def ReturnList(a,b,c):
+      "Demonstrate returning a list of values, each value is submitted as an SPL tuple" 
+      return [(a+1,b+1,c+1),(a+2,b+2,c+2),(a+3,b+3,c+3),(a+4,b+4,c+4)]
+
+
+++ \@spl.sink
+Decorator to create a sink SPL operator.
+If the Python function is decorated with `@spl.sink`
+then the operator is a sink operator, with a single
+input port and no output ports.
+For each input tuple the function is called.
+
+# Examples
+
+Operator to send an e-mail for each tuple using the local SMTP server.
+
+    import sys
+    import smtplib
+    
+    # Import the SPL decorators
+    from streamsx.spl import spl
+    
+    server = smtplib.SMTP('localhost')
+
+    def splNamespace():
+        return "com.ibm.streamsx.topology.pysamples.mail"
+
+    # Decorate this function as a sink operator
+    # This means the operator will have a single
+    # input port and no output ports. The SPL tuple
+    # is passed in as described in spl_samples.py.
+    # The function must return None, typically by
+    # not having any return statement.
+    ＠spl.sink
+    def simplesendmail(from_addr, to_addrs, msg):
+        "Send a simple email"
+        server.sendmail(from_addr, to_addrs, msg)
+
+++ \@spl.ignore
+Decorator to ignore a Python function.
+If the Python function is decorated with `@spl.ignore`
+then function is ignored by `spl-python-extract.py`.
+
+++ Extracting SPL operators from decorated Python functions
+
+To create operators in a toolkit, execute `python3 spl-python-extract.py -i toolkit-directory`. Any Python module in the toolkit's `opt/python/streams` directory will have its functions converted to SPL operators.
+
+These directories in a toolkit are automatically added to the Python search path during execution of an operator.
+ * `opt/python/streams` - Contains modules that define Python functions that will be created as SPL operators
+ * `opt/python/packages` - Root directory for Python [https://docs.python.org/3.4/tutorial/modules.html#packages|packages] hierarchy.
+ * `opt/python/modules` - Arbitrary [https://docs.python.org/3.4/tutorial/modules.html#modules|modules], not defined as a packages.
+
+A single Python embedded runtime is used by an SPL processing element (PE), thus when multiple operators
+implemented in python are fused into the same PE they share the same runtime. The library and include
+paths to the Python runtime are set from the version of Python used to execute `spl-python-extract.py`.
+
+The toolkit has no dependency on this toolkit (`com.ibm.streamsx.topology`) once `spl-python-extract.py` has been executed.
+
+The sample SPL toolkit `samples/python/com.ibm.streamsx.topology.pysamples` contains `opt/python/streams/spl_samples.py` for
+examples of how data is passed into and out of Python from SPL,
+using positional arguments.
+
+E.g.
+
+python3 $HOME/toolkits/com.ibm.streamsx.topology/bin/spl-python-extract.py -i samples/python/com.ibm.streamsx.topology.pysamples
+
+++ Sample toolkit
+
+A toolkit with a number of decorated Python functions and SPL applications that invoke them is supplied under `samples/python/com.ibm.streamsx.topology.pysamples`.
+
++ Python Application API
+Develop IBM Streams applications with Python.
+
+**Alpha version, basic functionality**
+
+This is intended as a preview of the intended direction, functionality
+is limited.
+
+# Overview
+
+A functional api to develop streaming applications for IBM Streams
+using Python. Streams are defined, transformed and sinked (terminated)
+using Python functions. The return of a function determines the
+content of the stream. Tuples on a stream are Python objects,
+a stream may contain different types of objects.
+
+# Prerequites
+
+* Install and configure IBM Streams Version 4.0.1 (or later).
+* Install CPython 3.5.0 (or later).  Testing has been performed with Python 3.5.1.  Python is assumed to be installed in the default location (`/usr/local`).
+* Download and extract the IBM Streams Topology Toolkit, which includes the Python Application API.
+  Include the fully qualified path of the `com.ibm.streamsx.topology/opt/python/packages` directory in the PYTHONPATH environment variable.
+
+# Sample HelloWorld Application
+
+Example code that builds and then submits a Hello World topology.
+
+    import mymodule;
+    from streamsx.topology.topology import *
+    import streamsx.topology.context
+
+    topo = Topology("HelloWorld")
+    hw = topo.source(mymodule.hello_world)
+    hw.sink(print)
+    streamsx.topology.context.submit("STANDALONE", topo.graph)
+
+The `source` function is passed a callable that returns an `Iterable`, in
+this case `mymodule.hello_world`.
+
+
+    def hello_world() :
+        return ["Hello", "World!"]
+
+The callable will be called when the application starts, and the SPL runtime will create an iterator from the returned value. Then each value returned from the iterator will be sent on the stream.
+
+The `sink` function is passed a callable that will be called for each tuple
+on the stream, in this case the builtin `print` function.
+
+# User-supplied functions to operations
+
+Operations such as `source` and `sink` accept a callable as input.  The callable must be one of the following:
+  * the name of a built-in function
+  * the name of a function defined at the top level of a module
+  * an instance of a callable class defined at the top level of a module that implements the method `__call__` and is picklable.  Using a callable class allows state information such as user-defined parameters to be stored during class initialization and utilized when the instance is called.
+
+The modules containing the callables, along with third-party libraries required by the modules, are copied into the Streams Application Bundle (sab file).
+* Dependent libraries can be individual modules or packages.
+* Dependent libraries can be installed in site packages, or not installed and simply reside in a directory in the Python search path
+* Dependent native libaries outside of the package directory are not copied into the bundle
+
+Limitations on callable inputs to operations:
+* Callables must be defined in a module file.
+* Callables must not be dynamically created nor anonymous.
+* Callables must not be defined in the `__main__` module.  They must be defined in a separate module.
+* Importing modules that contain user-defined functions with importlib is unsupported.  The PYTHONPATH or sys.path must contain the directory where modules to import are located.
+* Importing modules that contain user-defined functions from zip/egg/wheel files is unsupported.
+
+To avoid name conflicts, do not create modules with the same name as 
+* `streamsx` which is used by the Python Application API
+* built-in or standard library module names
+
+# Streams functions 
+
+* `source(self, func)` function on `Topology`
+
+  Fetches information from an external system and presents that information as a stream.
+  Takes a zero-argument callable that returns an iterable of tuples.
+  Each tuple that is not None from the iterator returned
+  from iter(func()) is present on the returned stream.
+
+  param `func`: A zero-argument callable that returns an iterable of tuples.
+  A tuple is represented as a Python object that must be picklable.
+
+  return: A Stream whose tuples are the result of the output obtained by invoking the provided callable.
+
+* `subscribe(self, topic, schema=CommonSchema.Python)` function on `Topology`
+
+  Subscribe to a topic published by other Streams applications.
+  A Streams application may publish a stream to allow other
+  applications to subscribe to it. A subscriber matches a
+  publisher if the topic and schema match.
+
+  When subscribing to a topic published by an Streams SPL application 
+  tuples will be transformed into a Python dictionary object (based on the schema).
+  Each tuple attribute will be converted into an appropriate Python type and added to the 
+  Python dictionary object using the name of the attribute as the dictionary key value. 
+
+  Supported SPL types and resulatant Python types are: 
+    signed ints : int
+    unsigned ints : int
+    float : float
+    rstring : str
+    ustring : str
+    boolean : boolean
+    list : list
+    set : set
+    map : dictionary
+
+
+  See [namespace:com.ibm.streamsx.topology.topic] for more details.
+
+  param `topic`: Topic to subscribe to.
+  param `schema`: Schema to subscriber to. Defaults to CommonSchema.Python representing Python objects.
+  return: A Stream whose tuples have been published to the topic by other Streams applications.
+
+* `sink(self, func)` function on `Stream`
+
+  Sends information as a stream to an external system.
+  Takes a user provided callable that does not return a value.
+
+  param `func`: A callable that takes a single parameter for the tuple and returns None.
+  The callable is invoked for each incoming tuple.  
+  
+  return: None
+        
+* `filter(self, func)` function on `Stream`
+
+  Filters tuples from a stream using the supplied callable `func`.
+  For each tuple on the stream the callable is called passing
+  the tuple, if the callable return evalulates to true the
+  tuple will be present on the returned stream, otherwise
+  the tuple is filtered out.
+  
+  param `func`: A callable that takes a single parameter for the tuple, and returns True or False.
+  If True, the tuple is included on the returned stream.  If False, the tuple is filtered out.
+  The callable is invoked for each incoming tuple.
+  
+  return: A Stream containing tuples that have not been filtered out.
+  
+* `transform(self, func)` or `map(self, func)` function on `Stream`
+
+  Transforms each tuple from this stream into 0 or 1 tuples using the supplied callable `func`.
+  For each tuple on this stream, the returned stream will contain a tuple
+  that is the result of the callable when the return is not None.
+  If the callable returns None then no tuple is submitted to the returned 
+  stream.
+ 
+  param `func`: A callable that takes a single parameter for the tuple, and returns a tuple or None.
+  The callable is invoked for each incoming tuple.
+ 
+  return: A Stream containing transformed tuples.
+  
+* `multi_transform(self, func)` or `flat_map(self, func)` function on `Stream`
+
+  Transforms each tuple from this stream into 0 or more tuples using the supplied callable `func`. 
+  For each tuple on this stream, the returned stream will contain all non-None tuples from
+  the iterable.
+  Tuples will be added to the returned stream in the order the iterable
+  returns them.
+  If the return is None or an empty iterable then no tuples are added to
+  the returned stream.
+
+  param `func`: A callable that takes a single parameter for the tuple, and returns an iterable of tuples or None.
+  The callable must return an iterable or None, otherwise a TypeError is raised.
+  The callable is invoked for each incoming tuple.
+
+  return: A Stream containing transformed tuples.
+  
+* `isolate(self)` function on `Stream`
+
+  Guarantees that the upstream operation will run in a separate process from the downstream operation when 
+  the application is executed in distributed mode.
+  
+  return: Stream
+  
+* `low_latency(self)` function on `Stream`
+
+  The function is guaranteed to run in the same process as the
+  upstream Stream function. All streams that are created from the returned stream 
+  are also guaranteed to run in the same process until end_low_latency() 
+  is called.
+  
+  return: Stream
+  
+* `end_low_latency(self)` function on `Stream`
+
+  Returns a Stream that is no longer guaranteed to run in the same process
+  as the calling stream.
+  
+  return: Stream
+
+* `union(self, streamSet)` function on `Stream`
+
+  The Union operator merges the outputs of the streams in the set into a single stream.
+  
+  param `streamSet` - Set of streams outputs to merge
+  
+  returns: Stream
+        
+* `parallel(self, width, routing=None, func=None)` function on `Stream`
+
+  Parallelizes the stream into `width` parallel channels.
+  Tuples are routed to parallel channels such that an even distribution is maintained.
+  Each parallel channel can be thought of as being assigned its own thread.
+  As such, each parallelized stream function are separate instances and operate independently from one another.
+  
+  `parallel` will only parallelize the stream operations performed after the call to `parallel` and before the call to `end_parallel`
+  
+  Parallel regions aren't required to have an output stream, and thus may be used as sinks.
+  In other words, a parallel sink is created by calling `parallel` and creating a sink operation.
+  It is not necessary to invoke `end_parallel` on parallel sinks.
+  
+  Nested parallelism is not currently supported.
+  A call to `parallel` should never be made immediately after another call to `parallel` without having an `end_parallel` in between.
+  
+  Every call to `end_parallel` must have a call to `parallel` preceding it.
+     
+  param `width`: degree of parallelism
+
+  param: `routing` - denotes what type of tuple routing to use. 
+  * ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators (Default)
+  * HASH_PARTIONED: delivers to downstream operators based on the hash of the tuples being sent or if a function is provided the function will be called to provide the hash
+  
+  param: `func` - (Optional) Function called when HASH_PARTIONED routing is specified. The function provides an int32 value to be used as the hash that determines the tuple routing to downstream operators
+  
+  return: Stream whose subsequent processing will occur on `width` channels.
+        
+* `end_parallel(self)` function on `Stream`
+
+  Ends a parallel region by merging the channels into a single stream
+  
+  return: A Stream for which subsequent transformations are no longer parallelized
+
+* `publish(self, topic, schema=schema.CommonSchema.Python)` function on `Stream`
+
+  Publish this stream on a topic for other Streams applications to subscribe to.
+  A Streams application may publish a stream to allow other
+  applications to subscribe to it. A subscriber matches a
+  publisher if the topic and schema match.
+
+  See [namespace:com.ibm.streamsx.topology.topic] for more details.
+
+  param `topic`: Topic to publish this stream to.
+  param: `schema`: Schema to publish. Defaults to CommonSchema.Python representing Python objects.
+
+
+  return: None
+
+
+# Sample Transform Application
+
+Example code that builds and then submits a simple topology.
+
+    from streamsx.topology.topology import Topology
+    import streamsx.topology.context
+    import transform_sample_functions;
+
+    topo = Topology("transform_sample")
+    source = topo.source(transform_sample_functions.int_strings_transform)
+    i1 = source.transform(transform_sample_functions.string_to_int)
+    i2 = i1.transform(transform_sample_functions.AddNum(17))
+    i2.print()
+    streamsx.topology.context.submit("STANDALONE", topo.graph)
+
+The `source` function is passed a function that returns an `Iterable`, in
+this case `transform_sample_functions.int_strings_transform`.
+
+    def int_strings_transform():
+        return ["325", "457", "9325"]
+
+The first `transform` function is passed a function that returns an integer
+converted from the string object, in this case `transform_sample_functions.string_to_int`.
+
+    def string_to_int(t):
+        return int(t)
+
+The second `transform` function is passed an instance of a callable class that adds 17 to the integer,
+in this case `transform_sample_functions.AddNum(17)`.
+
+    class AddNum:
+        def __init__(self, increment):
+            self.increment = increment  
+        def __call__(self, tuple):
+            return tuple + self.increment
+
+# Running the Sample Transform Application
+
+When building the topology the directory `com.ibm.streamsx.topology/opt/python/packages` must be in `$PYTHONPATH`.
+
+The sample `transform_sample.py` can be found under `samples/python/topology/simple`.
+After updating the PYTHONPATH, the sample can be executed using `python3 transform_sample.py`.
+
+Sample output:
+    342
+    474
+    9342
+
+# Context Types
+
+Only submission using `DISTRIBUTED`, `BUNDLE` and `STANDALONE` context type are supported.
+* `DISTRIBUTED` converts the application to an SPL graph, compiles it and submits it as a Streams application bundle to a Streams instance. The bundle is submitted using `streamtool` which must be setup to submit without requiring authentication input.
+* `BUNDLE` converts the application to an SPL graph and compiles it, producing a SPL application bundle (.sab file).  The application is executed separately by submitting the bundle to an IBM Streams instance as a distributed application.  A bundle can be submitted to an IBM Streams instance using `streamtool submitjob`, the IBM Streams Console, or IBM Streams JMX API.
+* `STANDALONE` converts the application to an SPL graph, compiles it and executes it as an IBM Streams standalone application.  The standalone execution is spawned as a separate process.
+
+Limited testing has been performed to build an application using DISTRIBUTED and BUNDLE.
+
+ A simple connector to a MQTT broker for publishing
+ string tuples to MQTT topics, and
+ subscribing to MQTT topics and creating streams.
+ 
+* `MqttStreams(self, config)` MQTT Connector 
+
+A connector is for a specific MQTT Broker as specified in
+the configuration object config. Any number of  publish()and  subscribe()
+connections may be created from a single MqttStreams connector.
+
+* `publish(self, pub_stream, topic)` function on MQTT Conector
+
+  Publish this stream (pub_stream) on a topic to an MQTT server for applications to subscribe to.
+  A Streams application may publish a stream to an MQTT server to allow other
+  applications to subscribe to it. A subscriber matches a
+  publisher if the topics and server URI match.  The schema of the stream to publish must be tuple<rstring message>
+
+  param: `pub_stream`: Stream to publish to MQTT server.
+  param `topic`: Topic to publish this stream to.
+
+
+  return: None
+  
+* `subscribe(self, topic)` function on MQTT Conector
+
+  Subscribe to a topic published to a MQTT server.
+  A Streams application may subscribe to a stream published to a MQTT server. 
+  A subscriber matches a publisher if the topic matches.
+  The schema of the stream returned from the MQTT server is tuple<rstring message>
+
+
+  param `topic`: Topic to subscribe to.
+  return: A Stream whose tuples have been published to the topic on a MQTT server.  
+
+# Sample use:
+
+	topo = Topology("An MQTT application")
+	// optionally, define configuration information
+	config = {}
+	config['clientID'] = "test_MQTTpublishClient"
+	config['defaultQOS'] = 1  (needs to be int vs long)
+	config['qos'] = int("1") #(needs to be int vs long)
+	config['keepAliveInterval'] = int(20) (needs to be int vs long)
+	config['commandTimeoutMsec'] = 30000 (needs to be int vs long)
+	config['reconnectDelayMsec'] = 5000 (needs to be int vs long)
+	config['receiveBufferSize'] = 10 (needs to be int vs long)
+	config['reconnectionBound'] = int(20)
+	config['retain'] = True 
+	config['password'] = "mypw"
+	config['trustStore'] = "/tmp/no-such-trustStore"
+	config['trustStorePassword'] = "trustpw"
+	config['keyStore'] = "/tmp/no-such-keyStore"
+	config['keyStorePassword'] = "keypw"
+
+	// create the connector's configuration property map
+	config['serverURI'] = "tcp://localhost:1883"
+	config['userID'] = "user1id"
+	config[' password'] = "user1passwrd"
+	
+	// create the connector
+	mqstream = MqttStreams(topo,config)
+	
+	// publish a python source stream to the topic "python.topic1"
+	topic = "python.topic1"
+	src = topo.source(test_functions.mqtt_publish)
+	mqstream.publish(src, topic) 
+	streamsx.topology.context.submit("BUNDLE", topo.graph)
+		
+	 # // subscribe to the topic "python.topic1"
+	topic = ["python.topic1", ]
+	mqs = mqstream.subscribe(topic) 
+	mqs.print()
+
+# Future Items
+
+Future items that need to be supported
+
+* lambda functions
+* dynamic functions
+* functions in packages
+* IBM Streams application features, such as windowing, etc.
+* ...
+
+*/
+
+namespace com.ibm.streamsx.topology.python;
+

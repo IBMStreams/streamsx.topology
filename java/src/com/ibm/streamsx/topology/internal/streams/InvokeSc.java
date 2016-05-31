@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
@@ -32,7 +33,7 @@ public class InvokeSc {
     private final File applicationDir;
     private final String installDir;
 
-    public InvokeSc(Map<String,Object> config, boolean standalone, String namespace, String mainComposite,
+    public InvokeSc(JSONObject deployConfig, boolean standalone, String namespace, String mainComposite,
             File applicationDir) throws URISyntaxException, IOException {
         super();
         this.standalone = standalone;
@@ -40,7 +41,7 @@ public class InvokeSc {
         this.mainComposite = mainComposite;
         this.applicationDir = applicationDir;
         
-        installDir = Util.getStreamsInstall(config, ContextProperties.COMPILE_INSTALL_DIR);
+        installDir = Util.getStreamsInstall(deployConfig, ContextProperties.COMPILE_INSTALL_DIR);
 
         addFunctionalToolkit();
     }
@@ -79,8 +80,9 @@ public class InvokeSc {
         String mainCompositeName = namespace + "::" + mainComposite;
 
         commands.add(sc.getAbsolutePath());
+        commands.add("--rebuild-toolkits");
         commands.add("--optimized-code-generation");
-        commands.add("--num-make-threads=4");
+        commands.add("--num-make-threads=4");      
         if (standalone)
             commands.add("--standalone");
 

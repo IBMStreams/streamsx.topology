@@ -2,6 +2,14 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
  */
+
+/**
+ * Subscribe functionality with data filters.
+ * [FilteredSubscribe] subscribes to streams and filters
+ * the data, optimizing the filter where possible by pushing
+ * it to the publisher to reduce network traffic.
+*/
+
 namespace com.ibm.streamsx.topology.topic ;
 
 /**

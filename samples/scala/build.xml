@@ -31,8 +31,8 @@
     <pathelement location="${tk.lib}"/>
     <pathelement location="${streams.install}/lib/com.ibm.streams.operator.samples.jar" />
     <pathelement location="${streams.install}/lib/com.ibm.streams.operator.jar" />
-    <pathelement location="${scala-library.jar}"   />
-  </path>
+    <pathelement location="${streams.install}/ext/lib/JSON4J.jar" />
+    <pathelement location="${scala-library.jar}"   /> </path>
 
   <path id="run.scala.classpath">
     <pathelement location="../java/functional/functionalsamples.jar" />
