@@ -9,29 +9,34 @@
 # xml document - xml - XML document
 # blob binary - binary - Binary data
 #
-# tuple<...> - tuple - Any SPL tuple type apart from above
+# tuple<...> - spltupleDict - Any SPL tuple type apart from above
 #
 # Not all are supported yet.
 # 
-# We only check the attribute name here as
-# these operators are only invoked by the PAA
 
 sub splpy_tuplestyle{
 
  my ($port) = @_;
 
  my $attr =  $port->getAttributeAt(0);
+ my $attrtype = $attr->getSPLType();
+ my $attrname = $attr->getName();
  my $pystyle = 'unk';
- my $itupleType = $port->getSPLTupleType();
  my $numattrs = $port->getNumberOfAttributes();
- if (($numattrs == 1) && ($attr->getName() eq '__spl_po')) {
+
+ if (($numattrs == 1) && SPL::CodeGen::Type::isBlob($attrtype) && ($attrname eq '__spl_po')) {
     $pystyle = 'pickle';
- } elsif (($numattrs == 1) && ($attr->getName() eq 'string')) {
+ } elsif (($numattrs == 1) && SPL::CodeGen::Type::isRString($attrtype) && ($attrname eq 'string')) {
     $pystyle = 'string';
- } elsif (($numattrs == 1) && ($attr->getName() eq 'jsonString')) {
+ } elsif (($numattrs == 1) && SPL::CodeGen::Type::isRString($attrtype) && ($attrname eq 'jsonString')) {
     $pystyle = 'json';
- }
- else {
+ } elsif (($numattrs == 1) && SPL::CodeGen::Type::isBlob($attrtype) && ($attrname eq 'binary')) {
+    $pystyle = 'binary';
+    SPL::CodeGen::errorln("Blob schema is not currently supported for Python."); 
+ } elsif (($numattrs == 1) && SPL::CodeGen::Type::isXml($attrtype) && ($attrname eq 'document')) {
+    $pystyle = 'xml';
+    SPL::CodeGen::errorln("XML schema is not currently supported for Python."); 
+ } else {
     $pystyle = 'spltupleDict';
  }
 
