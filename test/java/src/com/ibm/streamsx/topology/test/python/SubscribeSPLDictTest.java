@@ -30,7 +30,7 @@ import com.ibm.streamsx.topology.tester.Tester;
 public class SubscribeSPLDictTest extends PublishSubscribePython {
     
     @Test
-    public void testSubscribeMap() throws Exception {
+    public void testSubscribeSPLDictMap() throws Exception {
         Topology topology = new Topology("testSubscribeMap");
         
         // Publish a stream with all the SPL types supported by Python.
