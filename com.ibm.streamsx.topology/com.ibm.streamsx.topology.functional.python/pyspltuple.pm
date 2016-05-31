@@ -1,34 +1,5 @@
 use Switch;
 
-# This function does the reverse, converting a Python type back to a
-# c++ type based on the $type argument which is a string literal.
-#
-sub pythonToCppPrimitiveConversion{
-# TODO: do error checking for the conversions. E.g., 
-# char * str = PyUnicode_AsUTF8(pyAttrValue)
-# if(str==NULL) exit(0);
- 
-  my ($convert_from_string, $type) = @_;
-    switch ($type) {
-             case 'rstring' {return "SPL::rstring( PyUnicode_AsUTF8($convert_from_string))";}
-             case 'ustring' {return "SPL::ustring::fromUTF8( PyUnicode_AsUTF8($convert_from_string))";}
-             case 'int8' {return "(int8_t) PyLong_AsLong($convert_from_string)";}
-             case 'int16' {return "(int16_t) PyLong_AsLong($convert_from_string)";}
-             case 'int32' {return "(int32_t) PyLong_AsLong($convert_from_string)";}
-             case 'int64' {return "PyLong_AsLong($convert_from_string)";}
-             case 'uint8' {return "(uint8_t) PyLong_AsUnsignedLong($convert_from_string)";}
-             case 'uint16' {return "(uint16_t) PyLong_AsUnsignedLong($convert_from_string)";}
-             case 'uint32' {return "(uint32_t) PyLong_AsUnsignedLong($convert_from_string)";}
-             case 'uint64' {return "PyLong_AsUnsignedLong($convert_from_string)";}
-             case 'float32' {return "(float) PyFloat_AsDouble($convert_from_string)";}
-             case 'float64' {return "PyFloat_AsDouble($convert_from_string)";}
-             case 'boolean' {return "PyObject_IsTrue($convert_from_string)";}
-             case 'complex32' { return "SPL::complex32((float32_t) PyComplex_RealAsDouble($convert_from_string), (float32_t) PyComplex_ImagAsDouble($convert_from_string))";}
-             case 'complex64' { return "SPL::complex64(PyComplex_RealAsDouble($convert_from_string), PyComplex_ImagAsDouble($convert_from_string))";}
-	     else {SPL::CodeGen::exitln("An unknown type $type was encountered when converting to back to cpp types."); }
-    }
-}
-
 sub convertToPythonDictionaryObject {
   my $ituple = $_[0];
   my $i = $_[1];
