@@ -11,10 +11,6 @@
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
-<%
-  # hard code tuple stype is being used since $pystyle needed in pywrapfunction.cgt  
-  my $pystyle = 'pickle';
-%>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() : function_(NULL)
