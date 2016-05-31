@@ -80,7 +80,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     PyObject *pyValue;
 <%
      for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
-         print convertToPythonValue($ituple, $i, $itypes[$i], $inames[$i]);
+         print convertToPythonValueAsTuple($ituple, $i, $itypes[$i], $inames[$i]);
      }
 %>
   

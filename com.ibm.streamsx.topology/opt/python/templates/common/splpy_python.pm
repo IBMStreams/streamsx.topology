@@ -114,21 +114,34 @@ sub cppToPythonMapConversion {
       return $get;
 }
 
+# needs to be tested
+sub cppToPythonSetConversion {
+      my ($iv, $type) = @_;
+
+      my $element_type = SPL::CodeGen::Type::getElementType($type);
+
+      $get = "pyValue = PySet_New(NULL);\n";
+
+      my $loop = "for(std::tr1::unordered_set<SPL::$element_type>::const_iterator it = $iv.begin();\n";
+      $loop = $loop . "it!=$iv.end(); it++){\n";
+      $loop = $loop . "PyObject *v = " . cppToPythonPrimitiveConversion("*it", $element_type) . ";\n";
+      $loop = $loop . "PySet_Add(pyValue, v);\n";
+      $loop = $loop . "Py_DECREF(v);\n";
+      $loop = $loop . "}";
+      $get = $get . $loop;
+
+      return $get;
+}
+
 #
 # Return a C++ statement converting a input attribute
-# from an SPL input tuple to a Python object and
-# setting it into pyTuple (as a Python Tuple).
-# Assumes a C++ variable pyValue and pyTuple are defined.
+# from an SPL input tuple to a Python object
+# Assumes a C++ variable pyValue is defined.
 #
 sub convertToPythonValue {
   my $ituple = $_[0];
-  my $i = $_[1];
-  my $type = $_[2];
-  my $name = $_[3];
-
-
-  my $pyTypeConv = "UNKNOWN_TYPE";
-  my $get = undef;
+  my $type = $_[1];
+  my $name = $_[2];
 
   # input value
   my $iv = $ituple . ".get_" . $name . "()";
@@ -137,19 +150,34 @@ sub convertToPythonValue {
   # corresponding Python type. The List needsto be iterated through at
   # runtime becaues it could be of variable length.
   if (SPL::CodeGen::Type::isList($type)) {
-      $get = cppToPythonListConversion($iv, $type);
+      return cppToPythonListConversion($iv, $type);
   }  
-
   # If the type is a map, again, get the key and value types, then
   # iterate through the map to copy its contents.
   elsif(SPL::CodeGen::Type::isMap($type)){      
-      $get = cppToPythonMapConversion($iv, $type);
+      return cppToPythonMapConversion($iv, $type);
   }
+  elsif(SPL::CodeGen::Type::isPrimitive($type)) { 
+      return "pyValue = " . cppToPythonPrimitiveConversion($iv, $type) . ";\n";
+  }
+  else {
+      SPL::CodeGen::errorln("An unknown type was encountered when converting to python types." . $type ); 
+  }
+}
 
-  # Must be primitive type
-  else{
-      $get = "pyValue = " . cppToPythonPrimitiveConversion($iv, $type) . ";\n";
-  }
+#
+# Return a C++ statement converting a input attribute
+# from an SPL input tuple to a Python object and
+# setting it into pyTuple (as a Python Tuple).
+# Assumes a C++ variable pyValue and pyTuple are defined.
+#
+sub convertToPythonValueAsTuple {
+  my $ituple = $_[0];
+  my $i = $_[1];
+  my $type = $_[2];
+  my $name = $_[3];
+
+  my $get = convertToPythonValue($ituple, $type, $name);
   
   # Note PyTuple_SetItem steals the reference to the value
   my $assign =  "    PyTuple_SetItem(pyTuple, " . $i  .", pyValue);\n";
