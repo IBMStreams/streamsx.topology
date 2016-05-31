@@ -21,7 +21,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
 	 * String Subscribe feeding a map
 	 */
     @Test
-    public void testPublishMap() throws Exception {
+    public void testPublishStringMap() throws Exception {
     	
         final Topology t = new Topology();
   	
@@ -42,7 +42,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
 	 * String Subscribe feeding a filter
 	 */
     @Test
-    public void testPublishFilter() throws Exception {
+    public void testPublishStringFilter() throws Exception {
     	
         final Topology t = new Topology();
   	
@@ -60,7 +60,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
     }
 
     @Test
-    public void testPublishFlatMap() throws Exception {
+    public void testPublishStringFlatMap() throws Exception {
     	
         final Topology t = new Topology();
   	
@@ -68,13 +68,13 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
    	    	
         TStream<String> source = t.strings("mary had a little lamb", "If you can keep your head when all about you");
         
-        source = source.modify(new Delay<String>(10));
+        source = source.modify(new Delay<String>(15));
         
         source.publish("pytest/string/flatmap");
         
         TStream<String> subscribe = t.subscribe("pytest/string/flatmap/result", String.class);
 
-        completeAndValidate(subscribe, 30,
+        completeAndValidate(subscribe, 60,
         		"mary", "had", "a", "little", "lamb", "If", "you", "can", "keep", "your", "head", "when", "all", "about", "you");
     }
 }

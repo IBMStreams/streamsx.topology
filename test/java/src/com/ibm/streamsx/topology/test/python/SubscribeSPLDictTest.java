@@ -30,12 +30,12 @@ import com.ibm.streamsx.topology.tester.Tester;
 public class SubscribeSPLDictTest extends PublishSubscribePython {
     
     @Test
-    public void testSubscribeMap() throws Exception {
+    public void testSubscribeSPLDictMap() throws Exception {
         Topology topology = new Topology("testSubscribeMap");
         
         // Publish a stream with all the SPL types supported by Python.
         SPLStream tuples = PythonFunctionalOperatorsTest.testTupleStream(topology);
-        tuples = tuples.modify(new Delay<Tuple>(10));
+        tuples = tuples.modify(new Delay<Tuple>(15));
         tuples.publish("pytest/spl/map");
                      
         SPLStream viaSPL = SPL.invokeOperator("spl.relational::Functor", tuples, tuples.getSchema(), null);
@@ -55,7 +55,7 @@ public class SubscribeSPLDictTest extends PublishSubscribePython {
         Condition<List<Tuple>> viaSPLResult = tester.tupleContents(viaSPL);
         Condition<List<Tuple>> viaPythonResult = tester.tupleContents(viaPythonJsonSpl);
         
-        complete(tester, allConditions(expectedCount, expectedCountSpl), 600, TimeUnit.SECONDS);
+        complete(tester, allConditions(expectedCount, expectedCountSpl), 60, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.valid());
         assertTrue(expectedCountSpl.valid());

@@ -12,17 +12,10 @@
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
-
+@include "../pyspltuple.cgt"
 <%
-  # determine which tuple style is being used
-  my $fpdir = $model->getContext()->getToolkitDirectory()."/com.ibm.streamsx.topology.functional.python";
- require $fpdir."/pyfunction.pm";
- require $fpdir."/pyspltuple.pm";
- my $pystyle = splpy_tuplestyle($model->getInputPortAt(0));
  my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
 %>
-
-@include "../pyspltuple.cgt"
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() : function_(NULL)

@@ -12,7 +12,7 @@
   pyDict = PyDict_New();
 <%
      for (my $i = 0; $i < $pynumattrs; ++$i) {
-         print convertToPythonDictionaryObject($pytuple, $i, $pyatypes[$i], $pyanames[$i]);
+         print convertToPythonDictionaryObject("ip", $i, $pyatypes[$i], $pyanames[$i]);
      }
 %>
   value = pyDict;

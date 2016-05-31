@@ -25,7 +25,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
 	 * Json Subscribe feeding a map
 	 */
     @Test
-    public void testPublishMap() throws Exception {
+    public void testPublishJsonMap() throws Exception {
     	
     	Random r = new Random();
         final Topology t = new Topology();
@@ -71,7 +71,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
 	 * Json Subscribe feeding a filter
 	 */
     @Test
-    public void testPublishFilter() throws Exception {
+    public void testPublishJsonFilter() throws Exception {
     	
     	Random r = new Random();
     	
@@ -111,7 +111,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
 	 * Json Subscribe feeding a flat map
 	 */
     @Test
-    public void testPublishFlatMap() throws Exception {
+    public void testPublishJsonFlatMap() throws Exception {
     	
     	Random r = new Random();
         final Topology t = new Topology();
@@ -141,13 +141,13 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
    	    	
         TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
         
-        source = source.modify(new Delay<JSONObject>(10)).asType(JSONObject.class);
+        source = source.modify(new Delay<JSONObject>(15)).asType(JSONObject.class);
         
         source.publish("pytest/json/flatmap");
         
         TStream<String> subscribe = t.subscribe("pytest/json/flatmap/result", String.class);
 
-        completeAndValidate(subscribe, 30, s1a, s1b, s2a, s2b, s3a, s3b);
+        completeAndValidate(subscribe, 60, s1a, s1b, s2a, s2b, s3a, s3b);
     }
 
 }
