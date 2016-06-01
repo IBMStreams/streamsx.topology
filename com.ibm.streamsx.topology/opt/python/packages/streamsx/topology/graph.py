@@ -125,8 +125,8 @@ class SPLInvocation(object):
         if name is None:
             name = self.name + "_IN"+ str(len(self.inputPorts))
         iPortSchema = CommonSchema.Python    
-        if(not outputPort is None) :
-            iPortSchema = outputPort.getSchema()         
+        if not outputPort is None :
+            iPortSchema = outputPort.schema        
         iport = IPort(name, self, len(self.inputPorts),iPortSchema)
         self.inputPorts.append(iport)
 
@@ -213,9 +213,6 @@ class IPort(object):
         if not self in oport.inputPorts:
             oport.connect(self)
 
-    def getOperator(self):
-        return self.operator
-
     def getSPLInputPort(self):
         _iport = {}
         _iport["name"] = self.name
@@ -240,12 +237,6 @@ class OPort(object):
         
         if not self in iport.outputPorts:
             iport.connect(self)
-
-    def getOperator(self):
-        return self.operator
-    
-    def getSchema(self):
-        return self.schema
 
     def getSPLOutputPort(self):
         _oport = {}
