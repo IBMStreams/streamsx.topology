@@ -9,7 +9,7 @@
 # xml document - xml - XML document
 # blob binary - binary - Binary data
 #
-# tuple<...> - spltupleDict - Any SPL tuple type apart from above
+# tuple<...> - dict - Any SPL tuple type apart from above
 #
 # Not all are supported yet.
 # 
@@ -37,7 +37,7 @@ sub splpy_tuplestyle{
     $pystyle = 'xml';
     SPL::CodeGen::errorln("XML schema is not currently supported for Python."); 
  } else {
-    $pystyle = 'spltupleDict';
+    $pystyle = 'dict';
  }
 
  return $pystyle;
@@ -62,8 +62,8 @@ sub splpy_inputtuple2value{
   return 'SPL::rstring value = ip.get_jsonString();';
  }
 
- if ($pystyle eq 'spltupleDict') {
-  # nothing done here for spltuple style 
+ if ($pystyle eq 'dict') {
+  # nothing done here for dict style 
  }
 }
 1;

@@ -93,7 +93,7 @@ print splpy_inputtuple2value($pystyle);
   std::vector<OPort0Type> output_tuples; 
   
   {
-<%if ($pystyle eq 'spltupleDict') {%>
+<%if ($pystyle eq 'dict') {%>
 @include "../pyspltuple2dict.cgt"
 <%}%>
 

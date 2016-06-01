@@ -96,7 +96,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 print splpy_inputtuple2value($pystyle, $pyoutstyle);
 %>
 
-<%if ($pystyle eq 'spltupleDict') {%>
+<%if ($pystyle eq 'dict') {%>
 @include "../pyspltuple2dict.cgt"
 <%}%>
   OPort0Type otuple;
