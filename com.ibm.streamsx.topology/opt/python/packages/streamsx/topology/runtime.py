@@ -16,15 +16,9 @@ def setupOperator(dir):
     __splpy_addDirToPath(os.path.join(pydir, 'packages'))
     #print("sys.path", sys.path)
 
-def pickleObject(v):
-    return pickle.dumps(v)
-
-def depickleObject(v):
-    return pickle.loads(v)
-     
 def pickleReturn(function) :
     def _pickleReturn(v):
-        return pickleObject(function(v))
+        return pickle.dumps(function(v))
     return _pickleReturn
 
 # Given a callable 'callable', return a function
@@ -101,6 +95,13 @@ def _getCallable(f):
 ##          For output the function return is converted to a unicode
 ##          string using str(value).
 ##
+## dict - Object is a Python dictionary object
+##          to be passed directly to the Python application function.
+##          For output the function return is converted to a unicode
+##          string using str(value).
+##
+## object - Object is a Python object passed directly into the function
+##          Only used within this file 
 ##
 
 ###
@@ -137,6 +138,15 @@ def json_in__pickle_out(callable):
     return _wf
 
 def string_in__pickle_out(callable):
+    return object_in__pickle_out(callable)
+
+def spltupleDict_in__pickle_out(callable):
+    return object_in__pickle_out(callable)
+
+def dict_in__pickle_out(callable):
+    return object_in__pickle_out(callable)
+
+def object_in__pickle_out(callable):
     ac = _getCallable(callable)
     def _wf(v):
         rv = ac(v)
@@ -170,20 +180,6 @@ def pickle_in__string_out(callable):
         return str(rv)
     return _wf
 
-# Given a callable 'callable', return a function
-# that calls 'callable' with a python dictionary object 
-# form of an spltuple 
-# returning the callable's return already pickled.
-# If the return is None then it is not pickled.
-def spltupleDict_in__pickle_out(callable):
-    ac = _getCallable(callable)
-    def _wf(v):
-        rv = ac(v)
-        if rv is None:
-            return None
-        return pickle.dumps(rv)
-    return _wf
-
 # Given a function that returns an iterable
 # return a function that can be called
 # repeatably by a source operator returning
@@ -196,7 +192,7 @@ def iterableSource(callable) :
         while True:
             tuple = next(iterator)
             if not tuple is None:
-                return pickleObject(tuple)
+                return pickle.dumps(tuple)
      except StopIteration:
        return None
   return _wf

@@ -90,7 +90,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 print splpy_inputtuple2value($pystyle);
 %>
 
-<%if ($pystyle eq 'spltupleDict') {%>
+<%if ($pystyle eq 'dict') {%>
 @include "../pyspltuple2dict.cgt"
   SPL::int32 spl_hash = streamsx::topology::Splpy::pyTupleHash(function_, pyDict);
   OPort0Type oTemptuple; //  (ip, spl_hash);
@@ -98,7 +98,7 @@ print splpy_inputtuple2value($pystyle);
   OPort0Type otuple(oTemptuple, spl_hash); //  (ip, spl_hash);
 
 <%}%>
-<%if ($pystyle ne 'spltupleDict') {%>
+<%if ($pystyle ne 'dict') {%>
   SPL::int32 spl_hash = streamsx::topology::Splpy::pyTupleHash(function_, value);
 
   OPort0Type otuple(value, spl_hash);

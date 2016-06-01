@@ -1,4 +1,7 @@
 <%
+ # Generic setup of a variety of variables to
+ # handle conversion of spl tuples to/from Python
+
  my $tkdir = $model->getContext()->getToolkitDirectory();
  my $cmndir = $tkdir."/opt/python/templates/common";
  my $fpdir = $tkdir."/com.ibm.streamsx.topology.functional.python";

@@ -9,7 +9,7 @@
 # xml document - xml - XML document
 # blob binary - binary - Binary data
 #
-# tuple<...> - spltupleDict - Any SPL tuple type apart from above
+# tuple<...> - dict - Any SPL tuple type apart from above
 #
 # Not all are supported yet.
 # 
@@ -37,7 +37,7 @@ sub splpy_tuplestyle{
     $pystyle = 'xml';
     SPL::CodeGen::errorln("XML schema is not currently supported for Python."); 
  } else {
-    $pystyle = 'spltupleDict';
+    $pystyle = 'dict';
  }
 
  return $pystyle;
@@ -47,6 +47,9 @@ sub splpy_tuplestyle{
 # the C++ code to get the value
 # from an input tuple ip, that will
 # be converted to Python and passed to the function.
+#
+# Must setup a C++ variable called 'value' that
+# represents the value to be passed into the Python function
 #
 sub splpy_inputtuple2value{
  my ($pystyle) = @_;
@@ -62,8 +65,8 @@ sub splpy_inputtuple2value{
   return 'SPL::rstring value = ip.get_jsonString();';
  }
 
- if ($pystyle eq 'spltupleDict') {
-  # nothing done here for spltuple style 
+ if ($pystyle eq 'dict') {
+  # nothing done here for dict style 
  }
 }
 1;
