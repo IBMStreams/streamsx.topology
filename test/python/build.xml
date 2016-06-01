@@ -10,10 +10,10 @@
 
   <import file="../../common-build.xml"/>
 
-  <target name="all" depends="test.toolkit"/> 
+  <target name="all" depends="test.toolkit" if="topology.python"/> 
 	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/spl_samples.py"
 	  	toDir="${testtk}/opt/python/streams"/>
-	  <target name="test.toolkit">
+	  <target name="test.toolkit" if="topology.python">
 		   <exec executable="python3" dir="${testtk}">
 		     <arg value="${tk}/bin/spl-python-extract.py"/>
 		     <arg value="--directory"/>

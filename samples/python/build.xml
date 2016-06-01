@@ -11,7 +11,7 @@
 
   <target name="all" depends="spldoc,extract"/>
 
-  <target name="extract">
+  <target name="extract" if="topology.python">
    <exec executable="python3">
      <arg value="${tk}/bin/spl-python-extract.py"/>
      <arg value="-i"/>
@@ -24,7 +24,7 @@
    </exec>
    </target>
 
-   <target name="spldoc" depends="extract">
+   <target name="spldoc" depends="extract" if="topology.python">
    <exec executable="${streams.install}/bin/spl-make-doc">
      <arg value="--include-composite-operator-diagram"/>
      <arg value="-i"/>
