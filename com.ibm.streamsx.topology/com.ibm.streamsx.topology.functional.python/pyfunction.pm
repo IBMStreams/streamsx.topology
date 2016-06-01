@@ -48,6 +48,9 @@ sub splpy_tuplestyle{
 # from an input tuple ip, that will
 # be converted to Python and passed to the function.
 #
+# Must setup a C++ variable called 'value' that
+# represents the value to be passed into the Python function
+#
 sub splpy_inputtuple2value{
  my ($pystyle) = @_;
  if ($pystyle eq 'pickle') {
