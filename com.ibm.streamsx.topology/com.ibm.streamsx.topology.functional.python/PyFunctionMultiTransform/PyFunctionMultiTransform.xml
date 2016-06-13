@@ -28,8 +28,7 @@
         <library>
           <cmn:description>Python libraries</cmn:description>
           <cmn:managedLibrary>
-            <cmn:lib>python3.5m</cmn:lib>
-            <cmn:command>../pyversion.sh</cmn:command>
+            <cmn:command>../../opt/python/templates/common/pyversion.sh</cmn:command>
           </cmn:managedLibrary>
         </library>
       </libraryDependencies>

@@ -16,11 +16,8 @@ com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.java/PassThrough/
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.testing/TesterSink/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python/Py*/*.pm
 test/python/topology/*.sab
-test/python/spl/testtkpy
 test/python/topology/__pycache__
-test/spl/testtk
 test/python/topology/tk*
-test/spl/testtk
 com.ibm.streamsx.topology/toolkit.xml
 samples/python/com.ibm.streamsx.topology.pysamples/com.ibm.streamsx.topology.pysamples.mail/
 samples/python/com.ibm.streamsx.topology.pysamples/com.ibm.streamsx.topology.pysamples.positional/
