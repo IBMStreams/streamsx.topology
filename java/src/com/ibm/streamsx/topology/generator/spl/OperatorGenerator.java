@@ -92,6 +92,8 @@ class OperatorGenerator {
 
     private void viewAnnotation(JSONObject op, StringBuilder sb){
 	JSONObject config = (JSONObject)op.get("config");
+	if(config == null)
+	    return;
 	JSONObject viewConfig = (JSONObject)config.get("viewConfig");
 	if(viewConfig == null)
 	    return;
