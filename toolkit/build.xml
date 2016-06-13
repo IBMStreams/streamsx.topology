@@ -25,12 +25,6 @@
           includes="*.gif" />
    </copy>
 
-   <!-- copy retaining permissions -->
-   <exec executable="/bin/cp">
-     <arg value="${tk}/com.ibm.streamsx.topology.functional.python/pyversion.sh"/>
-     <arg value="${tk.opt}/python/templates/common/"/>
-   </exec>
-
    <mkdir dir="${tk}/license"/>
    <copy file="${streamsx.topology}/LICENSE" todir="${tk}/license"/>
 
