@@ -126,12 +126,14 @@
       <tar compression="gzip" longfile="gnu" destfile="${releasefilename}">
          <tarfileset dir="${basedir}" filemode="755" >
            <include name="com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python/pyversion.sh"/>
+           <include name="com.ibm.streamsx.topology/opt/python/templates/common/pyversion.sh"/>
          </tarfileset>
          <tarfileset dir="${basedir}" >
            <include name="com.ibm.streamsx.topology/**"/>
            <include name="samples/**"/>
            <exclude name="**/.gitignore"/>
            <exclude name="com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python/pyversion.sh"/>
+           <exclude name="com.ibm.streamsx.topology/opt/python/templates/common/pyversion.sh"/>
          </tarfileset>
       </tar>
       <checksum file="${releasefilename}"/>
