@@ -86,7 +86,7 @@ class SPLGraph(object):
 
 class SPLInvocation(object):
 
-    def __init__(self, index, kind, function, name, params, graph):
+    def __init__(self, index, kind, function, name, params, graph, view_config = None):
         self.index = index
         self.kind = kind
         self.function = function
@@ -95,6 +95,7 @@ class SPLInvocation(object):
         self.setParameters(params)
         self._addOperatorFunction(self.function)
         self.graph = graph
+        self.view_config = None
 
         self.inputPorts = []
         self.outputPorts = []
@@ -120,6 +121,12 @@ class SPLInvocation(object):
             else:
                 for innerParam in param:
                     self.params[param].append(innerParam)
+
+    def getViewConfig(self):
+        return self.view_config
+
+    def setViewConfig(self, view_config):
+        self.view_config = view_config
 
     def addInputPort(self, name=None, outputPort=None):
         if name is None:
@@ -153,7 +160,7 @@ class SPLInvocation(object):
         _op["outputs"] = _outputs
         _op["inputs"] = _inputs
         _op["config"] = {}
-
+        _op["config"]["viewConfig"] = self.view_config
         _params = {}
         # Add parameters as their string representation
         # unless they value has a spl_json() function,
@@ -246,10 +253,7 @@ class OPort(object):
         if not self.width is None:
             _oport["width"] = int(self.width)
         if not self.partitioned is None:
-            if self.partitioned is True :
-                _oport["partitioned"] = True
-            else :
-                _oport["partitioned"] = False        
+            _oport["partitioned"] = self.partitioned
         return _oport
 
 class Marker(SPLInvocation):

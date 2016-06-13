@@ -1,6 +1,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015
 
+import random
 from streamsx.topology import graph
 from streamsx.topology import schema
 import streamsx.topology.functions
@@ -128,6 +129,21 @@ class Stream(object):
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=schema)
         return Stream(self.topology, oport)
+
+    def view(self, buffer_time = 10.0, sample_size = 10000):
+        """
+        Defines a view on a stream. Returns a view object which can be graphed after the jobs is submitted.
+        """
+        name = ''.join(random.choice('0123456789abcdef') for x in range(16))
+
+        port = self.oport.name
+        self.oport.operator.setViewConfig({
+                'name': name,
+                'port': port,
+                'bufferTime': buffer_time,
+                'sampleSize': sample_size})
+        return View(name, port, buffer_time, sample_size)
+        
 
     def transform(self, func):
         """
@@ -389,3 +405,10 @@ class Routing(Enum):
     KEY_PARTITIONED=2
     HASH_PARTITIONED=3    
 
+
+class View(object):
+    def __init__(self, name, port, buffer_time, sample_size):
+        self.name = name
+        self.port = port
+        self.buffer_time = buffer_time
+        self.sample_size = sample_size
