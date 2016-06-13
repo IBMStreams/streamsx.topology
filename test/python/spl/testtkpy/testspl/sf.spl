@@ -1,0 +1,14 @@
+namespace testspl;
+
+type TS = tuple<int32 a,  int16 b, int64 vl>;
+
+// Invoke a Python operator using a predefined type.
+// reported as issue #408
+public composite SF(input In ; output Out) {
+  graph
+   stream<TS> I2 = Functor(In) {}
+
+   stream<TS> O2 = com.ibm.streamsx.topology.pysamples.positional::SimpleFilter(I2) { }
+   
+   stream<TS> Out = Functor(O2) { }
+}

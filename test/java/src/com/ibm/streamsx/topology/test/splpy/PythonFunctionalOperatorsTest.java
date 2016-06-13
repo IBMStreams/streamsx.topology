@@ -170,5 +170,31 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertTrue(expectedCount.valid());
         assertTrue(viaPythonResult.toString(), viaPythonResult.valid());
     }
+    
+    @Test
+    public void testPositionalSampleSimpleFilterUsingSPLType() throws Exception {
+        Topology topology = new Topology("testPositionalSampleSimpleFilterUsingSPLType");
+        
+        SPLStream tuples = sampleFilterStream(topology);
+        
+        SPL.addToolkit(tuples, new File(getTestRoot(), "python/spl/testtkpy"));
+        SPLStream viaPython = SPL.invokeOperator(
+                "testspl::SF", tuples, tuples.getSchema(), null);
+
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(viaPython, 2);
+        
+        // first attribute is the sum of the first and second input attributes
+        // others are copied across from in to out.
+        Tuple r1 = TEST_SCHEMA_SF.getTuple(new Object[] {32, (short) 25, 34535L});
+        Tuple r2 = TEST_SCHEMA_SF.getTuple(new Object[] {5, (short) 3, 654932L});
+        Condition<List<Tuple>> viaPythonResult = tester.tupleContents(viaPython,
+                r1, r2);
+
+        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.valid());
+        assertTrue(viaPythonResult.toString(), viaPythonResult.valid());
+    }
 
 }
