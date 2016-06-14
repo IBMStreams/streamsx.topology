@@ -9,9 +9,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
@@ -60,8 +57,6 @@ public class SubscribeSPLDictTest extends PublishSubscribePython {
         
         complete(tester, allConditions(expectedCount, expectedCountSpl), 60, TimeUnit.SECONDS);
 
-        	System.out.println(expectedCount.getResult());
-        	System.out.println(expectedCountSpl.getResult());
         assertTrue(expectedCount.valid());
         assertTrue(expectedCountSpl.valid());
         
@@ -100,27 +95,6 @@ public class SubscribeSPLDictTest extends PublishSubscribePython {
             	}
         	}
 
-        	{
-        		Set<?> ex = spl.getSet("si32");
-            JSONArray pya = (JSONArray) json.get("si32");
-            assertEquals(ex.size(), pya.size());
-
-            setAssertHelper(ex, pya);
-        	}
-
         }
-    }
-
-    private <T> void setAssertHelper(Set<T> s, JSONArray pya) {
-      Set<T> sorteds = new TreeSet<T> (s);
-      Set<T> pyset = new TreeSet<T>();
-      for (int i = 0; i < pya.size(); i++) {
-        T val = ((T) pya.get(i));
-        pyset.add(val);
-      }
-      for (T si : sorteds) {
-        Long sil = ((Number) si).longValue();
-        assertEquals(true, pyset.contains(sil));
-      }
     }
 }
