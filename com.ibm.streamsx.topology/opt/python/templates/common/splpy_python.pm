@@ -114,7 +114,6 @@ sub cppToPythonMapConversion {
       return $get;
 }
 
-# needs to be tested
 sub cppToPythonSetConversion {
       my ($iv, $type) = @_;
 
@@ -150,7 +149,7 @@ sub convertToPythonValue {
   if (SPL::CodeGen::Type::isList($type)) {
       return cppToPythonListConversion($iv, $type);
   }  
-  # If the type is a set, again, get the key and value types, then
+  # If the type is a set, get the value type, then
   # iterate through the set to copy its contents.
   elsif(SPL::CodeGen::Type::isSet($type)){      
       return cppToPythonSetConversion($iv, $type);
