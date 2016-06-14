@@ -32,7 +32,7 @@ def delete_json(fn):
 # environment
 #
 
-def submit(ctxtype, graph, config={}):
+def submit(ctxtype, graph, config=None):
     """
     Submits a topology with the specified context type.
     
@@ -51,6 +51,8 @@ def submit(ctxtype, graph, config={}):
     Returns:
         An output stream of bytes if submitting with JUPYTER, otherwise returns None.
     """    
+    if config is None:
+        config = {}
     fj = _createFullJSON(graph, config)
     fn = _createJSONFile(fj)
     try:
