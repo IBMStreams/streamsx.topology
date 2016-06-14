@@ -151,9 +151,31 @@ namespace streamsx {
       	// symbols from libpython*.*.so are not resolved properly. As
       	// as workaround, it's necessary to manually rediscover the
       	// symbols by calling dlopen().
-	if(NULL == dlopen("libpython3.5m.so", RTLD_LAZY |
+      	//
+
+        // Provide info on the setting of LD_LIBRARY_PATH
+        char * pyLDD = getenv("LD_LIBRARY_PATH");
+        if (pyLDD != NULL) {
+	      SPLAPPLOG(L_INFO, "LD_LIBRARY_PATH=" << pyLDD, "python");
+        } else {
+	      SPLAPPLOG(L_INFO, "LD_LIBRARY_PATH not set", "python");
+        }
+
+
+        std::string pyLib("libpython3.5m.so");
+        char * pyHome = getenv("PYTHONHOME");
+        if (pyHome != NULL) {
+            std::string wk(pyHome);
+            wk.append("/lib/");
+            wk.append(pyLib);
+
+            pyLib = wk;
+        }
+	SPLAPPLOG(L_INFO, "Loading Python library: " << pyLib  , "python");
+
+	if(NULL == dlopen(pyLib.c_str(), RTLD_LAZY |
 			  RTLD_GLOBAL)){
-	  SPLAPPLOG(L_ERROR, "Fatal error: could not open libpython3.5m.so", "python");
+	  SPLAPPLOG(L_ERROR, "Fatal error: could not open Python library:" << pyLib , "python");
 	  throw;
 	}
 
