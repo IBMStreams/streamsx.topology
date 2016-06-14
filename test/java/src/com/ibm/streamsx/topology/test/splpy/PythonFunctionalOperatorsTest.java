@@ -51,6 +51,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     		  "list<float32> lf32," +
     		  "list<float64> lf64," +
     		  "list<boolean> lb," +
+    		  "set<int32> si32," +
     		  "map<int32,rstring> mi32r," +
     		  "map<rstring,uint32> mru32," +
     		  "map<rstring,int32> mri32," +

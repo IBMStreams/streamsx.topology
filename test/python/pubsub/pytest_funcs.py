@@ -26,3 +26,13 @@ def remove_complex(v):
    del r['u64']
    del r['lui64']
    return r
+
+# JSON serialization doesn't handle sets, change them to a list
+def change_set_to_list(v):
+   r = dict(v)
+   s = r['si32']
+   if isinstance(s, set):
+     del r['si32']
+     l = list(s)
+     r['si32'] = l
+   return r

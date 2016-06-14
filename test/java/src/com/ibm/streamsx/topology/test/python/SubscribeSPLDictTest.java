@@ -9,6 +9,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
@@ -57,6 +58,8 @@ public class SubscribeSPLDictTest extends PublishSubscribePython {
         
         complete(tester, allConditions(expectedCount, expectedCountSpl), 60, TimeUnit.SECONDS);
 
+        	System.out.println(expectedCount.getResult());
+        	System.out.println(expectedCountSpl.getResult());
         assertTrue(expectedCount.valid());
         assertTrue(expectedCountSpl.valid());
         
@@ -93,6 +96,20 @@ public class SubscribeSPLDictTest extends PublishSubscribePython {
             	for (int j = 0; j < ex.size(); j++) {
             		assertEquals(ex.get(j), ((Number) pya.get(j)).intValue());
             	}
+        	}
+
+        	{
+        		Set<?> ex =spl.getSet("si32");
+            	JSONArray pya = (JSONArray) json.get("si32");
+            	assertEquals(ex.size(), pya.size());
+            	
+              /**
+              int j = 0;
+              for (int si : ex) {
+            		assertEquals(si, ((Number) pya.get(j)).intValue());
+                j++;
+              }
+              **/
         	}
 
         }
