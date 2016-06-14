@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
+import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.logging.TraceLevel;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.JobProperties;
@@ -195,10 +196,36 @@ public class JobConfig {
      * 
      * @see JobProperties
      */
+    @SuppressWarnings("unchecked")
     public static JobConfig fromProperties(Map<String,? extends Object> config) {
-        if (config.containsKey(CONFIG))
+        if (config.containsKey("jobConfig")) {
+            JSONObject json = getConfigEntry(config, "jobConfig", JSONObject.class);
+            return fromJSON(json);
+        }
+        if (config.containsKey(CONFIG)) {
             return getConfigEntry(config, CONFIG, JobConfig.class);
+        }
         
+        JobConfig jc = fromPrimitiveValues(config);
+
+        if (config.containsKey(SUBMISSION_PARAMS)) {
+            Map<String,Object> params = (Map<String,Object>) config.get(SUBMISSION_PARAMS);
+            for (String name : params.keySet()) {
+                jc.addSubmissionParameter(name, params.get(name).toString());
+            }
+        }
+        
+        if (config.containsKey(TRACING_LEVEL))
+            jc.setTracing(Util.getConfigEntry(config, TRACING_LEVEL, Level.class));
+
+        return jc;
+    }
+    
+    /**
+     * Works from a set of individual values in a config
+     * and from a JSON config.
+     */
+    private static JobConfig fromPrimitiveValues(Map<String,? extends Object> config) {
         JobConfig jc = new JobConfig();
         if (config.containsKey(NAME))
             jc.setJobName(getConfigEntry(config, NAME, String.class));
@@ -208,14 +235,6 @@ public class JobConfig {
         
         if (config.containsKey(DATA_DIRECTORY))
             jc.setDataDirectory(getConfigEntry(config, DATA_DIRECTORY, String.class));
-
-        if (config.containsKey(SUBMISSION_PARAMS)) {
-            @SuppressWarnings("unchecked")
-            Map<String,Object> params = (Map<String,Object>) config.get(SUBMISSION_PARAMS);
-            for (String name : params.keySet()) {
-                jc.addSubmissionParameter(name, params.get(name).toString());
-            }
-        }
         
         if (config.containsKey(OVERRIDE_RESOURCE_LOAD_PROTECTION))
             jc.setOverrideResourceLoadProtection(Util.getConfigEntry(config, 
@@ -225,9 +244,29 @@ public class JobConfig {
             jc.setPreloadApplicationBundles(Util.getConfigEntry(config, 
                     PRELOAD_APPLICATION_BUNDLES, Boolean.class));
         
-        if (config.containsKey(TRACING_LEVEL))
-            jc.setTracing(Util.getConfigEntry(config, TRACING_LEVEL, Level.class));
+        return jc;
+    }
+    /**
+     * Works from a set of individual values in a config
+     * and from a JSON config.
+     */
+    private static JobConfig fromJSON(JSONObject config) {
+        JobConfig jc = new JobConfig();
+        if (config.containsKey("jobName"))
+            jc.setJobName(config.get("jobName").toString());
+        
+        if (config.containsKey("jobGroup"))
+            jc.setJobGroup(config.get("jobGroup").toString());
+        
+        if (config.containsKey("dataDirectory"))
+            jc.setDataDirectory(config.get("dataDirectory").toString());
+        
+        if (config.containsKey("overrideResourceLoadProtection"))
+            jc.setOverrideResourceLoadProtection((Boolean) config.get("overrideResourceLoadProtection"));
 
+        if (config.containsKey("preloadApplicationBundles"))
+            jc.setPreloadApplicationBundles((Boolean) config.get("preloadApplicationBundles"));
+        
         return jc;
     }
     
