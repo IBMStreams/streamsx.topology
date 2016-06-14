@@ -151,7 +151,21 @@ namespace streamsx {
       	// symbols from libpython*.*.so are not resolved properly. As
       	// as workaround, it's necessary to manually rediscover the
       	// symbols by calling dlopen().
-	if(NULL == dlopen("libpython3.5m.so", RTLD_LAZY |
+      	//
+      	// Also loading it this way makes the Streams bundle (sab)
+      	// file relocatable.
+
+        std::string pyLib("libpython3.5m.so");
+        char * pyHome = getenv("PYTHONHOME");
+        if (pyHome != NULL) {
+            std::string wk(pyHome);
+            wk.append("/lib/");
+            wk.append(pyLib);
+
+            pyLib = wk;
+        }
+
+	if(NULL == dlopen(pyLib.c_str(), RTLD_LAZY |
 			  RTLD_GLOBAL)){
 	  SPLAPPLOG(L_ERROR, "Fatal error: could not open libpython3.5m.so", "python");
 	  throw;
