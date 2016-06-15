@@ -134,10 +134,11 @@ class Stream(object):
         """
         Defines a view on a stream. Returns a view object which can be graphed after the jobs is submitted.
         """
+        new_op = self._map(streamsx.topology.functions.identity,schema=schema.CommonSchema.Json)
         name = ''.join(random.choice('0123456789abcdef') for x in range(16))
 
-        port = self.oport.name
-        self.oport.operator.setViewConfig({
+        port = new_op.oport.name
+        new_op.oport.operator.setViewConfig({
                 'name': name,
                 'port': port,
                 'bufferTime': buffer_time,

@@ -54,7 +54,7 @@ class _DependencyResolver(object):
             # get the top-level package
             top_package_name = module.__name__.split('.')[0]
             top_package = sys.modules[top_package_name]
-            if top_package.__path__:
+            if "__path__" in top_package.__dict__:
                 # for regular packages, there is one top-level directory
                 # for namespace packages, there can be more than one.
                 # they will be merged in the bundle
