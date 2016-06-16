@@ -17,9 +17,7 @@ import java.util.logging.Level;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.logging.TraceLevel;
-import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.JobProperties;
-import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
@@ -198,11 +196,12 @@ public class JobConfig {
      */
     @SuppressWarnings("unchecked")
     public static JobConfig fromProperties(Map<String,? extends Object> config) {
-        if (config.containsKey("jobConfig")) {
-            JSONObject json = getConfigEntry(config, "jobConfig", JSONObject.class);
-            return fromJSON(json);
-        }
         if (config.containsKey(CONFIG)) {
+            if (config.get(CONFIG) instanceof JSONObject) {
+                JSONObject json = getConfigEntry(config, CONFIG, JSONObject.class);
+                return fromJSON(json);
+            }
+        
             return getConfigEntry(config, CONFIG, JobConfig.class);
         }
         
