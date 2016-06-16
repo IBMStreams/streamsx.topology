@@ -1,0 +1,191 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module streamsx.topology.graph</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="streamsx.html"><font color="#ffffff">streamsx</font></a>.<a href="streamsx.topology.html"><font color="#ffffff">topology</font></a>.graph</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br></font></td></tr></table>
+    <p><tt>#&nbsp;Licensed&nbsp;Materials&nbsp;-&nbsp;Property&nbsp;of&nbsp;IBM<br>
+#&nbsp;Copyright&nbsp;IBM&nbsp;Corp.&nbsp;2015</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top>base64<br>
+inspect<br>
+</td><td width="25%" valign=top>json<br>
+pickle<br>
+</td><td width="25%" valign=top><a href="streamsx.html">streamsx</a><br>
+uuid<br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial">builtins.object
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="streamsx.topology.graph.html#IPort">IPort</a>
+</font></dt><dt><font face="helvetica, arial"><a href="streamsx.topology.graph.html#OPort">OPort</a>
+</font></dt><dt><font face="helvetica, arial"><a href="streamsx.topology.graph.html#SPLGraph">SPLGraph</a>
+</font></dt><dt><font face="helvetica, arial"><a href="streamsx.topology.graph.html#SPLInvocation">SPLInvocation</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="streamsx.topology.graph.html#Marker">Marker</a>
+</font></dt></dl>
+</dd>
+</dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="IPort">class <strong>IPort</strong></a>(builtins.object)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="IPort-__init__"><strong>__init__</strong></a>(self, name, operator, index, schema)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="IPort-connect"><strong>connect</strong></a>(self, oport)</dt></dl>
+
+<dl><dt><a name="IPort-getSPLInputPort"><strong>getSPLInputPort</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Marker">class <strong>Marker</strong></a>(<a href="streamsx.topology.graph.html#SPLInvocation">SPLInvocation</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="streamsx.topology.graph.html#Marker">Marker</a></dd>
+<dd><a href="streamsx.topology.graph.html#SPLInvocation">SPLInvocation</a></dd>
+<dd>builtins.object</dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="Marker-__init__"><strong>__init__</strong></a>(self, index, kind, name, params, graph)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="Marker-generateSPLOperator"><strong>generateSPLOperator</strong></a>(self)</dt></dl>
+
+<hr>
+Methods inherited from <a href="streamsx.topology.graph.html#SPLInvocation">SPLInvocation</a>:<br>
+<dl><dt><a name="Marker-addInputPort"><strong>addInputPort</strong></a>(self, name=None, outputPort=None)</dt></dl>
+
+<dl><dt><a name="Marker-addOutputPort"><strong>addOutputPort</strong></a>(self, oWidth=None, name=None, inputPort=None, schema=&lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object at 0x7fe781e6fa58&gt;&gt;, partitioned=None)</dt></dl>
+
+<dl><dt><a name="Marker-appendParameters"><strong>appendParameters</strong></a>(self, params)</dt></dl>
+
+<dl><dt><a name="Marker-setParameters"><strong>setParameters</strong></a>(self, params)</dt></dl>
+
+<hr>
+Data descriptors inherited from <a href="streamsx.topology.graph.html#SPLInvocation">SPLInvocation</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="OPort">class <strong>OPort</strong></a>(builtins.object)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="OPort-__init__"><strong>__init__</strong></a>(self, name, operator, index, schema, width=None, partitioned=None)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="OPort-connect"><strong>connect</strong></a>(self, iport)</dt></dl>
+
+<dl><dt><a name="OPort-getSPLOutputPort"><strong>getSPLOutputPort</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="SPLGraph">class <strong>SPLGraph</strong></a>(builtins.object)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="SPLGraph-__init__"><strong>__init__</strong></a>(self, name=None)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="SPLGraph-addModules"><strong>addModules</strong></a>(self, includes)</dt></dl>
+
+<dl><dt><a name="SPLGraph-addOperator"><strong>addOperator</strong></a>(self, kind, function=None, name=None, params=None)</dt></dl>
+
+<dl><dt><a name="SPLGraph-addPackages"><strong>addPackages</strong></a>(self, includes)</dt></dl>
+
+<dl><dt><a name="SPLGraph-addPassThruOperator"><strong>addPassThruOperator</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="SPLGraph-generateSPLGraph"><strong>generateSPLGraph</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="SPLGraph-getLastOperator"><strong>getLastOperator</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="SPLGraph-printJSON"><strong>printJSON</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="SPLInvocation">class <strong>SPLInvocation</strong></a>(builtins.object)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="SPLInvocation-__init__"><strong>__init__</strong></a>(self, index, kind, function, name, params, graph)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="SPLInvocation-addInputPort"><strong>addInputPort</strong></a>(self, name=None, outputPort=None)</dt></dl>
+
+<dl><dt><a name="SPLInvocation-addOutputPort"><strong>addOutputPort</strong></a>(self, oWidth=None, name=None, inputPort=None, schema=&lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object at 0x7fe781e6fa58&gt;&gt;, partitioned=None)</dt></dl>
+
+<dl><dt><a name="SPLInvocation-appendParameters"><strong>appendParameters</strong></a>(self, params)</dt></dl>
+
+<dl><dt><a name="SPLInvocation-generateSPLOperator"><strong>generateSPLOperator</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="SPLInvocation-setParameters"><strong>setParameters</strong></a>(self, params)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table>
+</body></html>

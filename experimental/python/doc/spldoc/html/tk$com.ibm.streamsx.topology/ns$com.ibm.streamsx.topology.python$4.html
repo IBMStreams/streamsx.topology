@@ -7,63 +7,36 @@
 <meta name="copyright" content="(C) Copyright 2005"/>
 <meta name="DC.rights.owner" content="(C) Copyright 2005"/>
 <meta name="DC.Type" content="reference"/>
-<meta name="DC.Title" content="@spl.sink"/>
+<meta name="DC.Title" content="Context Types"/>
 <meta name="DC.Format" content="XHTML"/>
 <meta name="DC.Identifier" content="spldoc_page"/>
 <link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
 <link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
-<title>@spl.sink</title>
+<title>Context Types</title>
 </head>
 <body id="spldoc_page">
 
 
-<h1 class="title topictitle1">@spl.sink</h1>
+<h1 class="title topictitle1">Context Types</h1>
 
 <div class="body refbody">
 <div class="section">
 <p class="p">
-<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.2.5.alpha</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$1.html">Decorating Python Functions as SPL Operators</a> &gt; @spl.sink</p>
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.4.1.beta</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$1.html">Python Application API</a> &gt; Context Types</p>
 
 </div>
 
 
 <div class="section">
-<p class="p">Decorator to create a sink SPL operator. If the Python function is decorated with <tt class="ph tt">@spl.sink</tt> then the operator is a sink operator, with a single input port and no output ports. For each input tuple the function is called.
-</p>
+<div class="p">Only submission using <tt class="ph tt">DISTRIBUTED</tt>, <tt class="ph tt">BUNDLE</tt> and <tt class="ph tt">STANDALONE</tt> context type are supported.
+<ul class="ul">
+<li class="li"> <tt class="ph tt">DISTRIBUTED</tt> converts the application to an SPL graph, compiles it and submits it as a Streams application bundle to a Streams instance. The bundle is submitted using <tt class="ph tt">streamtool</tt> which must be setup to submit without requiring authentication input.</li>
 
-</div>
+<li class="li"> <tt class="ph tt">BUNDLE</tt> converts the application to an SPL graph and compiles it, producing a SPL application bundle (.sab file).  The application is executed separately by submitting the bundle to an IBM Streams instance as a distributed application.  A bundle can be submitted to an IBM Streams instance using <tt class="ph tt">streamtool submitjob</tt>, the IBM Streams Console, or IBM Streams JMX API.</li>
 
-<div class="section"><h2 class="title sectiontitle">Examples
-</h2>
+<li class="li"> <tt class="ph tt">STANDALONE</tt> converts the application to an SPL graph, compiles it and executes it as an IBM Streams standalone application.  The standalone execution is spawned as a separate process.</li>
 
-<p class="p">Operator to send an e-mail for each tuple using the local SMTP server.
-</p>
-
-<div class="p">
-<pre class="pre codeblock">
-import sys
-import smtplib
-
-# Import the SPL decorators
-from streamsx.spl import spl
-
-server = smtplib.SMTP('localhost')
-
-def splNamespace():
-    return "com.ibm.streamsx.topology.pysamples.mail"
-
-# Decorate this function as a sink operator
-# This means the operator will have a single
-# input port and no output ports. The SPL tuple
-# is passed in as described in spl_samples.py.
-# The function must return None, typically by
-# not having any return statement.
-＠spl.sink
-def simplesendmail(from_addr, to_addrs, msg):
-    "Send a simple email"
-    server.sendmail(from_addr, to_addrs, msg)
-</pre>
-
+</ul>
 
 </div>
 
