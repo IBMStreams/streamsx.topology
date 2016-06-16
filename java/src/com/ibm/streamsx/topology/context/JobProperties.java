@@ -21,7 +21,7 @@ public interface JobProperties {
     
     /**
      * Configuration for a submitted application.
-     * This single property contains the full submission
+     * This single property ({@value}) contains the full submission
      * time configuration for the application.
      * This property overrides all other {@code JobProperties}
      * such as {@link #NAME} and {@link #GROUP}.
@@ -31,7 +31,7 @@ public interface JobProperties {
      * Setting a job configuration is optional.
      * </p>
      */
-    String CONFIG = "job.config";
+    String CONFIG = "jobConfig";
     
     /**
      * Name for a submitted  application.

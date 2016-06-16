@@ -57,12 +57,20 @@ public class DistributedStreamsContext extends
     /**
      * Submit directly from a JSON representation of a topology.
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Future<BigInteger> submit(JSONObject json) throws Exception {
 
     	File bundle = bundler.submit(json).get();
     	
-        Map<String, Object> config = Collections.emptyMap(); 
+    	Map<String, Object> config = Collections.emptyMap();
+    	if (json.containsKey(SUBMISSION_DEPLOY)) {
+            JSONObject deploy = (JSONObject) json.get(SUBMISSION_DEPLOY);
+            if (!deploy.isEmpty()) {
+                config = deploy;
+            }
+    	}
+        
         return submitBundle(bundle, config);
     }
 }
