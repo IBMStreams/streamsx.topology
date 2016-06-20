@@ -11,9 +11,12 @@ from enum import Enum
 class Topology(object):
     """Topology that contains graph + operators"""
     def __init__(self, name, files=None):
-        self.name=name
+        self.name = name
         self.graph = graph.SPLGraph(name)
-        self.files = []
+        if files is not None:
+            self.files = files
+        else:
+            self.files = []
 
     def source(self, func):
         """
@@ -59,7 +62,8 @@ class Topology(object):
 
         Args:
             topic: Topic to subscribe to.
-            schema: schema.StreamSchema to subscribe to. Defaults to schema.CommonSchema.Python representing Python objects.
+            schema: schema.StreamSchema to subscribe to. Defaults to schema.CommonSchema.Python representing Python
+                    objects.
         Returns:
             A Stream whose tuples have been published to the topic by other Streams applications.
         """
@@ -143,7 +147,9 @@ class Stream(object):
                 'port': port,
                 'bufferTime': buffer_time,
                 'sampleSize': sample_size})
-        return View(name, port, buffer_time, sample_size)
+        _view = View(name, port, buffer_time, sample_size)
+        self.topology.graph.get_views().append(_view)
+        return _view
         
 
     def transform(self, func):
@@ -413,3 +419,10 @@ class View(object):
         self.port = port
         self.buffer_time = buffer_time
         self.sample_size = sample_size
+        self.streams_context = None
+
+    def set_streams_context(self, sc):
+        self.streams_context = sc
+
+    def get_streams_context(self):
+        return self.streams_context

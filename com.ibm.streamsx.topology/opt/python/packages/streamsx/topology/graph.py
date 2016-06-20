@@ -18,6 +18,13 @@ class SPLGraph(object):
         self.name = name
         self.operators = []
         self.resolver = streamsx.topology.dependency._DependencyResolver()
+        self._views = []
+
+    def get_views(self):
+        return self._views
+
+    def add_views(self, view):
+        self._views.append(view)
 
     def addOperator(self, kind, function=None, name=None, params=None):
         if(params is None):

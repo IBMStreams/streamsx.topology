@@ -16,9 +16,10 @@ def get_view_obj(_view, rc):
                     return view
     return None
 
-def graph_every(rc, view, key, time_step):
-    view = get_view_obj(view, rc)
-    if view == None:
+
+def graph_every(view, key, time_step):
+    view = get_view_obj(view, view.get_streams_context())
+    if view is None:
         return None
     fig, ax = plt.subplots()
     
