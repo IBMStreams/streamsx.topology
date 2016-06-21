@@ -34,9 +34,7 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 public class PythonFunctionalOperatorsTest extends TestTopology {
-    
-    public static final StreamSchema ALL_PYTHON_TYPES_SCHEMA =
-            Type.Factory.getStreamSchema("tuple<boolean b," +
+  public static final String ALL_PYTHON_TYPES_STRING1="tuple<boolean b," +
     		  "int8 i8, int16 i16, int32 i32, int64 i64," +
     		  "uint8 u8, uint16 u16, uint32 u32, uint64 u64," +
     		  "float32 f32, float64 f64," +
@@ -62,7 +60,13 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     		  "map<float64,int32> mf64i32," +
     		  "map<float64,uint32> mf64u32," +
     		  "map<float64,rstring> mf64r," +
-    		  "map<rstring,float64> mrf64>");
+    		  "map<rstring,float64> mrf64";
+
+    public static final StreamSchema ALL_PYTHON_TYPES_SCHEMA =
+            Type.Factory.getStreamSchema(ALL_PYTHON_TYPES_STRING1+">");
+
+    public static final StreamSchema ALL_PYTHON_TYPES_WITH_SETS_SCHEMA =
+            Type.Factory.getStreamSchema(ALL_PYTHON_TYPES_STRING1+",set<int32> si32>");
 
     
     public static final int TUPLE_COUNT = 1000;
@@ -76,6 +80,19 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     }
     
     public static SPLStream testTupleStream(Topology topology) {
+      return testTupleStream(topology, false);
+    }
+
+    public static StreamSchema getPythonTypesSchema(boolean withSets) {
+      if (withSets) {
+        return ALL_PYTHON_TYPES_WITH_SETS_SCHEMA;
+      }
+      else {
+        return ALL_PYTHON_TYPES_SCHEMA;
+      }
+    }
+
+    public static SPLStream testTupleStream(Topology topology, boolean withSets) {
         TStream<Long> beacon = BeaconStreams.longBeacon(topology, TUPLE_COUNT);
 
         return SPLStreams.convertStream(beacon, new BiFunction<Long, OutputTuple, OutputTuple>() {
@@ -87,14 +104,14 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
             @Override
             public OutputTuple apply(Long v1, OutputTuple v2) {
             	if (type == null) {
-            		type = Type.Factory.getTupleType(ALL_PYTHON_TYPES_SCHEMA.getLanguageType());
+            		type = Type.Factory.getTupleType(getPythonTypesSchema(withSets).getLanguageType());
             		rand = new Random();
             	}
             	Tuple randTuple = (Tuple) type.randomValue(rand);
             	v2.assign(randTuple);
                 return v2;
             }
-        }, ALL_PYTHON_TYPES_SCHEMA);        
+        }, getPythonTypesSchema(withSets));
     }
     
     @Test
