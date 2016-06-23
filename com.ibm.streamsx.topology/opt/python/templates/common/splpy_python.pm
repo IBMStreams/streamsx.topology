@@ -181,7 +181,7 @@ sub convertToPythonValueAsTuple {
   my $type = $_[2];
   my $name = $_[3];
 
-  my $get = convertToPythonValue($ituple, $type, $name);
+  my $get = "pyValue = " . convertToPythonValue($ituple, $type, $name);
   
   # Note PyTuple_SetItem steals the reference to the value
   my $assign =  "    PyTuple_SetItem(pyTuple, " . $i  .", pyValue);\n";
