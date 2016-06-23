@@ -5,6 +5,10 @@ import random
 from streamsx.topology import graph
 from streamsx.topology import schema
 import streamsx.topology.functions
+import json
+import threading
+import queue
+import time
 from enum import Enum
 
 
@@ -413,16 +417,79 @@ class Routing(Enum):
     HASH_PARTITIONED=3    
 
 
-class View(object):
+class View(threading.Thread):
     def __init__(self, name, port, buffer_time, sample_size):
+        super(View, self).__init__()
+        self._stop = threading.Event()
+        self.items = queue.Queue()
+
         self.name = name
         self.port = port
         self.buffer_time = buffer_time
         self.sample_size = sample_size
         self.streams_context = None
+        self.view_object = None
+
+        self._last_collection_time = -1
+
+    def stop_data_fetch(self):
+        self._stop.set()
+
+    def start_data_fetch(self):
+        self._stop.clear()
+        self._get_view_object()
+        t = threading.Thread(target=self)
+        t.start()
+        return self.items
+
+    def __call__(self):
+        while not self._stopped():
+            time.sleep(1)
+            _items = self._get_view_items(unseen=True)
+            if _items is not None:
+                for itm in _items:
+                    self.items.put(itm)
 
     def set_streams_context(self, sc):
         self.streams_context = sc
 
     def get_streams_context(self):
         return self.streams_context
+
+
+    # Private
+
+    def _stopped(self):
+        return self._stop.isSet()
+
+    def _get_view_object(self):
+        self.view_object = self._get_view_obj_from_name()
+        if self.view_object is None:
+            raise "Error finding view."
+
+    def _get_view_items(self, unseen=False):
+        view = self.view_object
+        if self.view_object is None:
+            return None
+
+        data_name = view.attributes[0]['name']
+        items = view.get_view_items()
+        data = []
+
+        for item in items:
+            if not unseen or item.collectionTime > self._last_collection_time:
+                data.append(json.loads(item.data[data_name]))
+
+        if len(items) > 0:
+            self._last_collection_time = items[-1].collectionTime
+
+        return data
+
+    # TODO: update to use domain, instance, job *and* view name
+    def _get_view_obj_from_name(self):
+        for domain in self.streams_context.get_domains():
+            for instance in domain.get_instances():
+                for view in instance.get_views():
+                    if view.name == self.name:
+                        return view
+        return None
