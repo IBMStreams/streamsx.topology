@@ -102,7 +102,7 @@ class SPLInvocation(object):
         self.setParameters(params)
         self._addOperatorFunction(self.function)
         self.graph = graph
-        self.view_config = None
+        self.view_config = view_config
 
         self.inputPorts = []
         self.outputPorts = []

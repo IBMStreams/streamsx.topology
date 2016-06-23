@@ -140,7 +140,8 @@ class Stream(object):
 
     def view(self, buffer_time = 10.0, sample_size = 10000):
         """
-        Defines a view on a stream. Returns a view object which can be graphed after the jobs is submitted.
+        Defines a view on a stream. Returns a view object which can be used to access the data
+        :param buffer_time The window of time over which tuples will be
         """
         new_op = self._map(streamsx.topology.functions.identity,schema=schema.CommonSchema.Json)
         name = ''.join(random.choice('0123456789abcdef') for x in range(16))
@@ -418,6 +419,9 @@ class Routing(Enum):
 
 
 class View(threading.Thread):
+    """
+    A View is an object which is associated with a Stream, and provides access to the items on the stream.
+    """
     def __init__(self, name, port, buffer_time, sample_size):
         super(View, self).__init__()
         self._stop = threading.Event()
