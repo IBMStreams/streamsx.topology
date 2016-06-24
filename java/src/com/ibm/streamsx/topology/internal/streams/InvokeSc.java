@@ -13,11 +13,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import com.ibm.json.java.JSONObject;
+import com.ibm.streams.operator.version.Product;
+import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
@@ -26,7 +27,7 @@ public class InvokeSc {
 
     static final Logger trace = Topology.STREAMS_LOGGER;
 
-    private Set<File> toolkits = new HashSet<File>();
+    private Set<File> toolkits = new HashSet<>();
     private final boolean standalone;
     private final String namespace;
     private final String mainComposite;
@@ -36,13 +37,25 @@ public class InvokeSc {
     public InvokeSc(JSONObject deployConfig, boolean standalone, String namespace, String mainComposite,
             File applicationDir) throws URISyntaxException, IOException {
         super();
-        this.standalone = standalone;
+       
         this.namespace = namespace;
         this.mainComposite = mainComposite;
         this.applicationDir = applicationDir;
         
         installDir = Util.getStreamsInstall(deployConfig, ContextProperties.COMPILE_INSTALL_DIR);
-
+        
+        // Version 4.2 onwards deprecates standlone compiler option
+        // so don't use it to avoid warnings.
+        if (deployConfig.containsKey(ContextProperties.COMPILE_INSTALL_DIR)) {
+            // TODO: get version of compile install to be used
+        } else {
+            Version ver = Product.getVersion();
+            if ((ver.getVersion() == 4 && ver.getRelease() >= 2)
+                || (ver.getVersion() > 4))
+                standalone = false;
+        }
+        this.standalone = standalone;
+        
         addFunctionalToolkit();
     }
 
@@ -139,8 +152,10 @@ public class InvokeSc {
         }
 
         String streamsInstallToolkits = installDir + "/toolkits";
-        sb.append(":");
-        sb.append(streamsInstallToolkits);
+        if (sb.indexOf(streamsInstallToolkits) == -1) {
+            sb.append(":");
+            sb.append(streamsInstallToolkits);
+        }
 
         trace.info("ToolkitPath:" + sb.toString());
         return sb.toString();
