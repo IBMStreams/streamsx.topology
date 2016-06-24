@@ -39,6 +39,7 @@ class OperatorGenerator {
         StringBuilder sb = new StringBuilder();
         noteAnnotations(op, sb);
         parallelAnnotation(op, sb);
+	viewAnnotation(op, sb);
         outputClause(op, sb);
         operatorNameAndKind(op, sb);
         inputClause(op, sb);
@@ -87,6 +88,31 @@ class OperatorGenerator {
             SPLGenerator.stringLiteral(sb, type);
             sb.append(")\n");
         }
+    }
+
+    private void viewAnnotation(JSONObject op, StringBuilder sb){
+	JSONObject config = (JSONObject)op.get("config");
+	if(config == null)
+	    return;
+
+        JSONArray viewConfigs = (JSONArray) config.get("viewConfigs");
+        if (viewConfigs == null || viewConfigs.isEmpty()) {
+            return;
+        }
+
+	for (int i = 0; i < viewConfigs.size(); i++) {
+            JSONObject viewConfig = (JSONObject) viewConfigs.get(i);
+	    String name = (String)viewConfig.get("name");
+	    String port = (String)viewConfig.get("port");
+	    Double bufferTime = ((Number)viewConfig.get("bufferTime")).doubleValue();
+	    Long sampleSize = ((Number)viewConfig.get("sampleSize")).longValue();
+	    sb.append("@view(name = \"");
+	    sb.append(splBasename(name));
+	    sb.append("\", port = " + port);
+	    sb.append(", bufferTime = " + bufferTime + ", ");
+	    sb.append("sampleSize = " + sampleSize + ", ");
+	    sb.append("activateOption = firstAccess)\n");
+	}	
     }
 
     private void parallelAnnotation(JSONObject op, StringBuilder sb) {

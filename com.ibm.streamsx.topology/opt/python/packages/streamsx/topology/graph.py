@@ -18,6 +18,13 @@ class SPLGraph(object):
         self.name = name
         self.operators = []
         self.resolver = streamsx.topology.dependency._DependencyResolver()
+        self._views = []
+
+    def get_views(self):
+        return self._views
+
+    def add_views(self, view):
+        self._views.append(view)
 
     def addOperator(self, kind, function=None, name=None, params=None):
         if(params is None):
@@ -86,7 +93,7 @@ class SPLGraph(object):
 
 class SPLInvocation(object):
 
-    def __init__(self, index, kind, function, name, params, graph):
+    def __init__(self, index, kind, function, name, params, graph, view_configs = None):
         self.index = index
         self.kind = kind
         self.function = function
@@ -95,6 +102,11 @@ class SPLInvocation(object):
         self.setParameters(params)
         self._addOperatorFunction(self.function)
         self.graph = graph
+
+        if view_configs is None:
+            self.view_configs = []
+        else:
+            self.view_configs = view_configs
 
         self.inputPorts = []
         self.outputPorts = []
@@ -120,6 +132,12 @@ class SPLInvocation(object):
             else:
                 for innerParam in param:
                     self.params[param].append(innerParam)
+
+    def getViewConfig(self):
+        return self.view_configs
+
+    def addViewConfig(self, view_configs):
+        self.view_configs.append(view_configs)
 
     def addInputPort(self, name=None, outputPort=None):
         if name is None:
@@ -153,7 +171,7 @@ class SPLInvocation(object):
         _op["outputs"] = _outputs
         _op["inputs"] = _inputs
         _op["config"] = {}
-
+        _op["config"]["viewConfigs"] = self.view_configs
         _params = {}
         # Add parameters as their string representation
         # unless they value has a spl_json() function,
@@ -246,10 +264,7 @@ class OPort(object):
         if not self.width is None:
             _oport["width"] = int(self.width)
         if not self.partitioned is None:
-            if self.partitioned is True :
-                _oport["partitioned"] = True
-            else :
-                _oport["partitioned"] = False        
+            _oport["partitioned"] = self.partitioned
         return _oport
 
 class Marker(SPLInvocation):

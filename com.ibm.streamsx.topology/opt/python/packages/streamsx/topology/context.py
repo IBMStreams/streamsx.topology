@@ -8,6 +8,7 @@ import json
 import subprocess
 import threading
 import sys, traceback
+from streamsx import rest
 
 #
 # Utilities
@@ -31,8 +32,7 @@ def delete_json(fn):
 # SPL, the toolkit, the bundle and submits it to the relevant
 # environment
 #
-
-def submit(ctxtype, graph, config=None):
+def submit(ctxtype, graph, username = None, password = None, config={}):
     """
     Submits a topology with the specified context type.
     
@@ -55,6 +55,19 @@ def submit(ctxtype, graph, config=None):
         config = {}
     fj = _createFullJSON(graph, config)
     fn = _createJSONFile(fj)
+
+    # Create connection to SWS
+    if username is not None and password is not None:
+        rc = None
+        try:
+            process = subprocess.Popen(['streamtool', 'geturl', '--api'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            resource_url = process.stdout.readline().strip().decode('utf-8')
+            rc = rest.StreamsContext(username, password, resource_url)
+        except:
+            print_exception("Error creating connection to SWS with username ", username)
+
+        for view in graph.get_views():
+            view.set_streams_context(rc)
     try:
         return _submitUsingJava(ctxtype, fn)
     except:
@@ -127,6 +140,8 @@ def _submitUsingJava(ctxtype, fn):
             stdout_thread.daemon = True
             stdout_thread.start()                
             process.wait()
+            process.stdout.close()
+            process.stderr.close()
             return None
         else:            
             return process.stdout
