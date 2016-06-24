@@ -99,8 +99,8 @@ class OperatorGenerator {
 	    return;
 	String name = (String)viewConfig.get("name");
 	String port = (String)viewConfig.get("port");
-	Double bufferTime = (Double)viewConfig.get("bufferTime");
-	Long sampleSize = (Long)viewConfig.get("sampleSize");
+	Double bufferTime = ((Number)viewConfig.get("bufferTime")).doubleValue();
+	Long sampleSize = ((Number)viewConfig.get("sampleSize")).longValue();
 	sb.append("@view(name = \"");
 	sb.append(splBasename(name));
 	sb.append("\", port = " + port);
