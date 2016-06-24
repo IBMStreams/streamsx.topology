@@ -147,7 +147,7 @@ class Stream(object):
         name = ''.join(random.choice('0123456789abcdef') for x in range(16))
 
         port = new_op.oport.name
-        new_op.oport.operator.setViewConfig({
+        new_op.oport.operator.addViewConfig({
                 'name': name,
                 'port': port,
                 'bufferTime': buffer_time,
