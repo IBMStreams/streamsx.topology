@@ -18,7 +18,6 @@
  my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.__splpy/common/";
 
  require "splpy_operator.pm";
- use Switch;
  require $cmnDir."/splpy_python.pm";
 
  my $module = splpy_Module();
