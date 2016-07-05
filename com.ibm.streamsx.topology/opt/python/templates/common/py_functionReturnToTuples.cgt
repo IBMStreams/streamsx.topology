@@ -62,8 +62,7 @@ if(PyTuple_Check(pyReturnVar)){
 <%
 
     my $ce = "__ERROR__";
-	 switch ($atype) {
-	     case 'list' {
+	     if ($atype eq 'list') {
 		 my $assign_string = pythonToCppPrimitiveConversion("PyList_GetItem(pyAttrValue, i)", $element_type);
 		 %>
 		     SPL::list< <%=$element_type%> > li = SPL::list< <%=$element_type%> >(PyList_Size(pyAttrValue));
@@ -74,7 +73,7 @@ if(PyTuple_Check(pyReturnVar)){
 		     $ce = "li";
 	     }
 	     
-	     case 'map' {
+       elsif ($atype eq 'map') {
 		 my $key_assign_string = pythonToCppPrimitiveConversion("k", $key_type);
 		 my $value_assign_string = pythonToCppPrimitiveConversion("v", $value_type);
 		 %>
@@ -92,7 +91,6 @@ if(PyTuple_Check(pyReturnVar)){
 	     }
 	     
 	     
-	 }
 %>
       otuple.set_<%=$name%>(<%=$ce%>);
 
@@ -168,8 +166,7 @@ if(PyTuple_Check(pyReturnVar)){
          # if(str==NULL) exit(0);
 
 	 my $ce = "__ERROR__";
-	 switch ($atype) {
-	     case 'list' {
+	     if ($atype eq 'list') {
 		 my $assign_string = pythonToCppPrimitiveConversion("PyList_GetItem(pyAttrValue, i)", $element_type);
 		 %>
 		     SPL::list< <%=$element_type%> > li = SPL::list< <%=$element_type%> >(PyList_Size(pyAttrValue));
@@ -180,7 +177,7 @@ if(PyTuple_Check(pyReturnVar)){
 		     $ce = "li";
 	     }
 	     
-	     case 'map' {
+	     elsif($atype eq 'map') {
 		 my $key_assign_string = pythonToCppPrimitiveConversion("k", $key_type);
 		 my $value_assign_string = pythonToCppPrimitiveConversion("v", $value_type);
 		 %>
@@ -196,7 +193,6 @@ if(PyTuple_Check(pyReturnVar)){
 	     else {
 		  $ce = pythonToCppPrimitiveConversion("pyAttrValue", $atype);		     
 	     }
-	 }
          %>
 	 otuple.set_<%=$name%>(<%=$ce%>);
 	 

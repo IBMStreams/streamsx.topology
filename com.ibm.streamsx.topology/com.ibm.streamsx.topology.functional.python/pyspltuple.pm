@@ -1,5 +1,3 @@
-use Switch;
-
 sub convertAndAddToPythonDictionaryObject {
   my $ituple = $_[0];
   my $i = $_[1];

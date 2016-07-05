@@ -1,4 +1,3 @@
-use Switch;
 
 # This function takes the string of a value to be converted and its
 # type, and generates the corresponding code to convert the type from
@@ -55,24 +54,54 @@ sub pythonToCppPrimitiveConversion{
 # if(str==NULL) exit(0);
  
   my ($convert_from_string, $type) = @_;
-    switch ($type) {
-             case 'rstring' {return "SPL::rstring( PyUnicode_AsUTF8($convert_from_string))";}
-             case 'ustring' {return "SPL::ustring::fromUTF8( PyUnicode_AsUTF8($convert_from_string))";}
-             case 'int8' {return "(int8_t) PyLong_AsLong($convert_from_string)";}
-             case 'int16' {return "(int16_t) PyLong_AsLong($convert_from_string)";}
-             case 'int32' {return "(int32_t) PyLong_AsLong($convert_from_string)";}
-             case 'int64' {return "PyLong_AsLong($convert_from_string)";}
-             case 'uint8' {return "(uint8_t) PyLong_AsUnsignedLong($convert_from_string)";}
-             case 'uint16' {return "(uint16_t) PyLong_AsUnsignedLong($convert_from_string)";}
-             case 'uint32' {return "(uint32_t) PyLong_AsUnsignedLong($convert_from_string)";}
-             case 'uint64' {return "PyLong_AsUnsignedLong($convert_from_string)";}
-             case 'float32' {return "(float) PyFloat_AsDouble($convert_from_string)";}
-             case 'float64' {return "PyFloat_AsDouble($convert_from_string)";}
-             case 'boolean' {return "PyObject_IsTrue($convert_from_string)";}
-             case 'complex32' { return "SPL::complex32((SPL::float32) PyComplex_RealAsDouble($convert_from_string), (SPL::float32) PyComplex_ImagAsDouble($convert_from_string))";}
-             case 'complex64' { return "SPL::complex64(PyComplex_RealAsDouble($convert_from_string), PyComplex_ImagAsDouble($convert_from_string))";}
-	     else {SPL::CodeGen::exitln("An unknown type $type was encountered when converting to back to cpp types."); }
-    }
+  if ($type eq 'rstring') {
+    return "SPL::rstring( PyUnicode_AsUTF8($convert_from_string))";
+  }
+  elsif ($type eq 'ustring') {
+    return "SPL::ustring::fromUTF8( PyUnicode_AsUTF8($convert_from_string))";
+  }
+  elsif ($type eq 'int8') {
+    return "(int8_t) PyLong_AsLong($convert_from_string)";
+  }
+  elsif ($type eq 'int16') {
+    return "(int16_t) PyLong_AsLong($convert_from_string)";
+  }
+  elsif ($type eq 'int32') {
+    return "(int32_t) PyLong_AsLong($convert_from_string)";
+  }
+  elsif ($type eq 'int64') {
+    return "PyLong_AsLong($convert_from_string)";
+  }
+  elsif ($type eq 'uint8') {
+    return "(uint8_t) PyLong_AsUnsignedLong($convert_from_string)";
+  }
+  elsif ($type eq 'uint16') {
+    return "(uint16_t) PyLong_AsUnsignedLong($convert_from_string)";
+  }
+  elsif ($type eq 'uint32') {
+    return "(uint32_t) PyLong_AsUnsignedLong($convert_from_string)";
+  }
+  elsif ($type eq 'uint64') {
+    return "PyLong_AsUnsignedLong($convert_from_string)";
+  }
+  elsif ($type eq 'float32') {
+    return "(float) PyFloat_AsDouble($convert_from_string)";
+  }
+  elsif ($type eq 'float64') {
+    return "PyFloat_AsDouble($convert_from_string)";
+  }
+  elsif ($type eq 'boolean') {
+    return "PyObject_IsTrue($convert_from_string)";
+  }
+  elsif ($type eq 'complex32') {
+    return "SPL::complex32((SPL::float32) PyComplex_RealAsDouble($convert_from_string), (SPL::float32) PyComplex_ImagAsDouble($convert_from_string))";
+  }
+  elsif ($type eq 'complex64') {
+    return "SPL::complex64(PyComplex_RealAsDouble($convert_from_string), PyComplex_ImagAsDouble($convert_from_string))";
+  }
+  else {
+    SPL::CodeGen::exitln("An unknown type $type was encountered when converting to back to cpp types.");
+  }
 }
 
 sub cppToPythonListConversion {
