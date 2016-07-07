@@ -111,7 +111,7 @@ sub cppToPythonListConversion {
       my $element_type = SPL::CodeGen::Type::getElementType($type);
 
       my $size = $iv . ".size()";
-      my $get = "pyValue = PyList_New($size);\n";
+      my $get = "PyList_New($size);\n";
 
       my $loop = "for(int i = 0; i < $size; i++){\n";
       $loop = $loop . "PyObject *o =" . cppToPythonPrimitiveConversion("($iv)[i]", $element_type) . ";\n";      
@@ -128,7 +128,7 @@ sub cppToPythonMapConversion {
       my $key_type = SPL::CodeGen::Type::getKeyType($type);
       my $value_type = SPL::CodeGen::Type::getValueType($type);
 
-      my $get = "pyValue = PyDict_New();\n";
+      my $get = "PyDict_New();\n";
 
       my $loop = "for(std::tr1::unordered_map<SPL::$key_type,SPL::$value_type>::const_iterator it = $iv.begin();\n";
       $loop = $loop . "it!=$iv.end(); it++){\n";
@@ -143,13 +143,12 @@ sub cppToPythonMapConversion {
       return $get;
 }
 
-# needs to be tested
 sub cppToPythonSetConversion {
       my ($iv, $type) = @_;
 
       my $element_type = SPL::CodeGen::Type::getElementType($type);
 
-      $get = "pyValue = PySet_New(NULL);\n";
+      $get = "PySet_New(NULL);\n";
 
       my $loop = "for(std::tr1::unordered_set<SPL::$element_type>::const_iterator it = $iv.begin();\n";
       $loop = $loop . "it!=$iv.end(); it++){\n";
@@ -181,13 +180,18 @@ sub convertToPythonValue {
   if (SPL::CodeGen::Type::isList($type)) {
       return cppToPythonListConversion($iv, $type);
   }  
+  # If the type is a set, get the value type, then
+  # iterate through the set to copy its contents.
+  elsif(SPL::CodeGen::Type::isSet($type)){      
+      return cppToPythonSetConversion($iv, $type);
+  }
   # If the type is a map, again, get the key and value types, then
   # iterate through the map to copy its contents.
   elsif(SPL::CodeGen::Type::isMap($type)){      
       return cppToPythonMapConversion($iv, $type);
   }
   elsif(SPL::CodeGen::Type::isPrimitive($type)) { 
-      return "pyValue = " . cppToPythonPrimitiveConversion($iv, $type) . ";\n";
+      return cppToPythonPrimitiveConversion($iv, $type) . ";\n";
   }
   else {
       SPL::CodeGen::errorln("An unknown type was encountered when converting to python types." . $type ); 
@@ -206,7 +210,7 @@ sub convertToPythonValueAsTuple {
   my $type = $_[2];
   my $name = $_[3];
 
-  my $get = convertToPythonValue($ituple, $type, $name);
+  my $get = "pyValue = " . convertToPythonValue($ituple, $type, $name);
   
   # Note PyTuple_SetItem steals the reference to the value
   my $assign =  "    PyTuple_SetItem(pyTuple, " . $i  .", pyValue);\n";

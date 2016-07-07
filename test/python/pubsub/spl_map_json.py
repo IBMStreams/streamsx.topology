@@ -14,6 +14,7 @@ def main():
   ts = topo.subscribe("pytest/spl/map", schema=pytest_schema.all_spl_types)
 
   ts = ts.isolate().map(pytest_funcs.remove_complex).isolate()
+  ts = ts.map(pytest_funcs.change_set_to_list).isolate()
 
   ts.publish("pytest/spl/map/result", schema=CommonSchema.Json)
 
