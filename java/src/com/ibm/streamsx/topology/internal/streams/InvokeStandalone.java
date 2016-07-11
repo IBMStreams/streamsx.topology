@@ -18,7 +18,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 
 import com.ibm.streams.operator.logging.TraceLevel;
-import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
 

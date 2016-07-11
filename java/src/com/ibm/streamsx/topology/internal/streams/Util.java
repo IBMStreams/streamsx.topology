@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.streams;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -30,10 +31,17 @@ public class Util {
     }
 
     private static String verifyStreamsInstall(String installDir) {
-        File f = new File(installDir, ".product");
-        if (!f.exists())
+        File si = new File(installDir);
+        String sicp;
+        try {
+            sicp = si.getCanonicalPath();
+        } catch (IOException e) {
+            sicp = null;
+        }
+        File f = new File(si, ".product");
+        if (sicp == null || !f.exists())
             throw new IllegalStateException(STREAMS_INSTALL+" "+installDir+" is not a Streams install directory.");
-        return installDir;
+        return sicp;
     }
     
     /**
