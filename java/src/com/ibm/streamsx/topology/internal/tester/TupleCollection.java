@@ -482,6 +482,7 @@ public class TupleCollection implements Tester {
         
         final long start = System.currentTimeMillis();
         
+        boolean endConditionValid = false;
         while ((System.currentTimeMillis() - start) < totalWait) {
             long wait = Math.min(1000, totalWait);
             try {
@@ -489,12 +490,14 @@ public class TupleCollection implements Tester {
                 break;
             } catch (TimeoutException e) {
                 if (endCondition.valid()) {                   
+                    endConditionValid = true;
                     break;
                 }
             }   
         }
         if (!future.isDone()) {
-            Topology.TOPOLOGY_LOGGER.warning(topology.getName() + " timed out waiting for condition");
+            if (!endConditionValid)
+                Topology.TOPOLOGY_LOGGER.warning(topology.getName() + " timed out waiting for condition");
             future.cancel(true);
         }
               
