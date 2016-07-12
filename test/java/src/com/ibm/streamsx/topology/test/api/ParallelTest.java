@@ -170,17 +170,8 @@ public class ParallelTest extends TestTopology {
         String submissionWidthName = "width";
         final Integer submissionWidth = 5;
         
-        @SuppressWarnings("serial")
-        Supplier<Integer> supplier = new Supplier<Integer>() {
-            
-            @Override
-            public Integer get() {
-                return submissionWidth;
-            }
-        };
-
         TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
-        TStream<BeaconTuple> pb = fb.parallel(supplier);
+        TStream<BeaconTuple> pb = fb.parallel(() -> submissionWidth);
 
         TStream<Integer> is = pb.transform(randomHashProducer());
         TStream<Integer> joined = is.endParallel();
@@ -190,10 +181,6 @@ public class ParallelTest extends TestTopology {
         Tester tester = topology.getTester();
         Condition<Long> expectedCount = tester.tupleCount(numRegions, 1);
         Condition<List<String>> regionCount = tester.stringContents(numRegions, submissionWidth.toString());
-
-        Map<String,Object> params = new HashMap<>();
-        params.put(submissionWidthName, submissionWidth);
-        getConfig().put(ContextProperties.SUBMISSION_PARAMS, params);
 
         complete(tester, allConditions(regionCount, expectedCount), 10, TimeUnit.SECONDS);
 
