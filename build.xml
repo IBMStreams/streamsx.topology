@@ -3,8 +3,6 @@
         Build the Streams Java functional api.
     </description>
 
-  <!-- Python build is currently disabled unless -Dtopology.python is set -->
-
   <import file="common-build.xml"/>
 
   <property name="release.base" location="release-${ant.project.name}" />
@@ -36,6 +34,7 @@
        <target name="junit.report"/>
        <target name="coverage.report"/>
     </ant>
+    <ant dir="test/python" target="test" inheritAll="true"/>
   </target>
 
   <target name="test.quick" >
@@ -85,7 +84,7 @@
        <antcall target="pydoc"/>
   </target>
   
-  <target name="pydoc" if="topology.python">
+  <target name="pydoc">
        <mkdir dir="${tk}/doc/pydoc"/>
        
        <!-- Copy streamsx directory !-->

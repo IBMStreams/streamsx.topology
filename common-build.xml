@@ -25,9 +25,12 @@
 
   <property name="topology.test.root" location="${streamsx.topology}/test"/>
 
+  <!-- Use the full class path as scalac doesn't seem to always pick
+       up jars theough the manifest, even if -usemanifestcp is set -->
   <path id="streams.classpath">
     <pathelement location="${streams.install}/lib/com.ibm.streams.operator.samples.jar" />
     <pathelement location="${streams.install}/lib/com.ibm.streams.operator.jar" />
+    <pathelement location="${streams.install}/ext/lib/JSON4J.jar" />
   </path>
   <path id="httpclient.classpath">
         <fileset dir="${tk.opt}/httpcomponents-client-4.3.6/lib">
