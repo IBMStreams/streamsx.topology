@@ -227,6 +227,7 @@
        </batchtest>
      </junit>
    </jacoco:coverage>
+   <fail message="Unittests failed" if="topology.tests.failed"/>
    </target>
 
   <target name="unittest.kafka.standalone">
