@@ -51,7 +51,7 @@ public class InvokeSubmit {
         
         File jobidFile = Files.createTempFile("streamsjobid", "txt").toFile();
 
-        List<String> commands = new ArrayList<String>();
+        List<String> commands = new ArrayList<>();
         
         final JobConfig jobConfig = JobConfig.fromProperties(config);
 
@@ -97,8 +97,8 @@ public class InvokeSubmit {
             
         } finally {
             jobidFile.delete();
-            //if (jcoFile != null)
-            //    jcoFile.delete();
+            if (jcoFile != null)
+                jcoFile.delete();
         }
     }
 

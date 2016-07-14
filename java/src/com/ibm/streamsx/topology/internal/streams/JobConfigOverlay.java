@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.streams;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 
@@ -37,7 +38,13 @@ public class JobConfigOverlay {
         JsonObject deploy = new JsonObject();
         deploy.addProperty("fusionScheme", "legacy");
         overlay.add("deploymentConfig", deploy);
+        
+        // Create the top-level structure.
+        JsonObject fullJco = new JsonObject();
+        JsonArray jcos = new JsonArray();
+        jcos.add(overlay);
+        fullJco.add("jobConfigOverlays", jcos);
                
-        return gson.toJson(overlay);
+        return gson.toJson(fullJco);
     }
 }
