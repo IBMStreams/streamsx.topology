@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
+import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -62,7 +64,11 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         JSONObject jsonGraph = app.builder().complete();
         
         JSONObject submission = new JSONObject();
-        submission.put(SUBMISSION_DEPLOY, new JSONObject());
+        JSONObject submissionDeploy = new JSONObject();
+        submission.put(SUBMISSION_DEPLOY, submissionDeploy);
+        if (config.containsKey(KEEP_ARTIFACTS)) {
+            submissionDeploy.put(KEEP_ARTIFACTS, config.get(KEEP_ARTIFACTS));
+        }
         submission.put(SUBMISSION_GRAPH, jsonGraph);
         
         return doSPLCompile(appDirA, submission);
@@ -121,7 +127,7 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
     private void deleteToolkit(File appDir, JSONObject deployConfig) throws IOException {
         Path tkdir = appDir.toPath();
         
-        Boolean keep = (Boolean) deployConfig.get(ContextProperties.KEEP_ARTIFACTS);
+        Boolean keep = (Boolean) deployConfig.get(KEEP_ARTIFACTS);
         if (Boolean.TRUE.equals(keep)) {
             trace.info("Keeping toolkit at: " + tkdir.toString());
             return;
