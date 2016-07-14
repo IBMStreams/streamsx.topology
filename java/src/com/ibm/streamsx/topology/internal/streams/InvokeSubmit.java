@@ -161,8 +161,10 @@ public class InvokeSubmit {
         if (jcoJson == null)
             return null;
                      
-        File jcoFile = File.createTempFile("streamsjco", "json");
+        File jcoFile = File.createTempFile("streamsjco", ".json");
         Files.write(jcoFile.toPath(), jcoJson.getBytes(StandardCharsets.UTF_8));
+        
+        trace.info("JobConfig: " + jcoJson);
         
         commands.add("--jobConfig");
         commands.add(jcoFile.getAbsolutePath());
