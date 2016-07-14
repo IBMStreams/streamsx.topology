@@ -1,11 +1,13 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015  
+# Copyright IBM Corp. 2015, 2016 
  */
 package com.ibm.streamsx.topology.internal.streams;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +16,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
+import com.ibm.streams.operator.version.Product;
+import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
@@ -55,6 +59,54 @@ public class InvokeSubmit {
         commands.add("submitjob");
         commands.add("--outfile");
         commands.add(jobidFile.getAbsolutePath());
+        
+        // Fot IBM Streams 4.2 or later use the job config overlay
+        // V.R.M.F
+        File jcoFile = null;
+        Version ver = Product.getVersion();
+        if (ver.getVersion() > 4 ||
+                (ver.getVersion() ==4 && ver.getRelease() >= 2))
+            jcoFile = fileJobConfig(commands, jobConfig);
+        else
+            explicitJobConfig(commands, jobConfig);
+        commands.add(bundle.getAbsolutePath());
+
+        trace.info("Invoking streamtool submitjob " + bundle.getAbsolutePath());
+        trace.info(Util.concatenate(commands));
+
+        ProcessBuilder pb = new ProcessBuilder(commands);
+
+        try {
+            Process sjProcess = pb.start();
+            ProcessOutputToLogger.log(trace, sjProcess);
+            sjProcess.getOutputStream().close();
+            int rc = sjProcess.waitFor();
+            trace.info("streamtool submitjob complete: return code=" + rc);
+            if (rc != 0)
+                throw new Exception("streamtool submitjob failed!");
+            
+            try (Scanner jobIdScanner = new Scanner(jobidFile)) {
+                if (!jobIdScanner.hasNextBigInteger())
+                    throw new Exception("streamtool failed to supply a job identifier!");
+                
+                BigInteger jobId = jobIdScanner.nextBigInteger();
+                trace.info("Bundle: " + bundle.getName() + " submitted with jobid: " + jobId);            
+                return jobId;
+            }
+            
+            
+        } finally {
+            jobidFile.delete();
+            if (jcoFile != null)
+                jcoFile.delete();
+        }
+    }
+
+    /**
+     * Set the job configuration as explicit streamtool submitjob arguments.
+     * Used for 4.1 and older.
+     */
+    private void explicitJobConfig(List<String> commands, final JobConfig jobConfig) {
         if (jobConfig.getTracing() != null) {
             commands.add("--config");
             commands.add("tracing="+jobConfig.getStreamsTracing());
@@ -95,34 +147,26 @@ public class InvokeSubmit {
                                                 .replace("\\", "\\\\\\"));
             }
         }
-        commands.add(bundle.getAbsolutePath());
+    }
+    
+    /**
+     * Set the job configuration as explicit streamtool submitjob arguments.
+     * Used for 4.1 and older.
+     */
+    private File fileJobConfig(List<String> commands, final JobConfig jobConfig) throws IOException {
+        
+        JobConfigOverlay jco = new JobConfigOverlay(jobConfig);
 
-        trace.info("Invoking streamtool submitjob " + bundle.getAbsolutePath());
-        trace.info(Util.concatenate(commands));
-
-        ProcessBuilder pb = new ProcessBuilder(commands);
-
-        try {
-            Process sjProcess = pb.start();
-            ProcessOutputToLogger.log(trace, sjProcess);
-            sjProcess.getOutputStream().close();
-            int rc = sjProcess.waitFor();
-            trace.info("streamtool submitjob complete: return code=" + rc);
-            if (rc != 0)
-                throw new Exception("streamtool submitjob failed!");
-            
-            try (Scanner jobIdScanner = new Scanner(jobidFile)) {
-                if (!jobIdScanner.hasNextBigInteger())
-                    throw new Exception("streamtool failed to supply a job identifier!");
-                
-                BigInteger jobId = jobIdScanner.nextBigInteger();
-                trace.info("Bundle: " + bundle.getName() + " submitted with jobid: " + jobId);            
-                return jobId;
-            }
-            
-            
-        } finally {
-            jobidFile.delete();
-        }
+        String jcoJson = jco.fullOverlay();
+        if (jcoJson == null)
+            return null;
+                     
+        File jcoFile = File.createTempFile("streamsjco", "json");
+        Files.write(jcoFile.toPath(), jcoJson.getBytes(StandardCharsets.UTF_8));
+        
+        commands.add("--jobConfig");
+        commands.add(jcoFile.getAbsolutePath());
+        
+        return jcoFile;      
     }
 }
