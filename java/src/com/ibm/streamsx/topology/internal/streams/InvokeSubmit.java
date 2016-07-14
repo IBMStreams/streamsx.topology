@@ -97,8 +97,8 @@ public class InvokeSubmit {
             
         } finally {
             jobidFile.delete();
-            if (jcoFile != null)
-                jcoFile.delete();
+            //if (jcoFile != null)
+            //    jcoFile.delete();
         }
     }
 
