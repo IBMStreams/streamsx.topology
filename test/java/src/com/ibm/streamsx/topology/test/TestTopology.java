@@ -199,20 +199,38 @@ public class TestTopology {
     /**
      * Only run a test at a specific minimum version or higher.
      */
-    protected void checkMinimumVersion(String reason, int ...vrmf) {
+    protected void checkMinimumVersion(String reason, int... vrmf) {
         switch (vrmf.length) {
-        case 4:
-            assumeTrue(Product.getVersion().getFix() >= vrmf[3]);
-        case 3:
-            assumeTrue(Product.getVersion().getMod() >= vrmf[2]);
         case 2:
-            assumeTrue(Product.getVersion().getRelease() >= vrmf[1]);
+            assumeTrue((Product.getVersion().getVersion() > vrmf[0])
+                     || (Product.getVersion().getVersion() == vrmf[0] &&
+                             Product.getVersion().getRelease() >= vrmf[1]));
+            break;
         case 1:
             assumeTrue(Product.getVersion().getVersion() >= vrmf[0]);
             break;
         default:
             fail("Invalid version supplied!");
-        }    }
+        }
+    }
+    
+    /**
+     * Only run a test at a specific maximum version or lower.
+     */
+    protected void checkMaximumVersion(String reason, int... vrmf) {
+        switch (vrmf.length) {
+        case 2:
+            assumeTrue((Product.getVersion().getVersion() < vrmf[0])
+                     || (Product.getVersion().getVersion() == vrmf[0] &&
+                             Product.getVersion().getRelease() <= vrmf[1]));
+            break;
+        case 1:
+            assumeTrue(Product.getVersion().getVersion() <= vrmf[0]);
+            break;
+        default:
+            fail("Invalid version supplied!");
+        }
+    }
     
     /**
      * Allow a test to be skipped for a specific version.

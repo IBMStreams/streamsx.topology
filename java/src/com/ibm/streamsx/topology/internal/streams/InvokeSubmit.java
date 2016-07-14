@@ -69,6 +69,15 @@ public class InvokeSubmit {
             jcoFile = fileJobConfig(commands, jobConfig);
         else
             explicitJobConfig(commands, jobConfig);
+        
+        if (jobConfig.getOverrideResourceLoadProtection() != null) {
+            
+            if (jobConfig.getOverrideResourceLoadProtection()) {
+                commands.add("--override");
+                commands.add("HostLoadProtection");
+            }
+        }
+        
         commands.add(bundle.getAbsolutePath());
 
         trace.info("Invoking streamtool submitjob " + bundle.getAbsolutePath());
@@ -119,13 +128,7 @@ public class InvokeSubmit {
             commands.add("--jobgroup");
             commands.add(jobConfig.getJobGroup());
         }
-        if (jobConfig.getOverrideResourceLoadProtection() != null) {
-            
-            if (jobConfig.getOverrideResourceLoadProtection()) {
-                commands.add("--override");
-                commands.add("HostLoadProtection");
-            }
-        }
+
         if (jobConfig.getPreloadApplicationBundles() != null) {
             commands.add("--config");
             commands.add("preloadApplicationBundles="+jobConfig.getPreloadApplicationBundles());
