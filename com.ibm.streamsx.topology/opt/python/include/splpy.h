@@ -209,6 +209,14 @@ namespace streamsx {
     */
     static void flush_PyErr_Print() {
         PyErr_Print();
+        flush_PyErrPyOut();
+    }
+
+    /*
+    * Flush Python stderr and stdout.
+    */
+    static void flush_PyErrPyOut() {
+        PyRun_SimpleString("sys.stdout.flush()");
         PyRun_SimpleString("sys.stderr.flush()");
     }
 

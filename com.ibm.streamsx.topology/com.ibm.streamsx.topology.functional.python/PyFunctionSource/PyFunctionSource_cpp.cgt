@@ -62,7 +62,8 @@ void MY_OPERATOR::allPortsReady()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    // This is an asynchronous call
+    streamsx::topology::PyGILLock lock;
+    streamsx::topology::Splpy::flush_PyErrPyOut();
 }
 
 // Processing for source and threaded operators   
