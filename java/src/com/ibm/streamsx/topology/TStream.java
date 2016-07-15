@@ -618,10 +618,27 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * by subscribing applications. Topic level separators can appear anywhere
      * in a topic filter or topic name. Adjacent topic level separators indicate
      * a zero length topic level.
-     * 
      * </P>
+     * <p>
+     * The type of the stream must be known to ensure that
+     * {@link Topology#subscribe(String, Class) subscribers}
+     * match on the Java type. Where possible the type of a
+     * stream is determined automatically, but due to Java type
+     * erasure this is not always possible. A stream can be
+     * assigned its type using {@link #asType(Class)}.
+     * For example, with a stream containing tuples of type
+     * {@code Location} it can be correctly published as follows:
+     * <pre>
+     * <code>
+     * TStream&lt;Location> locations = ...
+     * locations.asType(Location.class).publish("location/bus");
+     * </code>
+     * </pre>
+     * </p>
      * 
      * @param topic Topic name to publish tuples to.
+     *
+     * @exception IllegalStateException Type of the stream is not known.
      * 
      * @see Topology#subscribe(String, Class)
      * @see com.ibm.streamsx.topology.spl.SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
@@ -707,13 +724,31 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * in a topic filter or topic name. Adjacent topic level separators indicate
      * a zero length topic level.
      * </P>
-
+     * <p>
+     * The type of the stream must be known to ensure that
+     * {@link Topology#subscribe(String, Class) subscribers}
+     * match on the Java type. Where possible the type of a
+     * stream is determined automatically, but due to Java type
+     * erasure this is not always possible. A stream can be
+     * assigned its type using {@link #asType(Class)}.
+     * For example, with a stream containing tuples of type
+     * {@code Location} it can be correctly published as follows:
+     * <pre>
+     * <code>
+     * TStream&lt;Location> locations = ...
+     * locations.asType(Location.class).publish("location/bus");
+     * </code>
+     * </pre>
+     * </p>
      * 
      * @param topic Topic name to publish tuples to.
      * @param allowFilter Allow SPL filters specified by SPL application to be executed
      * in the publishing application.
+     *
+     * @exception IllegalStateException Type of the stream is not known.
      * 
      * @see Topology#subscribe(String, Class)
+     * @see #asType(Class)
      * @see com.ibm.streamsx.topology.spl.SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
      */
     void publish(String topic, boolean allowFilter);
