@@ -8,7 +8,6 @@ import json
 import subprocess
 import threading
 import sys, traceback
-from streamsx import rest
 
 #
 # Utilities
@@ -60,19 +59,20 @@ def submit(ctxtype, graph, config = None, username = None, password = None):
     if username is not None and password is not None:
         rc = None
         try:
-            process = subprocess.Popen(['streamtool', 'geturl', '--api'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            process = subprocess.Popen(['streamtool', 'geturl', '--api'],
+                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             resource_url = process.stdout.readline().strip().decode('utf-8')
-            rc = rest.StreamsContext(username, password, resource_url)
         except:
-            print_exception("Error creating connection to SWS with username ", username)
+            print_exception("Error getting SWS resource url ", username)
 
         for view in graph.get_views():
-            view.set_streams_context(rc)
+            view.set_streams_context_config({'username': username, 'password': password, 'resource_url': resource_url})
     try:
         return _submitUsingJava(ctxtype, fn)
     except:
         print_exception("Error submitting with java")
         delete_json(fn)
+
 
 def _createFullJSON(graph, config):
     fj = {}
