@@ -32,7 +32,7 @@ def delete_json(fn):
 # SPL, the toolkit, the bundle and submits it to the relevant
 # environment
 #
-def submit(ctxtype, graph, username = None, password = None, config={}):
+def submit(ctxtype, graph, config = None, username = None, password = None):
     """
     Submits a topology with the specified context type.
     
