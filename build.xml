@@ -16,7 +16,7 @@
     <ant dir="test/python" inheritAll="true"/>
    <exec executable="git">
       <arg value="clone"/>
-      <arg value="https://github.com/wmarshall484/streamsx.utility.git"/>
+      <arg value="https://github.com/IBMStreams/streamsx.utility.git"/>
    </exec>
     <exec executable="cp">
       <arg value="streamsx.utility/python/packages/streamsx/rest.py"/>
