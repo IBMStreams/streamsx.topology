@@ -440,6 +440,10 @@ class View(threading.Thread):
 
     def initialize_rest(self):
         if not self.is_rest_initialized:
+            if self.streams_context_config['username'] is None or \
+               self.streams_context_config['password'] is None:
+                raise ValueError(
+                    "WARNING: Both a username and password must be supplied when submitting a job in order to access view data")
             from streamsx import rest
             rc = rest.StreamsContext(self.streams_context_config['username'],
                                      self.streams_context_config['password'],
