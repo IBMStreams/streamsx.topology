@@ -448,6 +448,7 @@ class View(threading.Thread):
             rc = rest.StreamsContext(self.streams_context_config['username'],
                                      self.streams_context_config['password'],
                                      self.streams_context_config['resource_url'])
+            self.is_rest_initialized = True
             self.set_streams_context(rc)
 
     def stop_data_fetch(self):
