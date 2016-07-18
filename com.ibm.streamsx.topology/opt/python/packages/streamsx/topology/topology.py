@@ -433,13 +433,29 @@ class View(threading.Thread):
         self.sample_size = sample_size
         self.streams_context = None
         self.view_object = None
+        self.streams_context_config = {'username': '', 'password': '', 'resource_url': ''}
 
         self._last_collection_time = -1
+        self.is_rest_initialized = False
+
+    def initialize_rest(self):
+        if not self.is_rest_initialized:
+            if self.streams_context_config['username'] is None or \
+               self.streams_context_config['password'] is None:
+                raise ValueError(
+                    "WARNING: Both a username and password must be supplied when submitting a job in order to access view data")
+            from streamsx import rest
+            rc = rest.StreamsContext(self.streams_context_config['username'],
+                                     self.streams_context_config['password'],
+                                     self.streams_context_config['resource_url'])
+            self.is_rest_initialized = True
+            self.set_streams_context(rc)
 
     def stop_data_fetch(self):
         self._stop.set()
 
     def start_data_fetch(self):
+        self.initialize_rest()
         self._stop.clear()
         self._get_view_object()
         t = threading.Thread(target=self)
@@ -453,6 +469,12 @@ class View(threading.Thread):
             if _items is not None:
                 for itm in _items:
                     self.items.put(itm)
+
+    def set_streams_context_config(self, conf):
+        self.streams_context_config = conf
+
+    def get_streams_context_config(self):
+        return self.streams_context_config
 
     def set_streams_context(self, sc):
         self.streams_context = sc
