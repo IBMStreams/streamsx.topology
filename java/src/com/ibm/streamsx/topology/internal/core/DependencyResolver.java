@@ -189,9 +189,6 @@ public class DependencyResolver {
         
         ArrayList<String> jars = new ArrayList<String>();
         for(Path dep : globalDependencies){
-            if(previouslyCopiedDependencies.containsKey(dep)){
-                continue;
-            }
             String jarName = resolveDependency(dep, config);
             jars.add("impl/lib/" + jarName);	    
         }	
