@@ -130,7 +130,6 @@ public class PublishSubscribeTest extends TestTopology {
         completeAndValidate(strings, 20, "<book>Catch 22</book>", "<bus>V</bus>");
     }
     
-    @SuppressWarnings("serial")
     public TStream<String> publishXMLTopology() throws Exception {
     
         final Topology t = new Topology();
@@ -148,10 +147,7 @@ public class PublishSubscribeTest extends TestTopology {
         
         TStream<XML> subscribe = t.subscribe("testPublishXML", XML.class);
         
-        TStream<String> strings = subscribe.transform(new Function<XML,String>() {
-
-            @Override
-            public String apply(XML v) {
+        TStream<String> strings = subscribe.transform(v-> {
                 byte[] data = new byte[100];
                 InputStream in = v.getInputStream();
                 int read;
@@ -161,7 +157,7 @@ public class PublishSubscribeTest extends TestTopology {
                     return null;
                 }
                 return new String(data, 0, read, StandardCharsets.UTF_8);
-            }});      
+            });      
 
         return strings;
     }
