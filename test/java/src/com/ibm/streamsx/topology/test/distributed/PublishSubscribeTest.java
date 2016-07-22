@@ -105,7 +105,6 @@ public class PublishSubscribeTest extends TestTopology {
         completeAndValidate(strings, 20, "93245", "hello", "was a blob!");
     }
     
-    @SuppressWarnings("serial")
     public TStream<String> publishBlobTopology() throws Exception {
     
         final Topology t = new Topology();
@@ -113,18 +112,13 @@ public class PublishSubscribeTest extends TestTopology {
         source = addStartupDelay(source);
         
         TStream<Blob> blobs = source.transform(
-                v -> ValueFactory.newBlob(v.getBytes(StandardCharsets.UTF_8)));
+                v -> ValueFactory.newBlob(v.getBytes(StandardCharsets.UTF_8))).asType(Blob.class);
         
         blobs.publish("testPublishBlob");
         
         TStream<Blob> subscribe = t.subscribe("testPublishBlob", Blob.class);
         
-        TStream<String> strings = subscribe.transform(new Function<Blob,String>() {
-
-            @Override
-            public String apply(Blob v) {
-                return new String(v.getData(), StandardCharsets.UTF_8);
-            }});      
+        TStream<String> strings = subscribe.transform(v -> new String(v.getData(), StandardCharsets.UTF_8));
 
         return strings;
     }
@@ -148,7 +142,7 @@ public class PublishSubscribeTest extends TestTopology {
                 } catch (IOException e) {
                     return null;
                 }
-            });
+            }).asType(XML.class);
         
         xml.publish("testPublishXML");
         
@@ -185,7 +179,7 @@ public class PublishSubscribeTest extends TestTopology {
         TStream<String> source = t.strings("publishing", "a", "java object");       
         source = addStartupDelay(source);
         
-        TStream<SimpleString> objects = source.transform(SimpleString::new);
+        TStream<SimpleString> objects = source.transform(SimpleString::new).asType(SimpleString.class);
         
         objects.publish("testPublishJavaObject");
         
