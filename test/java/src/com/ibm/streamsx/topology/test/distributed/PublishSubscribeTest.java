@@ -30,7 +30,6 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLSchemas;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -113,12 +112,8 @@ public class PublishSubscribeTest extends TestTopology {
         TStream<String> source = t.strings("93245", "hello", "was a blob!");       
         source = addStartupDelay(source);
         
-        TStream<Blob> blobs = source.transform(new Function<String,Blob>() {
-
-            @Override
-            public Blob apply(String v) {
-                return ValueFactory.newBlob(v.getBytes(StandardCharsets.UTF_8));
-            }});
+        TStream<Blob> blobs = source.transform(
+                v -> ValueFactory.newBlob(v.getBytes(StandardCharsets.UTF_8)));
         
         blobs.publish("testPublishBlob");
         
@@ -148,16 +143,12 @@ public class PublishSubscribeTest extends TestTopology {
         TStream<String> source = t.strings("<book>Catch 22</book>", "<bus>V</bus>");       
         source = addStartupDelay(source);
         
-        TStream<XML> xml = source.transform(new Function<String,XML>() {
-
-            @Override
-            public XML apply(String v) {
-                try {
-                    return ValueFactory.newXML(new ByteArrayInputStream(v.getBytes(StandardCharsets.UTF_8)));
+        TStream<XML> xml = source.transform(
+                v -> { try { return ValueFactory.newXML(new ByteArrayInputStream(v.getBytes(StandardCharsets.UTF_8)));
                 } catch (IOException e) {
                     return null;
                 }
-            }});
+            });
         
         xml.publish("testPublishXML");
         
@@ -188,19 +179,13 @@ public class PublishSubscribeTest extends TestTopology {
         completeAndValidate(strings, 20, "publishing", "a", "java object");
     }
     
-    @SuppressWarnings("serial")
     public TStream<String> publishJavaObjectTopology() throws Exception {
     
         final Topology t = new Topology();
         TStream<String> source = t.strings("publishing", "a", "java object");       
         source = addStartupDelay(source);
         
-        TStream<SimpleString> objects = source.transform(new Function<String,SimpleString>() {
-
-            @Override
-            public SimpleString apply(String v) {
-                return new SimpleString(v);
-            }});
+        TStream<SimpleString> objects = source.transform(SimpleString::new);
         
         objects.publish("testPublishJavaObject");
         
@@ -216,7 +201,6 @@ public class PublishSubscribeTest extends TestTopology {
      * but ensure that the subscriber selects the correct one
      * based upon type.
      */
-    @SuppressWarnings("serial")
     public TStream<String> publishJavaObjectMultiple() throws Exception {
     
         final Topology t = new Topology();
@@ -232,12 +216,7 @@ public class PublishSubscribeTest extends TestTopology {
         TStream<String> source = t.strings("publishing", "a", "java object");       
         source = addStartupDelay(source);
         
-        TStream<SimpleString> objects = source.transform(new Function<String,SimpleString>() {
-
-            @Override
-            public SimpleString apply(String v) {
-                return new SimpleString(v);
-            }}).asType(SimpleString.class);
+        TStream<SimpleString> objects = source.transform(SimpleString::new).asType(SimpleString.class);
         
         objects.publish("testPublishJavaObjects");
                 
