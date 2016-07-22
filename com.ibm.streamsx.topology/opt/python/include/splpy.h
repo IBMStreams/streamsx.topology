@@ -1,3 +1,16 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015,2016
+*/
+
+/*
+ * Compile using the stable abi assuming 3.5.
+ * https://docs.python.org/3/c-api/stable.html
+ *
+ */
+
+#define Py_LIMITED_API 0x03050000
+
 #include "Python.h"
 #include <string>
 #include <sys/types.h>
