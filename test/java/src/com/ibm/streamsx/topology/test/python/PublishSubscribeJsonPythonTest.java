@@ -12,7 +12,6 @@ import org.junit.Test;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.test.distributed.PublishSubscribeTest.Delay;
 
 /**
  * Test publish/subscribe. These tests just use publish/subscribe
@@ -55,7 +54,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
    	    	
         TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
         
-        source = source.modify(new Delay<JSONObject>(10)).asType(JSONObject.class);
+        source = addStartupDelay(source).asType(JSONObject.class);
         
         source.publish("pytest/json/map");
         
@@ -95,7 +94,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
    	    	
         TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
         
-        source = source.modify(new Delay<JSONObject>(10)).asType(JSONObject.class);
+        source = addStartupDelay(source).asType(JSONObject.class);
         
         source.publish("pytest/json/filter");
         
@@ -141,7 +140,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
    	    	
         TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
         
-        source = source.modify(new Delay<JSONObject>(15)).asType(JSONObject.class);
+        source = addStartupDelay(source).asType(JSONObject.class);
         
         source.publish("pytest/json/flatmap");
         

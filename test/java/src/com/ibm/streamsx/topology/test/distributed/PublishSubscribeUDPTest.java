@@ -27,7 +27,6 @@ import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
-import com.ibm.streamsx.topology.test.distributed.PublishSubscribeTest.Delay;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
@@ -67,7 +66,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
         if (width > 0)
             source = source.parallel(width);
         
-        source = source.modify(new Delay<String>());
+        source = addStartupDelay(source);
         
         source.publish(topic);
         
@@ -112,7 +111,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
         if (pwidth > 0)
             source = source.parallel(pwidth);
         
-        source = source.modify(new Delay<String>());
+        source = addStartupDelay(source);
         
         source.publish(topic);
         
@@ -133,11 +132,11 @@ public class PublishSubscribeUDPTest extends TestTopology {
         final Topology t = new Topology();
         TStream<String> source = t.strings("325", "457", "9325", "hello", "udp");        
         source = source.parallel(4);      
-        source = source.modify(new Delay<String>(20));     
+        source = addStartupDelay(source);   
         source.publish(topic);
         
         TStream<String> source2 = t.strings("non-udp", "single", "346");
-        source2 = source2.modify(new Delay<String>(20));     
+        source2 = addStartupDelay(source);     
         source2.publish(topic);        
         
         
@@ -175,7 +174,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
         if (width > 0)
             source = source.parallel(width);
         
-        source = source.modify(new Delay<BigDecimal>());
+        source = addStartupDelay(source);
         
         source.asType(BigDecimal.class).publish(topic);
         
@@ -202,7 +201,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
         final Topology t = new Topology();
         TStream<BigDecimal> source = t.constants(data);        
         source = source.parallel(4);      
-        source = source.modify(new Delay<BigDecimal>(20));     
+        source = addStartupDelay(source);     
         source.asType(BigDecimal.class).publish(topic);
         
         List<BigDecimal> data2 = new ArrayList<>(10);
@@ -211,7 +210,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
 
         
         TStream<BigDecimal> source2 = t.constants(data2);
-        source2 = source2.modify(new Delay<BigDecimal>(20));     
+        source2 = addStartupDelay(source);     
         source2.asType(BigDecimal.class).publish(topic);   
         
         

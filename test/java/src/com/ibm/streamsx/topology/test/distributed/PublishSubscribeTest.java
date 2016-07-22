@@ -56,7 +56,7 @@ public class PublishSubscribeTest extends TestTopology {
         final Topology t = new Topology();
         TStream<String> source = t.strings("325", "457", "9325");
         
-        source = source.modify(new Delay<String>());
+        source = addStartupDelay(source);
         
         source.publish("testPublishString");
         
@@ -69,12 +69,12 @@ public class PublishSubscribeTest extends TestTopology {
     public void testPublishStringMultipleTopics() throws Exception {
         final Topology t = new Topology();
         TStream<String> source = t.strings("325", "457", "9325");       
-        source = source.modify(new Delay<String>());       
+        source = addStartupDelay(source);   
         source.publish("testPublishString");
         
         // A stream that should not be subscribed to!
         TStream<String> source2 = t.strings("999", "777", "8888");       
-        source2 = source2.modify(new Delay<String>());       
+        source2 = addStartupDelay(source2);    
         source2.publish("testPublishString2");
  
         
@@ -89,7 +89,7 @@ public class PublishSubscribeTest extends TestTopology {
         final Topology t = new Topology();
         TStream<String> source = t.strings("hello", "SPL!");
         
-        source = source.modify(new Delay<String>());
+        source = addStartupDelay(source);
         
         source.publish("testPublishStringSPL");
         
@@ -107,11 +107,11 @@ public class PublishSubscribeTest extends TestTopology {
     }
     
     @SuppressWarnings("serial")
-    public static TStream<String> publishBlobTopology() throws Exception {
+    public TStream<String> publishBlobTopology() throws Exception {
     
         final Topology t = new Topology();
         TStream<String> source = t.strings("93245", "hello", "was a blob!");       
-        source = source.modify(new Delay<String>());
+        source = addStartupDelay(source);
         
         TStream<Blob> blobs = source.transform(new Function<String,Blob>() {
 
@@ -142,11 +142,11 @@ public class PublishSubscribeTest extends TestTopology {
     }
     
     @SuppressWarnings("serial")
-    public static TStream<String> publishXMLTopology() throws Exception {
+    public TStream<String> publishXMLTopology() throws Exception {
     
         final Topology t = new Topology();
         TStream<String> source = t.strings("<book>Catch 22</book>", "<bus>V</bus>");       
-        source = source.modify(new Delay<String>());
+        source = addStartupDelay(source);
         
         TStream<XML> xml = source.transform(new Function<String,XML>() {
 
@@ -189,11 +189,11 @@ public class PublishSubscribeTest extends TestTopology {
     }
     
     @SuppressWarnings("serial")
-    public static TStream<String> publishJavaObjectTopology() throws Exception {
+    public TStream<String> publishJavaObjectTopology() throws Exception {
     
         final Topology t = new Topology();
         TStream<String> source = t.strings("publishing", "a", "java object");       
-        source = source.modify(new Delay<String>());
+        source = addStartupDelay(source);
         
         TStream<SimpleString> objects = source.transform(new Function<String,SimpleString>() {
 
@@ -217,7 +217,7 @@ public class PublishSubscribeTest extends TestTopology {
      * based upon type.
      */
     @SuppressWarnings("serial")
-    public static TStream<String> publishJavaObjectMultiple() throws Exception {
+    public TStream<String> publishJavaObjectMultiple() throws Exception {
     
         final Topology t = new Topology();
         List<SimpleInt> ints = new ArrayList<>();
@@ -226,11 +226,11 @@ public class PublishSubscribeTest extends TestTopology {
         ints.add(new SimpleInt(2));
         ints.add(new SimpleInt(3));
         TStream<SimpleInt> sints = t.constants(ints).asType(SimpleInt.class);
-        sints = sints.modify(new Delay<SimpleInt>());
+        sints = addStartupDelay(sints);
         sints.publish("testPublishJavaObjects");
         
         TStream<String> source = t.strings("publishing", "a", "java object");       
-        source = source.modify(new Delay<String>());
+        source = addStartupDelay(source);
         
         TStream<SimpleString> objects = source.transform(new Function<String,SimpleString>() {
 
@@ -246,37 +246,6 @@ public class PublishSubscribeTest extends TestTopology {
         TStream<String> strings = StringStreams.toString(subscribe);  
 
         return strings;
-    }
-    
-    /**
-     * Delay to ensure that tuples are not dropped while dynamic
-     * connections are being made.
-     */
-    @SuppressWarnings("serial")
-    public static class Delay<T> implements UnaryOperator<T> {
-        
-        private boolean first = true;
-        private long delay = 5000;
-        
-        public Delay(int delay) {
-            this.delay = delay * 1000;
-        }
-        public Delay() {
-        }
-
-        @Override
-        public T apply(T v)  {
-            if (first) {
-                try {
-                    Thread.sleep(delay);
-                } catch (InterruptedException e) {
-                    return null;
-                }
-                first = false;
-            }
-            
-            return v;
-        }
     }
     
     @SuppressWarnings("serial")
@@ -312,7 +281,7 @@ public class PublishSubscribeTest extends TestTopology {
         
         SPLStream source = SPLStreamsTest.testTupleStream(t);
                 
-        source = source.modify(new Delay<Tuple>());
+        source = addStartupDelay(source);
         
         source.publish("testSPLPublishNoFilterSFilteredSubscribe", false);
         
@@ -332,7 +301,7 @@ public class PublishSubscribeTest extends TestTopology {
         
         SPLStream source = SPLStreamsTest.testTupleStream(t);
                 
-        source = source.modify(new Delay<Tuple>());
+        source = addStartupDelay(source);
         
         source.publish("testSPLPublishAllowFilterWithSubscribe", true);
         
@@ -369,7 +338,7 @@ public class PublishSubscribeTest extends TestTopology {
         
         SPLStream source = SPLStreamsTest.testTupleStream(t);
                 
-        source = source.modify(new Delay<Tuple>());
+        source = addStartupDelay(source);
         
         source.publish(topic, allowFilters);
         

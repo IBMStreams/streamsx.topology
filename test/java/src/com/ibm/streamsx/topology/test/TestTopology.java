@@ -22,6 +22,7 @@ import java.util.logging.Level;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
+import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.version.Product;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
@@ -29,6 +30,7 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
@@ -142,6 +144,24 @@ public class TestTopology {
     
     public Map<String,Object> getConfig() {
         return config;
+    }
+    
+    /**
+     * Adds a startup delay based upon the context.
+     * @param stream
+     * @return
+     */
+    public <T,S> TStream<T> addStartupDelay(TStream<T> stream) {
+        if (getTesterType() == Type.DISTRIBUTED_TESTER) {
+            return stream.modify(new InitialDelay<T>(10*1000));
+        }
+        return stream;
+    }
+    public SPLStream addStartupDelay(SPLStream stream) {
+        if (getTesterType() == Type.DISTRIBUTED_TESTER) {
+            return stream.modify(new InitialDelay<Tuple>(10*1000));
+        }
+        return stream;
     }
 
     /**

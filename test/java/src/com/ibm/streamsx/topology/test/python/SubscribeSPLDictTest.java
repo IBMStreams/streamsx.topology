@@ -9,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +24,6 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
-import com.ibm.streamsx.topology.test.distributed.PublishSubscribeTest.Delay;
 import com.ibm.streamsx.topology.test.splpy.PythonFunctionalOperatorsTest;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -38,7 +36,7 @@ public class SubscribeSPLDictTest extends PublishSubscribePython {
         
         // Publish a stream with all the SPL types supported by Python including sets
         SPLStream tuples = PythonFunctionalOperatorsTest.testTupleStream(topology, true);
-        tuples = tuples.modify(new Delay<Tuple>(15));
+        tuples = addStartupDelay(tuples);
         tuples.publish("pytest/spl/map");
                      
         SPLStream viaSPL = SPL.invokeOperator("spl.relational::Functor", tuples, tuples.getSchema(), null);

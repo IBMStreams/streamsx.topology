@@ -77,8 +77,6 @@ public class SPLJavaPrimitiveTest extends TestTopology {
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
         assumeTrue(SC_OK);
         
-        skipVersion("isolate", 4, 2);
-
         Topology t = new Topology("testIsolatedVmArgs1"); 
         SPL.addToolkit(t, new File(getTestRoot(), "spl/testtk"));
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);

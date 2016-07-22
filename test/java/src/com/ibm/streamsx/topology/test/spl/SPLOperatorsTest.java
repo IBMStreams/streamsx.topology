@@ -247,10 +247,6 @@ public class SPLOperatorsTest extends TestTopology {
 
     @Test
     public void testSubmissionParamsWithoutDefault() throws Exception {
-        
-        if (getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER) {
-            skipVersion("streamtool: see commit 24763a8c5ebb5ccee4acd65c2cb5256a9f212208", 4, 2);
-        }
            
         // Test operator parameters with submission time values without defaults
         testOpParams("testSubmissionParamsWithoutDefault", new OpParamAdder() {
