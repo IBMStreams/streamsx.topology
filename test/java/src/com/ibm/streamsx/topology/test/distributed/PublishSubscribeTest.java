@@ -4,39 +4,37 @@
  */
 package com.ibm.streamsx.topology.test.distributed;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.ibm.json.java.JSONObject;
-import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.types.Blob;
 import com.ibm.streams.operator.types.ValueFactory;
 import com.ibm.streams.operator.types.XML;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
-import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLSchemas;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
-import com.ibm.streamsx.topology.test.spl.SPLStreamsTest;
+import com.ibm.streamsx.topology.tester.Condition;
 
 /**
  * Test publish/subscribe. These tests just use publish/subscribe
@@ -52,89 +50,100 @@ public class PublishSubscribeTest extends TestTopology {
 
     @Test
     public void testPublishString() throws Exception {
-        final Topology t = new Topology();
-        TStream<String> source = t.strings("325", "457", "9325");
         
-        source = addStartupDelay(source);
-        
+        TStream<String> source = source();
+       
         source.publish("testPublishString");
         
-        TStream<String> subscribe = t.subscribe("testPublishString", String.class);
-
-        completeAndValidate(subscribe, 20, "325", "457", "9325");
+        TStream<String> subscribe = source.topology().subscribe("testPublishString", String.class);
+        
+        checkSubscribedAsStrings(subscribe);
+    }
+    
+    private TStream<String> source() {
+        return source("S");
+    }
+    
+    private TStream<String> source(String prefix) {
+        final Topology t = new Topology();
+        int[] sv = new int[1];
+        TStream<String> source = t.periodicSource(() -> prefix + sv[0]++,
+                50, TimeUnit.MILLISECONDS);
+ 
+        return source.asType(String.class);
     }
     
     @Test
     public void testPublishStringMultipleTopics() throws Exception {
-        final Topology t = new Topology();
-        TStream<String> source = t.strings("325", "457", "9325");       
-        source = addStartupDelay(source);   
+
+        TStream<String> source = source();       
         source.publish("testPublishString");
         
         // A stream that should not be subscribed to!
-        TStream<String> source2 = t.strings("999", "777", "8888");       
-        source2 = addStartupDelay(source2);    
+        TStream<String> source2 = source("X");         
         source2.publish("testPublishString2");
- 
-        
-        TStream<String> subscribe = t.subscribe("testPublishString", String.class);
+       
+        TStream<String> subscribe = source.topology().subscribe("testPublishString", String.class);
 
-        completeAndValidate(subscribe, 20, "325", "457", "9325");
+        checkSubscribedAsStrings(subscribe);
     }
     
     // Test a exported String Java stream can be subscribed to by a SPL stream.
     @Test
     public void testPublishStringToSPL() throws Exception {
-        final Topology t = new Topology();
-        TStream<String> source = t.strings("hello", "SPL!");
-        
-        source = addStartupDelay(source);
+        TStream<String> source = source();
         
         source.publish("testPublishStringSPL");
         
-        SPLStream subscribe = SPLStreams.subscribe(t, "testPublishStringSPL", SPLSchemas.STRING);        
+        SPLStream subscribe = SPLStreams.subscribe(source.topology(), "testPublishStringSPL", SPLSchemas.STRING);        
 
-        completeAndValidate(subscribe.toStringStream(), 20, "hello", "SPL!");
-    }
-    
+        checkSubscribedAsStrings(subscribe.toStringStream());
+    }    
     
     @Test
     public void testPublishBlob() throws Exception {
-        TStream<String> strings = publishBlobTopology();
-        
-        completeAndValidate(strings, 20, "93245", "hello", "was a blob!");
-    }
-    
-    public TStream<String> publishBlobTopology() throws Exception {
-    
-        final Topology t = new Topology();
-        TStream<String> source = t.strings("93245", "hello", "was a blob!");       
-        source = addStartupDelay(source);
-        
-        TStream<Blob> blobs = source.transform(
+           
+        TStream<Blob> blobs = source().transform(
                 v -> ValueFactory.newBlob(v.getBytes(StandardCharsets.UTF_8))).asType(Blob.class);
         
         blobs.publish("testPublishBlob");
         
-        TStream<Blob> subscribe = t.subscribe("testPublishBlob", Blob.class);
+        TStream<Blob> subscribe = blobs.topology().subscribe("testPublishBlob", Blob.class);
         
         TStream<String> strings = subscribe.transform(v -> new String(v.getData(), StandardCharsets.UTF_8));
 
-        return strings;
+        checkSubscribedAsStrings(strings);
+    }
+
+    private void checkSubscribedAsStrings(TStream<String> strings) throws Exception {
+        
+        Topology t = strings.topology();
+                
+        Condition<Long> atLeast = t.getTester().atLeastTupleCount(strings, 100);
+        Condition<List<String>> subTuples = t.getTester().stringContents(strings);
+        
+        complete(t.getTester(), atLeast, 30, TimeUnit.SECONDS);
+        
+        assertTrue(atLeast.valid());
+
+        List<String> result = subTuples.getResult();
+        assertFalse(result.isEmpty());
+        int last = -1;
+        for (String r : result) {
+            assertEquals('S', r.charAt(0));
+            int v = Integer.valueOf(r.substring(1));
+            if (last != -1)
+                assertEquals(last+1, v);
+            last = v;
+        }
     }
     
     @Test
     public void testPublishXML() throws Exception {
-        TStream<String> strings = publishXMLTopology();
+        TStream<String> source = source();
         
-        completeAndValidate(strings, 20, "<book>Catch 22</book>", "<bus>V</bus>");
-    }
-    
-    public TStream<String> publishXMLTopology() throws Exception {
-    
-        final Topology t = new Topology();
-        TStream<String> source = t.strings("<book>Catch 22</book>", "<bus>V</bus>");       
-        source = addStartupDelay(source);
+        source = source.transform(
+                s -> "<a>" + s + "</a>");
         
         TStream<XML> xml = source.transform(
                 v -> { try { return ValueFactory.newXML(new ByteArrayInputStream(v.getBytes(StandardCharsets.UTF_8)));
@@ -145,7 +154,7 @@ public class PublishSubscribeTest extends TestTopology {
         
         xml.publish("testPublishXML");
         
-        TStream<XML> subscribe = t.subscribe("testPublishXML", XML.class);
+        TStream<XML> subscribe = source.topology().subscribe("testPublishXML", XML.class);
         
         TStream<String> strings = subscribe.transform(v-> {
                 byte[] data = new byte[100];
@@ -157,33 +166,26 @@ public class PublishSubscribeTest extends TestTopology {
                     return null;
                 }
                 return new String(data, 0, read, StandardCharsets.UTF_8);
-            });      
+            });
+        
+        strings = strings.transform(s -> s.substring(3, s.length() - 4));
 
-        return strings;
+        checkSubscribedAsStrings(strings);
     }
     
     @Test
     public void testPublishJavaObject() throws Exception {
-        TStream<String> strings = publishJavaObjectTopology();
-        
-        completeAndValidate(strings, 20, "publishing", "a", "java object");
-    }
-    
-    public TStream<String> publishJavaObjectTopology() throws Exception {
-    
-        final Topology t = new Topology();
-        TStream<String> source = t.strings("publishing", "a", "java object");       
-        source = addStartupDelay(source);
+        TStream<String> source = source();
         
         TStream<SimpleString> objects = source.transform(SimpleString::new).asType(SimpleString.class);
         
         objects.publish("testPublishJavaObject");
         
-        TStream<SimpleString> subscribe = t.subscribe("testPublishJavaObject", SimpleString.class);
+        TStream<SimpleString> subscribe = source.topology().subscribe("testPublishJavaObject", SimpleString.class);
         
         TStream<String> strings = StringStreams.toString(subscribe);  
-
-        return strings;
+        
+        checkSubscribedAsStrings(strings);
     }
     
     /**
@@ -239,89 +241,6 @@ public class PublishSubscribeTest extends TestTopology {
             return "SimpleInt:" + value;
         }
     }
-
-    /**
-     * Test that with publish allow filter set to false
-     * a subscriber without a filter gets the full set of data.
-     */
-    @Test
-    public void testSPLPublishNoFilterWithSubscribe() throws Exception {
-        final Topology t = new Topology();
-        
-        SPLStream source = SPLStreamsTest.testTupleStream(t);
-                
-        source = addStartupDelay(source);
-        
-        source.publish("testSPLPublishNoFilterSFilteredSubscribe", false);
-        
-        SPLStream sub = SPLStreams.subscribe(t, "testSPLPublishNoFilterSFilteredSubscribe", source.getSchema());
-        
-        TStream<String> subscribe = sub.transform(new GetTupleId());
-
-        completeAndValidate(subscribe, 20, "SPL:0", "SPL:1", "SPL:2", "SPL:3");
-    } 
-    /**
-     * Test that with publish allow filter set to false
-     * a subscriber without a filter gets the full set of data.
-     */
-    @Test
-    public void testSPLPublishAllowFilterWithSubscribe() throws Exception {
-        final Topology t = new Topology();
-        
-        SPLStream source = SPLStreamsTest.testTupleStream(t);
-                
-        source = addStartupDelay(source);
-        
-        source.publish("testSPLPublishAllowFilterWithSubscribe", true);
-        
-        SPLStream sub = SPLStreams.subscribe(t, "testSPLPublishAllowFilterWithSubscribe", source.getSchema());
-        
-        TStream<String> subscribe = sub.transform(new GetTupleId());
-
-        completeAndValidate(subscribe, 20, "SPL:0", "SPL:1", "SPL:2", "SPL:3");
-    }
-
-    public static class GetTupleId implements Function<Tuple, String> {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public String apply(Tuple v) {
-            return "SPL:" + v.getString("id");
-        }
-    }
-
-    @Test
-    public void testSPLPublishAllowFilterWithFilteredSubscribe() throws Exception {
-        _testSPLPublishFilteredSubscribe(
-              "testSPLPublishAllowFilterWithFilteredSubscribe", true);
-  }
-    @Test
-    public void testSPLPublishNoFilterWithFilteredSubscribe() throws Exception {
-        _testSPLPublishFilteredSubscribe(
-              "testSPLPublishNoFilterWithFilteredSubscribe", false);
-  }
-  private void _testSPLPublishFilteredSubscribe(String topic, boolean allowFilters) throws Exception {
-        final Topology t = new Topology();
-        
-        SPL.addToolkit(t, new File(getTestRoot(), "spl/testtk"));
-        
-        SPLStream source = SPLStreamsTest.testTupleStream(t);
-                
-        source = addStartupDelay(source);
-        
-        source.publish(topic, allowFilters);
-        
-        // Filter on the vi attribute, passing the value 321.
-        Map<String,Object> params = new HashMap<>();
-        params.put("topic", topic);
-        params.put("value", 43675232L);        
-  
-        SPLStream sub = SPL.invokeSource(t, "testspl::Int64SubscribeFilter", params, source.getSchema());
-        
-        TStream<String> subscribe = sub.transform(new GetTupleId());
-
-        completeAndValidate(subscribe, 20, "SPL:1");
-    } 
   
     @Test(expected=IllegalArgumentException.class)
     public void testFilterOnJava() throws Exception {

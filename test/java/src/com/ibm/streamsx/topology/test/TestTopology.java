@@ -146,20 +146,42 @@ public class TestTopology {
         return config;
     }
     
+    private int startupDelay = 20;
+
+    public void setStartupDelay(int delay) {
+        startupDelay = delay;
+    }
+
+    public int getStartupDelay() {
+        
+        int additional = 0;
+        String startupDelayS = System.getProperty("topology.test.additionalStartupDelay");
+        if (startupDelayS != null) {
+            try {
+                additional = Integer.valueOf(startupDelayS);
+            } catch (NumberFormatException e) {
+                ;
+            }
+        }
+        return startupDelay + additional;
+    }
+
+    
     /**
      * Adds a startup delay based upon the context.
      * @param stream
      * @return
      */
     public <T,S> TStream<T> addStartupDelay(TStream<T> stream) {
+         
         if (getTesterType() == Type.DISTRIBUTED_TESTER) {
-            return stream.modify(new InitialDelay<T>(20*1000));
+            return stream.modify(new InitialDelay<T>(getStartupDelay()*1000L));
         }
         return stream;
     }
     public SPLStream addStartupDelay(SPLStream stream) {
         if (getTesterType() == Type.DISTRIBUTED_TESTER) {
-            return stream.modify(new InitialDelay<Tuple>(20*1000));
+            return stream.modify(new InitialDelay<Tuple>(getStartupDelay()*1000L));
         }
         return stream;
     }
@@ -280,6 +302,9 @@ public class TestTopology {
             TStream<?> output, int seconds, String...contents) throws Exception {
         
         Tester tester = output.topology().getTester();
+        
+        if (getTesterType() == Type.DISTRIBUTED_TESTER)
+            seconds += getStartupDelay();
         
         Condition<List<String>> expectedContents = tester.completeAndTestStringOutput(
                 getTesterContext(),
