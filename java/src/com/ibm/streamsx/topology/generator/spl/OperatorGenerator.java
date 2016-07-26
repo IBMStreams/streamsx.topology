@@ -437,9 +437,10 @@ class OperatorGenerator {
             sb.append(stvHelper.generateCompParamName((JSONObject) value));
             return;
         } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
-            if ("USTRING".equals(type))
-                sb.append("(ustring)");
             SPLGenerator.stringLiteral(sb, value.toString());
+            if ("USTRING".equals(type))
+                sb.append("u");
+
             return;
         } else if (value instanceof JSONArray) {
             JSONArray a = (JSONArray) value;

@@ -1,0 +1,55 @@
+<project name="streamsx.topology.test.release" default="all"
+    xmlns:jacoco="antlib:org.jacoco.ant"
+    >
+    <description>
+        Build a release and test against it.
+    </description>
+
+  <property environment="env"/>
+  <fail unless="env.STREAMS_INSTALL" message="STREAMS_INSTALL not set."/>
+  <fail unless="env.SCALA_HOME" message="SCALA_HOME not set."/>
+
+  <property name="streamsx.topology"
+       location="${basedir}/../.."/>
+
+  <property name="rel.dir"
+       location="${streamsx.topology}/release-streamsx.topology"/>
+  <property name="unpack.dir"
+       value="${rel.dir}/unpack"/>
+
+  <target name="all" depends="standalone"/> 
+  <target name="distributed" depends="build_release,unpack"> 
+     <ant dir="${streamsx.topology}/test/java" target="unittest.distributed">
+        <property name="topology.toolkit.release"
+            value="${unpack.dir}/com.ibm.streamsx.topology"/>
+     </ant>
+  </target>
+
+  <target name="standalone" depends="build_release,unpack">
+     <ant dir="${streamsx.topology}" target="test">
+        <property name="topology.toolkit.release"
+            value="${unpack.dir}/com.ibm.streamsx.topology"/>
+     </ant>
+  </target>
+
+  <target name="build_release">
+     <echo message="ReleaseTest: Building release"/>
+     <ant dir="${streamsx.topology}" target="release"/>
+  </target>
+
+  <target name="unpack">
+     <echo message="ReleaseTest: Unpacking release"/>
+      <path id="rel.bundle"> 
+        <fileset dir="${rel.dir}"> 
+          <include name="*.tgz"/> 
+        </fileset>
+       </path>
+       <property name="bundle.file" refid="rel.bundle"/>
+     <mkdir dir="${unpack.dir}"/>
+     <exec executable="tar" dir="${unpack.dir}" failonerror="true">
+        <arg value="-xzf"/>
+        <arg value="${bundle.file}"/>
+     </exec>
+  </target>
+
+</project>

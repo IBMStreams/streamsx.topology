@@ -192,6 +192,8 @@ public class TupleCollection implements Tester {
     @Override
     public Condition<List<String>> stringContents(TStream<String> stream,
             final String... values) {
+        
+        stream = stream.asType(String.class);
 
         final StreamCollector<LinkedList<Tuple>, Tuple> tuples = StreamCollector
                 .newLinkedListCollector();

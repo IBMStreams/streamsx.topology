@@ -50,5 +50,7 @@ See the documentation under [namespace:com.ibm.streamsx.topology.python|com.ibm.
   <sabFiles>
    	<exclude path="opt/httpcomponents-client-4.3.6/**"/>
     	<exclude path="opt/icons/**"/>
+    	<exclude path="opt/python/include/**"/>
+    	<exclude path="opt/python/templates/**"/>
   </sabFiles>
 </toolkitInfoModel>

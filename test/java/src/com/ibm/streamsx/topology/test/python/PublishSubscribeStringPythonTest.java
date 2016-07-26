@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.test.distributed.PublishSubscribeTest.Delay;
 
 /**
  * Test publish/subscribe. These tests just use publish/subscribe
@@ -29,7 +28,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
    	    	
         TStream<String> source = t.strings("wasJava", "457", "CrystalPalace");
         
-        source = source.modify(new Delay<String>(10));
+        source = addStartupDelay(source);
         
         source.publish("pytest/string/map");
         
@@ -50,7 +49,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
    	    	
         TStream<String> source = t.strings("ABC", "DEF", "4372", "34", "24234XXX");
         
-        source = source.modify(new Delay<String>(10));
+        source = addStartupDelay(source);
         
         source.publish("pytest/string/filter");
         
@@ -68,7 +67,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
    	    	
         TStream<String> source = t.strings("mary had a little lamb", "If you can keep your head when all about you");
         
-        source = source.modify(new Delay<String>(15));
+        source = addStartupDelay(source);
         
         source.publish("pytest/string/flatmap");
         

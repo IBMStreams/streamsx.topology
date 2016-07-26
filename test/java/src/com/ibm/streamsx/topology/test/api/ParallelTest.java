@@ -724,8 +724,6 @@ public class ParallelTest extends TestTopology {
     public void testParallelIsolate() throws Exception {
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
         
-        skipVersion("isolate", 4, 2);
-      
         Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("A", "B", "C", "D", "E", "F", "G", "H", "I");

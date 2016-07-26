@@ -27,7 +27,6 @@ import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
-import com.ibm.streamsx.topology.test.distributed.PublishSubscribeTest.Delay;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
@@ -37,6 +36,10 @@ import com.ibm.streamsx.topology.tester.Tester;
  *
  */
 public class PublishSubscribeUDPTest extends TestTopology {
+    
+    public PublishSubscribeUDPTest() {
+        setStartupDelay(30);
+    }
 
     @Before
     public void checkIsDistributed() {
@@ -64,10 +67,10 @@ public class PublishSubscribeUDPTest extends TestTopology {
         final Topology t = new Topology();
         TStream<String> source = t.strings("325", "457", "9325", "hello", "udp");
         
+        source = addStartupDelay(source);
+        
         if (width > 0)
             source = source.parallel(width);
-        
-        source = source.modify(new Delay<String>());
         
         source.publish(topic);
         
@@ -112,7 +115,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
         if (pwidth > 0)
             source = source.parallel(pwidth);
         
-        source = source.modify(new Delay<String>());
+        source = addStartupDelay(source);
         
         source.publish(topic);
         
@@ -131,16 +134,17 @@ public class PublishSubscribeUDPTest extends TestTopology {
         String topic = "testPublishBothSubscribeNonUDP";
     
         final Topology t = new Topology();
-        TStream<String> source = t.strings("325", "457", "9325", "hello", "udp");        
-        source = source.parallel(4);      
-        source = source.modify(new Delay<String>(20));     
+        TStream<String> source = t.strings("325", "457", "9325", "hello", "udp");   
+        setStartupDelay(20);
+        source = addStartupDelay(source);   
+
+        source = source.parallel(4);     
         source.publish(topic);
         
         TStream<String> source2 = t.strings("non-udp", "single", "346");
-        source2 = source2.modify(new Delay<String>(20));     
+        source2 = addStartupDelay(source2);     
         source2.publish(topic);        
-        
-        
+               
         TStream<String> subscribe = t.subscribe(topic, String.class);
 
         completeAndValidateUnordered(subscribe, 40, "325", "457", "9325", "hello", "udp", "non-udp", "single", "346");
@@ -171,12 +175,12 @@ public class PublishSubscribeUDPTest extends TestTopology {
     
         final Topology t = new Topology();
         TStream<BigDecimal> source = t.constants(data);
+              
+        source = addStartupDelay(source);
         
         if (width > 0)
             source = source.parallel(width);
-        
-        source = source.modify(new Delay<BigDecimal>());
-        
+    
         source.asType(BigDecimal.class).publish(topic);
         
         TStream<BigDecimal> subscribe = t.subscribe(topic, BigDecimal.class);
@@ -201,8 +205,8 @@ public class PublishSubscribeUDPTest extends TestTopology {
  
         final Topology t = new Topology();
         TStream<BigDecimal> source = t.constants(data);        
-        source = source.parallel(4);      
-        source = source.modify(new Delay<BigDecimal>(20));     
+        source = addStartupDelay(source);     
+        source = source.parallel(4);  
         source.asType(BigDecimal.class).publish(topic);
         
         List<BigDecimal> data2 = new ArrayList<>(10);
@@ -211,7 +215,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
 
         
         TStream<BigDecimal> source2 = t.constants(data2);
-        source2 = source2.modify(new Delay<BigDecimal>(20));     
+        source2 = addStartupDelay(source2);     
         source2.asType(BigDecimal.class).publish(topic);   
         
         
@@ -238,7 +242,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
                 getTesterContext(),
                 getConfig(),
                 expectedContents,
-                seconds, TimeUnit.SECONDS);
+                seconds + getStartupDelay(), TimeUnit.SECONDS);
 
         assertTrue(expectedContents.toString(), expectedContents.valid());
     }
