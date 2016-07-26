@@ -44,15 +44,15 @@ public class InvokeSc {
         
         installDir = Util.getStreamsInstall(deployConfig, ContextProperties.COMPILE_INSTALL_DIR);
         
-        // Version 4.2 onwards deprecates standlone compiler option
+        // Version 4.2 onwards deprecates standalone compiler option
         // so don't use it to avoid warnings.
-        if (deployConfig.containsKey(ContextProperties.COMPILE_INSTALL_DIR)) {
-            // TODO: get version of compile install to be used
-        } else {
+        if (Util.getStreamsInstall().equals(installDir)) {
             Version ver = Product.getVersion();
             if ((ver.getVersion() == 4 && ver.getRelease() >= 2)
                 || (ver.getVersion() > 4))
                 standalone = false;
+        } else {
+            // TODO: get version of compile install to be used
         }
         this.standalone = standalone;
         

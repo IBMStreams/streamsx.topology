@@ -108,6 +108,8 @@ public class JobPropertiesTest extends TestTopology {
 
     @Test
     public void testPreloadApplicationBundlesProperty() throws Exception {
+        checkMaximumVersion("preload passed as job config in 4.2", 4, 1);
+        
         testIt("testPreloadApplicationBundlesProperty",
                 JobProperties.PRELOAD_APPLICATION_BUNDLES, true);
     }

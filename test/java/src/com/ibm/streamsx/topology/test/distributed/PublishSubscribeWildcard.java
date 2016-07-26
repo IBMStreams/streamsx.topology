@@ -139,7 +139,7 @@ public class PublishSubscribeWildcard extends TestTopology {
             data.add(leadIn + base + rand.nextInt(100));
         }
         
-        t.constants(data).asType(String.class).modify(new PublishSubscribeTest.Delay<>((1+count)*5)).publish(topic);
+        addStartupDelay(t.constants(data).asType(String.class)).publish(topic);
         return data;
     }
     private void publishPoll(Topology t, String topic) {
@@ -171,7 +171,7 @@ public class PublishSubscribeWildcard extends TestTopology {
         }
         
                 
-        t.constants(data).transform(WrapString::new).asType(WrapString.class).modify(new PublishSubscribeTest.Delay<>((1+count)*5)).publish(topic);
+        addStartupDelay(t.constants(data).transform(WrapString::new).asType(WrapString.class)).publish(topic);
         return data;
     }
     private void publishPollJava(Topology t, String topic) {

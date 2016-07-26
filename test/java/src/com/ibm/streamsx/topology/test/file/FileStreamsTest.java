@@ -23,7 +23,6 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.file.FileStreams;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
-import com.ibm.streamsx.topology.test.InitialDelay;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -73,8 +72,7 @@ public class FileStreamsTest extends TestTopology {
         // with the result being not seeing/processing the expected number
         // of files.
         
-        BeaconStreams.single(t)
-                    .modify(new InitialDelay<Long>(5*1000))
+        addStartupDelay(BeaconStreams.single(t))
                     .sink(createFiles(files, repeat));
 
         Tester tester = t.getTester();

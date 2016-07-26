@@ -31,7 +31,7 @@ public class JobConfig {
     private String jobName;
     private String jobGroup;
     private String dataDirectory;
-    private Boolean overrideResourceLoadProtection;
+    private transient Boolean overrideResourceLoadProtection;
     private Boolean preloadApplicationBundles;
     private List<SubmissionParameter> submissionParameters;
     private transient Level _tracing;
