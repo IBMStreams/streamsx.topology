@@ -5,17 +5,12 @@
 
 /**
 
-Beta support for Python in IBM Streams.
-
-This is an **beta version** of `com.ibm.streamsx.topology` allows
-use of Python in IBM Streams applications.
+Support for Python in IBM Streams.
 
 # Python Support
 
 + Python Application API
 Develop IBM Streams applications with Python.
-
-**Beta version**
 
 # Overview
 
