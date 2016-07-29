@@ -55,6 +55,9 @@ def submit(ctxtype, graph, config = None, username = None, password = None):
     fj = _createFullJSON(graph, config)
     fn = _createJSONFile(fj)
 
+    if graph.get_views() and (username is None or password is None):
+        print_exception("WARNING: Both a username and password must be supplied when submitting a job in order to access view data")
+
     # Create connection to SWS
     if username is not None and password is not None:
         rc = None
