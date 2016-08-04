@@ -107,6 +107,7 @@
        includeantruntime="no"
    	   />
    <exec executable="${streams.install}/bin/spl-make-toolkit">
+     <arg value="--make-operator"/>
      <arg value="-i"/>
      <arg value="${testtk}"/>
    </exec>
