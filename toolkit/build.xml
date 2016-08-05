@@ -29,6 +29,7 @@
    <copy file="${streamsx.topology}/LICENSE" todir="${tk}/license"/>
 
    <exec executable="${streams.install}/bin/spl-make-toolkit" failonerror="true">
+     <arg value="--make-operator"/>
      <arg value="-i"/>
      <arg value="${tk}"/>
    </exec>

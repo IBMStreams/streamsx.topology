@@ -36,6 +36,7 @@ public class InvokeMakeToolkit {
         List<String> commands = new ArrayList<String>();
 
         commands.add(mtk.getAbsolutePath());
+        commands.add("--make-operator");
         commands.add("-i");
 
         commands.add(toolkitDir.getAbsolutePath());
