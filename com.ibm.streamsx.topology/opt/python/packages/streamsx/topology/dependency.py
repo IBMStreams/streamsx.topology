@@ -15,6 +15,11 @@ class _DependencyResolver(object):
         self._modules = set()
         self._packages = collections.OrderedDict() # need an ordered set when merging namespace directories
         self._processed_modules = set()
+        # Determine path of opt/python/packages/streamsx
+        my_module = sys.modules[self.__module__]
+        dir = os.path.dirname(os.path.abspath(my_module.__file__))
+        dir = os.path.dirname(dir)
+        self._streamsx_topology_dir = dir
         
     def add_dependencies(self, module):
         """
@@ -48,6 +53,8 @@ class _DependencyResolver(object):
         """
         Adds a module to the list of dependencies
         """
+        if _is_streamsx_topology_module(module):
+            return None
         package_name = _get_package_name(module)
         if package_name:
             # module is part of a package
@@ -73,7 +80,8 @@ class _DependencyResolver(object):
         self._processed_modules.add(module)
 
     def _add_package(self, path):
-        #print ("Adding external package", path)
+        if path == self._streamsx_topology_dir:
+            return None
         self._packages[path] = None
     
     def _add_module(self, path):
@@ -152,7 +160,7 @@ def _get_imported_modules(module):
         # in the list of dependencies
         if vars_module:    
             if not _is_builtin_module(vars_module) and \
-               not _is_streamsx_module(vars_module) and \
+               not _is_streamsx_topology_module(vars_module) and \
                not _is_system_module(vars_module):
                 imported_modules[vars_module.__name__] = vars_module
     return imported_modules
@@ -162,9 +170,10 @@ def _is_builtin_module(module):
            not hasattr(module, '__file__') and \
            not hasattr(module, '__path__')
 
-def _is_streamsx_module(module):
+def _is_streamsx_topology_module(module):
     if hasattr(module, '__name__'):
-        return module.__name__.startswith('streamsx.topology')
+        mn = module.__name__
+        return mn.startswith('streamsx.topology.') or mn.startswith('streamsx.spl.') or mn == 'streamsx.rest'
     return False
 
 def _inside_site_package(path):
