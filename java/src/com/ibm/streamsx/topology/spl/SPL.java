@@ -33,7 +33,12 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
 /**
  * Integration between Java topologies and SPL operator invocations. If the SPL
  * operator to be invoked is an SPL Java primitive operator then the methods of
- * {@link JavaPrimitive} should be used.
+ * {@link JavaPrimitive} must be used.
+ * <BR>
+ * An operator's kind is its namespace followed by the
+ * operator name separated with '{@code ::}'. For example
+ * the {@code FileSource} operator from the SPL Standard toolkit must be specified
+ * as {@code spl.adapter::FileSource}.
  * <p>
  * When necessary use {@code createValue(T, MetaType)}
  * to create parameter values for SPL types.

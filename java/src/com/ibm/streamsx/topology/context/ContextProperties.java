@@ -34,12 +34,36 @@ public interface ContextProperties {
     String TOOLKIT_DIR = "topology.toolkitDir";
 
     /**
-     * Argument is a List of Strings.
+     * Java virtual machine arguments.
+     * These arguments are added to all invocations of
+     * Java virtual machines for the topology. For any
+     * SPL invoked operators the invocation must have
+     * been through methods in {@link com.ibm.streamsx.topology.spl.JavaPrimitive}.
+     * <BR>
+     * Setting the classpath is not supported.
+     * <P>
+     * For example, setting the maximum heap memory to 2GB:
+     * <pre>
+     * <code>
+     *    List&lt;String> vmArgs = new ArrayList&lt;>();
+     *    vmArgs.add("-Xmx2048m");
+     *    config.put(ContextProperties.VMARGS, vmArgs);
+     * </code>
+     * </pre>
+     * <BR>
+     * Argument is a {@code List<String>}.
+     * </P>
      */
     String VMARGS = "topology.vmArgs";
     
     /**
-     * Argument is a Boolean.
+     * Keep any intermediate artifacts.
+     * By default intermediate artifacts are deleted
+     * after submission of a topology. For example when
+     * create an IBM Streams application bundle the
+     * intermediate SPL code and toolkit are deleted.
+     * Keeping the artifacts can aid in debugging.
+     * Argument is a {@code Boolean}.
      */
     String KEEP_ARTIFACTS = "topology.keepArtifacts";
 
