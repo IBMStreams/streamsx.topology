@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Decorating Python Functions as SPL Operators"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Decorating Python Functions as SPL Operators</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">Decorating Python Functions as SPL Operators</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.4.3</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; Decorating Python Functions as SPL Operators</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">SPL operators that call a Python function are created by decorators provided by this toolkit.
+</p>
+
+<p class="p"><tt class="ph tt">bin/spl-python-extract.py</tt> is a Python script that creates SPL operators from Python functions contained in modules in a toolkit. The resulting operators embed the Python runtime to allow stream processing using Python.
+</p>
+
+<p class="p">To create SPL operators from Python functions one or more Python modules are created in the <tt class="ph tt">opt/python/streams</tt> directory of an SPL toolkit.
+</p>
+
+<p class="p">Each module must import the <tt class="ph tt">streamsx.spl</tt> package which is located in the <tt class="ph tt">opt/packages</tt> directory of this toolkit. It contains the decorators use to create SPL operators from Python functions. The module must also define a function <tt class="ph tt">splNamespace</tt> that returns a string containing the SPL namespace the operators for that module will be placed in.
+</p>
+
+<p class="p">For example:
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+# Import the SPL decorators
+from streamsx.spl import spl
+
+# Defines the SPL namespace for any functions in this module
+# Multiple modules can map to the same namespace
+def splNamespace():
+   return "com.ibm.streamsx.topology.pysamples.mail"
+</pre>
+
+
+</div>
+
+<p class="p">Any Python docstring for the function is copied into the SPL operator's description field in its operator model, providing a description for IDE developers using the toolkit.
+</p>
+
+<p class="p">Functions in the modules that are not decorated, decorated with <tt class="ph tt">@spl.ignore</tt> or start with <tt class="ph tt">spl</tt> are ignored and will not result in any SPL operator.
+</p>
+
+  <dl class="dl"><dt class="dt dlterm"><a class="xref" href="ns$com.ibm.streamsx.topology.python$7.html">Conversion between SPL and Python tuples.</a>
+</dt>
+<dd class="dd">SPL attributes map to Python tuples by position.
+</dd>
+</dl>
+
+  <dl class="dl"><dt class="dt dlterm"><a class="xref" href="ns$com.ibm.streamsx.topology.python$8.html">@spl.pipe</a>
+</dt>
+<dd class="dd">Decorator to create a pipe SPL operator.
+</dd>
+</dl>
+
+  <dl class="dl"><dt class="dt dlterm"><a class="xref" href="ns$com.ibm.streamsx.topology.python$9.html">@spl.sink</a>
+</dt>
+<dd class="dd">Decorator to create a sink SPL operator.
+</dd>
+</dl>
+
+  <dl class="dl"><dt class="dt dlterm"><a class="xref" href="ns$com.ibm.streamsx.topology.python$10.html">@spl.ignore</a>
+</dt>
+<dd class="dd">Decorator to ignore a Python function.
+</dd>
+</dl>
+
+  <dl class="dl"><dt class="dt dlterm"><a class="xref" href="ns$com.ibm.streamsx.topology.python$11.html">Extracting SPL operators from decorated Python functions</a>
+</dt>
+<dd class="dd">To create operators in a toolkit, execute <tt class="ph tt">python3 spl-python-extract.py -i toolkit-directory</tt>. Any Python module in the toolkit's <tt class="ph tt">opt/python/streams</tt> directory will have its functions converted to SPL operators. These directories in a toolkit are automatically added to the Python search path during execution of an operator.
+</dd>
+</dl>
+
+  <dl class="dl"><dt class="dt dlterm"><a class="xref" href="ns$com.ibm.streamsx.topology.python$12.html">Sample toolkit</a>
+</dt>
+<dd class="dd">A toolkit with a number of decorated Python functions and SPL applications that invoke them is supplied under <tt class="ph tt">samples/python/com.ibm.streamsx.topology.pysamples</tt>.
+</dd>
+</dl>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

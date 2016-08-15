@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Python Application API"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Python Application API</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">Python Application API</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.4.3</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; Python Application API</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">Develop IBM Streams applications with Python.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Overview
+</h2>
+
+<p class="p">A functional api to develop streaming applications for IBM Streams using Python. Streams are defined, transformed and sinked (terminated) using Python functions. The return of a function determines the content of the stream. Tuples on a stream are Python objects, a stream may contain different types of objects.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Prerequites
+</h2>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> Install and configure IBM Streams Version 4.0.1 (or later).</li>
+
+<li class="li"> Install Python
+<ul class="ul">
+<li class="li"> Either install Anaconda 3.5 - this is the easiest option. When running distributed the Streams instance application environment variable <tt class="ph tt">PYTHONHOME</tt> must be set to the install location.</li>
+
+<li class="li"> or install CPython 3.5.0 (or later). This is more involved and usually requires building Python from source code.</li>
+
+</ul>
+</li>
+
+<li class="li"> Download and extract the IBM Streams Topology Toolkit, which includes the Python Application API.</li>
+
+<li class="li">  Include the fully qualified path of the <tt class="ph tt">com.ibm.streamsx.topology/opt/python/packages</tt> directory in the PYTHONPATH environment variable.</li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">HelloWorld Application
+</h2>
+
+<p class="p">Example code that builds and then submits a Hello World topology.
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+import mymodule;
+from streamsx.topology.topology import *
+import streamsx.topology.context
+
+topo = Topology("HelloWorld")
+hw = topo.source(mymodule.hello_world)
+hw.sink(print)
+streamsx.topology.context.submit("STANDALONE", topo.graph)
+</pre>
+
+
+</div>
+
+<p class="p">The <tt class="ph tt">source</tt> function is passed a callable that returns an <tt class="ph tt">Iterable</tt>, in this case <tt class="ph tt">mymodule.hello_world</tt>.
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+def hello_world() :
+    return ["Hello", "World!"]
+</pre>
+
+
+</div>
+
+<p class="p">The callable will be called when the application starts, and the SPL runtime will create an iterator from the returned value. Then each value returned from the iterator will be sent on the stream.
+</p>
+
+<p class="p">The <tt class="ph tt">sink</tt> function is passed a callable that will be called for each tuple on the stream, in this case the builtin <tt class="ph tt">print</tt> function.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">User-supplied functions to operations
+</h2>
+
+<div class="p">Operations such as <tt class="ph tt">source</tt> and <tt class="ph tt">sink</tt> accept a callable as input.  The callable must be one of the following:
+<ul class="ul">
+<li class="li"> the name of a built-in function</li>
+
+<li class="li"> the name of a function defined at the top level of a module</li>
+
+<li class="li"> an instance of a callable class defined at the top level of a module that implements the method <tt class="ph tt">__call__</tt> and is picklable.  Using a callable class allows state information such as user-defined parameters to be stored during class initialization and utilized when the instance is called.</li>
+
+</ul>
+
+</div>
+
+<div class="p">The modules containing the callables, along with third-party libraries required by the modules, are copied into the Streams Application Bundle (sab file).
+<ul class="ul">
+<li class="li"> Dependent libraries can be individual modules or packages.</li>
+
+<li class="li"> Dependent libraries can be installed in site packages, or not installed and simply reside in a directory in the Python search path</li>
+
+<li class="li"> Dependent native libaries outside of the package directory are not copied into the bundle</li>
+
+</ul>
+
+</div>
+
+<div class="p">Limitations on callable inputs to operations:
+<ul class="ul">
+<li class="li"> Callables must be defined in a module file.</li>
+
+<li class="li"> Callables must not be dynamically created nor anonymous.</li>
+
+<li class="li"> Callables must not be defined in the <tt class="ph tt">__main__</tt> module.  They must be defined in a separate module.</li>
+
+<li class="li"> Importing modules that contain user-defined functions with importlib is unsupported.  The PYTHONPATH or sys.path must contain the directory where modules to import are located.</li>
+
+<li class="li"> Importing modules that contain user-defined functions from zip/egg/wheel files is unsupported.</li>
+
+</ul>
+
+</div>
+
+<div class="p">To avoid name conflicts, do not create modules with the same name as 
+<ul class="ul">
+<li class="li"> <tt class="ph tt">streamsx</tt> which is used by the Python Application API</li>
+
+<li class="li"> built-in or standard library module names</li>
+
+</ul>
+
+</div>
+
+  <dl class="dl"><dt class="dt dlterm"><a class="xref" href="ns$com.ibm.streamsx.topology.python$2.html">Python Application API functions </a>
+</dt>
+<dd class="dd">Functions to create topologies and streams.
+</dd>
+</dl>
+
+  <dl class="dl"><dt class="dt dlterm"><a class="xref" href="ns$com.ibm.streamsx.topology.python$3.html">Sample Application</a>
+</dt>
+<dd class="dd">Example code that builds and then submits a simple topology.
+</dd>
+</dl>
+
+  <dl class="dl"><dt class="dt dlterm"><a class="xref" href="ns$com.ibm.streamsx.topology.python$4.html">Context Types</a>
+</dt>
+<dd class="dd">Only submission using <tt class="ph tt">DISTRIBUTED</tt>, <tt class="ph tt">BUNDLE</tt> and <tt class="ph tt">STANDALONE</tt> context type are supported.
+</dd>
+</dl>
+
+  <dl class="dl"><dt class="dt dlterm"><a class="xref" href="ns$com.ibm.streamsx.topology.python$5.html">MQTT support</a>
+</dt>
+<dd class="dd">Publishing and subscribing to an MQTT broker.
+</dd>
+</dl>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Python Application API functions"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Python Application API functions</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">Python Application API functions </h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.4.3</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$1.html">Python Application API</a> &gt; Python Application API functions </p>
+
+</div>
+
+
+<div class="section">
+<p class="p">Functions to create topologies and streams.
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> <tt class="ph tt">source(self, func)</tt> function on <tt class="ph tt">Topology</tt>
+<p class="p">  Fetches information from an external system and presents that information as a stream.   Takes a zero-argument callable that returns an iterable of tuples.   Each tuple that is not None from the iterator returned   from iter(func()) is present on the returned stream.
+</p>
+
+<p class="p">  param <tt class="ph tt">func</tt>: A zero-argument callable that returns an iterable of tuples.   A tuple is represented as a Python object that must be picklable.
+</p>
+
+<p class="p">  return: A Stream whose tuples are the result of the output obtained by invoking the provided callable.
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">subscribe(self, topic, schema=CommonSchema.Python)</tt> function on <tt class="ph tt">Topology</tt>
+</p>
+
+<p class="p">  Subscribe to a topic published by IBM Streams applications.   A Streams application may publish a stream to allow other   applications to subscribe to it. A subscriber matches a   publisher if the topic and schema match.
+</p>
+
+<p class="p">  schema defaults to <tt class="ph tt">CommonSchema.Python</tt> which subscribes to streams   published by Python applications where the stream contains Python objects.
+</p>
+
+<p class="p">  Setting schema to <tt class="ph tt">CommonSchema.Json</tt> subscribes to streams of   JSON objects published by IBM Streams applications. JSON is used   as a common interchange format between all languages supported   by IBM Streams, including SPL, Java, Scala and Python.
+</p>
+
+<p class="p">  Setting schema to <tt class="ph tt">CommonSchema.String</tt> subscribes to streams of   strings published by IBM Streams applications. String is used   as a common interchange format between all languages supported   by IBM Streams, including SPL, Java, Scala and Python.
+</p>
+
+<p class="p">  Setting schema to any other SPL schema subscribes to streams   with the matching SPL tuple type published by IBM Streams applications.   In general this will be SPL applications though Java and Scala applications   can publish streams with an SPL schema.  In Python tuples will   be transformed into a Python dictionary object (based on the schema).   Each tuple attribute will be converted into an appropriate Python type and added to the    Python dictionary object using the name of the attribute as the dictionary key value. 
+</p>
+
+<div class="p">  Supported SPL types and resultant Python types are: 
+<pre class="pre codeblock">
+int8,int16,int32,int64 : int
+uint8,uint16,uint32,uint64 : int
+float32,float64 : float
+rstring : str
+ustring : str
+boolean : boolean
+list : list
+map : dictionary
+</pre>
+
+
+</div>
+
+<p class="p">  See <a class="xref" href="ns$com.ibm.streamsx.topology.topic.html">namespace:com.ibm.streamsx.topology.topic</a> for more details.
+</p>
+
+<p class="p">  param <tt class="ph tt">topic</tt>: Topic to subscribe to.   param <tt class="ph tt">schema</tt>: Schema to subscriber to. Defaults to CommonSchema.Python representing Python objects.   return: A Stream whose tuples have been published to the topic by IBM Streams applications.
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">sink(self, func)</tt> function on <tt class="ph tt">Stream</tt>
+</p>
+
+<p class="p">  Sends information as a stream to an external system.   Takes a user provided callable that does not return a value.
+</p>
+
+<p class="p">  param <tt class="ph tt">func</tt>: A callable that takes a single parameter for the tuple and returns None.   The callable is invoked for each incoming tuple.  
+</p>
+
+<p class="p">  return: None
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">filter(self, func)</tt> function on <tt class="ph tt">Stream</tt>
+</p>
+
+<p class="p">  Filters tuples from a stream using the supplied callable <tt class="ph tt">func</tt>.   For each tuple on the stream the callable is called passing   the tuple, if the callable return evalulates to true the   tuple will be present on the returned stream, otherwise   the tuple is filtered out.
+</p>
+
+<p class="p">  param <tt class="ph tt">func</tt>: A callable that takes a single parameter for the tuple, and returns True or False.   If True, the tuple is included on the returned stream.  If False, the tuple is filtered out.   The callable is invoked for each incoming tuple.
+</p>
+
+<p class="p">  return: A Stream containing tuples that have not been filtered out.
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">transform(self, func)</tt> or <tt class="ph tt">map(self, func)</tt> function on <tt class="ph tt">Stream</tt>
+</p>
+
+<p class="p">  Transforms each tuple from this stream into 0 or 1 tuples using the supplied callable <tt class="ph tt">func</tt>.   For each tuple on this stream, the returned stream will contain a tuple   that is the result of the callable when the return is not None.   If the callable returns None then no tuple is submitted to the returned    stream.
+</p>
+
+<p class="p">  param <tt class="ph tt">func</tt>: A callable that takes a single parameter for the tuple, and returns a tuple or None.   The callable is invoked for each incoming tuple.
+</p>
+
+<p class="p">  return: A Stream containing transformed tuples.
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">multi_transform(self, func)</tt> or <tt class="ph tt">flat_map(self, func)</tt> function on <tt class="ph tt">Stream</tt>
+</p>
+
+<p class="p">  Transforms each tuple from this stream into 0 or more tuples using the supplied callable <tt class="ph tt">func</tt>.    For each tuple on this stream, the returned stream will contain all non-None tuples from   the iterable.   Tuples will be added to the returned stream in the order the iterable   returns them.   If the return is None or an empty iterable then no tuples are added to   the returned stream.
+</p>
+
+<p class="p">  param <tt class="ph tt">func</tt>: A callable that takes a single parameter for the tuple, and returns an iterable of tuples or None.   The callable must return an iterable or None, otherwise a TypeError is raised.   The callable is invoked for each incoming tuple.
+</p>
+
+<p class="p">  return: A Stream containing transformed tuples.
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">isolate(self)</tt> function on <tt class="ph tt">Stream</tt>
+</p>
+
+<p class="p">  Guarantees that the upstream operation will run in a separate process from the downstream operation when    the application is executed in distributed mode.
+</p>
+
+<p class="p">  return: Stream
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">low_latency(self)</tt> function on <tt class="ph tt">Stream</tt>
+</p>
+
+<p class="p">  The function is guaranteed to run in the same process as the   upstream Stream function. All streams that are created from the returned stream    are also guaranteed to run in the same process until end_low_latency()    is called.
+</p>
+
+<p class="p">  return: Stream
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">end_low_latency(self)</tt> function on <tt class="ph tt">Stream</tt>
+</p>
+
+<p class="p">  Returns a Stream that is no longer guaranteed to run in the same process   as the calling stream.
+</p>
+
+<p class="p">  return: Stream
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">union(self, streamSet)</tt> function on <tt class="ph tt">Stream</tt>
+</p>
+
+<p class="p">  The Union operator merges the outputs of the streams in the set into a single stream.
+</p>
+
+<p class="p">  param <tt class="ph tt">streamSet</tt> - Set of streams outputs to merge
+</p>
+
+<p class="p">  returns: Stream
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">parallel(self, width, routing=None, func=None)</tt> function on <tt class="ph tt">Stream</tt>
+</p>
+
+<p class="p">  Parallelizes the stream into <tt class="ph tt">width</tt> parallel channels.   Tuples are routed to parallel channels such that an even distribution is maintained.   Each parallel channel can be thought of as being assigned its own thread.   As such, each parallelized stream function are separate instances and operate independently from one another.
+</p>
+
+<p class="p">  <tt class="ph tt">parallel</tt> will only parallelize the stream operations performed after the call to <tt class="ph tt">parallel</tt> and before the call to <tt class="ph tt">end_parallel</tt>
+</p>
+
+<p class="p">  Parallel regions aren't required to have an output stream, and thus may be used as sinks.   In other words, a parallel sink is created by calling <tt class="ph tt">parallel</tt> and creating a sink operation.   It is not necessary to invoke <tt class="ph tt">end_parallel</tt> on parallel sinks.
+</p>
+
+<p class="p">  Nested parallelism is not currently supported.   A call to <tt class="ph tt">parallel</tt> should never be made immediately after another call to <tt class="ph tt">parallel</tt> without having an <tt class="ph tt">end_parallel</tt> in between.
+</p>
+
+<p class="p">  Every call to <tt class="ph tt">end_parallel</tt> must have a call to <tt class="ph tt">parallel</tt> preceding it.
+</p>
+
+<p class="p">  param <tt class="ph tt">width</tt>: degree of parallelism
+</p>
+
+<div class="p">  param: <tt class="ph tt">routing</tt> - denotes what type of tuple routing to use. 
+<ul class="ul">
+<li class="li"> ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators (Default)</li>
+
+<li class="li"> HASH_PARTIONED: delivers to downstream operators based on the hash of the tuples being sent or if a function is provided the function will be called to provide the hash</li>
+
+</ul>
+
+</div>
+
+<p class="p">  param: <tt class="ph tt">func</tt> - (Optional) Function called when HASH_PARTIONED routing is specified. The function provides an int32 value to be used as the hash that determines the tuple routing to downstream operators
+</p>
+
+<p class="p">  return: Stream whose subsequent processing will occur on <tt class="ph tt">width</tt> channels.
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">end_parallel(self)</tt> function on <tt class="ph tt">Stream</tt>
+</p>
+
+<p class="p">  Ends a parallel region by merging the channels into a single stream
+</p>
+
+<p class="p">  return: A Stream for which subsequent transformations are no longer parallelized
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">publish(self, topic, schema=schema.CommonSchema.Python)</tt> function on <tt class="ph tt">Stream</tt>
+</p>
+
+<p class="p">  Publish this stream on a topic for IBM Streams applications to subscribe to.   A Streams application may publish a stream to allow other   applications to subscribe to it. A subscriber matches a   publisher if the topic and schema match.
+</p>
+
+<p class="p">  schema defaults to <tt class="ph tt">CommonSchema.Python</tt> which publishes    the stream as Python objects.
+</p>
+
+<p class="p">  Setting schema to <tt class="ph tt">CommonSchema.Json</tt> publishes the stream   as JSON objects. Each tuple (a Python object) is converted using   <tt class="ph tt">json.dumps</tt>. Note that each tuple object ype on the stream must   be able to be converted to JSON.   JSON is used as a common interchange format between all languages supported   by IBM Streams, including SPL, Java, Scala and Python.
+</p>
+
+<p class="p">  Setting schema to <tt class="ph tt">CommonSchema.String</tt> publishes the stream   as strings. Each tuple (a Python object) is converted using   <tt class="ph tt">str()</tt>.   String is used as a common interchange format between all languages supported   by IBM Streams, including SPL, Java, Scala and Python.
+</p>
+
+<p class="p">  See <a class="xref" href="ns$com.ibm.streamsx.topology.topic.html">namespace:com.ibm.streamsx.topology.topic</a> for more details.
+</p>
+
+<p class="p">  param <tt class="ph tt">topic</tt>: Topic to publish this stream to.   param: <tt class="ph tt">schema</tt>: Schema to publish. Defaults to CommonSchema.Python representing Python objects.
+</p>
+
+<p class="p">  return: None
+</p>
+</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

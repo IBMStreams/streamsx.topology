@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Extracting SPL operators from decorated Python functions"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Extracting SPL operators from decorated Python functions</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">Extracting SPL operators from decorated Python functions</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.4.3</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$6.html">Decorating Python Functions as SPL Operators</a> &gt; Extracting SPL operators from decorated Python functions</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">To create operators in a toolkit, execute <tt class="ph tt">python3 spl-python-extract.py -i toolkit-directory</tt>. Any Python module in the toolkit's <tt class="ph tt">opt/python/streams</tt> directory will have its functions converted to SPL operators.
+</p>
+
+<div class="p">These directories in a toolkit are automatically added to the Python search path during execution of an operator.
+<ul class="ul">
+<li class="li"> <tt class="ph tt">opt/python/streams</tt> - Contains modules that define Python functions that will be created as SPL operators</li>
+
+<li class="li"> <tt class="ph tt">opt/python/packages</tt> - Root directory for Python <a class="xref" href="https://docs.python.org/3.4/tutorial/modules.html#packages">packages</a> hierarchy.</li>
+
+<li class="li"> <tt class="ph tt">opt/python/modules</tt> - Arbitrary <a class="xref" href="https://docs.python.org/3.4/tutorial/modules.html#modules">modules</a>, not defined as a packages.</li>
+
+</ul>
+
+</div>
+
+<p class="p">A single Python embedded runtime is used by an SPL processing element (PE), thus when multiple operators implemented in python are fused into the same PE they share the same runtime. The library and include paths to the Python runtime are set from the version of Python used to execute <tt class="ph tt">spl-python-extract.py</tt>.
+</p>
+
+<p class="p">The toolkit has no dependency on this toolkit (<tt class="ph tt">com.ibm.streamsx.topology</tt>) once <tt class="ph tt">spl-python-extract.py</tt> has been executed.
+</p>
+
+<p class="p">The sample SPL toolkit <tt class="ph tt">samples/python/com.ibm.streamsx.topology.pysamples</tt> contains <tt class="ph tt">opt/python/streams/spl_samples.py</tt> for examples of how data is passed into and out of Python from SPL, using positional arguments.
+</p>
+
+<p class="p">E.g.
+</p>
+
+<p class="p">python3 $HOME/toolkits/com.ibm.streamsx.topology/bin/spl-python-extract.py -i samples/python/com.ibm.streamsx.topology.pysamples
+</p>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

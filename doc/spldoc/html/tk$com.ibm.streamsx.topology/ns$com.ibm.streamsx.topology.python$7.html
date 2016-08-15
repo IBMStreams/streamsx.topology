@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Conversion between SPL and Python tuples."/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Conversion between SPL and Python tuples.</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">Conversion between SPL and Python tuples.</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.4.3</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$6.html">Decorating Python Functions as SPL Operators</a> &gt; Conversion between SPL and Python tuples.</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">SPL attributes map to Python tuples by position.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">SPL Tuple passed into a Python function
+</h2>
+
+<div class="p">When an SPL tuple is passed into a Python function through its SPL operator its attributes are passed by position. The first attribute is the first positional parameter in the Python function. For example:
+<pre class="pre codeblock">
+# SPL input schema: tuple&lt;int32 id, float64 reading&gt;
+＠spl.sink
+def myfunc(a,b):
+  # a is set to: id
+  # b is set to: reading
+</pre>
+
+
+</div>
+
+<p class="p">If more SPL attributes exist than specified parameters then the additional attributes are ignored.
+</p>
+
+<div class="p">A Python variable argument can be used to capture all of the remaining attributes, for example:
+<pre class="pre codeblock">
+# SPL input schema: tuple&lt;int32 id, float64 reading, float lat, float lon&gt;
+＠spl.sink
+def myvarargfunc(a, *values)
+  # a is set to: id
+  # values is set to the values of: reading, lat, lon
+</pre>
+
+
+</div>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Python function return conversion to SPL Tuples
+</h2>
+
+<p class="p">A Python function must return <tt class="ph tt">None</tt>, a Python tuple or a list of Python tuples. When <tt class="ph tt">None</tt> is return then no tuple will be submitted to the operator's output port. When a single tuple is returned is is converted to an SPL tuple and submitted to the output port. When a list of tuples is returned, each tuple is converted to a tuple and submitted to the output port, in order of the list starting with the first tuple (position 0).
+</p>
+
+<p class="p">The values of a Python tuple are assigned to an output SPL tuple by position, so the first value in the Python tuple is assigned to the first attribute in the SPL tuple.
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+# SPL output schema: tuple&lt;int32 x, float64 y, float32 z&gt;
+＠spl.pipe
+def myfunc(a,b):
+   return a,b,a+b
+
+# The SPL output will be:
+# x is set to: a
+# y is set to: b 
+# z is set to: a+b
+</pre>
+
+
+</div>
+
+<p class="p">When a returned tuple has less values than attributes in the SPL output schema the attributes not set by the Python function will be set to their SPL default or copied from the input tuple, depending on the operator type.
+</p>
+
+<p class="p">When a returned tuple has more values than attributes in the SPL output schema then the additional values are ignored.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Supported SPL types
+</h2>
+
+<p class="p">A limited set of SPL types are supported.
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> <strong class="ph b">Primitive types</strong>
+<ul class="ul">
+<li class="li"> <tt class="ph tt">boolean</tt></li>
+
+<li class="li"> <tt class="ph tt">int8</tt>, <tt class="ph tt">int16</tt>, <tt class="ph tt">int32</tt>, <tt class="ph tt">int64</tt></li>
+
+<li class="li"> <tt class="ph tt">uint8</tt>, <tt class="ph tt">uint16</tt>, <tt class="ph tt">uint32</tt>, <tt class="ph tt">uint64</tt></li>
+
+<li class="li"> <tt class="ph tt">float32</tt>, <tt class="ph tt">float64</tt></li>
+
+<li class="li"> <tt class="ph tt">rstring</tt>, <tt class="ph tt">ustring</tt></li>
+
+</ul>
+</li>
+
+<li class="li"> <strong class="ph b">Collection types</strong>
+<ul class="ul">
+<li class="li"> <tt class="ph tt">list&lt;P&gt;</tt> where <tt class="ph tt">P</tt> is one of the supported primitive types. Passed into Python as a list.</li>
+
+<li class="li"> <tt class="ph tt">map&lt;K,V&gt;</tt> where <tt class="ph tt">K</tt> and <tt class="ph tt">V</tt> are supported primitive types. Passed into Python as a dictionary.</li>
+
+</ul>
+</li>
+
+</ul>
+
+</div>
+
+<p class="p">For an input port all the above types are supported.
+</p>
+
+<p class="p">For an output port only primitive types are supported.
+</p>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

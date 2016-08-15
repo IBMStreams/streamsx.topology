@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Context Types"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Context Types</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">Context Types</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.4.3</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$1.html">Python Application API</a> &gt; Context Types</p>
+
+</div>
+
+
+<div class="section">
+<div class="p">Only submission using <tt class="ph tt">DISTRIBUTED</tt>, <tt class="ph tt">BUNDLE</tt> and <tt class="ph tt">STANDALONE</tt> context type are supported.
+<ul class="ul">
+<li class="li"> <tt class="ph tt">DISTRIBUTED</tt> converts the application to an SPL graph, compiles it and submits it as a Streams application bundle to a Streams instance. The bundle is submitted using <tt class="ph tt">streamtool</tt> which must be setup to submit without requiring authentication input.</li>
+
+<li class="li"> <tt class="ph tt">BUNDLE</tt> converts the application to an SPL graph and compiles it, producing a SPL application bundle (.sab file).  The application is executed separately by submitting the bundle to an IBM Streams instance as a distributed application.  A bundle can be submitted to an IBM Streams instance using <tt class="ph tt">streamtool submitjob</tt>, the IBM Streams Console, or IBM Streams JMX API.</li>
+
+<li class="li"> <tt class="ph tt">STANDALONE</tt> converts the application to an SPL graph, compiles it and executes it as an IBM Streams standalone application.  The standalone execution is spawned as a separate process.</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

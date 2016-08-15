@@ -22,13 +22,13 @@
 <div class="body refbody">
 <div class="section">
 <p class="p">
-<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.3.0</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology</a> &gt; types.spl</p>
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.4.3</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology</a> &gt; types.spl</p>
 
 </div>
 
 <div class="section">
 
-<p class="p">Interchangeable SPL types. SPL tuple types that can be used to interchange streams between IBM Streams applications implemented in different languages, such as SPL and Java.
+<p class="p">Interchangeable SPL types. SPL tuple types that can be used to interchange streams between IBM Streams applications implemented in different languages, such as SPL, Python, Java &amp; Scala.
 </p>
 
 <p class="p">SPL uses structural equivalence for types, which means that types of the same structural composition are considered identical. This means that another toolkit or application need not use these type definitions, and thus can avoid being dependent on this toolkit. For example all these streams definitions are identical:
@@ -59,16 +59,16 @@
 
       <dd class="dd">
 <ul class="sl simple">
-<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__Blob">Blob</a></strong>: Tuple type representing binary tuples published by an application from the Java Application API.
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__Blob">Blob</a></strong>: Tuple type representing binary tuples.
 </li>
 
-<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__Json">Json</a></strong>: Tuple type for representing JSON in SPL.
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__Json">Json</a></strong>: Tuple type for representing JSON.
 </li>
 
-<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__String">String</a></strong>: Tuple type representing string tuples published by an application from the Java Application API.
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__String">String</a></strong>: Tuple type representing string tuples.
 </li>
 
-<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__XML">XML</a></strong>: Tuple type representing XML tuples published by an application from the Java Application API.
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__XML">XML</a></strong>: Tuple type representing XML tuples.
 </li>
 
 </ul>
@@ -89,7 +89,19 @@
 </div>
 <div class="section">
 
-<p class="p">Tuple type for representing JSON in SPL. 
+<p class="p">Tuple type for representing JSON.
+</p>
+
+<p class="p">Using this schema in an SPL application with <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">com.ibm.streamsx.topology.topic::Publish</a> and <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">com.ibm.streamsx.topology.topic::Subscribe</a> allows exchange of tuples between SPL, Python, Java &amp; Scala. SPL applications can use the <tt class="ph tt">com.ibm.streamsx.json</tt> toolkit to convert SPL tuples into JSON.
+</p>
+
+<p class="p">Any stream published by a Python application using <tt class="ph tt">schema.CommonSchema.Json</tt> will have this schema.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream&lt;JSONObject&gt;</tt> published by a Java application will have this schema.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream[JSONObject]</tt> published by a Scala application will have this schema. 
 </p>
 
 </div>
@@ -106,10 +118,19 @@
 </div>
 <div class="section">
 
-<p class="p">Tuple type representing string tuples published by an application from the Java Application API. Using this schema in an SPL application with <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">com.ibm.streamsx.topology.topic::Publish</a> and <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">com.ibm.streamsx.topology.topic::Subscribe</a> allows exchange of tuples between SPL and Java.
+<p class="p">Tuple type representing string tuples.
 </p>
 
-<p class="p">Any Java stream of type <tt class="ph tt">TStream&lt;String&gt;</tt> published by a Java application will have this schema. 
+<p class="p">Using this schema in an SPL application with <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">com.ibm.streamsx.topology.topic::Publish</a> and <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">com.ibm.streamsx.topology.topic::Subscribe</a> allows exchange of tuples between SPL, Python, Java &amp; Scala.
+</p>
+
+<p class="p">Any stream published by a Python application using <tt class="ph tt">schema.CommonSchema.String</tt> will have this schema.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream&lt;String&gt;</tt> published by a Java application will have this schema.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream[String]</tt> published by a Scala application will have this schema. 
 </p>
 
 </div>
@@ -126,10 +147,16 @@
 </div>
 <div class="section">
 
-<p class="p">Tuple type representing XML tuples published by an application from the Java Application API. Using this schema in an SPL application with <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">com.ibm.streamsx.topology.topic::Publish</a> and <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">com.ibm.streamsx.topology.topic::Subscribe</a> allows exchange of tuples between SPL and Java.
+<p class="p">Tuple type representing XML tuples.
 </p>
 
-<p class="p">Any Java stream of type <tt class="ph tt">TStream&lt;com.ibm.streams.operator.types.XML&gt;</tt> published by a Java application will have this schema. 
+<p class="p">Using this schema in an SPL application with <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">com.ibm.streamsx.topology.topic::Publish</a> and <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">com.ibm.streamsx.topology.topic::Subscribe</a> allows exchange of tuples between SPL, Java &amp; Scala.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream&lt;com.ibm.streams.operator.types.XML&gt;</tt> published by a Java application will have this schema.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream[com.ibm.streams.operator.types.XML]</tt> published by a Scala application will have this schema. 
 </p>
 
 </div>
@@ -146,10 +173,16 @@
 </div>
 <div class="section">
 
-<p class="p">Tuple type representing binary tuples published by an application from the Java Application API. Using this schema in an SPL application with <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">com.ibm.streamsx.topology.topic::Publish</a> and <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">com.ibm.streamsx.topology.topic::Subscribe</a> allows exchange of tuples between SPL and Java.
+<p class="p">Tuple type representing binary tuples.
 </p>
 
-<p class="p">Any Java stream of type <tt class="ph tt">TStream&lt;com.ibm.streams.operator.types.Blob&gt;</tt> published by a Java application will have this schema. 
+<p class="p">Using this schema in an SPL application with <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">com.ibm.streamsx.topology.topic::Publish</a> and <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">com.ibm.streamsx.topology.topic::Subscribe</a> allows exchange of tuples between SPL, Java &amp; Scala.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream&lt;com.ibm.streams.operator.types.Blob&gt;</tt> published by a Java application will have this schema.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream[com.ibm.streams.operator.types.Blob]</tt> published by a Scala application will have this schema. 
 </p>
 
 </div>

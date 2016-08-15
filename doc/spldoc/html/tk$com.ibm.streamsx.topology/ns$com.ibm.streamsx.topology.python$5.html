@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="MQTT support"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>MQTT support</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">MQTT support</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.4.3</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$1.html">Python Application API</a> &gt; MQTT support</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">Publishing and subscribing to an MQTT broker.
+</p>
+
+<p class="p"> A simple connector to a MQTT broker for publishing  string tuples to MQTT topics, and  subscribing to MQTT topics and creating streams.
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> <tt class="ph tt">MqttStreams(self, config)</tt> MQTT Connector </li>
+
+</ul>
+
+</div>
+
+<p class="p">A connector is for a specific MQTT Broker as specified in the configuration object config. Any number of  publish()and  subscribe() connections may be created from a single MqttStreams connector.
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> <tt class="ph tt">publish(self, pub_stream, topic)</tt> function on MQTT Conector
+<p class="p">  Publish this stream (pub_stream) on a topic to an MQTT server for applications to subscribe to.   A Streams application may publish a stream to an MQTT server to allow other   applications to subscribe to it. A subscriber matches a   publisher if the topics and server URI match.  The schema of the stream to publish must be tuple&lt;rstring message&gt;
+</p>
+
+<p class="p">  param: <tt class="ph tt">pub_stream</tt>: Stream to publish to MQTT server.   param <tt class="ph tt">topic</tt>: Topic to publish this stream to.
+</p>
+
+<p class="p">  return: None
+</p>
+</li>
+
+<li class="li">
+<p class="p"> <tt class="ph tt">subscribe(self, topic)</tt> function on MQTT Conector
+</p>
+
+<p class="p">  Subscribe to a topic published to a MQTT server.   A Streams application may subscribe to a stream published to a MQTT server.    A subscriber matches a publisher if the topic matches.   The schema of the stream returned from the MQTT server is tuple&lt;rstring message&gt;
+</p>
+
+<p class="p">  param <tt class="ph tt">topic</tt>: Topic to subscribe to.   return: A Stream whose tuples have been published to the topic on a MQTT server.  
+</p>
+</li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Sample use:
+</h2>
+
+<div class="p">
+<pre class="pre codeblock">
+topo = Topology("An MQTT application")
+// optionally, define configuration information
+config = {}
+config['clientID'] = "test_MQTTpublishClient"
+config['defaultQOS'] = 1  (needs to be int vs long)
+config['qos'] = int("1") #(needs to be int vs long)
+config['keepAliveInterval'] = int(20) (needs to be int vs long)
+config['commandTimeoutMsec'] = 30000 (needs to be int vs long)
+config['reconnectDelayMsec'] = 5000 (needs to be int vs long)
+config['receiveBufferSize'] = 10 (needs to be int vs long)
+config['reconnectionBound'] = int(20)
+config['retain'] = True 
+config['password'] = "mypw"
+config['trustStore'] = "/tmp/no-such-trustStore"
+config['trustStorePassword'] = "trustpw"
+config['keyStore'] = "/tmp/no-such-keyStore"
+config['keyStorePassword'] = "keypw"
+
+// create the connector's configuration property map
+config['serverURI'] = "tcp://localhost:1883"
+config['userID'] = "user1id"
+config[' password'] = "user1passwrd"
+
+// create the connector
+mqstream = MqttStreams(topo,config)
+
+// publish a python source stream to the topic "python.topic1"
+topic = "python.topic1"
+src = topo.source(test_functions.mqtt_publish)
+mqstream.publish(src, topic) 
+streamsx.topology.context.submit("BUNDLE", topo.graph)
+
+ # // subscribe to the topic "python.topic1"
+topic = ["python.topic1", ]
+mqs = mqstream.subscribe(topic) 
+mqs.print()
+</pre>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+</body>
+</html>
