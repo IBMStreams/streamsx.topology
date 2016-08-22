@@ -14,10 +14,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URLEncoder;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -41,10 +39,7 @@ import org.apache.http.util.EntityUtils;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.ContextProperties;
-import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
-import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
 

@@ -458,7 +458,8 @@ public class GraphUtilities {
         addBetween(parentList, childList, op);     
     }
     
-    static void addBetween(List<JSONObject> parents, List<JSONObject> children, JSONObject op){
+    @SuppressWarnings("unchecked")
+	static void addBetween(List<JSONObject> parents, List<JSONObject> children, JSONObject op){
         for(JSONObject parent : parents){
             for(JSONObject child : children){              
                 JSONArray outputs = (JSONArray) parent.get("outputs");
@@ -472,7 +473,8 @@ public class GraphUtilities {
         }
     }
     
-    static void insertOperatorBetweenPorts(JSONObject input, JSONObject output, JSONObject op){
+    @SuppressWarnings("unchecked")
+	static void insertOperatorBetweenPorts(JSONObject input, JSONObject output, JSONObject op){
         String oportName = (String) output.get("name");
         String iportName = (String) input.get("name");
         
@@ -485,12 +487,12 @@ public class GraphUtilities {
         // Attach op in inputs and outputs
         JSONArray opInputConns = (JSONArray) opInput.get("connections");
         JSONArray opOutputConns = (JSONArray) opOutput.get("connections");
-	if(!opInputConns.contains(oportName)){
-	    opInputConns.add(oportName);
-	}
-	if(!opOutputConns.add(iportName)){
-	    opOutputConns.add(iportName);
-	}
+        if(!opInputConns.contains(oportName)){
+            opInputConns.add(oportName);
+        }
+        if(!opOutputConns.add(iportName)){
+            opOutputConns.add(iportName);
+        }
         
         JSONArray outputConns = (JSONArray) output.get("connections");
         JSONArray inputConns = (JSONArray) input.get("connections");

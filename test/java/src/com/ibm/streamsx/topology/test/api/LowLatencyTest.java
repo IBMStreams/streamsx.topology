@@ -90,7 +90,7 @@ public class LowLatencyTest extends TestTopology {
                 lowLatencyTag = (String) placement.get(JOperator.PLACEMENT_LOW_LATENCY_REGION_ID);
             String kind = (String)op.get("kind");
             JSONObject queue = (JSONObject) op.get("queue");
-            if(queue != null && (lowLatencyTag!=null || lowLatencyTag.equals(""))){
+            if(queue != null && (lowLatencyTag == null || lowLatencyTag.equals(""))){
                 throw new IllegalStateException("Operator has threaded port when it shouldn't.");
             }
             if(queue != null 

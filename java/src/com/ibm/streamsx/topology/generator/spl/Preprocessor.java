@@ -107,10 +107,10 @@ class Preprocessor {
         String routing = (String) hashAdder.get("routing");
 
         // The hashremover object
-	// hashAdder -> $Parallel$ -> $Isolate -> hashremover
+        // hashAdder -> $Parallel$ -> $Isolate -> hashremover
         JSONObject hashRemover = GraphUtilities.getDownstream(hashAdder, graph).get(0);
-	hashRemover = GraphUtilities.getDownstream(hashRemover, graph).get(0);
-	hashRemover = GraphUtilities.getDownstream(hashRemover, graph).get(0);
+        hashRemover = GraphUtilities.getDownstream(hashRemover, graph).get(0);
+        hashRemover = GraphUtilities.getDownstream(hashRemover, graph).get(0);
         
         List<JSONObject> children = GraphUtilities.getDownstream(hashAdder, graph);
         List<JSONObject> parents = GraphUtilities.getUpstream(hashAdder, graph);
@@ -142,8 +142,8 @@ class Preprocessor {
                 }
             }
         }
-	if(unparallelParents.size() == 0)
-	    return;
+        if(unparallelParents.size() == 0)
+            return;
         
         for(JSONObject unparallelParent : unparallelParents){
             // Add hashadder before unparallel

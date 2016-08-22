@@ -5,7 +5,6 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Future;
 
 import com.ibm.json.java.JSONObject;

@@ -113,7 +113,8 @@ public class SubscribeSPLDictTest extends PublishSubscribePython {
       Set<T> sorteds = new TreeSet<T> (s);
       Set<T> pyset = new TreeSet<T>();
       for (int i = 0; i < pya.size(); i++) {
-        T val = ((T) pya.get(i));
+        @SuppressWarnings("unchecked")
+		T val = ((T) pya.get(i));
         pyset.add(val);
       }
       for (T si : sorteds) {
