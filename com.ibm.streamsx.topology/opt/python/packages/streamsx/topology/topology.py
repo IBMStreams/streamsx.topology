@@ -423,6 +423,9 @@ class Stream(object):
         autonomous region. This may be called even if this stream is in
         an autonomous region.
 
+        Autonomous is not applicable when a topology is submitted
+        to a STANDALONE contexts and will be ignored.
+
         Args:
             None
         Returns:
