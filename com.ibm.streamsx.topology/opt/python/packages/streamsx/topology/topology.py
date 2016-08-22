@@ -412,6 +412,27 @@ class Stream(object):
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params=publishParams)
         op.addInputPort(outputPort=self.oport)
 
+    def autonomous(self):
+        """
+        Guarantees that downstream processing will run in an autonomous region.
+        By default IBM Streams processing is executed in an autonomous region
+        where any checkpointing of operator state is autonomous (independent)
+        of other operators.
+        
+        This function may be used to end a consistent region by starting an
+        autonomous region. This may be called even if this stream is in
+        an autonomous region.
+
+        Args:
+            None
+        Returns:
+            Stream
+        """
+        op = self.topology.graph.addOperator("$Autonomous$")
+        op.addInputPort(outputPort=self.oport)
+        oport = op.addOutputPort()
+        return Stream(self.topology, oport)
+
 class Routing(Enum):
     ROUND_ROBIN=1
     KEY_PARTITIONED=2
