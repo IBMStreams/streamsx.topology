@@ -284,23 +284,11 @@ public class DependencyResolver {
         final File dstDir = new File((String) (config
                 .get(ContextProperties.TOOLKIT_DIR)), a.dstDirName);
         File absFile = a.absPath.toFile();
-        try {
-        	JSONObject include = new JSONObject();
-        	include.put("source", a.absPath.toString());
-        	include.put("target", a.dstDirName);
-            if (false && absFile.isFile()) {
-                Files.copy(a.absPath, 
-                        new File(dstDir, absFile.getName()).toPath(),
-                        StandardCopyOption.REPLACE_EXISTING);
-            }
-            else if (false && absFile.isDirectory()) {
-                copyDirectoryToDirectory(absFile, dstDir);
-            }
-            includes.add(include);
-        } catch (IOException e) {
-            throw new IOException("Error copying file dependency "+ a.absPath + ": " + e, e);
-        }
-    }
+        JSONObject include = new JSONObject();
+        include.put("source", a.absPath.toString());
+        include.put("target", a.dstDirName);
+        includes.add(include);
+   }
     
     /**
      * Copy srcDir tree to a directory of the same name in dstDir.
