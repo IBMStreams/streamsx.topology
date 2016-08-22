@@ -40,6 +40,7 @@ class OperatorGenerator {
         noteAnnotations(op, sb);
         parallelAnnotation(op, sb);
 	viewAnnotation(op, sb);
+        AutonomousRegions.autonomousAnnotation(op, sb);
         outputClause(op, sb);
         operatorNameAndKind(op, sb);
         inputClause(op, sb);

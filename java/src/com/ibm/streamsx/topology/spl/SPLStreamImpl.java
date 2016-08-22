@@ -121,6 +121,10 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     public SPLStream endLowLatency() {
         return asSPL(super.endLowLatency());
     }
+    @Override
+    public SPLStream autonomous() {
+    	return asSPL(super.autonomous());
+    }
        
     private SPLStream asSPL(TStream<Tuple> tupleStream) {
         // must have been created from addMatchingOutput or addMatchingStream
