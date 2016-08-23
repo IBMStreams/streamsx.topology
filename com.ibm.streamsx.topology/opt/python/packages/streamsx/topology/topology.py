@@ -414,7 +414,7 @@ class Stream(object):
 
     def autonomous(self):
         """
-        Guarantees that downstream processing will run in an autonomous region.
+        Starts an autonomous region for downstream processing.
         By default IBM Streams processing is executed in an autonomous region
         where any checkpointing of operator state is autonomous (independent)
         of other operators.
@@ -425,6 +425,8 @@ class Stream(object):
 
         Autonomous is not applicable when a topology is submitted
         to a STANDALONE contexts and will be ignored.
+
+        Supported since v1.5
 
         Args:
             None
