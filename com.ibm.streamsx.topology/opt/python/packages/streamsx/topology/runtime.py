@@ -24,6 +24,9 @@ def pickleReturn(function) :
 # Given a callable 'callable', return a function
 # that depickles the input and then calls 'callable'
 # returning the callable's return
+# The returned function must not maintain a reference
+# to the passed in value as it will be a memory view
+# object with memory that will become invalid after the call.
 def pickle_in(callable) :
     ac = _getCallable(callable)
     def _wf(v):
@@ -119,6 +122,9 @@ def _getCallable(f):
 ## {pickle,json,string} -> {pickle}
 ##
 
+# The returned function must not maintain a reference
+# to the passed in value as it will be a memory view
+# object with memory that will become invalid after the call.
 def pickle_in__pickle_out(callable):
     ac = _getCallable(callable)
     def _wf(v):
@@ -161,6 +167,9 @@ def object_in__pickle_out(callable):
 ##  {pickle} ->  {json,string}
 ##
 
+# The returned function must not maintain a reference
+# to the passed in value as it will be a memory view
+# object with memory that will become invalid after the call.
 def pickle_in__json_out(callable):
     ac = _getCallable(callable)
     def _wf(v):
@@ -220,6 +229,10 @@ class _PickleIterator:
 # an instance of _PickleIterator
 # wrapping an iterator from the iterable
 # Used by PyFunctionMultiTransform
+
+# The returned function must not maintain a reference
+# to the passed in value as it will be a memory view
+# object with memory that will become invalid after the call.
 def pickle_in__pickle_iter(callable):
     ac =_getCallable(callable)
     def _wf(v):

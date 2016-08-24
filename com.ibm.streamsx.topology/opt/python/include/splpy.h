@@ -82,13 +82,13 @@ namespace streamsx {
 
 
     /**
-     * Convert a SPL blob into a Python Byte string 
+     * Convert a SPL blob into a Python Memory view object.
      */
     inline PyObject * pyAttributeToPyObject(const SPL::blob & attr) {
       long int sizeb = attr.getSize();
       const unsigned char * bytes = attr.getData();
 
-      return PyBytes_FromStringAndSize((const char *)bytes, sizeb);
+      return PyMemoryView_FromMemory((char *) bytes, sizeb, PyBUF_READ);
     }
 
     /**
