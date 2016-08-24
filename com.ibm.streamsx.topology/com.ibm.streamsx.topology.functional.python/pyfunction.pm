@@ -54,15 +54,15 @@ sub splpy_tuplestyle{
 sub splpy_inputtuple2value{
  my ($pystyle) = @_;
  if ($pystyle eq 'pickle') {
-  return 'SPL::blob value = ip.get___spl_po();';
+  return 'SPL::blob const & value = ip.get___spl_po();';
  }
 
  if ($pystyle eq 'string') {
-  return 'SPL::rstring value = ip.get_string();';
+  return 'SPL::rstring const & value = ip.get_string();';
  }
  
  if ($pystyle eq 'json') {
-  return 'SPL::rstring value = ip.get_jsonString();';
+  return 'SPL::rstring const & value = ip.get_jsonString();';
  }
 
  if ($pystyle eq 'dict') {
