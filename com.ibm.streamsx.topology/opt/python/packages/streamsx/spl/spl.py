@@ -10,10 +10,23 @@ OperatorType.Pipe.spl_template = 'PythonFunctionPipe'
 OperatorType.Sink.spl_template = 'PythonFunctionSink'
 
 def pipe(wrapped):
+    if inspect.isclass(wrapped):
+      class _pipe_class(object):
+        def __init__(self,*args,**kwargs):
+            self.__splpy_instance = wrapped(*args,**kwargs)
+        def __call__(self, *args,**kwargs):
+            return self.__splpy_instance.__call__(*args, **kwargs)
+      _pipe_class.__splpy_optype = OperatorType.Pipe
+      _pipe_class.__splpy_callable = 'class'
+      _pipe_class.__splpy_file = inspect.getsourcefile(wrapped)
+      return _pipe_class
+    
+
     @functools.wraps(wrapped)
     def _pipe(*args, **kwargs):
         return wrapped(*args, **kwargs)
     _pipe.__splpy_optype = OperatorType.Pipe
+    _pipe.__splpy_callable = 'function'
     _pipe.__splpy_file = inspect.getsourcefile(wrapped)
     return _pipe
 

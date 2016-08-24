@@ -91,8 +91,11 @@ def copyCGT(opdir, ns, name, funcTuple):
          _funcdoc_ = 'Python function ' + funcTuple.__name__ + ' (module ' + funcTuple.__module__ + ')'
      replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", _funcdoc_);
 
-def writeParameterInfo(cfgfile, funcTuple):
-        sig = inspect.signature(funcTuple)
+def writeParameterInfo(cfgfile, opobj):
+        if inspect.isclass(opobj):
+            opobj = opobj.__call__
+        
+        sig = inspect.signature(opobj)
         fixedCount = 0
         params = sig.parameters
         for pname in params:
@@ -109,13 +112,14 @@ def writeParameterInfo(cfgfile, funcTuple):
 # Write out the configuration for the operator
 # as a set of Perl functions that return useful values
 # for the code generator
-def writeConfig(dynm, opdir, name, fnname, funcTuple):
+def write_config(dynm, opdir, module, opname, opobj):
     cfgpath = os.path.join(opdir, 'splpy_operator.pm')
     cfgfile = open(cfgpath, 'w')
-    cfgfile.write('sub splpy_Module { \''+ name   + "\'}\n")
-    cfgfile.write('sub splpy_FunctionName {\'' + fnname + "\'}\n")
-    cfgfile.write('sub splpy_OperatorType {\'' + funcTuple.__splpy_optype.name + "\'}\n")
-    writeParameterInfo(cfgfile, funcTuple)
+    cfgfile.write('sub splpy_Module { \''+ module   + "\'}\n")
+    cfgfile.write('sub splpy_OperatorCallable {\'' + opobj.__splpy_callable + "\'}\n")
+    cfgfile.write('sub splpy_FunctionName {\'' + opname + "\'}\n")
+    cfgfile.write('sub splpy_OperatorType {\'' + opobj.__splpy_optype.name + "\'}\n")
+    writeParameterInfo(cfgfile, opobj)
     cfgfile.write("1;\n")
     cfgfile.close()
 
@@ -137,7 +141,7 @@ def common_tuple_operator(dynm, module, opname, opobj) :
     copyPythonDir("packages")
     copyPythonDir("include")
     copyCGT(opdir, ns, opname, opobj)
-    writeConfig(dynm, opdir, module, opname, opobj)
+    write_config(dynm, opdir, module, opname, opobj)
 
 # Process python objects in a module looking for SPL operators
 # dynm - introspection for the modeul
@@ -177,3 +181,4 @@ for mf in glob.glob(os.path.join(tk_streams, '*.py')):
     dynm = imp.load_source(name, mf)
     streamsPythonFile = inspect.getsourcefile(dynm)
     process_operators(dynm, name, inspect.getmembers(dynm, inspect.isfunction))
+    process_operators(dynm, name, inspect.getmembers(dynm, inspect.isclass))
