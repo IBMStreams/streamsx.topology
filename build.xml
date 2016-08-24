@@ -6,6 +6,7 @@
   <import file="common-build.xml"/>
 
   <property name="release.base" location="release-${ant.project.name}" />
+  <property name="streamsx.py" location="${tk.opt}/python/packages/streamsx"/>
 
   <target name="all">
     <ant dir="java" inheritAll="true"/>
@@ -18,14 +19,9 @@
       <arg value="clone"/>
       <arg value="https://github.com/IBMStreams/streamsx.utility.git"/>
    </exec>
-    <exec executable="cp">
-      <arg value="streamsx.utility/python/packages/streamsx/rest.py"/>
-      <arg value="com.ibm.streamsx.topology/opt/python/packages/streamsx"/>
-    </exec>
-    <exec executable="rm">
-      <arg value="-rf"/>
-      <arg value="streamsx.utility"/>
-    </exec>
+    <copy file="streamsx.utility/python/packages/streamsx/rest.py"
+      todir="${streamsx.py}"/>
+   <delete dir="streamsx.utility"/>
   </target>
 
   <target name="clean" >
@@ -38,6 +34,8 @@
     <delete dir="${tk}/doc/scaladoc"/>
     <delete dir="${tk}/doc/pydoc"/>
     <delete dir="${release.base}"/>
+    <delete dir="streamsx.utility"/>
+    <delete file="${streamsx.py}/rest.py"/>
   </target>
 
   <target name="test" >
