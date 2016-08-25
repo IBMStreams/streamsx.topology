@@ -1,3 +1,5 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016
 from streamsx.topology.schema import *
 
 all_spl_types = StreamSchema("tuple<boolean b,"
