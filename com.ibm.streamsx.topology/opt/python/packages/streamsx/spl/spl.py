@@ -29,15 +29,8 @@ def pipe(wrapped):
     """
     if not inspect.isfunction(wrapped):
         raise TypeError('A function is required')
-          
-    @functools.wraps(wrapped)
-    def _pipe(*args, **kwargs):
-        return wrapped(*args, **kwargs)
-    _pipe.__splpy_optype = OperatorType.Pipe
-    _pipe.__splpy_callable = 'function'
-    _pipe.__splpy_attributes = PassBy.position
-    _pipe.__splpy_file = inspect.getsourcefile(wrapped)
-    return _pipe
+
+    return _wrapforsplop(OperatorType.Pipe, PassBy.position, wrapped)
 
 #
 # Wrap object for an SPL operator, either
@@ -57,6 +50,7 @@ def _wrapforsplop(optype, attributes, wrapped):
         _op_class.__splpy_callable = 'class'
         _op_class.__splpy_attributes = attributes
         _op_class.__splpy_file = inspect.getsourcefile(wrapped)
+        _op_class.__doc__ = wrapped.__doc__
         return _op_class
     if not inspect.isfunction(wrapped):
         raise TypeError('A function or callable class is required')
