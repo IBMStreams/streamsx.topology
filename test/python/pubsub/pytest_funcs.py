@@ -1,3 +1,5 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016
 def string_add(v):
    return v + "_Python234"
 
