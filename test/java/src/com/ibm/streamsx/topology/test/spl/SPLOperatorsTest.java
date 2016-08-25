@@ -26,7 +26,6 @@ import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
-import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.spl.SPL;

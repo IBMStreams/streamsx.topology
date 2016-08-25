@@ -12,7 +12,6 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;

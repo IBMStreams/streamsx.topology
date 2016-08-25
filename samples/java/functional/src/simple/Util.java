@@ -4,7 +4,6 @@
  */
 package simple;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
