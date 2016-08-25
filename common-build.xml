@@ -10,6 +10,8 @@
   <property environment="env"/>
   <fail unless="env.STREAMS_INSTALL" message="STREAMS_INSTALL not set."/>
   <property name="streams.install" value="${env.STREAMS_INSTALL}"/>
+  <property name="env.STREAMS_TOPOLOGYX_PYTHON" value="python3"/>
+  <property name="streams.python" value="${env.STREAMS_TOPOLOGYX_PYTHON}"/>
   <property name="tk.name" value="com.ibm.streamsx.topology"/>
   <property name="tk" location="${streamsx.topology}/${tk.name}"/>
   <property name="tk.opt" location="${tk}/opt"/>
