@@ -529,7 +529,8 @@ For an input port all the above types are supported.
 For an output port only primitive types are supported.
 
 ++ \@spl.map
-Decorator to create a stateful or stateless SPL operator from a Python callable class or function.
+Decorator to create a stateful or stateless SPL map operator from a Python callable class or function.
+
 When a Python callable class is decorated with `@spl.map`
 a potentially stateful SPL operator is created with a single input port
 and single output port.  For each input tuple the `__call__` function is called,
@@ -545,9 +546,24 @@ and its return value is used to submit zero or more tuples on the output port.
 
 TODO: Add more info about parameter passing.
  
+++ \@spl.for_each
+Decorator to create a stateful or stateless SPL sink operator from a Python callable class or function.
+
+When a Python callable class is decorated with `@spl.for_each`
+a potentially stateful SPL operator is created with a single input port
+and no output ports.  For each input tuple the `__call__` function is called.
+If the class has instance attributes then they are the state of the
+operator and are private to each invocation of the operator and maintained
+across calls to its `__call__` method.
+
+When a Python function is decorated with `@spl.for_each`
+a stateless SPL operator is created with a single input port
+and no output ports. For each input tuple the function is called.
+
+TODO: Add more info about parameter passing.
 
 ++ \@spl.pipe
-Decorator to create a stateless SPL operator from a Python function.
+Decorator to create a stateless SPL map operator from a Python function.
 When a Python function is decorated with `@spl.pipe`
 a stateless SPL operator is created with a single input port
 and single output port.  For each input tuple the function is called,
@@ -582,7 +598,7 @@ Demonstration of returning multiple tuples as a list.
 
 
 ++ \@spl.sink
-Decorator to create a sink SPL operator.
+Decorator to create a stateless SPL sink operator.
 If the Python function is decorated with `@spl.sink`
 then the operator is a sink operator, with a single
 input port and no output ports.
