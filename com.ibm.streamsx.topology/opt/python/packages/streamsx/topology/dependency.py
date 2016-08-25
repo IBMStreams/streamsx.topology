@@ -29,10 +29,10 @@ class _DependencyResolver(object):
         self._add_dependency(module)
         # recursively get the module's imports and add those as dependencies
         imported_modules = _get_imported_modules(module)
-        print ("_get_imported_modules for {0}: {1}".format(module.__name__, imported_modules))
+        #print ("_get_imported_modules for {0}: {1}".format(module.__name__, imported_modules))
         for imported_module_name,imported_module in imported_modules.items():
             if imported_module not in self._processed_modules:
-                print ("add_dependencies for {0} {1}".format(imported_module.__name__, imported_module))
+                #print ("add_dependencies for {0} {1}".format(imported_module.__name__, imported_module))
                 self.add_dependencies(imported_module)
     
     @property
@@ -56,9 +56,7 @@ class _DependencyResolver(object):
         if _is_streamsx_topology_module(module):
             return None
         package_name = _get_package_name(module)
-        print("Adding package name: ", package_name)
         top_package_name = module.__name__.split('.')[0]
-        print("top package name is ", top_package_name, " module name is ", module.__name__)
 
         if package_name and top_package_name in sys.modules:
             # module is part of a package
