@@ -472,7 +472,7 @@ When an SPL tuple is passed into a Python function through its SPL operator
 its attributes are passed by position. The first attribute is
 the first positional parameter in the Python function. For example:
     # SPL input schema: tuple<int32 id, float64 reading>
-    /@spl.sink
+    \@spl.sink
     def myfunc(a,b):
       # a is set to: id
       # b is set to: reading
