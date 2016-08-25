@@ -91,6 +91,23 @@ class AddSeq:
         id = self.seq
         self.seq += 1
         return tuple + (id,)
+
+from datetime import datetime
+
+# Stateful sink operator that prints each tuple
+# with the inter-tuple arrival time.
+#
+@spl.for_each(attributes=spl.PassBy.position)
+class PrintWithTimeIntervals:
+    def __init__(self):
+        self.last = datetime.now()
+
+    def __call__(self, *tuple):
+        now = datetime.now()
+        iat = now - self.last
+        self.last = now
+        print(tuple, " ", iat, " seconds", flush=True)
+
     
 # Filters tuples by only returning a value if
 # the first attribute is less than the second
