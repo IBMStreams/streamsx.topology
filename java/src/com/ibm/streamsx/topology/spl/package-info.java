@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015,2016  
+# Copyright IBM Corp. 2016,2016  
  */
 /**
  * Integration between Streams SPL and Java applications.

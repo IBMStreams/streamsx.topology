@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016  
+ */
 package com.ibm.streamsx.topology.jobconfig;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.SUBMISSION_PARAMS;

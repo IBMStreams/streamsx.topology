@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015  
+# Copyright IBM Corp. 2016  
  */
 @Namespace("com.ibm.streamsx.topology.testing")
 package com.ibm.streamsx.topology.internal.tester.ops;

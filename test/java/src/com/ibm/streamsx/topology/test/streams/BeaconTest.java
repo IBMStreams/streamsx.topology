@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015  
+# Copyright IBM Corp. 2016  
  */
 package com.ibm.streamsx.topology.test.streams;
 
@@ -32,7 +32,7 @@ import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015  
+# Copyright IBM Corp. 2016  
  */
 public class BeaconTest extends TestTopology {
     
