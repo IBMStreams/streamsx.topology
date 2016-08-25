@@ -14,6 +14,9 @@ def main():
 
   ts = ts.filter(pytest_funcs.json_filter)
 
+  # Verify that autonomous can be called from Python
+  ts = ts.autonomous()
+
   ts.publish("pytest/json/filter/result", schema=CommonSchema.Json)
 
   config = {}

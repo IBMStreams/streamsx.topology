@@ -579,6 +579,12 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
     
     @Override
+    public TStream<T> autonomous() {
+        BOutput autonomousOutput = builder().autonomous(output()); 
+        return addMatchingStream(autonomousOutput);
+    }
+    
+    @Override
     public TStream<T> lowLatency() {
         BOutput toBeLowLatency = output();
         BOutput lowLatencyOutput = builder().lowLatency(toBeLowLatency);

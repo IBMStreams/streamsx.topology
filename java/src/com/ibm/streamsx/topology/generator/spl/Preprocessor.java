@@ -43,6 +43,8 @@ class Preprocessor {
         
         // At this point, the $Union$ operators in the graph are just place holders.
         removeUnionOperators();
+        
+        AutonomousRegions.preprocessAutonomousRegions(graph);
     }
        
     private void removeUnionOperators(){

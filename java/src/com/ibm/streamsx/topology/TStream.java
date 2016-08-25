@@ -1074,6 +1074,26 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     // TKeyedStream<T,T> key();
     
     /**
+     * Return a stream matching this stream whose subsequent
+     * processing will execute in an autonomous region.
+     * By default IBM Streams processing
+     * is executed in an autonomous region where any checkpointing of
+     * operator state is autonomous (independent) of other operators.
+     * <BR>
+     * This method may be used to end a consistent region
+     * by starting an autonomous region. This may be called
+     * even if this stream is in an autonomous region.
+     * <BR>
+     * Autonomous is not applicable when a topology is submitted
+     * to {@link com.ibm.streamsx.topology.context.StreamsContext.Type#EMBEDDED embedded}
+     * and {@link com.ibm.streamsx.topology.context.StreamsContext.Type#STANDALONE standalone}
+     * contexts and will be ignored.
+     * 
+     * @since v1.5
+     */
+    TStream<T> autonomous();
+    
+    /**
      * Internal method.
      * <BR>
      * <B><I>Not intended to be called by applications, may be removed at any time.</I></B>

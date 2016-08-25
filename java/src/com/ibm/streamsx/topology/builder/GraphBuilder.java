@@ -152,6 +152,9 @@ public class GraphBuilder extends BJSONObject {
     public BOutput isolate(BOutput parent){
         return addPassThroughMarker(parent, BVirtualMarker.ISOLATE, false);
     }
+    public BOutput autonomous(BOutput parent){
+        return addPassThroughMarker(parent, BVirtualMarker.AUTONOMOUS, false);
+    }
 
     public BOutput addUnion(Set<BOutput> outputs) {
         BOperator op = addVirtualMarkerOperator(BVirtualMarker.UNION);

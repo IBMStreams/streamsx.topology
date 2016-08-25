@@ -283,8 +283,9 @@ public class SPLStreamsTest extends TestTopology {
         assertSPLStream(splStreamA, TEST_SCHEMA);
         assertNotSame(splStreamA, splStreamB);
 
-        
-
+        splStreamB = splStreamA.autonomous();
+        assertSPLStream(splStreamB, TEST_SCHEMA);
+        assertNotSame(splStreamA, splStreamB);
     }
     
     static void assertSPLStream(SPLStream splStream, StreamSchema schema) {

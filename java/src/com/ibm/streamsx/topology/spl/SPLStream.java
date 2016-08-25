@@ -155,4 +155,10 @@ public interface SPLStream extends TStream<Tuple>, SPLInput {
      */
     @Override
     SPLStream endParallel();
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    SPLStream autonomous();
 }

@@ -58,6 +58,8 @@ public class StreamTest extends TestTopology {
         assertStream(topology, source);
         assertSame(String.class, source.getTupleClass());
         assertSame(String.class, source.getTupleType());
+        
+        assertNotSame(source, source.autonomous());
     }
 
     @Test

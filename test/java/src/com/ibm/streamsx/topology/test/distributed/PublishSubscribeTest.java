@@ -93,6 +93,11 @@ public class PublishSubscribeTest extends TestTopology {
     public void testPublishStringToSPL() throws Exception {
         TStream<String> source = source();
         
+        // Check autonomous works in that it produces working SPL code.
+        source = source.autonomous();
+        assertEquals(String.class, source.getTupleClass());
+        assertEquals(String.class, source.getTupleType());
+        
         source.publish("testPublishStringSPL");
         
         SPLStream subscribe = SPLStreams.subscribe(source.topology(), "testPublishStringSPL", SPLSchemas.STRING);        
