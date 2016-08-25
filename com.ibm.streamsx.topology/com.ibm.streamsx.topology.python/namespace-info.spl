@@ -432,15 +432,15 @@ connections may be created from a single MqttStreams connector.
 	mqs.print()
 
 + Decorating Python Functions as SPL Operators
-SPL operators that call a Python function are created by
+SPL operators that call a Python function or callable class are created by
 decorators provided by this toolkit.
 
 `bin/spl-python-extract.py` is a Python script that creates SPL operators from
-Python functions contained in modules in a toolkit.
+Python functions and classes contained in modules in a toolkit.
 The resulting operators embed the Python runtime to
 allow stream processing using Python.
 
-To create SPL operators from Python functions one or more Python
+To create SPL operators from Python functions or classes one or more Python
 modules are created in the `opt/python/streams` directory
 of an SPL toolkit.
 
@@ -461,9 +461,13 @@ For example:
     def splNamespace():
        return "com.ibm.streamsx.topology.pysamples.mail"
 
-Any Python docstring for the function is copied into the SPL operator's description field in its operator model, providing a description for IDE developers using the toolkit.
+Decorating a Python function produces a stateless SPL operator. The function may reference variables in the module that are effectively state but such variables are shared by all invocations of the operator within the same processing elemen.
 
-Functions in the modules that are not decorated, decorated with `@spl.ignore` or start with `spl` are ignored and will not result in any SPL operator.
+Decorating a Python class produces a stateful SPL operator. The instance attributes of the class are the state for the operator. 
+
+Any Python docstring for the function or class is copied into the SPL operator's description field in its operator model, providing a description for IDE developers using the toolkit.
+
+Functions or classes in the modules that are not decorated, decorated with `@spl.ignore` or start with `spl` are ignored and will not result in any SPL operator.
 
 ++ Conversion between SPL and Python tuples.
 SPL attributes map to Python tuples by position.

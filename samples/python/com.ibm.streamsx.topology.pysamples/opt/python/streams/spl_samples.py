@@ -72,7 +72,26 @@ def Noop(*tuple):
     "Pass the tuple along without any change"
     return tuple
 
+# Stateful operator that adds a sequence number
+# as the last attribute of the input tuple.
+# The instance attribute self.seq is the operator's
+# state and is private to the operator invocation.
+#
+# From an SPL point of view the output schema
+# must the input schema plus one additional
+# numeric attribute as the last attribute.
 
+@spl.map(attributes=spl.PassBy.position)
+class AddSeq:
+    "Add a sequence number as the last attribute"
+    def __init__(self):
+        self.seq = 0
+
+    def __call__(self, *tuple):
+        id = self.seq
+        self.seq += 1
+        return tuple + (id,)
+    
 # Filters tuples by only returning a value if
 # the first attribute is less than the second
 # The returned value is a Tuple containing
