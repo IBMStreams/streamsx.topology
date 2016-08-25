@@ -528,12 +528,28 @@ For an input port all the above types are supported.
 
 For an output port only primitive types are supported.
 
+++ \@spl.map
+Decorator to create a stateful or stateless SPL operator from a Python callable class or function.
+When a Python callable class is decorated with `@spl.map`
+a potentially stateful SPL operator is created with a single input port
+and single output port.  For each input tuple the `__call__` function is called,
+and its return value is used to submit zero or more tuples on the output port.
+If the class has instance attributes then they are the state of the
+operator and are private to each invocation of the operator and maintained
+across calls to its `__call__` method.
+
+When a Python function is decorated with `@spl.map`
+a stateless SPL operator is created with a single input port
+and single output port.  For each input tuple the function is called,
+and its return value is used to submit zero or more tuples on the output port. 
+
+TODO: Add more info about parameter passing.
  
 
 ++ \@spl.pipe
-Decorator to create a pipe SPL operator.
+Decorator to create a stateless SPL operator from a Python function.
 When a Python function is decorated with `@spl.pipe`
-a pipe SPL operator is created with a single input port
+a stateless SPL operator is created with a single input port
 and single output port.  For each input tuple the function is called,
 and its return value is used to submit zero or more tuples on the output port. 
 
