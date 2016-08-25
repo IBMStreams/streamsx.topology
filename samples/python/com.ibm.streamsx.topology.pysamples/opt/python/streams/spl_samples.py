@@ -69,7 +69,7 @@ def splNamespace():
 
 @spl.pipe
 def Noop(*tuple):
-    "Pass the tuple along without any change"
+    "Pass the tuple along without any change."
     return tuple
 
 # Stateful operator that adds a sequence number
@@ -83,7 +83,7 @@ def Noop(*tuple):
 
 @spl.map(attributes=spl.PassBy.position)
 class AddSeq:
-    "Add a sequence number as the last attribute"
+    "Add a sequence number as the last attribute."
     def __init__(self):
         self.seq = 0
 
@@ -95,10 +95,11 @@ class AddSeq:
 from datetime import datetime
 
 # Stateful sink operator that prints each tuple
-# with the inter-tuple arrival time.
+# with the inter-tuple arrival delay.
 #
 @spl.for_each(attributes=spl.PassBy.position)
 class PrintWithTimeIntervals:
+    "Print tuples with inter-tuple arrival delay."
     def __init__(self):
         self.last = datetime.now()
 
@@ -146,7 +147,7 @@ def SimpleFilter(a,b):
 
 @spl.pipe
 def AddFirstTwoSecondTwo(a,b,c,d):
-    "Add first two and second two attributes"
+    "Add first two and second two attributes."
     return a+b,c+d
 
 # Example where the first attribute is passed by position
@@ -155,7 +156,7 @@ def AddFirstTwoSecondTwo(a,b,c,d):
 #
 @spl.pipe
 def Lowest(threshold, *values):
-    "Find the lowest value above a threshold in all the remaining attributes"
+    "Find the lowest value above a threshold in all the remaining attributes."
     lm = None
     for v in values:
       if v >= threshold:
@@ -171,10 +172,10 @@ def Lowest(threshold, *values):
 #
 @spl.pipe
 def ReturnList(a,b,c):
-    "Demonstrate returning a list of values, each value is submitted as a tuple" 
+    "Demonstrate returning a list of values, each value is submitted as a tuple." 
     return [(a+1,b+1,c+1),(a+2,b+2,c+2),(a+3,b+3,c+3),(a+4,b+4,c+4)]
 
 @spl.sink
 def PrintTuple(*tuple):
-    "Print each tuple to standard out"
+    "Print each tuple to standard out."
     print(tuple, flush=True)
