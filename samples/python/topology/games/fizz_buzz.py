@@ -1,3 +1,5 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
 import fizz_buzz_functions
