@@ -1,3 +1,16 @@
+;; begin_generated_IBM_copyright_prolog                             
+;;                                                                  
+;; This is an automatically generated copyright prolog.             
+;; After initializing,  DO NOT MODIFY OR MOVE                       
+;; **************************************************************** 
+;; Licensed Materials - Property of IBM                             
+;; 5724-Y95                                                         
+;; (C) Copyright IBM Corp.  2016, 2016    All Rights Reserved.      
+;; US Government Users Restricted Rights - Use, duplication or      
+;; disclosure restricted by GSA ADP Schedule Contract with          
+;; IBM Corp.                                                        
+;;                                                                  
+;; end_generated_IBM_copyright_prolog                               
 # streamsx.topology
 A project that supports building streaming topologies (applications)
 for IBM Streams in different programming languages, such as Java and Scala.

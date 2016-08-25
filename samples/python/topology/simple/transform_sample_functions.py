@@ -1,3 +1,5 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016
 def int_strings_transform():
     """
     Returns an iterable of strings
