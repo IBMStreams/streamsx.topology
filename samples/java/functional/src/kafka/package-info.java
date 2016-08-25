@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016  
+# Copyright IBM Corp. 2015  
  */
 /**
  * A sample demonstrating integration with the Apache Kafka messaging system

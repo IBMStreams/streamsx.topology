@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016  
+# Copyright IBM Corp. 2015  
  */
 /**
  * Support for integrating with the MQTT messaging system

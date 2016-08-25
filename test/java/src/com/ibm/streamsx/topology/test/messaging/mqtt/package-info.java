@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016  
+# Copyright IBM Corp. 2015  
  */
 /**
  * Tests for {@link com.ibm.streamsx.topology.messaging.mqtt.MqttStreams mqtt.MqttStreams}.
