@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016  
+ */
 package com.ibm.streamsx.topology.test.samples;
 
 import static org.junit.Assert.assertTrue;

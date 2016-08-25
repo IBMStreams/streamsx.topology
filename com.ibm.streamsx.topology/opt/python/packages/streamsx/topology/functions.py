@@ -1,5 +1,5 @@
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015,2016
+# Copyright IBM Corp. 2016
 
 # Print function that flushes
 def print_flush(v):

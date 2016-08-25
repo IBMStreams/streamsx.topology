@@ -1,3 +1,6 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016
+
 import os
 import pickle
 import base64

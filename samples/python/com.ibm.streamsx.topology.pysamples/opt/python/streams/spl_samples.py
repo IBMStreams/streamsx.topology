@@ -1,5 +1,5 @@
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015
+# Copyright IBM Corp. 2016
 
 # Simple inclusion of Python logic within an SPL application
 # as a SPL "Function" operator. A "Function" operator has
