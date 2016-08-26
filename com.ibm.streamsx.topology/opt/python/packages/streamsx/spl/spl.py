@@ -41,11 +41,17 @@ def _wrapforsplop(optype, attributes, wrapped):
     if inspect.isclass(wrapped):
         if not callable(wrapped):
             raise TypeError('Class must be callable')
+
         class _op_class(object):
+
+            @functools.wraps(wrapped.__init__)
             def __init__(self,*args,**kwargs):
                 self.__splpy_instance = wrapped(*args,**kwargs)
+
+            @functools.wraps(wrapped.__call__)
             def __call__(self, *args,**kwargs):
                 return self.__splpy_instance.__call__(*args, **kwargs)
+
         _op_class.__splpy_optype = optype
         _op_class.__splpy_callable = 'class'
         _op_class.__splpy_attributes = attributes
