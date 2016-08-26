@@ -472,7 +472,7 @@ When an SPL tuple is passed into a Python function through its SPL operator
 its attributes are passed by position. The first attribute is
 the first positional parameter in the Python function. For example:
     # SPL input schema: tuple<int32 id, float64 reading>
-    ＠spl.sink
+    \@spl.sink
     def myfunc(a,b):
       # a is set to: id
       # b is set to: reading
@@ -481,7 +481,7 @@ If more SPL attributes exist than specified parameters then the additional attri
 
 A Python variable argument can be used to capture all of the remaining attributes, for example:
     # SPL input schema: tuple<int32 id, float64 reading, float lat, float lon>
-    ＠spl.sink
+    \@spl.sink
     def myvarargfunc(a, *values)
       # a is set to: id
       # values is set to the values of: reading, lat, lon
@@ -493,7 +493,7 @@ When `None` is return then no tuple will be submitted to the operator's output p
 The values of a Python tuple are assigned to an output SPL tuple by position, so the first value in the Python tuple is assigned to the first attribute in the SPL tuple.
 
     # SPL output schema: tuple<int32 x, float64 y, float32 z>
-    ＠spl.pipe
+    \@spl.pipe
     def myfunc(a,b):
        return a,b,a+b
 
@@ -542,20 +542,20 @@ to the SPL default value.
 
 Simple `Noop` pipe operator that passes the input SPL tuple onto its output using a variable argument.
 
-    ＠spl.pipe
+    \@spl.pipe
     def Noop(*tuple):
       "Pass the tuple along without any change"
       return tuple
 
 Simple filter, note that no return statement is equivalent to returning `None`:
-    ＠spl.pipe
+    \@spl.pipe
     def SimpleFilter(a,b):
       "Filter tuples only allowing output if the first attribute is less than the second. Returns the sum of the first two attributes."
       if (a < b):
          return a+b,
 
 Demonstration of returning multiple tuples as a list.
-    ＠spl.pipe
+    \@spl.pipe
     def ReturnList(a,b,c):
       "Demonstrate returning a list of values, each value is submitted as an SPL tuple" 
       return [(a+1,b+1,c+1),(a+2,b+2,c+2),(a+3,b+3,c+3),(a+4,b+4,c+4)]
@@ -589,7 +589,7 @@ Operator to send an e-mail for each tuple using the local SMTP server.
     # is passed in as described in spl_samples.py.
     # The function must return None, typically by
     # not having any return statement.
-    ＠spl.sink
+    \@spl.sink
     def simplesendmail(from_addr, to_addrs, msg):
         "Send a simple email"
         server.sendmail(from_addr, to_addrs, msg)
