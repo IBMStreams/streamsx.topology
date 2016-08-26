@@ -58,11 +58,13 @@ class _DependencyResolver(object):
         if _is_streamsx_topology_module(module):
             return None
         package_name = _get_package_name(module)
-        if package_name:
+        top_package_name = module.__name__.split('.')[0]
+
+        if package_name and top_package_name in sys.modules:
             # module is part of a package
             # get the top-level package
-            top_package_name = module.__name__.split('.')[0]
             top_package = sys.modules[top_package_name]
+
             if "__path__" in top_package.__dict__:
                 # for regular packages, there is one top-level directory
                 # for namespace packages, there can be more than one.
