@@ -93,11 +93,23 @@ def copyCGT(opdir, ns, name, funcTuple):
          _funcdoc_ = 'Python function ' + funcTuple.__name__ + ' (module ' + funcTuple.__module__ + ')'
      replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", _funcdoc_);
 
-def writeParameterInfo(cfgfile, funcTuple):
-        sig = inspect.signature(funcTuple)
+# Write information about the Python function parameters.
+#
+def writeParameterInfo(cfgfile, opobj):
+        is_class = inspect.isclass(opobj)
+        if is_class:
+            opobj = opobj.__call__
+        
+        sig = inspect.signature(opobj)
         fixedCount = 0
         params = sig.parameters
+        seenFirst = False
         for pname in params:
+             if not seenFirst:
+                 # Skip 'self' for classes
+                 seenFirst = True
+                 if is_class:
+                     continue
              param = params[pname]
              if param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
                  fixedCount += 1
@@ -111,36 +123,57 @@ def writeParameterInfo(cfgfile, funcTuple):
 # Write out the configuration for the operator
 # as a set of Perl functions that return useful values
 # for the code generator
-def writeConfig(dynm, opdir, name, fnname, funcTuple):
+def write_config(dynm, opdir, module, opname, opobj):
     cfgpath = os.path.join(opdir, 'splpy_operator.pm')
     cfgfile = open(cfgpath, 'w')
-    cfgfile.write('sub splpy_Module { \''+ name   + "\'}\n")
-    cfgfile.write('sub splpy_FunctionName {\'' + fnname + "\'}\n")
-    cfgfile.write('sub splpy_OperatorType {\'' + funcTuple.__splpy_optype.name + "\'}\n")
-    writeParameterInfo(cfgfile, funcTuple)
+    cfgfile.write('sub splpy_Module { \''+ module   + "\'}\n")
+    cfgfile.write('sub splpy_OperatorCallable {\'' + opobj.__splpy_callable + "\'}\n")
+    cfgfile.write('sub splpy_FunctionName {\'' + opname + "\'}\n")
+    cfgfile.write('sub splpy_OperatorType {\'' + opobj.__splpy_optype.name + "\'}\n")
+    writeParameterInfo(cfgfile, opobj)
     cfgfile.write("1;\n")
     cfgfile.close()
 
 
-def functionTupleOperator(dynm, name, fnname, funcTuple) :        
+#
+# module - module for operator
+# opname - name of the SPL operator
+# opobj - decorated object defining operator
+#
+def common_tuple_operator(dynm, module, opname, opobj) :        
     ns = getattr(dynm, 'splNamespace')()   
-    print(ns + "::" + fnname)
-    if funcTuple.__doc__ != None:
-        print("  ", funcTuple.__doc__)
+    print(ns + "::" + opname)
+    if opobj.__doc__ != None:
+        print("  ", opobj.__doc__)
     nsdir = makeNamespaceDir(ns)
-    opdir = makeOperatorDir(nsdir, fnname)
+    opdir = makeOperatorDir(nsdir, opname)
     copyTemplateDir("common")
     copyTemplateDir("icons")
     copyPythonDir("packages")
     copyPythonDir("include")
-    copyCGT(opdir, ns, fnname, funcTuple)
-    writeConfig(dynm, opdir, name, fnname, funcTuple)
+    copyCGT(opdir, ns, opname, opobj)
+    write_config(dynm, opdir, module, opname, opobj)
+
+# Process python objects in a module looking for SPL operators
+# dynm - introspection for the modeul
+# module - module name
+# ops - list of potential operators (functions)
+def process_operators(dynm, module, ops):
+    for opname, opobj in ops:
+        if inspect.isbuiltin(opobj):
+            continue
+        if opname.startswith('spl'):
+            continue
+        if not hasattr(opobj, '__splpy_optype'):
+            continue
+        if opobj.__splpy_optype == OperatorType.Ignore:
+            continue
+        if streamsPythonFile != opobj.__splpy_file:
+            continue
+        common_tuple_operator(dynm, module, opname, opobj)
 
 # Look at all the modules in opt/python/streams (opt/python/streams/*.py) and extract
-# any function as an operator. Type will default to
-# a Function operator with input and output.
-# Functions may be decorated with spl decorators to
-# change the operator type.
+# any spl decorated function as an operator.
 
 tk_streams = os.path.join(userToolkitDir(), 'opt', 'python', 'streams')
 if not os.path.isdir(tk_streams):
@@ -158,16 +191,5 @@ for mf in glob.glob(os.path.join(tk_streams, '*.py')):
     (name, suffix, mode, mtype)  = inspect.getmoduleinfo(mf)
     dynm = imp.load_source(name, mf)
     streamsPythonFile = inspect.getsourcefile(dynm)
-    for fnname, funcOp in inspect.getmembers(dynm, inspect.isfunction):
-        if inspect.isbuiltin(funcOp):
-            continue
-        if fnname.startswith('spl'):
-            continue
-        if not hasattr(funcOp, '__splpy_optype'):
-            continue
-        if funcOp.__splpy_optype == OperatorType.Ignore:
-            continue
-        if streamsPythonFile != funcOp.__splpy_file:
-            continue
-
-        functionTupleOperator(dynm, name, fnname, funcOp)
+    process_operators(dynm, name, inspect.getmembers(dynm, inspect.isfunction))
+    process_operators(dynm, name, inspect.getmembers(dynm, inspect.isclass))

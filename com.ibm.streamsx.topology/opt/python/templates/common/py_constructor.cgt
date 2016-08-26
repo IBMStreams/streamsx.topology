@@ -14,4 +14,17 @@
     // Set the function the operator will call as a member field
     function_ =
       streamsx::topology::Splpy::loadFunction("<%=$module%>", "<%=$functionName%>");   
+<%
+    if (splpy_OperatorCallable() eq 'class') {
+%>
+     // At this point function_ is the callable class object
+     // we call it to create an instance of the class
+     // (which itself is callable)
+     PyObject *tmp_instance = PyObject_CallObject(function_, NULL);
+     Py_DECREF(function_);
+     function_ = tmp_instance;
+<%
+    }
+%>
+
     }
