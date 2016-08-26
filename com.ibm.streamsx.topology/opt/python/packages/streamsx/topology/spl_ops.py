@@ -33,8 +33,6 @@ def invoke(kind, topology=None, inputs=None, schemas=None, params=None):
     if topology is None:
          topology = inputs.topology
 
-    print(topology)
-
     # Add operator invocation
     op = topology.graph.addOperator(kind=kind)
 
@@ -58,15 +56,12 @@ def invoke(kind, topology=None, inputs=None, schemas=None, params=None):
 
     try:
        oports = []
-       print("Multiport", kind)
        for schema in schemas:
            oport = op.addOutputPort(schema=schema)
            oports.append(oport)
-       print("Multiport:", oports)
        return oports
  
     except TypeError:
        # not iterable, single schema
-       print("SinglePort:", kind)
        oport = op.addOutputPort(schema=schemas)
        return Stream(topology, oport)
