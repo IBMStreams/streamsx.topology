@@ -17,12 +17,20 @@
 <%
     if (splpy_OperatorCallable() eq 'class') {
 %>
+   { 
+     // Pass all the arguments by name
+     PyObject *empty_tuple = PyTuple_New(0);
+     PyObject *param_dict = PyDict_New();
+
      // At this point function_ is the callable class object
      // we call it to create an instance of the class
      // (which itself is callable)
-     PyObject *tmp_instance = PyObject_CallObject(function_, NULL);
+     PyObject *tmp_instance = PyObject_Call(function_, empty_tuple, param_dict);
      Py_DECREF(function_);
+     Py_DECREF(empty_tuple);
+     Py_DECREF(param_dict);
      function_ = tmp_instance;
+   }
 <%
     }
 %>
