@@ -173,6 +173,16 @@ sub convertToPythonValue {
 
   # input value
   my $iv = $ituple . ".get_" . $name . "()";
+
+  return convertToPythonValueFromExpr($type, $iv);
+}
+
+##
+## Convert to a Python value from an expression
+##
+sub convertToPythonValueFromExpr {
+  my $type = $_[0];
+  my $iv = $_[1];
   
   # If the type is a list, get the element type and make the
   # corresponding Python type. The List needsto be iterated through at
