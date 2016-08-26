@@ -91,14 +91,23 @@ def copyCGT(opdir, ns, name, funcTuple):
          _funcdoc_ = 'Python function ' + funcTuple.__name__ + ' (module ' + funcTuple.__module__ + ')'
      replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", _funcdoc_);
 
+# Write information about the Python function parameters.
+#
 def writeParameterInfo(cfgfile, opobj):
-        if inspect.isclass(opobj):
+        is_class = inspect.isclass(opobj)
+        if is_class:
             opobj = opobj.__call__
         
         sig = inspect.signature(opobj)
         fixedCount = 0
         params = sig.parameters
+        seenFirst = False
         for pname in params:
+             if not seenFirst:
+                 # Skip 'self' for classes
+                 seenFirst = True
+                 if is_class:
+                     continue
              param = params[pname]
              if param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
                  fixedCount += 1
