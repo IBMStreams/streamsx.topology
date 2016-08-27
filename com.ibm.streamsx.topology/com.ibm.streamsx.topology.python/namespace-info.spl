@@ -635,9 +635,15 @@ Decorator to ignore a Python function.
 If the Python function is decorated with `@spl.ignore`
 then function is ignored by `spl-python-extract.py`.
 
-++ Extracting SPL operators from decorated Python functions
+++ Extracting SPL operators from Python
 
-To create operators in a toolkit, execute `python3 spl-python-extract.py -i toolkit-directory`. Any Python module in the toolkit's `opt/python/streams` directory will have its functions converted to SPL operators.
+# Overview
+
+To create SPL operators in a toolkit, execute:
+
+    python3 spl-python-extract.py -i toolkit-directory
+
+Any Python module in the toolkit's `opt/python/streams` directory will have its decorated classes and functions converted to SPL operators.
 
 These directories in a toolkit are automatically added to the Python search path during execution of an operator.
  * `opt/python/streams` - Contains modules that define Python functions that will be created as SPL operators
@@ -656,7 +662,18 @@ using positional arguments.
 
 E.g.
 
-python3 $HOME/toolkits/com.ibm.streamsx.topology/bin/spl-python-extract.py -i samples/python/com.ibm.streamsx.topology.pysamples
+    python3 $HOME/toolkits/com.ibm.streamsx.topology/bin/spl-python-extract.py -i samples/python/com.ibm.streamsx.topology.pysamples
+
+# Usage
+    usage: spl-python-extract.py [-h] -i DIRECTORY [--make-toolkit]
+    
+    Extract SPL operators from decorated Python classes and functions.
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      -i DIRECTORY, --directory DIRECTORY
+                            Toolkit directory
+      --make-toolkit        Index toolkit using spl-make-toolkit
 
 ++ Sample toolkit
 
