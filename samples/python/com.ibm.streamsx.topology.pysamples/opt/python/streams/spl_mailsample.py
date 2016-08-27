@@ -22,7 +22,7 @@ def splNamespace():
 # not having any return statement.
 @spl.sink
 def simplesendmail(from_addr, to_addrs, msg):
-    "Send a simple email"
+    "Send a simple email."
     server.sendmail(from_addr, to_addrs, msg)
 
 

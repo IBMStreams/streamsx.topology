@@ -30,13 +30,13 @@ def pipe(wrapped):
     if not inspect.isfunction(wrapped):
         raise TypeError('A function is required')
 
-    return _wrapforsplop(OperatorType.Pipe, PassBy.position, wrapped)
+    return _wrapforsplop(OperatorType.Pipe, wrapped, PassBy.position, False)
 
 #
 # Wrap object for an SPL operator, either
 # a callable class or function.
 #
-def _wrapforsplop(optype, attributes, wrapped):
+def _wrapforsplop(optype, wrapped, attributes, docpy):
 
     if inspect.isclass(wrapped):
         if not callable(wrapped):
@@ -52,11 +52,13 @@ def _wrapforsplop(optype, attributes, wrapped):
             def __call__(self, *args,**kwargs):
                 return self.__splpy_instance.__call__(*args, **kwargs)
 
+        _op_class.__wrapped__ = wrapped
+        _op_class.__doc__ = wrapped.__doc__
         _op_class.__splpy_optype = optype
         _op_class.__splpy_callable = 'class'
         _op_class.__splpy_attributes = attributes
         _op_class.__splpy_file = inspect.getsourcefile(wrapped)
-        _op_class.__doc__ = wrapped.__doc__
+        _op_class.__splpy_docpy = docpy
         return _op_class
     if not inspect.isfunction(wrapped):
         raise TypeError('A function or callable class is required')
@@ -68,6 +70,7 @@ def _wrapforsplop(optype, attributes, wrapped):
     _op_fn.__splpy_callable = 'function'
     _op_fn.__splpy_attributes = attributes
     _op_fn.__splpy_file = inspect.getsourcefile(wrapped)
+    _op_fn.__splpy_docpy = docpy
     return _op_fn
 
 class map:
@@ -79,13 +82,14 @@ class map:
     function is called passing the contents of the tuple.
     """
 
-    def __init__(self, attributes=PassBy.name):
+    def __init__(self, attributes=PassBy.name, docpy=True):
         if attributes is not PassBy.position:
             raise NotImplementedError(attributes)
         self.attributes = attributes
+        self.docpy = docpy
 
     def __call__(self, wrapped):
-        return _wrapforsplop(OperatorType.Pipe, self.attributes, wrapped)
+        return _wrapforsplop(OperatorType.Pipe, wrapped, self.attributes, self.docpy)
 
 # Allows functions in any module in opt/python/streams to be explicitly ignored.
 def ignore(wrapped):
@@ -98,16 +102,10 @@ def ignore(wrapped):
 
 # Defines a function as a sink operator
 def sink(wrapped):
-    @functools.wraps(wrapped)
-    def _sink(*args, **kwargs):
-        ret = wrapped(*args, **kwargs)
-        assert ret == None, "SPL @sink function must not return any value, except None"
-        return None
-    _sink.__splpy_optype = OperatorType.Sink
-    _sink.__splpy_callable = 'function'
-    _sink.__splpy_attributes = PassBy.position
-    _sink.__splpy_file = inspect.getsourcefile(wrapped)
-    return _sink
+    if not inspect.isfunction(wrapped):
+        raise TypeError('A function is required')
+
+    return _wrapforsplop(OperatorType.Sink, wrapped, PassBy.position, False)
 
 # Defines a function as a sink operator
 class for_each:
@@ -118,10 +116,11 @@ class for_each:
     For each tuple on the input port the
     class or function is called passing the contents of the tuple.
     """
-    def __init__(self, attributes=PassBy.name):
+    def __init__(self, attributes=PassBy.name, docpy=True):
         if attributes is not PassBy.position:
             raise NotImplementedError(attributes)
         self.attributes = attributes
+        self.docpy = docpy
 
     def __call__(self, wrapped):
-        return _wrapforsplop(OperatorType.Sink, self.attributes, wrapped)
+        return _wrapforsplop(OperatorType.Sink, wrapped, self.attributes, self.docpy)

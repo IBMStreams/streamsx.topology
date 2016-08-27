@@ -88,10 +88,30 @@ def copyCGT(opdir, ns, name, funcTuple):
      shutil.copy(optemplate + '.xml', opmodel_xml)
      replaceTokenInFile(opmodel_xml, "__SPLPY__MAJOR_VERSION__SPLPY__", str(sys.version_info[0]));
      replaceTokenInFile(opmodel_xml, "__SPLPY__MINOR_VERSION__SPLPY__", str(sys.version_info[1]));
-     _funcdoc_ = funcTuple.__doc__
-     if _funcdoc_ is None:
-         _funcdoc_ = 'Python function ' + funcTuple.__name__ + ' (module ' + funcTuple.__module__ + ')'
-     replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", _funcdoc_);
+     create_op_spldoc(opmodel_xml, name, funcTuple)
+
+## Create SPL doc entries in the Operator model xml file.
+##
+import html
+def create_op_spldoc(opmodel_xml, name, opobj):
+     _opdoc = html.escape(inspect.getdoc(opobj))
+
+     # Optionally include the Python source code
+     if opobj.__splpy_docpy:
+         try:
+             _pysrc = inspect.getsource(opobj)
+             _opdoc += "\n"
+             _opdoc += "# Python\n";
+
+             for _line in str.splitlines(_pysrc):
+                 _opdoc += "    "
+                 _opdoc += html.escape(_line)
+                 _opdoc += "\n"
+         except:
+             pass
+     
+     replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", _opdoc);
+   
 
 # Write information about the Python function parameters.
 #
@@ -143,8 +163,11 @@ def write_config(dynm, opdir, module, opname, opobj):
 def common_tuple_operator(dynm, module, opname, opobj) :        
     ns = getattr(dynm, 'splNamespace')()   
     print(ns + "::" + opname)
-    if opobj.__doc__ != None:
-        print("  ", opobj.__doc__)
+    # Print the summary of the class/function
+    _doc = inspect.getdoc(opobj)
+    if _doc is not None:
+        _doc = str.splitlines(_doc)[0]
+        print("  ", _doc)
     nsdir = makeNamespaceDir(ns)
     opdir = makeOperatorDir(nsdir, opname)
     copyTemplateDir("common")
