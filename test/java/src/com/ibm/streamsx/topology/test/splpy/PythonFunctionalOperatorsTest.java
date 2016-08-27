@@ -209,5 +209,32 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertTrue(expectedCount.valid());
         assertTrue(viaPythonResult.toString(), viaPythonResult.valid());
     }
+    
+    @Test
+    public void testStatefulOperator() throws Exception {
+        Topology topology = new Topology("testPositionalSampleSimpleFilterUsingSPLType");
+        
+        SPLStream tuples = testTupleStream(topology, false);
+        SPL.addToolkit(tuples, new File(getTestRoot(), "python/spl/testtkpy"));
+        
+        StreamSchema outSchema = tuples.getSchema().extend("int32", "sequence_using_py");
+        SPLStream viaPython = SPL.invokeOperator(
+                "com.ibm.streamsx.topology.pysamples.positional::AddSeq", tuples, outSchema, null);
+
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(viaPython, TUPLE_COUNT);
+        Condition<List<Tuple>> outTuples = tester.tupleContents(viaPython);
+        
+        
+        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.valid());
+        
+        List<Tuple> result = outTuples.getResult();
+        
+        assertEquals(TUPLE_COUNT, result.size());
+        for (int i = 0; i < TUPLE_COUNT; i++)
+            assertEquals(i, result.get(i).getInt("sequence_using_py"));
+    }
 
 }
