@@ -31,6 +31,7 @@
     </context>
     <parameters>
       <allowAny>false</allowAny>
+      __SPLPY__PARAMETERS__SPLPY__
     </parameters>
     <inputPorts>
       <inputPortSet>

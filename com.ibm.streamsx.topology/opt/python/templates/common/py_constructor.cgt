@@ -17,12 +17,41 @@
 <%
     if (splpy_OperatorCallable() eq 'class') {
 %>
+   { 
+     // Pass all the arguments by name in a dictionary
+     // object, effectively as **kwargs. Python will
+     // unpack correctly to the actual __init__ args
+     PyObject *empty_tuple = PyTuple_New(0);
+     PyObject *param_dict = PyDict_New();
+<%
+     for (my $i = 0; $i < $model->getNumberOfParameters(); ++$i) {
+         my $tp = $model->getParameterAt($i);
+
+         print '{';
+         print 'PyObject * pk = PyUnicode_DecodeUTF8((const char*)  "' . $tp->getName() . '", ((int)(sizeof("' . $tp->getName() . '")))-1 , NULL);';
+
+         # cardinality == 1
+         print 'PyObject * pv = ';
+         print convertToPythonValueFromExpr(
+                 $tp->getValueAt(0)->getSPLType(),
+                 $tp->getValueAt(0)->getCppExpression());
+
+         print " PyDict_SetItem(param_dict, pk, pv);\n";
+         print " Py_DECREF(pk);\n";
+         print " Py_DECREF(pv);\n";
+         print "}\n";
+     }
+%>
+
      // At this point function_ is the callable class object
      // we call it to create an instance of the class
      // (which itself is callable)
-     PyObject *tmp_instance = PyObject_CallObject(function_, NULL);
+     PyObject *tmp_instance = PyObject_Call(function_, empty_tuple, param_dict);
      Py_DECREF(function_);
+     Py_DECREF(empty_tuple);
+     Py_DECREF(param_dict);
      function_ = tmp_instance;
+   }
 <%
     }
 %>

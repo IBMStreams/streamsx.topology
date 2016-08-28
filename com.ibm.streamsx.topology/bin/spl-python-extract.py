@@ -81,6 +81,43 @@ def copyPythonDir(dir):
         shutil.rmtree(cmn_dst)
     shutil.copytree(cmn_src, cmn_dst)
 
+# Create SPL operator parameters from the Python class
+# (functions cannot have parameters)
+# The parameters are taken from the signature of
+# the __init__ method. In the spirit of Python
+# the default for non-annotated function parameters
+# is to map to operator parameters that take any type
+# with a cardinality of 1. If the function parameter
+# has a default value, then the operator parameter is optional
+
+_OP_PARAM_TEMPLATE ="""
+ <parameter>
+  <name>__SPLPY__PARAM_NAME__SPLPY__</name>
+  <description></description>
+  <optional>__SPLPY__PARAM_OPT__SPLPY__</optional>
+  <rewriteAllowed>true</rewriteAllowed>
+  <expressionMode>AttributeFree</expressionMode>
+  <type></type>
+  <cardinality>1</cardinality>
+ </parameter>"""
+
+def create_op_parameters(opmodel_xml, name, opObj):
+    opparam_xml = ''
+    if opObj.__splpy_callable == 'class':
+        init_sig = inspect.signature(opObj.__init__)
+        seenSelf = False;
+        for pn in init_sig.parameters:
+            pmd = init_sig.parameters[pn]
+            # first argument to __init__ is self (instance ref)
+            if not seenSelf:
+                 seenSelf = True
+                 continue
+            px = _OP_PARAM_TEMPLATE
+            px = px.replace('__SPLPY__PARAM_NAME__SPLPY__', pn)
+            px = px.replace('__SPLPY__PARAM_OPT__SPLPY__', 'false' if pmd.default== inspect.Parameter.empty else 'true' )
+            opparam_xml = opparam_xml + px
+    replaceTokenInFile(opmodel_xml, '__SPLPY__PARAMETERS__SPLPY__', opparam_xml)
+    
 def copyCGT(opdir, ns, name, funcTuple):
      cgtbase = funcTuple.__splpy_optype.spl_template
      optemplate = os.path.join(topologyToolkitDir(), "opt", "python", "templates","operators", cgtbase)
@@ -91,6 +128,7 @@ def copyCGT(opdir, ns, name, funcTuple):
      shutil.copy(optemplate + '.xml', opmodel_xml)
      replaceTokenInFile(opmodel_xml, "__SPLPY__MAJOR_VERSION__SPLPY__", str(sys.version_info[0]));
      replaceTokenInFile(opmodel_xml, "__SPLPY__MINOR_VERSION__SPLPY__", str(sys.version_info[1]));
+     create_op_parameters(opmodel_xml, name, funcTuple)
      create_op_spldoc(opmodel_xml, name, funcTuple)
 
 ## Create SPL doc entries in the Operator model xml file.
@@ -115,7 +153,6 @@ def create_op_spldoc(opmodel_xml, name, opobj):
      
      replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", _opdoc);
    
-
 # Write information about the Python function parameters.
 #
 def writeParameterInfo(cfgfile, opobj):
