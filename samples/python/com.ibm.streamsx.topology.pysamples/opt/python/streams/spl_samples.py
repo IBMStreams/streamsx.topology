@@ -131,7 +131,11 @@ class PrintWithTimeIntervals:
 
 @spl.pipe
 def SimpleFilter(a,b):
-   "Filter tuples only allowing output if the first attribute is less than the second. Returns the sum of the first two attributes."
+   """
+   Filter tuples only allowing output if the first attribute is less than the second.
+   
+   Returns the sum of the first two attributes."
+   """
    if (a < b):
        return a+b,
 
