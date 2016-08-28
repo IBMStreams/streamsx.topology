@@ -8,12 +8,15 @@ import glob
 import os
 import shutil
 import argparse
+import subprocess
 
 ############################################
 # Argument parsing
-cmd_parser = argparse.ArgumentParser(description='Extract SPL operators from Python functions.')
+cmd_parser = argparse.ArgumentParser(description='Extract SPL operators from decorated Python classes and functions.')
 cmd_parser.add_argument('-i', '--directory', required=True,
                    help='Toolkit directory')
+cmd_parser.add_argument('--make-toolkit', action='store_true',
+                   help='Index toolkit using spl-make-toolkit')
 cmd_args = cmd_parser.parse_args()
 
 ############################################
@@ -193,3 +196,10 @@ for mf in glob.glob(os.path.join(tk_streams, '*.py')):
     streamsPythonFile = inspect.getsourcefile(dynm)
     process_operators(dynm, name, inspect.getmembers(dynm, inspect.isfunction))
     process_operators(dynm, name, inspect.getmembers(dynm, inspect.isclass))
+
+# Now make the toolkit if required
+if cmd_args.make_toolkit:
+    si = os.environ['STREAMS_INSTALL']
+    mktk = os.path.join(si, 'bin', 'spl-make-toolkit')
+    mktk_args = [mktk, '--directory', cmd_args.directory, '--make-operator']
+    subprocess.check_call(mktk_args)
