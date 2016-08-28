@@ -752,6 +752,56 @@ For an input port all the above types are supported.
 
 For an output port only primitive types are supported.
 
+++ \@spl decorator options
+\@spl decorators support an number of options.
+
+* `style` - Parameter passing style.
+* `docpy` - Include Python code in operator model for SPLDOC.
+
+Options are passed as parameters to the decorators, for example:
+
+    # a,b,c will map to the first three attributes in the SPL tuple
+    # SPLDOC for f will not include the source code in its description
+    
+    \@spl.map(style='position', docpy=False)
+    def f(a, b, c):
+        pass
+
+**Note**: For backwards compatibility `\@spl.pipe` and `\@spl.sink`
+do **not** support these options, defaulting to *attributes by position*
+and not including Python code in the function.
+
+`\@spl.ignore` does not accept any options.
+
+# `style`
+Defines how the SPL tuple is passed into the decorated callable.
+
+Can be set to:
+
+* `'position'` - Pass using *attributes by position*.
+* `'name'` - Pass using *attributes by name*.
+
+Defaults to `None`, the passing style is defined by the callable's signature
+where possible, otherwise *attributes by name* will be used,
+equivalent to 'name'
+
+Passing style *dictionary* is selected by having a callable signature
+with a single `\*\*kwargs` parameter.
+
+Passing style *tuple* is selected by having a callable signature
+with a single `\*args` parameter.
+
+# `docpy`
+Include the Python callable source code in the operator model.
+
+Can be set to:
+
+* `True` - Include the source code in the operator model, the default.
+* `False` - Do not include the source code.
+
+The source code is then included in the operator description when creating
+SPLDOC for the toolkit using `spl-make-doc`.
+
 ++ \@spl.map
 Decorator to create a stateful or stateless SPL map operator from a Python callable class or function.
 
@@ -799,7 +849,7 @@ and its return value is used to submit zero or more tuples on the output port.
 
 # Examples
 
-TODO: Add more info about parameter passing.
+TODO: Add examples
  
 ++ \@spl.for_each
 Decorator to create a stateful or stateless SPL sink operator from a Python callable class or function.
