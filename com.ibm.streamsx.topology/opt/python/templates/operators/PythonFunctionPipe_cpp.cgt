@@ -22,6 +22,7 @@
 
  my $module = splpy_Module();
  my $functionName = splpy_FunctionName();
+ my $paramStyle = splpy_ParamStyle();
  my $fixedParam = splpy_FixedParam();
  
  my $iport = $model->getInputPortAt(0);
@@ -32,6 +33,11 @@
  my $inputAttrs2Py = $iport->getNumberOfAttributes();
  if ($fixedParam != -1) {
     $inputAttrs2Py = $fixedParam;
+ }
+
+ if ($fixedParam > $iport->getNumberOfAttributes()) {
+   SPL::CodeGen::exitln('%s requires at least %i attributes in input port but schema is %s',
+           $model->getContext()->getKind(), $fixedParam, $iport->getSPLTupleType());
  }
  
   my $oport = $model->getOutputPortAt(0);
@@ -82,6 +88,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
    std::vector<OPort0Type> output_tuples;  
    {
     streamsx::topology::PyGILLock lock;
+<%
+    if ($paramStyle eq 'tuple') {
+%>
 
     PyObject * pyTuple = PyTuple_New(<%=$inputAttrs2Py%>); 
     PyObject *pyValue;
@@ -89,6 +98,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
      for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
          print convertToPythonValueAsTuple($ituple, $i, $itypes[$i], $inames[$i]);
      }
+    }
 %>
 
  @include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"

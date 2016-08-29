@@ -67,7 +67,7 @@ def splNamespace():
 #
 # See Test01.spl
 
-@spl.pipe
+@spl.map()
 def Noop(*tuple):
     "Pass the tuple along without any change."
     return tuple
@@ -81,7 +81,7 @@ def Noop(*tuple):
 # must the input schema plus one additional
 # numeric attribute as the last attribute.
 
-@spl.map(attributes=spl.PassBy.position)
+@spl.map()
 class AddSeq:
     "Add a sequence number as the last attribute."
     def __init__(self):
@@ -97,7 +97,7 @@ from datetime import datetime
 # Stateful sink operator that prints each tuple
 # with the inter-tuple arrival delay.
 #
-@spl.for_each(attributes=spl.PassBy.position)
+@spl.for_each
 class PrintWithTimeIntervals:
     "Print tuples with inter-tuple arrival delay."
     def __init__(self):
