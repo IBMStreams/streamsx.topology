@@ -485,7 +485,6 @@ An input tuple can be passed to Python function using a number of different styl
 * *tuple*
 * *attributes by name* **not yet implemented**
 * *attributes by position*
-* *named tuple* **not yet implemented**
 
 # Dictionary
 (**not yet implemented**)
@@ -557,17 +556,14 @@ the first SPL attribute.
 When *attributes by position* is used then SPL tuple attributes are
 passed to the function by position for formal parameters.
 The first SPL attribute in the tuple is passed as the first parameter.
-This is supported for function parameters of
-kind `POSITIONAL_ONLY` and `POSITIONAL_OR_KEYWORD`.
+This is supported for function parameters of kind `POSITIONAL_OR_KEYWORD`.
 
 If the function signature also contains an arbitrary argument
 list `\*args` (`VAR_POSITIONAL`) then any attributes not bound
 to formal parameters are passed in order of the SPL schema.
 
-If the function signature also contains a parameter of the form
-`\*\*kwargs` (`VAR_KEYWORD`) then any attributes not bound to formal parameters
-are passed in its dictionary using the attribute name as the key.
-(**not yet implemented**)
+The function signature must not contain a parameter of the form
+`\*\*kwargs` (`VAR_KEYWORD`).
 
 If there are only formal parameters any non-bound attributes
 are not passed into the function.
@@ -577,12 +573,11 @@ the function requires.
 
 # Selecting the style
 
-For signatures only containing parameters of the form 
+For signatures only containing a parameter of the form 
 \*args` or `\*\*kwargs` the style is implicitly defined:
 
 * `def f(\*\*tuple)` - *dictionary* - `tuple` will contain a dictionary of all of the SPL tuple attribute's values with the keys being the attribute names.
 * `def f(\*tuple)` - *tuple* - `tuple` will contain all of the SPL tuple attribute's values in order of the SPL schema definition.
-* `def f(\*empty, \*\*tuple)` - *dictionary* - `tuple` will contain a dictionary of all of the SPL tuple attribute's values with the keys being the attribute names. `empty` will be an empty Python tuple `empty = ()`.
 
 Otherwise the style is set by the `style` parameter to the decorator,
 defaulting to *attributes by name*. The style value can be set to:
@@ -603,21 +598,21 @@ These examples how a SPL tuple with the schema and value:
 is passed into a variety of functions by showing the effective Python call and the resulting values of the function's parameters.
 
 *Dictionary* consuming all attributes by `\*\*kwargs`:
-    \@spl.map
+    \@spl.map()
     def f(**tuple)
         pass
     # f(id='battery', temp=23.7, increase=True)
     # tuple={'id':'battery', 'temp':23.7, 'increase':True}
 
 *Tuple* consuming all attributes by `\*args`:
-    \@spl.map
+    \@spl.map()
     def f(*tuple)
         pass
     # f('battery', 23.7, True)
     # tuple=('battery',23.7, True)
 
 *Attributes by name* consuming all attributes:
-    \@spl.map
+    \@spl.map()
     def f(id, temp, increase)
         pass
     # f(id='battery', temp=23.7, increase=True)
@@ -626,7 +621,7 @@ is passed into a variety of functions by showing the effective Python call and t
     # increase=True
 
 *Attributes by name* consuming a subset of attributes:
-    \@spl.map
+    \@spl.map()
     def f(id, temp)
         pass
     # f(id='battery', temp=23.7)
@@ -634,7 +629,7 @@ is passed into a variety of functions by showing the effective Python call and t
     # temp=23.7
 
 *Attributes by name* consuming a subset of attributes in a different order:
-    \@spl.map
+    \@spl.map()
     def f(increase, temp)
         pass
     # f(temp=23.7, increase=True)
@@ -642,7 +637,7 @@ is passed into a variety of functions by showing the effective Python call and t
     # temp=23.7
 
 *Attributes by name* consuming `id` by name and remaining attributes by `\*\*kwargs`:
-    \@spl.map
+    \@spl.map()
     def f(id, **tuple)
         pass
     # f(id='battery', temp=23.7, increase=True)
@@ -650,7 +645,7 @@ is passed into a variety of functions by showing the effective Python call and t
     # tuple={'temp':23.7, 'increase':True}
 
 *Attributes by name* consuming `id` by name and remaining attributes by `\*args`:
-    \@spl.map
+    \@spl.map()
     def f(id, *tuple)
         pass
     # f(id='battery', 23.7, True)
@@ -668,24 +663,15 @@ is passed into a variety of functions by showing the effective Python call and t
     # up=True
 
 *Attributes by position* consuming a subset of attributes:
-    \@spl.map
+    \@spl.map(style='position')
     def f(a, b)
        pass
     # f('battery', 23.7)
     # a='battery'
     # b=23.7
 
-*Attributes by position* `id`, `temp` by position and all remaining attributes by `\*\*kwargs`:
-    \@spl.map
-    def f(key, value, **tuple)
-        pass
-    # f('battery', 23.7, increase=True)
-    # key=battery
-    # value=23.7
-    # tuple={'increase':True}
-
 *Attributes by position* consuming `id` by position and remaining attributes by `\*args`:
-    \@spl.map
+    \@spl.map(style='position')
     def f(key, *tuple)
         pass
     # f('battery', 23.7, True)
@@ -707,9 +693,6 @@ remaining attributes are optional (having a default).
     # id='battery'
     # temp=23.7
     # pressure=None
-
-Use of `\*args` and `\*\*kwargs` in a function signature will always
-result in `\*args` being passed an empty tuple.
 
 ++ Submission of SPL tuples from Python
 
