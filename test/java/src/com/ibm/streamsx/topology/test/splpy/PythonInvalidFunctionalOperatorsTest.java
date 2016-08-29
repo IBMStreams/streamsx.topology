@@ -43,6 +43,15 @@ public class PythonInvalidFunctionalOperatorsTest extends TestTopology {
         };
         _testInvalidToolkit(Arrays.asList(code));
     }
+    @Test
+    public void testPositionalWithKeywordOnly() throws Exception {
+        String[] code = {
+                "@spl.map(style='positional')\n",
+                "def inv4(a,b,c,**tuple,d):\n",
+                "  pass\n"
+        };
+        _testInvalidToolkit(Arrays.asList(code));
+    }
     
     public static void _testInvalidToolkit(String[] code) throws Exception {        
         _testInvalidToolkit(Arrays.asList(code));
