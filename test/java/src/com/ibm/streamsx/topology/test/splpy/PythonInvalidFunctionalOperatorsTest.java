@@ -20,7 +20,7 @@ public class PythonInvalidFunctionalOperatorsTest extends TestTopology {
     public void testInvalidStyle() throws Exception {
         String[] code = {
                 "@spl.map(style='fred')\n",
-                "def f2(*tuple):\n",
+                "def inv1(*tuple):\n",
                 "  pass\n"
         };
         _testInvalidToolkit(Arrays.asList(code));
@@ -29,7 +29,16 @@ public class PythonInvalidFunctionalOperatorsTest extends TestTopology {
     public void testMismatchedStyle1() throws Exception {
         String[] code = {
                 "@spl.map(style='name')\n",
-                "def f2(*tuple):\n",
+                "def inv2(*tuple):\n",
+                "  pass\n"
+        };
+        _testInvalidToolkit(Arrays.asList(code));
+    }
+    @Test
+    public void testKwargsAndPositional() throws Exception {
+        String[] code = {
+                "@spl.map(style='positional')\n",
+                "def inv3(a,b,c,**tuple):\n",
                 "  pass\n"
         };
         _testInvalidToolkit(Arrays.asList(code));

@@ -132,9 +132,15 @@ public class PythonExtractTest extends TestTopology {
     public static class TestGeneratedOpArtifacts implements Consumer<File> {
 
         private final String op;
+        private final boolean pm;
 
         public TestGeneratedOpArtifacts(String op) {
             this.op = op;
+            this.pm = false;
+        }
+        public TestGeneratedOpArtifacts(String op, boolean pm) {
+            this.op = op;
+            this.pm = pm;
         }
 
         @Override
@@ -150,6 +156,27 @@ public class PythonExtractTest extends TestTopology {
             assertTrue(opdir.isDirectory());
             assertTrue(opdir.exists());
             
+            File opFile = new File(opdir, op + ".xml");
+            assertTrue(opFile.toString(), opFile.isFile());
+            assertTrue(opFile.toString(), opFile.exists());
+            
+            opFile = new File(opdir, op + "_cpp.cgt");
+            assertTrue(opFile.toString(), opFile.isFile());
+            assertTrue(opFile.toString(), opFile.exists());
+
+            opFile = new File(opdir, op + "_h.cgt");
+            assertTrue(opFile.toString(), opFile.isFile());
+            assertTrue(opFile.toString(), opFile.exists());
+
+            if (pm) {
+                opFile = new File(opdir, op + "_cpp.pm");
+                assertTrue(opFile.toString(), opFile.isFile());
+                assertTrue(opFile.toString(), opFile.exists());
+
+                opFile = new File(opdir, op + "_h.pm");
+                assertTrue(opFile.toString(), opFile.isFile());
+                assertTrue(opFile.toString(), opFile.exists());
+            }
             
         }
 
@@ -171,7 +198,7 @@ public class PythonExtractTest extends TestTopology {
                 "def f2(*tuple):\n",
                 "  pass\n"
         };
-        _testToolkit(Arrays.asList(code), true, new TestGeneratedOpArtifacts("f2"));
+        _testToolkit(Arrays.asList(code), true, new TestGeneratedOpArtifacts("f2", true));
     }
     
     
