@@ -70,23 +70,23 @@ def _wrapforsplop(optype, wrapped, style, docpy):
     _op_fn.__splpy_docpy = docpy
     return _op_fn
 
-# define the SPL tuple passing style
+# define the SPL tuple passing style based
+# upon the function signature and the decorator
+# style parameter
 def _define_style(wrapped, fn, style):
-    seenSelf = False
-
     has_args = False
     has_kwargs = False
     has_positional = False
     req_named = False
      
-    pc = 0
     pmds = inspect.signature(fn).parameters
-    for pn in pmds:
-        # first argument to __init__ is self (instance ref)
-        if not seenSelf:
-            seenSelf = True
-            if inspect.isclass(wrapped):
-                continue
+    itpmds = iter(pmds)
+    # Skip self
+    if inspect.isclass(wrapped):
+        next(itpmds)
+
+    pc = 0
+    for pn in itpmds:
         pmd = pmds[pn]
         if pmd.kind == inspect.Parameter.POSITIONAL_ONLY:
             raise TypeError('Positional only parameters are not supported:' + pn)

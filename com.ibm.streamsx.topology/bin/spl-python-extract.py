@@ -104,14 +104,13 @@ _OP_PARAM_TEMPLATE ="""
 def create_op_parameters(opmodel_xml, name, opObj):
     opparam_xml = ''
     if opObj.__splpy_callable == 'class':
-        init_sig = inspect.signature(opObj.__init__)
-        seenSelf = False;
-        for pn in init_sig.parameters:
-            pmd = init_sig.parameters[pn]
-            # first argument to __init__ is self (instance ref)
-            if not seenSelf:
-                 seenSelf = True
-                 continue
+        pmds = init_sig = inspect.signature(opObj.__init__).parameters
+        itpmds = iter(pmds)
+        # first argument to __init__ is self (instance ref)
+        next(itpmds)
+        
+        for pn in itpmds:
+            pmd = pmds[pn]
             px = _OP_PARAM_TEMPLATE
             px = px.replace('__SPLPY__PARAM_NAME__SPLPY__', pn)
             px = px.replace('__SPLPY__PARAM_OPT__SPLPY__', 'false' if pmd.default== inspect.Parameter.empty else 'true' )
@@ -182,15 +181,14 @@ def write_style_info(cfgfile, opobj):
         sig = inspect.signature(opfn)
         fixedCount = 0
         if opobj.__splpy_style == 'tuple':
-            params = sig.parameters
-            seenFirst = False
-            for pname in params:
-                 if not seenFirst:
-                     # Skip 'self' for classes
-                     seenFirst = True
-                     if is_class:
-                         continue
-                 param = params[pname]
+            pmds = sig.parameters
+            itpmds = iter(pmds)
+            # Skip 'self' for classes
+            if is_class:
+                next(itpmds)
+            
+            for pn in itpmds:
+                 param = pmds[pn]
                  if param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
                      fixedCount += 1
                  if param.kind == inspect.Parameter.VAR_POSITIONAL:
