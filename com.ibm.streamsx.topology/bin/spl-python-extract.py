@@ -136,7 +136,11 @@ def copyCGT(opdir, ns, name, funcTuple):
 ##
 import html
 def create_op_spldoc(opmodel_xml, name, opobj):
-     _opdoc = html.escape(inspect.getdoc(opobj))
+     _opdoc = inspect.getdoc(opobj)
+     if _opdoc is None:
+         _opdoc = 'Callable: ' + name + "\n"
+
+     _opdoc = html.escape(_opdoc)
 
      # Optionally include the Python source code
      if opobj.__splpy_docpy:
@@ -164,7 +168,6 @@ def create_ip_spldoc(opmodel_xml, name, opobj):
        Tuple attribute values are passed by position to the Python callable.
              """;
  
-     _oc = html.escape(inspect.getdoc(opobj))
      replaceTokenInFile(opmodel_xml, "__SPLPY__INPORT_0_DESCRIPTION__SPLPY__", _p0doc);
    
 # Write information about the Python function parameters.
