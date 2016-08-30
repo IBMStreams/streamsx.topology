@@ -8,7 +8,7 @@ package com.ibm.streamsx.topology.test.consistent;
 import static com.ibm.streamsx.topology.consistent.ConsistentRegionConfig.operatorDriven;
 import static com.ibm.streamsx.topology.consistent.ConsistentRegionConfig.periodic;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -94,7 +94,7 @@ public class ConsistentRegionConfigTest extends TestTopology {
     @Test
     public void testEquals() {
         
-        assertNotEquals(operatorDriven(), periodic(2));
+        assertFalse(operatorDriven().equals(periodic(2)));
         
         assertEquals(operatorDriven(), new ConsistentRegionConfig());
         assertEquals(periodic(7), new ConsistentRegionConfig(7));
@@ -103,11 +103,11 @@ public class ConsistentRegionConfigTest extends TestTopology {
         assertEquals(operatorDriven(), operatorDriven());
         assertEquals(periodic(9), periodic(9));
         
-        assertNotEquals(operatorDriven(), operatorDriven().drainTimeout(15));
-        assertNotEquals(operatorDriven(), operatorDriven().resetTimeout(16));
-        assertNotEquals(operatorDriven(), operatorDriven().maxConsecutiveResetAttempts(17)); 
+        assertFalse(operatorDriven().equals(operatorDriven().drainTimeout(15)));
+        assertFalse(operatorDriven().equals(operatorDriven().resetTimeout(16)));
+        assertFalse(operatorDriven().equals(operatorDriven().maxConsecutiveResetAttempts(17))); 
         
-        assertNotEquals(periodic(9), periodic(11));
+        assertFalse(periodic(9).equals(periodic(11)));
     }
     
     private static void checkCRC(ConsistentRegionConfig config,
