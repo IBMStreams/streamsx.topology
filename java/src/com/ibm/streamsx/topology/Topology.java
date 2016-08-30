@@ -11,6 +11,7 @@ import java.io.File;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -890,4 +891,33 @@ public class Topology implements TopologyElement {
         return sp;
     }
 
+    private boolean hasJCP;
+    /**
+     * Add job control plane to this topology. Creates a job control
+     * plane, which other operators can use to communicate control information.
+     * Job control plane is a JMX MBean Server that supports registration of
+     * MBeans from operators and logic within the job. Operators then use their MBeans, or
+     * the ones that are automatically registered in the job control plane, to
+     * provide intra-job control, co-ordination, and configuration.
+     * <P>
+     * Multiple calls to this method may be made, a single job control plane
+     * will be created.
+     * </P>
+     * <P>
+     * A job control plane is required when a consistent region is used
+     * and is added automatically by TODO-add link.
+     * </P>
+     * <P>
+     * Job control plane is only supported is distributed contexts.
+     * </P>
+     * @since com.ibm.streamsx.topology 1.5
+     */
+    public void addJobControlPlane() {
+        if (!hasJCP) {
+            // no inputs, outputs or parameters.
+            SPL.invokeOperator(this, "JCP", "spl.control::JobControlPlane",
+                    Collections.emptyList(), Collections.emptyList(), Collections.emptyMap());
+            hasJCP = true;
+        }        
+    }
 }
