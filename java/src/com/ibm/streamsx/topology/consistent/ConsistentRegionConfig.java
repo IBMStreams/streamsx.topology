@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.consistent;
 
 import java.util.concurrent.TimeUnit;
 
+import com.ibm.streams.domain.aas.model.AuthorizationT.Objects;
 import com.ibm.streamsx.topology.TStream;
 
 /**
@@ -267,5 +268,34 @@ public final class ConsistentRegionConfig {
             throw new IllegalArgumentException("maxConsecutiveResetAttempts must be greater than zero:" + attempts);
 
         return new ConsistentRegionConfig(this, null, null, attempts);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(trigger, period, drain, reset, attempts);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ConsistentRegionConfig other = (ConsistentRegionConfig) obj;
+        if (attempts != other.attempts)
+            return false;
+        if (drain != other.drain)
+            return false;
+        if (period != other.period)
+            return false;
+        if (reset != other.reset)
+            return false;
+        if (trigger != other.trigger)
+            return false;
+        if (unit != other.unit)
+            return false;
+        return true;
     }
 }
