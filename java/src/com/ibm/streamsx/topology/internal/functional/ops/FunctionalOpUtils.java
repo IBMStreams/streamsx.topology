@@ -5,8 +5,10 @@
 package com.ibm.streamsx.topology.internal.functional.ops;
 
 import com.ibm.streams.operator.OperatorContext;
+import com.ibm.streams.operator.compile.OperatorContextChecker;
 import com.ibm.streams.operator.state.CheckpointContext;
 import com.ibm.streams.operator.state.CheckpointContext.Kind;
+import com.ibm.streams.operator.state.ConsistentRegionContext;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.StatelessFunctionalHandler;
@@ -27,5 +29,19 @@ class FunctionalOpUtils {
             return handler;
         }
         return new StatelessFunctionalHandler<T>(functionContext, functionalLogic);
+    }
+    
+    /**
+     * Verify a functional operator is not the start of a consistent region.
+     * @param checker Context checker.
+     */
+    static void checkNotConsistentRegionSource(OperatorContextChecker checker) {
+        OperatorContext context = checker.getOperatorContext();
+        ConsistentRegionContext crc = context.getOptionalContext(ConsistentRegionContext.class);
+        if (crc == null)
+            return;
+
+        if (crc.isStartOfRegion() || crc.isTriggerOperator())
+            checker.setInvalidContext("Functional logic operator {0} cannot be the start of a consistent region.", new Object[] {context.getKind()});
     }
 }
