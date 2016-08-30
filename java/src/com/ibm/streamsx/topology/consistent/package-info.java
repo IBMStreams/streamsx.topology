@@ -58,7 +58,7 @@
  * </P>
 * 
  * <H3>Start of a consistent region</H3>
- * A consistent region is started by
+ * A consistent region is started by marking a source stream as consistent using
  * {@link com.ibm.streamsx.topology.TStream#setConsistent(ConsistentRegionConfig)}.
  * The source operator for the {@code TStream} must support logic that,
  * after a failure in the region, can replay tuples since the last checkpoint.
@@ -77,12 +77,63 @@
  * Such an invocation may be wrapped by a Java method that provides
  * a simplified version of the invocation for application developers.
  * </P>
+ * 
+ * <H3>Drain-checkpoint cycle</H3>
+ * When a region is triggered it is:
+ * <OL>
+ * <LI> <em>drained</em> of any tuple related processing for
+ * all tuples seen on each stream in the region</li>
+ * <LI> <em>checkpointed</em> to reflect the state of each tuple processor (operator)
+ * after it has processed all tuples on its input streams (it has been <em>drained</em>).
+ * </OL>
+ * This drain-checkpoint cycle results in a region where all the operators are
+ * consistent with having processed all tuples seen on their input streams, and the
+ * region as a whole is consistent with having processed all tuples the source operator
+ * has submitted.
+ * <P>
+ * After any failure in the region, all operators are reset to a previous consistent point
+ * and then tuple processing resumes with the source operator replaying tuples since
+ * the last consistent point.
+ * </P>
+ * <H3>At least once/exactly once processing</H3> 
+ * From the point of view of an operator in the region tuple processing is effectively exactly
+ * once even though tuples are replayed after a failure. This is because the consistent
+ * region protocol resets each operator's state to a point before the tuples were seen for
+ * the first time. Each operator forgets it has seen the replayed tuple thus it seems them
+ * effectively exactly once from an operator state point of view.
+ * <P>
+ * At least once processing is only seen when the operator modifies external state that cannot
+ * be undone during a reset. For example sending an SMS text cannot be undone, so a IBM Streams
+ * application using a consistent region for monitoring and sending text alerts could result
+ * in more than once text message indicating an issue.
+ * <BR>
+ * With coordination between the operator and the external system exactly once processing
+ * is possible, depending on the capabilities of the external system, for example exactly
+ * once can be achieved with database and file systems.
+ * </P>
+ * <H3>Functional logic in consistent regions</H3>
+ * 
+ * The checkpointing of functional logic is identical for
+ * consistent regions and
+ * {@link com.ibm.streamsx.topology.Topology#checkpointPeriod(long, java.util.concurrent.TimeUnit) autonomous checkpointing}.
+ * 
+ * <H4>Stateless functions</H4>
+ * Stateless functions can be used in a consistent region, e.g. a stateless filter
+ * like {@code t = t.filter(s -> !s.empty())} on a {@code TStream<String>}.
+ * During a drain-checkpoint cycle no processing occurs related to the stateless function.
+ *  
+ * <H4>Stateful functions</H4>
+ * Stateful functions can be used in a consistent region. During a drain-checkpoint cycle
+ * the function instance will be serialized as the checkpointed state.
+ * 
  * <H3>Autonomous regions</H3>
  * By default processing occurs in an autonomous region where
  * operator checkpointing and recovery from failure is
  * independent of other operators. A consistent region can be
  * ended by starting an autonomous region using
  * {@link com.ibm.streamsx.topology.TStream#autonomous()}.
- 
+ * Any processing against the stream returned by {@code autonomous()}
+ * is outside of the consistent region.
  */
 package com.ibm.streamsx.topology.consistent;
+

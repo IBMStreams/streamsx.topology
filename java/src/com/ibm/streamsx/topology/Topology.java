@@ -724,7 +724,7 @@ public class Topology implements TopologyElement {
      * Otherwise the function object is taken as immutable.
      * </P>
      * <P>
-     * Checkpointing is only supported is distributed contexts.
+     * Checkpointing is only supported in distributed contexts.
      * </P>
      * 
      * @param period Approximate period for checkpointing.

@@ -1095,12 +1095,20 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     TStream<T> autonomous();
     
     /**
-     * Set the source operator for this stream to be the start of a consistent region.
+     * Set the source operator for this stream to be the start of a
+     * consistent region to support at least once and exactly once
+     * processing.
      * IBM Streams calculates the boundaries of the consistent region
      * that is based on the reachability graph of this stream.
      * 
+     * <P>
+     * Consistent regions are only supported in distributed contexts.
+     * </P>
+
      * @since v1.5
      * @return this
+     * 
+     * @see com.ibm.streamsx.topology.consistent
      */
     TStream<T> setConsistent(ConsistentRegionConfig config);
     
