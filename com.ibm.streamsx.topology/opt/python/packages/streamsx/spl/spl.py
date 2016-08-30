@@ -9,9 +9,6 @@ OperatorType = Enum('OperatorType', 'Ignore Source Sink Pipe')
 OperatorType.Pipe.spl_template = 'PythonFunctionPipe'
 OperatorType.Sink.spl_template = 'PythonFunctionSink'
 
-PassBy = Enum('PassBy', 'name position')
-
-
 def pipe(wrapped):
     """
     Create a SPL operator from a function.
@@ -30,13 +27,13 @@ def pipe(wrapped):
     if not inspect.isfunction(wrapped):
         raise TypeError('A function is required')
 
-    return _wrapforsplop(OperatorType.Pipe, wrapped, PassBy.position, False)
+    return _wrapforsplop(OperatorType.Pipe, wrapped, 'position', False)
 
 #
 # Wrap object for an SPL operator, either
 # a callable class or function.
 #
-def _wrapforsplop(optype, wrapped, attributes, docpy):
+def _wrapforsplop(optype, wrapped, style, docpy):
 
     if inspect.isclass(wrapped):
         if not callable(wrapped):
@@ -56,7 +53,7 @@ def _wrapforsplop(optype, wrapped, attributes, docpy):
         _op_class.__doc__ = wrapped.__doc__
         _op_class.__splpy_optype = optype
         _op_class.__splpy_callable = 'class'
-        _op_class.__splpy_attributes = attributes
+        _op_class.__splpy_style = _define_style(wrapped, wrapped.__call__, style)
         _op_class.__splpy_file = inspect.getsourcefile(wrapped)
         _op_class.__splpy_docpy = docpy
         return _op_class
@@ -68,10 +65,87 @@ def _wrapforsplop(optype, wrapped, attributes, docpy):
         return wrapped(*args, **kwargs)
     _op_fn.__splpy_optype = optype
     _op_fn.__splpy_callable = 'function'
-    _op_fn.__splpy_attributes = attributes
+    _op_fn.__splpy_style = _define_style(wrapped, wrapped, style)
     _op_fn.__splpy_file = inspect.getsourcefile(wrapped)
     _op_fn.__splpy_docpy = docpy
     return _op_fn
+
+# define the SPL tuple passing style based
+# upon the function signature and the decorator
+# style parameter
+def _define_style(wrapped, fn, style):
+    has_args = False
+    has_kwargs = False
+    has_positional = False
+    req_named = False
+     
+    pmds = inspect.signature(fn).parameters
+    itpmds = iter(pmds)
+    # Skip self
+    if inspect.isclass(wrapped):
+        next(itpmds)
+
+    pc = 0
+    for pn in itpmds:
+        pmd = pmds[pn]
+        if pmd.kind == inspect.Parameter.POSITIONAL_ONLY:
+            raise TypeError('Positional only parameters are not supported:' + pn)
+        elif pmd.kind == inspect.Parameter.VAR_POSITIONAL:
+            has_args = True
+        elif pmd.kind == inspect.Parameter.VAR_KEYWORD:
+            has_kwargs = True
+        elif pmd.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
+            has_positional = True
+        elif pmd.kind == inspect.Parameter.KEYWORD_ONLY:
+            if pmd.default is inspect.Parameter.empty:
+                req_named = True
+        pc +=1
+               
+    # See if the requested style matches the signature.
+    if style == 'position':
+        if req_named:
+             raise TypeError("style='position' not supported with a required named parameter.")
+        elif pc == 1 and has_kwargs:
+            raise TypeError("style='position' not supported with single **kwargs parameter.")
+        elif pc == 1 and has_args:
+            pass
+        elif not has_positional:
+            raise TypeError("style='position' not supported as no positional parameters exist.")
+        # From an implementation point of view the values
+        # are passed as a tuple and Python does the correct mapping
+        style = 'tuple'
+
+    elif style == 'name':
+        if pc == 1 and has_args:
+            raise TypeError("style='name' not supported with single *args parameter.")
+        elif pc == 1 and has_kwargs:
+            raise TypeError("style='name' not supported with single **kwargs parameter.")
+        # From an implementation point of view the values
+        # are passed as a dictionary and Python does the correct mapping
+        style = 'dictionary'
+
+    elif style is not None:
+        raise TypeError("style=" + style + " unknown.")
+
+    if style is None:
+        if has_kwargs:
+            style = 'dictionary'
+        elif pc == 1 and has_args:
+            style = 'tuple'
+        elif pc == 0:
+            style = 'tuple'
+        else:
+            # Default to by name
+            # From an implementation point of view the values
+            # are passed as a dictionary and Python does the correct mapping
+            style = 'dictionary'
+
+    if style == 'tuple' and has_kwargs:
+         raise TypeError("style='position' not yet implemented with **kwargs parameter.")
+
+    if style == 'dictionary':
+         raise TypeError("Not yet implemented!")
+    return style
 
 class map:
     """
@@ -81,15 +155,12 @@ class map:
     output port. For each tuple on the input port the
     function is called passing the contents of the tuple.
     """
-
-    def __init__(self, attributes=PassBy.name, docpy=True):
-        if attributes is not PassBy.position:
-            raise NotImplementedError(attributes)
-        self.attributes = attributes
+    def __init__(self, style=None, docpy=True):
+        self.style = style
         self.docpy = docpy
-
+    
     def __call__(self, wrapped):
-        return _wrapforsplop(OperatorType.Pipe, wrapped, self.attributes, self.docpy)
+        return _wrapforsplop(OperatorType.Pipe, wrapped, self.style, self.docpy)
 
 # Allows functions in any module in opt/python/streams to be explicitly ignored.
 def ignore(wrapped):
@@ -105,7 +176,7 @@ def sink(wrapped):
     if not inspect.isfunction(wrapped):
         raise TypeError('A function is required')
 
-    return _wrapforsplop(OperatorType.Sink, wrapped, PassBy.position, False)
+    return _wrapforsplop(OperatorType.Sink, wrapped, 'position', False)
 
 # Defines a function as a sink operator
 class for_each:
@@ -116,11 +187,9 @@ class for_each:
     For each tuple on the input port the
     class or function is called passing the contents of the tuple.
     """
-    def __init__(self, attributes=PassBy.name, docpy=True):
-        if attributes is not PassBy.position:
-            raise NotImplementedError(attributes)
-        self.attributes = attributes
+    def __init__(self, style=None, docpy=True):
+        self.style = style
         self.docpy = docpy
 
     def __call__(self, wrapped):
-        return _wrapforsplop(OperatorType.Sink, wrapped, self.attributes, self.docpy)
+        return _wrapforsplop(OperatorType.Sink, wrapped, self.style, self.docpy)

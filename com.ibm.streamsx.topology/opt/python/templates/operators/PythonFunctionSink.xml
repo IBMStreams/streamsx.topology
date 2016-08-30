@@ -6,7 +6,9 @@
 <operatorModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.ibm.com/xmlns/prod/streams/spl/operator" xmlns:cmn="http://www.ibm.com/xmlns/prod/streams/spl/common" xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/operator operatorModel.xsd">
   <cppOperatorModel>
     <context>
-      <description>__SPLPY__DESCRIPTION__SPLPY__</description>
+      <description>
+__SPLPY__DESCRIPTION__SPLPY__
+      </description>
       <iconUri size="16">../../opt/.__splpy/icons/python-powered16.gif</iconUri>
       <iconUri size="32">../../opt/.__splpy/icons/python-powered32.gif</iconUri>
       <metrics>
@@ -35,6 +37,9 @@
     </parameters>
     <inputPorts>
       <inputPortSet>
+        <description>
+__SPLPY__INPORT_0__DESCRIPTION__SPLPY__
+        </description>
         <tupleMutationAllowed>false</tupleMutationAllowed>
         <windowingMode>NonWindowed</windowingMode>
         <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>

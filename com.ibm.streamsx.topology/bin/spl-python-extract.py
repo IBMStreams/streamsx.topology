@@ -104,14 +104,13 @@ _OP_PARAM_TEMPLATE ="""
 def create_op_parameters(opmodel_xml, name, opObj):
     opparam_xml = ''
     if opObj.__splpy_callable == 'class':
-        init_sig = inspect.signature(opObj.__init__)
-        seenSelf = False;
-        for pn in init_sig.parameters:
-            pmd = init_sig.parameters[pn]
-            # first argument to __init__ is self (instance ref)
-            if not seenSelf:
-                 seenSelf = True
-                 continue
+        pmds = init_sig = inspect.signature(opObj.__init__).parameters
+        itpmds = iter(pmds)
+        # first argument to __init__ is self (instance ref)
+        next(itpmds)
+        
+        for pn in itpmds:
+            pmd = pmds[pn]
             px = _OP_PARAM_TEMPLATE
             px = px.replace('__SPLPY__PARAM_NAME__SPLPY__', pn)
             px = px.replace('__SPLPY__PARAM_OPT__SPLPY__', 'false' if pmd.default== inspect.Parameter.empty else 'true' )
@@ -130,12 +129,17 @@ def copyCGT(opdir, ns, name, funcTuple):
      replaceTokenInFile(opmodel_xml, "__SPLPY__MINOR_VERSION__SPLPY__", str(sys.version_info[1]));
      create_op_parameters(opmodel_xml, name, funcTuple)
      create_op_spldoc(opmodel_xml, name, funcTuple)
+     create_ip_spldoc(opmodel_xml, name, funcTuple)
 
 ## Create SPL doc entries in the Operator model xml file.
 ##
 import html
 def create_op_spldoc(opmodel_xml, name, opobj):
-     _opdoc = html.escape(inspect.getdoc(opobj))
+     _opdoc = inspect.getdoc(opobj)
+     if _opdoc is None:
+         _opdoc = 'Callable: ' + name + "\n"
+
+     _opdoc = html.escape(_opdoc)
 
      # Optionally include the Python source code
      if opobj.__splpy_docpy:
@@ -152,32 +156,49 @@ def create_op_spldoc(opmodel_xml, name, opobj):
              pass
      
      replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", _opdoc);
+
+def create_ip_spldoc(opmodel_xml, name, opobj):
+     if (opobj.__splpy_style == None):
+         return None
+     if (opobj.__splpy_style == 'dictionary'):
+         return None
+     
+     _p0doc = """
+       Tuple attribute values are passed by position to the Python callable.
+             """;
+ 
+     replaceTokenInFile(opmodel_xml, "__SPLPY__INPORT_0_DESCRIPTION__SPLPY__", _p0doc);
    
 # Write information about the Python function parameters.
 #
-def writeParameterInfo(cfgfile, opobj):
+def write_style_info(cfgfile, opobj):
         is_class = inspect.isclass(opobj)
         if is_class:
-            opobj = opobj.__call__
+            opfn = opobj.__call__
+        else:
+            opfn = opobj
         
-        sig = inspect.signature(opobj)
+        sig = inspect.signature(opfn)
         fixedCount = 0
-        params = sig.parameters
-        seenFirst = False
-        for pname in params:
-             if not seenFirst:
-                 # Skip 'self' for classes
-                 seenFirst = True
-                 if is_class:
-                     continue
-             param = params[pname]
-             if param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
-                 fixedCount += 1
-             if param.kind == inspect.Parameter.VAR_POSITIONAL:
-                 fixedCount = -1
-                 break
+        if opobj.__splpy_style == 'tuple':
+            pmds = sig.parameters
+            itpmds = iter(pmds)
+            # Skip 'self' for classes
+            if is_class:
+                next(itpmds)
+            
+            for pn in itpmds:
+                 param = pmds[pn]
+                 if param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
+                     fixedCount += 1
+                 if param.kind == inspect.Parameter.VAR_POSITIONAL:
+                     fixedCount = -1
+                     break
+                 if param.kind == inspect.Parameter.VAR_KEYWORD:
+                     break
 
         cfgfile.write('sub splpy_FixedParam { \''+ str(fixedCount)   + "\'}\n")
+        cfgfile.write('sub splpy_ParamStyle { \''+ str(opobj.__splpy_style)   + "\'}\n")
  
 
 # Write out the configuration for the operator
@@ -190,7 +211,7 @@ def write_config(dynm, opdir, module, opname, opobj):
     cfgfile.write('sub splpy_OperatorCallable {\'' + opobj.__splpy_callable + "\'}\n")
     cfgfile.write('sub splpy_FunctionName {\'' + opname + "\'}\n")
     cfgfile.write('sub splpy_OperatorType {\'' + opobj.__splpy_optype.name + "\'}\n")
-    writeParameterInfo(cfgfile, opobj)
+    write_style_info(cfgfile, opobj)
     cfgfile.write("1;\n")
     cfgfile.close()
 

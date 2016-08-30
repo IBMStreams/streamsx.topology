@@ -25,7 +25,6 @@ def simplesendmail(from_addr, to_addrs, msg):
     "Send a simple email."
     server.sendmail(from_addr, to_addrs, msg)
 
-
 # Example of a function that is explicitly ignored by the SPL extractor (spl-extract.py)
 @spl.ignore
 def thisIsNotAnOperator(a):
