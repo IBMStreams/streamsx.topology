@@ -6,7 +6,6 @@ package com.ibm.streamsx.topology.consistent;
 
 import java.util.concurrent.TimeUnit;
 
-import com.ibm.streams.domain.aas.model.AuthorizationT.Objects;
 import com.ibm.streamsx.topology.TStream;
 
 /**
@@ -105,9 +104,8 @@ public final class ConsistentRegionConfig {
     }
     
     /**
-     * Create a {@link Trigger#PERIODIC} consistent region configuration.
-     * The IBM Streams runtime will trigger a drain and checkpoint
-     * the region periodically approximately every {@code period} seconds.
+     * Create a {@link Trigger#OPERATOR_DRIVEN} consistent region configuration.
+     * The source operator triggers drain and checkpoint cycles for the region.
      * <BR>
      * Configuration values are set to the default values.
      * <P>
@@ -122,7 +120,6 @@ public final class ConsistentRegionConfig {
      * </code>
      * </pre>
      * </P>
-     * @param period Trigger period in seconds.
      */
     public static ConsistentRegionConfig operatorDriven() {
         return new ConsistentRegionConfig();
@@ -183,7 +180,7 @@ public final class ConsistentRegionConfig {
     }
 
     /**
-     * Get the time unit for {@line #getPeriod()}, {@link #getDrainTimeout()}
+     * Get the time unit for {@link #getPeriod()}, {@link #getDrainTimeout()}
      * and {@link #getResetTimeout()()}.
      * @return Time unit for this configuration.
      */
@@ -259,8 +256,8 @@ public final class ConsistentRegionConfig {
      * <P>
      * {@code stream.setConsistent(periodic(30).maxConsecutiveResetAttempts(7))}
      * </P>
-     * @param maxConsecutiveResetAttempts Reset timeout to use in seconds, must be greater than 0.
-     * @return New configuration with reset timeout set to {@code maxConsecutiveResetAttempts}
+     * @param attempts Maximum number of consecutive reset attempts, must be greater than 0.
+     * @return New configuration with maxConsecutiveResetAttempts set to {@code attempts}
      * and the remaining values copied from this configuration.
      */
     public ConsistentRegionConfig maxConsecutiveResetAttempts(int attempts) {

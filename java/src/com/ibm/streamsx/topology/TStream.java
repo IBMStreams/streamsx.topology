@@ -1108,7 +1108,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @since v1.5
      * @return this
      * 
-     * @see com.ibm.streamsx.topology.consistent
+     * @see com.ibm.streamsx.topology.consistent.ConsistentRegionConfig
      */
     TStream<T> setConsistent(ConsistentRegionConfig config);
     
