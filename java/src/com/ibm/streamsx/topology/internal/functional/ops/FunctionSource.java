@@ -10,6 +10,8 @@ import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.StreamingData;
 import com.ibm.streams.operator.StreamingOutput;
+import com.ibm.streams.operator.OperatorContext.ContextCheck;
+import com.ibm.streams.operator.compile.OperatorContextChecker;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
@@ -25,6 +27,11 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @OutputPortSet(cardinality = 1)
 @SharedLoader
 public class FunctionSource extends ProcessTupleProducer implements Functional {
+    
+    @ContextCheck(runtime=false)
+    public static void checkNotConsistentRegionSource(OperatorContextChecker checker) {
+        FunctionalOpUtils.checkNotConsistentRegionSource(checker);
+    }
 
     private FunctionalHandler<Supplier<Iterable<Object>>> dataHandler;
     private SPLMapping<Object> mapping;

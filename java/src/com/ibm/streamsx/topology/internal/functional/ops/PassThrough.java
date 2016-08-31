@@ -9,6 +9,8 @@ import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.StreamingInput;
 import com.ibm.streams.operator.StreamingOutput;
 import com.ibm.streams.operator.Tuple;
+import com.ibm.streams.operator.OperatorContext.ContextCheck;
+import com.ibm.streams.operator.compile.OperatorContextChecker;
 import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.PrimitiveOperator;
@@ -17,6 +19,11 @@ import com.ibm.streams.operator.model.PrimitiveOperator;
 @InputPortSet(cardinality = 1)
 @OutputPortSet(cardinality = 1)
 public class PassThrough extends AbstractOperator {
+    
+    @ContextCheck(runtime=false)
+    public static void checkNotConsistentRegionSource(OperatorContextChecker checker) {
+        FunctionalOpUtils.checkNotConsistentRegionSource(checker);
+    }
 
     public void process(StreamingInput<Tuple> stream, Tuple tuple)
             throws Exception {

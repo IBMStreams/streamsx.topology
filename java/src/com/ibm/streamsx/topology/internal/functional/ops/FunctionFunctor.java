@@ -8,6 +8,8 @@ import java.util.logging.Logger;
 
 import com.ibm.streams.operator.AbstractOperator;
 import com.ibm.streams.operator.OperatorContext;
+import com.ibm.streams.operator.OperatorContext.ContextCheck;
+import com.ibm.streams.operator.compile.OperatorContextChecker;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streamsx.topology.function.FunctionContext;
@@ -24,6 +26,11 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
 
     public static final String FUNCTIONAL_LOGIC_PARAM = "functionalLogic";
     static final Logger trace = Logger.getLogger("com.ibm.streamsx.topology.operators");
+    
+    @ContextCheck(runtime=false)
+    public static void checkNotConsistentRegionSource(OperatorContextChecker checker) {
+        FunctionalOpUtils.checkNotConsistentRegionSource(checker);
+    }
 
     // parameters
     private String functionalLogic;
