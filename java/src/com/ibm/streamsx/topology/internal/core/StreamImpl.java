@@ -30,6 +30,7 @@ import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.builder.BUnionOutput;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
+import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
@@ -582,6 +583,13 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public TStream<T> autonomous() {
         BOutput autonomousOutput = builder().autonomous(output()); 
         return addMatchingStream(autonomousOutput);
+    }
+    
+    @Override
+    public TStream<T> setConsistent(ConsistentRegionConfig config) {
+        //BOperatorInvocation op = operator();
+        throw new UnsupportedOperationException("WIP");
+        //return this;
     }
     
     @Override

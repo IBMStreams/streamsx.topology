@@ -18,6 +18,7 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
+import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -124,6 +125,11 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     @Override
     public SPLStream autonomous() {
     	return asSPL(super.autonomous());
+    }
+    @Override
+    public SPLStream setConsistent(ConsistentRegionConfig config) {
+        super.setConsistent(config);
+        return this;
     }
        
     private SPLStream asSPL(TStream<Tuple> tupleStream) {

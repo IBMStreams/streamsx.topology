@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
+import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
@@ -1092,6 +1093,24 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @since v1.5
      */
     TStream<T> autonomous();
+    
+    /**
+     * Set the source operator for this stream to be the start of a
+     * consistent region to support at least once and exactly once
+     * processing.
+     * IBM Streams calculates the boundaries of the consistent region
+     * that is based on the reachability graph of this stream.
+     * 
+     * <P>
+     * Consistent regions are only supported in distributed contexts.
+     * </P>
+
+     * @since v1.5
+     * @return this
+     * 
+     * @see com.ibm.streamsx.topology.consistent.ConsistentRegionConfig
+     */
+    TStream<T> setConsistent(ConsistentRegionConfig config);
     
     /**
      * Internal method.
