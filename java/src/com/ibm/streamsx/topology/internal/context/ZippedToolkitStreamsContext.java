@@ -1,5 +1,7 @@
 package com.ibm.streamsx.topology.internal.context;
 
+import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,42 +25,50 @@ import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	
 	@Override
-	public Future<File> submit(Topology app, Map<String, Object> config) throws Exception {
-
-        if (config == null)
-            config = new HashMap<>();
-
-        // If the toolkit path is not given, then create one in the
-        // currrent directory.
-        if (!config.containsKey(ContextProperties.TOOLKIT_DIR)) {
-            config.put(ContextProperties.TOOLKIT_DIR, Files
-                    .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
-        }
-        
+	public Future<File> submit(Topology app, Map<String, Object> config) throws Exception {        
         File toolkitRoot = super.submit(app, config).get();
-        Path zipOutPath = Paths.get(toolkitRoot.getAbsolutePath() + ".zip");
-		pack(toolkitRoot.toPath(), zipOutPath);
+        Path zipOutPath = pack(toolkitRoot.toPath());
+        if (!(config.containsKey(KEEP_ARTIFACTS) && (boolean)config.get(KEEP_ARTIFACTS)))
+        	delete(toolkitRoot.toPath());
         return new CompletedFuture<File>(zipOutPath.toFile());
 	}
 	
 	@Override
 	public Future<File> submit(JSONObject submission) throws Exception {
-		JSONObject deployInfo = (JSONObject) submission.get(SUBMISSION_DEPLOY);
-    	if (deployInfo == null)
-    		submission.put("deploy", deployInfo = new JSONObject());
-    	
-        if (!deployInfo.containsKey(ContextProperties.TOOLKIT_DIR)) {
-        	deployInfo.put(ContextProperties.TOOLKIT_DIR, Files
-                    .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
-        }
-
         File toolkitRoot = super.submit(submission).get();
-        Path zipOutPath = Paths.get(toolkitRoot.getAbsolutePath() + ".zip");
-		pack(toolkitRoot.toPath(), zipOutPath);
+        Path zipOutPath = pack(toolkitRoot.toPath());
+        
+        JSONObject deployInfo = (JSONObject)  submission.get(SUBMISSION_DEPLOY);
+        if (!(deployInfo.containsKey(KEEP_ARTIFACTS) && (boolean)deployInfo.get(KEEP_ARTIFACTS)))
+        	delete(toolkitRoot.toPath());
         return new CompletedFuture<File>(zipOutPath.toFile());
 	}
 	
-	public static void pack(final Path folder, final Path zipFilePath) throws IOException {
+	// Deletes a file or directory, even if not empty. Returns false if
+	// it could not be deleted.
+	public static boolean delete(final Path folder) {
+		try {
+			Files.walkFileTree(folder, new SimpleFileVisitor<Path>(){
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					Files.delete(file);
+			        return FileVisitResult.CONTINUE;
+			    }
+
+				@Override
+			    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+			    	Files.delete(dir);
+			        return FileVisitResult.CONTINUE;
+			    }
+			});
+		} catch (IOException e) {
+			return false;
+		}
+		return true;
+	}
+	
+	public static Path pack(final Path folder) throws IOException {
+		Path zipFilePath = Paths.get(folder.toAbsolutePath().toString() + ".zip");
 		String folderName = folder.getFileName().toString();
 	    try (
 	            FileOutputStream fos = new FileOutputStream(zipFilePath.toFile());
@@ -79,6 +89,7 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	            }
 	        });
 	    }
+	    return zipFilePath;
 	}
 
 }
