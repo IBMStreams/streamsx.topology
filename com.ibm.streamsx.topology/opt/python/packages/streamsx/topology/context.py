@@ -63,7 +63,6 @@ def submit(ctxtype, graph, config = None, username = None, password = None, reso
                 process = subprocess.Popen(['streamtool', 'geturl', '--api'],
                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 resource_url = process.stdout.readline().strip().decode('utf-8')
-                raise Exception("some exception in submit")
             except:
                 print_exception("Error getting SWS resource url ")               
                 raise
