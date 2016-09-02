@@ -124,42 +124,5 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         return new CompletedFuture<File>(localBundle);
     }
 
-    private void deleteToolkit(File appDir, JSONObject deployConfig) throws IOException {
-        Path tkdir = appDir.toPath();
-        
-        Boolean keep = (Boolean) deployConfig.get(KEEP_ARTIFACTS);
-        if (Boolean.TRUE.equals(keep)) {
-            trace.info("Keeping toolkit at: " + tkdir.toString());
-            return;
-        }
-
-        Files.walkFileTree(tkdir, new FileVisitor<Path>() {
-
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir,
-                    BasicFileAttributes attrs) throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file,
-                    BasicFileAttributes attrs) throws IOException {
-                file.toFile().delete();
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc)
-                    throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                    throws IOException {
-                dir.toFile().delete();
-                return FileVisitResult.CONTINUE;
-            }
-        });
-    }
+    
 }
