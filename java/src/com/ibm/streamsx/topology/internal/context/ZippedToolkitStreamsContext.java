@@ -32,9 +32,9 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
         Path zipOutPath = pack(toolkitRoot.toPath());
         
         JSONObject jso = new OrderedJSONObject();
-        addConfigToJSON(jso, config);
-        deleteToolkit(toolkitRoot, jso);
-        return new CompletedFuture<File>(zipOutPath.toFile());
+        addConfigToJSON(jso, config);  
+        
+        return deleteToolkitAndProduceCompletedFuture(toolkitRoot, jso, zipOutPath);
 	}
 	
 	@Override
@@ -42,10 +42,14 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
         File toolkitRoot = super.submit(submission).get();
         Path zipOutPath = pack(toolkitRoot.toPath());
         
-        deleteToolkit(toolkitRoot, (JSONObject)submission.get(SUBMISSION_DEPLOY));
-        return new CompletedFuture<File>(zipOutPath.toFile());
+        return deleteToolkitAndProduceCompletedFuture(toolkitRoot, (JSONObject)submission.get(SUBMISSION_DEPLOY), zipOutPath);
 	}
 	
+	// Addresses 
+	private CompletedFuture<File> deleteToolkitAndProduceCompletedFuture(File toolkitRoot, JSONObject deploy, Path zipOutPath) throws IOException{
+		deleteToolkit(toolkitRoot, deploy);
+        return new CompletedFuture<File>(zipOutPath.toFile());
+	}
 	
 	public static Path pack(final Path folder) throws IOException {
 		Path zipFilePath = Paths.get(folder.toAbsolutePath().toString() + ".zip");
