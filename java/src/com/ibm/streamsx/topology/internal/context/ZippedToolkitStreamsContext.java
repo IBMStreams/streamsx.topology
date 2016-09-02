@@ -21,6 +21,11 @@ import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 
 public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	
+    @Override
+    public Type getType() {
+        return Type.ZIPPED_TOOLKIT;
+    }
+	
 	@Override
 	public Future<File> submit(Topology app, Map<String, Object> config) throws Exception {        
         File toolkitRoot = super.submit(app, config).get();
