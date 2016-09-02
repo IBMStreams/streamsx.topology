@@ -63,8 +63,10 @@ def submit(ctxtype, graph, config = None, username = None, password = None, reso
                 process = subprocess.Popen(['streamtool', 'geturl', '--api'],
                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 resource_url = process.stdout.readline().strip().decode('utf-8')
+                raise Exception("some exception in submit")
             except:
-                print_exception("Error getting SWS resource url ", username)
+                print_exception("Error getting SWS resource url ")               
+                raise
 
         for view in graph.get_views():
             view.set_streams_context_config({'username': username, 'password': password, 'resource_url': resource_url})
@@ -73,7 +75,7 @@ def submit(ctxtype, graph, config = None, username = None, password = None, reso
     except:
         print_exception("Error submitting with java")
         delete_json(fn)
-
+        raise
 
 def _createFullJSON(graph, config):
     fj = {}
@@ -97,6 +99,7 @@ def print_process_stdout(process):
             print(line)
     except:
         print_exception("Error reading from process stdout")
+        raise
 
 def print_process_stderr(process, fn):
     try:
@@ -109,6 +112,7 @@ def print_process_stderr(process, fn):
                 delete_json(fn)
     except:
         print_exception("Error reading from process stderr")
+        raise
 
 def _submitUsingJava(ctxtype, fn):
     ctxtype_was = ctxtype
@@ -148,4 +152,4 @@ def _submitUsingJava(ctxtype, fn):
             return process.stdout
     except:
         print_exception("Error starting java subprocess for submission")
-        
+        raise
