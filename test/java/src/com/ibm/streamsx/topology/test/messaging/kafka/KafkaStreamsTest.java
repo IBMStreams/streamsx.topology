@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.test.messaging.kafka;
 
+import static com.ibm.streamsx.topology.messaging.kafka.Util.identifyStreamsxMessagingVer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -20,8 +21,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
-
-import static com.ibm.streamsx.topology.messaging.kafka.Util.identifyStreamsxMessagingVer;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.TStream;
@@ -53,6 +52,9 @@ import com.ibm.streamsx.topology.tuple.SimpleMessage;
  * <li>{@code com.ibm.streamsx.topology.test.messaging.kafka.metadata.broker.list} the
  *      Kafka cluster's brokers addresses. Defaults to "localhost:9092".</li>
  * </ul>
+ * 
+ * If topology.test.configured.run is false (or not set) then the topology is built
+ * but not executed. This is to ensure compatibility with toolkits.
  */
 public class KafkaStreamsTest extends TestTopology {
     
@@ -415,6 +417,9 @@ public class KafkaStreamsTest extends TestTopology {
                                             msgToJSONStringFunc());
 
         setupDebug();
+        if (testBuildOnly(top))
+            return;
+            
         completeAndValidate(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
@@ -462,6 +467,9 @@ public class KafkaStreamsTest extends TestTopology {
                                             msgToJSONStringFunc());
 
         setupDebug();
+        if (testBuildOnly(top))
+            return;
+
         completeAndValidate(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
@@ -505,6 +513,9 @@ public class KafkaStreamsTest extends TestTopology {
                                             msgToJSONStringFunc());
 
         setupDebug();
+        if (testBuildOnly(top))
+            return;
+
         completeAndValidate(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
@@ -545,6 +556,9 @@ public class KafkaStreamsTest extends TestTopology {
                                             msgToJSONStringFunc());
 
         setupDebug();
+        if (testBuildOnly(top))
+            return;
+
         completeAndValidate(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
@@ -584,6 +598,9 @@ public class KafkaStreamsTest extends TestTopology {
                                             subtypeMsgToJSONStringFunc(topicVal));
 
         setupDebug();
+        if (testBuildOnly(top))
+            return;
+
         completeAndValidate(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
@@ -623,6 +640,9 @@ public class KafkaStreamsTest extends TestTopology {
                                             subtypeMsgToJSONStringFunc(null));
 
         setupDebug();
+        if (testBuildOnly(top))
+            return;
+
         completeAndValidate(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
     
@@ -680,6 +700,9 @@ public class KafkaStreamsTest extends TestTopology {
                                             msgToJSONStringFunc());
                                             
         setupDebug();
+        if (testBuildOnly(top))
+            return;
+
         completeAndValidateUnordered(groupId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
     }
         
