@@ -4,10 +4,13 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
+import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,6 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.logging.Logger;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
@@ -29,8 +33,10 @@ import com.ibm.streamsx.topology.internal.streams.InvokeMakeToolkit;
 
 public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
+	static final Logger trace = Topology.TOPOLOGY_LOGGER;
+	
     Map<String, Object> graphItems;
-
+    
     @Override
     public Type getType() {
         return Type.TOOLKIT;
@@ -241,6 +247,45 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
                 Files.copy(file,
                         targetPath.resolve(sourcePath.relativize(file)),
                         StandardCopyOption.REPLACE_EXISTING);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+    
+    public void deleteToolkit(File appDir, JSONObject deployConfig) throws IOException {
+        Path tkdir = appDir.toPath();
+        
+        Boolean keep = (Boolean) deployConfig.get(KEEP_ARTIFACTS);
+        if (Boolean.TRUE.equals(keep)) {
+            trace.info("Keeping toolkit at: " + tkdir.toString());
+            return;
+        }
+
+        Files.walkFileTree(tkdir, new FileVisitor<Path>() {
+
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir,
+                    BasicFileAttributes attrs) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file,
+                    BasicFileAttributes attrs) throws IOException {
+                file.toFile().delete();
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc)
+                    throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                    throws IOException {
+                dir.toFile().delete();
                 return FileVisitResult.CONTINUE;
             }
         });

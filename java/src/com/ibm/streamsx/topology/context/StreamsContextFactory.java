@@ -14,6 +14,7 @@ import com.ibm.streamsx.topology.internal.context.EmbeddedTester;
 import com.ibm.streamsx.topology.internal.context.StandaloneStreamsContext;
 import com.ibm.streamsx.topology.internal.context.StandaloneTester;
 import com.ibm.streamsx.topology.internal.context.ToolkitStreamsContext;
+import com.ibm.streamsx.topology.internal.context.ZippedToolkitStreamsContext;
 
 public class StreamsContextFactory {
 
@@ -31,6 +32,8 @@ public class StreamsContextFactory {
             return getEmbedded();
         case TOOLKIT:
             return new ToolkitStreamsContext();
+        case ZIPPED_TOOLKIT:
+            return new ZippedToolkitStreamsContext();
         case STANDALONE_BUNDLE:
             return new BundleStreamsContext(true);
         case BUNDLE:

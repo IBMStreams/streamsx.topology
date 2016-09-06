@@ -42,6 +42,13 @@ public interface StreamsContext<T> {
          * 
          */
         TOOLKIT,
+        
+        /**
+         * Execution of the topology produces the application as a zipped
+         * Streams toolkit.
+         * 
+         */
+        ZIPPED_TOOLKIT,
 
         /**
          * Execution of the topology produces an SPL application bundle
