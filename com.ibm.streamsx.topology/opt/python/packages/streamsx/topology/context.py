@@ -8,8 +8,7 @@ import json
 import subprocess
 import threading
 import sys, traceback
-
-import shutil
+from platform import python_version
 
 #
 # Utilities
@@ -60,6 +59,7 @@ def submit(ctxtype, graph, config = None, username = None, password = None):
     pythonrealfile = os.path.basename(pythonreal)
     pythonconfig = pythondir+"/"+pythonfile+"-config"
     pythonrealconfig = os.path.realpath(pythondir+"/"+pythonrealfile+"-config")
+    pythonversion = python_version()
 
     if config is None:
         config = {}
@@ -67,6 +67,7 @@ def submit(ctxtype, graph, config = None, username = None, password = None):
     # place the fullpaths to the python binary that is running and 
     # the python-config that will used into the config
     config["pythonversion"] = {}
+    config["pythonversion"]["version"] = pythonversion
     config["pythonversion"]["binaries"] = []
     bf = {}
     bf["python"] = pythonreal
