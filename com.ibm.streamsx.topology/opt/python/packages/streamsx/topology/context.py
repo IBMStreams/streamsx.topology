@@ -9,6 +9,8 @@ import subprocess
 import threading
 import sys, traceback
 
+import shutil
+
 #
 # Utilities
 #
@@ -50,8 +52,31 @@ def submit(ctxtype, graph, config = None, username = None, password = None):
     Returns:
         An output stream of bytes if submitting with JUPYTER, otherwise returns None.
     """    
+    # path to python binary
+    pythonbin = sys.executable
+    pythonreal = os.path.realpath(pythonbin)
+    pythondir = os.path.dirname(pythonbin) 
+    pythonfile = os.path.basename(pythonbin)
+    pythonrealfile = os.path.basename(pythonreal)
+    pythonconfig = pythondir+"/"+pythonfile+"-config"
+    pythonrealconfig = os.path.realpath(pythondir+"/"+pythonrealfile+"-config")
+
     if config is None:
         config = {}
+
+    # place the fullpaths to the python binary that is running and 
+    # the python-config that will used into the config
+    config["pythonversion"] = {}
+    config["pythonversion"]["binaries"] = []
+    bf = {}
+    bf["python"] = pythonreal
+    bf["pythonconfig"] = pythonrealconfig
+    config["pythonversion"]["binaries"].append(bf)
+    # also write the python-config path to a file that will be used 
+    # from within pyversion.sh 
+    with open('/tmp/'+os.environ['USER']+'.pythonconfig', 'w') as pf:
+      pf.write(pythonrealconfig)
+
     fj = _createFullJSON(graph, config)
     fn = _createJSONFile(fj)
 
