@@ -10,8 +10,6 @@
   <property environment="env"/>
   <fail unless="env.STREAMS_INSTALL" message="STREAMS_INSTALL not set."/>
   <property name="streams.install" value="${env.STREAMS_INSTALL}"/>
-  <property name="env.STREAMS_TOPOLOGYX_PYTHON" value="python3"/>
-  <property name="streams.python" value="${env.STREAMS_TOPOLOGYX_PYTHON}"/>
   <property name="tk.name" value="com.ibm.streamsx.topology"/>
   <property name="tk" location="${streamsx.topology}/${tk.name}"/>
   <property name="tk.opt" location="${tk}/opt"/>
@@ -26,6 +24,7 @@
   <property name="ant.build.javac.target" value="8"/>
 
   <property name="topology.test.root" location="${streamsx.topology}/test"/>
+  <property name="topology.test.python" value="python3"/>
 
   <!-- Use the full class path as scalac doesn't seem to always pick
        up jars theough the manifest, even if -usemanifestcp is set -->
