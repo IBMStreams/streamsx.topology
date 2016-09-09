@@ -310,7 +310,7 @@
    </jacoco:coverage>
    </target>
 
-  <target name="junit.report">
+  <target name="junit.report" unless="topology.skip.junit.report">
    <junitreport todir="${test.dir}">
       <fileset dir="${test.dir}">
          <include name="**/TEST-*.xml"/>
