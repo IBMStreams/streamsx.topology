@@ -435,7 +435,7 @@ class Stream(object):
         """
         op = self.topology.graph.addOperator("$Autonomous$")
         op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
 class Routing(Enum):
