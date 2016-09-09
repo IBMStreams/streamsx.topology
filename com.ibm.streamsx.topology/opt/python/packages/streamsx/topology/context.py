@@ -73,10 +73,6 @@ def submit(ctxtype, graph, config = None, username = None, password = None):
     bf["python"] = pythonreal
     bf["pythonconfig"] = pythonrealconfig
     config["pythonversion"]["binaries"].append(bf)
-    # also write the python-config path to a file that will be used 
-    # from within pyversion.sh 
-    with open('/tmp/'+os.environ['USER']+'.pythonconfig', 'w') as pf:
-      pf.write(pythonrealconfig)
 
     fj = _createFullJSON(graph, config)
     fn = _createJSONFile(fj)
