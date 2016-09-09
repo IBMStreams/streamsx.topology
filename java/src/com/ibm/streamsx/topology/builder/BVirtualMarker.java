@@ -12,7 +12,7 @@ public enum BVirtualMarker {
     LOW_LATENCY("$LowLatency$"),
     END_LOW_LATENCY("$EndLowLatency$"),
     ISOLATE("$Isolate$"),
-    AUTONOMOUS("$Autonomou$"),
+    AUTONOMOUS("$Autonomous$"),
     ;
     
     private final String kind;
