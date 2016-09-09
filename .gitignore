@@ -1,5 +1,8 @@
 __pycache__
 *.sab
+*.class
+.DS_Store
+*.DS_Store
 toolkit.xml
 
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.file/DirectoryWatcher/*

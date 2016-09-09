@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
+import com.ibm.streams.operator.window.StreamWindow.Policy;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
@@ -41,6 +42,7 @@ import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionFilter;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionMultiTransform;
+import com.ibm.streamsx.topology.internal.functional.ops.FunctionParDo;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSink;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSplit;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionTransform;
@@ -358,24 +360,24 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public void publish(String topic) {
-    	publish(topic, false);
+        publish(topic, false);
     }
     
     private static void filtersNotAllowed(boolean allowFilter) {
-    	if (allowFilter)
-    		throw new IllegalArgumentException("TStream tuple type cannot be published allowing filters.");
+        if (allowFilter)
+            throw new IllegalArgumentException("TStream tuple type cannot be published allowing filters.");
     }
     
     @Override
     public void publish(String topic, boolean allowFilter) {
         
         checkTopicName(topic);
-    	
-    	Type tupleType = getTupleType();
+        
+        Type tupleType = getTupleType();
         
         if (JSONObject.class.equals(tupleType)) {
-        	filtersNotAllowed(allowFilter);
-        	
+            filtersNotAllowed(allowFilter);
+            
             @SuppressWarnings("unchecked")
             TStream<JSONObject> json = (TStream<JSONObject>) this;
             JSONStreams.toSPL(json).publish(topic, allowFilter);
@@ -386,23 +388,23 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         BOperatorInvocation op;
         if (Schemas.usesDirectSchema(tupleType)
                  || ((TStream<T>) this) instanceof SPLStream) {
-        	// Don't allow filtering against schemas that Streams
-        	// would not allow a filter against.
-        	if (String.class != tupleType && !(((TStream<T>) this) instanceof SPLStream))
-        		filtersNotAllowed(allowFilter);
-        	
+            // Don't allow filtering against schemas that Streams
+            // would not allow a filter against.
+            if (String.class != tupleType && !(((TStream<T>) this) instanceof SPLStream))
+                filtersNotAllowed(allowFilter);
+            
             // Publish as a stream consumable by SPL & Java/Scala
-        	Map<String,Object> publishParms = new HashMap<>();
-        	publishParms.put("topic", topic);
-        	publishParms.put("allowFilter", allowFilter);
-        	
+            Map<String,Object> publishParms = new HashMap<>();
+            publishParms.put("topic", topic);
+            publishParms.put("allowFilter", allowFilter);
+            
             op = builder().addSPLOperator("Publish",
                     "com.ibm.streamsx.topology.topic::Publish",
                     publishParms);
  
         } else if (getTupleClass() != null){
-        	filtersNotAllowed(allowFilter);
-        	
+            filtersNotAllowed(allowFilter);
+            
             // Publish as a stream consumable only by Java/Scala
             Map<String,Object> params = new HashMap<>();
             params.put("topic", topic);
@@ -711,5 +713,44 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public Set<String> getResourceTags() {
         return getPlacementInfo() .getResourceTags(this);
+    }
+
+    ////////////////////////////////////////////////////
+    //                  For Beam API                  //
+    ////////////////////////////////////////////////////
+
+    @Override
+    public List<TStream<?>> parDo(List<TWindow<?, Object>> sideInputs, 
+            BiFunction<T, 
+                Map<Integer, List<?>>, 
+                Map<Integer, List<?>>> doFn,
+            List<Class<?>> outputTypes) {
+
+        String opName = doFn.getClass().getSimpleName();
+        if (opName.isEmpty()) {
+            opName = getTupleName() + "parDo";         
+        }
+
+        BOperatorInvocation parDoOp = JavaFunctional.addFunctionalOperator(this,
+                opName, FunctionParDo.class, doFn);
+        
+        SourceInfo.setSourceInfo(parDoOp, WindowDefinition.class);
+
+        // connect main input
+        connectTo(parDoOp, true, null);
+
+        // connect side inputs
+        for (TWindow<?, Object> sideInput: sideInputs) {
+            ((WindowDefinition) sideInput).addInput(parDoOp, Policy.COUNT, 
+                Integer.MAX_VALUE, (TimeUnit) null);
+        }
+
+        // add outputs
+        List<TStream<?>> outputs = new ArrayList<>(outputTypes.size());
+        for (int i = 0; i < outputTypes.size(); ++i) {
+            outputs.add(JavaFunctional.addJavaOutput(this, parDoOp, outputTypes.get(i)));
+        }
+
+        return outputs;
     }
 }

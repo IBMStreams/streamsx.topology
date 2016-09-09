@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.streamsx.topology.builder.BInputPort;
@@ -1129,4 +1130,27 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * stream. Returns input or the new port if input was null.
      */
     BInputPort connectTo(BOperatorInvocation receivingBop, boolean functional, BInputPort input);
+
+
+    ////////////////////////////////////////////////////
+    //                  For Beam API                  //
+    ////////////////////////////////////////////////////
+
+    /**
+     * The counterpart for {@link org.apache.beam.sdk.transforms.ParDo ParDo}
+     * in Beam. 
+     *
+     * @param sideInputs      a list of all windowed side inputs
+     * @param doFn            the wrapper function that contains the 
+     * user-defined Beam DoFn. The runner should parepare this wrapper
+     * @param outputTypes     types all main output and all side outputs. The
+     * runner should extract the types from {@link org.apache.beam.sdk.values.TupleTag}s.
+     *
+     * @return a list of main output and all side outputs.
+     */
+    List<TStream<?>> parDo(List<TWindow<?, Object>> sideInputs, 
+          BiFunction<T, 
+               Map<Integer, List<?>>, 
+               Map<Integer, List<?>>> doFn,
+          List<Class<?>> outputTypes);
 }
