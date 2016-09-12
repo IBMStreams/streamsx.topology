@@ -108,7 +108,7 @@ public class BuildServiceCompile extends ZippedToolkitStreamsContext {
         try { 	
             InputStream is = null;
             FileOutputStream fos = null;
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[1024*1024];
 
             try{
             	bundle = new File(bundleName);
@@ -116,7 +116,7 @@ public class BuildServiceCompile extends ZippedToolkitStreamsContext {
             	fos = new FileOutputStream(bundle);
 
             	// Write the bundle in chunks.
-            	for(int length; (length = is.read(buffer)) > 0;){
+            	for(int length; (length = is.read(buffer)) != -1;){
             		fos.write(buffer, 0, length);
             	}
             }
