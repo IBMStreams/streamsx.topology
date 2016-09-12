@@ -31,7 +31,7 @@ def delete_json(fn):
 # SPL, the toolkit, the bundle and submits it to the relevant
 # environment
 #
-def submit(ctxtype, graph, config = None, username = None, password = None, resource_url = None):
+def submit(ctxtype, graph, config = None, username = None, password = None, rest_api_url = None):
     """
     Submits a topology with the specified context type.
     
@@ -58,17 +58,17 @@ def submit(ctxtype, graph, config = None, username = None, password = None, reso
     # Create connection to SWS
     if username is not None and password is not None:
         rc = None
-        if resource_url is None:
+        if rest_api_url is None:
             try:
                 process = subprocess.Popen(['streamtool', 'geturl', '--api'],
                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                resource_url = process.stdout.readline().strip().decode('utf-8')
+                rest_api_url = process.stdout.readline().strip().decode('utf-8')
             except:
-                print_exception("Error getting SWS resource url ")               
+                print_exception("Error getting SWS rest api url ")               
                 raise
 
         for view in graph.get_views():
-            view.set_streams_context_config({'username': username, 'password': password, 'resource_url': resource_url})
+            view.set_streams_context_config({'username': username, 'password': password, 'rest_api_url': rest_api_url})
     try:
         return _submitUsingJava(ctxtype, fn)
     except:

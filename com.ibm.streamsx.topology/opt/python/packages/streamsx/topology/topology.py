@@ -459,7 +459,7 @@ class View(threading.Thread):
         self.sample_size = sample_size
         self.streams_context = None
         self.view_object = None
-        self.streams_context_config = {'username': '', 'password': '', 'resource_url': ''}
+        self.streams_context_config = {'username': '', 'password': '', 'rest_api_url': ''}
 
         self._last_collection_time = -1
         self.is_rest_initialized = False
@@ -473,7 +473,7 @@ class View(threading.Thread):
             from streamsx import rest
             rc = rest.StreamsContext(self.streams_context_config['username'],
                                      self.streams_context_config['password'],
-                                     self.streams_context_config['resource_url'])
+                                     self.streams_context_config['rest_api_url'])
             self.is_rest_initialized = True
             self.set_streams_context(rc)
 
