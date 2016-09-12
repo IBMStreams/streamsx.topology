@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.streams;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -126,9 +127,12 @@ public class Util {
     }
     
     /**
-     * Get the toolkit version from the toolkit's info.xml.
+     * Get the toolkit name version from the toolkit's info.xml.
+     * Returns a map with the keys name and version.
      */
-    public static String identifyToolkitVersion(String tkloc) throws Exception {
+    public static Map<String,String> getToolkitInfo(String tkloc) throws Exception {
+        Map<String,String> tkInfo = new HashMap<>();
+        
         File info = new File(tkloc, "info.xml");
         // e.g., <info:version>2.0.1</info:version>
 
@@ -136,12 +140,20 @@ public class Util {
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document d = db.parse(info);
         XPath xpath = XPathFactory.newInstance().newXPath();
-        NodeList nodes = (NodeList)xpath.evaluate("/toolkitInfoModel/identity/version",
+        
+        NodeList nodes = (NodeList)xpath.evaluate("/toolkitInfoModel/identity/name",
                 d.getDocumentElement(), XPathConstants.NODESET);
         Element e = (Element) nodes.item(0);
-        Node n = e.getChildNodes().item(0);
-        String ver = n.getNodeValue();
-        return ver;
-    }
+        Node n = e.getChildNodes().item(0);        
+        tkInfo.put("name", n.getNodeValue());
+ 
 
+        nodes = (NodeList)xpath.evaluate("/toolkitInfoModel/identity/version",
+                d.getDocumentElement(), XPathConstants.NODESET);
+        e = (Element) nodes.item(0);
+        n = e.getChildNodes().item(0);        
+        tkInfo.put("version", n.getNodeValue());
+                
+        return tkInfo;
+    }
 }

@@ -13,17 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import com.ibm.streamsx.topology.TopologyElement;
 
 public class Util {
@@ -66,6 +55,6 @@ public class Util {
         String tkloc = System.getenv("STREAMS_INSTALL")
                         + "/toolkits/com.ibm.streamsx.messaging";
         
-        return com.ibm.streamsx.topology.internal.streams.Util.identifyToolkitVersion(tkloc);     
+        return com.ibm.streamsx.topology.internal.streams.Util.getToolkitInfo(tkloc).get("version");     
     }
 }
