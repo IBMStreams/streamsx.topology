@@ -153,7 +153,10 @@ public class KafkaConsumer {
 
         Map<String, Object> params = new HashMap<>();
         params.put("topic", topic);
-        params.put("threadsPerTopic", threadsPerTopic);
+        if (threadsPerTopic instanceof Value && threadsPerTopic.get() == 1)
+            ; // The default is one.
+        else
+            params.put("threadsPerTopic", threadsPerTopic);
         if (!config.isEmpty())
             params.put("kafkaProperty", Util.toKafkaProperty(config));
         

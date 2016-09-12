@@ -387,6 +387,9 @@ public class MqttStreamsTest extends TestTopology {
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
         msgs = modifyList(msgs, setTopic(topic));
         List<String> expectedAsString = mapList(msgs, msgToJSONStringFunc());
+        
+        if (testBuildOnly(top))
+            return;
 
         completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
         assertTrue(sink != null);
@@ -444,6 +447,9 @@ public class MqttStreamsTest extends TestTopology {
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+        
+        if (testBuildOnly(top))
+            return;
 
         completeAndValidate(clientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
         assertTrue(sink != null);
@@ -480,6 +486,9 @@ public class MqttStreamsTest extends TestTopology {
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+        
+        if (testBuildOnly(top))
+            return;
 
         completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
         assertTrue(sink != null);
@@ -514,6 +523,9 @@ public class MqttStreamsTest extends TestTopology {
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+        
+        if (testBuildOnly(top))
+            return;
 
         completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
         assertTrue(sink != null);
@@ -550,6 +562,9 @@ public class MqttStreamsTest extends TestTopology {
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+        
+        if (testBuildOnly(top))
+            return;
 
         completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
         assertTrue(sink != null);
@@ -588,6 +603,9 @@ public class MqttStreamsTest extends TestTopology {
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+        
+        if (testBuildOnly(top))
+            return;
 
         completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
         assertTrue(sink != null);
@@ -625,6 +643,9 @@ public class MqttStreamsTest extends TestTopology {
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+        
+        if (testBuildOnly(top))
+            return;
 
         completeAndValidate(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
         assertTrue(sink != null);
@@ -667,6 +688,9 @@ public class MqttStreamsTest extends TestTopology {
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+        
+        if (testBuildOnly(top))
+            return;
                                             
         completeAndValidateUnordered(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
         assertTrue(sink != null);
@@ -712,6 +736,9 @@ public class MqttStreamsTest extends TestTopology {
         rcvdMsgs.print();
         rcvdMsgs = selectMsgs(rcvdMsgs, mgen.pattern()); // just our msgs
         TStream<String> rcvdAsString = rcvdMsgs.transform(msgToJSONStringFunc());
+        
+        if (testBuildOnly(top))
+            return;
                                             
         completeAndValidateUnordered(subClientId, top, rcvdAsString, SEC_TIMEOUT, expectedAsString.toArray(new String[0]));
         assertTrue(sink1 != null);

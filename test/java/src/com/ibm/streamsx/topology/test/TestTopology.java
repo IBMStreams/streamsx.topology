@@ -4,10 +4,11 @@
  */
 package com.ibm.streamsx.topology.test;
 
+import static com.ibm.streamsx.topology.context.StreamsContextFactory.getStreamsContext;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
-
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -338,5 +339,35 @@ public class TestTopology {
             public Boolean getResult() {
                 return valid();
             }};
+    }
+    
+    /**
+     * Allows a test to perform a IBM Streams BUNDLE build only.
+     * 
+     * If a test requires specific configuration & external setup
+     * to run then it should use this method to test at least
+     * the topology can built into a IBM Streams bundle.
+     * 
+     * When the system property topology.test.external.run is
+     * not set or set to false, then this method will perform
+     * a build and return true.
+     * 
+     * If the property is set to true then any configuration/external
+     * setup is assumed to have been setup and this method will
+     * return false without performing a build.
+     *
+     * Thus the test goes on to build & execute the topology
+     * and test the expected conditions if this method returns false.
+     */
+    protected boolean testBuildOnly(Topology topology) throws Exception {
+        if (!Boolean.getBoolean("topology.test.external.run")) {
+            File bundle = (File) getStreamsContext(Type.BUNDLE).submit(topology, getConfig()).get();
+            assertNotNull(bundle);
+            assertTrue(bundle.exists());
+            assertTrue(bundle.isFile());
+            bundle.delete();
+            return true;
+        }
+        return false;
     }
 }
