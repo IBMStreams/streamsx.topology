@@ -57,7 +57,6 @@ def submit(ctxtype, graph, config = None, username = None, password = None):
     pythondir = os.path.dirname(pythonbin) 
     pythonfile = os.path.basename(pythonbin)
     pythonrealfile = os.path.basename(pythonreal)
-    pythonconfig = pythondir+"/"+pythonfile+"-config"
     pythonrealconfig = os.path.realpath(pythondir+"/"+pythonrealfile+"-config")
     pythonversion = python_version()
 
@@ -75,6 +74,13 @@ def submit(ctxtype, graph, config = None, username = None, password = None):
     config["pythonversion"]["binaries"].append(bf)
 
     fj = _createFullJSON(graph, config)
+
+    tk_root = _getTKroot()
+    mf = {}
+    mf["source"] = tk_root+"/opt/python/templates/common/pygetpythonconfig.sh"
+    mf["target"] = "opt/python/templates/common"
+    fj["graph"]["config"]["includes"].append(mf)
+
     fn = _createJSONFile(fj)
 
     # Create connection to SWS
@@ -131,6 +137,15 @@ def print_process_stderr(process, fn):
     except:
         print_exception("Error reading from process stderr")
 
+def _getTKroot():
+    # This is tk/opt/python/packages/streamsx/topology
+    dir = os.path.dirname(os.path.abspath(__file__))
+    dir = os.path.dirname(dir)
+    dir = os.path.dirname(dir)
+    dir = os.path.dirname(dir)
+    dir = os.path.dirname(dir)
+    return os.path.dirname(dir)
+
 def _submitUsingJava(ctxtype, fn):
     ctxtype_was = ctxtype
     if ctxtype == "JUPYTER":
@@ -139,13 +154,8 @@ def _submitUsingJava(ctxtype, fn):
     if streams_install is None:
        raise "Please set the STREAMS_INSTALL system variable"
 
-    # This is tk/opt/python/packages/streamsx/topology
-    dir = os.path.dirname(os.path.abspath(__file__))
-    dir = os.path.dirname(dir)
-    dir = os.path.dirname(dir)
-    dir = os.path.dirname(dir)
-    dir = os.path.dirname(dir)
-    tk_root = os.path.dirname(dir)
+    tk_root = _getTKroot()
+
     jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
     jaa_lib = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
     joa_lib = os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
