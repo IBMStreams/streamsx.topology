@@ -175,7 +175,11 @@ namespace streamsx {
         }
 
 
+#if PY_MAJOR_VERSION == 3
         std::string pyLib("libpython3.5m.so");
+#else
+        std::string pyLib("libpython2.7.so");
+#endif
         char * pyHome = getenv("PYTHONHOME");
         if (pyHome != NULL) {
             std::string wk(pyHome);
