@@ -26,6 +26,11 @@ import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 
 public class BuildServiceCompile extends ZippedToolkitStreamsContext {
 
+    @Override
+    public Type getType() {
+        return Type.BUILD_SERVICE_COMPILE;
+    }
+
 	@Override
 	public Future<File> submit(Topology app, Map<String, Object> config) throws Exception {  
 		String namespace = (String) app.builder().json().get("namespace");
