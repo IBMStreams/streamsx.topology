@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.context;
 
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streamsx.topology.internal.context.AnalyticsServiceStreamsContext;
+import com.ibm.streamsx.topology.internal.context.BuildServiceCompile;
 import com.ibm.streamsx.topology.internal.context.BundleStreamsContext;
 import com.ibm.streamsx.topology.internal.context.DistributedStreamsContext;
 import com.ibm.streamsx.topology.internal.context.DistributedTester;
@@ -34,6 +35,8 @@ public class StreamsContextFactory {
             return new ToolkitStreamsContext();
         case ZIPPED_TOOLKIT:
             return new ZippedToolkitStreamsContext();
+        case BUILD_SERVICE_COMPILE:
+            return new BuildServiceCompile();
         case STANDALONE_BUNDLE:
             return new BundleStreamsContext(true);
         case BUNDLE:

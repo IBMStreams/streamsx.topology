@@ -49,6 +49,13 @@ public interface StreamsContext<T> {
          * 
          */
         ZIPPED_TOOLKIT,
+        
+        /**
+         * Execution of the topology produces the SPL application bundle
+         * using a remote build service.
+         * 
+         */
+        BUILD_SERVICE_COMPILE,
 
         /**
          * Execution of the topology produces an SPL application bundle
