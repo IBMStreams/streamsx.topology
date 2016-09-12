@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.apache.http.HttpEntity;
@@ -41,6 +42,19 @@ public class BuildServiceCompile extends ZippedToolkitStreamsContext {
         File bundle = doRemoteCompile(namespace, mainComposite, zippedArchive);
         
         return new CompletedFuture<File>(bundle);
+	}
+	
+	@Override
+	public Future<File> submit(JSONObject submission) throws InterruptedException, ExecutionException, Exception{
+		JSONObject jsonGraph = (JSONObject) submission.get(SUBMISSION_GRAPH);
+		String namespace = jsonGraph.get("namespace").toString();
+		String mainComposite = jsonGraph.get("name").toString();
+		
+		File zippedArchive = super.submit(submission).get();
+		File bundle = doRemoteCompile(namespace, mainComposite, zippedArchive);
+
+		return new CompletedFuture<File>(bundle);
+		
 	}
 	
 	private File doRemoteCompile(String namespace, String mainComposite, 
