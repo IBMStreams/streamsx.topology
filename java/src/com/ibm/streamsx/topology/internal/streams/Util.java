@@ -9,6 +9,17 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import com.ibm.json.java.JSONObject;
 
 public class Util {
@@ -112,6 +123,25 @@ public class Util {
             cmdsb.append(s); cmdsb.append(" ");
         }
         return cmdsb.toString();
+    }
+    
+    /**
+     * Get the toolkit version from the toolkit's info.xml.
+     */
+    public static String identifyToolkitVersion(String tkloc) throws Exception {
+        File info = new File(tkloc, "info.xml");
+        // e.g., <info:version>2.0.1</info:version>
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document d = db.parse(info);
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        NodeList nodes = (NodeList)xpath.evaluate("/toolkitInfoModel/identity/version",
+                d.getDocumentElement(), XPathConstants.NODESET);
+        Element e = (Element) nodes.item(0);
+        Node n = e.getChildNodes().item(0);
+        String ver = n.getNodeValue();
+        return ver;
     }
 
 }
