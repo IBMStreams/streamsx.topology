@@ -270,6 +270,7 @@
 
   <target name="unittest.mqtt.base">
      <echo message="See com.ibm.streamsx.topology.test.messaging.mqtt.package-info.java for required configuration information."/>
+     <property name="topology.test.external.run" value="true"/>
      <property name="topology.test.showoutput" value="yes"/>
      <property name="topology.test.include.name" value="**/mqtt/*Test.java"/>
      <antcall target="unittest.simple"/>
