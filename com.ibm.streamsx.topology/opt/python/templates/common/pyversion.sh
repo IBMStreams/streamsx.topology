@@ -1,6 +1,8 @@
 #!/bin/sh
 action=$1
 
+pythonconfig=`$PWD/opt/python/templates/common/pygetpythonconfig.sh | cut -f 3 -d ' '`
+
 if [ $action = "lib" ]
 then
     python3-config --libs | sed -e 's/^-l//;s/ -l/ /g;s/ \+/\n/g'

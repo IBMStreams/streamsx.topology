@@ -248,5 +248,6 @@ public interface StreamsContext<T> {
     
     String SUBMISSION_DEPLOY = "deploy";
     String SUBMISSION_GRAPH = "graph";
+    String SUBMISSION_PYTHONVERSION = "pythonversion";
     
 }

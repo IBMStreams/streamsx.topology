@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.HashMap;
@@ -96,6 +97,23 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         		jsonGraph.get("namespace").toString());
 
         Future<File> future = createToolkitFromGraph(toolkitRoot, jsonGraph);
+
+        // process python version information and update toolkit file with the information
+        JSONObject jsonPythonVersion = (JSONObject) deployInfo.get(SUBMISSION_PYTHONVERSION);
+        if (jsonPythonVersion != null) {
+
+          String pythonVersion = new String(jsonPythonVersion.get("version").toString());
+          JSONArray jsonPythonBinaries = (JSONArray) jsonPythonVersion.get("binaries");
+          String pygetpythonconfigInfo = new String("echo " + pythonVersion + " ");
+          for (Object inco : jsonPythonBinaries) {
+            JSONObject inc = (JSONObject) inco;
+    		
+            String pythonBinary = inc.get("python").toString();
+            String pythonConfigBinary = inc.get("pythonconfig").toString();
+            pygetpythonconfigInfo += pythonBinary + " " + pythonConfigBinary; 
+          }
+          Files.write(Paths.get(toolkitRoot+"/opt/python/templates/common/pygetpythonconfig.sh"), pygetpythonconfigInfo.getBytes(), StandardOpenOption.APPEND);
+        }
         
         // Invoke spl-make-toolkit
         InvokeMakeToolkit imt = new InvokeMakeToolkit(deployInfo, toolkitRoot);
