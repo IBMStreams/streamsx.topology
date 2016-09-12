@@ -660,15 +660,20 @@ public class Topology implements TopologyElement {
     }
     
     private void addConfig(JSONObject cfg, String key, Object value) {
+        final String jsonKey = jsonConfigName(key);
+        
         if (value instanceof Collection) {
             JSONArray sa = new JSONArray();
-            @SuppressWarnings("unchecked")
-            Collection<String> strings = (Collection<String>) value;
-            for (String sv : strings) {
-                sa.add(sv);
+            Collection<?> values = (Collection<?>) value;
+            for (Object ov : values) {
+                sa.add(ov);
             }
             
-            cfg.put(jsonConfigName(key), sa);
+            cfg.put(jsonKey, sa);
+        }
+        else
+        {
+            cfg.put(jsonKey, value);
         }
     }
 
