@@ -54,7 +54,8 @@ public class Util {
     public static String identifyStreamsxMessagingVer() throws Exception {
         String tkloc = System.getenv("STREAMS_INSTALL")
                         + "/toolkits/com.ibm.streamsx.messaging";
+        File tkRoot = new File(tkloc);
         
-        return com.ibm.streamsx.topology.internal.streams.Util.getToolkitInfo(tkloc).get("version");     
+        return com.ibm.streamsx.topology.internal.streams.Util.getToolkitInfo(tkRoot).getIdentity().getVersion();     
     }
 }

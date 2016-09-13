@@ -10,8 +10,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
@@ -22,6 +26,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.internal.toolkit.info.ObjectFactory;
+import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
 public class Util {
     public static final String STREAMS_DOMAIN_ID = "STREAMS_DOMAIN_ID";
@@ -127,33 +133,16 @@ public class Util {
     }
     
     /**
-     * Get the toolkit name version from the toolkit's info.xml.
-     * Returns a map with the keys name and version.
+     * Get the full toolkit information.
      */
-    public static Map<String,String> getToolkitInfo(String tkloc) throws Exception {
-        Map<String,String> tkInfo = new HashMap<>();
-        
-        File info = new File(tkloc, "info.xml");
-        // e.g., <info:version>2.0.1</info:version>
+    public static ToolkitInfoModelType getToolkitInfo(File toolkitRoot) throws JAXBException {
 
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        DocumentBuilder db = dbf.newDocumentBuilder();
-        Document d = db.parse(info);
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        
-        NodeList nodes = (NodeList)xpath.evaluate("/toolkitInfoModel/identity/name",
-                d.getDocumentElement(), XPathConstants.NODESET);
-        Element e = (Element) nodes.item(0);
-        Node n = e.getChildNodes().item(0);        
-        tkInfo.put("name", n.getNodeValue());
- 
+        File infoFile = new File(toolkitRoot, "info.xml");
+        StreamSource infoSource = new StreamSource(infoFile);
 
-        nodes = (NodeList)xpath.evaluate("/toolkitInfoModel/identity/version",
-                d.getDocumentElement(), XPathConstants.NODESET);
-        e = (Element) nodes.item(0);
-        n = e.getChildNodes().item(0);        
-        tkInfo.put("version", n.getNodeValue());
-                
-        return tkInfo;
+        JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+        ToolkitInfoModelType tkinfo = jaxbUnmarshaller.unmarshal(infoSource, ToolkitInfoModelType.class).getValue();
+        return tkinfo;
     }
 }
