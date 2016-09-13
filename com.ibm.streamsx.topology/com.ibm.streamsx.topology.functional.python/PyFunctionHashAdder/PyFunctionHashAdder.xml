@@ -28,7 +28,7 @@
         <library>
           <cmn:description>Python libraries</cmn:description>
           <cmn:managedLibrary>
-            <cmn:command>../../opt/python/templates/common/pyversion.sh</cmn:command>
+            <cmn:command>../pyversion.sh</cmn:command>
           </cmn:managedLibrary>
         </library>
       </libraryDependencies>

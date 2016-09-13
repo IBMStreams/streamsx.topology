@@ -8,7 +8,9 @@ import streamsx.topology.functions
 import json
 import threading
 import queue
+import sys
 import time
+from platform import python_version
 from enum import Enum
 
 
@@ -16,6 +18,13 @@ class Topology(object):
     """Topology that contains graph + operators"""
     def __init__(self, name, files=None):
         self.name = name
+        self.pythonversion = python_version()
+        if sys.version_info.major == 3 and sys.version_info.minor == 5:
+          self.opnamespace = "com.ibm.streamsx.topology.functional.python"
+        elif sys.version_info.major == 2 and sys.version_info.minor == 7:
+          self.opnamespace = "com.ibm.streamsx.topology.functional.python2"
+        else:
+          raise ValueError("Python version not supported.")
         self.graph = graph.SPLGraph(name)
         if files is not None:
             self.files = files
@@ -41,7 +50,7 @@ class Topology(object):
         Returns:
             A Stream whose tuples are the result of the output obtained by invoking the provided callable.
         """
-        op = self.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionSource", func)
+        op = self.graph.addOperator(self.opnamespace+"::PyFunctionSource", func)
         oport = op.addOutputPort()
         return Stream(self, oport)
 
@@ -103,7 +112,7 @@ class Stream(object):
         Returns:
             None
         """
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionSink", func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionSink", func)
         op.addInputPort(outputPort=self.oport)
 
     def filter(self, func):
@@ -127,13 +136,13 @@ class Stream(object):
         Returns:
             A Stream containing tuples that have not been filtered out.
         """
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionFilter", func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionFilter", func)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
     def _map(self, func, schema):
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionTransform", func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionTransform", func)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=schema)
         return Stream(self.topology, oport)
@@ -210,7 +219,7 @@ class Stream(object):
         Raises:
             TypeError: if `func` does not return an iterator nor None
         """     
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionMultiTransform", func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionMultiTransform", func)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
@@ -310,7 +319,7 @@ class Stream(object):
         elif(routing == Routing.HASH_PARTITIONED ) :
             if (func is None) :
                 func = hash   
-            op = self.topology.graph.addOperator("com.ibm.streamsx.topology.functional.python::PyFunctionHashAdder",func)           
+            op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func)
             hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int32 __spl_hash>"))
             parentOp = op.addOutputPort(schema=hash_schema)
             op.addInputPort(outputPort=self.oport)
