@@ -148,7 +148,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         return params;
     }
 
-    private BInputPort addInput(BOperatorInvocation aggOp,
+    public BInputPort addInput(BOperatorInvocation aggOp,
             StreamWindow.Policy triggerPolicy, Object triggerConfig, TimeUnit triggerTimeUnit) {
         BInputPort bi = stream.connectTo(aggOp, true, null);
         
