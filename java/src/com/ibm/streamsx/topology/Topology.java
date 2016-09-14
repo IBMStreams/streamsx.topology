@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import com.ibm.json.java.JSONArray;
+import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.operator.StreamSchema;
@@ -661,8 +662,11 @@ public class Topology implements TopologyElement {
     
     private void addConfig(JSONObject cfg, String key, Object value) {
         final String jsonKey = jsonConfigName(key);
-        
-        if (value instanceof Collection) {
+                
+        if (value instanceof JSONArtifact) {
+            // Put a JSON object directly
+            cfg.put(jsonKey, value);
+        } else if (value instanceof Collection) {
             JSONArray sa = new JSONArray();
             Collection<?> values = (Collection<?>) value;
             for (Object ov : values) {
@@ -673,6 +677,7 @@ public class Topology implements TopologyElement {
         }
         else
         {
+            // try an arbitrary object directly.
             cfg.put(jsonKey, value);
         }
     }

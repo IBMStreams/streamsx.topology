@@ -20,7 +20,14 @@ public interface InternalProperties {
      */
     String SPL_PREFIX = PREFIX + "spl.";
     
-    String TK_DIRS_JSON = "toolkits";
-    String TK_DIRS = SPL_PREFIX + TK_DIRS_JSON;
-
+    /**
+     * List of toolkits & toolkit dependencies used by the topology.
+     * JSONArray containing a JSON object with fields:
+     * name - Name of toolkit
+     * version - dependency version string
+     * root (optional) - location of toolkit.
+     * 
+     */
+    String TOOLKITS_JSON = "toolkits";
+    String TOOLKITS = SPL_PREFIX + TOOLKITS_JSON;
 }

@@ -4,17 +4,18 @@
  */
 package com.ibm.streamsx.topology.spl;
 
-import static com.ibm.streamsx.topology.internal.core.InternalProperties.TK_DIRS;
+import static com.ibm.streamsx.topology.internal.core.InternalProperties.TOOLKITS;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import javax.xml.bind.JAXBException;
+
+import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Type.MetaType;
@@ -29,6 +30,9 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
+import com.ibm.streamsx.topology.internal.streams.Util;
+import com.ibm.streamsx.topology.internal.toolkit.info.IdentityType;
+import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
 /**
  * Integration between Java topologies and SPL operator invocations. If the SPL
@@ -321,14 +325,46 @@ public class SPL {
      * @throws IOException {@code toolkitRoot} is not a valid path.
      */
     public static void addToolkit(TopologyElement te, File toolkitRoot) throws IOException {
-        @SuppressWarnings("unchecked")
-        Set<String> tks = (Set<String>) te.topology().getConfig().get(TK_DIRS);
+            
+        JSONObject tkinfo = newToolkitDepInfo(te);
+        
+        tkinfo.put("root", toolkitRoot.getCanonicalPath());
+        
+        ToolkitInfoModelType infoModel;
+        try {
+            infoModel = Util.getToolkitInfo(toolkitRoot);
+        } catch (JAXBException e) {
+            throw new IOException(e);
+        }
+        if (infoModel != null) {
+            IdentityType tkIdentity = infoModel.getIdentity();
+
+            tkinfo.put("name", tkIdentity.getName());
+            tkinfo.put("version", tkIdentity.getVersion());
+        }
+    }
+    
+    private static JSONObject newToolkitDepInfo(TopologyElement te) {
+        JSONArray tks = (JSONArray) te.topology().getConfig().get(TOOLKITS);
         
         if (tks == null) {
-            tks = new HashSet<>();
-            te.topology().getConfig().put(TK_DIRS, tks);
+            te.topology().getConfig().put(TOOLKITS, tks = new JSONArray());
         }
-        tks.add(toolkitRoot.getCanonicalPath());
+        JSONObject tkinfo = new JSONObject();
+        tks.add(tkinfo);
+        return tkinfo;
+    }
+    
+    /**
+     * Add a logical dependency on an SPL toolkit.
+     * @param te Element within the topology.
+     * @param name Name of the toolkit.
+     * @param version Version dependency string.
+     */
+    public static void addToolkitDependency(TopologyElement te, String name, String version) {
+        JSONObject tkinfo = newToolkitDepInfo(te);
+        tkinfo.put("name", name);
+        tkinfo.put("version", version);
     }
 
     /**

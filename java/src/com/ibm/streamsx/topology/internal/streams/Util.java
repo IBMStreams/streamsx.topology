@@ -134,10 +134,14 @@ public class Util {
     
     /**
      * Get the full toolkit information.
+     * Returns null if there is no info.xml
      */
     public static ToolkitInfoModelType getToolkitInfo(File toolkitRoot) throws JAXBException {
 
         File infoFile = new File(toolkitRoot, "info.xml");
+        if (!infoFile.exists())
+            return null;
+        
         StreamSource infoSource = new StreamSource(infoFile);
 
         JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
