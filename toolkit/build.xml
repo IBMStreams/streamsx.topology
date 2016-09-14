@@ -30,11 +30,8 @@
 
    <copy todir="${tk}/com.ibm.streamsx.topology.functional.python2">
      <fileset dir="${tk}/com.ibm.streamsx.topology.functional.python" 
-         excludes="namespace-info.spl" />
-     <fileset dir="${tk}/com.ibm.streamsx.topology.functional.python" 
-         excludes="pyversion.sh" />
-     <fileset dir="${tk}/com.ibm.streamsx.topology.functional.python" 
-         includes="*" />
+         excludes="namespace-info.spl pyversion.sh"
+         includes="**" />
    </copy>      
 
    <exec executable="${streams.install}/bin/spl-make-toolkit" failonerror="true">
