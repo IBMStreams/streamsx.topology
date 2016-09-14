@@ -10,6 +10,7 @@
  */
 
 #define Py_LIMITED_API 0x03050000
+#include "patchlevel.h"
 
 #include "Python.h"
 #include <string>
@@ -66,12 +67,22 @@ namespace streamsx {
     */
     inline void pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
       Py_ssize_t size = 0;
+#if PY_MAJOR_VERSION > 2
       char * bytes = PyUnicode_AsUTF8AndSize(value, &size);          
+#else
+      PyObject *utf8String = PyUnicode_AsUTF8String(value); 
+      char *bytes = PyString_AsString(utf8String); 
+#endif
       if (bytes == 0) {
          SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
          throw;
       }
+#if PY_MAJOR_VERSION > 2
       attr.assign((const char *)bytes, (size_t) size);
+#else
+      attr.assign((const char *)bytes, strlen((const char *)bytes)); 
+      Py_DECREF(utf8String);
+#endif
     }
 
     /**************************************************************/
@@ -88,7 +99,11 @@ namespace streamsx {
       long int sizeb = attr.getSize();
       const unsigned char * bytes = attr.getData();
 
+#if PY_MAJOR_VERSION > 2
       return PyMemoryView_FromMemory((char *) bytes, sizeb, PyBUF_READ);
+#else
+      return PyBuffer_FromMemory((void *)bytes, sizeb);
+#endif
     }
 
     /**
