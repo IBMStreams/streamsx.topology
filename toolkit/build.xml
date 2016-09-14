@@ -28,6 +28,12 @@
    <mkdir dir="${tk}/license"/>
    <copy file="${streamsx.topology}/LICENSE" todir="${tk}/license"/>
 
+   <copy todir="${tk}/com.ibm.streamsx.topology.functional.python2">
+     <fileset dir="${tk}/com.ibm.streamsx.topology.functional.python" 
+         excludes="namespace-info.spl pyversion.sh"
+         includes="**" />
+   </copy>      
+
    <exec executable="${streams.install}/bin/spl-make-toolkit" failonerror="true">
      <arg value="--make-operator"/>
      <arg value="-i"/>
@@ -51,10 +57,15 @@
     <delete>
        <fileset dir="${tk}">
           <include name="com.ibm.streamsx.topology.functional.java/**"/>
+          <include name="com.ibm.streamsx.topology.functional.python2/**"/>
           <include name="com.ibm.streamsx.topology.file/**"/>
           <include name="com.ibm.streamsx.topology.testing/**"/>
+          <exclude name="com.ibm.streamsx.topology.functional.python2/pyversion.sh"/>
           <exclude name="**/namespace-info.spl"/>
        </fileset>
+       <dirset dir="${tk}">
+          <include name="com.ibm.streamsx.topology.functional.python2/PyFunction*"/>
+       </dirset>
     </delete>
   </target>
 </project>
