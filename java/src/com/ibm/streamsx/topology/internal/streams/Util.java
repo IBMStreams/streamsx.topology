@@ -6,10 +6,28 @@ package com.ibm.streamsx.topology.internal.streams;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.internal.toolkit.info.ObjectFactory;
+import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
 public class Util {
     public static final String STREAMS_DOMAIN_ID = "STREAMS_DOMAIN_ID";
@@ -113,5 +131,22 @@ public class Util {
         }
         return cmdsb.toString();
     }
+    
+    /**
+     * Get the full toolkit information.
+     * Returns null if there is no info.xml
+     */
+    public static ToolkitInfoModelType getToolkitInfo(File toolkitRoot) throws JAXBException {
 
+        File infoFile = new File(toolkitRoot, "info.xml");
+        if (!infoFile.exists())
+            return null;
+        
+        StreamSource infoSource = new StreamSource(infoFile);
+
+        JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+        ToolkitInfoModelType tkinfo = jaxbUnmarshaller.unmarshal(infoSource, ToolkitInfoModelType.class).getValue();
+        return tkinfo;
+    }
 }

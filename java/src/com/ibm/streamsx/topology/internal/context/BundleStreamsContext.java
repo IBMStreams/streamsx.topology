@@ -96,10 +96,13 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         if (graphConfig != null) {
             JSONObject splConfig = (JSONObject) graphConfig.get("spl");
             if (splConfig != null) {
-                JSONArray toolkits = (JSONArray) splConfig.get(InternalProperties.TK_DIRS_JSON);
+                JSONArray toolkits = (JSONArray) splConfig.get(InternalProperties.TOOLKITS_JSON);
                 if (toolkits != null) {
-                    for (Object tkdir : toolkits) {
-                        sc.addToolkit(new File(tkdir.toString()));
+                    for (Object obj : toolkits) {
+                        JSONObject tkinfo = (JSONObject) obj;
+                        String root = (String) tkinfo.get("root");
+                        if (root != null)
+                            sc.addToolkit(new File(root));
                     }
                 }
             }
