@@ -7,6 +7,8 @@ package com.ibm.streamsx.topology.internal.context;
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.FileVisitResult;
@@ -23,6 +25,10 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
@@ -30,6 +36,13 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeMakeToolkit;
+import com.ibm.streamsx.topology.internal.toolkit.info.DependenciesType;
+import com.ibm.streamsx.topology.internal.toolkit.info.DescriptionType;
+import com.ibm.streamsx.topology.internal.toolkit.info.IdentityType;
+import com.ibm.streamsx.topology.internal.toolkit.info.ObjectFactory;
+import com.ibm.streamsx.topology.internal.toolkit.info.ResourcesType;
+import com.ibm.streamsx.topology.internal.toolkit.info.SabFilesType;
+import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
 public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
@@ -60,12 +73,14 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
         makeDirectoryStructure(toolkitRoot,
                 (String) app.builder().json().get("namespace"));
-
+        
         graphItems = app.finalizeGraph(getType(), config);
         
         addConfigToJSON(app.builder().getConfig(), config);
         
         JSONObject jsonGraph = app.builder().complete();
+        
+        addToolkitInfo(toolkitRoot, jsonGraph);
         
         return createToolkitFromGraph(toolkitRoot, jsonGraph);
     }
@@ -94,6 +109,8 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
         makeDirectoryStructure(toolkitRoot,
         		jsonGraph.get("namespace").toString());
+        
+        addToolkitInfo(toolkitRoot, jsonGraph);
 
         Future<File> future = createToolkitFromGraph(toolkitRoot, jsonGraph);
         
@@ -166,6 +183,33 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         tkNamespace.mkdirs();
         tkEtc.mkdir();
         tkOpt.mkdir();
+    }
+    
+
+    /**
+     * Create an info.xml file for the toolkit.
+     */
+    private void addToolkitInfo(File toolkitRoot, JSONObject jsonGraph) throws JAXBException, FileNotFoundException, IOException  {
+        File infoFile = new File(toolkitRoot, "info.xml");
+        
+        ToolkitInfoModelType info = new ToolkitInfoModelType();
+        
+        info.setIdentity(new IdentityType());
+        info.getIdentity().setName(toolkitRoot.getName());
+        info.getIdentity().setDescription(new DescriptionType());
+        info.getIdentity().setVersion("1.0.0." + System.currentTimeMillis());
+        info.getIdentity().setRequiredProductVersion("4.0.1.0");
+        
+        info.setDependencies(new DependenciesType());
+        
+        JAXBContext context = JAXBContext
+                .newInstance(ObjectFactory.class);
+        Marshaller m = context.createMarshaller();
+        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+        try (FileOutputStream out = new FileOutputStream(infoFile)) {
+            m.marshal(info, out);
+        }
     }
     
     /**
