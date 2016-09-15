@@ -1,6 +1,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 
+from __future__ import print_function
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
 import transform_sample_functions;
