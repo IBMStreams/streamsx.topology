@@ -114,7 +114,10 @@ def _createFullJSON(graph, config):
    
 
 def _createJSONFile(fj) :
-    tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", prefix="splpytmp", delete=False)
+    if sys.hexversion < 0x03000000:
+      tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", prefix="splpytmp", delete=False)
+    else:
+      tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", encoding="UTF-8", prefix="splpytmp", delete=False)
     tf.write(json.dumps(fj, sort_keys=True, indent=2, separators=(',', ': ')))
     tf.close()
     return tf.name
