@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.XmlType;
  * 
  * 
  */
-@XmlRootElement
+@XmlRootElement(name="toolkitInfoModel")
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "toolkitInfoModelType", propOrder = {
     "identity",
