@@ -10,7 +10,6 @@
  */
 
 #define Py_LIMITED_API 0x03050000
-#include "patchlevel.h"
 
 #include "Python.h"
 #include <string>
@@ -30,9 +29,9 @@
  */
 
 #if PY_MAJOR_VERSION == 3
-#define DECL_PYTHON_LIBNAME std::string pyLib("libpython3.5m.so");
+#define TOPOLOGY_PYTHON_LIBNAME "libpython3.5m.so"
 #else
-#define DECL_PYTHON_LIBNAME std::string pyLib("libpython2.7.so");
+#define TOPOLOGY_PYTHON_LIBNAME "libpython2.7.so"
 #endif
     
 #define GET_PYTHON_VALUE_THROWIFERROR(pbytes)                            \
@@ -214,7 +213,7 @@ namespace streamsx {
         }
 
         // declare pylib and its value  
-        DECL_PYTHON_LIBNAME
+        std::string pyLib(TOPOLOGY_PYTHON_LIBNAME);
         char * pyHome = getenv("PYTHONHOME");
         if (pyHome != NULL) {
             std::string wk(pyHome);
