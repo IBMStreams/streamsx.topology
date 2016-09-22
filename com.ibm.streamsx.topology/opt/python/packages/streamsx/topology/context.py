@@ -122,27 +122,31 @@ def _createJSONFile(fj) :
     tf.close()
     return tf.name
     
-def print_process_stdout(process):
+def _print_process_stdout(process):
     try:
         while True:
-            line = process.stdout.readline().strip().decode("utf-8")
+            line = process.stdout.readline()
             if line == '':
                 break
+            line = line.strip().decode("utf-8")
             print(line)
     except:
         print_exception("Error reading from process stdout")
+    process.stdout.close()
 
-def print_process_stderr(process, fn):
+def _print_process_stderr(process, fn):
     try:
         while True:
-            line = process.stderr.readline().strip().decode("utf-8")
+            line = process.stderr.readline()
             if line == '':
                 break
+            line = line.strip().decode("utf-8") 
             print(line)
             if "com.ibm.streamsx.topology.internal.streams.InvokeSc getToolkitPath" in line:
                 delete_json(fn)
     except:
         print_exception("Error reading from process stderr")
+    process.stderr.close()
 
 def _submitUsingJava(ctxtype, fn):
     ctxtype_was = ctxtype
@@ -167,16 +171,14 @@ def _submitUsingJava(ctxtype, fn):
     "com.ibm.streamsx.topology.context.StreamsContextSubmit", ctxtype, fn]
     process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
     try:
-        stderr_thread = threading.Thread(target=print_process_stderr, args=([process, fn]))
+        stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, fn]))
         stderr_thread.daemon = True            
         stderr_thread.start()
         if not ctxtype_was == "JUPYTER":
-            stdout_thread = threading.Thread(target=print_process_stdout, args=([process]))
+            stdout_thread = threading.Thread(target=_print_process_stdout, args=([process]))
             stdout_thread.daemon = True
             stdout_thread.start()                
             process.wait()
-            process.stdout.close()
-            process.stderr.close()
             return None
         else:            
             return process.stdout
