@@ -28,7 +28,51 @@
  * Functionality for executing Python within IBM Streams.
  */
 
+#if PY_MAJOR_VERSION == 3
+#define TOPOLOGY_PYTHON_LIBNAME "libpython3.5m.so"
+#else
+#define TOPOLOGY_PYTHON_LIBNAME "libpython2.7.so"
+#endif
     
+#define GET_PYTHON_VALUE_THROWIFERROR(pbytes)                            \
+do {                                                                     \
+      if (pbytes == 0) {                                                 \
+         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python"); \
+         throw;                                                          \
+      }                                                                  \
+   }                                                                     \
+while(0) 
+
+#if PY_MAJOR_VERSION == 3
+#define GET_PYTHON_VALUE_AS_UTF8_AND_ASSIGN(pvalue,pattr)                \
+do {                                                                     \
+      Py_ssize_t size = 0;                                               \
+      char * bytes = PyUnicode_AsUTF8AndSize(pvalue, &size);             \
+      GET_PYTHON_VALUE_THROWIFERROR(bytes);                              \
+      pattr.assign((const char *)bytes, (size_t) size);                  \
+   }                                                                     \
+while(0) 
+#else
+#define GET_PYTHON_VALUE_AS_UTF8_AND_ASSIGN(pvalue,pattr)                \
+do {                                                                     \
+      Py_ssize_t size = 0;                                               \
+      PyObject *utf8String = PyUnicode_AsUTF8String(pvalue);             \
+      char *bytes = PyString_AsString(utf8String);                       \
+      GET_PYTHON_VALUE_THROWIFERROR(bytes);                              \
+      pattr.assign((const char *)bytes, strlen((const char *)bytes));    \
+      Py_DECREF(utf8String);                                             \
+   }                                                                     \
+while(0) 
+#endif
+
+#if PY_MAJOR_VERSION == 3
+#define GET_PYTHON_ATTR_FROM_MEMORY(pbytes,psizeb)                       \
+     PyMemoryView_FromMemory((char *) pbytes, psizeb, PyBUF_READ);
+#else
+#define GET_PYTHON_ATTR_FROM_MEMORY(pbytes,psizeb)                       \
+     PyBuffer_FromMemory((void *)bytes, sizeb);
+#endif
+
 namespace streamsx {
   namespace topology {
 
@@ -65,13 +109,7 @@ namespace streamsx {
     ** Convert to a SPL rstring from a Python string object.
     */
     inline void pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
-      Py_ssize_t size = 0;
-      char * bytes = PyUnicode_AsUTF8AndSize(value, &size);          
-      if (bytes == 0) {
-         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
-         throw;
-      }
-      attr.assign((const char *)bytes, (size_t) size);
+      GET_PYTHON_VALUE_AS_UTF8_AND_ASSIGN(value,attr);
     }
 
     /**************************************************************/
@@ -88,7 +126,7 @@ namespace streamsx {
       long int sizeb = attr.getSize();
       const unsigned char * bytes = attr.getData();
 
-      return PyMemoryView_FromMemory((char *) bytes, sizeb, PyBUF_READ);
+      return GET_PYTHON_ATTR_FROM_MEMORY(bytes, sizeb);
     }
 
     /**
@@ -174,12 +212,8 @@ namespace streamsx {
 	      SPLAPPLOG(L_INFO, "LD_LIBRARY_PATH not set", "python");
         }
 
-
-#if PY_MAJOR_VERSION == 3
-        std::string pyLib("libpython3.5m.so");
-#else
-        std::string pyLib("libpython2.7.so");
-#endif
+        // declare pylib and its value  
+        std::string pyLib(TOPOLOGY_PYTHON_LIBNAME);
         char * pyHome = getenv("PYTHONHOME");
         if (pyHome != NULL) {
             std::string wk(pyHome);

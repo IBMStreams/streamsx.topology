@@ -221,6 +221,10 @@ class _PickleIterator:
        while nv is None:
           nv = next(self.it)
        return pickle.dumps(nv)
+# python 2.7 uses the next function whereas 
+# python 3.x uses __next__ 
+   def next(self):
+       return self.__next__()
 
 # Return a function that depickles
 # the input tuple calls callable
