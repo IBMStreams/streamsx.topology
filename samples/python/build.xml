@@ -8,11 +8,12 @@
   <property name="streams.install" value="${env.STREAMS_INSTALL}"/>
   <property name="tk" location="../../com.ibm.streamsx.topology"/>
   <property name="pytk" location="com.ibm.streamsx.topology.pysamples"/>
+  <property name="topology.test.python" value="python3"/>
 
   <target name="all" depends="spldoc,extract"/>
 
   <target name="extract">
-   <exec executable="python3">
+   <exec executable="${topology.test.python}">
      <arg value="${tk}/bin/spl-python-extract.py"/>
      <arg value="-i"/>
      <arg value="${pytk}"/>
