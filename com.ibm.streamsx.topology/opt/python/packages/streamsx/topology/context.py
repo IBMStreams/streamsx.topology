@@ -127,24 +127,30 @@ def _createJSONFile(fj) :
 def _print_process_stdout(process):
     try:
         while True:
-            line = process.stdout.readline().strip().decode("utf-8")
-            if line == '':
+            line = process.stdout.readline();
+            if len(line) == 0:
+                process.stdout.close()
                 break
+            line = line.decode("utf-8").strip()
             print(line)
     except:
+        process.stdout.close()
         _print_exception("Error reading from process stdout")
         raise
 
 def _print_process_stderr(process, fn):
     try:
         while True:
-            line = process.stderr.readline().strip().decode("utf-8")
-            if line == '':
+            line = process.stderr.readline()
+            if len(line) == 0:
+                process.stderr.close()
                 break
+            line = line.decode("utf-8").strip()
             print(line)
             if "com.ibm.streamsx.topology.internal.streams.InvokeSc getToolkitPath" in line:
                 _delete_json(fn)
     except:
+        process.stderr.close()
         _print_exception("Error reading from process stderr")
         raise
 
@@ -179,8 +185,6 @@ def _submitUsingJava(ctxtype, fn):
             stdout_thread.daemon = True
             stdout_thread.start()                
             process.wait()
-            process.stdout.close()
-            process.stderr.close()
             return None
         else:            
             return process.stdout
