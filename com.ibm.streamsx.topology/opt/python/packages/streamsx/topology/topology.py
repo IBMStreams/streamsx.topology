@@ -159,13 +159,15 @@ class Stream(object):
         oport = op.addOutputPort(schema=schema)
         return Stream(self.topology, oport)
 
-    def view(self, buffer_time = 10.0, sample_size = 10000):
+    def view(self, buffer_time = 10.0, sample_size = 10000, name=None):
         """
         Defines a view on a stream. Returns a view object which can be used to access the data
         :param buffer_time The window of time over which tuples will be
+        :param name Name of the view. Name must be unique within the topology. Defaults to a generated name.
         """
         new_op = self._map(streamsx.topology.functions.identity,schema=schema.CommonSchema.Json)
-        name = ''.join(random.choice('0123456789abcdef') for x in range(16))
+        if name is None:
+            name = ''.join(random.choice('0123456789abcdef') for x in range(16))
 
         port = new_op.oport.name
         new_op.oport.operator.addViewConfig({
