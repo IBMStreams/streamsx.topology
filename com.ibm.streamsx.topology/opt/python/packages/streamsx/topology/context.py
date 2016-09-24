@@ -24,14 +24,14 @@ from platform import python_version
 # Utilities
 #
 
-def print_exception(msg):
+def _print_exception(msg):
     sys.stderr.write(msg + "\n")
     exc_type, exc_value, exc_traceback = sys.exc_info()
     traceback.print_tb(exc_traceback, limit=1, file=sys.stderr)
     traceback.print_exception(exc_type, exc_value, exc_traceback,
                               limit=2, file=sys.stderr)
 
-def delete_json(fn):
+def _delete_json(fn):
     if os.path.isfile(fn):
         os.remove(fn)
 
@@ -96,7 +96,7 @@ def submit(ctxtype, graph, config = None, username = None, password = None, rest
                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 rest_api_url = process.stdout.readline().strip().decode('utf-8')
             except:
-                print_exception("Error getting SWS rest api url ")               
+                _print_exception("Error getting SWS rest api url ")               
                 raise
 
         for view in graph.get_views():
@@ -104,8 +104,8 @@ def submit(ctxtype, graph, config = None, username = None, password = None, rest
     try:
         return _submitUsingJava(ctxtype, fn)
     except:
-        print_exception("Error submitting with java")
-        delete_json(fn)
+        _print_exception("Error submitting with java")
+        _delete_json(fn)
         raise
 
 def _createFullJSON(graph, config):
@@ -124,28 +124,34 @@ def _createJSONFile(fj) :
     tf.close()
     return tf.name
     
-def print_process_stdout(process):
+def _print_process_stdout(process):
     try:
         while True:
-            line = process.stdout.readline().strip().decode("utf-8")
-            if line == '':
+            line = process.stdout.readline();
+            if len(line) == 0:
+                process.stdout.close()
                 break
+            line = line.decode("utf-8").strip()
             print(line)
     except:
-        print_exception("Error reading from process stdout")
+        process.stdout.close()
+        _print_exception("Error reading from process stdout")
         raise
 
-def print_process_stderr(process, fn):
+def _print_process_stderr(process, fn):
     try:
         while True:
-            line = process.stderr.readline().strip().decode("utf-8")
-            if line == '':
+            line = process.stderr.readline()
+            if len(line) == 0:
+                process.stderr.close()
                 break
+            line = line.decode("utf-8").strip()
             print(line)
             if "com.ibm.streamsx.topology.internal.streams.InvokeSc getToolkitPath" in line:
-                delete_json(fn)
+                _delete_json(fn)
     except:
-        print_exception("Error reading from process stderr")
+        process.stderr.close()
+        _print_exception("Error reading from process stderr")
         raise
 
 def _submitUsingJava(ctxtype, fn):
@@ -171,19 +177,17 @@ def _submitUsingJava(ctxtype, fn):
     "com.ibm.streamsx.topology.context.StreamsContextSubmit", ctxtype, fn]
     process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
     try:
-        stderr_thread = threading.Thread(target=print_process_stderr, args=([process, fn]))
+        stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, fn]))
         stderr_thread.daemon = True            
         stderr_thread.start()
         if not ctxtype_was == "JUPYTER":
-            stdout_thread = threading.Thread(target=print_process_stdout, args=([process]))
+            stdout_thread = threading.Thread(target=_print_process_stdout, args=([process]))
             stdout_thread.daemon = True
             stdout_thread.start()                
             process.wait()
-            process.stdout.close()
-            process.stderr.close()
             return None
         else:            
             return process.stdout
     except:
-        print_exception("Error starting java subprocess for submission")
+        _print_exception("Error starting java subprocess for submission")
         raise
