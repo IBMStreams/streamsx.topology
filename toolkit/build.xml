@@ -34,6 +34,12 @@
          includes="**" />
    </copy>      
 
+   <!-- Copy codegen used by functional api to templates used by operators -->
+   <copy todir="${tk}/opt/python/templates/common">
+      <fileset dir="${tk}/opt/python/codegen"/>
+   </copy>
+       
+
    <exec executable="${streams.install}/bin/spl-make-toolkit" failonerror="true">
      <arg value="--make-operator"/>
      <arg value="-i"/>
