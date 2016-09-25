@@ -76,21 +76,9 @@ void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
-   IPort0Type const & <%=$ituple%> = static_cast<IPort0Type const &>(tuple);
-
    streamsx::topology::PyGILLock lock;
-<%
-    if ($paramStyle eq 'tuple') {
-%>
-   
-    PyObject * pyTuple = PyTuple_New(<%=$inputAttrs2Py%>); 
-    PyObject *pyValue;
-<%
-     for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
-         print convertToPythonValueAsTuple($ituple, $i, $itypes[$i], $inames[$i]);
-     }
-    }
-%>
+
+ @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
   
     PyObject * pyReturnNone = PyObject_CallObject(function_, pyTuple);
 
