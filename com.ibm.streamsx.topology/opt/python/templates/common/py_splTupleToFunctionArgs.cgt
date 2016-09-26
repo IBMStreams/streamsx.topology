@@ -1,0 +1,29 @@
+/*
+ * # Licensed Materials - Property of IBM
+ * # Copyright IBM Corp. 2015,2016
+ */
+
+//
+// Takes the input SPL tuple and converts it to
+// the arguments needed to be passed to a Python
+// function/callable decorated as a SPL operator.
+//
+
+   IPort0Type const & <%=$ituple%> = static_cast<IPort0Type const &>(tuple);
+
+// START-Processing passing SPL tuple as a Python tuple
+// Declares: PyObject * pyTuple 
+<%
+    if ($paramStyle eq 'tuple') {
+%>
+
+    PyObject * pyTuple = PyTuple_New(<%=$inputAttrs2Py%>);
+    PyObject *pyValue;
+<%
+     for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
+         print convertToPythonValueAsTuple($ituple, $i, $itypes[$i], $inames[$i]);
+     }
+    }
+%>
+// END-Processing passing SPL tuple as a Python tuple
+
