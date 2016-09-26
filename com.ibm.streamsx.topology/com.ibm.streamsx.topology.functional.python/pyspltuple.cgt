@@ -3,12 +3,9 @@
  # handle conversion of spl tuples to/from Python
 
  my $tkdir = $model->getContext()->getToolkitDirectory();
- my $cmndir = $tkdir."/opt/python/templates/common";
- my $fpdir = $tkdir."/com.ibm.streamsx.topology.functional.python";
+ my $pydir = $tkdir."/opt/python";
 
- require $fpdir."/pyfunction.pm";
- require $fpdir."/pyspltuple.pm";
- require $cmndir."/splpy_python.pm";
+ require $pydir."/codegen/splpy.pm";
 
  # setup the variables used when processing spltuples
  my $pyport = $model->getInputPortAt(0);
