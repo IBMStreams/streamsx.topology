@@ -4,6 +4,15 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streams.operator.Type.MetaType.UINT8;
+import static com.ibm.streams.operator.Type.MetaType.UINT16;
+import static com.ibm.streams.operator.Type.MetaType.UINT32;
+import static com.ibm.streams.operator.Type.MetaType.UINT64;
+import static com.ibm.streams.operator.Type.MetaType.INT8;
+import static com.ibm.streams.operator.Type.MetaType.FLOAT32;
+import static com.ibm.streams.operator.Type.MetaType.INT16;
+import static com.ibm.streams.operator.Type.MetaType.INT32;
+import static com.ibm.streams.operator.Type.MetaType.INT64;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 
 import java.io.IOException;
@@ -16,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
+import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.builder.JGraph;
 
@@ -502,20 +512,36 @@ public class SPLGenerator {
      */
     static void numberLiteral(StringBuilder sb, Number value, Object type) {
         Object val = value;
-        String suffix = "";
-        boolean isUnsignedInt = isUnsignedInt(type); 
-
-        if (value instanceof Byte)
+        String suffix = null;
+        boolean isUnsignedInt = isUnsignedInt(type);
+        
+        // derive first from the type
+        if (is8bitInt(type))
             suffix = "b";
-        else if (value instanceof Short)
+        else if (is16bitInt(type))
             suffix = "h";
-        else if (value instanceof Integer) {
-            if (isUnsignedInt)
-                suffix = "w";  // word, meaning 32 bits
-        } else if (value instanceof Long)
+        else if (is32bitInt(type)) {
+            suffix = isUnsignedInt ? "w" : "";  // word, meaning 32 bits
+        } else if (is64bitInt(type))
             suffix = "l";
-        else if (value instanceof Float)
-            suffix = "w"; // word, meaning 32 bits
+        else if (is32bitFloat(type))
+            suffix = "w"; // word, meaning 32 bit
+        
+        // then the value if not set
+        if (suffix == null) {
+            if (value instanceof Byte)
+                suffix = "b";
+            else if (value instanceof Short)
+                suffix = "h";
+            else if (value instanceof Integer) {
+                suffix = isUnsignedInt ? "w" : "";  // word, meaning 32 bits
+            } else if (value instanceof Long)
+                suffix = "l";
+            else if (value instanceof Float)
+                suffix = "w"; // word, meaning 32 bits
+            else
+                suffix = "";
+        }
 
         if (isUnsignedInt) {
             val = unsignedString(value);
@@ -527,10 +553,30 @@ public class SPLGenerator {
     }
     
     private static boolean isUnsignedInt(Object type) {
-        return "UINT8".equals(type)
-                || "UINT16".equals(type)
-                || "UINT32".equals(type)
-                || "UINT64".equals(type);
+        return UINT8.name().equals(type)
+                || UINT16.name().equals(type)
+                || UINT32.name().equals(type)
+                || UINT64.name().equals(type);
+    }
+    
+    private static boolean is8bitInt(Object type) {
+        return INT8.name().equals(type)
+                || UINT8.name().equals(type);
+    }
+    private static boolean is16bitInt(Object type) {
+        return INT16.name().equals(type)
+                || UINT16.name().equals(type);
+    }
+    private static boolean is32bitInt(Object type) {
+        return INT32.name().equals(type)
+                || UINT32.name().equals(type);
+    }
+    private static boolean is64bitInt(Object type) {
+        return INT64.name().equals(type)
+                || UINT64.name().equals(type);
+    }
+    private static boolean is32bitFloat(Object type) {
+        return FLOAT32.name().equals(type);
     }
     
     /**
