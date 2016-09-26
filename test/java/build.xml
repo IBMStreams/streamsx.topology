@@ -47,6 +47,8 @@
    <property name="topology.toolkit.jar" location="${topology.toolkit.release}/lib/com.ibm.streamsx.topology.jar"/>
    <property name="topology.samples.jar" location="${topology.toolkit.release}/../samples/java/functional/functionalsamples.jar"/>
 
+   <echo message="Topology test python: ${topology.test.python}"/>
+
    <echo message="Topology toolkit jar: ${topology.toolkit.jar}"/>
    <echo message="Topology toolkit samples jar: ${topology.samples.jar}"/>
 
@@ -188,6 +190,7 @@
        <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
        <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
        <sysproperty key="topology.test.resource_dir" file="resources"/>
+       <sysproperty key="topology.test.python" value="${topology.test.python}"/>
        <sysproperty key="topology.toolkit.release" value="${topology.toolkit.release}"/>
        <sysproperty key="topology.install.compile" value="${topology.install.compile}"/>
        <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
