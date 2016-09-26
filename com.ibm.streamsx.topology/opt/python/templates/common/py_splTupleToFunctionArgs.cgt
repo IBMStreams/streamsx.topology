@@ -1,8 +1,3 @@
-/*
- * # Licensed Materials - Property of IBM
- * # Copyright IBM Corp. 2015,2016
- */
-
 //
 // Takes the input SPL tuple and converts it to
 // the arguments needed to be passed to a Python
@@ -11,11 +6,11 @@
 
    IPort0Type const & <%=$ituple%> = static_cast<IPort0Type const &>(tuple);
 
-// START-Processing passing SPL tuple as a Python tuple
-// Declares: PyObject * pyTuple 
 <%
     if ($paramStyle eq 'tuple') {
 %>
+// START-Processing passing SPL tuple as a Python tuple
+// Declares: PyObject * pyTuple 
 
     PyObject * pyTuple = PyTuple_New(<%=$inputAttrs2Py%>);
     PyObject *pyValue;
@@ -23,7 +18,28 @@
      for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
          print convertToPythonValueAsTuple($ituple, $i, $itypes[$i], $inames[$i]);
      }
-    }
 %>
 // END-Processing passing SPL tuple as a Python tuple
+<%
+    }
+%>
+
+<%
+    if ($paramStyle eq 'dictionary') {
+%>
+// START-Processing passing SPL tuple as a Python dictionary
+// All attributes are passed in the dictionary
+// Declares: PyObject * pyDict
+
+    PyObject * pyDict = PyDict_New();
+<%
+     for (my $i = 0; $i < $iport->getNumberOfAttributes(); ++$i) {
+         my $la = $iport->getAttributeAt($i);
+         print convertAndAddToPythonDictionaryObject($ituple, $i, $la->getSPLType(), $la->getName());
+     }
+%>
+// END-Processing passing SPL tuple as a Python dictionary
+<%
+    }
+%>
 
