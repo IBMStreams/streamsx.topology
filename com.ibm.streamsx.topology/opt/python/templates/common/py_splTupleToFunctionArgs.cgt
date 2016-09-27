@@ -11,7 +11,9 @@
 %>
 // START-Processing passing SPL tuple as a Python tuple
 // Declares: PyObject * pyTuple 
+// Declares: PyObject * pyDict as NULL
 
+    PyObject *pyDict = NULL; 
     PyObject * pyTuple = PyTuple_New(<%=$inputAttrs2Py%>);
     PyObject *pyValue;
 <%
@@ -29,8 +31,10 @@
 %>
 // START-Processing passing SPL tuple as a Python dictionary
 // All attributes are passed in the dictionary
+// Declares: PyObject * pyTuple as empty tuple
 // Declares: PyObject * pyDict
 
+    PyObject * pyTuple = PyTuple_New(0);
     PyObject * pyDict = PyDict_New();
 <%
      for (my $i = 0; $i < $iport->getNumberOfAttributes(); ++$i) {
