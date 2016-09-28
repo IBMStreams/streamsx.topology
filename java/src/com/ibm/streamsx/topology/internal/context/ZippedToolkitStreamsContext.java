@@ -79,7 +79,7 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	
 	@Override
     protected void makeToolkit(JSONObject deployInfo, File toolkitRoot) throws InterruptedException, Exception{
-        // Do dothing
+        // Do nothing
     }
 
 }
