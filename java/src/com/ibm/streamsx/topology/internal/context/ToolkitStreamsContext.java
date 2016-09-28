@@ -81,7 +81,7 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         JSONObject jsonGraph = app.builder().complete();
         
         addToolkitInfo(toolkitRoot, jsonGraph);
-        
+        makeToolkit(app.builder().getConfig(), toolkitRoot);
         return createToolkitFromGraph(toolkitRoot, jsonGraph);
     }
     
@@ -114,11 +114,15 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
         Future<File> future = createToolkitFromGraph(toolkitRoot, jsonGraph);
         
-        // Invoke spl-make-toolkit
-        InvokeMakeToolkit imt = new InvokeMakeToolkit(deployInfo, toolkitRoot);
-        imt.invoke();
+        makeToolkit(deployInfo, toolkitRoot);
         
         return future;
+    }
+    
+    protected void makeToolkit(JSONObject deployInfo, File toolkitRoot) throws InterruptedException, Exception{
+        // Invoke spl-make-toolkit 
+        InvokeMakeToolkit imt = new InvokeMakeToolkit(deployInfo, toolkitRoot);
+        imt.invoke();
     }
 
     protected void addConfigToJSON(JSONObject graphConfig, Map<String,Object> config) {
