@@ -18,6 +18,8 @@
   <target name="all" depends="test.toolkit"/> 
 	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/spl_samples.py"
 	  	toDir="${testtk}/opt/python/streams"/>
+	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/spl_kwargs.py"
+	  	toDir="${testtk}/opt/python/streams"/>
 	  <target name="test.toolkit">
 		   <exec executable="${topology.test.python}" dir="${testtk}" failonerror="true">
 		     <arg value="${tk}/bin/spl-python-extract.py"/>
