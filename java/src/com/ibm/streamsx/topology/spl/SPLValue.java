@@ -5,7 +5,6 @@
 package com.ibm.streamsx.topology.spl;
 
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
@@ -84,8 +83,8 @@ class SPLValue<T> {
          * }
          * </code></pre>
          */
-        JSONObject jo = new OrderedJSONObject();
-        JSONObject jv = new OrderedJSONObject();
+        JSONObject jo = new JSONObject();
+        JSONObject jv = new JSONObject();
         jo.put("type", "__spl_value");
         jo.put("value", jv);
         jv.put("metaType", metaType.name());

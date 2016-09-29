@@ -15,7 +15,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 
@@ -31,7 +30,7 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
         File toolkitRoot = super.submit(app, config).get();
         Path zipOutPath = pack(toolkitRoot.toPath());
         
-        JSONObject jso = new OrderedJSONObject();
+        JSONObject jso = new JSONObject();
         addConfigToJSON(jso, config);  
         
         return deleteToolkitAndProduceCompletedFuture(toolkitRoot, jso, zipOutPath);

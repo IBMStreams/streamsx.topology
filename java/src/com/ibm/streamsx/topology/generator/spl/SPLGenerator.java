@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.builder.JGraph;
 
@@ -35,7 +34,7 @@ public class SPLGenerator {
         new Preprocessor(graph).preprocess();
        
         // Generate parallel composites
-        JSONObject comp = new OrderedJSONObject();
+        JSONObject comp = new JSONObject();
         comp.put("name", graph.get("name"));
         comp.put("public", true);
         comp.put("parameters", graph.get("parameters"));
@@ -276,10 +275,10 @@ public class SPLGenerator {
             // composite.
             else if (isParallelStart(visitOp)) {
                 // The new composite, represented in JSON
-                JSONObject subComp = new OrderedJSONObject();
+                JSONObject subComp = new JSONObject();
                 // The operator to include in the graph that refers to the
                 // parallel composite.
-                JSONObject compOperator = new OrderedJSONObject();
+                JSONObject compOperator = new JSONObject();
                 subComp.put(
                         "name",
                         "__parallel_Composite_"

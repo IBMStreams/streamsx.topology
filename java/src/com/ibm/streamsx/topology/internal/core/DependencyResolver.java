@@ -30,7 +30,6 @@ import java.util.jar.JarOutputStream;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
@@ -203,7 +202,7 @@ public class DependencyResolver {
                                 "parameters");
                         JSONObject op_jars = (JSONObject) params.get("jar");
                         if (null == op_jars) {
-                            JSONObject val = new OrderedJSONObject();
+                            JSONObject val = new JSONObject();
                             val.put("value", new JSONArray());
                             params.put("jar", val);
                             op_jars = val;
