@@ -88,7 +88,7 @@ public class InvokeSc {
     public void invoke() throws Exception, InterruptedException {
         File sc = new File(installDir, "bin/sc");
 
-        List<String> commands = new ArrayList<String>();
+        List<String> commands = new ArrayList<>();
 
         String mainCompositeName = namespace + "::" + mainComposite;
 

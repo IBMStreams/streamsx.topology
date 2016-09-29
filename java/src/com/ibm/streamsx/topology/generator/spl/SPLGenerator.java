@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONArray;
@@ -25,7 +26,7 @@ public class SPLGenerator {
 
     // The final list of composites (Main composite and parallel regions), which
     // compose the graph.
-    ArrayList<JSONObject> composites = new ArrayList<JSONObject>();
+    List<JSONObject> composites = new ArrayList<>();
     
     private SubmissionTimeValue stvHelper;
 
@@ -226,19 +227,19 @@ public class SPLGenerator {
      *            Necessary to pass it to the GraphUtilities.getChildren
      *            function.
      */
-    JSONObject separateIntoComposites(ArrayList<JSONObject> starts,
+    JSONObject separateIntoComposites(List<JSONObject> starts,
             JSONObject comp, JSONObject graph) {
         // Contains all ops which have been reached by graph traversal,
         // regardless of whether they are 'special' operators, such as the ones
         // whose kind begins with '$', or whether they're included in the final
         // physical graph.
-        HashSet<JSONObject> allTraversedOps = new HashSet<JSONObject>();
+        Set<JSONObject> allTraversedOps = new HashSet<>();
 
         // Only contains operators that are in the final physical graph.
-        List<JSONObject> visited = new ArrayList<JSONObject>();
+        List<JSONObject> visited = new ArrayList<>();
 
         // Operators which might not have been visited yet.
-        List<JSONObject> unvisited = new ArrayList<JSONObject>();
+        List<JSONObject> unvisited = new ArrayList<>();
         JSONObject unparallelOp = null;
 
         unvisited.addAll(starts);
@@ -261,7 +262,7 @@ public class SPLGenerator {
             // If the operator is not a special operator, add it to the
             // visited list.
             if (!isParallelStart(visitOp) && !isParallelEnd(visitOp)) {
-                ArrayList<JSONObject> children = GraphUtilities.getDownstream(
+                List<JSONObject> children = GraphUtilities.getDownstream(
                         visitOp, graph);
                 unvisited.addAll(children);
                 visited.add(visitOp);
@@ -325,7 +326,7 @@ public class SPLGenerator {
 
                 // Get the start operators in the parallel region -- the ones
                 // immediately downstream from the $Parallel operator
-                ArrayList<JSONObject> parallelStarts = GraphUtilities
+                List<JSONObject> parallelStarts = GraphUtilities
                         .getDownstream(visitOp, graph);
 
                 // Once you have the start operators, recursively call the
@@ -353,7 +354,7 @@ public class SPLGenerator {
                 }
 
                 if (parallelEnd != null) {
-                    ArrayList<JSONObject> children = GraphUtilities
+                    List<JSONObject> children = GraphUtilities
                             .getDownstream(parallelEnd, graph);
                     unvisited.addAll(children);
                     compOperator.put("outputs", parallelEnd.get("outputs"));
