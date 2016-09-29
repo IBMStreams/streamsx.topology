@@ -158,14 +158,14 @@ def create_op_spldoc(opmodel_xml, name, opobj):
      replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", _opdoc);
 
 def create_ip_spldoc(opmodel_xml, name, opobj):
-     if (opobj.__splpy_style == None):
-         return None
      if (opobj.__splpy_style == 'dictionary'):
-         return None
-     
-     _p0doc = """
+       return """
+       Tuple attribute values are passed by name to the Python callable using `\*\*kwargs`.
+             """
+     if (opobj.__splpy_style == 'tuple'):
+       return """
        Tuple attribute values are passed by position to the Python callable.
-             """;
+             """
  
      replaceTokenInFile(opmodel_xml, "__SPLPY__INPORT_0_DESCRIPTION__SPLPY__", _p0doc);
    

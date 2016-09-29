@@ -120,15 +120,12 @@ def _define_style(wrapped, fn, style):
             raise TypeError("style='name' not supported with single *args parameter.")
         elif pc == 1 and has_kwargs:
             raise TypeError("style='name' not supported with single **kwargs parameter.")
-        # From an implementation point of view the values
-        # are passed as a dictionary and Python does the correct mapping
-        style = 'dictionary'
 
     elif style is not None:
         raise TypeError("style=" + style + " unknown.")
 
     if style is None:
-        if has_kwargs:
+        if pc == 1 and has_kwargs:
             style = 'dictionary'
         elif pc == 1 and has_args:
             style = 'tuple'
@@ -136,14 +133,12 @@ def _define_style(wrapped, fn, style):
             style = 'tuple'
         else:
             # Default to by name
-            # From an implementation point of view the values
-            # are passed as a dictionary and Python does the correct mapping
-            style = 'dictionary'
+            style = 'name'
 
     if style == 'tuple' and has_kwargs:
-         raise TypeError("style='position' not yet implemented with **kwargs parameter.")
+         raise TypeError("style='position' not implemented with **kwargs parameter.")
 
-    if style == 'dictionary':
+    if style == 'name':
          raise TypeError("Not yet implemented!")
     return style
 
