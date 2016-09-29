@@ -5,7 +5,6 @@
 package com.ibm.streamsx.topology.builder;
 
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 
 /**
  * Utility methods for an operator represented as a JSON Object.
@@ -77,7 +76,7 @@ public class JOperator {
     public static JSONObject createConfig(final JSONObject op) {
         JSONObject config = getConfig(op);
         if (config == null)
-            op.put(CONFIG, config = new OrderedJSONObject());
+            op.put(CONFIG, config = new JSONObject());
         
         return config;
     }
@@ -141,7 +140,7 @@ public class JOperator {
         public static JSONObject createJSONItem(final JSONObject op, String key) {
             JSONObject value = (JSONObject) getItem(op, key);
             if (value == null) {
-                createConfig(op).put(key, value = new OrderedJSONObject());
+                createConfig(op).put(key, value = new JSONObject());
             }
             
             return value;

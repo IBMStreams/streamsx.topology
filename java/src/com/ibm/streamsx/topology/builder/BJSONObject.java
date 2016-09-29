@@ -5,11 +5,10 @@
 package com.ibm.streamsx.topology.builder;
 
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 
 public abstract class BJSONObject {
 
-    private final JSONObject json = new OrderedJSONObject();
+    private final JSONObject json = new JSONObject();
 
     /**
      * Provides direct access to the JSON object, which may not be complete.

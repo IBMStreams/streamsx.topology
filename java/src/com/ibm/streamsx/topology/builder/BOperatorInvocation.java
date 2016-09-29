@@ -11,7 +11,6 @@ import java.util.Map;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streams.flow.declare.InputPortDeclaration;
 import com.ibm.streams.flow.declare.OperatorInvocation;
 import com.ibm.streams.flow.declare.OutputPortDeclaration;
@@ -46,7 +45,7 @@ public class BOperatorInvocation extends BOperator {
     private final OperatorInvocation<? extends Operator> op;
     protected List<BInputPort> inputs;
     protected List<BOutputPort> outputs;
-    private final JSONObject jparams = new OrderedJSONObject();
+    private final JSONObject jparams = new JSONObject();
 
     public BOperatorInvocation(GraphBuilder bt,
             Class<? extends Operator> opClass,

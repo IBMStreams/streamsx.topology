@@ -12,7 +12,6 @@ import java.util.Map;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streams.operator.Type.MetaType;
 
 /**
@@ -188,7 +187,7 @@ public class SubmissionTimeValue {
         // augment the composite's parameters
         JSONObject params = (JSONObject) composite.get("parameters");
         if (params == null && spParams.size() > 0) {
-            params = new OrderedJSONObject();
+            params = new JSONObject();
             composite.put("parameters", params);
         }
         for (Object pname : spParams.keySet()) {
