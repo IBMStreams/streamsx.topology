@@ -30,7 +30,7 @@ public class InvokeCancel {
         
         Util.checkInvokeStreamtoolPreconditions();
 
-        List<String> commands = new ArrayList<String>();
+        List<String> commands = new ArrayList<>();
 
         commands.add(sj.getAbsolutePath());
         commands.add("canceljob");

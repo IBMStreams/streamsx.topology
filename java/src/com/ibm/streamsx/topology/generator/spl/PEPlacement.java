@@ -130,7 +130,7 @@ class PEPlacement {
                 continue;
             }
             
-            List<JSONObject> startList = new ArrayList<JSONObject>();
+            List<JSONObject> startList = new ArrayList<>();
             startList.add(start);
             
             Set<BVirtualMarker> boundaries = EnumSet.of(BVirtualMarker.ISOLATE);
