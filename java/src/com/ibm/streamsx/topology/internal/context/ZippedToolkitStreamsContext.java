@@ -17,6 +17,7 @@ import java.util.zip.ZipOutputStream;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
+import com.ibm.streamsx.topology.internal.streams.InvokeMakeToolkit;
 
 public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	
@@ -74,5 +75,10 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	    }
 	    return zipFilePath;
 	}
+	
+	@Override
+    protected void makeToolkit(JSONObject deployInfo, File toolkitRoot) throws InterruptedException, Exception{
+        // Do nothing
+    }
 
 }
