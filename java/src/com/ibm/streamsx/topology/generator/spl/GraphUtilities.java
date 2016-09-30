@@ -13,6 +13,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+import com.ibm.json.java.JSON;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
@@ -106,19 +112,27 @@ public class GraphUtilities {
      * @param graph The graph JSONObject in which {@code visitOp} resides.
      * @return A list of all operators immediately upstream from {@code visitOp}
      */
-    public static List<JSONObject> getUpstream(JSONObject visitOp,
+    public static List<JSONObject> getUpstream(JSONObject _visitOp,
             JSONObject graph) {
+        
+        JsonObject visitOp = gson(_visitOp);
+        
         List<JSONObject> uniqueParents = new ArrayList<>();
-        Set<JSONObject> parents = new HashSet<>();
-        JSONArray inputs = (JSONArray) visitOp.get("inputs");
-        if (inputs == null || inputs.isEmpty()) {
+                
+        JsonArray inputs = null;
+        if (visitOp.has("inputs"))
+            inputs = visitOp.get("inputs").getAsJsonArray();
+        if (inputs == null || inputs.size() == 0) {
             return uniqueParents;
         }
-        for (Object _input : inputs) {
-            JSONObject input = (JSONObject) _input;
-            JSONArray connections = (JSONArray) input.get("connections");
-            for (Object _conn : connections) {
-                String outputPort = (String) _conn;
+        
+        Set<JSONObject> parents = new HashSet<>();
+        
+        for (JsonElement _input : inputs) {
+            JsonObject input = _input.getAsJsonObject();
+            JsonArray connections = input.get("connections").getAsJsonArray();
+            for (JsonElement _conn : connections) {
+                String outputPort = _conn.getAsString();
                 // TODO: build index instead of iterating through graph each
                 // time
                 JSONArray ops = (JSONArray) graph.get("operators");
@@ -433,16 +447,16 @@ public class GraphUtilities {
         return false;
     }
 
-    static String getInputPortName(JSONObject op, int index) {
-        JSONArray inputs = (JSONArray) op.get("inputs");
-        JSONObject input = (JSONObject) inputs.get(index);
-        return (String) input.get("name");
+    static String getInputPortName(JsonObject op, int index) {
+        JsonArray inputs = op.get("inputs").getAsJsonArray();
+        JsonObject input = inputs.get(index).getAsJsonObject();
+        return input.get("name").getAsString();
     }    
-    
-    static String getOutputPortName(JSONObject op, int index) {
-        JSONArray outputs = (JSONArray) op.get("outputs");
-        JSONObject output = (JSONObject) outputs.get(index);
-        return (String) output.get("name");
+
+    static String getOutputPortName(JsonObject op, int index) {
+        JsonArray outputs =  op.get("ouputs").getAsJsonArray();
+        JsonObject output = outputs.get(index).getAsJsonObject();
+        return output.get("name").getAsString();
     }  
     
     static void addBefore(JSONObject op, JSONObject addOp, JSONObject graph){
@@ -461,14 +475,15 @@ public class GraphUtilities {
         addBetween(parentList, childList, op);     
     }
     
-    @SuppressWarnings("unchecked")
 	static void addBetween(List<JSONObject> parents, List<JSONObject> children, JSONObject op){
         for(JSONObject parent : parents){
             for(JSONObject child : children){              
                 JSONArray outputs = (JSONArray) parent.get("outputs");
                 JSONArray inputs = (JSONArray) child.get("inputs");
-                for(JSONObject output : (Collection<JSONObject>)outputs){
-                    for(JSONObject input : (Collection<JSONObject>)inputs){
+                for(Object _output : outputs){
+                    JSONObject output = (JSONObject) _output;
+                    for(Object _input : inputs) {
+                        JSONObject input = (JSONObject) _input;
                         insertOperatorBetweenPorts(input, output, op);
                     }
                 }              
@@ -476,7 +491,6 @@ public class GraphUtilities {
         }
     }
     
-    @SuppressWarnings("unchecked")
 	static void insertOperatorBetweenPorts(JSONObject input, JSONObject output, JSONObject op){
         String oportName = (String) output.get("name");
         String iportName = (String) input.get("name");
@@ -500,16 +514,38 @@ public class GraphUtilities {
         JSONArray outputConns = (JSONArray) output.get("connections");
         JSONArray inputConns = (JSONArray) input.get("connections");
         
-        for(String conn : (Collection<String>)outputConns){
+        for(Object conn : outputConns){
             if(conn.equals(iportName)){
                 outputConns.set(outputConns.indexOf(conn), opIportName);
             }
         }
         
-        for(String conn : (Collection<String>)inputConns){
+        for(Object conn : inputConns){
             if(conn.equals(oportName)){
                 inputConns.set(inputConns.indexOf(conn), opOportName);
             }
         }
     }
+	
+	/**
+	 * TEMP
+	 * 
+	 */
+	
+	static JsonObject gson(JSONObject object) {
+	    try {
+            return new JsonParser().parse(object.serialize()).getAsJsonObject();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+	}
+	
+	static JSONObject json4j(JsonObject object) {
+	    try {
+            return (JSONObject) JSON.parse(object.toString());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+	}
 }
+

@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.gson;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -119,8 +121,8 @@ class Preprocessor {
         
         JSONObject parallelStart = children.get(0);
         
-        String inputPortName = GraphUtilities.getInputPortName(hashAdder, 0);
-        String parallelInputPortName = GraphUtilities.getInputPortName(parallelStart, 0);
+        String inputPortName = GraphUtilities.getInputPortName(gson(hashAdder), 0);
+        String parallelInputPortName = GraphUtilities.getInputPortName(gson(parallelStart), 0);
         
         List<JSONObject> unparallelParents = new ArrayList<>();
         List<JSONObject> nonUnparallelParents = new ArrayList<>();
