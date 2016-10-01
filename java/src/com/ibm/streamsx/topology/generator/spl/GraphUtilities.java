@@ -25,6 +25,73 @@ import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
 
 public class GraphUtilities {
+    
+    /**
+     * Perform an action on every JsonObject in an array.
+     */
+    static void objectArray(JsonObject object, String property, Consumer<JsonObject> action) {
+        JsonArray array = array(object, property);
+        if (array == null)
+            return;
+        array.forEach(e -> action.accept(e.getAsJsonObject()));
+    }
+    
+    /**
+     * Perform an action on every String in an array.
+     */
+    static void stringArray(JsonObject object, String property, Consumer<String> action) {
+        JsonArray array = array(object, property);
+        if (array == null)
+            return;
+        array.forEach(e -> action.accept(e.getAsString()));
+    }
+    
+    /**
+     * Return a Json array.
+     * Returns null if the array is empty or not present.
+     */
+    static JsonArray array(JsonObject object, String property) {
+        if (object.has(property)) {
+            JsonElement je = object.get(property);
+            if (je.isJsonNull())
+                return null;
+            return je.getAsJsonArray();
+        }
+        return null;
+    }
+    /**
+     * Return a Json object.
+     * Returns null if the object is not present or null.
+     */
+    static JsonObject object(JsonObject object, String property) {
+        if (object.has(property)) {
+            JsonElement je = object.get(property);
+            if (je.isJsonNull())
+                return null;
+            return je.getAsJsonObject();
+        }
+        return null;
+    }
+    static String jstring(JsonObject object, String property) {
+        if (object.has(property)) {
+            JsonElement je = object.get(property);
+            if (je.isJsonNull())
+                return null;
+            return je.getAsString();
+        }
+        return null;
+    }
+    static boolean jboolean(JsonObject object, String property) {
+        if (object.has(property)) {
+            JsonElement je = object.get(property);
+            if (je.isJsonNull())
+                return false;
+            return je.getAsBoolean();
+        }
+        return false;
+    }
+ 
+    
     static ArrayList<JSONObject> findStarts(JSONObject graph) {
         ArrayList<JSONObject> starts = new ArrayList<JSONObject>();
         JSONArray ops = (JSONArray) graph.get("operators");
