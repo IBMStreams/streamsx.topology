@@ -2,6 +2,7 @@ package com.ibm.streamsx.topology.generator.spl;
 
 import java.util.List;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 
@@ -40,9 +41,8 @@ class AutonomousRegions {
     /**
      * Add in the annotation.
      */
-    static void autonomousAnnotation(JSONObject op, StringBuilder sb) {
-    	Boolean set = (Boolean) op.get(AUTONOMOUS);
-    	if (set != null && set)
+    static void autonomousAnnotation(JsonObject op, StringBuilder sb) {
+    	if (op.has(AUTONOMOUS) && op.get(AUTONOMOUS).getAsBoolean())
     		sb.append("@autonomous\n");
     }
 }

@@ -5,6 +5,8 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.gson;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.jboolean;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_NAMES;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_VALUES;
@@ -15,8 +17,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindow.Type;
@@ -34,111 +38,106 @@ class OperatorGenerator {
         this.stvHelper = splGenerator.stvHelper();
     }
 
-    String generate(JSONObject graphConfig, JSONObject op)
+    String generate(JSONObject graphConfig, JSONObject _op)
             throws IOException {
+        JsonObject op = gson(_op);
         StringBuilder sb = new StringBuilder();
         noteAnnotations(op, sb);
         parallelAnnotation(op, sb);
 	viewAnnotation(op, sb);
         AutonomousRegions.autonomousAnnotation(op, sb);
-        outputClause(op, sb);
-        operatorNameAndKind(op, sb);
-        inputClause(op, sb);
+        outputClause(_op, sb);
+        operatorNameAndKind(_op, sb);
+        inputClause(_op, sb);
 
         sb.append("  {\n");
-        windowClause(op, sb);
-        paramClause(graphConfig, op, sb);
-        configClause(graphConfig, op, sb);
+        windowClause(_op, sb);
+        paramClause(graphConfig, _op, sb);
+        configClause(graphConfig, _op, sb);
         sb.append("  }\n");
 
         return sb.toString();
     }
 
-    private static void noteAnnotations(JSONObject op, StringBuilder sb)
+    private static void noteAnnotations(JsonObject op, StringBuilder sb)
             throws IOException {
         
         sourceLocationNote(op, sb);
         portTypesNote(op, sb);
     }
     
-    private static void sourceLocationNote(JSONObject op, StringBuilder sb) throws IOException {
-        JSONArray ja = (JSONArray) op.get("sourcelocation");
-        if (ja == null || ja.isEmpty())
+    private static void sourceLocationNote(JsonObject op, StringBuilder sb) throws IOException {
+        
+        JsonArray ja = GraphUtilities.array(op, "sourcelocation");
+        if (ja == null)
             return;
 
-        JSONArtifact jsource = ja.size() == 1 ? (JSONArtifact) ja.get(0) : ja;
+        JsonElement jsource = ja.size() == 1 ? (JsonElement) ja.get(0) : ja;
 
         sb.append("@spl_note(id=\"__spl_sourcelocation\"");
         sb.append(", text=");
-        String sourceInfo = jsource.serialize();
+        String sourceInfo = jsource.toString();
         SPLGenerator.stringLiteral(sb, sourceInfo);
         sb.append(")\n");
     }
     
-    private static void portTypesNote(JSONObject op, StringBuilder sb) {
-        JSONArray ja = (JSONArray) op.get("outputs");
-        if (ja == null || ja.isEmpty())
-            return;
-        for (int i = 0 ; i < ja.size(); i++) {
-            JSONObject output = (JSONObject) ja.get(i);
-            String type = (String) output.get("type.native");
+    private static void portTypesNote(JsonObject op, StringBuilder sb) {
+        
+        int[] id = new int[1];
+        GraphUtilities.objectArray(op, "outputs",
+                output -> {
+                    
+            String type = GraphUtilities.jstring(output, "type.native");
             if (type == null || type.isEmpty())
-                continue;
-            sb.append("@spl_note(id=\"__spl_nativeType_output_" + i + "\"");
+                return;
+            sb.append("@spl_note(id=\"__spl_nativeType_output_" + id[0]++ + "\"");
             sb.append(", text=");
             SPLGenerator.stringLiteral(sb, type);
             sb.append(")\n");
-        }
+        });
     }
 
-    private void viewAnnotation(JSONObject op, StringBuilder sb){
-	JSONObject config = (JSONObject)op.get("config");
-	if(config == null)
-	    return;
-
-        JSONArray viewConfigs = (JSONArray) config.get("viewConfigs");
-        if (viewConfigs == null || viewConfigs.isEmpty()) {
+    private void viewAnnotation(JsonObject op, StringBuilder sb) {
+        
+        JsonObject config = GraphUtilities.object(op, "config");
+        if (config == null)
             return;
-        }
+        
+        GraphUtilities.objectArray(config, "viewConfigs", viewConfig -> {
 
-	for (int i = 0; i < viewConfigs.size(); i++) {
-            JSONObject viewConfig = (JSONObject) viewConfigs.get(i);
-	    String name = (String)viewConfig.get("name");
-	    String port = (String)viewConfig.get("port");
-	    Double bufferTime = ((Number)viewConfig.get("bufferTime")).doubleValue();
-	    Long sampleSize = ((Number)viewConfig.get("sampleSize")).longValue();
-	    sb.append("@view(name = \"");
-	    sb.append(splBasename(name));
-	    sb.append("\", port = " + port);
-	    sb.append(", bufferTime = " + bufferTime + ", ");
-	    sb.append("sampleSize = " + sampleSize + ", ");
-	    sb.append("activateOption = firstAccess)\n");
-	}	
+            String name = viewConfig.get("name").getAsString();
+            String port = viewConfig.get("port").getAsString();
+            Double bufferTime = viewConfig.get("bufferTime").getAsDouble();
+            Long sampleSize = viewConfig.get("sampleSize").getAsLong();
+            sb.append("@view(name = \"");
+            sb.append(splBasename(name));
+            sb.append("\", port = " + port);
+            sb.append(", bufferTime = " + bufferTime + ", ");
+            sb.append("sampleSize = " + sampleSize + ", ");
+            sb.append("activateOption = firstAccess)\n");
+        });
     }
 
-    private void parallelAnnotation(JSONObject op, StringBuilder sb) {
-        Boolean parallel = (Boolean) op.get("parallelOperator");
-        if (parallel != null && parallel) {
+    private void parallelAnnotation(JsonObject op, StringBuilder sb) {
+        boolean parallel = jboolean(op, "parallelOperator");
+        
+        if (parallel) {
             sb.append("@parallel(width=");
-            Object width = op.get("width");
-            if (width instanceof Integer) {
-                sb.append(Integer.toString((int) width));
+            JsonElement width = op.get("width");
+            if (width.isJsonPrimitive()) {
+                sb.append(width.getAsString());
         	}
-        	else if (width instanceof Long) {        		
-            	sb.append(Integer.toString(((Long)width).intValue()));
-            }
             else {
-                JSONObject jo = (JSONObject) width;
-                String jsonType = (String) jo.get("type");
+                JsonObject jo = width.getAsJsonObject();
+                String jsonType = jo.get("type").getAsString();
                 if (TYPE_SUBMISSION_PARAMETER.equals(jsonType))
-                    sb.append(stvHelper.generateCompParamName((JSONObject) jo.get("value")));
+                    sb.append(SubmissionTimeValue.generateCompParamName(jo.get("value").getAsJsonObject()));
                 else
                     throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
             }
-            Boolean partitioned = (Boolean) op.get("partitioned");
-            if (partitioned != null && partitioned) {
-                String parallelInputPortName = (String) op
-                        .get("parallelInputPortName");
+            boolean partitioned = jboolean(op, "partitioned");
+            if (partitioned) {
+                String parallelInputPortName = op.get("parallelInputPortName").getAsString();
                 parallelInputPortName = splBasename(parallelInputPortName);
                 sb.append(", partitionBy=[{port=" + parallelInputPortName
                         + ", attributes=[__spl_hash]}]");
@@ -435,7 +434,7 @@ class OperatorGenerator {
         Object value = param.get("value");
         Object type = param.get("type");
         if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
-            sb.append(stvHelper.generateCompParamName((JSONObject) value));
+            sb.append(SubmissionTimeValue.generateCompParamName(gson((JSONObject) value)));
             return;
         } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
             SPLGenerator.stringLiteral(sb, value.toString());

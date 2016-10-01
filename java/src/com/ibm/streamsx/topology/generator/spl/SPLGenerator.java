@@ -116,9 +116,9 @@ public class SPLGenerator {
                 Object value = param.get("value");
                 if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
                     sb.append("  ");
-                    if (isMainComposite)
-                        stvHelper.generateMainDef((JSONObject)value, sb);
-                    else
+                    if (isMainComposite) {
+                        stvHelper.generateMainDef(GraphUtilities.gson((JSONObject)value), sb);
+                    } else
                         stvHelper.generateInnerDef((JSONObject)value, sb);
                     sb.append(";\n");
                 }
@@ -536,7 +536,7 @@ public class SPLGenerator {
     /**
      * Get the string value of an "unsigned" Byte, Short, Integer or Long.
      */
-    public static String unsignedString(Object integerValue) {
+    public static String unsignedString(Number integerValue) {
 // java8 impl
 //        if (integerValue instanceof Long)
 //            return Long.toUnsignedString((Long) integerValue);
