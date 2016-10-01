@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.generator.spl;
 import static com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor.FUNCTIONAL_LOGIC_PARAM;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.gson;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.json4j;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -169,7 +170,8 @@ public class SubmissionTimeValue {
                     }
                 }
                 if (addAll && !addedAll) {
-                    spParams.putAll(allSubmissionParams);
+                    for (String key : allSubmissionParams.keySet())
+                        spParams.put(key, json4j(allSubmissionParams.get(key)));
                     addedAll = true;
                 }
             }
