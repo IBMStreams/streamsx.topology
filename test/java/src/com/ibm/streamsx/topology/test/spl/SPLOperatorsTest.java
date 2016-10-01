@@ -285,7 +285,7 @@ public class SPLOperatorsTest extends TestTopology {
         String metaType = (String) value.get("metaType");
         Object v = value.get("value");
         if (metaType.startsWith("UINT"))
-            return SPLGenerator.unsignedString(v);
+            return SPLGenerator.unsignedString((Number) v);
         else
             return v.toString();
     }

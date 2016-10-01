@@ -158,7 +158,8 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
         jo.put("value", jv);
         jv.put("name", name);
         jv.put("metaType", metaType.name());
-        jv.put("defaultValue", defaultValue);
+        if (defaultValue != null)
+            jv.put("defaultValue", defaultValue);
         return jo;
     }
 

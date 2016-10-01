@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.gson;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_NAMES;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_VALUES;
@@ -131,7 +132,7 @@ class OperatorGenerator {
                 JSONObject jo = (JSONObject) width;
                 String jsonType = (String) jo.get("type");
                 if (TYPE_SUBMISSION_PARAMETER.equals(jsonType))
-                    sb.append(stvHelper.generateCompParamName((JSONObject) jo.get("value")));
+                    sb.append(SubmissionTimeValue.generateCompParamName(gson((JSONObject) jo.get("value"))));
                 else
                     throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
             }
@@ -435,7 +436,7 @@ class OperatorGenerator {
         Object value = param.get("value");
         Object type = param.get("type");
         if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
-            sb.append(stvHelper.generateCompParamName((JSONObject) value));
+            sb.append(SubmissionTimeValue.generateCompParamName(gson((JSONObject) value)));
             return;
         } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
             SPLGenerator.stringLiteral(sb, value.toString());

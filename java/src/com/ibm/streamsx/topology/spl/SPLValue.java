@@ -43,7 +43,7 @@ class SPLValue<T> {
     @Override
     public String toString() {
         if (isUnsignedInt(metaType))
-            return SPLGenerator.unsignedString(value);
+            return SPLGenerator.unsignedString((Number) value);
         return value.toString();
     }
     
