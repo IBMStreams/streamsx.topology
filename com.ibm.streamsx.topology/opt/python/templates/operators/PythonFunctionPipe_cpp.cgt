@@ -71,6 +71,13 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
+   streamsx::topology::PyGILLock lock;
+   if (function_)
+      Py_DECREF(function_);
+   if (pyInNames_)
+      Py_DECREF(pyInNames_);
+   if (pyOutNames_)
+      Py_DECREF(pyOutNames_);
 }
 
 // Notify port readiness
