@@ -50,9 +50,22 @@
 %>
 
 // Constructor
-MY_OPERATOR::MY_OPERATOR()
+MY_OPERATOR::MY_OPERATOR() :
+   function_(NULL),
+   pyInNames_(NULL),
+   pyOutNames_(NULL)
 {
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
+   
+   {
+      streamsx::topology::PyGILLock lock;
+      pyOutNames_ = streamsx::topology::Splpy::pyAttributeNames(
+               getOutputPortAt(0));
+<% if ($paramStyle eq 'dictionary') { %>
+      pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
+               getInputPortAt(0));
+<% } %>
+   }
 }
 
 // Destructor
