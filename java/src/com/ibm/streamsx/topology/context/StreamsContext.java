@@ -49,9 +49,16 @@ public interface StreamsContext<T> {
          * 
          */
         ZIPPED_TOOLKIT,
+        
+        /**
+         * Execution of the topology produces the Streams application bundle
+         * using a remote build service.
+         * 
+         */
+        BUILD_SERVICE_COMPILE,
 
         /**
-         * Execution of the topology produces an SPL application bundle
+         * Execution of the topology produces an Streams application bundle
          * {@code .sab} file that can be submitted to an IBM Streams
          * instances as a distributed application. The bundle is self-contained
          * and 
@@ -79,7 +86,7 @@ public interface StreamsContext<T> {
         BUNDLE,
 
         /**
-         * Execution of the topology produces an SPL application bundle
+         * Execution of the topology produces an Streams application bundle
          * {@code .sab} file that can be executed as an IBM Streams
          * standalone application.
          * <P>

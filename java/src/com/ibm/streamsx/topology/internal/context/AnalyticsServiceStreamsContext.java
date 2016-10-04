@@ -160,29 +160,40 @@ public class AnalyticsServiceStreamsContext extends
             throw new IllegalStateException("Service is not running!");
     }
 
+	public static CloseableHttpResponse executeAndHandleErrors(CloseableHttpClient httpClient,
+			HttpRequestBase request) throws ClientProtocolException, IOException{
+		CloseableHttpResponse response = httpClient.execute(request);
+
+
+		HttpEntity entity = response.getEntity();
+		if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+			final String errorInfo;
+			if (entity != null)
+				errorInfo = " -- " + EntityUtils.toString(entity);
+			else
+				errorInfo = "";
+			throw new IllegalStateException(
+					"Unexpected HTTP resource from service:" + response.getStatusLine().getStatusCode() + ":"
+							+ response.getStatusLine().getReasonPhrase() + errorInfo);
+		}
+
+		if (entity == null)
+			throw new IllegalStateException("No HTTP resource from service");
+		
+		return response;
+	}
+    
     private JSONObject getJsonResponse(CloseableHttpClient httpClient,
             HttpRequestBase request) throws IOException, ClientProtocolException {
         request.addHeader("accept",
                 ContentType.APPLICATION_JSON.getMimeType());
 
-        CloseableHttpResponse response = httpClient.execute(request);
+        CloseableHttpResponse response = executeAndHandleErrors(httpClient,
+    			request);
+        HttpEntity entity = response.getEntity();
+        
         JSONObject jsonResponse;
         try {
-            HttpEntity entity = response.getEntity();
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                final String errorInfo;
-                if (entity != null)
-                    errorInfo = " -- " + EntityUtils.toString(entity);
-                else
-                    errorInfo = "";
-                throw new IllegalStateException(
-                        "Unexpected HTTP resource from service:"
-                                + response.getStatusLine().getStatusCode() + ":" +
-                                response.getStatusLine().getReasonPhrase() + errorInfo);
-            }
-            
-            if (entity == null)
-                throw new IllegalStateException("No HTTP resource from service");
 
             jsonResponse = JSONObject.parse(new BufferedInputStream(entity
                     .getContent()));
