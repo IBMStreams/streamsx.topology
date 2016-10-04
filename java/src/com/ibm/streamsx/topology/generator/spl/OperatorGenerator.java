@@ -5,6 +5,8 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.objectArray;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_NAMES;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_VALUES;
@@ -14,16 +16,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindow.Type;
 import com.ibm.streamsx.topology.builder.JOperator;
-import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
@@ -38,13 +40,14 @@ class OperatorGenerator {
 
     String generate(JSONObject graphConfig, JSONObject op)
             throws IOException {
+        JsonObject _op = GraphUtilities.gson(op);
         StringBuilder sb = new StringBuilder();
-        noteAnnotations(op, sb);
+        noteAnnotations(_op, sb);
         parallelAnnotation(op, sb);
 	viewAnnotation(op, sb);
-        AutonomousRegions.autonomousAnnotation(op, sb);
-        outputClause(op, sb);
-        operatorNameAndKind(op, sb);
+        AutonomousRegions.autonomousAnnotation(_op, sb);
+        outputClause(_op, sb);
+        operatorNameAndKind(_op, sb);
         inputClause(op, sb);
 
         sb.append("  {\n");
@@ -56,41 +59,42 @@ class OperatorGenerator {
         return sb.toString();
     }
 
-    private static void noteAnnotations(JSONObject op, StringBuilder sb)
+    private static void noteAnnotations(JsonObject op, StringBuilder sb)
             throws IOException {
         
         sourceLocationNote(op, sb);
         portTypesNote(op, sb);
     }
     
-    private static void sourceLocationNote(JSONObject op, StringBuilder sb) throws IOException {
-        JSONArray ja = (JSONArray) op.get("sourcelocation");
-        if (ja == null || ja.isEmpty())
+    private static void sourceLocationNote(JsonObject op, StringBuilder sb) throws IOException {
+        
+        JsonArray ja = GsonUtilities.array(op, "sourcelocation");
+        if (ja == null)
             return;
 
-        JSONArtifact jsource = ja.size() == 1 ? (JSONArtifact) ja.get(0) : ja;
+        JsonElement jsource = ja.size() == 1 ? (JsonElement) ja.get(0) : ja;
 
         sb.append("@spl_note(id=\"__spl_sourcelocation\"");
         sb.append(", text=");
-        String sourceInfo = jsource.serialize();
+        String sourceInfo = jsource.toString();
         SPLGenerator.stringLiteral(sb, sourceInfo);
         sb.append(")\n");
     }
     
-    private static void portTypesNote(JSONObject op, StringBuilder sb) {
-        JSONArray ja = (JSONArray) op.get("outputs");
-        if (ja == null || ja.isEmpty())
-            return;
-        for (int i = 0 ; i < ja.size(); i++) {
-            JSONObject output = (JSONObject) ja.get(i);
-            String type = (String) output.get("type.native");
+    private static void portTypesNote(JsonObject op, StringBuilder sb) {
+        
+        int[] id = new int[1];
+        GsonUtilities.objectArray(op, "outputs",
+                output -> {
+                    
+            String type = GsonUtilities.jstring(output, "type.native");
             if (type == null || type.isEmpty())
-                continue;
-            sb.append("@spl_note(id=\"__spl_nativeType_output_" + i + "\"");
+                return;
+            sb.append("@spl_note(id=\"__spl_nativeType_output_" + id[0]++ + "\"");
             sb.append(", text=");
             SPLGenerator.stringLiteral(sb, type);
             sb.append(")\n");
-        }
+        });
     }
 
     private void viewAnnotation(JSONObject op, StringBuilder sb){
@@ -149,39 +153,41 @@ class OperatorGenerator {
         }
     }
 
-    static void outputClause(JSONObject op, StringBuilder sb) {
-
-        JSONArray outputs = (JSONArray) op.get("outputs");
-        if (outputs == null || outputs.isEmpty()) {
-            sb.append("() ");
-            return;
-        }
+    /**
+     * Create the output port definitions.
+     */
+    static void outputClause(JsonObject op, StringBuilder sb) {
 
         sb.append("  ( ");
-        for (int i = 0; i < outputs.size(); i++) {
-            JSONObject output = (JSONObject) outputs.get(i);
+        
+        // effectively a mutable boolean
+        AtomicBoolean first = new AtomicBoolean(true);
+        
+        objectArray(op, "outputs", output -> {
 
-            String type = (String) output.get("type");
+            String type = jstring(output, "type");
             // removes the 'tuple' part of the type
             type = type.substring(5);
 
-            String name = (String) output.get("name");
+            String name = jstring(output, "name");
             name = splBasename(name);
 
-            if (i != 0)
-                sb.append("; ");
+            if (!first.get()) {
+                sb.append("; ");              
+            }
+            first.set(false);
 
             sb.append("stream");
             sb.append(type);
             sb.append(" ");
             sb.append(name);
-        }
+        });
 
         sb.append(") ");
     }
 
-    static void operatorNameAndKind(JSONObject op, StringBuilder sb) {
-        String name = (String) op.get("name");
+    static void operatorNameAndKind(JsonObject op, StringBuilder sb) {
+        String name = jstring(op, "name");
         name = splBasename(name);
 
         sb.append("as ");
@@ -192,7 +198,7 @@ class OperatorGenerator {
          * null || outputs.isEmpty()) { sb.append("_sink"); }
          */
 
-        String kind = (String) op.get("kind");
+        String kind = jstring(op, "kind");
         sb.append(" = ");
         sb.append(kind);
     }
