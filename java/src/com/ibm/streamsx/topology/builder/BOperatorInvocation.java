@@ -17,6 +17,7 @@ import com.ibm.streams.flow.declare.OutputPortDeclaration;
 import com.ibm.streams.operator.Attribute;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.StreamSchema;
+import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -164,18 +165,30 @@ public class BOperatorInvocation extends BOperator {
                 
         if (value instanceof String) {
             op.setStringParameter(name, (String) value);
+            if (jsonType == null)
+                jsonType = MetaType.RSTRING.name();
         } else if (value instanceof Byte) {
             op.setByteParameter(name, (Byte) value);
+            if (jsonType == null)
+                jsonType = MetaType.INT8.name();
         } else if (value instanceof Short) {
             op.setShortParameter(name, (Short) value);
+            if (jsonType == null)
+                jsonType = MetaType.INT16.name();
         } else if (value instanceof Integer) {
             op.setIntParameter(name, (Integer) value);
+            if (jsonType == null)
+                jsonType = MetaType.INT32.name();
         } else if (value instanceof Long) {
             op.setLongParameter(name, (Long) value);
+            if (jsonType == null)
+                jsonType = MetaType.INT64.name();
         } else if (value instanceof Float) {
             op.setFloatParameter(name, (Float) value);
+            jsonType = MetaType.FLOAT32.name();
         } else if (value instanceof Double) {
             op.setDoubleParameter(name, (Double) value);
+            jsonType = MetaType.FLOAT64.name();
         } else if (value instanceof Boolean) {
             op.setBooleanParameter(name, (Boolean) value);
         } else if (value instanceof BigDecimal) {
