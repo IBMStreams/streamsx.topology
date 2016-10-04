@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.objectArray;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
@@ -44,7 +45,7 @@ class OperatorGenerator {
         StringBuilder sb = new StringBuilder();
         noteAnnotations(_op, sb);
         parallelAnnotation(op, sb);
-	viewAnnotation(op, sb);
+        viewAnnotation(_op, sb);
         AutonomousRegions.autonomousAnnotation(_op, sb);
         outputClause(_op, sb);
         operatorNameAndKind(_op, sb);
@@ -97,29 +98,25 @@ class OperatorGenerator {
         });
     }
 
-    private void viewAnnotation(JSONObject op, StringBuilder sb){
-	JSONObject config = (JSONObject)op.get("config");
-	if(config == null)
-	    return;
-
-        JSONArray viewConfigs = (JSONArray) config.get("viewConfigs");
-        if (viewConfigs == null || viewConfigs.isEmpty()) {
+    private void viewAnnotation(JsonObject op, StringBuilder sb) {
+        
+        JsonObject config = jobject(op, "config");
+        if (config == null)
             return;
-        }
+        
+        objectArray(config, "viewConfigs", viewConfig -> {
 
-	for (int i = 0; i < viewConfigs.size(); i++) {
-            JSONObject viewConfig = (JSONObject) viewConfigs.get(i);
-	    String name = (String)viewConfig.get("name");
-	    String port = (String)viewConfig.get("port");
-	    Double bufferTime = ((Number)viewConfig.get("bufferTime")).doubleValue();
-	    Long sampleSize = ((Number)viewConfig.get("sampleSize")).longValue();
-	    sb.append("@view(name = \"");
-	    sb.append(splBasename(name));
-	    sb.append("\", port = " + port);
-	    sb.append(", bufferTime = " + bufferTime + ", ");
-	    sb.append("sampleSize = " + sampleSize + ", ");
-	    sb.append("activateOption = firstAccess)\n");
-	}	
+            String name = viewConfig.get("name").getAsString();
+            String port = viewConfig.get("port").getAsString();
+            Double bufferTime = viewConfig.get("bufferTime").getAsDouble();
+            Long sampleSize = viewConfig.get("sampleSize").getAsLong();
+            sb.append("@view(name = \"");
+            sb.append(splBasename(name));
+            sb.append("\", port = " + port);
+            sb.append(", bufferTime = " + bufferTime + ", ");
+            sb.append("sampleSize = " + sampleSize + ", ");
+            sb.append("activateOption = firstAccess)\n");
+        });
     }
 
     private void parallelAnnotation(JSONObject op, StringBuilder sb) {
