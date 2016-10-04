@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.net.URISyntaxException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -21,9 +19,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import com.ibm.json.java.JSONObject;
+import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
-import com.ibm.streamsx.topology.internal.streams.InvokeMakeToolkit;
 
 public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	
