@@ -99,9 +99,8 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 		paths.add(folder);
 		
 		addAllToZippedArchive(paths, zipFilePath);	
-		JSONObject jso = new OrderedJSONObject();
-		super.deleteToolkit(new File(paths.get(1).toString()), jso);
-		super.deleteToolkit(new File(paths.get(2).toString()), jso);
+		new File(paths.get(1).toString()).delete();
+		new File(paths.get(2).toString()).delete();
 		
 	    return zipFilePath;
 	}
