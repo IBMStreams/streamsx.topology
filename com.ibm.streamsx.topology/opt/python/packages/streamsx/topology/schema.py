@@ -2,14 +2,23 @@
 # Copyright IBM Corp. 2016
 import enum
 
+def _stream_schema(schema):
+    if isinstance(schema, StreamSchema):
+        return schema
+    if isinstance(schema, CommonSchema):
+        return schema
+    return StreamSchema(str(schema))
+
 class StreamSchema(object) :
     """SPL stream schema."""
 
     def __init__(self, schema):
-        self.__schema=schema.strip()
+        schema = schema.strip()
+        self.__spl_type = not schema.startswith("tuple<")
+        self.__schema=schema
 
     def schema(self):
-        return self.__schema;
+        return self.__schema
 
     def spl_json(self):
         _splj = {}
@@ -21,6 +30,8 @@ class StreamSchema(object) :
         """
         Extend a schema by another
         """
+        if self.__spl_type:
+           raise TypeError("Not supported for declared SPL types")
         base = self.schema()
         extends = schema.schema()
         new_schema = base[:-1] + ',' + extends[6:]

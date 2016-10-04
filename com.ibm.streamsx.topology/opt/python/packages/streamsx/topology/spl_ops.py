@@ -2,12 +2,13 @@
 # Copyright IBM Corp. 2016
 
 from streamsx.topology.topology import Stream
+from streamsx.topology.schema import _stream_schema
 
 def source(kind, topology, schema, params=None):
     """
     Invoke an SPL source operator with a single output port.
     """
-    return invoke(kind, topology, schemas=schema, params=params)
+    return invoke(kind, topology, schemas=_stream_schema(schema), params=params)
 
 def sink(kind, input, params=None):
     """
@@ -22,7 +23,7 @@ def map(kind, input, schema=None, params=None):
     """
     if schema is None:
         schema = input.oport.schema
-    return invoke(kind, inputs=input, schemas=schema, params=params)
+    return invoke(kind, inputs=input, schemas=_stream_schema(schema), params=params)
 
 def invoke(kind, topology=None, inputs=None, schemas=None, params=None):
     """
