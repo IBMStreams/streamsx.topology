@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
@@ -131,7 +133,7 @@ class OperatorGenerator {
                 JSONObject jo = (JSONObject) width;
                 String jsonType = (String) jo.get("type");
                 if (TYPE_SUBMISSION_PARAMETER.equals(jsonType))
-                    sb.append(stvHelper.generateCompParamName((JSONObject) jo.get("value")));
+                    sb.append(stvHelper.generateCompParamName(GraphUtilities.gson((JSONObject) jo.get("value"))));
                 else
                     throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
             }
@@ -392,7 +394,7 @@ class OperatorGenerator {
             sb.append("      ");
             sb.append(name);
             sb.append(": ");
-            parameterValue(param, sb);
+            parameterValue(GraphUtilities.gson(param), sb);
             sb.append(";\n");
         }
 
@@ -403,7 +405,7 @@ class OperatorGenerator {
             sb.append("vmArg");
             sb.append(": ");
 
-            parameterValue(tmpVMArgParam, sb);
+            parameterValue(GraphUtilities.gson(tmpVMArgParam), sb);
             sb.append(";\n");
         }
         
@@ -422,42 +424,15 @@ class OperatorGenerator {
         }
     }
 
-    // Set of "type"s where the "value" in the JSON is printed as-is.
-    private static final Set<String> PARAM_TYPES_TOSTRING = new HashSet<>();
-    static {
-        PARAM_TYPES_TOSTRING.add(JParamTypes.TYPE_ENUM);
-        PARAM_TYPES_TOSTRING.add(JParamTypes.TYPE_SPLTYPE);
-        PARAM_TYPES_TOSTRING.add(JParamTypes.TYPE_ATTRIBUTE);
-        PARAM_TYPES_TOSTRING.add(JParamTypes.TYPE_SPL_EXPRESSION);      
-    }
-
-    private void parameterValue(JSONObject param, StringBuilder sb) {
-        Object value = param.get("value");
-        Object type = param.get("type");
-        if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
-            sb.append(stvHelper.generateCompParamName((JSONObject) value));
-            return;
-        } else if (value instanceof String && !PARAM_TYPES_TOSTRING.contains(type)) {
-            SPLGenerator.stringLiteral(sb, value.toString());
-            if ("USTRING".equals(type))
-                sb.append("u");
-
-            return;
-        } else if (value instanceof JSONArray) {
-            JSONArray a = (JSONArray) value;
-            for (int i = 0; i < a.size(); i++) {
-                if (i != 0)
-                    sb.append(", ");
-                String sv = (String) a.get(i);
-                SPLGenerator.stringLiteral(sb, sv);
-            }
-            return;
-        } else if (value instanceof Number) {
-            SPLGenerator.numberLiteral(sb, (Number) value, type);
+    private void parameterValue(JsonObject param, StringBuilder sb) {
+        JsonElement value = param.get("value");
+        JsonElement type = param.get("type");
+        if (param.has("type") && TYPE_SUBMISSION_PARAMETER.equals(type.getAsString())) {
+            sb.append(stvHelper.generateCompParamName(value.getAsJsonObject()));
             return;
         }
-
-        sb.append(value);
+        
+        SPLGenerator.value(sb, param);
     }
 
     static void configClause(JSONObject graphConfig, JSONObject op,

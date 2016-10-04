@@ -13,6 +13,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
@@ -510,6 +512,19 @@ public class GraphUtilities {
             if(conn.equals(oportName)){
                 inputConns.set(inputConns.indexOf(conn), opOportName);
             }
+        }
+    }
+    
+    /**
+     * TEMP
+     * 
+     */
+    
+    static JsonObject gson(JSONObject object) {
+        try {
+            return new JsonParser().parse(object.serialize()).getAsJsonObject();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

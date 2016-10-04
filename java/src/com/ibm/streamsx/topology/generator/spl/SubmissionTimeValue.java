@@ -10,6 +10,7 @@ import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARA
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.Type.MetaType;
@@ -108,7 +109,7 @@ public class SubmissionTimeValue {
                 valuesSb.append(", ");
             }
             namesSb.append(SPLGenerator.stringLiteral(opParamName));
-            valuesSb.append("(rstring) ").append(generateCompParamName(spval));
+            valuesSb.append("(rstring) ").append(generateCompParamName(GraphUtilities.gson(spval)));
         }
 
         return new ParamsInfo(namesSb.toString(), valuesSb.toString());
@@ -260,7 +261,7 @@ public class SubmissionTimeValue {
      * @param sb
      */
     void generateMainDef(JSONObject spval, StringBuilder sb) {
-        String paramName = generateCompParamName(spval);
+        String paramName = generateCompParamName(GraphUtilities.gson(spval));
         String spName = SPLGenerator.stringLiteral((String) spval.get("name"));
         String metaType = (String) spval.get("metaType");
         String splType = MetaType.valueOf(metaType).getLanguageType();
@@ -289,7 +290,7 @@ public class SubmissionTimeValue {
      * @param sb
      */
     void generateInnerDef(JSONObject spval, StringBuilder sb) {
-        String paramName = generateCompParamName(spval);
+        String paramName = generateCompParamName(GraphUtilities.gson(spval));
         String metaType = (String) spval.get("metaType");
         String splType = MetaType.valueOf(metaType).getLanguageType();
         sb.append(String.format("expression<%s> %s", splType, paramName));
@@ -308,8 +309,8 @@ public class SubmissionTimeValue {
      * @param spval JSONObject for the submission parameter's value
      * @return the name
      */
-    String generateCompParamName(JSONObject spval) {
-        return "$" + mkOpParamName((String)spval.get("name"));
+    String generateCompParamName(JsonObject spval) {
+        return "$" + mkOpParamName(spval.get("name").getAsString());
     }
 
 }
