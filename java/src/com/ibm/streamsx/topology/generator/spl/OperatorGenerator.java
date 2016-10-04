@@ -5,9 +5,11 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.objectArray;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.stringArray;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_NAMES;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_VALUES;
@@ -44,12 +46,12 @@ class OperatorGenerator {
         JsonObject _op = GraphUtilities.gson(op);
         StringBuilder sb = new StringBuilder();
         noteAnnotations(_op, sb);
-        parallelAnnotation(op, sb);
+        parallelAnnotation(_op, sb);
         viewAnnotation(_op, sb);
         AutonomousRegions.autonomousAnnotation(_op, sb);
         outputClause(_op, sb);
         operatorNameAndKind(_op, sb);
-        inputClause(op, sb);
+        inputClause(_op, sb);
 
         sb.append("  {\n");
         windowClause(op, sb);
@@ -119,29 +121,26 @@ class OperatorGenerator {
         });
     }
 
-    private void parallelAnnotation(JSONObject op, StringBuilder sb) {
-        Boolean parallel = (Boolean) op.get("parallelOperator");
-        if (parallel != null && parallel) {
+    private void parallelAnnotation(JsonObject op, StringBuilder sb) {
+        boolean parallel = jboolean(op, "parallelOperator");
+        
+        if (parallel) {
             sb.append("@parallel(width=");
-            Object width = op.get("width");
-            if (width instanceof Integer) {
-                sb.append(Integer.toString((int) width));
-        	}
-        	else if (width instanceof Long) {        		
-            	sb.append(Integer.toString(((Long)width).intValue()));
+            JsonElement width = op.get("width");
+            if (width.isJsonPrimitive()) {
+                sb.append(width.getAsString());
             }
             else {
-                JSONObject jo = (JSONObject) width;
-                String jsonType = (String) jo.get("type");
+                JsonObject jo = width.getAsJsonObject();
+                String jsonType = jo.get("type").getAsString();
                 if (TYPE_SUBMISSION_PARAMETER.equals(jsonType))
-                    sb.append(stvHelper.generateCompParamName(GraphUtilities.gson((JSONObject) jo.get("value"))));
+                    sb.append(SubmissionTimeValue.generateCompParamName(jo.get("value").getAsJsonObject()));
                 else
                     throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
             }
-            Boolean partitioned = (Boolean) op.get("partitioned");
-            if (partitioned != null && partitioned) {
-                String parallelInputPortName = (String) op
-                        .get("parallelInputPortName");
+            boolean partitioned = jboolean(op, "partitioned");
+            if (partitioned) {
+                String parallelInputPortName = op.get("parallelInputPortName").getAsString();
                 parallelInputPortName = splBasename(parallelInputPortName);
                 sb.append(", partitionBy=[{port=" + parallelInputPortName
                         + ", attributes=[__spl_hash]}]");
@@ -208,36 +207,28 @@ class OperatorGenerator {
 
     }
 
-    static void inputClause(JSONObject op, StringBuilder sb) {
-
-        JSONArray inputs = getInputs(op);
-        if (inputs == null) {
-            sb.append("()\n");
-            return;
-        }
+    static void inputClause(JsonObject op, StringBuilder sb) {
 
         sb.append("  ( ");
-        for (int i = 0; i < inputs.size(); i++) {
-            JSONObject input = (JSONObject) inputs.get(i);
-
-            JSONArray conns = (JSONArray) input.get("connections");
-
-            if (i != 0)
+        
+        AtomicBoolean firstPort = new AtomicBoolean(true);
+        
+        objectArray(op, "inputs", input ->  {
+            
+            if (!firstPort.getAndSet(false))
                 sb.append("; ");
-
-            for (int j = 0; j < conns.size(); j++) {
-                String name = (String) conns.get(j);
-                name = splBasename(name);
-
-                if (j != 0)
+            
+            AtomicBoolean firstStream = new AtomicBoolean(true);
+            stringArray(input, "connections", name -> {
+                if (!firstStream.getAndSet(false))
                     sb.append(", ");
                 sb.append(name);
-            }
+            });
 
-            String name = (String) input.get("name");
+            String name = jstring(input, "name");
             sb.append(" as ");
             sb.append(splBasename(name));
-        }
+        });
 
         sb.append(")\n");
     }

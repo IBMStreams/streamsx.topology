@@ -309,7 +309,7 @@ public class SubmissionTimeValue {
      * @param spval JSONObject for the submission parameter's value
      * @return the name
      */
-    String generateCompParamName(JsonObject spval) {
+    static String generateCompParamName(JsonObject spval) {
         return "$" + mkOpParamName(spval.get("name").getAsString());
     }
 
