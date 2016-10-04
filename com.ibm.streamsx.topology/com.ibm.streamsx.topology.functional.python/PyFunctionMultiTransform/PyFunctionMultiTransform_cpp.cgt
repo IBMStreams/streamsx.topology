@@ -15,7 +15,9 @@
 @include "../pyspltuple.cgt"
 
 // Constructor
-MY_OPERATOR::MY_OPERATOR() : function_(NULL)
+MY_OPERATOR::MY_OPERATOR() :
+   function_(NULL),
+   pyInNames_(NULL)
 { 
   std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
   std::string streamsxDir = tkDir + "/opt/python/packages/streamsx/topology";
@@ -46,18 +48,21 @@ MY_OPERATOR::MY_OPERATOR() : function_(NULL)
  my $pywrapfunc= $pystyle . '_in__pickle_iter';
 %>
 @include "../pywrapfunction.cgt"
+
+<% if ($pystyle eq 'dict') { %>
+     pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
+               getInputPortAt(0));
+<% } %>
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-    // Finalization code goes here
-    if (function_) {
-      streamsx::topology::PyGILLock lock;
-      if (function_) {
-        Py_DECREF(function_);
-      }
-    }
+  streamsx::topology::PyGILLock lock;
+  if (function_)
+    Py_DECREF(function_);
+  if (pyInNames_)
+    Py_DECREF(pyInNames_);
 }
 
 // Notify port readiness

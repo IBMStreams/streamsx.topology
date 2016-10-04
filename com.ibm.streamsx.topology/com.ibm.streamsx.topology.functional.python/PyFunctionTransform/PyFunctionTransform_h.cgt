@@ -37,6 +37,9 @@ private:
     // and calls the application function
     // and returns a suitable value
     PyObject *function_;
+ 
+    // Names of input attributes
+    PyObject *pyInNames_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
