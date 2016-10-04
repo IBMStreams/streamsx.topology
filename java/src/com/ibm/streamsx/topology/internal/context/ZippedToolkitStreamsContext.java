@@ -99,8 +99,8 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 		paths.add(folder);
 		
 		addAllToZippedArchive(paths, zipFilePath);	
-		new File(paths.get(1).toString()).delete();
-		new File(paths.get(2).toString()).delete();
+		paths.get(1).toFile().delete();
+		paths.get(2).toFile().delete();
 		
 	    return zipFilePath;
 	}
