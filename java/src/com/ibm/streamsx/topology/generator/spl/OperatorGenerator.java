@@ -54,7 +54,7 @@ class OperatorGenerator {
         inputClause(_op, sb);
 
         sb.append("  {\n");
-        windowClause(op, sb);
+        windowClause(_op, sb);
         paramClause(graphConfig, op, sb);
         configClause(graphConfig, op, sb);
         sb.append("  }\n");
@@ -222,7 +222,7 @@ class OperatorGenerator {
             stringArray(input, "connections", name -> {
                 if (!firstStream.getAndSet(false))
                     sb.append(", ");
-                sb.append(name);
+                sb.append(splBasename(name));
             });
 
             String name = jstring(input, "name");
@@ -233,31 +233,26 @@ class OperatorGenerator {
         sb.append(")\n");
     }
 
-    static void windowClause(JSONObject op, StringBuilder sb) {
-        JSONArray inputs = getInputs(op);
-        if (inputs == null) {
-            return;
-        }
+    static void windowClause(JsonObject op, StringBuilder sb) {
 
-        boolean seenWindow = false;
-        for (int i = 0; i < inputs.size(); i++) {
-
-            JSONObject input = (JSONObject) inputs.get(i);
-            JSONObject window = (JSONObject) input.get("window");
+        AtomicBoolean firstWindow = new AtomicBoolean(true);
+        
+        objectArray(op, "inputs", input ->  {
+            
+            JsonObject window = jobject(input, "window");
             if (window == null)
-                continue;
-            String stype = (String) window.get("type");
+                return;
+            
+            String stype = jstring(window, "type");
             StreamWindow.Type type = StreamWindow.Type.valueOf(stype);
             if (type == Type.NOT_WINDOWED)
-                continue;
+                return;
 
-            if (!seenWindow) {
+            if (firstWindow.getAndSet(false))
                 sb.append("  window\n");
-                seenWindow = true;
-            }
 
             sb.append("    ");
-            sb.append(splBasename((String) input.get("name")));
+            sb.append(splBasename(jstring(input, "name")));
             sb.append(":");
             switch (type) {
             case SLIDING:
@@ -270,33 +265,32 @@ class OperatorGenerator {
                 throw new IllegalStateException("Internal error");
             }
 
-            appendWindowPolicy(window.get("evictPolicy"),
-                    window.get("evictConfig"), window.get("evictTimeUnit"), sb);
+            appendWindowPolicy(jstring(window, "evictPolicy"),
+                    window.get("evictConfig"), jstring(window, "evictTimeUnit"), sb);
 
-            Object triggerPolicy = window.get("triggerPolicy");
+            String triggerPolicy = jstring(window, "triggerPolicy");
             if (triggerPolicy != null) {
                 sb.append(", ");
-                appendWindowPolicy(triggerPolicy, window.get("triggerConfig"), window.get("triggerTimeUnit"),
+                appendWindowPolicy(triggerPolicy, window.get("triggerConfig"), jstring(window, "triggerTimeUnit"),
                         sb);
             }
 
-            Boolean partitioned = (Boolean) window.get("partitioned");
-            if (partitioned != null && partitioned) {
+            if (jboolean(window, "partitioned"))
                 sb.append(", partitioned");
-            }
+
             sb.append(";\n");
-        }
+        });
 
     }
 
-    static void appendWindowPolicy(Object policyName, Object config, Object timeUnit,
+    static void appendWindowPolicy(String policyName, JsonElement config, String timeUnit,
             StringBuilder sb) {
         StreamWindow.Policy policy = StreamWindow.Policy
                 .valueOf((String) policyName);
         switch (policy) {
         case COUNT:
             sb.append("count(");
-            sb.append(config);
+            sb.append(config.getAsInt());
             sb.append(")");
             break;
         case DELTA:
@@ -308,7 +302,7 @@ class OperatorGenerator {
         case TIME:
         {
             TimeUnit unit = TimeUnit.valueOf(timeUnit.toString());
-            Long time = (Long) config;
+            long time = config.getAsLong();
             double secs;
             switch (unit) {
             case DAYS:
