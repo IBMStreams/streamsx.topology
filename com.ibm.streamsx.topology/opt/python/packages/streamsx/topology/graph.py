@@ -9,6 +9,7 @@ import base64
 import streamsx.topology.dependency
 import streamsx.topology.param
 from streamsx.topology.schema import CommonSchema
+from streamsx.topology.schema import _stream_schema
 
 class SPLGraph(object):
 
@@ -242,7 +243,7 @@ class OPort(object):
     def __init__(self, name, operator, index, schema, width=None, partitioned=None):
         self.name = name
         self.operator = operator
-        self.schema = schema
+        self.schema = _stream_schema(schema)
         self.index = index
         self.width = width
         self.partitioned =  partitioned
