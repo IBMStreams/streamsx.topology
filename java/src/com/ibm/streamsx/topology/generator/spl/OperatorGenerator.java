@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.gson;
 import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
@@ -43,7 +44,7 @@ class OperatorGenerator {
 
     String generate(JSONObject graphConfig, JSONObject op)
             throws IOException {
-        JsonObject _op = GraphUtilities.gson(op);
+        JsonObject _op = gson(op);
         StringBuilder sb = new StringBuilder();
         noteAnnotations(_op, sb);
         parallelAnnotation(_op, sb);
@@ -425,14 +426,34 @@ class OperatorGenerator {
 
     static void configClause(JSONObject graphConfig, JSONObject op,
             StringBuilder sb) {
-        if (!JOperator.hasConfig(op))
+        
+        JsonObject _op = gson(op);
+        if (!_op.has(JOperator.CONFIG))
             return;
+        
+        JsonObject config = jobject(_op, JOperator.CONFIG);
+        
+        StringBuilder sbConfig = new StringBuilder();
 
         boolean needsConfigSection = false;
         
-        Boolean streamViewability = JOperatorConfig.getBooleanItem(op, "streamViewability");
-        needsConfigSection = streamViewability != null;
+        if (config.has("streamViewability")) {
+            sbConfig.append("    streamViewability: ");
+            sbConfig.append(jboolean(config, "streamViewability"));
+            sbConfig.append(";\n");
+        }
         
+        if (config.has("queue")) {
+            JsonObject queue = jobject(config, "queue");
+            if (!queue.entrySet().isEmpty()) {
+                sbConfig.append("    threadedPort: queue(");
+                sbConfig.append(jstring(queue, "inputPortName") + ", ");
+                sbConfig.append(jstring(queue, "congestionPolicy") + ",");
+                sbConfig.append(jstring(queue, "queueSize"));
+                sbConfig.append(");\n");
+            }
+        }
+               
         String colocationTag = null;
         String hostPool = null;
         boolean needsPlacement = false;
@@ -469,19 +490,12 @@ class OperatorGenerator {
                 hostPool = getHostPoolName(graphConfig, uniqueResourceTags);         
             }
         }
-        
-        JSONObject queue = JOperatorConfig.getJSONItem(op, "queue");
-        if (!needsConfigSection)
-            needsConfigSection = queue != null && !queue.isEmpty();
-        
-        if (needsConfigSection) {
+                
+        if (needsConfigSection || sbConfig.length() != 0) {
             sb.append("  config\n");
+            sb.append(sbConfig);
         }
-        if (streamViewability != null) {
-            sb.append("    streamViewability: ");
-            sb.append(streamViewability);
-            sb.append(";\n");
-        }
+
 
         if (needsPlacement) {
             sb.append("    placement: \n");
@@ -505,13 +519,7 @@ class OperatorGenerator {
         }
         
         
-        if(queue != null && !queue.isEmpty()){
-            sb.append("    threadedPort: queue(");
-            sb.append((String)queue.get("inputPortName") + ", ");
-            sb.append((String)queue.get("congestionPolicy") + ",");
-            sb.append(((Integer)queue.get("queueSize")).toString());
-            sb.append(");\n");
-        }
+
       
         
     }
