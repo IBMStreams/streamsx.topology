@@ -57,7 +57,7 @@ class OperatorGenerator {
         sb.append("  {\n");
         windowClause(_op, sb);
         paramClause(graphConfig, op, sb);
-        configClause(graphConfig, op, sb);
+        configClause(graphConfig, _op, sb);
         sb.append("  }\n");
 
         return sb.toString();
@@ -424,18 +424,15 @@ class OperatorGenerator {
         SPLGenerator.value(sb, param);
     }
 
-    static void configClause(JSONObject graphConfig, JSONObject op,
+    static void configClause(JSONObject graphConfig, JsonObject op,
             StringBuilder sb) {
         
-        JsonObject _op = gson(op);
-        if (!_op.has(JOperator.CONFIG))
+        if (!op.has(JOperator.CONFIG))
             return;
         
-        JsonObject config = jobject(_op, JOperator.CONFIG);
+        JsonObject config = jobject(op, JOperator.CONFIG);
         
         StringBuilder sbConfig = new StringBuilder();
-
-        boolean needsConfigSection = false;
         
         if (config.has("streamViewability")) {
             sbConfig.append("    streamViewability: ");
@@ -454,74 +451,42 @@ class OperatorGenerator {
             }
         }
                
-        String colocationTag = null;
-        String hostPool = null;
-        boolean needsPlacement = false;
-        JSONObject placement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
-        if (placement != null) {
+        if (config.has(JOperatorConfig.PLACEMENT)) {
+            JsonObject placement = jobject(config, JOperatorConfig.PLACEMENT);
+            StringBuilder sbPlacement = new StringBuilder();
+            
             // Explicit placement takes precedence.
-            colocationTag = (String) placement.get(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID);
+            String colocationTag = jstring(placement, JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID);
             if (colocationTag == null)
-                colocationTag = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
+                colocationTag = jstring(placement, JOperator.PLACEMENT_ISOLATE_REGION_ID);
             
-            if (colocationTag != null && colocationTag.isEmpty())
-                colocationTag = null;
-            
-            Set<String> uniqueResourceTags = new HashSet<>();
-
-            JSONArray resourceTags = (JSONArray) placement.get(JOperator.PLACEMENT_RESOURCE_TAGS);
-            if (resourceTags != null && resourceTags.isEmpty())
-                resourceTags = null;
-            
-            if (resourceTags != null) {
-                for (Object rto : resourceTags) {
-                    String rt = rto.toString();
-                    if (!rt.isEmpty())
-                        uniqueResourceTags.add(rt);                  
-                }
+            if (colocationTag != null && !colocationTag.isEmpty()) {
+                sbPlacement.append("      partitionColocation(");
+                SPLGenerator.stringLiteral(sbPlacement, colocationTag);
+                sbPlacement.append(")\n");
             }
             
-            needsPlacement = colocationTag != null || !uniqueResourceTags.isEmpty();
-                      
-            if (needsPlacement)
-                needsConfigSection = true;
-            
+            Set<String> uniqueResourceTags = new HashSet<>();           
+            GsonUtilities.stringArray(placement, JOperator.PLACEMENT_RESOURCE_TAGS, tag -> {if (!tag.isEmpty()) uniqueResourceTags.add(tag);} );
             if (!uniqueResourceTags.isEmpty()) {
-                hostPool = getHostPoolName(graphConfig, uniqueResourceTags);         
+                String hostPool = getHostPoolName(graphConfig, uniqueResourceTags);
+                if (sbPlacement.length() != 0)
+                    sbPlacement.append(",");
+                sbPlacement.append("      host(");
+                sbPlacement.append(hostPool);
+                sbPlacement.append(")\n");
+            }
+            
+            if (sbPlacement.length() != 0) {
+                sbConfig.append(sbPlacement);
+                sbConfig.append("    ;\n");
             }
         }
                 
-        if (needsConfigSection || sbConfig.length() != 0) {
+        if (sbConfig.length() != 0) {
             sb.append("  config\n");
             sb.append(sbConfig);
         }
-
-
-        if (needsPlacement) {
-            sb.append("    placement: \n");
-        }
-        if (colocationTag != null) {
-            
-            
-            sb.append("      partitionColocation(");
-            SPLGenerator.stringLiteral(sb, colocationTag);
-            sb.append(")\n");
-        }
-        if (hostPool != null) {
-            if (colocationTag != null)
-                sb.append(",");
-            sb.append("      host(");
-            sb.append(hostPool);
-            sb.append(")\n");
-        }
-        if (needsPlacement) {
-            sb.append("    ;\n");
-        }
-        
-        
-
-      
-        
     }
     
     /**
