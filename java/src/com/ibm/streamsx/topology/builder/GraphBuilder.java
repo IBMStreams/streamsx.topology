@@ -127,7 +127,7 @@ public class GraphBuilder extends BJSONObject {
         for (BOperator operator : operators) {
             JSONObject jop = operator.complete();
             GraphUtilities.visitOnce(visitController,
-                    Collections.singletonList(jop), graph,
+                    Collections.singleton(jop), graph,
                 new Consumer<JSONObject>() {
                     private static final long serialVersionUID = 1L;
                     @Override

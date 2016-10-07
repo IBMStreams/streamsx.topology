@@ -4,6 +4,10 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.objectArray;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.stringArray;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,8 +25,8 @@ import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
 
 public class GraphUtilities {
-    static ArrayList<JSONObject> findStarts(JSONObject graph) {
-        ArrayList<JSONObject> starts = new ArrayList<JSONObject>();
+    static Set<JSONObject> findStarts(JSONObject graph) {
+        Set<JSONObject> starts = new HashSet<>();
         JSONArray ops = (JSONArray) graph.get("operators");
         for (Object _op : ops) {
             JSONObject op = (JSONObject) _op;
@@ -38,17 +42,18 @@ public class GraphUtilities {
         return starts;
     }
 
-    static List<JSONObject> findOperatorByKind(BVirtualMarker virtualMarker,
-            JSONObject graph) {
-        List<JSONObject> kindOperators = new ArrayList<>();
-        JSONArray ops = (JSONArray) graph.get("operators");
-        for (Object _op : ops) {
-            JSONObject op = (JSONObject) _op;
-            if (virtualMarker.isThis((String) op.get("kind"))) {
+    static Set<JSONObject> findOperatorByKind(BVirtualMarker virtualMarker,
+            JSONObject _graph) {
+        
+        JsonObject graph = gson(_graph);
+        Set<JsonObject> kindOperators = new HashSet<>();
+        
+        operators(graph, op -> {
+            if (virtualMarker.isThis(jstring(op, "kind")))
                 kindOperators.add(op);
-            }
-        }
-        return kindOperators;
+        });
+
+        return backToJSON(_graph, kindOperators);
     }
 
     /**
@@ -62,13 +67,12 @@ public class GraphUtilities {
      * @param graph The graph JSONObject in which {@code visitOp} resides.
      * @return A list of all operators immediately downstream from {@code visitOp}
      */
-    static List<JSONObject> getDownstream(JSONObject visitOp,
+    static Set<JSONObject> getDownstream(JSONObject visitOp,
             JSONObject graph) {
-        List<JSONObject> uniqueChildren = new ArrayList<>();
         Set<JSONObject> children = new HashSet<>();
         JSONArray outputs = (JSONArray) visitOp.get("outputs");
         if (outputs == null || outputs.isEmpty()) {
-            return uniqueChildren;
+            return children;
         }
 
         for (Object _out : outputs) {
@@ -93,8 +97,7 @@ public class GraphUtilities {
                 }
             }
         }
-        uniqueChildren.addAll(children);
-        return uniqueChildren;
+        return children;
     }
 
     /**
@@ -108,39 +111,21 @@ public class GraphUtilities {
      * @param graph The graph JSONObject in which {@code visitOp} resides.
      * @return A list of all operators immediately upstream from {@code visitOp}
      */
-    public static List<JSONObject> getUpstream(JSONObject visitOp,
-            JSONObject graph) {
-        List<JSONObject> uniqueParents = new ArrayList<>();
-        Set<JSONObject> parents = new HashSet<>();
-        JSONArray inputs = (JSONArray) visitOp.get("inputs");
-        if (inputs == null || inputs.isEmpty()) {
-            return uniqueParents;
-        }
-        for (Object _input : inputs) {
-            JSONObject input = (JSONObject) _input;
-            JSONArray connections = (JSONArray) input.get("connections");
-            for (Object _conn : connections) {
-                String outputPort = (String) _conn;
-                // TODO: build index instead of iterating through graph each
-                // time
-                JSONArray ops = (JSONArray) graph.get("operators");
-                for (Object _op : ops) {
-                    JSONObject op = (JSONObject) _op;
-                    JSONArray outputs = (JSONArray) op.get("outputs");
-                    if (outputs != null && !outputs.isEmpty()) {
-                        for (Object _output : outputs) {
-                            JSONObject output = (JSONObject) _output;
-                            String name = (String) output.get("name");
-                            if (name.equals(outputPort)) {
-                                parents.add(op);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        uniqueParents.addAll(parents);
-        return uniqueParents;
+    public static Set<JSONObject> getUpstream(JSONObject _visitOp,
+            JSONObject _graph) {
+        Set<JsonObject> parents = new HashSet<>();
+        
+        JsonObject graph = gson(_graph);
+        JsonObject visitOp = gson(_visitOp);
+        
+        inputConnections(visitOp, outputPort -> {
+            operators(graph, op -> outputs(op, output-> {
+                if (jstring(output, "name").equals(outputPort))
+                    parents.add(op);
+            }));
+        });
+
+        return backToJSON(_graph, parents);
     }
     
     /**
@@ -178,14 +163,14 @@ public class GraphUtilities {
         removeOperators(Collections.singletonList(op), graph);
     }
 
-    static void removeOperators(List<JSONObject> operators,
+    static void removeOperators(Collection<JSONObject> operators,
             JSONObject graph) {
         for (JSONObject iso : operators) {
 
             // Get parents and children of operator
-            List<JSONObject> operatorParents = GraphUtilities.getUpstream(iso,
+            Set<JSONObject> operatorParents = GraphUtilities.getUpstream(iso,
                     graph);
-            List<JSONObject> operatorChildren = GraphUtilities.getDownstream(iso,
+            Set<JSONObject> operatorChildren = GraphUtilities.getDownstream(iso,
                     graph);
 
             
@@ -304,7 +289,7 @@ public class GraphUtilities {
 
     // Visits every node in the region defined by the boundaries, and applies
     // to it the consumer's accept() method.
-    static void visitOnce(List<JSONObject> starts,
+    static void visitOnce(Set<JSONObject> starts,
             Set<BVirtualMarker> boundaries, JSONObject graph,
             Consumer<JSONObject> consumer) {
         visitOnce(new VisitController(Direction.BOTH, boundaries),
@@ -326,7 +311,7 @@ public class GraphUtilities {
      * @param consumer
      */
     public static void visitOnce(VisitController visitController,
-            List<JSONObject> starts, JSONObject graph,
+            Set<JSONObject> starts, JSONObject graph,
             Consumer<JSONObject> consumer) {
         Set<JSONObject> visited = new HashSet<>();
         List<JSONObject> unvisited = new ArrayList<>();
@@ -365,8 +350,8 @@ public class GraphUtilities {
         Direction direction = visitController.direction();
         Set<BVirtualMarker> boundaries = visitController.markerBoundaries();
         
-        List<JSONObject> parents = GraphUtilities.getUpstream(op, graph);
-        List<JSONObject> children = GraphUtilities.getDownstream(op, graph);
+        Set<JSONObject> parents = GraphUtilities.getUpstream(op, graph);
+        Set<JSONObject> children = GraphUtilities.getDownstream(op, graph);
         removeVisited(parents, visited);
         removeVisited(children, visited);
 
@@ -448,8 +433,7 @@ public class GraphUtilities {
     }  
     
     static void addBefore(JSONObject op, JSONObject addOp, JSONObject graph){
-        List<JSONObject> parents = getUpstream(op, graph);
-        for(JSONObject parent : (Collection<JSONObject>)parents){
+        for(JSONObject parent : getUpstream(op, graph)){
             addBetween(parent, op, addOp);
         }       
     }
@@ -516,6 +500,31 @@ public class GraphUtilities {
     }
     
     /**
+     * Perform an action for every operator in the graph
+     */
+    static void operators(JsonObject graph, Consumer<JsonObject> action) {
+        objectArray(graph, "operators", action);
+    }
+    
+    /**
+     * Perform an action for every input for an operator
+     */
+    static void inputs(JsonObject op, Consumer<JsonObject> action) {
+        objectArray(op, "inputs", action);
+    }
+    
+    static void inputConnections(JsonObject op, Consumer<String> action) {
+        inputs(op, input -> stringArray(input, "connections", action));
+    }
+    
+    /**
+     * Perform an action for every output for an operator
+     */
+    static void outputs(JsonObject op, Consumer<JsonObject> action) {
+        objectArray(op, "outputs", action);
+    }
+    
+    /**
      * TEMP
      * 
      */
@@ -526,5 +535,22 @@ public class GraphUtilities {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    static Set<JSONObject> backToJSON(JSONObject graph, Set<JsonObject> ops) {
+        Set<JSONObject> _ops = new HashSet<>();
+        Set<String> names = new HashSet<>();
+        for (JsonObject op : ops) {
+            names.add(GsonUtilities.jstring(op, "name"));
+        }
+        
+        JSONArray opsa = (JSONArray) graph.get("operators");
+        for (Object opo : opsa) {
+            JSONObject op = (JSONObject) opo;
+            if (names.contains(op.get("name")))
+                _ops.add(op);          
+        }
+        
+        return _ops;
     }
 }

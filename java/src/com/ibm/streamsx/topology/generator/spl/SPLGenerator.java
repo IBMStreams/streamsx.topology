@@ -46,7 +46,7 @@ public class SPLGenerator {
         comp.put("parameters", graph.get("parameters"));
         comp.put("__spl_mainComposite", true);
 
-        ArrayList<JSONObject> starts = GraphUtilities.findStarts(graph);
+        Set<JSONObject> starts = GraphUtilities.findStarts(graph);
         separateIntoComposites(starts, comp, graph);
         StringBuilder sb = new StringBuilder();
         generateGraph(graph, sb);
@@ -231,7 +231,7 @@ public class SPLGenerator {
      *            Necessary to pass it to the GraphUtilities.getChildren
      *            function.
      */
-    JSONObject separateIntoComposites(List<JSONObject> starts,
+    JSONObject separateIntoComposites(Set<JSONObject> starts,
             JSONObject comp, JSONObject graph) {
         // Contains all ops which have been reached by graph traversal,
         // regardless of whether they are 'special' operators, such as the ones
@@ -266,7 +266,7 @@ public class SPLGenerator {
             // If the operator is not a special operator, add it to the
             // visited list.
             if (!isParallelStart(visitOp) && !isParallelEnd(visitOp)) {
-                List<JSONObject> children = GraphUtilities.getDownstream(
+                Set<JSONObject> children = GraphUtilities.getDownstream(
                         visitOp, graph);
                 unvisited.addAll(children);
                 visited.add(visitOp);
@@ -330,7 +330,7 @@ public class SPLGenerator {
 
                 // Get the start operators in the parallel region -- the ones
                 // immediately downstream from the $Parallel operator
-                List<JSONObject> parallelStarts = GraphUtilities
+                Set<JSONObject> parallelStarts = GraphUtilities
                         .getDownstream(visitOp, graph);
 
                 // Once you have the start operators, recursively call the
@@ -358,7 +358,7 @@ public class SPLGenerator {
                 }
 
                 if (parallelEnd != null) {
-                    List<JSONObject> children = GraphUtilities
+                    Set<JSONObject> children = GraphUtilities
                             .getDownstream(parallelEnd, graph);
                     unvisited.addAll(children);
                     compOperator.put("outputs", parallelEnd.get("outputs"));
@@ -368,7 +368,7 @@ public class SPLGenerator {
                     // parallel composite.
                     JSONObject paraEndIn = (JSONObject)((JSONArray)parallelEnd.get("inputs")).get(0);
                     String parallelEndInputPortName = (String)(paraEndIn.get("name"));
-                    List<JSONObject> parallelOutParents = GraphUtilities.getUpstream(parallelEnd, graph);
+                    Set<JSONObject> parallelOutParents = GraphUtilities.getUpstream(parallelEnd, graph);
                     for(JSONObject end : parallelOutParents){
 			if(((String)end.get("kind")).equals("com.ibm.streamsx.topology.functional.java::HashAdder")){
 			    String endType = (String)((JSONObject)((JSONArray)end.get("outputs")).get(0)).get("type");

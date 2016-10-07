@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.generator.spl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +37,7 @@ class PEPlacement {
     }
     
     @SuppressWarnings("serial")
-    private void assignIsolateRegionIds(JSONObject isolate, List<JSONObject> starts,
+    private void assignIsolateRegionIds(JSONObject isolate, Set<JSONObject> starts,
             JSONObject graph) {
 
         final String isolationRegionId = newIsolateRegionId();
@@ -73,9 +74,9 @@ class PEPlacement {
      */
     @SuppressWarnings("serial")
     private void checkValidColocationRegion(JSONObject isolate, JSONObject graph) {
-        final List<JSONObject> isolateChildren = GraphUtilities.getDownstream(
+        final Set<JSONObject> isolateChildren = GraphUtilities.getDownstream(
                 isolate, graph);
-        List<JSONObject> isoParents = GraphUtilities.getUpstream(isolate, graph);
+        Set<JSONObject> isoParents = GraphUtilities.getUpstream(isolate, graph);
 
         assertNotIsolated(isoParents);
 
@@ -97,7 +98,7 @@ class PEPlacement {
 
     void tagIsolationRegions(JSONObject graph) {
         // Check whether graph is valid for colocations
-        List<JSONObject> isolateOperators = GraphUtilities.findOperatorByKind(
+        Set<JSONObject> isolateOperators = GraphUtilities.findOperatorByKind(
                 BVirtualMarker.ISOLATE, graph);
         
         for (JSONObject jso : isolateOperators) {
@@ -118,7 +119,7 @@ class PEPlacement {
     
     @SuppressWarnings("serial")
     private void tagIslandIsolatedRegions(JSONObject graph){
-        List<JSONObject> starts = GraphUtilities.findStarts(graph);   
+        Set<JSONObject> starts = GraphUtilities.findStarts(graph);   
         
         for(JSONObject start : starts){
             final String colocationTag = newIsolateRegionId();
@@ -130,8 +131,7 @@ class PEPlacement {
                 continue;
             }
             
-            List<JSONObject> startList = new ArrayList<>();
-            startList.add(start);
+            Set<JSONObject> startList = Collections.singleton(start);
             
             Set<BVirtualMarker> boundaries = EnumSet.of(BVirtualMarker.ISOLATE);
             
@@ -160,9 +160,9 @@ class PEPlacement {
     }
     
     void tagLowLatencyRegions(JSONObject graph) {
-        List<JSONObject> lowLatencyStartOperators = GraphUtilities
+        Set<JSONObject> lowLatencyStartOperators = GraphUtilities
                 .findOperatorByKind(BVirtualMarker.LOW_LATENCY, graph);
-        List<JSONObject> lowLatencyEndOperators = GraphUtilities
+        Set<JSONObject> lowLatencyEndOperators = GraphUtilities
                 .findOperatorByKind(BVirtualMarker.END_LOW_LATENCY, graph);
 
         // Assign isolation regions their lowLatency tag
@@ -180,7 +180,7 @@ class PEPlacement {
 
     @SuppressWarnings("serial")
     private void assignLowLatency(JSONObject llStart,
-            List<JSONObject> llStartChildren, JSONObject graph) {
+            Set<JSONObject> llStartChildren, JSONObject graph) {
 
         final String lowLatencyTag = "LowLatencyRegion"
                 + Integer.toString(lowLatencyRegionCount++);

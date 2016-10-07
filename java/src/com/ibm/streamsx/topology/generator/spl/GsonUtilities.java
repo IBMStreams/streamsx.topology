@@ -69,7 +69,7 @@ public class GsonUtilities {
         return object == null || object.isJsonNull() || object.entrySet().isEmpty();
     }
     static boolean jisEmpty(JsonArray array) {
-        return array == null || array.isJsonNull() || array.size() == 0;
+        return array == null || array.size() == 0;
     }
     
     static void gclear(JsonArray array) {

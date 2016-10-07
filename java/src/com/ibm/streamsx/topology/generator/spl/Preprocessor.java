@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.generator.spl;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.JSONArray;
@@ -48,13 +49,13 @@ class Preprocessor {
     }
        
     private void removeUnionOperators(){
-        List<JSONObject> unionOps = GraphUtilities.findOperatorByKind(BVirtualMarker.UNION, graph);
+        Set<JSONObject> unionOps = GraphUtilities.findOperatorByKind(BVirtualMarker.UNION, graph);
         GraphUtilities.removeOperators(unionOps, graph);
     }
     
     @SuppressWarnings("serial")
     private void relocateHashAdders(){
-        final List<JSONObject> hashAdders = new ArrayList<>();
+        final Set<JSONObject> hashAdders = new HashSet<>();
         // Firstly, find each hashAdder
         GraphUtilities.visitOnce(GraphUtilities.findStarts(graph), new HashSet<BVirtualMarker>(), graph, new Consumer<JSONObject>(){
             public void accept(JSONObject op) {
@@ -71,10 +72,10 @@ class Preprocessor {
         
     }
     
-    private void assertValidParallelUnions(List<JSONObject> hashAdders) {   
+    private void assertValidParallelUnions(Set<JSONObject> hashAdders) {   
         for(JSONObject hashAdder : hashAdders){
-            List<JSONObject> hashAdderParents = GraphUtilities.getUpstream(hashAdder, graph);
-            List<JSONObject> tmp = new ArrayList<>();
+            Set<JSONObject> hashAdderParents = GraphUtilities.getUpstream(hashAdder, graph);
+            Set<JSONObject> tmp = new HashSet<>();
             
             // Add all $Unparallel$ parents of hashAdder to list
             for(JSONObject hashAdderParent : hashAdderParents){
@@ -88,7 +89,7 @@ class Preprocessor {
             // operator are all of the same routing type.
             for(JSONObject hashAdderParent : hashAdderParents){
                 String lastRoutingType = null;
-                List<JSONObject> unparallelChildren = GraphUtilities.getDownstream(hashAdderParent, graph);
+                Set<JSONObject> unparallelChildren = GraphUtilities.getDownstream(hashAdderParent, graph);
                 for(JSONObject unparallelChild : unparallelChildren){
                     if(((String)unparallelChild.get("kind")).equals("com.ibm.streamsx.topology.functional.java::HashAdder")
 		       || ((String)unparallelChild.get("kind")).equals(BVirtualMarker.PARALLEL.kind())){
@@ -110,14 +111,14 @@ class Preprocessor {
 
         // The hashremover object
         // hashAdder -> $Parallel$ -> $Isolate -> hashremover
-        JSONObject hashRemover = GraphUtilities.getDownstream(hashAdder, graph).get(0);
-        hashRemover = GraphUtilities.getDownstream(hashRemover, graph).get(0);
-        hashRemover = GraphUtilities.getDownstream(hashRemover, graph).get(0);
+        JSONObject hashRemover = GraphUtilities.getDownstream(hashAdder, graph).iterator().next();
+        hashRemover = GraphUtilities.getDownstream(hashRemover, graph).iterator().next();
+        hashRemover = GraphUtilities.getDownstream(hashRemover, graph).iterator().next();
         
-        List<JSONObject> children = GraphUtilities.getDownstream(hashAdder, graph);
-        List<JSONObject> parents = GraphUtilities.getUpstream(hashAdder, graph);
+        Set<JSONObject> children = GraphUtilities.getDownstream(hashAdder, graph);
+        Set<JSONObject> parents = GraphUtilities.getUpstream(hashAdder, graph);
         
-        JSONObject parallelStart = children.get(0);
+        JSONObject parallelStart = children.iterator().next();
         
         String inputPortName = GraphUtilities.getInputPortName(hashAdder, 0);
         String parallelInputPortName = GraphUtilities.getInputPortName(parallelStart, 0);
@@ -129,9 +130,9 @@ class Preprocessor {
         // the unparallel. If it has, remove it.
         for(JSONObject parent : parents){
             if(((String)parent.get("kind")).equals(BVirtualMarker.END_PARALLEL.kind())){
-                JSONObject upstreamOfUnparallelOp = GraphUtilities.getUpstream(parent, graph).get(0);
+                JSONObject upstreamOfUnparallelOp = GraphUtilities.getUpstream(parent, graph).iterator().next();
 		// Need to jump over the auto-inserted $isolate operator
-		upstreamOfUnparallelOp = GraphUtilities.getUpstream(upstreamOfUnparallelOp, graph).get(0);
+		upstreamOfUnparallelOp = GraphUtilities.getUpstream(upstreamOfUnparallelOp, graph).iterator().next();
                 if(!((String)upstreamOfUnparallelOp.get("kind")).equals("com.ibm.streamsx.topology.functional.java::HashAdder")){
                     if(!unparallelParents.contains(parent)){
                         unparallelParents.add(parent);
@@ -151,7 +152,7 @@ class Preprocessor {
             // Add hashadder before unparallel
             JSONObject hashAdderCopy = GraphUtilities.copyOperatorNewName(hashAdder, 
                     ((String)hashAdder.get("name")) +"_"+Integer.toString(numHashAdderCopies++));
-	    JSONObject isolateOp = GraphUtilities.getUpstream(unparallelParent, graph).get(0);
+	    JSONObject isolateOp = GraphUtilities.getUpstream(unparallelParent, graph).iterator().next();
             GraphUtilities.addBefore(isolateOp, hashAdderCopy, graph);
 	    ((JSONArray)graph.get("operators")).add(hashAdderCopy);
         }
@@ -167,7 +168,7 @@ class Preprocessor {
         // Get non-parallel, non hashremover children of unparallel regions and add 
         // a hashRemover between each.
         for(JSONObject unparallelParent : unparallelParents){
-            List<JSONObject> unparallelParentChildren = GraphUtilities.getDownstream(unparallelParent, graph);
+            Set<JSONObject> unparallelParentChildren = GraphUtilities.getDownstream(unparallelParent, graph);
             for(JSONObject unparallelParentChild : unparallelParentChildren){
                 if(!((String)unparallelParentChild.get("kind")).equals("com.ibm.streamsx.topology.functional.java::HashRemover")
 		    && !((String)unparallelParentChild.get("kind")).equals("com.ibm.streamsx.topology.functional.java::HashAdder")

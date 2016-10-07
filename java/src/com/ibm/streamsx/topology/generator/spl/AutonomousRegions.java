@@ -1,6 +1,9 @@
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
+
 import java.util.List;
+import java.util.Set;
 
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONObject;
@@ -24,12 +27,11 @@ class AutonomousRegions {
 	 */
     static void preprocessAutonomousRegions(JSONObject graph) {
 
-        List<JSONObject> autonomousOperators = GraphUtilities.findOperatorByKind(
+        Set<JSONObject> autonomousOperators = GraphUtilities.findOperatorByKind(
                 BVirtualMarker.AUTONOMOUS, graph);
 
         for (JSONObject autonomous : autonomousOperators) {
-        	List<JSONObject> startAutonomous = GraphUtilities.getDownstream(autonomous, graph);
-        	for (JSONObject sa : startAutonomous) {
+        	for (JSONObject sa : getDownstream(autonomous, graph)) {
         		if (!sa.containsKey(AUTONOMOUS))
         		    sa.put(AUTONOMOUS, Boolean.TRUE);
         	}
