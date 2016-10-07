@@ -342,13 +342,13 @@ class OperatorGenerator {
     private void paramClause(JsonObject graphConfig, JsonObject op,
             StringBuilder sb) {
         
-        final JsonArray fullVmArgs = new JsonArray();
-        objectArray(graphConfig, ContextProperties.VMARGS, v -> fullVmArgs.add(v));
-        boolean hasVMArgs = !GsonUtilities.jisEmpty(fullVmArgs);
 
         // VMArgs only apply to Java SPL operators.
         boolean isJavaOp = JOperator.LANGUAGE_JAVA.equals(jstring(op, JOperator.LANGUAGE));
-        hasVMArgs &= isJavaOp;
+
+        JsonArray vmArgs = null;
+        if (isJavaOp && graphConfig.has(ContextProperties.VMARGS))
+            vmArgs = GsonUtilities.array(graphConfig, ContextProperties.VMARGS);
 
         // determine if we need to inject submission param names and values info. 
         boolean addSPInfo = false;
@@ -360,22 +360,24 @@ class OperatorGenerator {
         }
         
         JsonObject params = jobject(op, "parameters");
-        if (!hasVMArgs && GsonUtilities.jisEmpty(params)
+        if (vmArgs == null && GsonUtilities.jisEmpty(params)
             && !addSPInfo) {
             return;
         }
 
-        sb.append("    param\n");
-        
+        sb.append("    param\n");       
         
         for (Entry<String, JsonElement> on : params.entrySet()) {
             String name = on.getKey();
             JsonObject param = on.getValue().getAsJsonObject();
             if ("vmArg".equals(name)) {
-                GsonUtilities.gclear(fullVmArgs);
-                objectArray(param, "value", v -> fullVmArgs.add(v));
-                objectArray(graphConfig, ContextProperties.VMARGS, v -> fullVmArgs.add(v));               
-
+                JsonArray fullVmArgs = new JsonArray();
+                fullVmArgs.addAll(GsonUtilities.array(param, "value"));
+                if (vmArgs != null)
+                    fullVmArgs.addAll(vmArgs);
+                //stringArray(param, "value", v -> fullVmArgs.);
+                // objectArray(graphConfig, ContextProperties.VMARGS, v -> fullVmArgs.add(v));  
+                vmArgs = fullVmArgs;
                 continue;
             }
             sb.append("      ");
@@ -385,9 +387,10 @@ class OperatorGenerator {
             sb.append(";\n");
         }
 
-        if (GsonUtilities.jisEmpty(fullVmArgs)) {
+        if (vmArgs != null) {
             JsonObject tmpVMArgParam = new JsonObject();
-            tmpVMArgParam.add("value", fullVmArgs);
+            tmpVMArgParam.add("value", vmArgs);
+            System.err.println("TEMP:" + tmpVMArgParam);
             sb.append("      ");
             sb.append("vmArg");
             sb.append(": ");
@@ -476,6 +479,7 @@ class OperatorGenerator {
             }
             
             if (sbPlacement.length() != 0) {
+                sbConfig.append("   placement: ");
                 sbConfig.append(sbPlacement);
                 sbConfig.append("    ;\n");
             }
