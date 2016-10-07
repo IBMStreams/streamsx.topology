@@ -18,6 +18,7 @@ import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParame
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -56,7 +57,7 @@ class OperatorGenerator {
 
         sb.append("  {\n");
         windowClause(_op, sb);
-        paramClause(graphConfig, op, sb);
+        paramClause(GraphUtilities.gson(graphConfig), _op, sb);
         configClause(graphConfig, _op, sb);
         sb.append("  }\n");
 
@@ -338,15 +339,15 @@ class OperatorGenerator {
         }
     }
 
-    private void paramClause(JSONObject graphConfig, JSONObject op,
+    private void paramClause(JsonObject graphConfig, JsonObject op,
             StringBuilder sb) {
-
-        JSONArray vmArgs = (JSONArray) graphConfig
-                .get(ContextProperties.VMARGS);
-        boolean hasVMArgs = vmArgs != null && !vmArgs.isEmpty();
+        
+        final JsonArray fullVmArgs = new JsonArray();
+        objectArray(graphConfig, ContextProperties.VMARGS, v -> fullVmArgs.add(v));
+        boolean hasVMArgs = !GsonUtilities.jisEmpty(fullVmArgs);
 
         // VMArgs only apply to Java SPL operators.
-        boolean isJavaOp = JOperator.LANGUAGE_JAVA.equals(op.get(JOperator.LANGUAGE));
+        boolean isJavaOp = JOperator.LANGUAGE_JAVA.equals(jstring(op, JOperator.LANGUAGE));
         hasVMArgs &= isJavaOp;
 
         // determine if we need to inject submission param names and values info. 
@@ -354,47 +355,44 @@ class OperatorGenerator {
         ParamsInfo stvOpParamInfo = stvHelper.getSplInfo();
         if (stvOpParamInfo != null) {
             Map<String,JSONObject> functionalOps = stvHelper.getFunctionalOps();
-            if (functionalOps.containsKey((String) op.get("name")))
+            if (functionalOps.containsKey(op.get("name").getAsString()))
                 addSPInfo = true;
         }
         
-        JSONObject params = (JSONObject) op.get("parameters");
-        if (!hasVMArgs && (params == null || params.isEmpty())
+        JsonObject params = jobject(op, "parameters");
+        if (!hasVMArgs && GsonUtilities.jisEmpty(params)
             && !addSPInfo) {
             return;
         }
 
         sb.append("    param\n");
+        
+        
+        for (Entry<String, JsonElement> on : params.entrySet()) {
+            String name = on.getKey();
+            JsonObject param = on.getValue().getAsJsonObject();
+            if ("vmArg".equals(name)) {
+                GsonUtilities.gclear(fullVmArgs);
+                objectArray(param, "value", v -> fullVmArgs.add(v));
+                objectArray(graphConfig, ContextProperties.VMARGS, v -> fullVmArgs.add(v));               
 
-        for (Object on : params.keySet()) {
-            String name = (String) on;
-            JSONObject param = (JSONObject) params.get(name);
-            if (hasVMArgs && "vmArg".equals(name)) {
-                JSONArray ja = new JSONArray();
-                ja.addAll(vmArgs);
-                vmArgs = ja;
-                Object value = param.get("value");
-                if (value instanceof JSONArray)
-                    vmArgs.addAll((JSONArray) value);
-                else
-                    vmArgs.add(value);
                 continue;
             }
             sb.append("      ");
             sb.append(name);
             sb.append(": ");
-            parameterValue(GraphUtilities.gson(param), sb);
+            parameterValue(param, sb);
             sb.append(";\n");
         }
 
-        if (hasVMArgs) {
-            JSONObject tmpVMArgParam = new JSONObject();
-            tmpVMArgParam.put("value", vmArgs);
+        if (GsonUtilities.jisEmpty(fullVmArgs)) {
+            JsonObject tmpVMArgParam = new JsonObject();
+            tmpVMArgParam.add("value", fullVmArgs);
             sb.append("      ");
             sb.append("vmArg");
             sb.append(": ");
 
-            parameterValue(GraphUtilities.gson(tmpVMArgParam), sb);
+            parameterValue(tmpVMArgParam, sb);
             sb.append(";\n");
         }
         
