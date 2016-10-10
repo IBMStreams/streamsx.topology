@@ -14,6 +14,7 @@ import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
@@ -85,10 +86,10 @@ public class SubmissionParameterManager {
     
     /** The name of the functional operator's actual SPL parameter
      * for the submission parameters names */
-    public static final String NAME_SUBMISSION_PARAM_NAMES = "submissionParamNames";
+    public static final String NAME_SUBMISSION_PARAM_NAMES = FunctionalOpProperties.NAME_SUBMISSION_PARAM_NAMES;
     /** The name of the functional operator's actual SPL parameter
      * for the submission parameters values */
-    public static final String NAME_SUBMISSION_PARAM_VALUES = "submissionParamValues";
+    public static final String NAME_SUBMISSION_PARAM_VALUES = FunctionalOpProperties.NAME_SUBMISSION_PARAM_VALUES;
     
     /**
      * Initialize submission parameter value information

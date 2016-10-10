@@ -4,8 +4,6 @@
  */
 package com.ibm.streamsx.topology.context;
 
-import com.ibm.streamsx.topology.Topology;
-
 /**
  * Properties that can be specified when submitting the topology to a context.
  * @see StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)

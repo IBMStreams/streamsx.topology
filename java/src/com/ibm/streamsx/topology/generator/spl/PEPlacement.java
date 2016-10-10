@@ -4,6 +4,10 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_ISOLATE_REGION_ID;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_LOW_LATENCY_REGION_ID;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.nestedObjectCreate;
 
@@ -16,8 +20,6 @@ import java.util.Set;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
-import com.ibm.streamsx.topology.builder.JOperator;
-import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.function.Consumer;
 
 class PEPlacement {
@@ -27,16 +29,16 @@ class PEPlacement {
     
     private void setIsolateRegionId(JsonObject op, String isolationRegionId) {
        
-        JsonObject placement = nestedObjectCreate(op, JOperator.CONFIG, JOperatorConfig.PLACEMENT);
+        JsonObject placement = nestedObjectCreate(op, CONFIG, PLACEMENT);
 
         // If the region has already been assigned a PLACEMENT_ISOLATE_REGION_ID
         // tag, simply return.
-        String id = jstring(placement, JOperator.PLACEMENT_ISOLATE_REGION_ID);
+        String id = jstring(placement, PLACEMENT_ISOLATE_REGION_ID);
         if (id != null && !id.isEmpty()) {
             return;
         }
         
-        placement.addProperty(JOperator.PLACEMENT_ISOLATE_REGION_ID, isolationRegionId);
+        placement.addProperty(PLACEMENT_ISOLATE_REGION_ID, isolationRegionId);
     }
     
     @SuppressWarnings("serial")
@@ -127,9 +129,9 @@ class PEPlacement {
         for(JsonObject start : starts){
             final String colocationTag = newIsolateRegionId();
             
-            JsonObject placement = nestedObjectCreate(start, JOperator.CONFIG, JOperatorConfig.PLACEMENT);
+            JsonObject placement = nestedObjectCreate(start, CONFIG, PLACEMENT);
                      
-            String regionTag = jstring(placement, JOperator.PLACEMENT_ISOLATE_REGION_ID);         
+            String regionTag = jstring(placement, PLACEMENT_ISOLATE_REGION_ID);         
             if (regionTag != null && !regionTag.isEmpty()) {
                 continue;
             }
@@ -197,12 +199,12 @@ class PEPlacement {
                     public void accept(JsonObject op) {
                         // If the region has already been assigned a
                         // lowLatency tag, simply return.
-                        JsonObject placement = nestedObjectCreate(op, JOperator.CONFIG, JOperatorConfig.PLACEMENT);
-                        String regionTag = jstring(placement, JOperator.PLACEMENT_LOW_LATENCY_REGION_ID);
+                        JsonObject placement = nestedObjectCreate(op, CONFIG, PLACEMENT);
+                        String regionTag = jstring(placement, PLACEMENT_LOW_LATENCY_REGION_ID);
                         if (regionTag != null && !regionTag.isEmpty()) {
                             return;
                         }
-                        placement.addProperty(JOperator.PLACEMENT_LOW_LATENCY_REGION_ID, lowLatencyTag);
+                        placement.addProperty(PLACEMENT_LOW_LATENCY_REGION_ID, lowLatencyTag);
                     }
                 });
 

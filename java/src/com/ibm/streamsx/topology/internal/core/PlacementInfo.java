@@ -4,19 +4,17 @@
 */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.ISOLATE;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
-
-import static com.ibm.streamsx.topology.builder.BVirtualMarker.ISOLATE;
-import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.gson;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
@@ -28,9 +26,7 @@ import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
 
 /**
  * Manages fusing of Placeables. 

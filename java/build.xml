@@ -31,12 +31,13 @@
        to allow local generation of SPL code and submission to
        a build farm.
    -->
+  <property name="cisxt" value="com/ibm/streamsx/topology"/>
   <target name="compile.pure" depends="init">
     <javac debug="true" includeantruntime="no"
 	   srcdir="${src}" 
 	   destdir="${classes}"
 	   classpathref="compile.pure.classpath"
-	   includes="com/ibm/streamsx/topology/function/*.java com/ibm/streamsx/topology/internal/gson/*.java"
+	   includes="${cisxt}/function/*.java ${cisxt}/internal/gson/*.java ${cisxt}/generator/**"
     />   
   </target>
 

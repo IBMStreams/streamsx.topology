@@ -16,9 +16,8 @@ import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.builder.JOperator;
-import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 
 class ThreadingModel {
     
@@ -63,12 +62,12 @@ class ThreadingModel {
                 // remove anything from the operator's params.
                 functional = jboolean(queue, "functional");
 
-                JsonObject placement = jobject(op, JOperatorConfig.PLACEMENT);
+                JsonObject placement = jobject(op, OpProperties.PLACEMENT);
                 
                 // See if operator is in a lowLatency region
                 String regionTag = null;
                 if (placement != null) {
-                    regionTag = jstring(placement, JOperator.PLACEMENT_LOW_LATENCY_REGION_ID);
+                    regionTag = jstring(placement, OpProperties.PLACEMENT_LOW_LATENCY_REGION_ID);
                 }
                 if (regionTag != null && !regionTag.isEmpty()) {
                     regionTagExists = true;
@@ -79,14 +78,14 @@ class ThreadingModel {
 
                 String colocTag = null;
                 if (placement != null) {
-                    colocTag = jstring(placement, JOperator.PLACEMENT_ISOLATE_REGION_ID);
+                    colocTag = jstring(placement, OpProperties.PLACEMENT_ISOLATE_REGION_ID);
                 }
 
                 for(JsonObject parent : getUpstream(op, graph)){
-                    JsonObject parentPlacement = nestedObject(parent, JOperator.CONFIG, JOperatorConfig.PLACEMENT);
+                    JsonObject parentPlacement = nestedObject(parent, OpProperties.CONFIG, OpProperties.PLACEMENT);
                     String parentColocTag = null;
                     if (parentPlacement != null)
-                        parentColocTag = jstring(parentPlacement, JOperator.PLACEMENT_ISOLATE_REGION_ID);
+                        parentColocTag = jstring(parentPlacement, OpProperties.PLACEMENT_ISOLATE_REGION_ID);
                     // Test whether colocation tags are different. If they are,
                     // don't insert a threaded port.
                     if(!colocTag.equals(parentColocTag)){
@@ -111,7 +110,7 @@ class ThreadingModel {
                 // Add to SPL operator config if necessary
                 if(!functional && 
                         !(differentColocationThanParent || regionTagExists)){
-                    JsonObject newQueue = nestedObjectCreate(op, JOperator.CONFIG, "queue");
+                    JsonObject newQueue = nestedObjectCreate(op, OpProperties.CONFIG, "queue");
                     newQueue.addProperty("queueSize", new Integer(100));
                     newQueue.addProperty("inputPortName", input.get("name").getAsString());
                     newQueue.addProperty("congestionPolicy", "Sys.Wait");

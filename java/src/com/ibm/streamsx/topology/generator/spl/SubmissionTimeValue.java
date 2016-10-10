@@ -4,11 +4,11 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
-import static com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor.FUNCTIONAL_LOGIC_PARAM;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties.FUNCTIONAL_LOGIC_PARAM;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
@@ -269,7 +268,7 @@ public class SubmissionTimeValue {
         String paramName = generateCompParamName(spval);
         String spName = SPLGenerator.stringLiteral(jstring(spval, "name"));
         String metaType = jstring(spval, "metaType");
-        String splType = MetaType.valueOf(metaType).getLanguageType();
+        String splType = Types.metaTypeToSPL(metaType);
         
         sb.append(String.format("expression<%s> %s : ", splType, paramName));
         if (!spval.has("defaultValue")) {
@@ -306,7 +305,7 @@ public class SubmissionTimeValue {
     void generateInnerDef(JsonObject spval, StringBuilder sb) {
         String paramName = generateCompParamName(spval);
         String metaType = jstring(spval, "metaType");
-        String splType = MetaType.valueOf(metaType).getLanguageType();
+        String splType = Types.metaTypeToSPL(metaType);
         sb.append(String.format("expression<%s> %s", splType, paramName));
     }
     

@@ -5,9 +5,15 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_COUNT;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_DELTA;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_NONE;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_PUNCTUATION;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_TIME;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_NOT_WINDOWED;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_SLIDING;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_TUMBLING;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
-import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_NAMES;
-import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_VALUES;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
@@ -27,11 +33,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.streams.operator.window.StreamWindow;
-import com.ibm.streams.operator.window.StreamWindow.Type;
-import com.ibm.streamsx.topology.builder.JOperator;
-import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
@@ -249,9 +253,8 @@ class OperatorGenerator {
             if (window == null)
                 return;
             
-            String stype = jstring(window, "type");
-            StreamWindow.Type type = StreamWindow.Type.valueOf(stype);
-            if (type == Type.NOT_WINDOWED)
+            String type = jstring(window, "type");
+            if (TYPE_NOT_WINDOWED.equals(type))
                 return;
 
             if (firstWindow.getAndSet(false))
@@ -261,10 +264,10 @@ class OperatorGenerator {
             sb.append(splBasename(jstring(input, "name")));
             sb.append(":");
             switch (type) {
-            case SLIDING:
+            case TYPE_SLIDING:
                 sb.append("sliding,");
                 break;
-            case TUMBLING:
+            case TYPE_TUMBLING:
                 sb.append("tumbing,");
                 break;
             default:
@@ -291,21 +294,19 @@ class OperatorGenerator {
 
     static void appendWindowPolicy(String policyName, JsonElement config, String timeUnit,
             StringBuilder sb) {
-        StreamWindow.Policy policy = StreamWindow.Policy
-                .valueOf((String) policyName);
-        switch (policy) {
-        case COUNT:
+        switch (policyName) {
+        case POLICY_COUNT:
             sb.append("count(");
             sb.append(config.getAsInt());
             sb.append(")");
             break;
-        case DELTA:
+        case POLICY_DELTA:
             break;
-        case NONE:
+        case POLICY_NONE:
             break;
-        case PUNCTUATION:
+        case POLICY_PUNCTUATION:
             break;
-        case TIME:
+        case POLICY_TIME:
         {
             TimeUnit unit = TimeUnit.valueOf(timeUnit.toString());
             long time = config.getAsLong();
@@ -348,7 +349,7 @@ class OperatorGenerator {
         
 
         // VMArgs only apply to Java SPL operators.
-        boolean isJavaOp = JOperator.LANGUAGE_JAVA.equals(jstring(op, JOperator.LANGUAGE));
+        boolean isJavaOp = OpProperties.LANGUAGE_JAVA.equals(jstring(op, OpProperties.LANGUAGE));
 
         JsonArray vmArgs = null;
         if (isJavaOp && graphConfig.has(ContextProperties.VMARGS))
@@ -405,13 +406,13 @@ class OperatorGenerator {
         
         if (addSPInfo) {
             sb.append("      ");
-            sb.append(NAME_SUBMISSION_PARAM_NAMES);
+            sb.append(FunctionalOpProperties.NAME_SUBMISSION_PARAM_NAMES);
             sb.append(": ");
             sb.append(stvOpParamInfo.names);
             sb.append(";\n");
 
             sb.append("      ");
-            sb.append(NAME_SUBMISSION_PARAM_VALUES);
+            sb.append(FunctionalOpProperties.NAME_SUBMISSION_PARAM_VALUES);
             sb.append(": ");
             sb.append(stvOpParamInfo.values);
             sb.append(";\n");
@@ -432,10 +433,10 @@ class OperatorGenerator {
     static void configClause(JsonObject graphConfig, JsonObject op,
             StringBuilder sb) {
         
-        if (!op.has(JOperator.CONFIG))
+        if (!op.has(OpProperties.CONFIG))
             return;
         
-        JsonObject config = jobject(op, JOperator.CONFIG);
+        JsonObject config = jobject(op, OpProperties.CONFIG);
         
         StringBuilder sbConfig = new StringBuilder();
         
@@ -456,14 +457,14 @@ class OperatorGenerator {
             }
         }
                
-        if (config.has(JOperatorConfig.PLACEMENT)) {
-            JsonObject placement = jobject(config, JOperatorConfig.PLACEMENT);
+        if (config.has(OpProperties.PLACEMENT)) {
+            JsonObject placement = jobject(config, OpProperties.PLACEMENT);
             StringBuilder sbPlacement = new StringBuilder();
             
             // Explicit placement takes precedence.
-            String colocationTag = jstring(placement, JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID);
+            String colocationTag = jstring(placement, OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID);
             if (colocationTag == null)
-                colocationTag = jstring(placement, JOperator.PLACEMENT_ISOLATE_REGION_ID);
+                colocationTag = jstring(placement, OpProperties.PLACEMENT_ISOLATE_REGION_ID);
             
             if (colocationTag != null && !colocationTag.isEmpty()) {
                 sbPlacement.append("      partitionColocation(");
@@ -472,7 +473,7 @@ class OperatorGenerator {
             }
             
             Set<String> uniqueResourceTags = new HashSet<>();           
-            GsonUtilities.stringArray(placement, JOperator.PLACEMENT_RESOURCE_TAGS, tag -> {if (!tag.isEmpty()) uniqueResourceTags.add(tag);} );
+            GsonUtilities.stringArray(placement, OpProperties.PLACEMENT_RESOURCE_TAGS, tag -> {if (!tag.isEmpty()) uniqueResourceTags.add(tag);} );
             if (!uniqueResourceTags.isEmpty()) {
                 String hostPool = getHostPoolName(graphConfig, uniqueResourceTags);
                 if (sbPlacement.length() != 0)

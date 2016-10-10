@@ -15,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.ibm.json.java.JSONObject;
 
 /**
  * Given the path of a file containing the JSON representation of a graph,

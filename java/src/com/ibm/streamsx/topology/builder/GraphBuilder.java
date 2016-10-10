@@ -13,7 +13,6 @@ import java.util.Set;
 
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
-import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.gson;
 
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
@@ -32,7 +31,6 @@ import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 /**
