@@ -2,11 +2,9 @@ package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 
-import java.util.List;
 import java.util.Set;
 
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 
 /**
@@ -25,15 +23,15 @@ class AutonomousRegions {
 	 * Preprocess autonomous virtual markers to mark
 	 * downstream operators as autonomous.  
 	 */
-    static void preprocessAutonomousRegions(JSONObject graph) {
+    static void preprocessAutonomousRegions(JsonObject graph) {
 
-        Set<JSONObject> autonomousOperators = GraphUtilities.findOperatorByKind(
+        Set<JsonObject> autonomousOperators = GraphUtilities.findOperatorByKind(
                 BVirtualMarker.AUTONOMOUS, graph);
 
-        for (JSONObject autonomous : autonomousOperators) {
-        	for (JSONObject sa : getDownstream(autonomous, graph)) {
-        		if (!sa.containsKey(AUTONOMOUS))
-        		    sa.put(AUTONOMOUS, Boolean.TRUE);
+        for (JsonObject autonomous : autonomousOperators) {
+        	for (JsonObject sa : getDownstream(autonomous, graph)) {
+        		if (!sa.has(AUTONOMOUS))
+        		    sa.addProperty(AUTONOMOUS, Boolean.TRUE);
         	}
         }
  

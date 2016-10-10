@@ -5,13 +5,17 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.array;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jobject;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.nestedObject;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.nestedObjectCreate;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.function.Consumer;
@@ -19,7 +23,7 @@ import com.ibm.streamsx.topology.function.Consumer;
 class ThreadingModel {
     
     @SuppressWarnings("serial")
-    static void preProcessThreadedPorts(final JSONObject graph){
+    static void preProcessThreadedPorts(final JsonObject graph){
         // Remove the threaded port configuration from the operator and its 
         // params if:
         // 1) The operator has a lowLatencyTag assigned
@@ -29,18 +33,18 @@ class ThreadingModel {
         // Added threaded port configuration if the operator is non-functional
         // and it has a threaded port.
         
-        Set<JSONObject> starts = GraphUtilities.findStarts(graph);
-        GraphUtilities.visitOnce(starts, null, graph, new Consumer<JSONObject>(){
+        Set<JsonObject> starts = GraphUtilities.findStarts(graph);
+        GraphUtilities.visitOnce(starts, null, graph, new Consumer<JsonObject>(){
 
             @Override
-            public void accept(JSONObject op) {
+            public void accept(JsonObject op) {
                 // These booleans will be used to determine whether to delete the
                 // threaded port from the operator.         
                 boolean regionTagExists = false;
                 boolean differentColocationThanParent = false;
                 boolean functional=false;
                 
-                JSONArray inputs = (JSONArray) op.get("inputs");
+                JsonArray inputs = array(op, "inputs");
                 
                 // Currently, threadedPorts are only supported on operators
                 // with one input port.
@@ -48,8 +52,8 @@ class ThreadingModel {
                     return;
                 }
                 
-                JSONObject input = (JSONObject)inputs.get(0);
-                JSONObject queue = (JSONObject) input.get("queue");
+                JsonObject input = inputs.get(0).getAsJsonObject();
+                JsonObject queue = jobject(input, "queue");
                 // If the queue is null, simply return. Nothing to be done.
                 if(queue == null){
                     return;
@@ -57,14 +61,14 @@ class ThreadingModel {
 
                 // If the operator is not functional, the we don't have to 
                 // remove anything from the operator's params.
-                functional = (boolean) queue.get("functional");
+                functional = jboolean(queue, "functional");
 
-                JSONObject placement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
+                JsonObject placement = jobject(op, JOperatorConfig.PLACEMENT);
                 
                 // See if operator is in a lowLatency region
                 String regionTag = null;
                 if (placement != null) {
-                    regionTag = (String) placement.get(JOperator.PLACEMENT_LOW_LATENCY_REGION_ID);
+                    regionTag = jstring(placement, JOperator.PLACEMENT_LOW_LATENCY_REGION_ID);
                 }
                 if (regionTag != null && !regionTag.isEmpty()) {
                     regionTagExists = true;
@@ -75,14 +79,14 @@ class ThreadingModel {
 
                 String colocTag = null;
                 if (placement != null) {
-                    colocTag = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
+                    colocTag = jstring(placement, JOperator.PLACEMENT_ISOLATE_REGION_ID);
                 }
 
-                for(JSONObject parent : getUpstream(op, graph)){
-                    JSONObject parentPlacement = JOperatorConfig.getJSONItem(parent, JOperatorConfig.PLACEMENT);
+                for(JsonObject parent : getUpstream(op, graph)){
+                    JsonObject parentPlacement = nestedObject(parent, JOperator.CONFIG, JOperatorConfig.PLACEMENT);
                     String parentColocTag = null;
                     if (parentPlacement != null)
-                        parentColocTag = (String) parentPlacement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
+                        parentColocTag = jstring(parentPlacement, JOperator.PLACEMENT_ISOLATE_REGION_ID);
                     // Test whether colocation tags are different. If they are,
                     // don't insert a threaded port.
                     if(!colocTag.equals(parentColocTag)){
@@ -92,9 +96,9 @@ class ThreadingModel {
                 
                 // Remove the threaded port if necessary
                 if(differentColocationThanParent || regionTagExists){
-                    input.remove(queue);
+                    input.remove("queue");
                     if(functional){
-                        JSONObject params = (JSONObject) op.get("parameters");
+                        JsonObject params = jobject(op, "parameters");
                         params.remove("queueSize");
                     }
                 }
@@ -107,10 +111,10 @@ class ThreadingModel {
                 // Add to SPL operator config if necessary
                 if(!functional && 
                         !(differentColocationThanParent || regionTagExists)){
-                    JSONObject newQueue =JOperatorConfig.createJSONItem(op, "queue");
-                    newQueue.put("queueSize", new Integer(100));
-                    newQueue.put("inputPortName", input.get("name").toString());
-                    newQueue.put("congestionPolicy", "Sys.Wait");
+                    JsonObject newQueue = nestedObjectCreate(op, JOperator.CONFIG, "queue");
+                    newQueue.addProperty("queueSize", new Integer(100));
+                    newQueue.addProperty("inputPortName", input.get("name").getAsString());
+                    newQueue.addProperty("congestionPolicy", "Sys.Wait");
                 }          
            }
 

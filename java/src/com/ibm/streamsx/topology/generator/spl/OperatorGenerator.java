@@ -5,7 +5,7 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
-import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.gson;
+import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.array;
 import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
@@ -26,8 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonPrimitive;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindow.Type;
 import com.ibm.streamsx.topology.builder.JOperator;
@@ -43,9 +42,9 @@ class OperatorGenerator {
         this.stvHelper = splGenerator.stvHelper();
     }
 
-    String generate(JSONObject graphConfig, JSONObject op)
+    String generate(JsonObject graphConfig, JsonObject op)
             throws IOException {
-        JsonObject _op = gson(op);
+        JsonObject _op = op;
         StringBuilder sb = new StringBuilder();
         noteAnnotations(_op, sb);
         parallelAnnotation(_op, sb);
@@ -57,7 +56,7 @@ class OperatorGenerator {
 
         sb.append("  {\n");
         windowClause(_op, sb);
-        paramClause(GraphUtilities.gson(graphConfig), _op, sb);
+        paramClause(graphConfig, _op, sb);
         configClause(graphConfig, _op, sb);
         sb.append("  }\n");
 
@@ -203,6 +202,7 @@ class OperatorGenerator {
         sb.append(kind);
     }
 
+    /*
     static JSONArray getInputs(JSONObject op) {
         JSONArray inputs = (JSONArray) op.get("inputs");
         if (inputs == null || inputs.isEmpty())
@@ -210,6 +210,7 @@ class OperatorGenerator {
         return inputs;
 
     }
+    */
 
     static void inputClause(JsonObject op, StringBuilder sb) {
 
@@ -356,7 +357,7 @@ class OperatorGenerator {
         boolean addSPInfo = false;
         ParamsInfo stvOpParamInfo = stvHelper.getSplInfo();
         if (stvOpParamInfo != null) {
-            Map<String,JSONObject> functionalOps = stvHelper.getFunctionalOps();
+            Map<String,JsonObject> functionalOps = stvHelper.getFunctionalOps();
             if (functionalOps.containsKey(op.get("name").getAsString()))
                 addSPInfo = true;
         }
@@ -427,7 +428,7 @@ class OperatorGenerator {
         SPLGenerator.value(sb, param);
     }
 
-    static void configClause(JSONObject graphConfig, JsonObject op,
+    static void configClause(JsonObject graphConfig, JsonObject op,
             StringBuilder sb) {
         
         if (!op.has(JOperator.CONFIG))
@@ -497,30 +498,31 @@ class OperatorGenerator {
      * Gets or creates a host pool at the graphConfig level
      * corresponding to the unique set of tags.
      */
-    @SuppressWarnings("unchecked")
-    private static String getHostPoolName(JSONObject graphConfig, Set<String> uniqueResourceTags) {
-        String hostPool = null;
-        JSONArray hostPools = (JSONArray) graphConfig.get("__spl_hostPools");
+    private static String getHostPoolName(JsonObject graphConfig, Set<String> uniqueResourceTags) {
+        JsonArray hostPools = array(graphConfig, "__spl_hostPools");
         if (hostPools == null) {
-            graphConfig.put("__spl_hostPools", hostPools = new JSONArray());
+            graphConfig.add("__spl_hostPools", hostPools = new JsonArray());
         }
         
         // Look for a host pool matching this one
-        for (Object hpo : hostPools) {
-            JSONObject hostPoolDef = (JSONObject) hpo;
-            JSONArray rta = (JSONArray) hostPoolDef.get("resourceTags");
-            Set<Object> poolResourceTags = new HashSet<>();
-            poolResourceTags.addAll(rta);
+        for (JsonElement hpe : hostPools) {
+            JsonObject hostPoolDef = hpe.getAsJsonObject();
+            JsonArray rta = hostPoolDef.get("resourceTags").getAsJsonArray();
+            Set<String> poolResourceTags = new HashSet<>();
+            for (JsonElement tage : rta)
+                poolResourceTags.add(tage.getAsString());
             if (uniqueResourceTags.equals(poolResourceTags)) {
-                return hostPoolDef.get("name").toString();
+                return jstring(hostPoolDef, "name");
             }
         }
                         
-        JSONObject hostPoolDef = new JSONObject();
-        hostPoolDef.put("name", hostPool = "__jaaHostPool" + hostPools.size());
-        JSONArray rta = new JSONArray();
-        rta.addAll(uniqueResourceTags);
-        hostPoolDef.put("resourceTags", rta);
+        JsonObject hostPoolDef = new JsonObject();
+        String hostPool;
+        hostPoolDef.addProperty("name", hostPool = "__jaaHostPool" + hostPools.size());
+        JsonArray rta = new JsonArray();
+        for (String tag : uniqueResourceTags)
+            rta.add(new JsonPrimitive(tag));
+        hostPoolDef.add("resourceTags", rta);
         hostPools.add(hostPoolDef);  
         return hostPool;
     }

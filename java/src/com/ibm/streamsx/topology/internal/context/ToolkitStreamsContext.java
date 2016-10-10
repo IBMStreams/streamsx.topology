@@ -33,6 +33,7 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeMakeToolkit;
@@ -157,7 +158,7 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
         // Create the SPL file, and save a copy of the JSON file.
         SPLGenerator generator = new  SPLGenerator();
-        createNamespaceFile(toolkitRoot, jsonGraph, "spl", generator.generateSPL(jsonGraph));
+        createNamespaceFile(toolkitRoot, jsonGraph, "spl", generator.generateSPL(GraphUtilities.gson(jsonGraph)));
         createNamespaceFile(toolkitRoot, jsonGraph, "json", jsonGraph.serialize());
     }
 

@@ -13,7 +13,9 @@ import java.util.Set;
 
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.gson;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
@@ -26,6 +28,7 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
+import com.ibm.streamsx.topology.generator.spl.GsonUtilities;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 import com.ibm.streamsx.topology.tuple.JSONAble;
@@ -127,12 +130,12 @@ public class GraphBuilder extends BJSONObject {
         for (BOperator operator : operators) {
             JSONObject jop = operator.complete();
             GraphUtilities.visitOnce(visitController,
-                    Collections.singleton(jop), graph,
-                new Consumer<JSONObject>() {
+                    Collections.singleton(gson(jop)), gson(graph),
+                new Consumer<JsonObject>() {
                     private static final long serialVersionUID = 1L;
                     @Override
-                    public void accept(JSONObject jo) {
-                        String kind = (String) jo.get("kind");
+                    public void accept(JsonObject jo) {
+                        String kind = GsonUtilities.jstring(jo, "kind");
                         if (LOW_LATENCY.kind().equals(kind)) {
                             if (openRegionCount[0] <= 0)
                                 visitController.setStop();

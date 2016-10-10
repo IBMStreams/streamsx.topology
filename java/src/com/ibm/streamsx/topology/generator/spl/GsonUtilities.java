@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import com.google.gson.JsonArray;
@@ -15,7 +16,7 @@ public class GsonUtilities {
     /**
      * Perform an action on every JsonObject in an array.
      */
-    static void objectArray(JsonObject object, String property, Consumer<JsonObject> action) {
+    public static void objectArray(JsonObject object, String property, Consumer<JsonObject> action) {
         JsonArray array = array(object, property);
         if (array == null)
             return;
@@ -25,7 +26,7 @@ public class GsonUtilities {
     /**
      * Perform an action on every String in an array.
      */
-    static void stringArray(JsonObject object, String property, Consumer<String> action) {
+    public static void stringArray(JsonObject object, String property, Consumer<String> action) {
         JsonArray array = array(object, property);
         if (array == null)
             return;
@@ -79,7 +80,7 @@ public class GsonUtilities {
     }
     
     
-    static String jstring(JsonObject object, String property) {
+    public static String jstring(JsonObject object, String property) {
         if (object.has(property)) {
             JsonElement je = object.get(property);
             if (je.isJsonNull())
@@ -96,5 +97,52 @@ public class GsonUtilities {
             return je.getAsBoolean();
         }
         return false;
+    }
+    
+    static JsonObject first(Collection<JsonObject> objects) {
+        return objects.iterator().next();
+    }
+    
+    static JsonObject nestedObject(JsonObject object, String nested, String property) {
+        JsonObject nester = jobject(object, nested);
+        if (nester == null)
+            return null;
+        
+        return jobject(nester, property);
+    }
+    
+    public static JsonObject object(JsonObject object,  String ...property) {
+        
+        assert property.length > 0;
+        
+        JsonObject item = null;
+        for (String key : property) {
+            item = jobject(object, key);
+            if (item == null)
+                return null;
+            object = item;
+        }
+
+        return item; 
+    }
+    
+    public static JsonObject objectCreate(JsonObject object, String ...property) {
+        
+        assert property.length > 0;
+        
+        JsonObject item = null;
+        for (String key : property) {
+            item = jobject(object, key);
+            if (item == null)
+                object.add(key, item = new JsonObject());
+            object = item;
+        }
+
+        return item; 
+    }
+    
+    
+    static JsonObject nestedObjectCreate(JsonObject object, String nested, String property) {
+        return objectCreate(object, nested, property);
     }
 }
