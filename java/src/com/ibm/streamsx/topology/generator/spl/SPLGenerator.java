@@ -14,10 +14,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.builder.JGraph;
+import com.ibm.streamsx.topology.builder.JParamTypes;
 
 public class SPLGenerator {
     // Needed for composite name generation
@@ -41,7 +46,7 @@ public class SPLGenerator {
         comp.put("parameters", graph.get("parameters"));
         comp.put("__spl_mainComposite", true);
 
-        ArrayList<JSONObject> starts = GraphUtilities.findStarts(graph);
+        Set<JSONObject> starts = GraphUtilities.findStarts(graph);
         separateIntoComposites(starts, comp, graph);
         StringBuilder sb = new StringBuilder();
         generateGraph(graph, sb);
@@ -226,7 +231,7 @@ public class SPLGenerator {
      *            Necessary to pass it to the GraphUtilities.getChildren
      *            function.
      */
-    JSONObject separateIntoComposites(List<JSONObject> starts,
+    JSONObject separateIntoComposites(Set<JSONObject> starts,
             JSONObject comp, JSONObject graph) {
         // Contains all ops which have been reached by graph traversal,
         // regardless of whether they are 'special' operators, such as the ones
@@ -261,7 +266,7 @@ public class SPLGenerator {
             // If the operator is not a special operator, add it to the
             // visited list.
             if (!isParallelStart(visitOp) && !isParallelEnd(visitOp)) {
-                List<JSONObject> children = GraphUtilities.getDownstream(
+                Set<JSONObject> children = GraphUtilities.getDownstream(
                         visitOp, graph);
                 unvisited.addAll(children);
                 visited.add(visitOp);
@@ -325,7 +330,7 @@ public class SPLGenerator {
 
                 // Get the start operators in the parallel region -- the ones
                 // immediately downstream from the $Parallel operator
-                List<JSONObject> parallelStarts = GraphUtilities
+                Set<JSONObject> parallelStarts = GraphUtilities
                         .getDownstream(visitOp, graph);
 
                 // Once you have the start operators, recursively call the
@@ -353,7 +358,7 @@ public class SPLGenerator {
                 }
 
                 if (parallelEnd != null) {
-                    List<JSONObject> children = GraphUtilities
+                    Set<JSONObject> children = GraphUtilities
                             .getDownstream(parallelEnd, graph);
                     unvisited.addAll(children);
                     compOperator.put("outputs", parallelEnd.get("outputs"));
@@ -363,7 +368,7 @@ public class SPLGenerator {
                     // parallel composite.
                     JSONObject paraEndIn = (JSONObject)((JSONArray)parallelEnd.get("inputs")).get(0);
                     String parallelEndInputPortName = (String)(paraEndIn.get("name"));
-                    List<JSONObject> parallelOutParents = GraphUtilities.getUpstream(parallelEnd, graph);
+                    Set<JSONObject> parallelOutParents = GraphUtilities.getUpstream(parallelEnd, graph);
                     for(JSONObject end : parallelOutParents){
 			if(((String)end.get("kind")).equals("com.ibm.streamsx.topology.functional.java::HashAdder")){
 			    String endType = (String)((JSONObject)((JSONArray)end.get("outputs")).get(0)).get("type");
@@ -471,6 +476,82 @@ public class SPLGenerator {
     static String splBasename(String name) {
         return getSPLCompatibleName(basename(name));
     }
+    
+    /**
+     * Add an arbitrary SPL value.
+     * JsonObject has a type and a value. 
+     */
+    static void value(StringBuilder sb, JsonObject tv) {
+        
+        JsonElement value = tv.get("value");
+        
+        String type = JParamTypes.TYPE_SPL_EXPRESSION;
+        if (tv.has("type")) {
+            type = tv.get("type").getAsString();          
+        } else {
+            if (value.isJsonPrimitive()) {
+                JsonPrimitive pv = value.getAsJsonPrimitive();               
+                if (pv.isString())
+                    type = "RSTRING";
+            }
+            else if (value.isJsonArray()) {
+                type = "RSTRING";
+            }
+        }
+               
+        if (value.isJsonArray()) {
+            JsonArray array = value.getAsJsonArray();
+            
+           for (int i = 0; i < array.size(); i++) {
+                if (i != 0)
+                    sb.append(", ");
+                value(sb, type, array.get(i));
+            }
+        }
+        else
+        {
+            value(sb, type, value);
+        }
+    }
+    
+    /**
+     * Add a single value of a known type.
+     */
+    static void value(StringBuilder sb, String type, JsonElement value) {
+        switch (type) {
+        case "UINT8":
+        case "UINT16":
+        case "UINT32":
+        case "UINT64":
+        case "INT8":
+        case "INT16":
+        case "INT32":
+        case "INT64":
+        case "FLOAT32":
+        case "FLOAT64":
+            numberLiteral(sb, value.getAsJsonPrimitive(), type);
+            break;
+        case "RSTRING":
+            stringLiteral(sb, value.getAsString());
+            break;
+        case "USTRING":
+            stringLiteral(sb, value.getAsString());
+            sb.append("u");
+            break;
+            
+        case "BOOLEAN":
+            sb.append(value.getAsBoolean());
+            break;
+            
+        default:
+        case JParamTypes.TYPE_ENUM:
+        case JParamTypes.TYPE_SPLTYPE:
+        case JParamTypes.TYPE_ATTRIBUTE:
+        case JParamTypes.TYPE_SPL_EXPRESSION:
+            sb.append(value.getAsString());
+            break;
+        }
+    }
 
     
     static String stringLiteral(String value) {
@@ -500,7 +581,50 @@ public class SPLGenerator {
      * Append the value with the correct SPL suffix. Integer & Double do not
      * require a suffix
      */
-    static void numberLiteral(StringBuilder sb, Number value, Object type) {
+    static void numberLiteral(StringBuilder sb, JsonPrimitive value, String type) {
+        String suffix = "";
+        
+        switch (type) {
+        case "INT8": suffix = "b"; break;
+        case "INT16": suffix = "h"; break;
+        case "INT32": break;
+        case "INT64": suffix = "l"; break;
+        
+        case "UINT8": suffix = "ub"; break;
+        case "UINT16": suffix = "uh"; break;
+        case "UINT32": suffix = "uw"; break;
+        case "UINT64": suffix = "ul"; break;
+        
+        case "FLOAT32": suffix = "w"; break; // word, meaning 32 bits
+        case "FLOAT64": break;
+        }
+
+        String literal;
+
+        if (value.isNumber() && isUnsignedInt(type)) {
+            Number nv = value.getAsNumber();
+
+            if ("UINT64".equals(type))
+                literal = Long.toUnsignedString(nv.longValue());
+            else if ("UINT32".equals(type))
+                literal = Integer.toUnsignedString(nv.intValue());
+            else if ("UINT16".equals(type))
+                literal = Integer.toUnsignedString(Short.toUnsignedInt(nv.shortValue()));
+            else
+                literal = Integer.toUnsignedString(Byte.toUnsignedInt(nv.byteValue()));
+        } else {
+            literal = value.getAsNumber().toString();
+        }
+        
+        sb.append(literal);
+        sb.append(suffix);
+    }
+
+    /**
+     * Append the value with the correct SPL suffix. Integer & Double do not
+     * require a suffix
+     */
+    static void numberLiteral(StringBuilder sb, Number value, String type) {
         Object val = value;
         String suffix = "";
         boolean isUnsignedInt = isUnsignedInt(type); 
@@ -526,7 +650,7 @@ public class SPLGenerator {
         sb.append(suffix);
     }
     
-    private static boolean isUnsignedInt(Object type) {
+    private static boolean isUnsignedInt(String type) {
         return "UINT8".equals(type)
                 || "UINT16".equals(type)
                 || "UINT32".equals(type)

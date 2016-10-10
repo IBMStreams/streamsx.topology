@@ -4,8 +4,11 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
@@ -26,7 +29,7 @@ class ThreadingModel {
         // Added threaded port configuration if the operator is non-functional
         // and it has a threaded port.
         
-        ArrayList<JSONObject> starts = GraphUtilities.findStarts(graph);
+        Set<JSONObject> starts = GraphUtilities.findStarts(graph);
         GraphUtilities.visitOnce(starts, null, graph, new Consumer<JSONObject>(){
 
             @Override
@@ -75,8 +78,7 @@ class ThreadingModel {
                     colocTag = (String) placement.get(JOperator.PLACEMENT_ISOLATE_REGION_ID);
                 }
 
-                List<JSONObject> parents = GraphUtilities.getUpstream(op, graph);
-                for(JSONObject parent : parents){
+                for(JSONObject parent : getUpstream(op, graph)){
                     JSONObject parentPlacement = JOperatorConfig.getJSONItem(parent, JOperatorConfig.PLACEMENT);
                     String parentColocTag = null;
                     if (parentPlacement != null)
