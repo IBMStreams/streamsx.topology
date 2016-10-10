@@ -39,7 +39,7 @@ public class GsonUtilities {
      * value is returned.
      * Returns null if the array is empty or not present.
      */
-    static JsonArray array(JsonObject object, String property) {
+    public static JsonArray array(JsonObject object, String property) {
         if (object.has(property)) {
             JsonElement je = object.get(property);
             if (je.isJsonNull())
@@ -56,7 +56,7 @@ public class GsonUtilities {
      * Return a Json object.
      * Returns null if the object is not present or null.
      */
-    static JsonObject jobject(JsonObject object, String property) {
+    public static JsonObject jobject(JsonObject object, String property) {
         if (object.has(property)) {
             JsonElement je = object.get(property);
             if (je.isJsonNull())
@@ -66,14 +66,14 @@ public class GsonUtilities {
         return null;
     }
     
-    static boolean jisEmpty(JsonObject object) {
+    public static boolean jisEmpty(JsonObject object) {
         return object == null || object.isJsonNull() || object.entrySet().isEmpty();
     }
-    static boolean jisEmpty(JsonArray array) {
+    public static boolean jisEmpty(JsonArray array) {
         return array == null || array.size() == 0;
     }
     
-    static void gclear(JsonArray array) {
+    public static void gclear(JsonArray array) {
         Iterator<JsonElement> it = array.iterator();
         while(it.hasNext())
             it.remove();
@@ -89,7 +89,7 @@ public class GsonUtilities {
         }
         return null;
     }
-    static boolean jboolean(JsonObject object, String property) {
+    public static boolean jboolean(JsonObject object, String property) {
         if (object.has(property)) {
             JsonElement je = object.get(property);
             if (je.isJsonNull())
@@ -99,11 +99,11 @@ public class GsonUtilities {
         return false;
     }
     
-    static JsonObject first(Collection<JsonObject> objects) {
+    public static JsonObject first(Collection<JsonObject> objects) {
         return objects.iterator().next();
     }
     
-    static JsonObject nestedObject(JsonObject object, String nested, String property) {
+    public static JsonObject nestedObject(JsonObject object, String nested, String property) {
         JsonObject nester = jobject(object, nested);
         if (nester == null)
             return null;
@@ -142,7 +142,7 @@ public class GsonUtilities {
     }
     
     
-    static JsonObject nestedObjectCreate(JsonObject object, String nested, String property) {
+    public  static JsonObject nestedObjectCreate(JsonObject object, String nested, String property) {
         return objectCreate(object, nested, property);
     }
 }
