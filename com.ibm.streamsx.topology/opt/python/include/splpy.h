@@ -20,9 +20,16 @@
 #include <memory>
 #include <dlfcn.h>
 
-#include <SPL/Runtime/Operator/Operator.h>
-#include <SPL/Runtime/Operator/OperatorContext.h>
+#include <SPL/Runtime/Type/Meta/BaseType.h>
 #include <SPL/Runtime/ProcessingElement/PE.h>
+#include <SPL/Runtime/Operator/Port/OperatorPort.h>
+#include <SPL/Runtime/Operator/Port/OperatorInputPort.h>
+#include <SPL/Runtime/Operator/Port/OperatorOutputPort.h>
+#include <SPL/Runtime/Operator/OperatorContext.h>
+#include <SPL/Runtime/Operator/Operator.h>
+
+#ifndef __SPL__SPLPY_H
+#define __SPL__SPLPY_H
 
 /**
  * Functionality for executing Python within IBM Streams.
@@ -42,28 +49,6 @@ do {                                                                     \
       }                                                                  \
    }                                                                     \
 while(0) 
-
-#if PY_MAJOR_VERSION == 3
-#define GET_PYTHON_VALUE_AS_UTF8_AND_ASSIGN(pvalue,pattr)                \
-do {                                                                     \
-      Py_ssize_t size = 0;                                               \
-      char * bytes = PyUnicode_AsUTF8AndSize(pvalue, &size);             \
-      GET_PYTHON_VALUE_THROWIFERROR(bytes);                              \
-      pattr.assign((const char *)bytes, (size_t) size);                  \
-   }                                                                     \
-while(0) 
-#else
-#define GET_PYTHON_VALUE_AS_UTF8_AND_ASSIGN(pvalue,pattr)                \
-do {                                                                     \
-      Py_ssize_t size = 0;                                               \
-      PyObject *utf8String = PyUnicode_AsUTF8String(pvalue);             \
-      char *bytes = PyString_AsString(utf8String);                       \
-      GET_PYTHON_VALUE_THROWIFERROR(bytes);                              \
-      pattr.assign((const char *)bytes, strlen((const char *)bytes));    \
-      Py_DECREF(utf8String);                                             \
-   }                                                                     \
-while(0) 
-#endif
 
 #if PY_MAJOR_VERSION == 3
 #define GET_PYTHON_ATTR_FROM_MEMORY(pbytes,psizeb)                       \
@@ -108,8 +93,44 @@ namespace streamsx {
     /*
     ** Convert to a SPL rstring from a Python string object.
     */
-    inline void pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
-      GET_PYTHON_VALUE_AS_UTF8_AND_ASSIGN(value,attr);
+    inline SPL::rstring & pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
+      Py_ssize_t size = 0;
+      char * bytes = NULL;
+
+#if PY_MAJOR_VERSION == 3
+      // Python 3 character strings are unicode objects
+      if (PyUnicode_Check(value)) {
+          bytes = PyUnicode_AsUTF8AndSize(value, &size);
+          GET_PYTHON_VALUE_THROWIFERROR(bytes);
+      } else {
+          // Create a string from the object
+          PyObject *svalue = PyObject_Str(value);
+          bytes = PyUnicode_AsUTF8AndSize(svalue, &size);
+          Py_DECREF(svalue);
+          GET_PYTHON_VALUE_THROWIFERROR(bytes);
+      }
+#else
+      // Python 2 supports Unicode and byte character strings 
+      // Default is byte character strings.
+      if (PyUnicode_Check(value)) {
+          PyObject *utf8String = PyUnicode_AsUTF8String(pvalue);
+          int x = PyString_AsStringAndSize(utf8String, &bytes, &size);
+          Py_DECREF(utf8String);
+          GET_PYTHON_VALUE_THROWIFERROR(bytes);
+      } else if (PyString_Check(value)) {
+          int x = PyString_AsStringAndSize(value, &bytes, &size);
+          // TODO
+      } else {
+          // Create a string from the object
+          PyObject *svalue = PyObject_Str(value);
+          int x = PyString_AsStringAndSize(svalue, &bytes, &size);
+          Py_DECREF(*svalue);
+         // TODO
+      }
+#endif
+      attr.assign((const char *)bytes, (size_t) size);
+
+      return attr;
     }
 
     /**************************************************************/
@@ -435,8 +456,27 @@ namespace streamsx {
       return pyReturnVar;
     }
 
+    /**
+     *  Return a Python tuple containing the attribute
+     *  names for a port in order.
+     */
+    static PyObject * pyAttributeNames(SPL::OperatorPort & port) {
+       SPL::Meta::TupleType const & tt = 
+           dynamic_cast<SPL::Meta::TupleType const &>(port.getTupleType());
+       uint32_t ac = tt.getNumberOfAttributes();
+       PyObject * pyNames = PyTuple_New(ac);
+       for (uint32_t i = 0; i < ac; i++) {
+            std::string const & name = tt.getAttributeName(i);
+
+            PyObject * pyName = PyUnicode_DecodeUTF8(
+                           name.c_str(), name.size(), NULL);
+            PyTuple_SetItem(pyNames, i, pyName);
+       }
+       return pyNames;
+    }
 
     };
    
   }
 }
+#endif

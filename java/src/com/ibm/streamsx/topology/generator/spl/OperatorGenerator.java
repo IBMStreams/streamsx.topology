@@ -160,8 +160,10 @@ class OperatorGenerator {
             JSONObject output = (JSONObject) outputs.get(i);
 
             String type = (String) output.get("type");
-            // removes the 'tuple' part of the type
-            type = type.substring(5);
+            if (type.startsWith("tuple<")) {
+                // removes the 'tuple<..>' part of the type
+                type = type.substring(6, type.length()-1);
+            }
 
             String name = (String) output.get("name");
             name = splBasename(name);
@@ -169,9 +171,9 @@ class OperatorGenerator {
             if (i != 0)
                 sb.append("; ");
 
-            sb.append("stream");
+            sb.append("stream<");
             sb.append(type);
-            sb.append(" ");
+            sb.append("> ");
             sb.append(name);
         }
 

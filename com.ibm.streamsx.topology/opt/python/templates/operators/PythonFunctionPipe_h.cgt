@@ -36,6 +36,8 @@ public:
 private:
   // Members
     PyObject *function_;
+    PyObject *pyInNames_;
+    PyObject *pyOutNames_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

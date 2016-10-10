@@ -39,7 +39,7 @@
 <%
      for (my $i = 0; $i < $iport->getNumberOfAttributes(); ++$i) {
          my $la = $iport->getAttributeAt($i);
-         print convertAndAddToPythonDictionaryObject($ituple, $i, $la->getSPLType(), $la->getName());
+         print convertAndAddToPythonDictionaryObject($ituple, $i, $la->getSPLType(), $la->getName(), 'pyInNames_');
      }
 %>
 // END-Processing passing SPL tuple as a Python dictionary
