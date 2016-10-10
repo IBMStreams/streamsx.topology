@@ -164,8 +164,10 @@ class OperatorGenerator {
         objectArray(op, "outputs", output -> {
 
             String type = jstring(output, "type");
-            // removes the 'tuple' part of the type
-            type = type.substring(5);
+            if (type.startsWith("tuple<")) {
+                // removes the 'tuple<..>' part of the type
+                type = type.substring(6, type.length()-1);
+            }
 
             String name = jstring(output, "name");
             name = splBasename(name);
@@ -175,9 +177,9 @@ class OperatorGenerator {
             }
             first.set(false);
 
-            sb.append("stream");
+            sb.append("stream<");
             sb.append(type);
-            sb.append(" ");
+            sb.append("> ");
             sb.append(name);
         });
 

@@ -7,7 +7,7 @@
   PyObject * pyDict = PyDict_New();
 <%
      for (my $i = 0; $i < $pynumattrs; ++$i) {
-         print convertAndAddToPythonDictionaryObject("ip", $i, $pyatypes[$i], $pyanames[$i]);
+         print convertAndAddToPythonDictionaryObject("ip", $i, $pyatypes[$i], $pyanames[$i], 'pyInNames_');
      }
 %>
   value = pyDict;

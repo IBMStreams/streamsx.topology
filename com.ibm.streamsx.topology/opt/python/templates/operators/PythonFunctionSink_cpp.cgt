@@ -43,14 +43,29 @@
 %>
 
 // Constructor
-MY_OPERATOR::MY_OPERATOR()
+MY_OPERATOR::MY_OPERATOR() :
+    function_(NULL),
+    pyInNames_(NULL)
 {
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
+
+<% if ($paramStyle eq 'dictionary') { %>
+   {
+      streamsx::topology::PyGILLock lock;
+      pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
+               getInputPortAt(0));
+   }
+<% } %>
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
+   streamsx::topology::PyGILLock lock;
+   if (function_)
+      Py_DECREF(function_);
+   if (pyInNames_)
+      Py_DECREF(pyInNames_);
 }
 
 // Notify port readiness

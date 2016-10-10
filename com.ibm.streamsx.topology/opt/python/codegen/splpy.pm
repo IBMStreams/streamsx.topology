@@ -48,10 +48,11 @@ sub cppToPythonPrimitiveConversion{
 # This function does the reverse, converting a Python type back to a
 # c++ type based on the $type argument which is a string literal.
 #
+# $convert_from_string - C++ expression representing PyObject * 
+# $type - SPL type of target attribute
+#
+#
 sub pythonToCppPrimitiveConversion{
-# TODO: do error checking for the conversions. E.g., 
-# char * str = PyUnicode_AsUTF8(pyAttrValue)
-# if(str==NULL) exit(0);
  
   my ($convert_from_string, $type) = @_;
   if ($type eq 'rstring') {
@@ -300,20 +301,31 @@ sub splpy_inputtuple2value{
  }
 }
 
+#
+# Convert attribute of an SPL tuple to Python
+# and add to a dictionary object.
+#
+# ituple - C++ expression of the tuple
+# i  - Attribute index
+# type - spl type
+# name - attribute name
+# names - PyObject * pointing to Python tuple containing attribute names.
+
 sub convertAndAddToPythonDictionaryObject {
   my $ituple = $_[0];
   my $i = $_[1];
   my $type = $_[2];
   my $name = $_[3];
+  my $names = $_[4];
 
   my $get = '{ PyObject * pyValue = ';
   $get = $get . convertToPythonValue($ituple, $type, $name);
 
-  $getkey = '{ PyObject * pyDictKey = PyUnicode_DecodeUTF8((const char*)  "' . $name . '", ((int)(sizeof("' . $name . '")))-1 , NULL);'."\n";
+  # PyTuple_GET_ITEM returns a borrowed reference.
+  $getkey = '{ PyObject * pyDictKey = PyTuple_GET_ITEM(' . $names . ',' . $i . ") ;\n";
 
 # Note PyDict_SetItem does not steal the references to the key and value
   my $setdict =  "  PyDict_SetItem(pyDict, pyDictKey, pyValue);\n";
-  $setdict =  $setdict . "  Py_DECREF(pyDictKey);\n";
   $setdict =  $setdict . "  Py_DECREF(pyValue);}}\n";
 
   return $get . $getkey . $setdict ;

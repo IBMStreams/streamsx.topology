@@ -20,9 +20,16 @@
 #include <memory>
 #include <dlfcn.h>
 
-#include <SPL/Runtime/Operator/Operator.h>
-#include <SPL/Runtime/Operator/OperatorContext.h>
+#include <SPL/Runtime/Type/Meta/BaseType.h>
 #include <SPL/Runtime/ProcessingElement/PE.h>
+#include <SPL/Runtime/Operator/Port/OperatorPort.h>
+#include <SPL/Runtime/Operator/Port/OperatorInputPort.h>
+#include <SPL/Runtime/Operator/Port/OperatorOutputPort.h>
+#include <SPL/Runtime/Operator/OperatorContext.h>
+#include <SPL/Runtime/Operator/Operator.h>
+
+#ifndef __SPL__SPLPY_H
+#define __SPL__SPLPY_H
 
 /**
  * Functionality for executing Python within IBM Streams.
@@ -435,8 +442,27 @@ namespace streamsx {
       return pyReturnVar;
     }
 
+    /**
+     *  Return a Python tuple containing the attribute
+     *  names for a port in order.
+     */
+    static PyObject * pyAttributeNames(SPL::OperatorPort & port) {
+       SPL::Meta::TupleType const & tt = 
+           dynamic_cast<SPL::Meta::TupleType const &>(port.getTupleType());
+       uint32_t ac = tt.getNumberOfAttributes();
+       PyObject * pyNames = PyTuple_New(ac);
+       for (uint32_t i = 0; i < ac; i++) {
+            std::string const & name = tt.getAttributeName(i);
+
+            PyObject * pyName = PyUnicode_DecodeUTF8(
+                           name.c_str(), name.size(), NULL);
+            PyTuple_SetItem(pyNames, i, pyName);
+       }
+       return pyNames;
+    }
 
     };
    
   }
 }
+#endif
