@@ -4,8 +4,8 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.nestedObjectCreate;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.nestedObjectCreate;
 
 import java.util.ArrayList;
 import java.util.Collection;

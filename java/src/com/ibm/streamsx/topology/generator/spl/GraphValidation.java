@@ -6,8 +6,8 @@ package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.findOperatorByKind;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.first;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.first;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.util.Set;
 

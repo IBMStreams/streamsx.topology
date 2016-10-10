@@ -5,10 +5,10 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor.FUNCTIONAL_LOGIC_PARAM;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jboolean;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jobject;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +19,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streams.operator.Type.MetaType;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * A Submission Time Value is the SPL realization of a "Submission Parameter".

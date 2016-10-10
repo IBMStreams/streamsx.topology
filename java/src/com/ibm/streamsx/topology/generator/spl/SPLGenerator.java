@@ -7,9 +7,9 @@ package com.ibm.streamsx.topology.generator.spl;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.array;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jboolean;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -26,6 +26,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.builder.JParamTypes;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class SPLGenerator {
     // Needed for composite name generation

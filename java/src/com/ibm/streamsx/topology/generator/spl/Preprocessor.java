@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,6 +14,7 @@ import java.util.Set;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * Preprocessor modifies the passed in JSON to perform

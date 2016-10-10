@@ -5,15 +5,15 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.array;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jboolean;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jobject;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.objectArray;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.stringArray;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_NAMES;
 import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_VALUES;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectArray;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.stringArray;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -33,6 +33,7 @@ import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class OperatorGenerator {
     

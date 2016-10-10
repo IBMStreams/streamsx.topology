@@ -4,10 +4,10 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.array;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.objectArray;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.stringArray;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectArray;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.stringArray;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +26,7 @@ import com.google.gson.JsonSyntaxException;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class GraphUtilities {
     static Set<JsonObject> findStarts(JsonObject graph) {
