@@ -31,6 +31,8 @@ import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
+import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 /**
@@ -130,7 +132,7 @@ public class GraphBuilder extends BJSONObject {
         for (BOperator operator : operators) {
             JSONObject jop = operator.complete();
             GraphUtilities.visitOnce(visitController,
-                    Collections.singleton(gson(jop)), gson(graph),
+                    Collections.singleton(JSON4JUtilities.gson(jop)), JSON4JUtilities.gson(graph),
                 new Consumer<JsonObject>() {
                     private static final long serialVersionUID = 1L;
                     @Override

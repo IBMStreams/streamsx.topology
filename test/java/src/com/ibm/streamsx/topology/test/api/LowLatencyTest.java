@@ -32,9 +32,9 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
-import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -89,7 +89,7 @@ public class LowLatencyTest extends TestTopology {
         SPLGenerator generator = new SPLGenerator();
         JSONObject graph = topology.builder().complete();
         
-        JsonObject ggraph = GraphUtilities.gson(graph);
+        JsonObject ggraph = JSON4JUtilities.gson(graph);
         generator.generateSPL(ggraph);
         
         GsonUtilities.objectArray(ggraph , "operators", op -> {

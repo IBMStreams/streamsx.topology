@@ -23,7 +23,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
@@ -562,37 +561,4 @@ public class GraphUtilities {
     static void outputConnections(JsonObject op, Consumer<String> action) {
         outputs(op, output -> stringArray(output, "connections", action));
     }
-    
-    /**
-     * TEMP
-     * 
-     */
-    
-
-    public static JsonObject gson(JSONObject object) {
-        try {
-            return new JsonParser().parse(object.serialize()).getAsJsonObject();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-    /*
-    
-    static Set<JSONObject> backToJSON(JSONObject graph, Set<JsonObject> ops) {
-        Set<JSONObject> _ops = new HashSet<>();
-        Set<String> names = new HashSet<>();
-        for (JsonObject op : ops) {
-            names.add(GsonUtilities.jstring(op, "name"));
-        }
-        
-        JSONArray opsa = (JSONArray) graph.get("operators");
-        for (Object opo : opsa) {
-            JSONObject op = (JSONObject) opo;
-            if (names.contains(op.get("name")))
-                _ops.add(op);          
-        }
-        
-        return _ops;
-    }
-    */
 }

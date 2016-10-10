@@ -29,6 +29,8 @@ import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
+import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
 
 /**
  * Manages fusing of Placeables. 
@@ -122,13 +124,13 @@ class PlacementInfo {
     private void disallowColocateIsolatedOpWithParent(Placeable<?> first, Placeable<?> ... toFuse) {
         JSONObject graph = first.builder().complete();
         JSONObject colocateOp = first.operator().complete();
-        Set<JsonObject> parents = GraphUtilities.getUpstream(gson(colocateOp), gson(graph));
+        Set<JsonObject> parents = GraphUtilities.getUpstream(JSON4JUtilities.gson(colocateOp), JSON4JUtilities.gson(graph));
         if (!parents.isEmpty()) {
             JsonObject isolate = parents.iterator().next();
             String kind = jstring(isolate, "kind");
             if (!ISOLATE.kind().equals(kind))
                 return;
-            parents = GraphUtilities.getUpstream(isolate, gson(graph));
+            parents = GraphUtilities.getUpstream(isolate, JSON4JUtilities.gson(graph));
             if (parents.isEmpty())
                 return;
             JsonObject isolateParentOp = parents.iterator().next();
