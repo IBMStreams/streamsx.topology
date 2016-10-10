@@ -48,10 +48,11 @@ sub cppToPythonPrimitiveConversion{
 # This function does the reverse, converting a Python type back to a
 # c++ type based on the $type argument which is a string literal.
 #
+# $convert_from_string - C++ expression representing PyObject * 
+# $type - SPL type of target attribute
+#
+#
 sub pythonToCppPrimitiveConversion{
-# TODO: do error checking for the conversions. E.g., 
-# char * str = PyUnicode_AsUTF8(pyAttrValue)
-# if(str==NULL) exit(0);
  
   my ($convert_from_string, $type) = @_;
   if ($type eq 'rstring') {

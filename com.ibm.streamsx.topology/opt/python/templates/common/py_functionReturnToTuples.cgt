@@ -161,12 +161,12 @@ if(PyTuple_Check(pyReturnVar)){
     %>
     if (<%=$ai%> < frs) {
          // Value from the Python function
-         PyObject *pyAttrValue = PyTuple_GetItem(tuple, <%=$ai%>);
+         // Can use GET_ITEM as we have checked the index
+         PyObject *pyAttrValue = PyTuple_GET_ITEM(tuple, <%=$ai%>);
          <%
 
          # TODO: do error checking for the conversions. E.g., 
          # char * str = PyUnicode_AsUTF8(pyAttrValue)
-         # if(str==NULL) exit(0);
 
 	 my $ce = "__ERROR__";
 	     if ($atype eq 'list') {
