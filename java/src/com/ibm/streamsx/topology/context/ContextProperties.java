@@ -102,7 +102,7 @@ public interface ContextProperties {
      *              .submit(topology, config);
      * }</pre>
      * 
-     * See {@link Topology#createSubmissionParameter(String, Class)}
+     * See {@link com.ibm.streamsx.topology.Topology#createSubmissionParameter(String, Class)}
      */
     String SUBMISSION_PARAMS = "topology.submissionParams";
 }
