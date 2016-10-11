@@ -4,7 +4,6 @@ from __future__ import print_function
 import sys
 import sysconfig
 import inspect
-import sys
 if sys.version_info.major == 2:
   import funcsigs
 import imp
