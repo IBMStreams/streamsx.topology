@@ -5,12 +5,18 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -18,11 +24,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
-import com.ibm.streamsx.topology.builder.JGraph;
 import com.ibm.streamsx.topology.builder.JParamTypes;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class SPLGenerator {
     // Needed for composite name generation
@@ -30,39 +34,39 @@ public class SPLGenerator {
 
     // The final list of composites (Main composite and parallel regions), which
     // compose the graph.
-    List<JSONObject> composites = new ArrayList<>();
+    List<JsonObject> composites = new ArrayList<>();
     
     private SubmissionTimeValue stvHelper;
 
-    public String generateSPL(JSONObject graph) throws IOException {
-        
+    public String generateSPL(JsonObject graph) throws IOException {
+                
         stvHelper = new SubmissionTimeValue(graph);
         new Preprocessor(graph).preprocess();
        
         // Generate parallel composites
-        JSONObject comp = new JSONObject();
-        comp.put("name", graph.get("name"));
-        comp.put("public", true);
-        comp.put("parameters", graph.get("parameters"));
-        comp.put("__spl_mainComposite", true);
+        JsonObject comp = new JsonObject();
+        comp.addProperty("name", graph.get("name").getAsString());
+        comp.addProperty("public", true);
+        comp.add("parameters", graph.get("parameters"));
+        comp.addProperty("__spl_mainComposite", true);
 
-        Set<JSONObject> starts = GraphUtilities.findStarts(graph);
+        Set<JsonObject> starts = GraphUtilities.findStarts(graph);
         separateIntoComposites(starts, comp, graph);
         StringBuilder sb = new StringBuilder();
         generateGraph(graph, sb);
         return sb.toString();
     }
     
-    void generateGraph(JSONObject graph, StringBuilder sb) throws IOException {
+    void generateGraph(JsonObject graph, StringBuilder sb) throws IOException {
 
-        String namespace = (String) graph.get("namespace");
+        String namespace = jstring(graph, "namespace");
         if (namespace != null && !namespace.isEmpty()) {
             sb.append("namespace ");
             sb.append(namespace);
             sb.append(";\n");
         }
 
-        JSONObject graphConfig = getGraphConfig(graph);
+        JsonObject graphConfig = getGraphConfig(graph);
 
         for (int i = 0; i < composites.size(); i++) {
             StringBuilder compBuilder = new StringBuilder();
@@ -71,20 +75,20 @@ public class SPLGenerator {
         }
     }
 
-    void generateComposite(JSONObject graphConfig, JSONObject graph,
+    void generateComposite(JsonObject graphConfig, JsonObject graph,
             StringBuilder compBuilder) throws IOException {
-        Boolean isPublic = (Boolean) graph.get("public");
-        String name = (String) graph.get("name");
+        boolean isPublic = jboolean(graph, "public");
+        String name = jstring(graph, "name");
         name = getSPLCompatibleName(name);
-        if (isPublic != null && isPublic)
+        if (isPublic)
             compBuilder.append("public ");
 
         compBuilder.append("composite ");
 
         compBuilder.append(name);
         if (name.startsWith("__parallel_")) {
-            String iput = (String) graph.get("inputName");
-            String oput = (String) graph.get("outputName");
+            String iput = jstring(graph, "inputName");
+            String oput = jstring(graph, "outputName");
 
             iput = splBasename(iput);
             compBuilder.append("(input " + iput);
@@ -107,24 +111,22 @@ public class SPLGenerator {
         compBuilder.append("}\n");
     }
     
-    private void generateCompParams(JSONObject graph, StringBuilder sb) {
-        JSONObject jparams = (JSONObject) graph.get("parameters");
-        if (jparams != null && jparams.size() > 0) {
-            Boolean isMainComposite = (Boolean) graph.get("__spl_mainComposite");
-            if (isMainComposite == null)
-                isMainComposite = false;
+    private void generateCompParams(JsonObject graph, StringBuilder sb) {
+        JsonObject jparams = GsonUtilities.jobject(graph, "parameters");
+        if (jparams != null && jparams.entrySet().size() > 0) {
+            boolean isMainComposite = jboolean(graph, "__spl_mainComposite");
             sb.append("param\n");
-            for (Object on : jparams.keySet()) {
-                String name = (String) on;
-                JSONObject param = (JSONObject) jparams.get(name);
-                Object type = param.get("type");
-                Object value = param.get("value");
+            for (Entry<String, JsonElement> on : jparams.entrySet()) {
+                String name = on.getKey();
+                JsonObject param = on.getValue().getAsJsonObject();
+                String type = jstring(param, "type");
+                JsonObject value = param.get("value").getAsJsonObject();
                 if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
                     sb.append("  ");
                     if (isMainComposite)
-                        stvHelper.generateMainDef((JSONObject)value, sb);
+                        stvHelper.generateMainDef(value, sb);
                     else
-                        stvHelper.generateInnerDef((JSONObject)value, sb);
+                        stvHelper.generateInnerDef(value, sb);
                     sb.append(";\n");
                 }
                 else
@@ -133,18 +135,18 @@ public class SPLGenerator {
         }
     }
     
-    private void generateCompConfig(JSONObject graph, JSONObject graphConfig, StringBuilder sb) {
-        Boolean isMainComposite = (Boolean) graph.get("__spl_mainComposite");
-        if (isMainComposite != null && isMainComposite) {
+    private void generateCompConfig(JsonObject graph, JsonObject graphConfig, StringBuilder sb) {
+        boolean isMainComposite = jboolean(graph, "__spl_mainComposite");
+        if (isMainComposite) {
             generateMainCompConfig(graphConfig, sb);
         }
     }
     
-    private void generateMainCompConfig(JSONObject graphConfig, StringBuilder sb) {
-        JSONArray hostPools = (JSONArray) graphConfig.get("__spl_hostPools");
-        boolean hasHostPools =  hostPools != null && !hostPools.isEmpty();
+    private void generateMainCompConfig(JsonObject graphConfig, StringBuilder sb) {
+        JsonArray hostPools = array(graphConfig, "__spl_hostPools");
+        boolean hasHostPools =  hostPools != null && hostPools.size() != 0;
         
-        JSONObject checkpoint = (JSONObject) graphConfig.get("checkpoint");
+        JsonObject checkpoint = GsonUtilities.jobject(graphConfig, "checkpoint");
         
         boolean hasCheckpoint = checkpoint != null;
                 
@@ -154,16 +156,16 @@ public class SPLGenerator {
         
         if (hasHostPools) {
             boolean seenOne = false;
-            for (Object hpo : hostPools) {
+            for (JsonElement hpo : hostPools) {
                 if (!seenOne) {
                     sb.append("    hostPool:\n");
                     seenOne = true;
                 } else {
                     sb.append(",");
                 }
-                JSONObject hp = (JSONObject) hpo;
-                String name = (String) hp.get("name");
-                JSONArray resourceTags = (JSONArray) hp.get("resourceTags");
+                JsonObject hp = hpo.getAsJsonObject();
+                String name = jstring(hp, "name");
+                JsonArray resourceTags = array(hp, "resourceTags");
                 
                 sb.append("    ");
                 sb.append(name);
@@ -171,7 +173,7 @@ public class SPLGenerator {
                 for (int i = 0; i < resourceTags.size(); i++) {
                     if (i != 0)
                         sb.append(",");
-                    stringLiteral(sb, resourceTags.get(i).toString());
+                    stringLiteral(sb, resourceTags.get(i).getAsString());
                 }
                 sb.append("]}, Sys.Shared)");
             }
@@ -179,8 +181,8 @@ public class SPLGenerator {
         }
         
         if (hasCheckpoint) {
-            TimeUnit unit = TimeUnit.valueOf(checkpoint.get("unit").toString());
-            long period = Long.valueOf(checkpoint.get("period").toString());
+            TimeUnit unit = TimeUnit.valueOf(jstring(checkpoint, "unit"));
+            long period = checkpoint.get("period").getAsLong();
             
             // SPL works in seconds, including fractions.
             long periodMs = unit.toMillis(period);
@@ -191,22 +193,15 @@ public class SPLGenerator {
         }
     }
 
-    void operators(JSONObject graphConfig, JSONObject graph, StringBuilder sb)
+    void operators(JsonObject graphConfig, JsonObject graph, StringBuilder sb)
             throws IOException {
-        JSONArray ops = (JSONArray) graph.get("operators");
-
-        if (ops == null || ops.isEmpty())
-            return;
-        
+      
         OperatorGenerator opGenerator = new OperatorGenerator(this);
-
-        for (int i = 0; i < ops.size(); i++) {
-            JSONObject op = (JSONObject) ops.get(i);
-
-            String splOp = opGenerator.generate(graphConfig, op);
+        JsonArray ops = array(graph, "operators");
+        for (JsonElement ope : ops) {
+            String splOp = opGenerator.generate(graphConfig, ope.getAsJsonObject());
             sb.append(splOp);
             sb.append("\n");
-
         }
     }
     
@@ -231,27 +226,27 @@ public class SPLGenerator {
      *            Necessary to pass it to the GraphUtilities.getChildren
      *            function.
      */
-    JSONObject separateIntoComposites(Set<JSONObject> starts,
-            JSONObject comp, JSONObject graph) {
+    JsonObject separateIntoComposites(Set<JsonObject> starts,
+            JsonObject comp, JsonObject graph) {
         // Contains all ops which have been reached by graph traversal,
         // regardless of whether they are 'special' operators, such as the ones
         // whose kind begins with '$', or whether they're included in the final
         // physical graph.
-        Set<JSONObject> allTraversedOps = new HashSet<>();
+        Set<JsonObject> allTraversedOps = new HashSet<>();
 
         // Only contains operators that are in the final physical graph.
-        List<JSONObject> visited = new ArrayList<>();
+        List<JsonObject> visited = new ArrayList<>();
 
         // Operators which might not have been visited yet.
-        List<JSONObject> unvisited = new ArrayList<>();
-        JSONObject unparallelOp = null;
+        List<JsonObject> unvisited = new ArrayList<>();
+        JsonObject unparallelOp = null;
 
         unvisited.addAll(starts);
 
         // While there are still nodes to visit
         while (unvisited.size() > 0) {
             // Get the first unvisited node
-            JSONObject visitOp = unvisited.get(0);
+            JsonObject visitOp = unvisited.get(0);
             // Check whether we've seen it before. Remember, allTraversedOps
             // contains *every* operator we've traversed in the JSON graph,
             // while visited is a list of only the physical operators that will
@@ -266,7 +261,7 @@ public class SPLGenerator {
             // If the operator is not a special operator, add it to the
             // visited list.
             if (!isParallelStart(visitOp) && !isParallelEnd(visitOp)) {
-                Set<JSONObject> children = GraphUtilities.getDownstream(
+                Set<JsonObject> children = GraphUtilities.getDownstream(
                         visitOp, graph);
                 unvisited.addAll(children);
                 visited.add(visitOp);
@@ -281,106 +276,108 @@ public class SPLGenerator {
             // composite.
             else if (isParallelStart(visitOp)) {
                 // The new composite, represented in JSON
-                JSONObject subComp = new JSONObject();
+                JsonObject subComp = new JsonObject();
                 // The operator to include in the graph that refers to the
                 // parallel composite.
-                JSONObject compOperator = new JSONObject();
-                subComp.put(
+                JsonObject compOperator = new JsonObject();
+                subComp.addProperty(
                         "name",
                         "__parallel_Composite_"
                                 + Integer.toString(numParallelComposites));
-                subComp.put("public", false);
+                subComp.addProperty("public", false);
 
-                compOperator.put(
+                compOperator.addProperty(
                         "kind",
                         "__parallel_Composite_"
                                 + Integer.toString(numParallelComposites));
-                compOperator.put("name",
+                compOperator.addProperty("name",
                         "paraComp_" + Integer.toString(numParallelComposites));
-                compOperator.put("inputs", visitOp.get("inputs"));
+                compOperator.add("inputs", visitOp.get("inputs"));
 
-                Boolean partitioned = (Boolean) ((JSONObject) ((JSONArray) visitOp
-                        .get("outputs")).get(0)).get("partitioned");
-                if (partitioned != null && partitioned) {
-                    JSONArray inputs = (JSONArray) visitOp.get("inputs");
+                
+                boolean partitioned = jboolean(
+                        visitOp.get("outputs").getAsJsonArray().get(0).getAsJsonObject(), "partitioned");
+                if (partitioned) {
+                    JsonArray inputs = visitOp.get("inputs").getAsJsonArray();
                     String parallelInputPortName = null;
 
                     // Get the first port that has the __spl_hash attribute
                     for (int i = 0; i < inputs.size(); i++) {
-                        JSONObject input = (JSONObject) inputs.get(i);
-                        String type = (String) input.get("type");
+                        JsonObject input = inputs.get(i).getAsJsonObject();
+                        String type = jstring(input, "type");
                         if (type.contains("__spl_hash")) {
-                            parallelInputPortName = (String) input.get("name");
+                            parallelInputPortName = jstring(input, "name");
                         }
                     }
-                    compOperator.put("partitioned", true);
-                    compOperator.put("parallelInputPortName",
+                    compOperator.addProperty("partitioned", true);
+                    compOperator.addProperty("parallelInputPortName",
                             parallelInputPortName);
                 }
 
                 // Necessary to later indicate whether the composite the
                 // operator
                 // refers to is parallelized.
-                compOperator.put("parallelOperator", true);
+                compOperator.addProperty("parallelOperator", true);
 
-                JSONArray outputs = (JSONArray) visitOp.get("outputs");
-                JSONObject output = (JSONObject) outputs.get(0);
-                compOperator.put("width", output.get("width"));
+                JsonArray outputs = visitOp.get("outputs").getAsJsonArray();
+                JsonObject output = outputs.get(0).getAsJsonObject();
+                compOperator.add("width", output.get("width"));
                 numParallelComposites++;
 
                 // Get the start operators in the parallel region -- the ones
                 // immediately downstream from the $Parallel operator
-                Set<JSONObject> parallelStarts = GraphUtilities
+                Set<JsonObject> parallelStarts = GraphUtilities
                         .getDownstream(visitOp, graph);
 
                 // Once you have the start operators, recursively call the
                 // function
                 // to populate the parallel composite.
-                JSONObject parallelEnd = separateIntoComposites(parallelStarts,
+                JsonObject parallelEnd = separateIntoComposites(parallelStarts,
                         subComp, graph);
                 stvHelper.addJsonInstanceParams(compOperator, subComp);
 
                 // Set all relevant input port connections to the input port
                 // name of the parallel composite
-                String parallelStartOutputPortName = (String)(output.get("name"));
-                subComp.put("inputName", "parallelInput");
-                for(JSONObject start : parallelStarts){
-                    JSONArray inputs = (JSONArray) start.get("inputs");
-                    for(Object inputObj : inputs){
-                        JSONObject input = (JSONObject)inputObj;
-                        JSONArray connections = (JSONArray) input.get("connections");
+                String parallelStartOutputPortName = jstring(output, "name");
+                subComp.addProperty("inputName", "parallelInput");
+                for(JsonObject start : parallelStarts){
+                    JsonArray inputs = array(start, "inputs");
+                    for(JsonElement inputObj : inputs){
+                        JsonObject input = inputObj.getAsJsonObject();
+                        JsonArray connections = array(input, "connections");
                         for(int i = 0; i < connections.size(); i++){
-                            if(((String)connections.get(i)).equals(parallelStartOutputPortName)){
-                                connections.set(i, "parallelInput");
+                            if(connections.get(i).getAsString().equals(parallelStartOutputPortName)){
+                                connections.set(i, new JsonPrimitive("parallelInput"));
                             }
                         }
                     }
                 }
 
                 if (parallelEnd != null) {
-                    Set<JSONObject> children = GraphUtilities
-                            .getDownstream(parallelEnd, graph);
+                    Set<JsonObject> children = getDownstream(parallelEnd, graph);
                     unvisited.addAll(children);
-                    compOperator.put("outputs", parallelEnd.get("outputs"));
-                    subComp.put("outputName", "parallelOutput");
+                    compOperator.add("outputs", parallelEnd.get("outputs"));
+                    subComp.addProperty("outputName", "parallelOutput");
 
-		    // Set all relevant output port names to the output port of the
+                    // Set all relevant output port names to the output port of
+                    // the
                     // parallel composite.
-                    JSONObject paraEndIn = (JSONObject)((JSONArray)parallelEnd.get("inputs")).get(0);
-                    String parallelEndInputPortName = (String)(paraEndIn.get("name"));
-                    Set<JSONObject> parallelOutParents = GraphUtilities.getUpstream(parallelEnd, graph);
-                    for(JSONObject end : parallelOutParents){
-			if(((String)end.get("kind")).equals("com.ibm.streamsx.topology.functional.java::HashAdder")){
-			    String endType = (String)((JSONObject)((JSONArray)end.get("outputs")).get(0)).get("type");
-			    ((JSONObject)((JSONArray)compOperator.get("outputs")).get(0)).put("type", endType);
-			}
-                        JSONArray parallelOutputs = (JSONArray) end.get("outputs");
-                        for(Object outputObj : parallelOutputs){
-                            JSONObject paraOutput = (JSONObject)outputObj;
-                            JSONArray connections = (JSONArray) paraOutput.get("connections");
-                            for(int i = 0; i < connections.size(); i++){
-                                if(((String)connections.get(i)).equals(parallelEndInputPortName)){
-                                    paraOutput.put("name", "parallelOutput");
+                    JsonObject paraEndIn = array(parallelEnd, "inputs").get(0).getAsJsonObject();
+                    String parallelEndInputPortName = jstring(paraEndIn, "name");
+                    Set<JsonObject> parallelOutParents = getUpstream(parallelEnd, graph);
+                    for (JsonObject end : parallelOutParents) {
+                        if (jstring(end, "kind").equals("com.ibm.streamsx.topology.functional.java::HashAdder")) {
+                            
+                            String endType = jstring(array(end, "outputs").get(0).getAsJsonObject(), "type");
+                            array(compOperator, "outputs").get(0).getAsJsonObject().addProperty("type", endType);
+                        }
+                        JsonArray parallelOutputs = array(end, "outputs");
+                        for (JsonElement outputObj : parallelOutputs) {
+                            JsonObject paraOutput = outputObj.getAsJsonObject();
+                            JsonArray connections = array(paraOutput, "connections");
+                            for (int i = 0; i < connections.size(); i++) {
+                                if (connections.get(i).getAsString().equals(parallelEndInputPortName)) {
+                                    paraOutput.addProperty("name", "parallelOutput");
                                 }
                             }
                         }
@@ -403,10 +400,11 @@ public class SPLGenerator {
             unvisited.remove(0);
         }
 
-        JSONArray compOps = new JSONArray(visited.size());
-        compOps.addAll(visited);
+        JsonArray compOps = new JsonArray();
+        for (JsonObject op : visited)
+            compOps.add(op);
 
-        comp.put("operators", compOps);
+        comp.add("operators", compOps);
         stvHelper.addJsonParamDefs(comp);
         composites.add(comp);
 
@@ -418,12 +416,12 @@ public class SPLGenerator {
 
 
 
-    private boolean isParallelEnd(JSONObject visitOp) {
-        return BVirtualMarker.END_PARALLEL.isThis((String) visitOp.get("kind"));
+    private boolean isParallelEnd(JsonObject visitOp) {
+        return BVirtualMarker.END_PARALLEL.isThis(jstring(visitOp, "kind"));
     }
 
-    private boolean isParallelStart(JSONObject visitOp) {
-        return BVirtualMarker.PARALLEL.isThis((String) visitOp.get("kind"));
+    private boolean isParallelStart(JsonObject visitOp) {
+        return BVirtualMarker.PARALLEL.isThis(jstring(visitOp, "kind"));
     }
 
     /**
@@ -695,7 +693,7 @@ public class SPLGenerator {
         return Long.toString(l);
     }
 
-    static JSONObject getGraphConfig(JSONObject graph) {
-        return JGraph.createConfig(graph);
+    static JsonObject getGraphConfig(JsonObject graph) {
+        return GsonUtilities.objectCreate(graph, "config");
     }
 }

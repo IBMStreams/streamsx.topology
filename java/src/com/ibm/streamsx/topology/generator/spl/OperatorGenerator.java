@@ -5,15 +5,21 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
-import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.gson;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jboolean;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jobject;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.objectArray;
-import static com.ibm.streamsx.topology.generator.spl.GsonUtilities.stringArray;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_COUNT;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_DELTA;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_NONE;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_PUNCTUATION;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_TIME;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_NOT_WINDOWED;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_SLIDING;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_TUMBLING;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
-import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_NAMES;
-import static com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager.NAME_SUBMISSION_PARAM_VALUES;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectArray;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.stringArray;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -26,14 +32,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
-import com.ibm.streams.operator.window.StreamWindow;
-import com.ibm.streams.operator.window.StreamWindow.Type;
-import com.ibm.streamsx.topology.builder.JOperator;
-import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
+import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class OperatorGenerator {
     
@@ -43,9 +47,9 @@ class OperatorGenerator {
         this.stvHelper = splGenerator.stvHelper();
     }
 
-    String generate(JSONObject graphConfig, JSONObject op)
+    String generate(JsonObject graphConfig, JsonObject op)
             throws IOException {
-        JsonObject _op = gson(op);
+        JsonObject _op = op;
         StringBuilder sb = new StringBuilder();
         noteAnnotations(_op, sb);
         parallelAnnotation(_op, sb);
@@ -57,7 +61,7 @@ class OperatorGenerator {
 
         sb.append("  {\n");
         windowClause(_op, sb);
-        paramClause(GraphUtilities.gson(graphConfig), _op, sb);
+        paramClause(graphConfig, _op, sb);
         configClause(graphConfig, _op, sb);
         sb.append("  }\n");
 
@@ -203,6 +207,7 @@ class OperatorGenerator {
         sb.append(kind);
     }
 
+    /*
     static JSONArray getInputs(JSONObject op) {
         JSONArray inputs = (JSONArray) op.get("inputs");
         if (inputs == null || inputs.isEmpty())
@@ -210,6 +215,7 @@ class OperatorGenerator {
         return inputs;
 
     }
+    */
 
     static void inputClause(JsonObject op, StringBuilder sb) {
 
@@ -247,9 +253,8 @@ class OperatorGenerator {
             if (window == null)
                 return;
             
-            String stype = jstring(window, "type");
-            StreamWindow.Type type = StreamWindow.Type.valueOf(stype);
-            if (type == Type.NOT_WINDOWED)
+            String type = jstring(window, "type");
+            if (TYPE_NOT_WINDOWED.equals(type))
                 return;
 
             if (firstWindow.getAndSet(false))
@@ -259,10 +264,10 @@ class OperatorGenerator {
             sb.append(splBasename(jstring(input, "name")));
             sb.append(":");
             switch (type) {
-            case SLIDING:
+            case TYPE_SLIDING:
                 sb.append("sliding,");
                 break;
-            case TUMBLING:
+            case TYPE_TUMBLING:
                 sb.append("tumbing,");
                 break;
             default:
@@ -289,21 +294,19 @@ class OperatorGenerator {
 
     static void appendWindowPolicy(String policyName, JsonElement config, String timeUnit,
             StringBuilder sb) {
-        StreamWindow.Policy policy = StreamWindow.Policy
-                .valueOf((String) policyName);
-        switch (policy) {
-        case COUNT:
+        switch (policyName) {
+        case POLICY_COUNT:
             sb.append("count(");
             sb.append(config.getAsInt());
             sb.append(")");
             break;
-        case DELTA:
+        case POLICY_DELTA:
             break;
-        case NONE:
+        case POLICY_NONE:
             break;
-        case PUNCTUATION:
+        case POLICY_PUNCTUATION:
             break;
-        case TIME:
+        case POLICY_TIME:
         {
             TimeUnit unit = TimeUnit.valueOf(timeUnit.toString());
             long time = config.getAsLong();
@@ -346,7 +349,7 @@ class OperatorGenerator {
         
 
         // VMArgs only apply to Java SPL operators.
-        boolean isJavaOp = JOperator.LANGUAGE_JAVA.equals(jstring(op, JOperator.LANGUAGE));
+        boolean isJavaOp = OpProperties.LANGUAGE_JAVA.equals(jstring(op, OpProperties.LANGUAGE));
 
         JsonArray vmArgs = null;
         if (isJavaOp && graphConfig.has(ContextProperties.VMARGS))
@@ -356,7 +359,7 @@ class OperatorGenerator {
         boolean addSPInfo = false;
         ParamsInfo stvOpParamInfo = stvHelper.getSplInfo();
         if (stvOpParamInfo != null) {
-            Map<String,JSONObject> functionalOps = stvHelper.getFunctionalOps();
+            Map<String,JsonObject> functionalOps = stvHelper.getFunctionalOps();
             if (functionalOps.containsKey(op.get("name").getAsString()))
                 addSPInfo = true;
         }
@@ -403,13 +406,13 @@ class OperatorGenerator {
         
         if (addSPInfo) {
             sb.append("      ");
-            sb.append(NAME_SUBMISSION_PARAM_NAMES);
+            sb.append(FunctionalOpProperties.NAME_SUBMISSION_PARAM_NAMES);
             sb.append(": ");
             sb.append(stvOpParamInfo.names);
             sb.append(";\n");
 
             sb.append("      ");
-            sb.append(NAME_SUBMISSION_PARAM_VALUES);
+            sb.append(FunctionalOpProperties.NAME_SUBMISSION_PARAM_VALUES);
             sb.append(": ");
             sb.append(stvOpParamInfo.values);
             sb.append(";\n");
@@ -427,13 +430,13 @@ class OperatorGenerator {
         SPLGenerator.value(sb, param);
     }
 
-    static void configClause(JSONObject graphConfig, JsonObject op,
+    static void configClause(JsonObject graphConfig, JsonObject op,
             StringBuilder sb) {
         
-        if (!op.has(JOperator.CONFIG))
+        if (!op.has(OpProperties.CONFIG))
             return;
         
-        JsonObject config = jobject(op, JOperator.CONFIG);
+        JsonObject config = jobject(op, OpProperties.CONFIG);
         
         StringBuilder sbConfig = new StringBuilder();
         
@@ -454,14 +457,14 @@ class OperatorGenerator {
             }
         }
                
-        if (config.has(JOperatorConfig.PLACEMENT)) {
-            JsonObject placement = jobject(config, JOperatorConfig.PLACEMENT);
+        if (config.has(OpProperties.PLACEMENT)) {
+            JsonObject placement = jobject(config, OpProperties.PLACEMENT);
             StringBuilder sbPlacement = new StringBuilder();
             
             // Explicit placement takes precedence.
-            String colocationTag = jstring(placement, JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID);
+            String colocationTag = jstring(placement, OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID);
             if (colocationTag == null)
-                colocationTag = jstring(placement, JOperator.PLACEMENT_ISOLATE_REGION_ID);
+                colocationTag = jstring(placement, OpProperties.PLACEMENT_ISOLATE_REGION_ID);
             
             if (colocationTag != null && !colocationTag.isEmpty()) {
                 sbPlacement.append("      partitionColocation(");
@@ -470,7 +473,7 @@ class OperatorGenerator {
             }
             
             Set<String> uniqueResourceTags = new HashSet<>();           
-            GsonUtilities.stringArray(placement, JOperator.PLACEMENT_RESOURCE_TAGS, tag -> {if (!tag.isEmpty()) uniqueResourceTags.add(tag);} );
+            GsonUtilities.stringArray(placement, OpProperties.PLACEMENT_RESOURCE_TAGS, tag -> {if (!tag.isEmpty()) uniqueResourceTags.add(tag);} );
             if (!uniqueResourceTags.isEmpty()) {
                 String hostPool = getHostPoolName(graphConfig, uniqueResourceTags);
                 if (sbPlacement.length() != 0)
@@ -497,30 +500,31 @@ class OperatorGenerator {
      * Gets or creates a host pool at the graphConfig level
      * corresponding to the unique set of tags.
      */
-    @SuppressWarnings("unchecked")
-    private static String getHostPoolName(JSONObject graphConfig, Set<String> uniqueResourceTags) {
-        String hostPool = null;
-        JSONArray hostPools = (JSONArray) graphConfig.get("__spl_hostPools");
+    private static String getHostPoolName(JsonObject graphConfig, Set<String> uniqueResourceTags) {
+        JsonArray hostPools = array(graphConfig, "__spl_hostPools");
         if (hostPools == null) {
-            graphConfig.put("__spl_hostPools", hostPools = new JSONArray());
+            graphConfig.add("__spl_hostPools", hostPools = new JsonArray());
         }
         
         // Look for a host pool matching this one
-        for (Object hpo : hostPools) {
-            JSONObject hostPoolDef = (JSONObject) hpo;
-            JSONArray rta = (JSONArray) hostPoolDef.get("resourceTags");
-            Set<Object> poolResourceTags = new HashSet<>();
-            poolResourceTags.addAll(rta);
+        for (JsonElement hpe : hostPools) {
+            JsonObject hostPoolDef = hpe.getAsJsonObject();
+            JsonArray rta = hostPoolDef.get("resourceTags").getAsJsonArray();
+            Set<String> poolResourceTags = new HashSet<>();
+            for (JsonElement tage : rta)
+                poolResourceTags.add(tage.getAsString());
             if (uniqueResourceTags.equals(poolResourceTags)) {
-                return hostPoolDef.get("name").toString();
+                return jstring(hostPoolDef, "name");
             }
         }
                         
-        JSONObject hostPoolDef = new JSONObject();
-        hostPoolDef.put("name", hostPool = "__jaaHostPool" + hostPools.size());
-        JSONArray rta = new JSONArray();
-        rta.addAll(uniqueResourceTags);
-        hostPoolDef.put("resourceTags", rta);
+        JsonObject hostPoolDef = new JsonObject();
+        String hostPool;
+        hostPoolDef.addProperty("name", hostPool = "__jaaHostPool" + hostPools.size());
+        JsonArray rta = new JsonArray();
+        for (String tag : uniqueResourceTags)
+            rta.add(new JsonPrimitive(tag));
+        hostPoolDef.add("resourceTags", rta);
         hostPools.add(hostPoolDef);  
         return hostPool;
     }

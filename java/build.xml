@@ -15,6 +15,10 @@
     <path refid="tk.classpath"/>
   </path>
 
+  <path id="compile.pure.classpath">
+    <path refid="gson.classpath" />
+  </path>
+
   <target name="all" depends="jar"/>
 
 
@@ -23,7 +27,21 @@
     <mkdir dir="${tk.lib}"/>
   </target>
 
-  <target name="compile" depends="init">
+  <!-- Compile of classes that do not depend on STREAMS_INSTALL
+       to allow local generation of SPL code and submission to
+       a build farm.
+   -->
+  <property name="cisxt" value="com/ibm/streamsx/topology"/>
+  <target name="compile.pure" depends="init">
+    <javac debug="true" includeantruntime="no"
+	   srcdir="${src}" 
+	   destdir="${classes}"
+	   classpathref="compile.pure.classpath"
+	   includes="${cisxt}/function/*.java ${cisxt}/internal/gson/*.java ${cisxt}/generator/**"
+    />   
+  </target>
+
+  <target name="compile" depends="init,compile.pure">
     <javac debug="true" includeantruntime="no"
 	   srcdir="${src}" 
 	   destdir="${classes}"

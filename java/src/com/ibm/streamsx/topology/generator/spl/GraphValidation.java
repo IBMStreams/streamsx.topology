@@ -4,34 +4,38 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
-import java.util.List;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.findOperatorByKind;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.first;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+
 import java.util.Set;
 
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 
 public class GraphValidation {
     
-    void validateGraph(JSONObject graph){
+    void validateGraph(JsonObject graph){
         checkValidEndParallel(graph);
     }
     
-    private void checkValidEndParallel(JSONObject graph){
-        Set<JSONObject> endParallels = GraphUtilities.findOperatorByKind(BVirtualMarker.END_PARALLEL, graph);	
+    private void checkValidEndParallel(JsonObject graph){
+        Set<JsonObject> endParallels = findOperatorByKind(BVirtualMarker.END_PARALLEL, graph);	
 
-        for(JSONObject endParallel : endParallels){
-	    Set<JSONObject> endParallelParents = null;
-	    // Setting up loop
-	    JSONObject endParallelParent = endParallel;
-            do{
-		endParallelParents = GraphUtilities.getUpstream(endParallelParent, graph);
-		if(endParallelParents.size() != 1){
-		    throw new IllegalStateException("Cannot union multiple streams before invoking endParallel()");
-		}
-		endParallelParent = endParallelParents.toArray(new JSONObject[1])[0];
-	    } while(((String)endParallelParent.get("kind")).startsWith("$"));
-            Set<JSONObject> endParallelParentChildren = GraphUtilities.getDownstream(endParallelParent, graph);
-            if(endParallelParentChildren.size() != 1){
+        for (JsonObject endParallel : endParallels) {
+            // Setting up loop
+            JsonObject endParallelParent = endParallel;
+            do {
+                Set<JsonObject> endParallelParents = GraphUtilities.getUpstream(endParallelParent, graph);
+                if (endParallelParents.size() != 1) {
+                    throw new IllegalStateException("Cannot union multiple streams before invoking endParallel()");
+                }
+                endParallelParent = first(endParallelParents);
+            } while (jstring(endParallelParent, "kind").startsWith("$"));
+            
+            Set<JsonObject> endParallelParentChildren = getDownstream(endParallelParent, graph);
+            if (endParallelParentChildren.size() != 1) {
                 throw new IllegalStateException("Cannot fanout a stream before invoking endParallel()");
             }
         }

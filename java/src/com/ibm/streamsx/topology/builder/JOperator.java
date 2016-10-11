@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.builder;
 
 import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 
 /**
  * Utility methods for an operator represented as a JSON Object.
@@ -15,45 +16,45 @@ public class JOperator {
     /**
      * Programming model used to create the operator.
      */
-    public static final String MODEL = "model";
+    public static final String MODEL = OpProperties.MODEL;
     
     /**
      * Language for the operator within its {@link #MODEL}.
      */
-    public static final String LANGUAGE = "language";
+    public static final String LANGUAGE = OpProperties.LANGUAGE;
     
-    public static final String MODEL_FUNCTIONAL = "functional";
-    public static final String MODEL_SPL = "spl";
+    public static final String MODEL_FUNCTIONAL = OpProperties.MODEL_FUNCTIONAL;
+    public static final String MODEL_SPL = OpProperties.MODEL_SPL;
     
-    public static final String LANGUAGE_JAVA = "java";
-    public static final String LANGUAGE_CPP = "cpp";
-    public static final String LANGUAGE_PYTHON = "python";
-    public static final Object LANGUAGE_SPL = "spl";
+    public static final String LANGUAGE_JAVA = OpProperties.LANGUAGE_JAVA;
+    public static final String LANGUAGE_CPP = OpProperties.LANGUAGE_CPP;
+    public static final String LANGUAGE_PYTHON = OpProperties.LANGUAGE_PYTHON;
+    public static final Object LANGUAGE_SPL = OpProperties.LANGUAGE_SPL;
       
     /**
      * JSON attribute for operator configuration.
      */
-    public static final String CONFIG = "config"; 
+    public static final String CONFIG = OpProperties.CONFIG; 
     
     /**
      * Attribute for isolation region identifier.
      */
-    public static final String PLACEMENT_ISOLATE_REGION_ID = "isolateRegion";
+    public static final String PLACEMENT_ISOLATE_REGION_ID = OpProperties.PLACEMENT_ISOLATE_REGION_ID;
 
     /**
      * Attribute for an explicit colocation identifier.
      */
-    public static final String PLACEMENT_EXPLICIT_COLOCATE_ID = "explicitColocate";
+    public static final String PLACEMENT_EXPLICIT_COLOCATE_ID = OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID;
 
     /**
      * Attribute for low latency region identifier.
      */
-    public static final String PLACEMENT_LOW_LATENCY_REGION_ID = "lowLatencyRegion";
+    public static final String PLACEMENT_LOW_LATENCY_REGION_ID = OpProperties.PLACEMENT_LOW_LATENCY_REGION_ID;
 
     /**
      * Attribute for an resource tags, a list of tags.
      */
-    public static final String PLACEMENT_RESOURCE_TAGS = "resourceTags";
+    public static final String PLACEMENT_RESOURCE_TAGS = OpProperties.PLACEMENT_RESOURCE_TAGS;
 
 
     

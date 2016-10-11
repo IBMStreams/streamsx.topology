@@ -4,13 +4,17 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  * Given the path of a file containing the JSON representation of a graph,
@@ -27,21 +31,22 @@ public class SPLFromFileName {
         if(!JSONFile.exists()){
             throw new FileNotFoundException("File " + JSONPath + " does not exist");
         }
-        FileInputStream fis= new FileInputStream(JSONFile);
-        /*byte[] data = new byte[(int)JSONFile.length()];
-        fis.read(data);
-        fis.close();
-        String JSONString = new String(data, "UTF-8");*/
-        
-        JSONObject jso = JSONObject.parse(fis);
-        
-        SPLGenerator splGen = new SPLGenerator();
-        String SPLString = splGen.generateSPL(jso);
-        
-        File f = new File(SPLPath);
-        PrintWriter splFile = new PrintWriter(f, "UTF-8");
-        splFile.print(SPLString);
-        splFile.flush();
-        splFile.close();
+                
+        try (BufferedReader input = new BufferedReader(
+                new InputStreamReader(new FileInputStream(JSONFile), StandardCharsets.UTF_8))) {
+
+            JsonParser parser = new JsonParser();
+
+            JsonObject jso = parser.parse(input).getAsJsonObject();
+
+            SPLGenerator splGen = new SPLGenerator();
+            String SPLString = splGen.generateSPL(jso);
+
+            File f = new File(SPLPath);
+            PrintWriter splFile = new PrintWriter(f, "UTF-8");
+            splFile.print(SPLString);
+            splFile.flush();
+            splFile.close();
+        }
     }
 }
