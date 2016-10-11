@@ -1,8 +1,12 @@
+from __future__ import print_function
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 import sys
 import sysconfig
 import inspect
+import sys
+if sys.version_info.major == 2:
+  import funcsigs
 import imp
 import glob
 import os
@@ -19,6 +23,16 @@ cmd_parser.add_argument('--make-toolkit', action='store_true',
                    help='Index toolkit using spl-make-toolkit')
 cmd_args = cmd_parser.parse_args()
 
+############################################
+
+############################################
+# setup for function inspection
+if sys.version_info.major == 3:
+  _inspect = inspect
+elif sys.version_info.major == 2:
+  _inspect = funcsigs
+else:
+  raise ValueError("Python version not supported.")
 ############################################
 
 # Return the root of the com.ibm.streamsx.topology toolkit
@@ -104,7 +118,7 @@ _OP_PARAM_TEMPLATE ="""
 def create_op_parameters(opmodel_xml, name, opObj):
     opparam_xml = ''
     if opObj.__splpy_callable == 'class':
-        pmds = init_sig = inspect.signature(opObj.__init__).parameters
+        pmds = init_sig = _inspect.signature(opObj.__init__).parameters
         itpmds = iter(pmds)
         # first argument to __init__ is self (instance ref)
         next(itpmds)
@@ -113,7 +127,7 @@ def create_op_parameters(opmodel_xml, name, opObj):
             pmd = pmds[pn]
             px = _OP_PARAM_TEMPLATE
             px = px.replace('__SPLPY__PARAM_NAME__SPLPY__', pn)
-            px = px.replace('__SPLPY__PARAM_OPT__SPLPY__', 'false' if pmd.default== inspect.Parameter.empty else 'true' )
+            px = px.replace('__SPLPY__PARAM_OPT__SPLPY__', 'false' if pmd.default== _inspect.Parameter.empty else 'true' )
             opparam_xml = opparam_xml + px
     replaceTokenInFile(opmodel_xml, '__SPLPY__PARAMETERS__SPLPY__', opparam_xml)
     
@@ -178,7 +192,7 @@ def write_style_info(cfgfile, opobj):
         else:
             opfn = opobj
         
-        sig = inspect.signature(opfn)
+        sig = _inspect.signature(opfn)
         fixedCount = 0
         if opobj.__splpy_style == 'tuple':
             pmds = sig.parameters
@@ -189,12 +203,12 @@ def write_style_info(cfgfile, opobj):
             
             for pn in itpmds:
                  param = pmds[pn]
-                 if param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
+                 if param.kind == _inspect.Parameter.POSITIONAL_OR_KEYWORD:
                      fixedCount += 1
-                 if param.kind == inspect.Parameter.VAR_POSITIONAL:
+                 if param.kind == _inspect.Parameter.VAR_POSITIONAL:
                      fixedCount = -1
                      break
-                 if param.kind == inspect.Parameter.VAR_KEYWORD:
+                 if param.kind == _inspect.Parameter.VAR_KEYWORD:
                      break
 
         cfgfile.write('sub splpy_FixedParam { \''+ str(fixedCount)   + "\'}\n")
