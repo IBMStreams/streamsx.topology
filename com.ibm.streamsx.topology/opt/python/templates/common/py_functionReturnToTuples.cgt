@@ -11,7 +11,7 @@
     if (pyReturnVar == NULL) {
         SPLAPPLOG(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
        
-        streamsx::topology::Splpy::flush_PyErr_Print();
+        streamsx::topology::flush_PyErr_Print();
         throw;
     }
 

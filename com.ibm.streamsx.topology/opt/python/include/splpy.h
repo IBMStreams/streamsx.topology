@@ -75,19 +75,41 @@ namespace streamsx {
     };
 
     /*
+    * Flush Python stderr and stdout.
+    */
+    inline void flush_PyErrPyOut() {
+        PyRun_SimpleString("sys.stdout.flush()");
+        PyRun_SimpleString("sys.stderr.flush()");
+    }
+
+    /*
+    * Call PyErr_Print() and then flush stderr.
+    * This is because CPython buffers stderr (and stdout)
+    * when it is not connected to a terminal.
+    * Without the flush output is lost in distributed
+    * (since stderr is conncted to a file) and
+    * makes diagnosing errors impossible.
+    */
+    inline void flush_PyErr_Print() {
+        PyErr_Print();
+        flush_PyErrPyOut();
+    }
+
+    /*
     ** Conversion of Python objects to SPL attributes.
     */
 
     template <class T>
-    inline void pyAttributeFromPyObject(T & attr, PyObject *);
+    inline T & pyAttributeFromPyObject(T & attr, PyObject *);
     
     /*
     ** Convert to a SPL blob from a Python bytes object.
     */
-    inline void pyAttributeFromPyObject(SPL::blob & attr, PyObject * value) {
+    inline SPL::blob & pyAttributeFromPyObject(SPL::blob & attr, PyObject * value) {
       long int size = PyBytes_Size(value);
       char * bytes = PyBytes_AsString(value);          
       attr.setData((const unsigned char *)bytes, size);
+      return attr;
     }
 
     /*
@@ -95,40 +117,53 @@ namespace streamsx {
     */
     inline SPL::rstring & pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
       Py_ssize_t size = 0;
+      PyObject * converted = NULL;
       char * bytes = NULL;
 
 #if PY_MAJOR_VERSION == 3
       // Python 3 character strings are unicode objects
-      if (PyUnicode_Check(value)) {
-          bytes = PyUnicode_AsUTF8AndSize(value, &size);
-          GET_PYTHON_VALUE_THROWIFERROR(bytes);
-      } else {
+      // Caller is not responsible for deallocating buffer
+      // returned by PyUnicode_AsUTF8AndSize
+      //
+      if (!PyUnicode_Check(value)) {
           // Create a string from the object
-          PyObject *svalue = PyObject_Str(value);
-          bytes = PyUnicode_AsUTF8AndSize(svalue, &size);
-          Py_DECREF(svalue);
-          GET_PYTHON_VALUE_THROWIFERROR(bytes);
+          value = converted = PyObject_Str(value);
       }
+      bytes = PyUnicode_AsUTF8AndSize(value, &size);
 #else
       // Python 2 supports Unicode and byte character strings 
       // Default is byte character strings.
+      // PyString_AsStringAndSize returns a pointer to an
+      // internal buffer that must not be modified or deallocated
       if (PyUnicode_Check(value)) {
-          PyObject *utf8String = PyUnicode_AsUTF8String(pvalue);
-          int x = PyString_AsStringAndSize(utf8String, &bytes, &size);
-          Py_DECREF(utf8String);
-          GET_PYTHON_VALUE_THROWIFERROR(bytes);
+          value = converted = PyUnicode_AsUTF8String(value);
       } else if (PyString_Check(value)) {
-          int x = PyString_AsStringAndSize(value, &bytes, &size);
-          // TODO
+           // no coversion needed
       } else {
           // Create a string from the object
-          PyObject *svalue = PyObject_Str(value);
-          int x = PyString_AsStringAndSize(svalue, &bytes, &size);
-          Py_DECREF(*svalue);
-         // TODO
+          value = converted = PyObject_Str(value);
       }
+      int rc = PyString_AsStringAndSize(value, &bytes, &size);
+      if (rc != 0)
+          bytes = NULL;
 #endif
+
+      if (bytes == NULL) {
+         if (converted != NULL)
+             Py_DECREF(converted);
+         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
+         streamsx::topology::flush_PyErr_Print();
+         throw;
+      }
+
+      // This copies from bytes into the rstring.
       attr.assign((const char *)bytes, (size_t) size);
+
+      // Need to decrement the reference after we
+      // have copied the bytes out as bytes points
+      // into the Python object.
+      if (converted != NULL)
+          Py_DECREF(converted);
 
       return attr;
     }
@@ -267,30 +302,10 @@ namespace streamsx {
        PyGILLock lock;
        if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
          SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
-         flush_PyErr_Print();
+         streamsx::topology::flush_PyErr_Print();
          throw;
        }
       }
-    /*
-    * Call PyErr_Print() and then flush stderr.
-    * This is because CPython buffers stderr (and stdout)
-    * when it is not connected to a terminal.
-    * Without the flush output is lost in distributed
-    * (since stderr is conncted to a file) and
-    * makes diagnosing errors impossible.
-    */
-    static void flush_PyErr_Print() {
-        PyErr_Print();
-        flush_PyErrPyOut();
-    }
-
-    /*
-    * Flush Python stderr and stdout.
-    */
-    static void flush_PyErrPyOut() {
-        PyRun_SimpleString("sys.stdout.flush()");
-        PyRun_SimpleString("sys.stderr.flush()");
-    }
 
     /*
      * Import a module, returning the reference to the module.
@@ -303,7 +318,7 @@ namespace streamsx {
       Py_DECREF(moduleName);
       if (module == NULL) {
         SPLAPPLOG(L_ERROR, "Fatal error: missing module: " << moduleNameC, "python");
-        flush_PyErr_Print();
+        streamsx::topology::flush_PyErr_Print();
         throw;
       }
       SPLAPPTRC(L_INFO, "Imported  module: " << moduleNameC, "python");
@@ -339,7 +354,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
       if(pyReturnVar == 0){
-        flush_PyErr_Print();
+        streamsx::topology::flush_PyErr_Print();
         throw;
       }
 
@@ -370,7 +385,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
       if(pyReturnVar == 0){
-        flush_PyErr_Print();
+        streamsx::topology::flush_PyErr_Print();
         throw;
       }
 
@@ -397,7 +412,7 @@ namespace streamsx {
         Py_DECREF(pyReturnVar);
         return 0;
       } else if(pyReturnVar == 0){
-        flush_PyErr_Print();
+        streamsx::topology::flush_PyErr_Print();
         throw;
       } 
 
@@ -427,13 +442,13 @@ namespace streamsx {
       	retval = PyLong_AsLong(pyReturnVar);
       } catch(...) {
         Py_DECREF(pyReturnVar);
-        flush_PyErr_Print();
+        streamsx::topology::flush_PyErr_Print();
         throw;
       }  	 
       // PyLong_AsLong will return an error without 
       // throwing an error, so check if an error happened
       if (PyErr_Occurred()) {
-        flush_PyErr_Print();
+        streamsx::topology::flush_PyErr_Print();
       }
       else {
         Py_DECREF(pyReturnVar);		
