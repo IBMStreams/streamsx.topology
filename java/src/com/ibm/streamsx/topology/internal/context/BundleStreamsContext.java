@@ -7,13 +7,8 @@ package com.ibm.streamsx.topology.internal.context;
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;

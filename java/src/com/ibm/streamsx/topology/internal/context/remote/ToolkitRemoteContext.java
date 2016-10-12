@@ -27,7 +27,6 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.toolkit.info.DependenciesType;
 import com.ibm.streamsx.topology.internal.toolkit.info.DescriptionType;
@@ -96,7 +95,7 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
         splFile.close();
     }
 
-    private void makeDirectoryStructure(File toolkitRoot, String namespace)
+    public static void makeDirectoryStructure(File toolkitRoot, String namespace)
             throws Exception {
 
         File tkNamespace = new File(toolkitRoot, namespace);
