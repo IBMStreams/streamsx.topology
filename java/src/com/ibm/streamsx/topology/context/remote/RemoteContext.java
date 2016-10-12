@@ -3,13 +3,14 @@ package com.ibm.streamsx.topology.context.remote;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.ContextProperties;
 
 public interface RemoteContext<T> {
+    String SUBMISSION_DEPLOY = "deploy";
+    String SUBMISSION_GRAPH = "graph";
+    
     /**
-     * Types of the {@link StreamsContext IBM Streams context} that a
-     * {@link Topology} can be executed against.
+     * Types of the context that a
+     * JSON graph can be executed against.
      * 
      */
     public enum Type {
@@ -36,8 +37,6 @@ public interface RemoteContext<T> {
      * returned by {@link #getType()} for details on what the encapsulated returned
      * value represents.
      * @throws Exception Exception submitting the topology.
-     * 
-     * @see ContextProperties
      */
     Future<T> submit(JsonObject submission) throws Exception;
 }

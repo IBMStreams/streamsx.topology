@@ -37,7 +37,12 @@
 	   srcdir="${src}" 
 	   destdir="${classes}"
 	   classpathref="compile.pure.classpath"
-	   includes="${cisxt}/function/*.java ${cisxt}/internal/gson/*.java ${cisxt}/generator/**"
+	   includes="${cisxt}/function/*.java
+	             ${cisxt}/internal/gson/*.java
+	             ${cisxt}/generator/**
+	             ${cisxt}/context/remote/*.java
+	             ${cisxt}/internal/context/remote/*.java
+	             "
     />   
   </target>
 

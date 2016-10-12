@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.json4j;
 
+import java.io.IOException;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.ibm.json.java.JSONObject;
@@ -19,6 +21,10 @@ public class JSON4JUtilities {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    public static JSONObject json4j(JsonObject object) throws IOException {
+        return JSONObject.parse(object.toString());
     }
 
 }

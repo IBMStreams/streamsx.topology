@@ -5,6 +5,10 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+import static com.ibm.streamsx.topology.context.remote.RemoteContextFactory.getRemoteContext;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
+import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.json4j;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,11 +33,15 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.context.remote.RemoteContextFactory;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeMakeToolkit;
@@ -81,9 +89,21 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         
         JSONObject jsonGraph = app.builder().complete();
         
+        JSONObject deploy = new JSONObject();
+        deploy.put(ContextProperties.TOOLKIT_DIR, toolkitRoot.getAbsolutePath());
+        
+        JSONObject submission = new JSONObject();
+        submission.put(SUBMISSION_DEPLOY, deploy);
+        submission.put(SUBMISSION_GRAPH, jsonGraph);
+        
+        return createToolkit(submission);
+        
+        /*
+        
         addToolkitInfo(toolkitRoot, jsonGraph);
         makeToolkit(app.builder().getConfig(), toolkitRoot);
         return createToolkitFromGraph(toolkitRoot, jsonGraph);
+        */
     }
     
     private Future<File> createToolkitFromGraph(File toolkitRoot, JSONObject jsonGraph) throws IOException {
@@ -94,27 +114,26 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
     
     @Override
     public Future<File> submit(JSONObject submission) throws Exception {
-    	
-    	JSONObject deployInfo = (JSONObject) submission.get(SUBMISSION_DEPLOY);
-    	if (deployInfo == null)
-    		submission.put("deploy", deployInfo = new JSONObject());
-    	
-        if (!deployInfo.containsKey(ContextProperties.TOOLKIT_DIR)) {
-        	deployInfo.put(ContextProperties.TOOLKIT_DIR, Files
-                    .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
-        }
-
-        final File toolkitRoot = new File((String) deployInfo.get(ContextProperties.TOOLKIT_DIR));
+        return createToolkit(submission);
+    }
+    
+    private Future<File> createToolkit(JSONObject submission) throws Exception {
         
-        JSONObject jsonGraph = (JSONObject) submission.get(SUBMISSION_GRAPH);
-
-        makeDirectoryStructure(toolkitRoot,
-        		jsonGraph.get("namespace").toString());
+        // use the remote context to build the toolkit.
+        @SuppressWarnings("unchecked")
+        RemoteContext<File> tkrc = (RemoteContext<File>) getRemoteContext(RemoteContext.Type.TOOLKIT);
         
-        addToolkitInfo(toolkitRoot, jsonGraph);
-
-        Future<File> future = createToolkitFromGraph(toolkitRoot, jsonGraph);
+        JsonObject gsonSubmission = gson(submission);
+        final Future<File> future = tkrc.submit(gsonSubmission);
+        final File toolkitRoot = future.get();
         
+        JsonObject gsonDeploy = object(gsonSubmission, SUBMISSION_DEPLOY);
+        
+        // Patch up the returned deploy info.
+        JSONObject deployInfo = json4j(gsonDeploy);
+        submission.put(SUBMISSION_DEPLOY, deployInfo);
+        
+        // Index the toolkit
         makeToolkit(deployInfo, toolkitRoot);
         
         return future;

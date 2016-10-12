@@ -9,6 +9,7 @@ import java.util.concurrent.Future;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
 
 /**
  * A {@code StreamsContext} provides the ability to turn
@@ -246,7 +247,7 @@ public interface StreamsContext<T> {
      */
     Future<T> submit(JSONObject submission) throws Exception;
     
-    String SUBMISSION_DEPLOY = "deploy";
-    String SUBMISSION_GRAPH = "graph";
+    String SUBMISSION_DEPLOY = RemoteContext.SUBMISSION_DEPLOY;
+    String SUBMISSION_GRAPH = RemoteContext.SUBMISSION_GRAPH;
     
 }
