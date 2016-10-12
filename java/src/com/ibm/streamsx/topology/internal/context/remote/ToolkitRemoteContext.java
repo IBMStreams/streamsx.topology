@@ -50,9 +50,7 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
         JsonObject deployInfo = object(submission, SUBMISSION_DEPLOY);
         if (deployInfo == null)
             submission.add(SUBMISSION_DEPLOY, deployInfo = new JsonObject());
-        
-        System.err.println("DEPLOY_ENTRY: " + deployInfo);
-        
+                
         if (!deployInfo.has(ContextProperties.TOOLKIT_DIR)) {
             deployInfo.addProperty(ContextProperties.TOOLKIT_DIR, Files
                     .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
@@ -60,8 +58,6 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
 
         final File toolkitRoot = new File(jstring(deployInfo, ContextProperties.TOOLKIT_DIR));
 
-        System.err.println("ROOT: " + toolkitRoot);
-        System.err.println("DEPLOY: " + deployInfo);
         JsonObject jsonGraph = object(submission, SUBMISSION_GRAPH);
 
         makeDirectoryStructure(toolkitRoot, jstring(jsonGraph, "namespace"));
@@ -110,9 +106,6 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
         tkNamespace.mkdirs();
         tkEtc.mkdir();
         tkOpt.mkdir();
-        
-        System.err.println("TOOLKIT_IMPL" + tkImplLib);
-        System.err.println("TOOLKIT_IMPL" + tkImplLib.exists());
     }
     
     /**

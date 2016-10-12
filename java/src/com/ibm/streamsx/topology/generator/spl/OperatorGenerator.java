@@ -395,7 +395,6 @@ class OperatorGenerator {
         if (vmArgs != null) {
             JsonObject tmpVMArgParam = new JsonObject();
             tmpVMArgParam.add("value", vmArgs);
-            System.err.println("TEMP:" + tmpVMArgParam);
             sb.append("      ");
             sb.append("vmArg");
             sb.append(": ");
