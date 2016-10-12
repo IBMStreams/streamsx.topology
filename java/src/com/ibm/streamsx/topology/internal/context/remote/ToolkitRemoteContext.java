@@ -1,6 +1,8 @@
 package com.ibm.streamsx.topology.internal.context.remote;
 
+import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
@@ -27,6 +29,7 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
+import com.ibm.streamsx.topology.internal.file.FileUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.toolkit.info.DependenciesType;
 import com.ibm.streamsx.topology.internal.toolkit.info.DescriptionType;
@@ -225,5 +228,14 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
                 return FileVisitResult.CONTINUE;
             }
         });
+    }
+    
+    public static boolean deleteToolkit(File appDir, JsonObject deployConfig) throws IOException {       
+        if (jboolean(deployConfig, KEEP_ARTIFACTS)) {
+            return false;
+        }
+        
+        FileUtilities.deleteDirectory(appDir);
+        return true;
     }
 }

@@ -71,6 +71,8 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         
         JSONObject deploy = new JSONObject();
         deploy.put(ContextProperties.TOOLKIT_DIR, toolkitRoot.getAbsolutePath());
+        if (config.containsKey(ContextProperties.KEEP_ARTIFACTS))
+            deploy.put(KEEP_ARTIFACTS, config.get(KEEP_ARTIFACTS));
         
         JSONObject submission = new JSONObject();
         submission.put(SUBMISSION_DEPLOY, deploy);
@@ -133,44 +135,5 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
                 graphConfig.put(key, ja);            
             }
         }
-    }
-    
-    public void deleteToolkit(File appDir, JSONObject deployConfig) throws IOException {
-        Path tkdir = appDir.toPath();
-        
-        Boolean keep = (Boolean) deployConfig.get(KEEP_ARTIFACTS);
-        if (Boolean.TRUE.equals(keep)) {
-            trace.info("Keeping toolkit at: " + tkdir.toString());
-            return;
-        }
-
-        Files.walkFileTree(tkdir, new FileVisitor<Path>() {
-
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir,
-                    BasicFileAttributes attrs) throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file,
-                    BasicFileAttributes attrs) throws IOException {
-                file.toFile().delete();
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc)
-                    throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                    throws IOException {
-                dir.toFile().delete();
-                return FileVisitResult.CONTINUE;
-            }
-        });
     }
 }

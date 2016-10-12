@@ -18,7 +18,9 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext;
 import com.ibm.streamsx.topology.internal.core.InternalProperties;
+import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeSc;
 
@@ -114,7 +116,8 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         Files.copy(bundle.toPath(), localBundle.toPath(),
                 StandardCopyOption.REPLACE_EXISTING);
 
-        deleteToolkit(appDir, deployInfo);
+        if (!ToolkitRemoteContext.deleteToolkit(appDir, JSON4JUtilities.gson(deployInfo)))
+            trace.info("Keeping toolkit at: " + appDir.getAbsolutePath());
 
         trace.info("Streams Application Bundle produced: "
                 + localBundle.getName());
