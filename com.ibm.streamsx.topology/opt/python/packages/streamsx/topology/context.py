@@ -158,9 +158,6 @@ def _submitUsingJava(ctxtype, fn):
     ctxtype_was = ctxtype
     if ctxtype == "JUPYTER":
         ctxtype = "STANDALONE"
-    streams_install = os.environ.get('STREAMS_INSTALL')
-    if streams_install is None:
-       raise "Please set the STREAMS_INSTALL system variable"
 
     # This is tk/opt/python/packages/streamsx/topology
     dir = os.path.dirname(os.path.abspath(__file__))
@@ -169,12 +166,23 @@ def _submitUsingJava(ctxtype, fn):
     dir = os.path.dirname(dir)
     dir = os.path.dirname(dir)
     tk_root = os.path.dirname(dir)
-    jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
-    jaa_lib = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
-    joa_lib = os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
-    cp = jaa_lib + ":" + joa_lib
-    args = [ jvm, "-classpath", cp,
-    "com.ibm.streamsx.topology.context.StreamsContextSubmit", ctxtype, fn]
+
+    cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
+
+    streams_install = os.environ.get('STREAMS_INSTALL')
+    if streams_install is None:
+        java_home = os.environ.get('JAVA_HOME')
+        if java_home is None:
+            raise "Please set the JAVA_HOME system variable"
+   
+        jvm = os.path.join(java_home, "bin", "java")
+        submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
+    else:
+        jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
+        submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
+        cp = cp + ':' +  os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
+
+    args = [ jvm, '-classpath', cp, submit_class, ctxtype, fn]
     process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
     try:
         stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, fn]))
