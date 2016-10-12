@@ -100,22 +100,21 @@ namespace streamsx {
     */
 
     template <class T>
-    inline T & pyAttributeFromPyObject(T & attr, PyObject *);
+    inline void pyAttributeFromPyObject(T & attr, PyObject *);
     
     /*
     ** Convert to a SPL blob from a Python bytes object.
     */
-    inline SPL::blob & pyAttributeFromPyObject(SPL::blob & attr, PyObject * value) {
+    inline void pyAttributeFromPyObject(SPL::blob & attr, PyObject * value) {
       long int size = PyBytes_Size(value);
       char * bytes = PyBytes_AsString(value);          
       attr.setData((const unsigned char *)bytes, size);
-      return attr;
     }
 
     /*
     ** Convert to a SPL rstring from a Python string object.
     */
-    inline SPL::rstring & pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
+    inline void pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
       Py_ssize_t size = 0;
       PyObject * converted = NULL;
       char * bytes = NULL;
@@ -164,8 +163,13 @@ namespace streamsx {
       // into the Python object.
       if (converted != NULL)
           Py_DECREF(converted);
+    }
 
-      return attr;
+    inline std::auto_ptr<SPL::rstring> pyRstringFromPyObject(PyObject * value)
+    {
+        std::auto_ptr<SPL::rstring> rsv(new SPL::rstring());
+        pyAttributeFromPyObject(*rsv, value);
+        return rsv ;
     }
 
     /**************************************************************/
