@@ -13,7 +13,7 @@ public class RemoteContextFactory {
         switch (type) {
         case TOOLKIT:
             return new ToolkitRemoteContext();
-        case ZIPPED_TOOLKIT:
+        case BUILD_ARCHIVE:
             return new ZippedToolkitRemoteContext();
         default:
             throw new IllegalArgumentException("Unknown type:" + type);

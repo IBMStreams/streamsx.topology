@@ -40,16 +40,30 @@ public interface StreamsContext<T> {
         /**
          * Execution of the topology produces the application as a Streams
          * toolkit.
-         * 
+         * <P>
+         * The returned type for the {@code submit} calls is
+         * a {@code Future&lt;File>} where the value is
+         * the location of the toolkit.
+         * <BR>
+         * The {@code Future} returned from {@code submit()} will
+         * always be complete when the {@code submit()} returns.
+         * </P>
          */
         TOOLKIT,
         
         /**
-         * Execution of the topology produces the application as a zipped
-         * Streams toolkit.
-         * 
+         * Execution of the topology produces the application a
+         * Streams build archive.
+         * <P>
+         * The returned type for the {@code submit} calls is
+         * a {@code Future&lt;File>} where the value is
+         * the location of the build archive.
+         * <BR>
+         * The {@code Future} returned from {@code submit()} will
+         * always be complete when the {@code submit()} returns.
+         * </P>
          */
-        ZIPPED_TOOLKIT,
+        BUILD_ARCHIVE,
 
         /**
          * Execution of the topology produces an SPL application bundle

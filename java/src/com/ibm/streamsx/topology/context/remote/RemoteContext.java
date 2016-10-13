@@ -15,7 +15,7 @@ public interface RemoteContext<T> {
      */
     public enum Type {
         TOOLKIT,        
-        ZIPPED_TOOLKIT,
+        BUILD_ARCHIVE,
     }
     
     

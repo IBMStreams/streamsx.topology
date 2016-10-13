@@ -32,7 +32,7 @@ public class StreamsContextFactory {
             return getEmbedded();
         case TOOLKIT:
             return new ToolkitStreamsContext();
-        case ZIPPED_TOOLKIT:
+        case BUILD_ARCHIVE:
             return new ZippedToolkitStreamsContext();
         case STANDALONE_BUNDLE:
             return new BundleStreamsContext(true);
