@@ -149,9 +149,7 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
     private void copyIncludes(File toolkitRoot, JsonObject json) throws IOException {
         
         JsonObject config = object(json, "config");
-        
-        System.out.println("INCLUDES:" + config.get("includes"));
-        
+                
         if (!config.has("includes"))
             return;
         

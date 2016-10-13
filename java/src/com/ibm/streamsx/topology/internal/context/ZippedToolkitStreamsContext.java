@@ -18,7 +18,7 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	
     @Override
     public Type getType() {
-        return Type.ZIPPED_TOOLKIT;
+        return Type.BUILD_ARCHIVE;
     }
 	
 	@Override
@@ -40,7 +40,7 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	public Future<File> submit(JSONObject submission) throws Exception {
 	    // Let the remote archive do all the work.
 	    @SuppressWarnings("unchecked")
-        RemoteContext<File> ztrc = (RemoteContext<File>) RemoteContextFactory.getRemoteContext(RemoteContext.Type.ZIPPED_TOOLKIT);
+        RemoteContext<File> ztrc = (RemoteContext<File>) RemoteContextFactory.getRemoteContext(RemoteContext.Type.BUILD_ARCHIVE);
 	    
 	    return ztrc.submit(gson(submission));
 	}

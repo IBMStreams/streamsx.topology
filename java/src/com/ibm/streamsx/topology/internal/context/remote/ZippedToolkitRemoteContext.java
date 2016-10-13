@@ -26,7 +26,7 @@ import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     @Override
     public Type getType() {
-        return Type.ZIPPED_TOOLKIT;
+        return Type.BUILD_ARCHIVE;
     }
     
     @Override
