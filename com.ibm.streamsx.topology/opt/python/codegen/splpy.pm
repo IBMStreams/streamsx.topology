@@ -56,10 +56,10 @@ sub pythonToCppPrimitiveConversion{
  
   my ($convert_from_string, $type) = @_;
   if ($type eq 'rstring') {
-    return "*streamsx::topology::pyRstringFromPyObject($convert_from_string)";
+    return "streamsx::topology::pyRstringFromPyObject($convert_from_string)";
   }
   elsif ($type eq 'ustring') {
-    return "SPL::ustring::fromUTF8( PyUnicode_AsUTF8($convert_from_string))";
+    return "streamsx::topology::pyUstringFromPyObject($convert_from_string)";
   }
   elsif ($type eq 'int8') {
     return "(int8_t) PyLong_AsLong($convert_from_string)";

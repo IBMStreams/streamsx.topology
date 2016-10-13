@@ -165,11 +165,24 @@ namespace streamsx {
           Py_DECREF(converted);
     }
 
-    inline std::auto_ptr<SPL::rstring> pyRstringFromPyObject(PyObject * value)
+    inline void pyAttributeFromPyObject(SPL::ustring & attr, PyObject * value) {
+         SPL::rstring rs;
+         pyAttributeFromPyObject(rs, value);
+
+         attr = SPL::ustring::fromUTF8(rs);
+    }
+
+    inline SPL::rstring pyRstringFromPyObject(PyObject * value)
     {
-        std::auto_ptr<SPL::rstring> rsv(new SPL::rstring());
-        pyAttributeFromPyObject(*rsv, value);
-        return rsv ;
+        SPL::rstring rs;
+        pyAttributeFromPyObject(rs, value);
+        return rs ;
+    }
+    inline SPL::ustring pyUstringFromPyObject(PyObject * value)
+    {
+        SPL::ustring us;
+        pyAttributeFromPyObject(us, value);
+        return us ;
     }
 
     /**************************************************************/
