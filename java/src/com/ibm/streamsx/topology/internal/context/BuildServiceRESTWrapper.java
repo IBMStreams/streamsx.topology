@@ -40,12 +40,34 @@ public class BuildServiceRESTWrapper {
         
         JSONObject build = (JSONObject)jso.get("build");
         String buildId = (String)build.get("id");
-        while(true){
-        	System.out.println(buildStatusGet(buildId, httpclient, apiKey));
+        String outputId = (String)build.get("output_id");
+        String status = "";
+        while(!status.equals("built")){
+        	status = buildStatusGet(buildId, httpclient, apiKey);
+        	if(status.equals("building")){
+        		continue;
+        	}
+        	else if(status.equals("failed")){
+        		JSONObject output = getBuildOutput(buildId, outputId, httpclient, apiKey);
+        		String strOutput = "";
+        		if(output!=null)
+        			strOutput = prettyPrintOutput(output);
+        		throw new IllegalStateException("Error submitting archive for compilation: \n"
+        				+ strOutput);
+        	}
         }
-   
+        return "";
 	}
 	
+	private String prettyPrintOutput(JSONObject output) {
+		StringBuffer sb = new StringBuffer();
+		for(Object messageObj : (JSONArray)output.get("output")){
+			JSONObject message = (JSONObject)messageObj;
+			sb.append(message.get("message_text") + "\n");
+		}
+		return sb.toString();
+	}
+
 	private JSONObject doArchivePost(CloseableHttpClient httpclient,
 			String apiKey, File archive) throws ClientProtocolException, IOException{
 		String newBuildURL = getBuildsURL(credentials) + "?build_name=" + newBuildName(16);
@@ -77,22 +99,48 @@ public class BuildServiceRESTWrapper {
 	 */
 	private String buildStatusGet(String buildId, CloseableHttpClient httpclient,
 			String apiKey) throws ClientProtocolException, IOException{
-		String buildURL = getBuildsURL(credentials);
-		HttpGet httpget = new HttpGet(buildId);
+        JSONObject build = getBuild(buildId, httpclient, apiKey);   
+		if(build != null)
+			return (String)build.get("status");  
+		else
+			return null;
+	}
+	
+	private JSONObject getBuild(String buildId, CloseableHttpClient httpclient,
+			String apiKey) throws ClientProtocolException, IOException{
+		String buildURL = getBuildsURL(credentials) + "?build_id=" + buildId;
+		HttpGet httpget = new HttpGet(buildURL);
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpget.addHeader("Authorization", apiKey);
 		
-        JSONObject response = RemoteContexts.getJsonResponse(httpclient, httpget);
-        
-        // Get the correct build
+		JSONObject response = RemoteContexts.getJsonResponse(httpclient, httpget);
+		// Get the correct build
 		JSONObject build = null;
 		JSONArray builds = (JSONArray) response.get("builds");
-		for(Object iterBuildObj : builds){
+		for (Object iterBuildObj : builds) {
 			JSONObject iterBuild = (JSONObject) iterBuildObj;
-			if((String)iterBuild.get("id") == buildId)
+			if (((String) iterBuild.get("id")).equals(buildId))
 				build = iterBuild;
 		}
-		return (String)build.get("status");  
+		return build;
+	}
+	
+	private JSONObject getBuildOutput(String buildId, String outputId, CloseableHttpClient httpclient,
+			String apiKey) throws ClientProtocolException, IOException{
+		String buildOutputURL = getBuildsURL(credentials) + "?build_id=" + buildId
+				+ "&output_id=" + outputId;
+		HttpGet httpget = new HttpGet(buildOutputURL);
+		httpget.addHeader("Authorization", apiKey);
+        httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
+		
+		JSONObject response = RemoteContexts.getJsonResponse(httpclient, httpget);
+		for(Object outputObj : (JSONArray)response.get("builds")){
+			JSONObject output = (JSONObject)outputObj;
+			if(((String)output.get("id")).equals(buildId))
+				return output;
+		}
+		
+		return null;
 	}
 	
 	private String newBuildName(int length){
