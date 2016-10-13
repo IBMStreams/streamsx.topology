@@ -41,6 +41,8 @@ public class BuildServiceRESTWrapper {
         JSONObject build = (JSONObject)jso.get("build");
         String buildId = (String)build.get("id");
         String outputId = (String)build.get("output_id");
+        
+        // Loop until built
         String status = "";
         while(!status.equals("built")){
         	status = buildStatusGet(buildId, httpclient, apiKey);
@@ -129,6 +131,7 @@ public class BuildServiceRESTWrapper {
 			String apiKey) throws ClientProtocolException, IOException{
 		String buildOutputURL = getBuildsURL(credentials) + "?build_id=" + buildId
 				+ "&output_id=" + outputId;
+		System.out.println(buildOutputURL);
 		HttpGet httpget = new HttpGet(buildOutputURL);
 		httpget.addHeader("Authorization", apiKey);
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());

@@ -29,7 +29,7 @@ public class RemoteBuildAndSubmitStreamsContext extends ZippedToolkitStreamsCont
 	public Future<File> submit(Topology app, Map<String, Object> config) throws Exception { 
 		Future<File> archive = super.submit(app,  config);
 		doSubmit(config, archive.get());
-        return null;
+        return archive;
 	}
 	
 	@Override
@@ -38,7 +38,7 @@ public class RemoteBuildAndSubmitStreamsContext extends ZippedToolkitStreamsCont
 		Map<String, Object> config = RemoteContexts.jsonDeployToMap(
 				(JSONObject)submission.get("deploy"));
 		doSubmit(config, archive.get());
-       return null;
+       return archive;
 	}
 	
 	private void doSubmit(Map<String, Object> config, File archive) throws IOException{
