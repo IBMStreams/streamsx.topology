@@ -23,6 +23,7 @@ import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.meta.TupleType;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.spl.SPL;
@@ -118,7 +119,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         
         SPLStream viaSPL = SPL.invokeOperator("spl.relational::Functor", tuples, tuples.getSchema(), null);
         
-        SPL.addToolkit(tuples, new File(getTestRoot(), "python/spl/testtkpy"));
+        addTestToolkit(tuples);
         SPLStream viaPython = SPL.invokeOperator("com.ibm.streamsx.topology.pysamples.positional::Noop", tuples, tuples.getSchema(), null);
 
         Tester tester = topology.getTester();
@@ -158,13 +159,21 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         }, TEST_SCHEMA_SF);        
     }
     
+    private void addTestToolkit(TopologyElement te) throws Exception {
+        // Need to run extract to ensure the operators match the python
+        // version we are testing.
+        File toolkitRoot = new File(getTestRoot(), "python/spl/testtkpy");
+        PythonExtractTest.extract(toolkitRoot, true);
+        SPL.addToolkit(te, toolkitRoot);
+    }
+    
     @Test
     public void testPositionalSampleSimpleFilter() throws Exception {
         Topology topology = new Topology("testPositionalSampleSimpleFilter");
         
         SPLStream tuples = sampleFilterStream(topology);
         
-        SPL.addToolkit(tuples, new File(getTestRoot(), "python/spl/testtkpy"));
+        addTestToolkit(tuples);
         SPLStream viaPython = SPL.invokeOperator(
         		"com.ibm.streamsx.topology.pysamples.positional::SimpleFilter", tuples, tuples.getSchema(), null);
 
@@ -180,7 +189,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
 
         complete(tester, expectedCount, 10, TimeUnit.SECONDS);
 
-        assertTrue(expectedCount.valid());
+        assertTrue(expectedCount.toString(), expectedCount.valid());
         assertTrue(viaPythonResult.toString(), viaPythonResult.valid());
     }
     
@@ -190,7 +199,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         
         SPLStream tuples = sampleFilterStream(topology);
         
-        SPL.addToolkit(tuples, new File(getTestRoot(), "python/spl/testtkpy"));
+        addTestToolkit(tuples);
         SPLStream viaPython = SPL.invokeOperator(
                 "testspl::SF", tuples, tuples.getSchema(), null);
 
@@ -215,7 +224,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         Topology topology = new Topology("testPositionalSampleSimpleFilterUsingSPLType");
         
         SPLStream tuples = testTupleStream(topology, false);
-        SPL.addToolkit(tuples, new File(getTestRoot(), "python/spl/testtkpy"));
+        addTestToolkit(tuples);
         
         StreamSchema outSchema = tuples.getSchema().extend("int32", "sequence_using_py");
         SPLStream viaPython = SPL.invokeOperator(
