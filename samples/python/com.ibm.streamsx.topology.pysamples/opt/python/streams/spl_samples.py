@@ -99,7 +99,7 @@ from datetime import datetime
 # Stateful sink operator that prints each tuple
 # with the inter-tuple arrival delay.
 #
-@spl.for_each
+@spl.for_each()
 class PrintWithTimeIntervals:
     "Print tuples with inter-tuple arrival delay."
     def __init__(self):
