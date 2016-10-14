@@ -1,5 +1,7 @@
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015
+# Copyright IBM Corp. 2015, 2016
+
+from __future__ import absolute_import, division, print_function
 
 # Simple inclusion of Python logic within an SPL application
 # as a SPL "Function" operator. A "Function" operator has
