@@ -3,7 +3,6 @@ package com.ibm.streamsx.topology.internal.context;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Iterator;
 import java.util.Random;
 
 import javax.xml.bind.DatatypeConverter;
@@ -12,7 +11,9 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -29,7 +30,7 @@ public class BuildServiceRESTWrapper {
 		this.credentials = credentials;
 	}
 	
-	public String remoteBuildAndSubmit(File archive) throws ClientProtocolException, IOException{
+	public void remoteBuildAndSubmit(File archive) throws ClientProtocolException, IOException{
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         
         String apiKey = getAPIKey((String)credentials.get("userid"), (String)credentials.get("password"));
@@ -58,7 +59,35 @@ public class BuildServiceRESTWrapper {
         				+ strOutput);
         	}
         }
-        return "";
+        
+        // Now perform archive put
+        build = getBuild(buildId, httpclient, apiKey);
+        
+        JSONArray artifacts = ((JSONArray)build.get("artifacts"));
+        if(artifacts.size() == 0){
+        	throw new IllegalStateException("No artifacts associated with build " + buildId);
+        }
+        
+        // TODO: support multiple artifacts associated with a single build.
+        String artifactId = (String)((JSONObject)artifacts.get(0)).get("id");
+        JSONObject putResponse = doArchivePut(httpclient, apiKey, artifactId);
+	}
+	
+	private JSONObject doArchivePut(CloseableHttpClient httpclient,
+			String apiKey, String artifactId) throws ClientProtocolException, IOException{
+		String putURL = getBuildsURL(credentials) + "?artifact_id=" + artifactId;
+		HttpPut httpput = new HttpPut(putURL);
+        httpput.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
+        httpput.addHeader("Authorization", apiKey);
+        //httpput.addHeader("Content-Length", "2");
+        httpput.addHeader("content-type", "application/json");
+        
+        StringEntity params =new StringEntity("{}","UTF-8");    
+        httpput.setEntity(params);
+       
+        //System.out.println(httppost.getAllHeaders()[1]);
+        JSONObject jso = RemoteContexts.getJsonResponse(httpclient, httpput);
+		return jso;
 	}
 	
 	private String prettyPrintOutput(JSONObject output) {
