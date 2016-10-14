@@ -163,7 +163,8 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         // Need to run extract to ensure the operators match the python
         // version we are testing.
         File toolkitRoot = new File(getTestRoot(), "python/spl/testtkpy");
-        PythonExtractTest.extract(toolkitRoot, true);
+        int rc = PythonExtractTest.extract(toolkitRoot, true);
+        assertEquals(0, rc);
         SPL.addToolkit(te, toolkitRoot);
     }
     
