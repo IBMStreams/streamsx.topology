@@ -56,6 +56,6 @@ public class Util {
                         + "/toolkits/com.ibm.streamsx.messaging";
         File tkRoot = new File(tkloc);
         
-        return com.ibm.streamsx.topology.internal.streams.Util.getToolkitInfo(tkRoot).getIdentity().getVersion();     
+        return com.ibm.streamsx.topology.internal.context.remote.TkInfo.getToolkitInfo(tkRoot).getIdentity().getVersion();     
     }
 }

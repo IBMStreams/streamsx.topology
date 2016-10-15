@@ -1,6 +1,11 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015, 2016 
+ */
 package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+import static com.ibm.streamsx.topology.internal.core.InternalProperties.TOOLKITS_JSON;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
@@ -12,6 +17,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URISyntaxException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +25,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import java.util.concurrent.Future;
 
 import javax.xml.bind.JAXBContext;
@@ -31,11 +38,13 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.internal.file.FileUtilities;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.toolkit.info.DependenciesType;
 import com.ibm.streamsx.topology.internal.toolkit.info.DescriptionType;
 import com.ibm.streamsx.topology.internal.toolkit.info.IdentityType;
 import com.ibm.streamsx.topology.internal.toolkit.info.ObjectFactory;
+import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitDependencyType;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
 public class ToolkitRemoteContext implements RemoteContext<File> {
@@ -111,8 +120,9 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
     
     /**
      * Create an info.xml file for the toolkit.
+     * @throws URISyntaxException 
      */
-    private void addToolkitInfo(File toolkitRoot, JsonObject jsonGraph) throws JAXBException, FileNotFoundException, IOException  {
+    private void addToolkitInfo(File toolkitRoot, JsonObject jsonGraph) throws JAXBException, FileNotFoundException, IOException, URISyntaxException  {
         File infoFile = new File(toolkitRoot, "info.xml");
         
         ToolkitInfoModelType info = new ToolkitInfoModelType();
@@ -122,8 +132,34 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
         info.getIdentity().setDescription(new DescriptionType());
         info.getIdentity().setVersion("1.0.0." + System.currentTimeMillis());
         info.getIdentity().setRequiredProductVersion("4.0.1.0");
+              
+        DependenciesType dependencies = new DependenciesType();
         
-        info.setDependencies(new DependenciesType());
+        List<ToolkitDependencyType> toolkits = dependencies.getToolkit();
+        
+        GsonUtilities.objectArray(object(jsonGraph, "spl"), TOOLKITS_JSON, tk -> {
+            ToolkitDependencyType depTkInfo;
+            String root = jstring(tk, "root");
+            if (root != null) {
+                try {
+                    depTkInfo = TkInfo.getTookitDependency(root);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                depTkInfo = new ToolkitDependencyType();
+                
+                depTkInfo.setName(jstring(tk, "name"));
+                depTkInfo.setVersion(jstring(tk, "version"));
+            }
+            toolkits.add(depTkInfo);
+        });
+        
+        File topologyToolkitRoot = TkInfo.getTopologyToolkitRoot();
+        toolkits.add(TkInfo.getTookitDependency(topologyToolkitRoot.getAbsolutePath()));
+        
+        info.setDependencies(dependencies);
+        
         
         JAXBContext context = JAXBContext
                 .newInstance(ObjectFactory.class);
@@ -134,6 +170,7 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
             m.marshal(info, out);
         }
     }
+   
    
     
     /**
