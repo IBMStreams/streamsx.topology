@@ -5,6 +5,7 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -84,21 +85,21 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
             throws IOException {
 
         String namespace = jstring(json, "namespace");
-        String name = jstring(json, "name");;
+        String name = jstring(json, "name");
+        
+        Path f = Paths.get(toolkitRoot.getAbsolutePath(), namespace, name + "." + suffix);
 
-        File f = new File(toolkitRoot,
-                namespace + "/" + name + "." + suffix);
-        PrintWriter splFile = new PrintWriter(f, "UTF-8");
-        splFile.print(content);
-        splFile.flush();
-        splFile.close();
+        try (PrintWriter splFile = new PrintWriter(f.toFile(), UTF_8.name())) {
+            splFile.print(content);
+            splFile.flush();
+        }
     }
 
     public static void makeDirectoryStructure(File toolkitRoot, String namespace)
             throws Exception {
 
         File tkNamespace = new File(toolkitRoot, namespace);
-        File tkImplLib = new File(toolkitRoot, "impl/lib");
+        File tkImplLib = new File(toolkitRoot, Paths.get("impl", "lib").toString());
         File tkEtc = new File(toolkitRoot, "etc");
         File tkOpt = new File(toolkitRoot, "opt");
 
