@@ -154,18 +154,49 @@ def _print_process_stderr(process, fn):
         _print_exception("Error reading from process stderr")
         raise
 
+# There are two modes for execution.
+#
+# Pypi (Python focused)
+#  Pypi (pip install) package includes the SPL toolkit as
+#      streamsx/.toolkit/com.ibm.streamsx.topology
+#      However the streamsx Python packages have been moved out
+#      of the toolkit's (opt/python/package) compared
+#      to the original toolkit layout. They are moved to the
+#      top level of the pypi package.
+#
+# SPL Toolkit (SPL focused):
+#   Streamsx Python packages are executed from opt/python/packages
+#   
+# This function determines the root of the SPL toolkit based
+# upon the existance of the '.toolkit' directory.
+#
+def _get_toolkit_root():
+    # Directory of this file (streamsx/topology)
+    dir = os.path.dirname(os.path.abspath(__file__))
+
+    # This is streamsx
+    dir = os.path.dirname(dir)
+
+    # See if .toolkit exists, if so executing from
+    # a pip install
+    tk_root = os.path.join(dir, '.toolkit', 'com.ibm.streamsx.topology')
+    if os.path.isdir(tk_root):
+        return tk_root
+
+    # Else dir is tk/opt/python/packages/streamsx
+
+    dir = os.path.dirname(dir)
+    dir = os.path.dirname(dir)
+    dir = os.path.dirname(dir)
+    tk_root = os.path.dirname(dir)
+    return tk_root
+
 def _submitUsingJava(ctxtype, fn):
     ctxtype_was = ctxtype
     if ctxtype == "JUPYTER":
         ctxtype = "STANDALONE"
 
-    # This is tk/opt/python/packages/streamsx/topology
-    dir = os.path.dirname(os.path.abspath(__file__))
-    dir = os.path.dirname(dir)
-    dir = os.path.dirname(dir)
-    dir = os.path.dirname(dir)
-    dir = os.path.dirname(dir)
-    tk_root = os.path.dirname(dir)
+    tk_root = _get_toolkit_root()
 
     cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
 

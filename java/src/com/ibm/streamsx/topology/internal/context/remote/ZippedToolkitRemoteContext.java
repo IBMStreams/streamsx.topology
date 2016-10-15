@@ -92,9 +92,15 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                 String startName = start.getFileName().toString();
                 Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        
+                        // Skip pyc files.
+                        if (file.getFileName().toString().endsWith(".pyc"))
+                            return FileVisitResult.CONTINUE;
+                        
                         String entryName = startName;
                         String relativePath = start.relativize(file).toString();
-                        if(relativePath.length() != 0){
+                        // If empty, file is the start file.
+                        if(!relativePath.isEmpty()){                          
                             entryName = entryName + "/" + relativePath;
                         }
                         zos.putNextEntry(new ZipEntry(entryName));
@@ -104,6 +110,10 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                     }
 
                     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                        // Don't include pyc files
+                        if (dir.getFileName().toString().equals("__pycache__"))
+                            return FileVisitResult.SKIP_SUBTREE;
+                        
                         zos.putNextEntry(new ZipEntry(startName + "/" + start.relativize(dir).toString() + "/"));
                         zos.closeEntry();
                         return FileVisitResult.CONTINUE;
