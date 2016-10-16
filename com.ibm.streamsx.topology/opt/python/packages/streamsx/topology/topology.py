@@ -22,6 +22,7 @@ import threading
 import queue
 import sys
 import time
+import inspect
 from platform import python_version
 from enum import Enum
 
@@ -62,6 +63,13 @@ class Topology(object):
         Returns:
             A Stream whose tuples are the result of the output obtained by invoking the provided callable.
         """
+        if inspect.isroutine(func):
+             pass
+        elif callable(func):
+             pass
+        else:
+             func = streamsx.topology.functions._IterableInstance(func)
+        
         op = self.graph.addOperator(self.opnamespace+"::PyFunctionSource", func)
         oport = op.addOutputPort()
         return Stream(self, oport)

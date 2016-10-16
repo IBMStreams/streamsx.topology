@@ -19,3 +19,12 @@ def identity(t):
     :returns: Its argument.
     """
     return t;
+
+# Wraps an iterable instance returning
+# it when called. Allows an iterable
+# instance to be passed directly to Topology.source
+class _IterableInstance(object):
+    def __init__(self, it):
+        self._it = it
+    def __call__(self):
+        return self._it
