@@ -37,6 +37,11 @@
 	     <echo message="Topology python: ${topology.test.python}"/>
 		   <exec executable="${topology.test.python}" dir="${topology}" failonerror="true">
 		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages"/>
+		     <arg value="test_build_archive.py"/>
+		   </exec>
+
+		   <exec executable="${topology.test.python}" dir="${topology}" failonerror="true">
+		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages"/>
 		     <arg value="test1.py"/>
 		   </exec>
 	   </target>
