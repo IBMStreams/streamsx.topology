@@ -27,7 +27,7 @@ def main():
     """
     
     topo = Topology("filter_echo")
-    source = topo.source(filter_echo_functions.SysArgv(sys.argv[1:]))
+    source = topo.source(sys.argv[1:])
     
     # Declare a stream that will execute functional logic
     # against tuples on the echo stream.
@@ -39,7 +39,7 @@ def main():
     
     filtered.print()
     
-    streamsx.topology.context.submit("STANDALONE", topo.graph)
+    streamsx.topology.context.submit("STANDALONE", topo)
      
 if __name__ == '__main__':
     main()

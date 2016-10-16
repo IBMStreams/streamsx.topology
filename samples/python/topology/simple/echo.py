@@ -29,10 +29,9 @@ def main():
     """
     
     topo = Topology("echo")
-    # The command line arguments (sys.argv) are captured by the SysArgv
-    # callable class and will be used at runtime as the contents of the
-    # echo stream.
-    echo = topo.source(echo_functions.SysArgv(sys.argv[1:]))
+    # The command line arguments (sys.argv) excluding the application
+    # name will be used at runtime as the contents of the echo stream.
+    echo = topo.source(sys.argv[1:])
     
     # print the echo stream to stdout
     echo.print()
@@ -41,7 +40,7 @@ def main():
     # stream that is printed to stdout
     
     # execute the topology by submitting to a standalone context
-    streamsx.topology.context.submit("STANDALONE", topo.graph)
+    streamsx.topology.context.submit("STANDALONE", topo)
      
 if __name__ == '__main__':
     main()

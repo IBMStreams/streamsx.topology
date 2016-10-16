@@ -4,8 +4,6 @@ from __future__ import print_function
 import sys
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
-import hello_world_functions
-
 
 def main():
     """
@@ -30,7 +28,7 @@ def main():
     
     # Declare a source stream (hw) with string tuples containing two tuples,
     # "Hello" and "World!".
-    hw = topo.source(hello_world_functions.source_tuples)
+    hw = topo.source(["Hello", "World!"])
     
     # Sink hw by printing each of its tuples to standard output
     hw.print()
@@ -41,7 +39,5 @@ def main():
     # Now execute the topology by submitting to a standalone context.
     streamsx.topology.context.submit("STANDALONE", topo)
 
-     
 if __name__ == '__main__':
     main()
-    
