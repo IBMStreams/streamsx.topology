@@ -47,12 +47,13 @@ class Topology(object):
     def source(self, func):
         """
         Fetches information from an external system and presents that information as a stream.
-        Takes a zero-argument callable that returns an iterable of tuples.
+        Tuples are obtained from an iterator obtained from the passed iterable
+        or callable that returns an iterable.
         Each tuple that is not None from the iterator returned
         from iter(func()) is present on the returned stream.
         
         Args:
-            func: A zero-argument callable that returns an iterable of tuples.
+            func: An iterable or a zero-argument callable that returns an iterable of tuples.
             The callable must be either 
             * the name of a function defined at the top level of a module that takes no arguments, or
             * an instance of a callable class defined at the top level of a module that implements
@@ -61,7 +62,7 @@ class Topology(object):
             initialization and utilized when the instance is called.
             A tuple is represented as a Python object that must be picklable.
         Returns:
-            A Stream whose tuples are the result of the output obtained by invoking the provided callable.
+            A Stream whose tuples are the result of the output obtained by invoking the provided callable or iterable.
         """
         if inspect.isroutine(func):
              pass
