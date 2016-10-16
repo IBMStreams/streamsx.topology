@@ -7,6 +7,7 @@ import inspect
 import pickle
 import base64
 import streamsx.topology.dependency
+import streamsx.topology.functions
 import streamsx.topology.param
 from streamsx.topology.schema import CommonSchema
 from streamsx.topology.schema import _stream_schema
@@ -48,8 +49,12 @@ class SPLGraph(object):
             op = SPLInvocation(len(self.operators), kind, function, name, params, self)
         self.operators.append(op)
         if not function is None:
-            if not inspect.isbuiltin(function):
-                self.resolver.add_dependencies(inspect.getmodule(function))
+            dep_instance = function
+            if isinstance(function, streamsx.topology.functions._IterableInstance):
+                dep_instance = type(function._it)
+
+            if not inspect.isbuiltin(dep_instance):
+                self.resolver.add_dependencies(inspect.getmodule(dep_instance))
         return op
     
     def addPassThruOperator(self):
