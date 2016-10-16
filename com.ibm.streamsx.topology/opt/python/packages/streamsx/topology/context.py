@@ -56,7 +56,7 @@ def submit(ctxtype, graph, config = None, username = None, password = None, rest
           (.sab file) that can be submitted to an IBM Streams instance as a distributed application.
         * JUPYTER - the topology is run in standalone mode, and context.submit returns a stdout streams of bytes which 
           can be read from to visualize the output of the application.
-        graph: a Topology.graph object
+        graph: a Topology object or Topology.graph object
         
     Returns:
         An output stream of bytes if submitting with JUPYTER, otherwise returns None.
@@ -83,6 +83,9 @@ def submit(ctxtype, graph, config = None, username = None, password = None, rest
     bf["python"] = pythonreal
     bf["pythonconfig"] = pythonrealconfig
     config["pythonversion"]["binaries"].append(bf)
+
+    # Allows a graph or topology to be passed
+    graph = graph.graph
 
     fj = _createFullJSON(graph, config)
     fn = _createJSONFile(fj)

@@ -27,10 +27,10 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.internal.context.remote.TkInfo;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
-import com.ibm.streamsx.topology.internal.streams.Util;
 import com.ibm.streamsx.topology.internal.toolkit.info.IdentityType;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
@@ -332,7 +332,7 @@ public class SPL {
         
         ToolkitInfoModelType infoModel;
         try {
-            infoModel = Util.getToolkitInfo(toolkitRoot);
+            infoModel = TkInfo.getToolkitInfo(toolkitRoot);
         } catch (JAXBException e) {
             throw new IOException(e);
         }

@@ -16,6 +16,8 @@ class SPLGraph(object):
     def __init__(self, name=None):
         if name is None:
             name = str(uuid.uuid1()).replace("-", "")
+        # Allows Topology or SPLGraph to be passed to submit
+        self.graph = self
         self.name = name
         self.operators = []
         self.resolver = streamsx.topology.dependency._DependencyResolver()

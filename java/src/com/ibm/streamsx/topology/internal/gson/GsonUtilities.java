@@ -17,6 +17,8 @@ public class GsonUtilities {
      * Perform an action on every JsonObject in an array.
      */
     public static void objectArray(JsonObject object, String property, Consumer<JsonObject> action) {
+        if (object == null)
+            return;
         JsonArray array = array(object, property);
         if (array == null)
             return;
@@ -27,6 +29,9 @@ public class GsonUtilities {
      * Perform an action on every String in an array.
      */
     public static void stringArray(JsonObject object, String property, Consumer<String> action) {
+        if (object == null)
+            return;
+
         JsonArray array = array(object, property);
         if (array == null)
             return;
