@@ -120,8 +120,6 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                         if (dir.getFileName().toString().equals("__pycache__"))
                             return FileVisitResult.SKIP_SUBTREE;
                         
-                        // No requirement to create directory entries
-                        
                         zos.putNextEntry(new ZipEntry(rootEntryName + "/" + start.relativize(dir).toString().replace(File.separatorChar, '/') + "/"));
                         zos.closeEntry();
                         return FileVisitResult.CONTINUE;
