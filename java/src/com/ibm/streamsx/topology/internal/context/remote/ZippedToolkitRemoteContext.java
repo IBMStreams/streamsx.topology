@@ -55,10 +55,8 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     private static Path pack(final Path folder, String namespace, String name, String tkName) throws IOException, URISyntaxException {
         Path zipFilePath = Paths.get(folder.toAbsolutePath().toString() + ".zip");
         String workingDir = zipFilePath.getParent().toString();
-        // com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar
-        File jarLocation = new File(ZippedToolkitRemoteContext.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-        // com.ibm.streamsx.topology
-        File topologyToolkit = jarLocation.getParentFile().getParentFile();    
+        
+        File topologyToolkit = TkInfo.getTopologyToolkitRoot();  
         
         // tkManifest is the list of toolkits contained in the archive
         try (PrintWriter tkManifest = new PrintWriter("manifest_tk.txt", "UTF-8")) {
@@ -71,13 +69,13 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         try (PrintWriter mainComposite = new PrintWriter("main_composite.txt", "UTF-8")) {
             mainComposite.print(namespace + "::" + name);
         }
-        
+               
         Path topToolkitPath = Paths.get(topologyToolkit.getAbsolutePath());
-        Path manifest = Paths.get(workingDir + "/manifest_tk.txt");
-        Path mainComp = Paths.get(workingDir + "/main_composite.txt");
-        Path makefile = Paths.get(topologyToolkit.getAbsolutePath() + "/opt/python/templates/common/Makefile.template");
+        Path manifest = Paths.get(workingDir, "manifest_tk.txt");
+        Path mainComp = Paths.get(workingDir, "main_composite.txt");
+        Path makefile = Paths.get(topologyToolkit.getAbsolutePath(), "opt", "python", "templates", "common", "Makefile.template");
         
-        Map<Path, String> paths = new HashMap<Path, String>();
+        Map<Path, String> paths = new HashMap<>();
         paths.put(topToolkitPath, topToolkitPath.getFileName().toString());
         paths.put(manifest, "manifest_tk.txt");
         paths.put(mainComp, "main_composite.txt");
@@ -109,6 +107,8 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                         if(!relativePath.isEmpty()){                          
                             entryName = entryName + "/" + relativePath;
                         }
+                        // Zip uses forward slashes
+                        entryName = entryName.replace(File.separatorChar, '/');
                         zos.putNextEntry(new ZipEntry(entryName));
                         Files.copy(file, zos);
                         zos.closeEntry();
@@ -120,7 +120,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                         if (dir.getFileName().toString().equals("__pycache__"))
                             return FileVisitResult.SKIP_SUBTREE;
                         
-                        zos.putNextEntry(new ZipEntry(startName + "/" + start.relativize(dir).toString() + "/"));
+                        zos.putNextEntry(new ZipEntry(startName + "/" + start.relativize(dir).toString().replace(File.separatorChar, '/') + "/"));
                         zos.closeEntry();
                         return FileVisitResult.CONTINUE;
                     }
