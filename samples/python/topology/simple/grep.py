@@ -59,7 +59,7 @@ def main():
     matching.print()
     
     # execute the topology
-    streamsx.topology.context.submit("STANDALONE", topo.graph)
+    streamsx.topology.context.submit("STANDALONE", topo)
      
 if __name__ == '__main__':
     main()
