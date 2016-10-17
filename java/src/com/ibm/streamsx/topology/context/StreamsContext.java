@@ -64,7 +64,12 @@ public interface StreamsContext<T> {
          * </P>
          */
         BUILD_ARCHIVE,
-
+        /**
+        * Execution of the topology submits the application to be built and 
+        * executed within a Streaming Analytics Service.
+        * 
+        */
+       REMOTE_BUILD_AND_SUBMIT,
         /**
          * Execution of the topology produces an SPL application bundle
          * {@code .sab} file that can be submitted to an IBM Streams

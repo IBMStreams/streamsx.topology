@@ -15,7 +15,9 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -70,34 +72,38 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
             mainComposite.print(namespace + "::" + name);
         }
         
-        List<Path> paths = new ArrayList<Path>();
-        paths.add(Paths.get(topologyToolkit.getAbsolutePath()));
-        paths.add(Paths.get(workingDir + "/manifest_tk.txt"));
-        paths.add(Paths.get(workingDir + "/main_composite.txt"));
-        paths.add(Paths.get(topologyToolkit.getAbsolutePath() + "/opt/python/templates/common/Makefile"));
-        paths.add(folder);
+        Path topToolkitPath = Paths.get(topologyToolkit.getAbsolutePath());
+        Path manifest = Paths.get(workingDir + "/manifest_tk.txt");
+        Path mainComp = Paths.get(workingDir + "/main_composite.txt");
+        Path makefile = Paths.get(topologyToolkit.getAbsolutePath() + "/opt/python/templates/common/Makefile.template");
+        
+        Map<Path, String> paths = new HashMap<Path, String>();
+        paths.put(topToolkitPath, topToolkitPath.getFileName().toString());
+        paths.put(manifest, "manifest_tk.txt");
+        paths.put(mainComp, "main_composite.txt");
+        paths.put(makefile, "Makefile");
+        paths.put(folder, folder.getFileName().toString());
         
         addAllToZippedArchive(paths, zipFilePath);  
-        paths.get(1).toFile().delete();
-        paths.get(2).toFile().delete();
+        manifest.toFile().delete();
+        mainComp.toFile().delete();
         
         return zipFilePath;
     }
     
     
-    private static void addAllToZippedArchive(List<Path> starts, Path zipFilePath) throws IOException {
+    private static void addAllToZippedArchive(Map<Path, String> starts, Path zipFilePath) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(zipFilePath.toFile());
                 ZipOutputStream zos = new ZipOutputStream(fos)) {
-            for (Path start : starts) {
+            for (Path start : starts.keySet()) {
                 String startName = start.getFileName().toString();
                 Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        
                         // Skip pyc files.
                         if (file.getFileName().toString().endsWith(".pyc"))
                             return FileVisitResult.CONTINUE;
                         
-                        String entryName = startName;
+                        String entryName = starts.get(start);
                         String relativePath = start.relativize(file).toString();
                         // If empty, file is the start file.
                         if(!relativePath.isEmpty()){                          
