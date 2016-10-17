@@ -94,14 +94,14 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         try (FileOutputStream fos = new FileOutputStream(zipFilePath.toFile());
                 ZipOutputStream zos = new ZipOutputStream(fos)) {
             for (Path start : starts.keySet()) {
-                String startName = start.getFileName().toString();
+                final String rootEntryName = starts.get(start);
                 Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                         // Skip pyc files.
                         if (file.getFileName().toString().endsWith(".pyc"))
                             return FileVisitResult.CONTINUE;
                         
-                        String entryName = starts.get(start);
+                        String entryName = rootEntryName;
                         String relativePath = start.relativize(file).toString();
                         // If empty, file is the start file.
                         if(!relativePath.isEmpty()){                          
@@ -120,7 +120,9 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                         if (dir.getFileName().toString().equals("__pycache__"))
                             return FileVisitResult.SKIP_SUBTREE;
                         
-                        zos.putNextEntry(new ZipEntry(startName + "/" + start.relativize(dir).toString().replace(File.separatorChar, '/') + "/"));
+                        // No requirement to create directory entries
+                        
+                        zos.putNextEntry(new ZipEntry(rootEntryName + "/" + start.relativize(dir).toString().replace(File.separatorChar, '/') + "/"));
                         zos.closeEntry();
                         return FileVisitResult.CONTINUE;
                     }
