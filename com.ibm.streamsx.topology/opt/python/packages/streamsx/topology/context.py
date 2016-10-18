@@ -87,7 +87,7 @@ def submit(ctxtype, graph, config = None, username = None, password = None, rest
     # Allows a graph or topology to be passed
     graph = graph.graph
 
-    fj = _createFullJSON(graph, config, os.path.dirname(pythondir))
+    fj = _createFullJSON(graph, config)
     fn = _createJSONFile(fj)
 
     # Create connection to SWS
@@ -111,10 +111,10 @@ def submit(ctxtype, graph, config = None, username = None, password = None, rest
         _delete_json(fn)
         raise
 
-def _createFullJSON(graph, config, pythondir):
+def _createFullJSON(graph, config):
     fj = {}
     fj["deploy"] = config
-    fj["graph"] = graph.generateSPLGraph(pythondir)
+    fj["graph"] = graph.generateSPLGraph()
     return fj
    
 
