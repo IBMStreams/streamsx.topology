@@ -30,6 +30,7 @@ class SPLGraph(object):
         self.operators = []
         self.resolver = streamsx.topology.dependency._DependencyResolver()
         self._views = []
+        self._pythondir = ""
 
     def get_views(self):
         return self._views
@@ -70,7 +71,8 @@ class SPLGraph(object):
         self.operators.append(op)
         return op
 
-    def generateSPLGraph(self):
+    def generateSPLGraph(self, pythondir):
+        self._pythondir = pythondir
         _graph = {}
         _graph["name"] = self.name
         _graph["namespace"] = self.name
@@ -88,18 +90,29 @@ class SPLGraph(object):
    
     def addPackages(self, includes):
         for package_path in self.resolver.packages:
-           mf = {}
-           mf["source"] = package_path
-           mf["target"] = "opt/python/packages"
-           includes.append(mf)
+          if self._include_source(package_path):
+             mf = {}
+             mf["source"] = package_path
+             mf["target"] = "opt/python/packages"
+             includes.append(mf)
 
     def addModules(self, includes):
         for module_path in self.resolver.modules:
-           mf = {}
-           mf["source"] = module_path
-           mf["target"] = "opt/python/modules"
-           includes.append(mf)
-           
+          if self._include_source(package_path):
+             mf = {}
+             mf["source"] = module_path
+             mf["target"] = "opt/python/modules"
+             includes.append(mf)
+
+    def _include_source(self, package_path):         
+      if not "/anaconda" in self._pythondir:
+        return True
+
+      if not package_path.startswith(self._pythondir):
+        return True
+
+      return False
+
     def getLastOperator(self):
         return self.operators[len(self.operators) -1]      
         
