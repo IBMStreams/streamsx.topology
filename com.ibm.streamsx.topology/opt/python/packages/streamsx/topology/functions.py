@@ -28,3 +28,13 @@ class _IterableInstance(object):
         self._it = it
     def __call__(self):
         return self._it
+
+# Wraps an callable instance 
+# When this is called, the callable is called.
+# Used to wrap a lambda object
+class _Callable(object):
+    def __init__(self, callable):
+        self._callable = callable
+    def __call__(self, *args, **kwargs):
+        return self._callable.__call__(*args, **kwargs)
+

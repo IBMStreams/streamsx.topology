@@ -2,6 +2,12 @@
 # Copyright IBM Corp. 2016
 import os
 import pickle
+
+try:
+    import dill
+except ImportError:
+    dill = pickle
+
 import base64
 import sys
 import json
@@ -72,7 +78,7 @@ def _getCallable(f):
     if callable(f):
         return f
     if isinstance(f, str):
-        ci = pickle.loads(base64.b64decode(f))
+        ci = dill.loads(base64.b64decode(f))
         if callable(ci):
             return ci
     return None
