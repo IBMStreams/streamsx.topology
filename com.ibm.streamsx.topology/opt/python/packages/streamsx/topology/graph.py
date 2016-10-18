@@ -1,6 +1,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2016
 
+import sys
 import uuid
 import json
 import inspect
@@ -105,7 +106,7 @@ class SPLGraph(object):
              includes.append(mf)
 
     def _include_source(self, package_path):         
-      if not "/anaconda" in self._pythondir:
+      if not "Anaconda" in sys.version:
         return True
 
       if not package_path.startswith(self._pythondir):
