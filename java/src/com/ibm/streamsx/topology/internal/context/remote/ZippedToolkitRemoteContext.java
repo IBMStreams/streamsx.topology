@@ -55,10 +55,8 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     private static Path pack(final Path folder, String namespace, String name, String tkName) throws IOException, URISyntaxException {
         Path zipFilePath = Paths.get(folder.toAbsolutePath().toString() + ".zip");
         String workingDir = zipFilePath.getParent().toString();
-        // com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar
-        File jarLocation = new File(ZippedToolkitRemoteContext.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-        // com.ibm.streamsx.topology
-        File topologyToolkit = jarLocation.getParentFile().getParentFile();    
+        
+        Path topologyToolkit = TkInfo.getTopologyToolkitRoot().getAbsoluteFile().toPath();  
         
         // tkManifest is the list of toolkits contained in the archive
         try (PrintWriter tkManifest = new PrintWriter("manifest_tk.txt", "UTF-8")) {
@@ -71,18 +69,33 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         try (PrintWriter mainComposite = new PrintWriter("main_composite.txt", "UTF-8")) {
             mainComposite.print(namespace + "::" + name);
         }
+               
+        Path manifest = Paths.get(workingDir, "manifest_tk.txt");
+        Path mainComp = Paths.get(workingDir, "main_composite.txt");
+        Path makefile = topologyToolkit.resolve(Paths.get("opt", "python", "templates", "common", "Makefile.template"));
         
-        Path topToolkitPath = Paths.get(topologyToolkit.getAbsolutePath());
-        Path manifest = Paths.get(workingDir + "/manifest_tk.txt");
-        Path mainComp = Paths.get(workingDir + "/main_composite.txt");
-        Path makefile = Paths.get(topologyToolkit.getAbsolutePath() + "/opt/python/templates/common/Makefile.template");
-        
-        Map<Path, String> paths = new HashMap<Path, String>();
-        paths.put(topToolkitPath, topToolkitPath.getFileName().toString());
+        Map<Path, String> paths = new HashMap<>();
+        paths.put(topologyToolkit, topologyToolkit.getFileName().toString());
         paths.put(manifest, "manifest_tk.txt");
         paths.put(mainComp, "main_composite.txt");
         paths.put(makefile, "Makefile");
         paths.put(folder, folder.getFileName().toString());
+        
+        // If we are running from a pip installed package then
+        // the toolkit does not contain the Python packages
+        // under streamsx. In that case the toolkit is under streamsx
+        //    streamsx/.toolkit/com.ibm.streamsx.topology
+        //
+        // In that case we need to copy the streamsx packages (excluding .toolkit)
+        // back into the code in the toolkit archive to have it work for the SPL world.
+        Path optStreamsx = Paths.get("opt", "python", "packages", "streamsx");
+        Path streamsx = topologyToolkit.resolve(optStreamsx);
+        if (!streamsx.toFile().exists()) {
+            // streamsx/.toolkit/com.ibm.streamsx.topology is toolkit root
+            streamsx = topologyToolkit.getParent().getParent();
+            
+            paths.put(streamsx, streamsx.getFileName().toString());
+        }
         
         addAllToZippedArchive(paths, zipFilePath);  
         manifest.toFile().delete();
@@ -96,19 +109,21 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         try (FileOutputStream fos = new FileOutputStream(zipFilePath.toFile());
                 ZipOutputStream zos = new ZipOutputStream(fos)) {
             for (Path start : starts.keySet()) {
-                String startName = start.getFileName().toString();
+                final String rootEntryName = starts.get(start);
                 Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                         // Skip pyc files.
                         if (file.getFileName().toString().endsWith(".pyc"))
                             return FileVisitResult.CONTINUE;
                         
-                        String entryName = starts.get(start);
+                        String entryName = rootEntryName;
                         String relativePath = start.relativize(file).toString();
                         // If empty, file is the start file.
                         if(!relativePath.isEmpty()){                          
                             entryName = entryName + "/" + relativePath;
                         }
+                        // Zip uses forward slashes
+                        entryName = entryName.replace(File.separatorChar, '/');
                         zos.putNextEntry(new ZipEntry(entryName));
                         Files.copy(file, zos);
                         zos.closeEntry();
@@ -116,11 +131,16 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                     }
 
                     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                        // Don't include pyc files
-                        if (dir.getFileName().toString().equals("__pycache__"))
+                        final String dirName = dir.getFileName().toString();
+                        // Don't include pyc files or .toolkit 
+                        if (dirName.equals("__pycache__"))
                             return FileVisitResult.SKIP_SUBTREE;
                         
-                        zos.putNextEntry(new ZipEntry(startName + "/" + start.relativize(dir).toString() + "/"));
+                        // Skip .toolkit/com.ibm.streamsx.topology from the pip installed version
+                        if (dirName.equals(".toolkit") && dir.resolve("com.ibm.streamsx.topology").toFile().exists())
+                            return FileVisitResult.SKIP_SUBTREE;
+                        
+                        zos.putNextEntry(new ZipEntry(rootEntryName + "/" + start.relativize(dir).toString().replace(File.separatorChar, '/') + "/"));
                         zos.closeEntry();
                         return FileVisitResult.CONTINUE;
                     }
