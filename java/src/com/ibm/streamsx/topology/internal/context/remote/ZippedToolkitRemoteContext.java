@@ -56,7 +56,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         Path zipFilePath = Paths.get(folder.toAbsolutePath().toString() + ".zip");
         String workingDir = zipFilePath.getParent().toString();
         
-        File topologyToolkit = TkInfo.getTopologyToolkitRoot();  
+        Path topologyToolkit = TkInfo.getTopologyToolkitRoot().getAbsoluteFile().toPath();  
         
         // tkManifest is the list of toolkits contained in the archive
         try (PrintWriter tkManifest = new PrintWriter("manifest_tk.txt", "UTF-8")) {
@@ -70,17 +70,32 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
             mainComposite.print(namespace + "::" + name);
         }
                
-        Path topToolkitPath = Paths.get(topologyToolkit.getAbsolutePath());
         Path manifest = Paths.get(workingDir, "manifest_tk.txt");
         Path mainComp = Paths.get(workingDir, "main_composite.txt");
-        Path makefile = Paths.get(topologyToolkit.getAbsolutePath(), "opt", "python", "templates", "common", "Makefile.template");
+        Path makefile = topologyToolkit.resolve(Paths.get("opt", "python", "templates", "common", "Makefile.template"));
         
         Map<Path, String> paths = new HashMap<>();
-        paths.put(topToolkitPath, topToolkitPath.getFileName().toString());
+        paths.put(topologyToolkit, topologyToolkit.getFileName().toString());
         paths.put(manifest, "manifest_tk.txt");
         paths.put(mainComp, "main_composite.txt");
         paths.put(makefile, "Makefile");
         paths.put(folder, folder.getFileName().toString());
+        
+        // If we are running from a pip installed package then
+        // the toolkit does not contain the Python packages
+        // under streamsx. In that case the toolkit is under streamsx
+        //    streamsx/.toolkit/com.ibm.streamsx.topology
+        //
+        // In that case we need to copy the streamsx packages (excluding .toolkit)
+        // back into the code in the toolkit archive to have it work for the SPL world.
+        Path optStreamsx = Paths.get("opt", "python", "packages", "streamsx");
+        Path streamsx = topologyToolkit.resolve(optStreamsx);
+        if (!streamsx.toFile().exists()) {
+            // streamsx/.toolkit/com.ibm.streamsx.topology is toolkit root
+            streamsx = topologyToolkit.getParent().getParent();
+            
+            paths.put(streamsx, streamsx.getFileName().toString());
+        }
         
         addAllToZippedArchive(paths, zipFilePath);  
         manifest.toFile().delete();
@@ -116,8 +131,13 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                     }
 
                     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                        // Don't include pyc files
-                        if (dir.getFileName().toString().equals("__pycache__"))
+                        final String dirName = dir.getFileName().toString();
+                        // Don't include pyc files or .toolkit 
+                        if (dirName.equals("__pycache__"))
+                            return FileVisitResult.SKIP_SUBTREE;
+                        
+                        // Skip .toolkit/com.ibm.streamsx.topology from the pip installed version
+                        if (dirName.equals(".toolkit") && dir.resolve("com.ibm.streamsx.topology").toFile().exists())
                             return FileVisitResult.SKIP_SUBTREE;
                         
                         zos.putNextEntry(new ZipEntry(rootEntryName + "/" + start.relativize(dir).toString().replace(File.separatorChar, '/') + "/"));
