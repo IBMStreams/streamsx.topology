@@ -19,26 +19,23 @@ import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-import com.ibm.json.java.JSONObject;
-import com.ibm.streamsx.topology.internal.context.RemoteContexts;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONArray;
 
 public class BuildServiceRemoteRESTWrapper {
 	
-	JSONObject credentials;
+	JsonObject credentials;
 	
-	public BuildServiceRemoteRESTWrapper(JSONObject credentials){
+	public BuildServiceRemoteRESTWrapper(JsonObject credentials){
 		this.credentials = credentials;
 	}
 	
 	public void remoteBuildAndSubmit(File archive) throws ClientProtocolException, IOException{
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         
-        String apiKey = getAPIKey((String)credentials.get("userid"), (String)credentials.get("password"));
+        String apiKey = getAPIKey(GsonUtilities.jstring(credentials,  "userid"), GsonUtilities.jstring(credentials, "password"));
         
         
         // Perform initial post of the archive
@@ -199,8 +196,8 @@ public class BuildServiceRemoteRESTWrapper {
 	}
 
 	
-	private String getBuildsURL(JSONObject credentials){
-		String buildURL = ((String) credentials.get("jobs_path")).replace("jobs", "builds");
+	private String getBuildsURL(JsonObject credentials){
+		String buildURL = (GsonUtilities.jstring(credentials, "jobs_path").replace("jobs", "builds"));
 		return credentials.get("rest_url") + buildURL;
 	}
 }

@@ -70,7 +70,7 @@ public class BuildServiceRESTWrapper {
         
         // TODO: support multiple artifacts associated with a single build.
         String artifactId = (String)((JSONObject)artifacts.get(0)).get("id");
-        JSONObject putResponse = doArchivePut(httpclient, apiKey, artifactId);
+        doArchivePut(httpclient, apiKey, artifactId);
 	}
 	
 	private JSONObject doArchivePut(CloseableHttpClient httpclient,
@@ -86,7 +86,7 @@ public class BuildServiceRESTWrapper {
         httpput.setEntity(params);
        
         //System.out.println(httppost.getAllHeaders()[1]);
-        JSONObject jso = RemoteContexts.getJsonResponse(httpclient, httpput);
+        JSONObject jso = Contexts.getJsonResponse(httpclient, httpput);
 		return jso;
 	}
 	
@@ -115,7 +115,7 @@ public class BuildServiceRESTWrapper {
         
         httppost.setEntity(reqEntity);
         //System.out.println(httppost.getAllHeaders()[1]);
-        JSONObject jso = RemoteContexts.getJsonResponse(httpclient, httppost);
+        JSONObject jso = Contexts.getJsonResponse(httpclient, httppost);
         return jso;
 	}
 	
@@ -144,7 +144,7 @@ public class BuildServiceRESTWrapper {
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpget.addHeader("Authorization", apiKey);
 		
-		JSONObject response = RemoteContexts.getJsonResponse(httpclient, httpget);
+		JSONObject response = Contexts.getJsonResponse(httpclient, httpget);
 		// Get the correct build
 		JSONObject build = null;
 		JSONArray builds = (JSONArray) response.get("builds");
@@ -165,7 +165,7 @@ public class BuildServiceRESTWrapper {
 		httpget.addHeader("Authorization", apiKey);
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
 		
-		JSONObject response = RemoteContexts.getJsonResponse(httpclient, httpget);
+		JSONObject response = Contexts.getJsonResponse(httpclient, httpget);
 		for(Object outputObj : (JSONArray)response.get("builds")){
 			JSONObject output = (JSONObject)outputObj;
 			if(((String)output.get("id")).equals(buildId))

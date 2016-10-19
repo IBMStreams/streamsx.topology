@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONObject;
-import com.ibm.streamsx.topology.internal.context.RemoteContexts;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContext {
@@ -26,8 +24,8 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	}
 	
 	private void doSubmit(Map<String, Object> config, File archive) throws IOException{
-		JSONObject service = RemoteContexts.getVCAPService(config);        
-        JSONObject credentials = (JSONObject) service.get("credentials");
+		JsonObject service = RemoteContexts.getVCAPService(config);        
+        JsonObject credentials = GsonUtilities.object(service,  "credentials");
      
         BuildServiceRemoteRESTWrapper wrapper = new BuildServiceRemoteRESTWrapper(credentials);
         wrapper.remoteBuildAndSubmit(archive);

@@ -7,8 +7,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,15 +18,10 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.apache.mina.core.IoUtil;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
-public class RemoteContexts {
+public class Contexts {
 	static void preBundle(Map<String, Object> config) {
         if (!config.containsKey(SERVICE_NAME))
             throw new IllegalStateException("Service name is not defined, please set property: " + SERVICE_NAME);
@@ -112,39 +105,6 @@ public class RemoteContexts {
         return jsonResponse;
     }
     
-    public static JsonObject getGsonResponse(CloseableHttpClient httpClient,
-            HttpRequestBase request) throws IOException, ClientProtocolException {
-        request.addHeader("accept",
-                ContentType.APPLICATION_JSON.getMimeType());
-
-        CloseableHttpResponse response = httpClient.execute(request);
-        JsonObject jsonResponse;
-        try {
-            HttpEntity entity = response.getEntity();
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                final String errorInfo;
-                if (entity != null)
-                    errorInfo = " -- " + EntityUtils.toString(entity);
-                else
-                    errorInfo = "";
-                throw new IllegalStateException(
-                        "Unexpected HTTP resource from service:"
-                                + response.getStatusLine().getStatusCode() + ":" +
-                                response.getStatusLine().getReasonPhrase() + errorInfo);
-            }
-            
-            if (entity == null)
-                throw new IllegalStateException("No HTTP resource from service");
-
-            
-            Reader r = new InputStreamReader(entity.getContent());
-            jsonResponse = new Gson().fromJson(r, JsonObject.class);
-            EntityUtils.consume(entity);
-        } finally {
-            response.close();
-        }
-        return jsonResponse;
-    }
 
 	public static Map<String, Object> jsonDeployToMap(JSONObject deploy) {
 		Map<String, Object> config = new HashMap<>();
@@ -155,12 +115,4 @@ public class RemoteContexts {
 		return config;
 	}
 
-	public static Map<String, Object> gsonDeployToMap(JsonObject deploy) {
-		Map<String, Object> config = new HashMap<>();
-		if(deploy.has(VCAP_SERVICES))
-			config.put(VCAP_SERVICES, deploy.get(VCAP_SERVICES));
-		if(deploy.has(SERVICE_NAME))
-			config.put(SERVICE_NAME, deploy.get(SERVICE_NAME));
-		return config;
-	}
 }
