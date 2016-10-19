@@ -16,6 +16,7 @@ public interface RemoteContext<T> {
     public enum Type {
         TOOLKIT,        
         BUILD_ARCHIVE,
+        REMOTE_BUILD_AND_SUBMIT
     }
     
     
