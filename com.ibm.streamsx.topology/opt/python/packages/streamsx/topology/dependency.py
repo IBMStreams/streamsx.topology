@@ -7,13 +7,14 @@ import inspect
 import types
 import collections
     
+from streamsx.topology.topologypackages import TopologyPackages
 
 class _DependencyResolver(object):
     """
     Finds dependencies given a module object
     """
     
-    def __init__(self):
+    def __init__(self, topology_packages):
         self._modules = set()
         self._packages = collections.OrderedDict() # need an ordered set when merging namespace directories
         self._processed_modules = set()
@@ -22,9 +23,7 @@ class _DependencyResolver(object):
         dir = os.path.dirname(os.path.abspath(my_module.__file__))
         dir = os.path.dirname(dir)
         self._streamsx_topology_dir = dir
-        self._conda = "Anaconda" in sys.version
-        # abbreviated list of Anaconda packages to exclude from dependency inclusion
-        self._conda_packages_to_exclude = ["numpy", "scipy", "matplotlib", "h5py"]
+        self._topology_packages = topology_packages
         
     def add_dependencies(self, module):
         """
@@ -34,7 +33,7 @@ class _DependencyResolver(object):
         self._add_dependency(module)
         # recursively get the module's imports and add those as dependencies
         imported_modules = {}
-        if not self._include_module(module):
+        if self._include_module(module):
           imported_modules = _get_imported_modules(module)
         for imported_module_name,imported_module in imported_modules.items():
             if imported_module not in self._processed_modules:
@@ -56,10 +55,12 @@ class _DependencyResolver(object):
         return tuple(self._packages.keys())   
 
     def _include_module(self, module):
-        if self._conda and module.__name__ in self._conda_packages_to_exclude:
-          return False  
-        else:
+        if module.__name__ in self._topology_packages.include_packages:
+          return True  
+        elif module.__name__ not in self._topology_packages.exclude_packages:
           return True
+        else: 
+          return False
     
     def _add_dependency(self, module):
         """
