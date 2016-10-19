@@ -16,6 +16,7 @@ except (ImportError,NameError):
 import random
 from streamsx.topology import graph
 from streamsx.topology import schema
+from streamsx.topology import topologypackages
 import streamsx.topology.functions
 import json
 import threading
@@ -25,7 +26,6 @@ import time
 import inspect
 from platform import python_version
 from enum import Enum
-
 
 class Topology(object):
     """Topology that contains graph + operators"""
@@ -38,7 +38,8 @@ class Topology(object):
           self.opnamespace = "com.ibm.streamsx.topology.functional.python2"
         else:
           raise ValueError("Python version not supported.")
-        self.graph = graph.SPLGraph(name)
+        self.dependent_packages = topologypackages.TopologyPackages()
+        self.graph = graph.SPLGraph(name, self.dependent_packages)
         if files is not None:
             self.files = files
         else:
