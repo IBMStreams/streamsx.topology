@@ -14,9 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.zip.ZipEntry;
@@ -80,22 +78,6 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         paths.put(mainComp, "main_composite.txt");
         paths.put(makefile, "Makefile");
         paths.put(folder, folder.getFileName().toString());
-        
-        // If we are running from a pip installed package then
-        // the toolkit does not contain the Python packages
-        // under streamsx. In that case the toolkit is under streamsx
-        //    streamsx/.toolkit/com.ibm.streamsx.topology
-        //
-        // In that case we need to copy the streamsx packages (excluding .toolkit)
-        // back into the code in the toolkit archive to have it work for the SPL world.
-        Path optStreamsx = Paths.get("opt", "python", "packages", "streamsx");
-        Path streamsx = topologyToolkit.resolve(optStreamsx);
-        if (!streamsx.toFile().exists()) {
-            // streamsx/.toolkit/com.ibm.streamsx.topology is toolkit root
-            streamsx = topologyToolkit.getParent().getParent();
-            
-            paths.put(streamsx, streamsx.getFileName().toString());
-        }
         
         addAllToZippedArchive(paths, zipFilePath);  
         manifest.toFile().delete();
