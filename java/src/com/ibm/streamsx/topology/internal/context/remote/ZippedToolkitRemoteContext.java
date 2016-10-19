@@ -117,11 +117,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                         // Don't include pyc files or .toolkit 
                         if (dirName.equals("__pycache__"))
                             return FileVisitResult.SKIP_SUBTREE;
-                        
-                        // Skip .toolkit/com.ibm.streamsx.topology from the pip installed version
-                        if (dirName.equals(".toolkit") && dir.resolve("com.ibm.streamsx.topology").toFile().exists())
-                            return FileVisitResult.SKIP_SUBTREE;
-                        
+                                                
                         zos.putNextEntry(new ZipEntry(rootEntryName + "/" + start.relativize(dir).toString().replace(File.separatorChar, '/') + "/"));
                         zos.closeEntry();
                         return FileVisitResult.CONTINUE;
