@@ -90,6 +90,10 @@ def submit(ctxtype, graph, config = None, username = None, password = None, rest
     fj = _createFullJSON(graph, config)
     fn = _createJSONFile(fj)
 
+    # deserialize vcap config if present
+    if 'topology.service.vcap' in config:
+        config['topology.service.vcap'] = json.loads(config['topology.service.vcap'])
+
     # Create connection to SWS
     if username is not None and password is not None:
         rc = None

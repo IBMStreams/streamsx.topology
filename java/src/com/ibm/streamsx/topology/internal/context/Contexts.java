@@ -18,11 +18,10 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
-
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 
-public class RemoteContexts {
+public class Contexts {
 	static void preBundle(Map<String, Object> config) {
         if (!config.containsKey(SERVICE_NAME))
             throw new IllegalStateException("Service name is not defined, please set property: " + SERVICE_NAME);
@@ -105,6 +104,7 @@ public class RemoteContexts {
         }
         return jsonResponse;
     }
+    
 
 	public static Map<String, Object> jsonDeployToMap(JSONObject deploy) {
 		Map<String, Object> config = new HashMap<>();
@@ -114,4 +114,5 @@ public class RemoteContexts {
 			config.put(SERVICE_NAME, deploy.get(SERVICE_NAME));
 		return config;
 	}
+
 }
