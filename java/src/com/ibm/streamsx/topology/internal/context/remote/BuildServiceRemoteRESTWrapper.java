@@ -34,9 +34,7 @@ public class BuildServiceRemoteRESTWrapper {
 	
 	public void remoteBuildAndSubmit(File archive) throws ClientProtocolException, IOException{
 		CloseableHttpClient httpclient = HttpClients.createDefault();
-        
         String apiKey = getAPIKey(GsonUtilities.jstring(credentials,  "userid"), GsonUtilities.jstring(credentials, "password"));
-        
         
         // Perform initial post of the archive
         JsonObject jso = doArchivePost(httpclient, apiKey, archive);
@@ -198,7 +196,7 @@ public class BuildServiceRemoteRESTWrapper {
 	
 	private String getBuildsURL(JsonObject credentials){
 		String buildURL = (GsonUtilities.jstring(credentials, "jobs_path").replace("jobs", "builds"));
-		return credentials.get("rest_url") + buildURL;
+		return GsonUtilities.jstring(credentials, "rest_url") + buildURL;
 	}
 }
 
