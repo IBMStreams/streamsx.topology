@@ -87,13 +87,13 @@ def submit(ctxtype, graph, config = None, username = None, password = None, rest
     # Allows a graph or topology to be passed
     graph = graph.graph
 
-    fj = _createFullJSON(graph, config)
-    fn = _createJSONFile(fj)
-
-    # deserialize vcap config if present
-    if 'topology.service.vcap' in config:
+    # deserialize vcap config if present and streams is unset
+    streams_install = os.environ.get('STREAMS_INSTALL')
+    if 'topology.service.vcap' in config and streams_install is None:
         config['topology.service.vcap'] = json.loads(config['topology.service.vcap'])
 
+    fj = _createFullJSON(graph, config)
+    fn = _createJSONFile(fj)
     # Create connection to SWS
     if username is not None and password is not None:
         rc = None
