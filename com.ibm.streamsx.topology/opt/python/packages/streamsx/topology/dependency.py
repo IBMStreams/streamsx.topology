@@ -55,12 +55,26 @@ class _DependencyResolver(object):
         return tuple(self._packages.keys())   
 
     def _include_module(self, module):
-        if module.__name__ in self._topology_packages.include_packages:
-          return True  
-        elif module.__name__ not in self._topology_packages.exclude_packages:
-          return True
-        else: 
-          return False
+        # As some packages have the following format:
+        # 
+        # scipy.special.specfun
+        # scipy.linalg
+        #
+        # Where the top-level package name is just a prefix to a longer package name, 
+        # we don't want to do a direct comparison. Instead, we want to excluse packages
+        # which are either exactly "<package_name>", or start with "<package_name>".
+        
+        for include_package in self._topology_packages.include_packages:
+            if include_package == module.__name__ or module.__name__.startswith(include_package + '.'):
+                return True
+            
+        for exclude_package in self._topology_packages.exclude_packages:
+            if exclude_package == module.__name__ or module.__name__.startswith(exclude_package + '.'):
+                return False
+            
+        return True
+
+
     
     def _add_dependency(self, module):
         """
