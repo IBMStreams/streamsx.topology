@@ -36,6 +36,9 @@ private:
     // Python nested function that depickles the input value
     // and calls the application function
     PyObject *function_;
+
+    // Names of input attributes
+    PyObject *pyInNames_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
