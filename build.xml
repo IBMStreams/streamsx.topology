@@ -64,6 +64,7 @@
     <path location="${tk.lib}/com.ibm.streamsx.topology.jar"/>
     <path refid="streams.classpath"/>
     <path refid="tk.classpath"/>
+    <path location="${junit.jar}"/>
   </path>
 
   <target name="release" depends="clean,all,doc,create_release_bundle"/>
