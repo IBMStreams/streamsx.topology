@@ -13,6 +13,7 @@
   <path id="compile.classpath">
     <path refid="streams.classpath"/>
     <path refid="tk.classpath"/>
+    <pathelement location="${junit.jar}"/>
   </path>
 
   <path id="compile.pure.classpath">

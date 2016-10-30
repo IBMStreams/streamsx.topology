@@ -324,21 +324,7 @@ public class TestTopology {
      * @return
      */
     public static Condition<Boolean> allConditions(final Condition<?> ...conditions) {
-        return new Condition<Boolean>() {
-
-            @Override
-            public boolean valid() {
-                for (Condition<?> condition : conditions) {
-                    if (!condition.valid())
-                        return false;
-                }
-                return true;
-            }
-
-            @Override
-            public Boolean getResult() {
-                return valid();
-            }};
+        return Condition.all(conditions);
     }
     
     /**
