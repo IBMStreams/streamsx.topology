@@ -1,0 +1,146 @@
+/*
+ * # Licensed Materials - Property of IBM
+ * # Copyright IBM Corp. 2015  
+ */
+
+#include <Python.h>
+#include <string>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdio.h>
+
+#include "splpy.h"
+
+<%SPL::CodeGen::implementationPrologue($model);%>
+
+<%
+ my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.__splpy/common/";
+
+ require "splpy_operator.pm";
+ require $cmnDir."/splpy.pm";
+
+ my $module = splpy_Module();
+ my $functionName = splpy_FunctionName();
+ my $paramStyle = splpy_ParamStyle();
+ my $fixedParam = splpy_FixedParam();
+ 
+ my $iport = $model->getInputPortAt(0);
+ my $itupleType = $iport->getSPLTupleType();
+ my @inames = SPL::CodeGen::Type::getAttributeNames($itupleType);
+ my @itypes = SPL::CodeGen::Type::getAttributeTypes($itupleType);
+
+ my $inputAttrs2Py = $iport->getNumberOfAttributes();
+ if ($fixedParam != -1) {
+    $inputAttrs2Py = $fixedParam;
+ }
+
+ if ($fixedParam > $iport->getNumberOfAttributes()) {
+   SPL::CodeGen::exitln('%s requires at least %i attributes in input port but schema is %s',
+           $model->getContext()->getKind(), $fixedParam, $iport->getSPLTupleType());
+
+ }
+
+ my $oport = $model->getOutputPortAt(0);
+ my $otupleType = $oport->getSPLTupleType();
+
+ SPL::CodeGen::exitln(SPL::Msg::STDTK_OUTPUT_SCHEMA_NOT_MATCHING_INPUT(0, 0), 
+      $oport->getSourceLocation()) if($itupleType ne $otupleType);
+
+ if ($model->getNumberOfOutputPorts() == 2) {
+   my $oport = $model->getOutputPortAt(1);
+   my $otupleType = $oport->getSPLTupleType();
+   SPL::CodeGen::exitln(SPL::Msg::STDTK_OUTPUT_SCHEMA_NOT_MATCHING_INPUT(1, 0),
+         $oport->getSourceLocation()) if($itupleType ne $otupleType);
+ }
+ 
+  my $ituple = $iport->getCppTupleName();
+
+  my $nonMatchOutput = $model->getNumberOfOutputPorts() == 2;
+%>
+
+// Constructor
+MY_OPERATOR::MY_OPERATOR() :
+   function_(NULL),
+   pyInNames_(NULL)
+{
+@include  "../../opt/.__splpy/common/py_constructor.cgt"
+
+<% if ($paramStyle eq 'dictionary') { %>
+   {
+      streamsx::topology::PyGILLock lock;
+      pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
+               getInputPortAt(0));
+   }
+<% } %>
+}
+
+// Destructor
+MY_OPERATOR::~MY_OPERATOR() 
+{
+   streamsx::topology::PyGILLock lock;
+   if (function_)
+      Py_DECREF(function_);
+   if (pyInNames_)
+      Py_DECREF(pyInNames_);
+}
+
+// Notify port readiness
+void MY_OPERATOR::allPortsReady() 
+{
+}
+ 
+// Notify pending shutdown
+void MY_OPERATOR::prepareToShutdown() 
+{
+    streamsx::topology::PyGILLock lock;
+    streamsx::topology::flush_PyErrPyOut();
+}
+
+// Processing for source and threaded operators   
+void MY_OPERATOR::process(uint32_t idx)
+{
+}
+
+// Tuple processing for mutating ports 
+void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
+{
+}
+
+// Tuple processing for non-mutating ports
+void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
+{
+   int ret = 0;
+   {
+    // Don't hold the lock across submission
+    streamsx::topology::PyGILLock lock;
+
+ @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
+
+    PyObject * pyReturnVar = PyObject_Call(function_, pyTuple, pyDict);
+    Py_DECREF(pyTuple);
+
+    if (pyReturnVar == NULL) {
+        SPLAPPLOG(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
+        streamsx::topology::flush_PyErr_Print();
+        throw;
+    }
+    ret = PyObject_IsTrue(pyReturnVar);
+
+    Py_DECREF(pyReturnVar);
+    }
+   if (ret)
+       submit(tuple, 0);   
+<%if ($nonMatchOutput) {%>
+   else
+       submit(tuple, 1);
+<%}%>
+}
+
+// Punctuation processing
+void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
+{
+    forwardWindowPunctuation(punct);
+}
+
+<%SPL::CodeGen::implementationEpilogue($model);%>

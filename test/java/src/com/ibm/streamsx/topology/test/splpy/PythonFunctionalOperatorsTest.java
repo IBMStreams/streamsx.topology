@@ -24,6 +24,7 @@ import com.ibm.streams.operator.meta.TupleType;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.spl.SPL;
@@ -127,6 +128,8 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         
         Condition<List<Tuple>> viaSPLResult = tester.tupleContents(viaSPL);
         Condition<List<Tuple>> viaPythonResult = tester.tupleContents(viaPython);
+        
+        
 
         complete(tester, expectedCount, 10, TimeUnit.SECONDS);
 
@@ -134,10 +137,10 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(viaSPLResult.getResult(), viaPythonResult.getResult());
     }
     
-    private static final StreamSchema TEST_SCHEMA_SF =
+    static final StreamSchema TEST_SCHEMA_SF =
             Type.Factory.getStreamSchema("tuple<int32 a,  int16 b, int64 vl>");
     
-    private static final Tuple[] TEST_TUPLES = new Tuple[4];
+    static final Tuple[] TEST_TUPLES = new Tuple[4];
     static {
         TEST_TUPLES[0] = TEST_SCHEMA_SF.getTuple(new Object[] {7, (short) 25, 34535L});
         TEST_TUPLES[1] = TEST_SCHEMA_SF.getTuple(new Object[] {32, (short) 6, 43675232L});
@@ -159,7 +162,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         }, TEST_SCHEMA_SF);        
     }
     
-    private void addTestToolkit(TopologyElement te) throws Exception {
+    static void addTestToolkit(TopologyElement te) throws Exception {
         // Need to run extract to ensure the operators match the python
         // version we are testing.
         File toolkitRoot = new File(getTestRoot(), "python/spl/testtkpy");

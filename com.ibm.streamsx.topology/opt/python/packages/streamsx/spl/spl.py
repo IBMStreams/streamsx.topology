@@ -18,9 +18,10 @@ else:
   raise ValueError("Python version not supported.")
 ############################################
 
-OperatorType = Enum('OperatorType', 'Ignore Source Sink Pipe')
+OperatorType = Enum('OperatorType', 'Ignore Source Sink Pipe Filter')
 OperatorType.Pipe.spl_template = 'PythonFunctionPipe'
 OperatorType.Sink.spl_template = 'PythonFunctionSink'
+OperatorType.Filter.spl_template = 'PythonFunctionFilter'
 
 def pipe(wrapped):
     """
@@ -158,7 +159,7 @@ def _define_style(wrapped, fn, style):
 
 class map:
     """
-    Create a SPL operator from a callable class or function.
+    Create a map SPL operator from a callable class or function.
 
     A map SPL operator with a single input port and a single
     output port. For each tuple on the input port the
@@ -170,6 +171,26 @@ class map:
     
     def __call__(self, wrapped):
         return _wrapforsplop(OperatorType.Pipe, wrapped, self.style, self.docpy)
+
+class filter:
+    """
+    Create a filter SPL operator from a callable class or function.
+
+    A filter SPL operator has a single input port and one mandatory
+    and one optional output port. The schema of each output port
+    must match the input port. For each tuple on the input port the
+    callable is called passing the contents of the tuple. if the
+    function returns a value that evaluates to True then it is
+    submitted to mandatory output port 0. Otherwise it it submitted to
+    the second optional output port (1) or discarded if the port is
+    not specified in the SPL invocation.
+    """
+    def __init__(self, style=None, docpy=True):
+        self.style = style
+        self.docpy = docpy
+    
+    def __call__(self, wrapped):
+        return _wrapforsplop(OperatorType.Filter, wrapped, self.style, self.docpy)
 
 # Allows functions in any module in opt/python/streams to be explicitly ignored.
 def ignore(wrapped):
