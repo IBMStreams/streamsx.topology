@@ -8,16 +8,19 @@ import static com.ibm.streamsx.topology.test.splpy.PythonFunctionalOperatorsTest
 import static com.ibm.streamsx.topology.test.splpy.PythonFunctionalOperatorsTest.sampleFilterStream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -25,9 +28,16 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 public class PythonFunctionalOperatorsKwargsTest extends TestTopology {
- 
+	
+    @Before
+    public void runSpl() {
+        assumeSPLOk();
+        
+        assumeTrue(getTesterContext().getType() == StreamsContext.Type.STANDALONE_TESTER
+        		|| getTesterContext().getType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+    }
     
-    ///@Test
+    @Test
     public void testFilter() throws Exception {
         Topology topology = new Topology("testPositionalSampleNoop");
         
@@ -73,7 +83,7 @@ public class PythonFunctionalOperatorsKwargsTest extends TestTopology {
         Condition<List<Tuple>> failedResult = tester.tupleContents(failed);
 
         getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
-        complete(tester, expectedPassCount.an, 10, TimeUnit.SECONDS);
+        complete(tester, expectedPassCount.and(expectedFailedCount), 10, TimeUnit.SECONDS);
      
         assertEquals(TEST_TUPLES[1], passResult.getResult().get(0));
         assertEquals(TEST_TUPLES[3], passResult.getResult().get(1));

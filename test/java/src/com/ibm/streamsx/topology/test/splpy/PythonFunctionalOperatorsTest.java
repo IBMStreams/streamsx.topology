@@ -24,7 +24,6 @@ import com.ibm.streams.operator.meta.TupleType;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
-import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.spl.SPL;
@@ -129,8 +128,6 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         Condition<List<Tuple>> viaSPLResult = tester.tupleContents(viaSPL);
         Condition<List<Tuple>> viaPythonResult = tester.tupleContents(viaPython);
         
-        
-
         complete(tester, expectedCount, 10, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.valid());
