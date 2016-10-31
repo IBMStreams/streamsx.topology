@@ -80,24 +80,11 @@ MY_OPERATOR::~MY_OPERATOR()
       Py_DECREF(pyOutNames_);
 }
 
-// Notify port readiness
-void MY_OPERATOR::allPortsReady() 
-{
-}
- 
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-}
-
-// Processing for source and threaded operators   
-void MY_OPERATOR::process(uint32_t idx)
-{
-}
-
-// Tuple processing for mutating ports 
-void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
-{
+    streamsx::topology::PyGILLock lock;
+    streamsx::topology::flush_PyErrPyOut();
 }
 
 // Tuple processing for non-mutating ports
