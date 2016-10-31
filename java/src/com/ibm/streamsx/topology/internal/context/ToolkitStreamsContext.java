@@ -5,30 +5,27 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+import static com.ibm.streamsx.topology.context.remote.RemoteContextFactory.getRemoteContext;
+import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.makeDirectoryStructure;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
+import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.json4j;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
-import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
-import com.ibm.streamsx.topology.internal.process.CompletedFuture;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.streams.InvokeMakeToolkit;
 
 public class ToolkitStreamsContext extends StreamsContextImpl<File> {
@@ -60,48 +57,56 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
         makeDirectoryStructure(toolkitRoot,
                 (String) app.builder().json().get("namespace"));
-
+        
         graphItems = app.finalizeGraph(getType(), config);
         
         addConfigToJSON(app.builder().getConfig(), config);
         
         JSONObject jsonGraph = app.builder().complete();
         
-        return createToolkitFromGraph(toolkitRoot, jsonGraph);
-    }
-    
-    private Future<File> createToolkitFromGraph(File toolkitRoot, JSONObject jsonGraph) throws IOException {
-        copyIncludes(toolkitRoot, jsonGraph);
-        generateSPL(toolkitRoot, jsonGraph);
-        return new CompletedFuture<File>(toolkitRoot);
+        JSONObject deploy = new JSONObject();
+        deploy.put(ContextProperties.TOOLKIT_DIR, toolkitRoot.getAbsolutePath());
+        if (config.containsKey(ContextProperties.KEEP_ARTIFACTS))
+            deploy.put(KEEP_ARTIFACTS, config.get(KEEP_ARTIFACTS));
+        
+        JSONObject submission = new JSONObject();
+        submission.put(SUBMISSION_DEPLOY, deploy);
+        submission.put(SUBMISSION_GRAPH, jsonGraph);
+        
+        return createToolkit(submission);
     }
     
     @Override
     public Future<File> submit(JSONObject submission) throws Exception {
-    	
-    	JSONObject deployInfo = (JSONObject) submission.get(SUBMISSION_DEPLOY);
-    	if (deployInfo == null)
-    		submission.put("deploy", deployInfo = new JSONObject());
-    	
-        if (!deployInfo.containsKey(ContextProperties.TOOLKIT_DIR)) {
-        	deployInfo.put(ContextProperties.TOOLKIT_DIR, Files
-                    .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
-        }
-
-        final File toolkitRoot = new File((String) deployInfo.get(ContextProperties.TOOLKIT_DIR));
+        return createToolkit(submission);
+    }
+    
+    private Future<File> createToolkit(JSONObject submission) throws Exception {
         
-        JSONObject jsonGraph = (JSONObject) submission.get(SUBMISSION_GRAPH);
-
-        makeDirectoryStructure(toolkitRoot,
-        		jsonGraph.get("namespace").toString());
-
-        Future<File> future = createToolkitFromGraph(toolkitRoot, jsonGraph);
+        // use the remote context to build the toolkit.
+        @SuppressWarnings("unchecked")
+        RemoteContext<File> tkrc = (RemoteContext<File>) getRemoteContext(RemoteContext.Type.TOOLKIT);
         
-        // Invoke spl-make-toolkit
-        InvokeMakeToolkit imt = new InvokeMakeToolkit(deployInfo, toolkitRoot);
-        imt.invoke();
+        JsonObject gsonSubmission = gson(submission);
+        final Future<File> future = tkrc.submit(gsonSubmission);
+        final File toolkitRoot = future.get();
+        
+        JsonObject gsonDeploy = object(gsonSubmission, SUBMISSION_DEPLOY);
+        
+        // Patch up the returned deploy info.
+        JSONObject deployInfo = json4j(gsonDeploy);
+        submission.put(SUBMISSION_DEPLOY, deployInfo);
+        
+        // Index the toolkit
+        makeToolkit(deployInfo, toolkitRoot);
         
         return future;
+    }
+    
+    protected void makeToolkit(JSONObject deployInfo, File toolkitRoot) throws InterruptedException, Exception{
+        // Invoke spl-make-toolkit 
+        InvokeMakeToolkit imt = new InvokeMakeToolkit(deployInfo, toolkitRoot);
+        imt.invoke();
     }
 
     protected void addConfigToJSON(JSONObject graphConfig, Map<String,Object> config) {
@@ -125,169 +130,5 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
                 graphConfig.put(key, ja);            
             }
         }
-    }
-    
-    private static JSONObject getGraphConfig(JSONObject json) {
-    	return (JSONObject) json.get("config");
-    }
-
-    private void generateSPL(File toolkitRoot, JSONObject jsonGraph)
-            throws IOException {
-
-        // Create the SPL file, and save a copy of the JSON file.
-        SPLGenerator generator = new  SPLGenerator();
-        createNamespaceFile(toolkitRoot, jsonGraph, "spl", generator.generateSPL(jsonGraph));
-        createNamespaceFile(toolkitRoot, jsonGraph, "json", jsonGraph.serialize());
-    }
-
-    private void createNamespaceFile(File toolkitRoot, JSONObject json, String suffix, String content)
-            throws IOException {
-
-        String namespace = (String) json.get("namespace");
-        String name = (String) json.get("name");
-
-        File f = new File(toolkitRoot,
-                namespace + "/" + name + "." + suffix);
-        PrintWriter splFile = new PrintWriter(f, "UTF-8");
-        splFile.print(content);
-        splFile.flush();
-        splFile.close();
-    }
-
-    private void makeDirectoryStructure(File toolkitRoot, String namespace)
-            throws Exception {
-
-        File tkNamespace = new File(toolkitRoot, namespace);
-        File tkImplLib = new File(toolkitRoot, "impl/lib");
-        File tkEtc = new File(toolkitRoot, "etc");
-        File tkOpt = new File(toolkitRoot, "opt");
-
-        tkImplLib.mkdirs();
-        tkNamespace.mkdirs();
-        tkEtc.mkdir();
-        tkOpt.mkdir();
-    }
-    
-    /**
-     * Looks for "includes" in the graph config which will be
-     * a list of JSON object representing files or directories to copy
-     * into the toolkit, with source being the file or directory path
-     * and target being the target directory relative to toolkitRoot.
-     * @param toolkitRoot
-     * @param json
-     * @throws IOException
-     * 
-     * TODO add support for directories
-     */
-    private void copyIncludes(File toolkitRoot, JSONObject json) throws IOException {
-    	
-    	JSONObject config = getGraphConfig(json);
-    	JSONArray includes = (JSONArray) config.get("includes");
-    	if (includes == null || includes.isEmpty())
-    		return;
-    	
-    	for (Object inco : includes) {
-    		JSONObject inc = (JSONObject) inco;
-    		
-    		String source = inc.get("source").toString();
-    		String target = inc.get("target").toString();
-    		
-    		File srcFile = new File(source);
-    		File targetDir = new File(toolkitRoot, target);
-    		if (!targetDir.exists())
-    			targetDir.mkdirs();
-    		if (srcFile.isFile())
-    			copyFile(srcFile, targetDir);
-    		else if (srcFile.isDirectory())
-    			copyDirectoryToDirectory(srcFile, targetDir);
-    	}
-    }
-
-    private static void copyFile(File srcFile, File targetDir) throws IOException {
-        Files.copy(srcFile.toPath(), 
-                new File(targetDir, srcFile.getName()).toPath(),
-                StandardCopyOption.REPLACE_EXISTING);
-
-    }
-    
-    /**
-     * Copy srcDir tree to a directory of the same name in dstDir.
-     * The destination directory is created if necessary.
-     * @param srcDir
-     * @param dstDir
-     */
-    private static void copyDirectoryToDirectory(File srcDir, File dstDir)
-            throws IOException {
-        String dirname = srcDir.getName();
-        dstDir = new File(dstDir, dirname);
-        copyDirectory(srcDir, dstDir);
-    }
-
-    /**
-     * Copy srcDir's children, recursively, to dstDir.  dstDir is created
-     * if necessary.  Any existing children in dstDir are overwritten.
-     * @param srcDir
-     * @param dstDir
-     */
-    private static void copyDirectory(File srcDir, File dstDir) throws IOException {
-        final Path targetPath = dstDir.toPath();
-        final Path sourcePath = srcDir.toPath();
-        Files.walkFileTree(sourcePath, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(final Path dir,
-                    final BasicFileAttributes attrs) throws IOException {
-                Files.createDirectories(targetPath.resolve(sourcePath
-                        .relativize(dir)));
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(final Path file,
-                    final BasicFileAttributes attrs) throws IOException {
-                Files.copy(file,
-                        targetPath.resolve(sourcePath.relativize(file)),
-                        StandardCopyOption.REPLACE_EXISTING);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-    }
-    
-    public void deleteToolkit(File appDir, JSONObject deployConfig) throws IOException {
-        Path tkdir = appDir.toPath();
-        
-        Boolean keep = (Boolean) deployConfig.get(KEEP_ARTIFACTS);
-        if (Boolean.TRUE.equals(keep)) {
-            trace.info("Keeping toolkit at: " + tkdir.toString());
-            return;
-        }
-
-        Files.walkFileTree(tkdir, new FileVisitor<Path>() {
-
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir,
-                    BasicFileAttributes attrs) throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file,
-                    BasicFileAttributes attrs) throws IOException {
-                file.toFile().delete();
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc)
-                    throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                    throws IOException {
-                dir.toFile().delete();
-                return FileVisitResult.CONTINUE;
-            }
-        });
     }
 }

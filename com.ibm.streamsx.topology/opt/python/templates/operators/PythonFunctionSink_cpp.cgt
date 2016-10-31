@@ -18,7 +18,7 @@
  my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.__splpy/common/";
 
  require "splpy_operator.pm";
- require $cmnDir."/splpy_python.pm";
+ require $cmnDir."/splpy.pm";
 
  my $module = splpy_Module();
  my $functionName = splpy_FunctionName();
@@ -43,14 +43,29 @@
 %>
 
 // Constructor
-MY_OPERATOR::MY_OPERATOR()
+MY_OPERATOR::MY_OPERATOR() :
+    function_(NULL),
+    pyInNames_(NULL)
 {
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
+
+<% if ($paramStyle eq 'dictionary') { %>
+   {
+      streamsx::topology::PyGILLock lock;
+      pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
+               getInputPortAt(0));
+   }
+<% } %>
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
+   streamsx::topology::PyGILLock lock;
+   if (function_)
+      Py_DECREF(function_);
+   if (pyInNames_)
+      Py_DECREF(pyInNames_);
 }
 
 // Notify port readiness
@@ -76,28 +91,16 @@ void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
-   IPort0Type const & <%=$ituple%> = static_cast<IPort0Type const &>(tuple);
-
    streamsx::topology::PyGILLock lock;
-<%
-    if ($paramStyle eq 'tuple') {
-%>
-   
-    PyObject * pyTuple = PyTuple_New(<%=$inputAttrs2Py%>); 
-    PyObject *pyValue;
-<%
-     for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
-         print convertToPythonValueAsTuple($ituple, $i, $itypes[$i], $inames[$i]);
-     }
-    }
-%>
+
+ @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
   
     PyObject * pyReturnNone = PyObject_CallObject(function_, pyTuple);
 
     Py_DECREF(pyTuple);
     if (pyReturnNone == NULL) {
         SPLAPPLOG(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
-        streamsx::topology::Splpy::flush_PyErr_Print();
+        streamsx::topology::flush_PyErr_Print();
         throw;
     }
 

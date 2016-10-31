@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -153,13 +152,14 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
          * }
          * </code></pre>
          */
-        OrderedJSONObject jo = new OrderedJSONObject();
-        OrderedJSONObject jv = new OrderedJSONObject();
+        JSONObject jo = new JSONObject();
+        JSONObject jv = new JSONObject();
         jo.put("type", TYPE_SUBMISSION_PARAMETER);
         jo.put("value", jv);
         jv.put("name", name);
         jv.put("metaType", metaType.name());
-        jv.put("defaultValue", defaultValue);
+        if (defaultValue != null)
+            jv.put("defaultValue", defaultValue);
         return jo;
     }
 

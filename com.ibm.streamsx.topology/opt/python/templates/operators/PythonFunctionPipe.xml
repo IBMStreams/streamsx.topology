@@ -23,8 +23,7 @@ __SPLPY__DESCRIPTION__SPLPY__
         <library>
           <cmn:description>Python libraries.</cmn:description>
           <cmn:managedLibrary>
-            <cmn:lib>python__SPLPY__MAJOR_VERSION__SPLPY__.__SPLPY__MINOR_VERSION__SPLPY__m</cmn:lib>
-            <cmn:command>../../opt/.__splpy/common/pyversion.sh</cmn:command>
+            <cmn:command>../../opt/.__splpy/common/pyversion__SPLPY__MAJOR_VERSION__SPLPY__.sh</cmn:command>
           </cmn:managedLibrary>
         </library>
       </libraryDependencies>

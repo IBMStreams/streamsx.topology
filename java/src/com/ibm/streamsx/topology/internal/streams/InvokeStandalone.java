@@ -37,7 +37,7 @@ public class InvokeStandalone {
         
         JobConfig jc = JobConfig.fromProperties(config);
 
-        List<String> commands = new ArrayList<String>();
+        List<String> commands = new ArrayList<>();
         commands.add(jvm.getAbsolutePath());
         commands.add("-jar");
         commands.add(bundle.getAbsolutePath());

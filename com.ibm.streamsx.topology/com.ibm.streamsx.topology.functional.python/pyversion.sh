@@ -1,4 +1,5 @@
 #!/bin/sh
+# python3 version
 action=$1
 
 if [ $action = "lib" ]

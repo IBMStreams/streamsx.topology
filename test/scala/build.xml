@@ -73,6 +73,8 @@
      <property name="topology.test.coverage" value="true"/>
      <property name="topology.test.resource_dir" location="resources"/>
 
+     <property name="topology.test.base.pattern" value="com/ibm/streamsx/topology/test/scala/**/*Test.class"/>
+
      <!-- Can be overridden by setting -D topology.install.compile on cmd line -->
 
     <echo message="INSTALL: ${topology.install.compile}"/>
@@ -98,7 +100,7 @@
        <formatter type="xml"/>
        <batchtest todir="${topology.test.dir}">
           <fileset dir="${classes}">
-             <include name="com/ibm/streamsx/topology/test/scala/**/*Test.class"/>
+             <include name="${topology.test.base.pattern}"/>
           </fileset>
        </batchtest>
      </junit>

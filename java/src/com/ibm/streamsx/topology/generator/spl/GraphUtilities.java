@@ -4,7 +4,11 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
-import java.io.IOException;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectArray;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.stringArray;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,39 +17,52 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSyntaxException;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class GraphUtilities {
-    static ArrayList<JSONObject> findStarts(JSONObject graph) {
-        ArrayList<JSONObject> starts = new ArrayList<JSONObject>();
-        JSONArray ops = (JSONArray) graph.get("operators");
-        for (int k = 0; k < ops.size(); k++) {
-            JSONObject op = (JSONObject) (ops.get(k));
-            JSONArray inputs = (JSONArray) op.get("inputs");
+    static Set<JsonObject> findStarts(JsonObject graph) {
+        Set<JsonObject> starts = new HashSet<>();
+        
+        operators(graph, op -> {
+            JsonArray inputs = GsonUtilities.array(op, "inputs");
             if (inputs == null || inputs.size() == 0) {
-                if (((JSONObject) ops.get(k)).get("name") != null
-                        && !((String) ((JSONObject) ops.get(k)).get("name"))
-                                .startsWith("$")) {
-                    starts.add((JSONObject) ops.get(k));
+                // should this be kind?
+                String name = jstring(op, "name");
+                
+                if(name != null && !name.startsWith("$"))
+                    starts.add(op);
                 }
-            }
-        }
+            });
+        
         return starts;
     }
 
-    static ArrayList<JSONObject> findOperatorByKind(BVirtualMarker virtualMarker,
-            JSONObject graph) {
-        ArrayList<JSONObject> kindOperators = new ArrayList<JSONObject>();
-        JSONArray ops = (JSONArray) graph.get("operators");
-        for (int k = 0; k < ops.size(); k++) {
-            JSONObject op = (JSONObject) (ops.get(k));
-            if (virtualMarker.isThis((String) op.get("kind"))) {
+    /*
+    static Set<JSONObject> findOperatorByKind(BVirtualMarker virtualMarker,
+            JSONObject _graph) {
+        
+        return backToJSON(_graph, findOperatorByKind(virtualMarker, gson(_graph)));
+    }
+    */
+    
+    static Set<JsonObject> findOperatorByKind(BVirtualMarker virtualMarker,
+                JsonObject graph) {
+
+        Set<JsonObject> kindOperators = new HashSet<>();
+        
+        operators(graph, op -> {
+            if (virtualMarker.isThis(jstring(op, "kind")))
                 kindOperators.add(op);
-            }
-        }
+        });
+
         return kindOperators;
     }
 
@@ -60,40 +77,58 @@ public class GraphUtilities {
      * @param graph The graph JSONObject in which {@code visitOp} resides.
      * @return A list of all operators immediately downstream from {@code visitOp}
      */
-    static ArrayList<JSONObject> getDownstream(JSONObject visitOp,
-            JSONObject graph) {
-        ArrayList<JSONObject> uniqueChildren = new ArrayList<JSONObject>();
-        HashSet<JSONObject> children = new HashSet<JSONObject>();
+    /*
+    static Set<JSONObject> getDownstream(JSONObject _visitOp,
+            JSONObject _graph) {
+        
+        return backToJSON(_graph, getDownstream(gson(_visitOp), gson(_graph)));
+    }
+    */
+    
+    static Set<JsonObject> getDownstream(JsonObject visitOp,
+            JsonObject graph) {    
+        
+        Set<JsonObject> children = new HashSet<>();
+                
+        outputConnections(visitOp, inputPort -> {
+            operators(graph, op -> inputs(op, input-> {
+                if (jstring(input, "name").equals(inputPort))
+                    children.add(op);
+            }));
+        });
+
+        return children;
+        /*
+        Set<JSONObject> children = new HashSet<>();
         JSONArray outputs = (JSONArray) visitOp.get("outputs");
-        if (outputs == null || outputs.size() == 0) {
-            return uniqueChildren;
+        if (outputs == null || outputs.isEmpty()) {
+            return children;
         }
 
-        for (int i = 0; i < outputs.size(); i++) {
-            JSONArray connections = (JSONArray) ((JSONObject) outputs.get(i))
+        for (Object _out : outputs) {
+            JSONArray connections = (JSONArray) ((JSONObject) _out)
                     .get("connections");
-            for (int j = 0; j < connections.size(); j++) {
-                String inputPort = (String) connections.get(j);
+            for (Object _conn : connections) {
+                String inputPort = (String) _conn;
                 // TODO: build index instead of iterating through graph each
                 // time
                 JSONArray ops = (JSONArray) graph.get("operators");
-                for (int k = 0; k < ops.size(); k++) {
-                    JSONArray inputs = (JSONArray) ((JSONObject) ops.get(k))
-                            .get("inputs");
-                    if (inputs != null && inputs.size() != 0) {
-                        for (int l = 0; l < inputs.size(); l++) {
-                            String name = (String) ((JSONObject) inputs.get(l))
-                                    .get("name");
+                for (Object _op : ops) {
+                    JSONObject op = (JSONObject) _op;
+                    JSONArray inputs = (JSONArray) op.get("inputs");
+                    if (inputs != null && !inputs.isEmpty()) {
+                        for (Object _input : inputs) {
+                            String name = (String) ((JSONObject) _input).get("name");
                             if (name.equals(inputPort)) {
-                                children.add((JSONObject) ops.get(k));
+                                children.add(op);
                             }
                         }
                     }
                 }
             }
         }
-        uniqueChildren.addAll(children);
-        return uniqueChildren;
+        return children;
+        */
     }
 
     /**
@@ -107,39 +142,26 @@ public class GraphUtilities {
      * @param graph The graph JSONObject in which {@code visitOp} resides.
      * @return A list of all operators immediately upstream from {@code visitOp}
      */
-    public static List<JSONObject> getUpstream(JSONObject visitOp,
-            JSONObject graph) {
-        List<JSONObject> uniqueParents = new ArrayList<>();
-        Set<JSONObject> parents = new HashSet<>();
-        JSONArray inputs = (JSONArray) visitOp.get("inputs");
-        if (inputs == null || inputs.size() == 0) {
-            return uniqueParents;
-        }
-        for (int i = 0; i < inputs.size(); i++) {
-            JSONArray connections = (JSONArray) ((JSONObject) inputs.get(i))
-                    .get("connections");
-            for (int j = 0; j < connections.size(); j++) {
-                String outputPort = (String) connections.get(j);
-                // TODO: build index instead of iterating through graph each
-                // time
-                JSONArray ops = (JSONArray) graph.get("operators");
-                for (int k = 0; k < ops.size(); k++) {
-                    JSONArray outputs = (JSONArray) ((JSONObject) ops.get(k))
-                            .get("outputs");
-                    if (outputs != null && outputs.size() != 0) {
-                        for (int l = 0; l < outputs.size(); l++) {
-                            String name = (String) ((JSONObject) outputs.get(l))
-                                    .get("name");
-                            if (name.equals(outputPort)) {
-                                parents.add((JSONObject) ops.get(k));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        uniqueParents.addAll(parents);
-        return uniqueParents;
+    /*
+    public static Set<JSONObject> getUpstream(JSONObject _visitOp,
+            JSONObject _graph) {
+        
+        return backToJSON(_graph, getUpstream(gson(_visitOp), gson(_graph)));
+    }
+    */
+        
+    public static Set<JsonObject> getUpstream(JsonObject visitOp,
+                JsonObject graph) {
+        Set<JsonObject> parents = new HashSet<>();
+                
+        inputConnections(visitOp, outputPort -> {
+            operators(graph, op -> outputs(op, output-> {
+                if (jstring(output, "name").equals(outputPort))
+                    parents.add(op);
+            }));
+        });
+
+        return parents;
     }
     
     /**
@@ -148,67 +170,58 @@ public class GraphUtilities {
      * @param op
      * @param name
      */
-    static JSONObject copyOperatorNewName(JSONObject op, String name){
-        JSONObject op_new=null;
+    static JsonObject copyOperatorNewName(JsonObject op, String name){
+        JsonObject op_new;
         try {
-            op_new = JSONObject.parse(op.serialize());
-        } catch (IOException e) {
-            throw new RuntimeException("Error copying operator " + (String)op.get("name"), e);
+            JsonParser parser = new JsonParser();
+            op_new = parser.parse(op.toString()).getAsJsonObject();
+        } catch (JsonSyntaxException e) {
+            throw new RuntimeException("Error copying operator " + jstring(op, "name"), e);
         }
-        op_new.put("name", name);
-        @SuppressWarnings("unchecked")
-        Collection<JSONObject> inputs = (Collection<JSONObject>)op_new.get("inputs");
-        @SuppressWarnings("unchecked")
-        Collection<JSONObject> outputs = (Collection<JSONObject>)op_new.get("outputs");
-        for(JSONObject input : inputs){
-            input.put("name", name + "_IN" + input.get("index").toString());
-            JSONArray conns = (JSONArray) input.get("connections");
-            conns.clear();
-        }
-        for(JSONObject output : outputs){
-            output.put("name", name + "_OUT" + output.get("index").toString());
-            JSONArray conns = (JSONArray) output.get("connections");
-            conns.clear();
-        }
+        op_new.addProperty("name", name);
+        
+        inputs(op_new, input -> {
+            input.addProperty("name", name + "_IN" + jstring(input, "index"));
+            input.add("connections", new JsonArray());
+        });
+        
+        outputs(op_new, output -> {
+            output.addProperty("name", name + "_OUT" + jstring(output, "index"));
+            output.add("connections", new JsonArray());
+        });
+        
         return op_new;
     }
 
-    static void removeOperator(JSONObject op, JSONObject graph){
-        removeOperators(Collections.singletonList(op), graph);
+    static void removeOperator(JsonObject op, JsonObject graph){
+        removeOperators(Collections.singleton(op), graph);
     }
 
-    static void removeOperators(List<JSONObject> operators,
-            JSONObject graph) {
-        for (JSONObject iso : operators) {
+    static void removeOperators(Collection<JsonObject> operators,
+            JsonObject graph) {
+        for (JsonObject iso : operators) {
 
             // Get parents and children of operator
-            List<JSONObject> operatorParents = GraphUtilities.getUpstream(iso,
+            Set<JsonObject> operatorParents = GraphUtilities.getUpstream(iso,
                     graph);
-            List<JSONObject> operatorChildren = GraphUtilities.getDownstream(iso,
+            Set<JsonObject> operatorChildren = GraphUtilities.getDownstream(iso,
                     graph);
 
             
-            JSONArray operatorOutputs = (JSONArray) iso.get("outputs");
+            JsonArray operatorOutputs = array(iso, "outputs");
             
             // Get the output name of the operator
             String operatorOutName="";
             if(operatorOutputs != null){
-                JSONObject operatorFirstOutput = (JSONObject) operatorOutputs
-                        .get(0);
+                JsonObject operatorFirstOutput = operatorOutputs.get(0).getAsJsonObject();
                 if(operatorFirstOutput != null){
-                    operatorOutName = (String) operatorFirstOutput.get("name");
+                    operatorOutName = jstring(operatorFirstOutput, "name");
                 }
             }
             
             // Also get input names
-            List<String> operatorInNames = new ArrayList<String>();
-            JSONArray operatorInputs = (JSONArray) iso.get("inputs");
-            if(operatorInputs != null){
-            	for( int i = 0; i < operatorInputs.size(); i++) {
-            		JSONObject in = (JSONObject) operatorInputs.get(i);
-                    operatorInNames.add((String) in.get("name"));
-                }
-            }
+            List<String> operatorInNames = new ArrayList<>();
+            inputs(iso, input -> operatorInNames.add(jstring(input, "name")));
 
             // Respectively, the names of the child and parent input and
             // output ports connected to the operator.
@@ -218,23 +231,22 @@ public class GraphUtilities {
             // References to the list of connections for the parent and child
             // output and input ports that are connected to the $isolate$
             // operator.
-            List<JSONArray> childConnections = new ArrayList<>();
-            List<JSONArray> parentConnections = new ArrayList<>();
+            List<JsonArray> childConnections = new ArrayList<>();
+            List<JsonArray> parentConnections = new ArrayList<>();
 
             // Get names of children's input ports that are connected to the
             // operator;
-            for (JSONObject child : operatorChildren) {
-                JSONArray inputs = (JSONArray) child.get("inputs");
-                for (Object inputObj : inputs) {
-                    JSONObject input = (JSONObject) inputObj;
-                    JSONArray connections = (JSONArray) input
-                            .get("connections");
-                    for (Object connectionObj : connections) {
-                        String connection = (String) connectionObj;
+            for (JsonObject child : operatorChildren) {
+                JsonArray inputs = child.get("inputs").getAsJsonArray();
+                for (JsonElement inputObj : inputs) {
+                    JsonObject input = inputObj.getAsJsonObject();
+                    JsonArray connections = input.get("connections").getAsJsonArray();
+                    for (JsonElement connectionObj : connections) {
+                        String connection = connectionObj.getAsString();
                         if (connection.equals(operatorOutName)) {
-                            childInputPortNames.add((String) input.get("name"));
+                            childInputPortNames.add(jstring(input, "name"));
                             childConnections.add(connections);
-                            connections.remove(connection);
+                            connections.remove(connectionObj);
                             break;
                         }
                     }
@@ -243,19 +255,17 @@ public class GraphUtilities {
 
             // Get names of parent's output ports that are connected to the
             // $Isolate$ operator;
-            for (JSONObject parent : operatorParents) {
-                JSONArray outputs = (JSONArray) parent.get("outputs");
-                for (Object outputObj : outputs) {
-                    JSONObject output = (JSONObject) outputObj;
-                    JSONArray connections = (JSONArray) output
-                            .get("connections");
-                    for (Object connectionObj : connections) {
-                        String connection = (String) connectionObj;
+            for (JsonObject parent : operatorParents) {
+                JsonArray outputs = parent.get("outputs").getAsJsonArray();
+                for (JsonElement outputObj : outputs) {
+                    JsonObject output = outputObj.getAsJsonObject();
+                    JsonArray connections = output.get("connections").getAsJsonArray();
+                    for (JsonElement connectionObj : connections) {
+                        String connection = connectionObj.getAsString();
                         if(operatorInNames.contains(connection)) {	
-                            parentOutputPortNames.add((String) output
-                                    .get("name"));
+                            parentOutputPortNames.add(jstring(output, "name"));
                             parentConnections.add(connections);
-                            connections.remove(connection);
+                            connections.remove(connectionObj);
                             break;
                         }
                     }
@@ -263,15 +273,17 @@ public class GraphUtilities {
             }
 
             // Connect child to parents
-            for (JSONArray childConnection : childConnections) {
-                childConnection.addAll(parentOutputPortNames);
+            for (JsonArray childConnection : childConnections) {
+                for (String name : parentOutputPortNames)
+                    childConnection.add(new JsonPrimitive(name));
             }
 
             // Connect parent to children
-            for (JSONArray parentConnection : parentConnections) {
-                parentConnection.addAll(childInputPortNames);
+            for (JsonArray parentConnection : parentConnections) {
+                for (String name : childInputPortNames)
+                    parentConnection.add(new JsonPrimitive(name));
             }
-            JSONArray ops = (JSONArray) graph.get("operators");
+            JsonArray ops = graph.get("operators").getAsJsonArray();
             ops.remove(iso);
         }
     }
@@ -303,9 +315,9 @@ public class GraphUtilities {
 
     // Visits every node in the region defined by the boundaries, and applies
     // to it the consumer's accept() method.
-    static void visitOnce(List<JSONObject> starts,
-            Set<BVirtualMarker> boundaries, JSONObject graph,
-            Consumer<JSONObject> consumer) {
+    static void visitOnce(Set<JsonObject> starts,
+            Set<BVirtualMarker> boundaries, JsonObject graph,
+            Consumer<JsonObject> consumer) {
         visitOnce(new VisitController(Direction.BOTH, boundaries),
                 starts, graph, consumer);
     }
@@ -325,10 +337,10 @@ public class GraphUtilities {
      * @param consumer
      */
     public static void visitOnce(VisitController visitController,
-            List<JSONObject> starts, JSONObject graph,
-            Consumer<JSONObject> consumer) {
-        Set<JSONObject> visited = new HashSet<JSONObject>();
-        List<JSONObject> unvisited = new ArrayList<JSONObject>();
+            Set<JsonObject> starts, JsonObject graph,
+            Consumer<JsonObject> consumer) {
+        Set<JsonObject> visited = new HashSet<>();
+        List<JsonObject> unvisited = new ArrayList<>();
         if (visitController == null)
             visitController = new VisitController();
 
@@ -336,7 +348,7 @@ public class GraphUtilities {
         unvisited.addAll(starts);
 
         while (unvisited.size() > 0) {
-            JSONObject op = unvisited.get(0);
+            JsonObject op = unvisited.get(0);
             // Modify and THEN add to hashSet as to not break the hashCode of
             // the object in the hashSet.
             if (visitController.stopped())
@@ -350,31 +362,31 @@ public class GraphUtilities {
     }
 
     static void getUnvisitedAdjacentNodes(
-            Collection<JSONObject> visited, Collection<JSONObject> unvisited,
-            JSONObject op, JSONObject graph, Set<BVirtualMarker> boundaries) {
+            Collection<JsonObject> visited, Collection<JsonObject> unvisited,
+            JsonObject op, JsonObject graph, Set<BVirtualMarker> boundaries) {
         getUnvisitedAdjacentNodes(new VisitController(Direction.BOTH, boundaries),
                 visited, unvisited, op, graph);
     }
 
     static void getUnvisitedAdjacentNodes(
             VisitController visitController,
-            Collection<JSONObject> visited, Collection<JSONObject> unvisited,
-            JSONObject op, JSONObject graph) {
+            Collection<JsonObject> visited, Collection<JsonObject> unvisited,
+            JsonObject op, JsonObject graph) {
         
         Direction direction = visitController.direction();
         Set<BVirtualMarker> boundaries = visitController.markerBoundaries();
         
-        List<JSONObject> parents = GraphUtilities.getUpstream(op, graph);
-        List<JSONObject> children = GraphUtilities.getDownstream(op, graph);
+        Set<JsonObject> parents = GraphUtilities.getUpstream(op, graph);
+        Set<JsonObject> children = GraphUtilities.getDownstream(op, graph);
         removeVisited(parents, visited);
         removeVisited(children, visited);
 
         // --- Process parents ---
         if (direction != Direction.DOWNSTREAM) {
-            Set<JSONObject> allOperatorChildren = new HashSet<>();
-            List<JSONObject> operatorParents = new ArrayList<>();
-            for (JSONObject parent : parents) {
-                if (equalsAny(boundaries, (String) parent.get("kind"))) {
+            Set<JsonObject> allOperatorChildren = new HashSet<>();
+            List<JsonObject> operatorParents = new ArrayList<>();
+            for (JsonObject parent : parents) {
+                if (equalsAny(boundaries, jstring(parent, "kind"))) {
                     operatorParents.add(parent);
                     allOperatorChildren.addAll(GraphUtilities.getDownstream(parent,
                             graph));
@@ -391,10 +403,10 @@ public class GraphUtilities {
 
         // --- Process children ---
         if (direction != Direction.UPSTREAM) {
-            List<JSONObject> childrenToRemove = new ArrayList<JSONObject>();
-            Set<JSONObject> allOperatorParents = new HashSet<>();
-            for (JSONObject child : children) {
-                if (equalsAny(boundaries, (String) child.get("kind"))) {
+            List<JsonObject> childrenToRemove = new ArrayList<>();
+            Set<JsonObject> allOperatorParents = new HashSet<>();
+            for (JsonObject child : children) {
+                if (equalsAny(boundaries, jstring(child, "kind"))) {
                     childrenToRemove.add(child);
                     allOperatorParents.addAll(GraphUtilities.getUpstream(child,
                             graph));
@@ -410,12 +422,12 @@ public class GraphUtilities {
         }
     }
 
-    private static void removeVisited(Collection<JSONObject> ops,
-            Collection<JSONObject> visited) {
-        Iterator<JSONObject> it = ops.iterator();
+    private static void removeVisited(Collection<JsonObject> ops,
+            Collection<JsonObject> visited) {
+        Iterator<JsonObject> it = ops.iterator();
         // Iterate in this manner to preserve list structure while deleting
         while (it.hasNext()) {
-            JSONObject op = it.next();
+            JsonObject op = it.next();
             if (visited.contains(op)) {
                 it.remove();
             }
@@ -434,83 +446,119 @@ public class GraphUtilities {
         return false;
     }
 
-    static String getInputPortName(JSONObject op, int index) {
-        JSONArray inputs = (JSONArray) op.get("inputs");
-        JSONObject input = (JSONObject) inputs.get(index);
-        return (String) input.get("name");
+    static String getInputPortName(JsonObject op, int index) {
+        JsonArray inputs = op.get("inputs").getAsJsonArray();
+        JsonObject input = inputs.get(index).getAsJsonObject();
+        return jstring(input, "name");
     }    
     
-    static String getOutputPortName(JSONObject op, int index) {
-        JSONArray outputs = (JSONArray) op.get("outputs");
-        JSONObject output = (JSONObject) outputs.get(index);
-        return (String) output.get("name");
+    static String getOutputPortName(JsonObject op, int index) {
+        JsonArray outputs = op.get("output").getAsJsonArray();
+        JsonObject output = outputs.get(index).getAsJsonObject();
+        return jstring(output, "name");
+
     }  
     
-    static void addBefore(JSONObject op, JSONObject addOp, JSONObject graph){
-        List<JSONObject> parents = getUpstream(op, graph);
-        for(JSONObject parent : (Collection<JSONObject>)parents){
+    static void addBefore(JsonObject op, JsonObject addOp, JsonObject graph){
+        for(JsonObject parent : getUpstream(op, graph)){
             addBetween(parent, op, addOp);
         }       
     }
     
-    static void addBetween(JSONObject parent, JSONObject child, JSONObject op){
-        List<JSONObject> parentList = new ArrayList<>();
-        List<JSONObject> childList = new ArrayList<>();
+    static void addBetween(JsonObject parent, JsonObject child, JsonObject op){
+        List<JsonObject> parentList = new ArrayList<>();
+        List<JsonObject> childList = new ArrayList<>();
         parentList.add(parent);
         childList.add(child);
         
         addBetween(parentList, childList, op);     
     }
     
-    @SuppressWarnings("unchecked")
-	static void addBetween(List<JSONObject> parents, List<JSONObject> children, JSONObject op){
-        for(JSONObject parent : parents){
-            for(JSONObject child : children){              
-                JSONArray outputs = (JSONArray) parent.get("outputs");
-                JSONArray inputs = (JSONArray) child.get("inputs");
-                for(JSONObject output : (Collection<JSONObject>)outputs){
-                    for(JSONObject input : (Collection<JSONObject>)inputs){
-                        insertOperatorBetweenPorts(input, output, op);
+	static void addBetween(List<JsonObject> parents, List<JsonObject> children, JsonObject op){
+        for(JsonObject parent : parents){
+            for(JsonObject child : children){              
+                JsonArray outputs = parent.get("outputs").getAsJsonArray();
+                JsonArray inputs = child.get("inputs").getAsJsonArray();
+                for(JsonElement output : outputs){
+                    for(JsonElement input : inputs){
+                        insertOperatorBetweenPorts(input.getAsJsonObject(), output.getAsJsonObject(), op);
                     }
                 }              
             }
         }
     }
     
-    @SuppressWarnings("unchecked")
-	static void insertOperatorBetweenPorts(JSONObject input, JSONObject output, JSONObject op){
-        String oportName = (String) output.get("name");
-        String iportName = (String) input.get("name");
+
+	static void insertOperatorBetweenPorts(JsonObject input, JsonObject output, JsonObject op){
+        String oportName = jstring(output, "name");
+        String iportName = jstring(input, "name");
         
-        JSONObject opInput = (JSONObject) ((JSONArray)op.get("inputs")).get(0);
-        JSONObject opOutput = (JSONObject) ((JSONArray)op.get("outputs")).get(0);
+        JsonObject opInput = op.get("inputs").getAsJsonArray().get(0).getAsJsonObject();
+        JsonObject opOutput = op.get("outputs").getAsJsonArray().get(0).getAsJsonObject();
         
-        String opIportName = (String) opInput.get("name");
-        String opOportName = (String) opOutput.get("name");
+        String opIportName = jstring(opInput, "name");
+        String opOportName = jstring(opOutput, "name");
         
         // Attach op in inputs and outputs
-        JSONArray opInputConns = (JSONArray) opInput.get("connections");
-        JSONArray opOutputConns = (JSONArray) opOutput.get("connections");
-        if(!opInputConns.contains(oportName)){
-            opInputConns.add(oportName);
-        }
-        if(!opOutputConns.add(iportName)){
-            opOutputConns.add(iportName);
-        }
-        
-        JSONArray outputConns = (JSONArray) output.get("connections");
-        JSONArray inputConns = (JSONArray) input.get("connections");
-        
-        for(String conn : (Collection<String>)outputConns){
-            if(conn.equals(iportName)){
-                outputConns.set(outputConns.indexOf(conn), opIportName);
+        JsonArray opInputConns = opInput.get("connections").getAsJsonArray();
+        JsonArray opOutputConns = opOutput.get("connections").getAsJsonArray();
+        boolean add = true;
+        for (JsonElement conn : opInputConns)
+            if (conn.getAsString().equals(oportName)) {
+                add = false;
+                break;
             }
+        if (add)
+            opInputConns.add(new JsonPrimitive(oportName));
+        
+        add = true;
+        for (JsonElement conn : opOutputConns)
+            if (conn.getAsString().equals(iportName)) {
+                add = false;
+                break;
+            }
+        opOutputConns.add(new JsonPrimitive(iportName));
+        
+        JsonArray outputConns = output.get("connections").getAsJsonArray();
+        JsonArray inputConns =  input.get("connections").getAsJsonArray();
+        
+        for (int i = 0 ; i < outputConns.size(); i++) {
+            if (outputConns.get(i).getAsString().equals(iportName))
+                outputConns.set(i, new JsonPrimitive(opIportName));
         }
         
-        for(String conn : (Collection<String>)inputConns){
-            if(conn.equals(oportName)){
-                inputConns.set(inputConns.indexOf(conn), opOportName);
-            }
+        for (int i = 0 ; i < inputConns.size(); i++) {
+            if (inputConns.get(i).getAsString().equals(oportName))
+                inputConns.set(i, new JsonPrimitive(opOportName));
         }
+    }
+    
+    /**
+     * Perform an action for every operator in the graph
+     */
+    static void operators(JsonObject graph, Consumer<JsonObject> action) {
+        objectArray(graph, "operators", action);
+    }
+    
+    /**
+     * Perform an action for every input for an operator
+     */
+    static void inputs(JsonObject op, Consumer<JsonObject> action) {
+        objectArray(op, "inputs", action);
+    }
+    
+    static void inputConnections(JsonObject op, Consumer<String> action) {
+        inputs(op, input -> stringArray(input, "connections", action));
+    }
+    
+    /**
+     * Perform an action for every output for an operator
+     */
+    static void outputs(JsonObject op, Consumer<JsonObject> action) {
+        objectArray(op, "outputs", action);
+    }
+    
+    static void outputConnections(JsonObject op, Consumer<String> action) {
+        outputs(op, output -> stringArray(output, "connections", action));
     }
 }

@@ -13,6 +13,7 @@ import com.ibm.streams.operator.compile.OperatorContextChecker;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streamsx.topology.function.FunctionContext;
+import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 
@@ -24,7 +25,7 @@ import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 @SharedLoader
 public abstract class FunctionFunctor extends AbstractOperator implements Functional {
 
-    public static final String FUNCTIONAL_LOGIC_PARAM = "functionalLogic";
+    public static final String FUNCTIONAL_LOGIC_PARAM = FunctionalOpProperties.FUNCTIONAL_LOGIC_PARAM;
     static final Logger trace = Logger.getLogger("com.ibm.streamsx.topology.operators");
     
     @ContextCheck(runtime=false)

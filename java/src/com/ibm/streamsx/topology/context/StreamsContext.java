@@ -9,6 +9,7 @@ import java.util.concurrent.Future;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
 
 /**
  * A {@code StreamsContext} provides the ability to turn
@@ -39,17 +40,36 @@ public interface StreamsContext<T> {
         /**
          * Execution of the topology produces the application as a Streams
          * toolkit.
-         * 
+         * <P>
+         * The returned type for the {@code submit} calls is
+         * a {@code Future&lt;File>} where the value is
+         * the location of the toolkit.
+         * <BR>
+         * The {@code Future} returned from {@code submit()} will
+         * always be complete when the {@code submit()} returns.
+         * </P>
          */
         TOOLKIT,
         
         /**
-         * Execution of the topology produces the application as a zipped
-         * Streams toolkit.
-         * 
+         * Execution of the topology produces the application a
+         * Streams build archive.
+         * <P>
+         * The returned type for the {@code submit} calls is
+         * a {@code Future&lt;File>} where the value is
+         * the location of the build archive.
+         * <BR>
+         * The {@code Future} returned from {@code submit()} will
+         * always be complete when the {@code submit()} returns.
+         * </P>
          */
-        ZIPPED_TOOLKIT,
-
+        BUILD_ARCHIVE,
+        /**
+        * Execution of the topology submits the application to be built and 
+        * executed within a Streaming Analytics Service.
+        * 
+        */
+       REMOTE_BUILD_AND_SUBMIT,
         /**
          * Execution of the topology produces an SPL application bundle
          * {@code .sab} file that can be submitted to an IBM Streams
@@ -246,7 +266,7 @@ public interface StreamsContext<T> {
      */
     Future<T> submit(JSONObject submission) throws Exception;
     
-    String SUBMISSION_DEPLOY = "deploy";
-    String SUBMISSION_GRAPH = "graph";
+    String SUBMISSION_DEPLOY = RemoteContext.SUBMISSION_DEPLOY;
+    String SUBMISSION_GRAPH = RemoteContext.SUBMISSION_GRAPH;
     
 }

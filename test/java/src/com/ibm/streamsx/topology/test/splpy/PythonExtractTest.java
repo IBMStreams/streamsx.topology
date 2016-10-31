@@ -37,7 +37,7 @@ public class PythonExtractTest extends TestTopology {
 
         List<String> commands = new ArrayList<String>();
 
-        commands.add("python3");
+        commands.add(System.getProperty("topology.test.python", "python3"));
         commands.add(expy.getAbsolutePath());
         commands.add("--directory");
         commands.add(tkDir.getAbsolutePath());

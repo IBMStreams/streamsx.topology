@@ -1,5 +1,6 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+from __future__ import print_function
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
 import temperature_sensor_functions
@@ -39,7 +40,7 @@ def main():
     source.print()
     
     # Now execute the topology by submitting to a standalone context.
-    streamsx.topology.context.submit("STANDALONE", topo.graph)
+    streamsx.topology.context.submit("STANDALONE")
      
 if __name__ == '__main__':
     main()

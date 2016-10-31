@@ -33,7 +33,7 @@ public class InvokeMakeToolkit {
     public void invoke() throws Exception, InterruptedException {
         File mtk = new File(installDir, "bin/spl-make-toolkit");
 
-        List<String> commands = new ArrayList<String>();
+        List<String> commands = new ArrayList<>();
 
         commands.add(mtk.getAbsolutePath());
         commands.add("--make-operator");

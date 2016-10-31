@@ -4,6 +4,19 @@
 from enum import Enum
 import functools
 import inspect
+import sys
+if sys.version_info.major == 2:
+  import funcsigs
+
+############################################
+# setup for function inspection
+if sys.version_info.major == 3:
+  _inspect = inspect
+elif sys.version_info.major == 2:
+  _inspect = funcsigs
+else:
+  raise ValueError("Python version not supported.")
+############################################
 
 OperatorType = Enum('OperatorType', 'Ignore Source Sink Pipe')
 OperatorType.Pipe.spl_template = 'PythonFunctionPipe'
@@ -41,6 +54,7 @@ def _wrapforsplop(optype, wrapped, style, docpy):
 
         class _op_class(object):
 
+            __doc__ = wrapped.__doc__
             @functools.wraps(wrapped.__init__)
             def __init__(self,*args,**kwargs):
                 self.__splpy_instance = wrapped(*args,**kwargs)
@@ -50,7 +64,7 @@ def _wrapforsplop(optype, wrapped, style, docpy):
                 return self.__splpy_instance.__call__(*args, **kwargs)
 
         _op_class.__wrapped__ = wrapped
-        _op_class.__doc__ = wrapped.__doc__
+        # _op_class.__doc__ = wrapped.__doc__
         _op_class.__splpy_optype = optype
         _op_class.__splpy_callable = 'class'
         _op_class.__splpy_style = _define_style(wrapped, wrapped.__call__, style)
@@ -79,7 +93,7 @@ def _define_style(wrapped, fn, style):
     has_positional = False
     req_named = False
      
-    pmds = inspect.signature(fn).parameters
+    pmds = _inspect.signature(fn).parameters
     itpmds = iter(pmds)
     # Skip self
     if inspect.isclass(wrapped):
@@ -88,16 +102,16 @@ def _define_style(wrapped, fn, style):
     pc = 0
     for pn in itpmds:
         pmd = pmds[pn]
-        if pmd.kind == inspect.Parameter.POSITIONAL_ONLY:
+        if pmd.kind == _inspect.Parameter.POSITIONAL_ONLY:
             raise TypeError('Positional only parameters are not supported:' + pn)
-        elif pmd.kind == inspect.Parameter.VAR_POSITIONAL:
+        elif pmd.kind == _inspect.Parameter.VAR_POSITIONAL:
             has_args = True
-        elif pmd.kind == inspect.Parameter.VAR_KEYWORD:
+        elif pmd.kind == _inspect.Parameter.VAR_KEYWORD:
             has_kwargs = True
-        elif pmd.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
+        elif pmd.kind == _inspect.Parameter.POSITIONAL_OR_KEYWORD:
             has_positional = True
-        elif pmd.kind == inspect.Parameter.KEYWORD_ONLY:
-            if pmd.default is inspect.Parameter.empty:
+        elif pmd.kind == _inspect.Parameter.KEYWORD_ONLY:
+            if pmd.default is _inspect.Parameter.empty:
                 req_named = True
         pc +=1
                
@@ -120,15 +134,12 @@ def _define_style(wrapped, fn, style):
             raise TypeError("style='name' not supported with single *args parameter.")
         elif pc == 1 and has_kwargs:
             raise TypeError("style='name' not supported with single **kwargs parameter.")
-        # From an implementation point of view the values
-        # are passed as a dictionary and Python does the correct mapping
-        style = 'dictionary'
 
     elif style is not None:
         raise TypeError("style=" + style + " unknown.")
 
     if style is None:
-        if has_kwargs:
+        if pc == 1 and has_kwargs:
             style = 'dictionary'
         elif pc == 1 and has_args:
             style = 'tuple'
@@ -136,14 +147,12 @@ def _define_style(wrapped, fn, style):
             style = 'tuple'
         else:
             # Default to by name
-            # From an implementation point of view the values
-            # are passed as a dictionary and Python does the correct mapping
-            style = 'dictionary'
+            style = 'name'
 
     if style == 'tuple' and has_kwargs:
-         raise TypeError("style='position' not yet implemented with **kwargs parameter.")
+         raise TypeError("style='position' not implemented with **kwargs parameter.")
 
-    if style == 'dictionary':
+    if style == 'name':
          raise TypeError("Not yet implemented!")
     return style
 

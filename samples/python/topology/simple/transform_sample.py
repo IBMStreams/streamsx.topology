@@ -1,6 +1,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 
+from __future__ import print_function
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
 import transform_sample_functions;
@@ -37,7 +38,7 @@ def main():
     i2.print()
     
     # execute the application in standalone mode
-    streamsx.topology.context.submit("STANDALONE", topo.graph)
+    streamsx.topology.context.submit("STANDALONE")
 
 if __name__ == '__main__':
     main()

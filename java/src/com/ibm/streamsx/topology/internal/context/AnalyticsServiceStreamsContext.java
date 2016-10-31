@@ -252,8 +252,9 @@ public class AnalyticsServiceStreamsContext extends
                 "overrideResourceLoadProtection");
         
         JSONObject submitConfigConfig = new JSONObject();
-        if (jc.getPreloadApplicationBundles())
-            addSubmitValue(submitConfigConfig, jc.getPreloadApplicationBundles().toString(), "preloadApplicationBundles");
+        Boolean preLoad = jc.getPreloadApplicationBundles();
+        if (preLoad != null && preLoad)
+            addSubmitValue(submitConfigConfig, preLoad.toString(), "preloadApplicationBundles");
         if (jc.getTracing() != null) {
             submitConfigConfig.put("tracing", jc.getStreamsTracing());
         }

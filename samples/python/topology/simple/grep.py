@@ -1,5 +1,6 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+from __future__ import print_function
 import sys
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
@@ -58,7 +59,7 @@ def main():
     matching.print()
     
     # execute the topology
-    streamsx.topology.context.submit("STANDALONE", topo.graph)
+    streamsx.topology.context.submit("STANDALONE", topo)
      
 if __name__ == '__main__':
     main()

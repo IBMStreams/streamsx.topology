@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.test.api;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerId;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIdAppend;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIds;
@@ -18,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.PERuntime;
@@ -30,6 +33,8 @@ import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -83,17 +88,17 @@ public class LowLatencyTest extends TestTopology {
         
         SPLGenerator generator = new SPLGenerator();
         JSONObject graph = topology.builder().complete();
-        generator.generateSPL(graph);
         
-        JSONArray ops = (JSONArray)graph.get("operators");
-        for(Object opObj : ops){
-            JSONObject op = (JSONObject)opObj;
+        JsonObject ggraph = JSON4JUtilities.gson(graph);
+        generator.generateSPL(ggraph);
+        
+        GsonUtilities.objectArray(ggraph , "operators", op -> {
             String lowLatencyTag = null;
-            JSONObject placement = JOperatorConfig.getJSONItem(op, JOperatorConfig.PLACEMENT);
+            JsonObject placement = object(op, JOperator.CONFIG, JOperatorConfig.PLACEMENT);
             if (placement != null)
-                lowLatencyTag = (String) placement.get(JOperator.PLACEMENT_LOW_LATENCY_REGION_ID);
-            String kind = (String)op.get("kind");
-            JSONObject queue = (JSONObject) op.get("queue");
+                lowLatencyTag = jstring(placement, JOperator.PLACEMENT_LOW_LATENCY_REGION_ID);
+            String kind = jstring(op, "kind");
+            JsonObject queue = object(op, "queue");
             if(queue != null && (lowLatencyTag == null || lowLatencyTag.equals(""))){
                 throw new IllegalStateException("Operator has threaded port when it shouldn't.");
             }
@@ -101,7 +106,7 @@ public class LowLatencyTest extends TestTopology {
                     && kind.equals("com.ibm.streamsx.topology.functional.java::FunctionTransform")){
                 throw new IllegalStateException("Transform operator expecting threaded port; none found.");
             }
-        }
+        });
     }
     
     @Test

@@ -32,6 +32,6 @@
     Py_DECREF(depickleInput);
     Py_DECREF(funcArg);
     if(function_ == 0){
-      streamsx::topology::Splpy::flush_PyErr_Print();
+      streamsx::topology::flush_PyErr_Print();
       throw;
     }

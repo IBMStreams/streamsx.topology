@@ -4,8 +4,6 @@
  */
 package com.ibm.streamsx.topology.context;
 
-import com.ibm.streamsx.topology.Topology;
-
 /**
  * Properties that can be specified when submitting the topology to a context.
  * @see StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)
@@ -104,7 +102,7 @@ public interface ContextProperties {
      *              .submit(topology, config);
      * }</pre>
      * 
-     * See {@link Topology#createSubmissionParameter(String, Class)}
+     * See {@link com.ibm.streamsx.topology.Topology#createSubmissionParameter(String, Class)}
      */
     String SUBMISSION_PARAMS = "topology.submissionParams";
 }

@@ -7,13 +7,14 @@ import inspect
 import types
 import collections
     
+from streamsx.topology.topologypackages import TopologyPackages
 
 class _DependencyResolver(object):
     """
     Finds dependencies given a module object
     """
     
-    def __init__(self):
+    def __init__(self, topology_packages):
         self._modules = set()
         self._packages = collections.OrderedDict() # need an ordered set when merging namespace directories
         self._processed_modules = set()
@@ -22,6 +23,7 @@ class _DependencyResolver(object):
         dir = os.path.dirname(os.path.abspath(my_module.__file__))
         dir = os.path.dirname(dir)
         self._streamsx_topology_dir = dir
+        self._topology_packages = topology_packages
         
     def add_dependencies(self, module):
         """
@@ -30,8 +32,9 @@ class _DependencyResolver(object):
         # add the module as a dependency
         self._add_dependency(module)
         # recursively get the module's imports and add those as dependencies
-        imported_modules = _get_imported_modules(module)
-        #print ("_get_imported_modules for {0}: {1}".format(module.__name__, imported_modules))
+        imported_modules = {}
+        if self._include_module(module):
+          imported_modules = _get_imported_modules(module)
         for imported_module_name,imported_module in imported_modules.items():
             if imported_module not in self._processed_modules:
                 #print ("add_dependencies for {0} {1}".format(imported_module.__name__, imported_module))
@@ -50,6 +53,28 @@ class _DependencyResolver(object):
         Property to get the list of package dependencies
         """
         return tuple(self._packages.keys())   
+
+    def _include_module(self, module):
+        # As some packages have the following format:
+        # 
+        # scipy.special.specfun
+        # scipy.linalg
+        #
+        # Where the top-level package name is just a prefix to a longer package name, 
+        # we don't want to do a direct comparison. Instead, we want to excluse packages
+        # which are either exactly "<package_name>", or start with "<package_name>".
+        
+        for include_package in self._topology_packages.include_packages:
+            if include_package == module.__name__ or module.__name__.startswith(include_package + '.'):
+                return True
+            
+        for exclude_package in self._topology_packages.exclude_packages:
+            if exclude_package == module.__name__ or module.__name__.startswith(exclude_package + '.'):
+                return False
+            
+        return True
+
+
     
     def _add_dependency(self, module):
         """
@@ -57,6 +82,11 @@ class _DependencyResolver(object):
         """
         if _is_streamsx_topology_module(module):
             return None
+
+        if not self._include_module(module):
+          #print ("ignoring dependencies for {0} {1}".format(module.__name__, module))
+          return None
+
         package_name = _get_package_name(module)
         top_package_name = module.__name__.split('.')[0]
 

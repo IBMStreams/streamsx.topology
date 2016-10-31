@@ -7,13 +7,8 @@ package com.ibm.streamsx.topology.internal.context;
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -23,7 +18,9 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext;
 import com.ibm.streamsx.topology.internal.core.InternalProperties;
+import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeSc;
 
@@ -96,10 +93,13 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         if (graphConfig != null) {
             JSONObject splConfig = (JSONObject) graphConfig.get("spl");
             if (splConfig != null) {
-                JSONArray toolkits = (JSONArray) splConfig.get(InternalProperties.TK_DIRS_JSON);
+                JSONArray toolkits = (JSONArray) splConfig.get(InternalProperties.TOOLKITS_JSON);
                 if (toolkits != null) {
-                    for (Object tkdir : toolkits) {
-                        sc.addToolkit(new File(tkdir.toString()));
+                    for (Object obj : toolkits) {
+                        JSONObject tkinfo = (JSONObject) obj;
+                        String root = (String) tkinfo.get("root");
+                        if (root != null)
+                            sc.addToolkit(new File(root));
                     }
                 }
             }
@@ -116,7 +116,8 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         Files.copy(bundle.toPath(), localBundle.toPath(),
                 StandardCopyOption.REPLACE_EXISTING);
 
-        deleteToolkit(appDir, deployInfo);
+        if (!ToolkitRemoteContext.deleteToolkit(appDir, JSON4JUtilities.gson(deployInfo)))
+            trace.info("Keeping toolkit at: " + appDir.getAbsolutePath());
 
         trace.info("Streams Application Bundle produced: "
                 + localBundle.getName());

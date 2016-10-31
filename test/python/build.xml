@@ -18,6 +18,8 @@
   <target name="all" depends="test.toolkit"/> 
 	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/spl_samples.py"
 	  	toDir="${testtk}/opt/python/streams"/>
+	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/spl_kwargs.py"
+	  	toDir="${testtk}/opt/python/streams"/>
 	  <target name="test.toolkit">
 		   <exec executable="${topology.test.python}" dir="${testtk}" failonerror="true">
 		     <arg value="${tk}/bin/spl-python-extract.py"/>
@@ -32,6 +34,12 @@
 	   </target>
 
 	  <target name="test.application.api">
+	     <echo message="Topology python: ${topology.test.python}"/>
+		   <exec executable="${topology.test.python}" dir="${topology}" failonerror="true">
+		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages"/>
+		     <arg value="test_build_archive.py"/>
+		   </exec>
+
 		   <exec executable="${topology.test.python}" dir="${topology}" failonerror="true">
 		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages"/>
 		     <arg value="test1.py"/>
@@ -44,5 +52,31 @@
 		     <arg value="mqtest1.py"/>
 		   </exec>
 	   </target>	   
+
+
+     <target name="test.python2" description="Run all Python tests with python executable (assumed to be Python 2)">
+         <exec executable="python">
+            <arg value="-V"/>
+         </exec>
+         <antcall inheritAll="no">
+            <param name="topology.test.python" value="python"/>
+            <target name="test.application.api"/>
+         </antcall>
+         <!--
+              Disable until issue #574 is fixed
+         <ant inheritAll="no" dir="../java">
+            <property name="topology.test.python" value="python"/>
+            <property name="topology.test.base.pattern" value="**/splpy/*Test.java"/>
+            <target name="unittest.standalone"/>
+            <target name="unittest.distributed"/>
+         </ant>
+         -->
+         <ant inheritAll="no" dir="../java">
+            <property name="topology.test.python" value="python"/>
+            <property name="topology.test.base.pattern" value="**/python/*Test.java"/>
+            <target name="unittest.standalone"/>
+            <target name="unittest.distributed"/>
+         </ant>
+     </target>
 
 </project>

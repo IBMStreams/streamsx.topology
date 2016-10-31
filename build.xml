@@ -64,6 +64,7 @@
     <path location="${tk.lib}/com.ibm.streamsx.topology.jar"/>
     <path refid="streams.classpath"/>
     <path refid="tk.classpath"/>
+    <path location="${junit.jar}"/>
   </path>
 
   <target name="release" depends="clean,all,doc,create_release_bundle"/>
@@ -131,16 +132,16 @@
       <tstamp/>
       <property name="release.dir" location="${release.base}" />
       <mkdir dir="${release.dir}" />
-      <property name="releasefilename" value="${release.dir}/streamsx.topology-v1.4-${DSTAMP}-${TSTAMP}.tgz"/>
+      <property name="releasefilename" value="${release.dir}/streamsx.topology-v1.5-${DSTAMP}-${TSTAMP}.tgz"/>
       <tar compression="gzip" longfile="gnu" destfile="${releasefilename}">
          <tarfileset dir="${basedir}" filemode="755" >
-           <include name="**/pyversion.sh"/>
+           <include name="**/pyversion*.sh"/>
          </tarfileset>
          <tarfileset dir="${basedir}" >
            <include name="com.ibm.streamsx.topology/**"/>
            <include name="samples/**"/>
            <exclude name="**/.gitignore"/>
-           <exclude name="**/pyversion.sh"/>
+           <exclude name="**/pyversion*.sh"/>
          </tarfileset>
       </tar>
       <checksum file="${releasefilename}"/>

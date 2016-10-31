@@ -6,8 +6,20 @@ package com.ibm.streamsx.topology.internal.streams;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.ibm.json.java.JSONObject;
 
@@ -113,5 +125,4 @@ public class Util {
         }
         return cmdsb.toString();
     }
-
 }

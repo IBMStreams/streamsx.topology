@@ -2,6 +2,12 @@
 # Copyright IBM Corp. 2016
 import os
 import pickle
+
+try:
+    import dill
+except ImportError:
+    dill = pickle
+
 import base64
 import sys
 import json
@@ -54,7 +60,7 @@ def string_in(callable) :
 # Given a callable 'callable', return a function
 # that calls 'callable' with a python dictionary object 
 # form of an spltuple returning the callable's return
-def spltupleDict_in(callable) :
+def dict_in(callable) :
     ac = _getCallable(callable)
     def _wf(v):
         return ac(v)
@@ -72,7 +78,7 @@ def _getCallable(f):
     if callable(f):
         return f
     if isinstance(f, str):
-        ci = pickle.loads(base64.b64decode(f))
+        ci = dill.loads(base64.b64decode(f))
         if callable(ci):
             return ci
     return None
@@ -148,7 +154,7 @@ def json_in__pickle_out(callable):
 def string_in__pickle_out(callable):
     return object_in__pickle_out(callable)
 
-def spltupleDict_in__pickle_out(callable):
+def dict_in__pickle_out(callable):
     return object_in__pickle_out(callable)
 
 def dict_in__pickle_out(callable):
@@ -221,6 +227,10 @@ class _PickleIterator:
        while nv is None:
           nv = next(self.it)
        return pickle.dumps(nv)
+# python 2.7 uses the next function whereas 
+# python 3.x uses __next__ 
+   def next(self):
+       return self.__next__()
 
 # Return a function that depickles
 # the input tuple calls callable
@@ -262,7 +272,7 @@ def string_in__pickle_iter(callable):
         return _PickleIterator(irv)
     return _wf
 
-def spltupleDict_in__pickle_iter(callable):
+def dict_in__pickle_iter(callable):
     ac =_getCallable(callable)
     def _wf(v):
         irv = ac(v)
@@ -270,3 +280,4 @@ def spltupleDict_in__pickle_iter(callable):
             return None
         return _PickleIterator(irv)
     return _wf
+

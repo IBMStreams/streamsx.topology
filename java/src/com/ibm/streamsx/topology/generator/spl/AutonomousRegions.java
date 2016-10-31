@@ -1,9 +1,12 @@
 package com.ibm.streamsx.topology.generator.spl;
 
-import java.util.List;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 
-import com.ibm.json.java.JSONObject;
+import java.util.Set;
+
+import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * Processing related to autonomous regions.
@@ -21,16 +24,15 @@ class AutonomousRegions {
 	 * Preprocess autonomous virtual markers to mark
 	 * downstream operators as autonomous.  
 	 */
-    static void preprocessAutonomousRegions(JSONObject graph) {
+    static void preprocessAutonomousRegions(JsonObject graph) {
 
-        List<JSONObject> autonomousOperators = GraphUtilities.findOperatorByKind(
+        Set<JsonObject> autonomousOperators = GraphUtilities.findOperatorByKind(
                 BVirtualMarker.AUTONOMOUS, graph);
 
-        for (JSONObject autonomous : autonomousOperators) {
-        	List<JSONObject> startAutonomous = GraphUtilities.getDownstream(autonomous, graph);
-        	for (JSONObject sa : startAutonomous) {
-        		if (!sa.containsKey(AUTONOMOUS))
-        		    sa.put(AUTONOMOUS, Boolean.TRUE);
+        for (JsonObject autonomous : autonomousOperators) {
+        	for (JsonObject sa : getDownstream(autonomous, graph)) {
+        		if (!sa.has(AUTONOMOUS))
+        		    sa.addProperty(AUTONOMOUS, Boolean.TRUE);
         	}
         }
  
@@ -40,9 +42,9 @@ class AutonomousRegions {
     /**
      * Add in the annotation.
      */
-    static void autonomousAnnotation(JSONObject op, StringBuilder sb) {
-    	Boolean set = (Boolean) op.get(AUTONOMOUS);
-    	if (set != null && set)
+    static void autonomousAnnotation(JsonObject op, StringBuilder sb) {
+    	boolean set = GsonUtilities.jboolean(op, AUTONOMOUS);
+    	if (set)
     		sb.append("@autonomous\n");
     }
 }
