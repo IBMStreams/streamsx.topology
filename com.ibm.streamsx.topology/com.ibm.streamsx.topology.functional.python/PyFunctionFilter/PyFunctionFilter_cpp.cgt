@@ -88,8 +88,4 @@ print splpy_inputtuple2value($pystyle);
   }
 }
 
-// Punctuation processing
-void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
-{
-}
 <%SPL::CodeGen::implementationEpilogue($model);%>

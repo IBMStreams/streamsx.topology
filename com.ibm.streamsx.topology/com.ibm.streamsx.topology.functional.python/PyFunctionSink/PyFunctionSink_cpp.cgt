@@ -85,8 +85,4 @@ print splpy_inputtuple2value($pystyle);
   streamsx::topology::Splpy::pyTupleSink(function_, value);
 }
 
-// Punctuation processing
-void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
-{
-}
 <%SPL::CodeGen::implementationEpilogue($model);%>

@@ -18,9 +18,6 @@ public:
   // Tuple processing for non-mutating ports
   void process(Tuple const & tuple, uint32_t port);
 
-  // Punctuation processing
-  void process(Punctuation const & punct, uint32_t port);
-
 private:
     // Members
     
