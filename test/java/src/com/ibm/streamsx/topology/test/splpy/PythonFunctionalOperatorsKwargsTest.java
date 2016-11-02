@@ -37,9 +37,9 @@ public class PythonFunctionalOperatorsKwargsTest extends TestTopology {
         		|| getTesterContext().getType() == StreamsContext.Type.DISTRIBUTED_TESTER);
     }
     
-    @Test
+    //@Test
     public void testFilter() throws Exception {
-        Topology topology = new Topology("testPositionalSampleNoop");
+        Topology topology = new Topology("testFilter");
         
         SPLStream tuples = sampleFilterStream(topology);
         
@@ -59,9 +59,9 @@ public class PythonFunctionalOperatorsKwargsTest extends TestTopology {
         assertEquals(TEST_TUPLES[3], passResult.getResult().get(1));
         assertTrue(expectedCount.valid());
     }
-    @Test
+    //@Test
     public void testFilterOptionalOutput() throws Exception {
-        Topology topology = new Topology("testPositionalSampleNoop");
+        Topology topology = new Topology("testFilterOptionalOutput");
         
         SPLStream tuples = sampleFilterStream(topology);
         
@@ -90,5 +90,27 @@ public class PythonFunctionalOperatorsKwargsTest extends TestTopology {
         
         assertEquals(TEST_TUPLES[0], failedResult.getResult().get(0));
         assertEquals(TEST_TUPLES[2], failedResult.getResult().get(1));
+    }
+    @Test
+    public void testMap() throws Exception {
+        Topology topology = new Topology("testMap");
+                
+        SPLStream tuples = sampleFilterStream(topology);
+        
+        PythonFunctionalOperatorsTest.addTestToolkit(tuples);
+        SPLStream mapped = SPL.invokeOperator("Mp",
+        		"com.ibm.streamsx.topology.pytest.pymap::OffByOne",
+        		tuples,
+        		tuples.getSchema(), null);
+        
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(mapped, 3);
+               
+        Condition<List<Tuple>> result = tester.tupleContents(mapped, TEST_TUPLES[0], TEST_TUPLES[1], TEST_TUPLES[2]);
+
+        getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
+     
+        assertTrue(result.getResult().toString(), result.valid());
     }
 }
