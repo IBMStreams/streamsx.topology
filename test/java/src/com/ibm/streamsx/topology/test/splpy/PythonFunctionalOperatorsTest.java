@@ -9,9 +9,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -127,17 +131,17 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         
         Condition<List<Tuple>> viaSPLResult = tester.tupleContents(viaSPL);
         Condition<List<Tuple>> viaPythonResult = tester.tupleContents(viaPython);
-
+        
         complete(tester, expectedCount, 10, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.valid());
         assertEquals(viaSPLResult.getResult(), viaPythonResult.getResult());
     }
     
-    private static final StreamSchema TEST_SCHEMA_SF =
+    static final StreamSchema TEST_SCHEMA_SF =
             Type.Factory.getStreamSchema("tuple<int32 a,  int16 b, int64 vl>");
     
-    private static final Tuple[] TEST_TUPLES = new Tuple[4];
+    static final Tuple[] TEST_TUPLES = new Tuple[4];
     static {
         TEST_TUPLES[0] = TEST_SCHEMA_SF.getTuple(new Object[] {7, (short) 25, 34535L});
         TEST_TUPLES[1] = TEST_SCHEMA_SF.getTuple(new Object[] {32, (short) 6, 43675232L});
@@ -159,12 +163,25 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         }, TEST_SCHEMA_SF);        
     }
     
-    private void addTestToolkit(TopologyElement te) throws Exception {
+    private static final AtomicBoolean extractedTestTookit = new AtomicBoolean();
+    static void addTestToolkit(TopologyElement te) throws Exception {
         // Need to run extract to ensure the operators match the python
         // version we are testing.
+    	
         File toolkitRoot = new File(getTestRoot(), "python/spl/testtkpy");
-        int rc = PythonExtractTest.extract(toolkitRoot, true);
-        assertEquals(0, rc);
+        
+        // Only need to do this once.
+		if (!extractedTestTookit.getAndSet(true)) {
+			File lf = new File(toolkitRoot, ".lock");
+			try (RandomAccessFile lff = new RandomAccessFile(lf, "rw");
+					FileChannel channel = lff.getChannel();
+					FileLock lock = channel.lock();
+			) {
+				int rc = PythonExtractTest.extract(toolkitRoot, true);
+				assertEquals(0, rc);
+			}
+		}  
+        
         SPL.addToolkit(te, toolkitRoot);
     }
     

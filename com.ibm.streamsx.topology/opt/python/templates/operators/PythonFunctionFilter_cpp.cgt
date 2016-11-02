@@ -1,6 +1,6 @@
 /*
  * # Licensed Materials - Property of IBM
- * # Copyright IBM Corp. 2015  
+ * # Copyright IBM Corp. 2015,2016
  */
 
 #include <Python.h>
@@ -38,34 +38,41 @@
  if ($fixedParam > $iport->getNumberOfAttributes()) {
    SPL::CodeGen::exitln('%s requires at least %i attributes in input port but schema is %s',
            $model->getContext()->getKind(), $fixedParam, $iport->getSPLTupleType());
+
+ }
+
+ my $oport = $model->getOutputPortAt(0);
+ my $otupleType = $oport->getSPLTupleType();
+
+ SPL::CodeGen::exitln(SPL::Msg::STDTK_OUTPUT_SCHEMA_NOT_MATCHING_INPUT(0, 0), 
+      $oport->getSourceLocation()) if($itupleType ne $otupleType);
+
+ if ($model->getNumberOfOutputPorts() == 2) {
+   my $oport = $model->getOutputPortAt(1);
+   my $otupleType = $oport->getSPLTupleType();
+   SPL::CodeGen::exitln(SPL::Msg::STDTK_OUTPUT_SCHEMA_NOT_MATCHING_INPUT(1, 0),
+         $oport->getSourceLocation()) if($itupleType ne $otupleType);
  }
  
-  my $oport = $model->getOutputPortAt(0);
-  my $otupleType = $oport->getSPLTupleType();
-  my @onames = SPL::CodeGen::Type::getAttributeNames($otupleType);
-  my @otypes = SPL::CodeGen::Type::getAttributeTypes($otupleType);
- 
   my $ituple = $iport->getCppTupleName();
-  
+
+  my $nonMatchOutput = $model->getNumberOfOutputPorts() == 2;
 %>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    function_(NULL),
-   pyInNames_(NULL),
-   pyOutNames_(NULL)
+   pyInNames_(NULL)
 {
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
-   
+
+<% if ($paramStyle eq 'dictionary') { %>
    {
       streamsx::topology::PyGILLock lock;
-      pyOutNames_ = streamsx::topology::Splpy::pyAttributeNames(
-               getOutputPortAt(0));
-<% if ($paramStyle eq 'dictionary') { %>
       pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getInputPortAt(0));
-<% } %>
    }
+<% } %>
 }
 
 // Destructor
@@ -76,8 +83,6 @@ MY_OPERATOR::~MY_OPERATOR()
       Py_DECREF(function_);
    if (pyInNames_)
       Py_DECREF(pyInNames_);
-   if (pyOutNames_)
-      Py_DECREF(pyOutNames_);
 }
 
 // Notify pending shutdown
@@ -90,18 +95,31 @@ void MY_OPERATOR::prepareToShutdown()
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
-   std::vector<OPort0Type> output_tuples;  
+   int ret = 0;
    {
     // Don't hold the lock across submission
     streamsx::topology::PyGILLock lock;
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
 
- @include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
-   
+    PyObject * pyReturnVar = PyObject_Call(function_, pyTuple, pyDict);
+    Py_DECREF(pyTuple);
+
+    if (pyReturnVar == NULL) {
+        SPLAPPLOG(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
+        streamsx::topology::flush_PyErr_Print();
+        throw;
     }
- for(int i = 0; i < output_tuples.size();i++)
-   submit(output_tuples[i], 0);   
+    ret = PyObject_IsTrue(pyReturnVar);
+
+    Py_DECREF(pyReturnVar);
+    }
+   if (ret)
+       submit(tuple, 0);   
+<%if ($nonMatchOutput) {%>
+   else
+       submit(tuple, 1);
+<%}%>
 }
 
 // Punctuation processing
