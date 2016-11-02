@@ -96,18 +96,4 @@ void MY_OPERATOR::process(uint32_t idx)
 
 }
 
-// Tuple processing for mutating ports 
-void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
-{
-}
-
-// Tuple processing for non-mutating ports
-void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
-{
-}
-
-// Punctuation processing
-void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
-{
-}
 <%SPL::CodeGen::implementationEpilogue($model);%>
