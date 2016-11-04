@@ -280,9 +280,9 @@ namespace streamsx {
         // Provide info on the setting of LD_LIBRARY_PATH
         char * pyLDD = getenv("LD_LIBRARY_PATH");
         if (pyLDD != NULL) {
-	      SPLAPPLOG(L_INFO, "LD_LIBRARY_PATH=" << pyLDD, "python");
+	      SPLAPPTRC(L_INFO, "LD_LIBRARY_PATH=" << pyLDD, "python");
         } else {
-	      SPLAPPLOG(L_INFO, "LD_LIBRARY_PATH not set", "python");
+	      SPLAPPTRC(L_INFO, "LD_LIBRARY_PATH not set", "python");
         }
 
         // declare pylib and its value  
@@ -295,11 +295,11 @@ namespace streamsx {
 
             pyLib = wk;
         }
-	SPLAPPLOG(L_INFO, "Loading Python library: " << pyLib  , "python");
+	SPLAPPTRC(L_INFO, "Loading Python library: " << pyLib  , "python");
 
 	if(NULL == dlopen(pyLib.c_str(), RTLD_LAZY |
 			  RTLD_GLOBAL)){
-	  SPLAPPLOG(L_ERROR, "Fatal error: could not open Python library:" << pyLib , "python");
+	  SPLAPPTRC(L_ERROR, "Fatal error: could not open Python library:" << pyLib , "python");
 	  throw;
 	}
 
@@ -334,7 +334,7 @@ namespace streamsx {
       PyObject * module = PyImport_Import(moduleName);
       Py_DECREF(moduleName);
       if (module == NULL) {
-        SPLAPPLOG(L_ERROR, "Fatal error: missing module: " << moduleNameC, "python");
+        SPLAPPTRC(L_ERROR, "Fatal error: missing module: " << moduleNameC, "python");
         streamsx::topology::flush_PyErr_Print();
         throw;
       }
@@ -353,7 +353,7 @@ namespace streamsx {
        Py_DECREF(module);
     
        if (!PyCallable_Check(function)) {
-           SPLAPPLOG(L_ERROR, "Fatal error: function " << functionNameC << " in module " << moduleNameC << " not callable", "python");
+           SPLAPPTRC(L_ERROR, "Fatal error: function " << functionNameC << " in module " << moduleNameC << " not callable", "python");
          throw;
         }
         SPLAPPTRC(L_INFO, "Callable function: " << functionNameC, "python");
