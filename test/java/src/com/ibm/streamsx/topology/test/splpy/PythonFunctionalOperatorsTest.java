@@ -157,7 +157,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
 
             @Override
             public OutputTuple apply(Long v1, OutputTuple v2) {
-                v2.assign(TEST_TUPLES[(int)((long) v1)]);
+                v2.assign(TEST_TUPLES[v1.intValue()]);
                 return v2;
             }
         }, TEST_SCHEMA_SF);        
