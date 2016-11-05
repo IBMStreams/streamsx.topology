@@ -37,7 +37,7 @@ public class PythonFunctionalOperatorsKwargsTest extends TestTopology {
         		|| getTesterContext().getType() == StreamsContext.Type.DISTRIBUTED_TESTER);
     }
     
-    //@Test
+    @Test
     public void testFilter() throws Exception {
         Topology topology = new Topology("testFilter");
         
@@ -59,7 +59,7 @@ public class PythonFunctionalOperatorsKwargsTest extends TestTopology {
         assertEquals(TEST_TUPLES[3], passResult.getResult().get(1));
         assertTrue(expectedCount.valid());
     }
-    //@Test
+    @Test
     public void testFilterOptionalOutput() throws Exception {
         Topology topology = new Topology("testFilterOptionalOutput");
         
