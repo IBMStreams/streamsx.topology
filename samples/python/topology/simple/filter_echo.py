@@ -31,11 +31,11 @@ def main():
     
     # Declare a stream that will execute functional logic
     # against tuples on the echo stream.
-    # For each tuple that will appear on echo, the below
-    # `starts_with_d` method will be called.  If it returns
-    # True then the tuple will appear on the filtered
+    # For each tuple that will appear on echo, the
+    # lambda function will be called, passing the tuple.
+    # If it returns True then the tuple will appear on the filtered
     # stream, otherwise the tuple is discarded.
-    filtered = source.filter(filter_echo_functions.starts_with_d)
+    filtered = source.filter(lambda tuple : tuple.startswith("d"))
     
     filtered.print()
     
