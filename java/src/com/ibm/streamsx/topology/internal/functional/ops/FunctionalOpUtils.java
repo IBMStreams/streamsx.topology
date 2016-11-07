@@ -10,6 +10,7 @@ import com.ibm.streams.operator.state.CheckpointContext;
 import com.ibm.streams.operator.state.CheckpointContext.Kind;
 import com.ibm.streams.operator.state.ConsistentRegionContext;
 import com.ibm.streamsx.topology.function.FunctionContext;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.StatelessFunctionalHandler;
 
@@ -42,6 +43,6 @@ class FunctionalOpUtils {
             return;
 
         if (crc.isStartOfRegion() || crc.isTriggerOperator())
-            checker.setInvalidContext("Functional logic operator {0} cannot be the start of a consistent region.", new Object[] {context.getKind()});
+            checker.setInvalidContext(Messages.getString("CONSISTENT_CHECK_1"), new String[] {context.getKind()});
     }
 }
