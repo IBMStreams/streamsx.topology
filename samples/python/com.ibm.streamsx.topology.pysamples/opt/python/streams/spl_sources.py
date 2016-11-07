@@ -69,4 +69,6 @@ class Range:
         self.count = count
 
     def __iter__(self):
-        return map(tuple, iter(range(self.count)))
+        # Use zip to convert the single returned value
+        # into a tuple to allow it to be returned to SPL
+        return zip(range(self.count))
