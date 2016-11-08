@@ -64,10 +64,8 @@ def submit(ctxtype, graph, config = None, username = None, password = None, rest
     # path to python binary
     pythonbin = sys.executable
     pythonreal = os.path.realpath(pythonbin)
-    pythondir = os.path.dirname(pythonbin) 
-    pythonfile = os.path.basename(pythonbin)
+    pythondir = os.path.dirname(pythonbin)
     pythonrealfile = os.path.basename(pythonreal)
-    pythonconfig = pythondir+"/"+pythonfile+"-config"
     pythonrealconfig = os.path.realpath(pythondir+"/"+pythonrealfile+"-config")
     pythonversion = python_version()
 
