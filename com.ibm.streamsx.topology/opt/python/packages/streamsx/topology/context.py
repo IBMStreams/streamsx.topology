@@ -85,9 +85,8 @@ def submit(ctxtype, graph, config = None, username = None, password = None, rest
     # Allows a graph or topology to be passed
     graph = graph.graph
 
-    # deserialize vcap config if present and streams is unset
-    streams_install = os.environ.get('STREAMS_INSTALL')
-    if 'topology.service.vcap' in config and streams_install is None:
+    # deserialize vcap config before passing it off to Java
+    if 'topology.service.vcap' in config:
         config['topology.service.vcap'] = json.loads(config['topology.service.vcap'])
 
     fj = _createFullJSON(graph, config)
