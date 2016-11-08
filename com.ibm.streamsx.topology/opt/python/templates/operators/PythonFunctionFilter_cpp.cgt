@@ -106,7 +106,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     Py_DECREF(pyTuple);
 
     if (pyReturnVar == NULL) {
-        SPLAPPLOG(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
+        SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
         streamsx::topology::flush_PyErr_Print();
         throw;
     }
