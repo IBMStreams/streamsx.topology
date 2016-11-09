@@ -137,6 +137,7 @@ class ContextSubmitter:
             fn = self._createJSONFile(self._createFullJSON())
         except Exception:
             logger.exception("Error generating SPL and creating JSON file.")
+            raise
 
         # Create connection to SWS
         if self.username is not None and self.password is not None:
