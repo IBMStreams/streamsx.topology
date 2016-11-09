@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -157,7 +158,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
 
             @Override
             public OutputTuple apply(Long v1, OutputTuple v2) {
-                v2.assign(TEST_TUPLES[(int)((long) v1)]);
+                v2.assign(TEST_TUPLES[v1.intValue()]);
                 return v2;
             }
         }, TEST_SCHEMA_SF);        
@@ -275,5 +276,35 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         
         for (int i = 0; i < filteredResult.size(); i++)
             assertEquals(i, filteredResult.get(i).getInt("sequence_using_py"));
+    }
+    
+    @Test
+    public void testSourceWithClass() throws Exception {
+        Topology topology = new Topology("testSourceWithClass");
+        
+        addTestToolkit(topology);
+        
+        StreamSchema outSchema = Type.Factory.getStreamSchema("tuple<int32 seq>");
+        
+        int count = new Random().nextInt(200) + 10;
+        SPLStream pysrc = SPL.invokeSource(topology,
+        		"com.ibm.streamsx.topology.pysamples.sources::Range",
+        		Collections.singletonMap("count", count), outSchema);
+        
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(pysrc, count);
+        Condition<List<Tuple>> outTuples = tester.tupleContents(pysrc);
+        
+        // getConfig().put(ContextProperties.TRACING_LEVEL, TraceLevel.DEBUG);
+                
+        complete(tester, expectedCount, 20, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.valid());
+        
+        List<Tuple> result = outTuples.getResult();
+        
+        assertEquals(count, result.size());
+        for (int i = 0; i < count; i++)
+            assertEquals(i, result.get(i).getInt("seq"));
     }
 }

@@ -1,0 +1,116 @@
+/*
+ * # Licensed Materials - Property of IBM
+ * # Copyright IBM Corp. 2015  
+ */
+
+#include <Python.h>
+#include <string>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdio.h>
+
+#include "splpy.h"
+
+<%SPL::CodeGen::implementationPrologue($model);%>
+
+<%
+ my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.__splpy/common/";
+
+ require "splpy_operator.pm";
+ require $cmnDir."/splpy.pm";
+
+ my $module = splpy_Module();
+ my $functionName = splpy_FunctionName();
+
+ my $iport;
+ my $itupleType;
+ my @inames;
+ my @itypes;
+ my $ituple;
+ 
+  my $oport = $model->getOutputPortAt(0);
+  my $otupleType = $oport->getSPLTupleType();
+  my @onames = SPL::CodeGen::Type::getAttributeNames($otupleType);
+  my @otypes = SPL::CodeGen::Type::getAttributeTypes($otupleType);
+%>
+
+// Constructor
+MY_OPERATOR::MY_OPERATOR() :
+   function_(NULL),
+   pyOutNames_(NULL)
+{
+@include  "../../opt/.__splpy/common/py_constructor.cgt"
+   
+   {
+      streamsx::topology::PyGILLock lock;
+
+      // function_ is an instance of the callable class
+      // then when called returns an iterable
+      PyObject *iterSource =
+      streamsx::topology::Splpy::loadFunction("streamsx.spl.runtime",
+             "_splpy_iter_source");   
+
+      PyObject *tc = PyTuple_New(1);
+      PyTuple_SetItem(tc, 0, function_);
+
+      function_ = PyObject_Call(iterSource, tc, NULL);
+
+      Py_DECREF(tc);
+      Py_DECREF(iterSource);
+   
+      pyOutNames_ = streamsx::topology::Splpy::pyAttributeNames(
+               getOutputPortAt(0));
+   }
+}
+
+// Destructor
+MY_OPERATOR::~MY_OPERATOR() 
+{
+   streamsx::topology::PyGILLock lock;
+   if (function_)
+      Py_DECREF(function_);
+   if (pyOutNames_)
+      Py_DECREF(pyOutNames_);
+}
+
+// Notify port readiness
+void MY_OPERATOR::allPortsReady()
+{
+  createThreads(1);
+}
+
+// Notify pending shutdown
+void MY_OPERATOR::prepareToShutdown() 
+{
+    streamsx::topology::PyGILLock lock;
+    streamsx::topology::flush_PyErrPyOut();
+}
+
+void MY_OPERATOR::process(uint32_t idx)
+{
+  while(!getPE().getShutdownRequested()) {
+
+    std::vector<OPort0Type> output_tuples;  
+    {
+      // Don't hold the lock across submission
+      streamsx::topology::PyGILLock lock;
+
+      PyObject *pyTuple = PyTuple_New(0);
+      PyObject *pyDict = NULL;
+
+@include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
+//      Py_DECREF(pyTuple);
+   
+    }
+ 
+    if (output_tuples.size() == 0) {
+        break;
+    }
+ 
+    for(int i = 0; i < output_tuples.size();i++)
+       submit(output_tuples[i], 0);   
+  }
+}
+
+<%SPL::CodeGen::implementationEpilogue($model);%>
