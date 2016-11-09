@@ -167,7 +167,7 @@ class ContextSubmitter:
         fj["graph"] = self.app_topology.generateSPLGraph()
         return fj
 
-    def _createJSONFile(fj):
+    def _createJSONFile(self, fj):
         if sys.hexversion < 0x03000000:
             tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", prefix="splpytmp", delete=False)
         else:
