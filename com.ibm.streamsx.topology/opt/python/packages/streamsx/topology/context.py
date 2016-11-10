@@ -32,7 +32,7 @@ logger = logging.getLogger('streamsx.topology.py_submit')
 # SPL, the toolkit, the bundle and submits it to the relevant
 # environment
 #
-def submit(ctxtype, app_topology, config=None, username=None, password=None, rest_api_url=None, log_level=logging.INFO):
+def submit(ctxtype, app_topology, config=None, username=None, password=None, log_level=logging.INFO):
     """
     Submits a topology with the specified context type.
     
@@ -54,13 +54,19 @@ def submit(ctxtype, app_topology, config=None, username=None, password=None, res
         * REMOTE_BUILD_AND_SUBMIT - the application is submitted to and built on a Bluemix streaming analytics service.
           It is then submitted as a job.
         app_topology: a Topology object or Topology.graph object
+        config (dict): a configuration object containing job configurations and/or submission information. Keys include:
+        * 'topology.service.vcap' - a json representation of a VCAP object.
+        * 'topology.service.name' - the name of the streaming analytics service for submission.
+        username (string): an optional SWS username. Needed for retrieving remote view data.
+        password (string): an optional SWS password. Used in conjunction with the username, and needed for retrieving
+        remote view data.
+        log_level: The maximum logging level for log output.
         
     Returns:
         An output stream of bytes if submitting with JUPYTER, otherwise returns None.
     """    
     logger.setLevel(log_level)
-    context_submitter = _SubmitContextFactory(app_topology, config, username, password, rest_api_url)\
-        .get_submit_context(ctxtype)
+    context_submitter = _SubmitContextFactory(app_topology, config, username, password).get_submit_context(ctxtype)
     try:
         context_submitter.submit()
     except:
@@ -271,7 +277,7 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
             logger.exception("Error while querying url: " + resources_url)
             raise
 
-        rest_api_url = response['streams_rest_url']
+        rest_api_url = response['streams_rest_url'] + '/resources'
 
         # Give each view in the app the necessary information to connect to SWS.
         for view in app_topology.get_views():
@@ -310,12 +316,11 @@ class _SubmitContextFactory:
         Responsible for performing the correct submission depending on a number of factors, including: the
         presence/absence of a streams install, the type of context, and whether the user seeks to retrieve data via rest
     """
-    def __init__(self, app_topology, config=None, username=None, password=None, rest_api_url=None):
+    def __init__(self, app_topology, config=None, username=None, password=None):
         self.app_topology = app_topology.graph
         self.config = config
         self.username = username
         self.password = password
-        self.rest_api_url = rest_api_url
 
         if self.config is None:
             self.config = {}
