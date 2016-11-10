@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.test.splpy;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -14,6 +15,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -420,6 +422,43 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
             assertEquals(-6.917091E-08f, li32[2], 0.1);
             assertEquals(7.735085E8f, li32[3], 0.1);
         }
-
+        
+        {
+            double[] lf64 = (double[]) r1.getObject("lf64");
+            assertEquals(1, lf64.length);
+            assertEquals(765.46477e19, lf64[0], 0.1);
+        }
+        
+        {
+            boolean[] lb = (boolean[]) r1.getObject("lb");
+            assertEquals(3, lb.length);
+            assertTrue(lb[0]);
+            assertFalse(lb[1]);
+            assertTrue(lb[2]);
+        }
+        
+        assertTrue(r1.getMap("mi32r").isEmpty());
+        assertTrue(r1.getMap("mru32").isEmpty());
+        
+        {
+            Map<?,?> mri32  = r1.getMap("mri32");
+            assertEquals(2, mri32.size());
+            System.out.println("mri32:"  + mri32);
+            assertTrue(mri32.containsKey(new RString("abc")));
+            assertTrue(mri32.containsKey(new RString("многоязычных")));
+            
+            assertEquals(35320, mri32.get(new RString("abc")));
+            assertEquals(-236325, mri32.get(new RString("многоязычных")));
+        }
+        
+        assertTrue(r1.getMap("mu32r").isEmpty());
+        assertTrue(r1.getMap("mi32i32").isEmpty());
+        assertTrue(r1.getMap("mu32u32").isEmpty());
+        assertTrue(r1.getMap("mrr").isEmpty());
+        assertTrue(r1.getMap("mf64f64").isEmpty());
+        assertTrue(r1.getMap("mf64i32").isEmpty());
+        assertTrue(r1.getMap("mf64u32").isEmpty());
+        assertTrue(r1.getMap("mf64r").isEmpty());
+        assertTrue(r1.getMap("mrf64").isEmpty());
     }
 }
