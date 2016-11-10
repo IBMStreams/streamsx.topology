@@ -1,6 +1,6 @@
 import logging
 
-# create logger with 'spam_application'
+# create logger with 'streamsx.topology'
 logger = logging.getLogger('streamsx.topology')
 logger.setLevel(logging.DEBUG)
 
