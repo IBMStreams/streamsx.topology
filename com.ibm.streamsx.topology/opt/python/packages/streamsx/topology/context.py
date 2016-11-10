@@ -33,7 +33,7 @@ logger = logging.getLogger('streamsx.topology.py_submit')
 # SPL, the toolkit, the bundle and submits it to the relevant
 # environment
 #
-def submit(ctxtype, app_topology, config = None, username = None, password = None, rest_api_url = None, log_level=logging.INFO):
+def submit(ctxtype, app_topology, config=None, username=None, password=None, rest_api_url=None, log_level=logging.INFO):
     """
     Submits a topology with the specified context type.
     
@@ -63,14 +63,61 @@ def submit(ctxtype, app_topology, config = None, username = None, password = Non
 
 class _AbstractSubmitter:
     """
-    A submitter which handles submit operations common across all submitter types.
+    A submitter which handles submit operations common across all submitter types..
     """
-    def __init__(self, ctxtype):
+    def __init__(self, ctxtype, config, app_topology):
         self.ctxtype = ctxtype
+        self.config = config
+        self.app_topology = app_topology
+
+        # encode the relevant python version information into the config
+        self._do_pyversion_initialization()
+
+        # Create the json file containing the representation of the application
+        try:
+            self.fn = self._create_json_file(self._create_full_json())
+        except Exception:
+            logger.exception("Error generating SPL and creating JSON file.")
+            raise
 
     def submit(self):
         raise NotImplementedError('The submit method in _AbstractSubmitter is meant to be overridden by subclasses, '
                                   'not invoked directly.')
+
+    def _do_pyversion_initialization(self):
+        # path to python binary
+        pythonbin = sys.executable
+        pythonreal = os.path.realpath(pythonbin)
+        pythondir = os.path.dirname(pythonbin)
+        pythonrealfile = os.path.basename(pythonreal)
+        pythonrealconfig = os.path.realpath(pythondir + "/" + pythonrealfile + "-config")
+        pythonversion = python_version()
+
+        # place the fullpaths to the python binary that is running and
+        # the python-config that will used into the config
+        self.config["pythonversion"] = {}
+        self.config["pythonversion"]["version"] = pythonversion
+        self.config["pythonversion"]["binaries"] = []
+        bf = dict()
+        bf["python"] = pythonreal
+        bf["pythonconfig"] = pythonrealconfig
+        self.config["pythonversion"]["binaries"].append(bf)
+
+    def _create_full_json(self):
+        fj = dict()
+        fj["deploy"] = self.config
+        fj["graph"] = self.app_topology.generateSPLGraph()
+        return fj
+
+    def _create_json_file(self, fj):
+        if sys.hexversion < 0x03000000:
+            tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", prefix="splpytmp", delete=False)
+        else:
+            tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", encoding="UTF-8", prefix="splpytmp",
+                                             delete=False)
+        tf.write(json.dumps(fj, sort_keys=True, indent=2, separators=(',', ': ')))
+        tf.close()
+        return tf.name
 
     # There are two modes for execution.
     #
@@ -116,12 +163,10 @@ class _RemoteBuildSubmitter(_AbstractSubmitter):
     A submitter which retrieves the SWS REST API URL and then submits the application to be built and submitted
     on BlueMix within a Streaming Analytics service.
     """
-    def __init__(self, config, app_topology, ctxtype, fn):
-        _AbstractSubmitter.__init__(self, ctxtype)
+    def __init__(self, ctxtype, config, app_topology):
+        _AbstractSubmitter.__init__(self, ctxtype, config, app_topology)
 
         # Get the username, password, and rest API URL
-        self.fn = fn
-
         services = config['streaming-analytics']
         creds = None
         for service in services:
@@ -209,60 +254,16 @@ class _SubmitContextFactory:
         if 'topology.service.vcap' in self.config:
             self.config['topology.service.vcap'] = json.loads(self.config['topology.service.vcap'])
 
-        # encode the relevant python version information into the config
-        self._do_pyversion_initialization()
-
-    def _do_pyversion_initialization(self):
-        # path to python binary
-        pythonbin = sys.executable
-        pythonreal = os.path.realpath(pythonbin)
-        pythondir = os.path.dirname(pythonbin)
-        pythonrealfile = os.path.basename(pythonreal)
-        pythonrealconfig = os.path.realpath(pythondir + "/" + pythonrealfile + "-config")
-        pythonversion = python_version()
-
-        # place the fullpaths to the python binary that is running and
-        # the python-config that will used into the config
-        self.config["pythonversion"] = {}
-        self.config["pythonversion"]["version"] = pythonversion
-        self.config["pythonversion"]["binaries"] = []
-        bf = dict()
-        bf["python"] = pythonreal
-        bf["pythonconfig"] = pythonrealconfig
-        self.config["pythonversion"]["binaries"].append(bf)
-
     def get_submit_context(self, ctxtype):
-        # Create the json file containing the representation of the application
-        try:
-            fn = self._create_json_file(self._create_full_json())
-        except Exception:
-            logger.exception("Error generating SPL and creating JSON file.")
-            raise
 
         # If there is no streams install present, currently only REMOTE_BUILD_AND_SUBMIT is supported.
         streams_install = os.environ.get('STREAMS_INSTALL')
         if streams_install is None:
             if ctxtype != 'REMOTE_BUILD_AND_SUBMIT':
                 raise UnsupportedContextException(ctxtype + " must be submitted when a streams install is present.")
-            return _RemoteBuildSubmitter(self.config, self.app_topology, ctxtype, fn)
+            return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
 
         # Support for other contexts here.
-
-    def _create_full_json(self):
-        fj = dict()
-        fj["deploy"] = self.config
-        fj["graph"] = self.app_topology.generateSPLGraph()
-        return fj
-
-    def _create_json_file(self, fj):
-        if sys.hexversion < 0x03000000:
-            tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", prefix="splpytmp", delete=False)
-        else:
-            tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", encoding="UTF-8", prefix="splpytmp",
-                                             delete=False)
-        tf.write(json.dumps(fj, sort_keys=True, indent=2, separators=(',', ': ')))
-        tf.close()
-        return tf.name
 
 
 # Used to delete the JSON file after it is no longer needed.
