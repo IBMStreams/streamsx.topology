@@ -118,7 +118,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         }, getPythonTypesSchema(withSets));
     }
     
-    //@Test
+    @Test
     public void testPositionalSampleNoop() throws Exception {
         Topology topology = new Topology("testPositionalSampleNoop");
         
@@ -188,7 +188,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         SPL.addToolkit(te, toolkitRoot);
     }
     
-    //@Test
+    @Test
     public void testPositionalSampleSimpleFilter() throws Exception {
         Topology topology = new Topology("testPositionalSampleSimpleFilter");
         
@@ -214,7 +214,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertTrue(viaPythonResult.toString(), viaPythonResult.valid());
     }
     
-    //@Test
+    @Test
     public void testPositionalSampleSimpleFilterUsingSPLType() throws Exception {
         Topology topology = new Topology("testPositionalSampleSimpleFilterUsingSPLType");
         
@@ -240,7 +240,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertTrue(viaPythonResult.toString(), viaPythonResult.valid());
     }
     
-    //@Test
+    @Test
     public void testStatefulOperator() throws Exception {
         Topology topology = new Topology("testPositionalSampleSimpleFilterUsingSPLType");
         
@@ -280,7 +280,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
             assertEquals(i, filteredResult.get(i).getInt("sequence_using_py"));
     }
     
-    //@Test
+    @Test
     public void testSourceWithClass() throws Exception {
         Topology topology = new Topology("testSourceWithClass");
         
