@@ -101,6 +101,7 @@ class _BaseSubmitter:
             cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
 
         args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
+        logger.trace("Generating SPL and submitting application.")
         process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
         try:
             stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
@@ -153,39 +154,6 @@ class _BaseSubmitter:
         return tf.name
 
 
-class _JupyterSubmitter(_BaseSubmitter):
-    def submit(self):
-        tk_root = self._get_toolkit_root()
-
-        cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
-
-        streams_install = os.environ.get('STREAMS_INSTALL')
-        # If there is no streams install, get java from JAVA_HOME and use the remote contexts.
-        if streams_install is None:
-            java_home = os.environ.get('JAVA_HOME')
-            if java_home is None:
-                raise ValueError("JAVA_HOME not found. Please set the JAVA_HOME system variable")
-
-            jvm = os.path.join(java_home, "bin", "java")
-            submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
-        # Otherwise, use the Java version from the streams install
-        else:
-            jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
-            submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
-            cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
-
-        args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
-        process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
-        try:
-            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
-            stderr_thread.daemon = True
-            stderr_thread.start()
-
-            return process.stdout
-        except:
-            logger.exception("Error starting java subprocess for submission")
-            raise
-
     # There are two modes for execution.
     #
     # Pypi (Python focused)
@@ -223,6 +191,41 @@ class _JupyterSubmitter(_BaseSubmitter):
         dir = os.path.dirname(dir)
         tk_root = os.path.dirname(dir)
         return tk_root
+
+
+
+class _JupyterSubmitter(_BaseSubmitter):
+    def submit(self):
+        tk_root = self._get_toolkit_root()
+
+        cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
+
+        streams_install = os.environ.get('STREAMS_INSTALL')
+        # If there is no streams install, get java from JAVA_HOME and use the remote contexts.
+        if streams_install is None:
+            java_home = os.environ.get('JAVA_HOME')
+            if java_home is None:
+                raise ValueError("JAVA_HOME not found. Please set the JAVA_HOME system variable")
+
+            jvm = os.path.join(java_home, "bin", "java")
+            submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
+        # Otherwise, use the Java version from the streams install
+        else:
+            jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
+            submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
+            cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
+
+        args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
+        process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+        try:
+            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
+            stderr_thread.daemon = True
+            stderr_thread.start()
+
+            return process.stdout
+        except:
+            logger.exception("Error starting java subprocess for submission")
+            raise
 
 
 class _RemoteBuildSubmitter(_BaseSubmitter):
@@ -269,9 +272,30 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
             view.set_streams_context_config(
                 {'username': username, 'password': password, 'rest_api_url': rest_api_url})
 
-    def submit(self):
-        logger.trace('Generating SPL and submitting application to BlueMix via REST.')
-        _BaseSubmitter.submit(self)
+
+class _DistributedSubmitter(_BaseSubmitter):
+    """
+    A submitter which retrieves the SWS REST API URL and then submits the application to be built and submitted
+    on BlueMix within a Streaming Analytics service.
+    """
+    def __init__(self, ctxtype, config, app_topology, username, password):
+        _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
+        
+        # If a username or password isn't supplied, don't attempt to retrieve view data.
+        if username is None or password is None:
+            return
+        try:
+            process = subprocess.Popen(['streamtool', 'geturl', '--api'],
+                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            rest_api_url = process.stdout.readline().strip().decode('utf-8')
+        except:
+            logger.exception("Error getting SWS rest api url via streamtool")
+            raise
+
+        # Give each view in the app the necessary information to connect to SWS.
+        for view in app_topology.get_views():
+            view.set_streams_context_config(
+                {'username': username, 'password': password, 'rest_api_url': rest_api_url})
 
 
 class _SubmitContextFactory:
@@ -308,6 +332,8 @@ class _SubmitContextFactory:
                 return _JupyterSubmitter(ctxtype, self.config, self.app_topology)
             elif ctxtype == 'REMOTE_BUILD_AND_SUBMIT':
                 return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
+            elif ctxtype == 'DISTRIBUTED':
+                return _DistributedSubmitter(ctxtype, self.config, self.app_topology, self.username, self.password)
             else:
                 return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
 
