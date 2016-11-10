@@ -90,7 +90,7 @@ class _BaseSubmitter:
         if streams_install is None:
             java_home = os.environ.get('JAVA_HOME')
             if java_home is None:
-                raise "Please set the JAVA_HOME system variable"
+                raise ValueError("JAVA_HOME not found. Please set the JAVA_HOME system variable")
 
             jvm = os.path.join(java_home, "bin", "java")
             submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
@@ -151,6 +151,40 @@ class _BaseSubmitter:
         tf.write(json.dumps(fj, sort_keys=True, indent=2, separators=(',', ': ')))
         tf.close()
         return tf.name
+
+
+class _JupyterSubmitter(_BaseSubmitter):
+    def submit(self):
+        tk_root = self._get_toolkit_root()
+
+        cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
+
+        streams_install = os.environ.get('STREAMS_INSTALL')
+        # If there is no streams install, get java from JAVA_HOME and use the remote contexts.
+        if streams_install is None:
+            java_home = os.environ.get('JAVA_HOME')
+            if java_home is None:
+                raise ValueError("JAVA_HOME not found. Please set the JAVA_HOME system variable")
+
+            jvm = os.path.join(java_home, "bin", "java")
+            submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
+        # Otherwise, use the Java version from the streams install
+        else:
+            jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
+            submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
+            cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
+
+        args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
+        process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+        try:
+            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
+            stderr_thread.daemon = True
+            stderr_thread.start()
+
+            return process.stdout
+        except:
+            logger.exception("Error starting java subprocess for submission")
+            raise
 
     # There are two modes for execution.
     #
@@ -235,6 +269,10 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
             view.set_streams_context_config(
                 {'username': username, 'password': password, 'rest_api_url': rest_api_url})
 
+    def submit(self):
+        logger.trace('Generating SPL and submitting application to BlueMix via REST.')
+        _BaseSubmitter.submit(self)
+
 
 class _SubmitContextFactory:
     """
@@ -258,17 +296,20 @@ class _SubmitContextFactory:
 
     def get_submit_context(self, ctxtype):
 
-        # If there is no streams install present, currently only REMOTE_BUILD_AND_SUBMIT is supported.
+        # If there is no streams install present, currently only REMOTE_BUILD_AND_SUBMIT, TOOLKIT, and BUILD_ARCHIVE
+        # are supported.
         streams_install = os.environ.get('STREAMS_INSTALL')
         if streams_install is None:
-            if ctxtype == 'REMOTE_BUILD_AND_SUBMIT':
-                return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
-            elif ctxtype == 'TOOLKIT' or ctxtype == 'BUILD_ARCHIVE':
-                return _BaseSubmitter(ctxtype, self.config, self.app_topology)
-            else:
+            if not (ctxtype == 'REMOTE_BUILD_AND_SUBMIT' or ctxtype == 'TOOLKIT' or ctxtype == 'BUILD_ARCHIVE'):
                 raise UnsupportedContextException(ctxtype + " must be submitted when a streams install is present.")
 
-        # Support for other contexts here.
+        else:
+            if ctxtype == 'JUPYTER':
+                return _JupyterSubmitter(ctxtype, self.config, self.app_topology)
+            elif ctxtype == 'REMOTE_BUILD_AND_SUBMIT':
+                return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
+            else:
+                return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
 
 
 # Used to delete the JSON file after it is no longer needed.
