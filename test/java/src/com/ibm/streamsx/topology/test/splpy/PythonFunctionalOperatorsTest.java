@@ -312,7 +312,8 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     
     /**
      * Test that specific values in Python
-     * make their way into SPL correctly.
+     * make their way into SPL correctly
+     * when returning as a tuple.
      * @throws Exception
      */
     @Test
