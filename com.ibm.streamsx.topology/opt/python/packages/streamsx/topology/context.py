@@ -61,7 +61,7 @@ def submit(ctxtype, app_topology, config=None, username=None, password=None, res
         logger.exception("Error while submitting application.")
 
 
-class _AbstractSubmitter:
+class _BaseSubmitter:
     """
     A submitter which handles submit operations common across all submitter types..
     """
@@ -81,8 +81,41 @@ class _AbstractSubmitter:
             raise
 
     def submit(self):
-        raise NotImplementedError('The submit method in _AbstractSubmitter is meant to be overridden by subclasses, '
-                                  'not invoked directly.')
+        tk_root = self._get_toolkit_root()
+
+        cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
+
+        streams_install = os.environ.get('STREAMS_INSTALL')
+        # If there is no streams install, get java from JAVA_HOME and use the remote contexts.
+        if streams_install is None:
+            java_home = os.environ.get('JAVA_HOME')
+            if java_home is None:
+                raise "Please set the JAVA_HOME system variable"
+
+            jvm = os.path.join(java_home, "bin", "java")
+            submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
+        # Otherwise, use the Java version from the streams install
+        else:
+            jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
+            submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
+            cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
+
+        args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
+        process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+        try:
+            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
+            stderr_thread.daemon = True
+            stderr_thread.start()
+
+            stdout_thread = threading.Thread(target=_print_process_stdout, args=([process]))
+            stdout_thread.daemon = True
+            stdout_thread.start()
+            process.wait()
+            return None
+
+        except:
+            logger.exception("Error starting java subprocess for submission")
+            raise
 
     def _do_pyversion_initialization(self):
         # path to python binary
@@ -158,16 +191,16 @@ class _AbstractSubmitter:
         return tk_root
 
 
-class _RemoteBuildSubmitter(_AbstractSubmitter):
+class _RemoteBuildSubmitter(_BaseSubmitter):
     """
     A submitter which retrieves the SWS REST API URL and then submits the application to be built and submitted
     on BlueMix within a Streaming Analytics service.
     """
     def __init__(self, ctxtype, config, app_topology):
-        _AbstractSubmitter.__init__(self, ctxtype, config, app_topology)
+        _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
 
         # Get the username, password, and rest API URL
-        services = config['streaming-analytics']
+        services = config['topology.service.vcap']['streaming-analytics']
         creds = None
         for service in services:
             if service['name'] == config['topology.service.name']:
@@ -175,7 +208,7 @@ class _RemoteBuildSubmitter(_AbstractSubmitter):
                 break
         if creds is None:
             raise ValueError(config['topology.service.name'] + " service was not found in the supplied VCAP")
-        username = creds['username']
+        username = creds['userid']
         password = creds['password']
 
         # Obtain REST only when needed. Otherwise, submitting "Hello World" without requests fails.
@@ -187,7 +220,8 @@ class _RemoteBuildSubmitter(_AbstractSubmitter):
             raise
 
         # Obtain the streams SWS REST URL
-        resources_url = creds['rest_host'] + creds['resources_path']
+        resources_url = creds['rest_url'] + creds['resources_path']
+        #print("Rest host is ", creds['rest_url'], " resources_url is ", resources_url)
         try:
             response = requests.get(resources_url, auth=(username, password)).json()
         except:
@@ -200,38 +234,6 @@ class _RemoteBuildSubmitter(_AbstractSubmitter):
         for view in app_topology.get_views():
             view.set_streams_context_config(
                 {'username': username, 'password': password, 'rest_api_url': rest_api_url})
-
-    def submit(self):
-        _AbstractSubmitter.submit(self)
-        tk_root = self._get_toolkit_root()
-
-        cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
-
-        java_home = os.environ.get('JAVA_HOME')
-        if java_home is None:
-            raise ValueError("JAVA_HOME not found. Please set the JAVA_HOME system variable")
-
-        jvm = os.path.join(java_home, "bin", "java")
-        submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
-
-        args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
-
-        # Foward subprocess stdout and stderr to process stdout and stderr, resprctively
-        process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
-        try:
-            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
-            stderr_thread.daemon = True
-            stderr_thread.start()
-
-            stdout_thread = threading.Thread(target=_print_process_stdout, args=([process]))
-            stdout_thread.daemon = True
-            stdout_thread.start()
-            process.wait()
-            return None
-
-        except:
-            logger.exception("Error starting java subprocess for submission")
-            raise
 
 
 class _SubmitContextFactory:
@@ -259,9 +261,12 @@ class _SubmitContextFactory:
         # If there is no streams install present, currently only REMOTE_BUILD_AND_SUBMIT is supported.
         streams_install = os.environ.get('STREAMS_INSTALL')
         if streams_install is None:
-            if ctxtype != 'REMOTE_BUILD_AND_SUBMIT':
+            if ctxtype == 'REMOTE_BUILD_AND_SUBMIT':
+                return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
+            elif ctxtype == 'TOOLKIT' or ctxtype == 'BUILD_ARCHIVE':
+                return _BaseSubmitter(ctxtype, self.config, self.app_topology)
+            else:
                 raise UnsupportedContextException(ctxtype + " must be submitted when a streams install is present.")
-            return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
 
         # Support for other contexts here.
 
