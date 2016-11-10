@@ -280,7 +280,7 @@ class _DistributedSubmitter(_BaseSubmitter):
     """
     def __init__(self, ctxtype, config, app_topology, username, password):
         _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
-        
+
         # If a username or password isn't supplied, don't attempt to retrieve view data.
         if username is None or password is None:
             return
@@ -335,7 +335,7 @@ class _SubmitContextFactory:
             elif ctxtype == 'DISTRIBUTED':
                 return _DistributedSubmitter(ctxtype, self.config, self.app_topology, self.username, self.password)
             else:
-                return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
+                return _BaseSubmitter(ctxtype, self.config, self.app_topology)
 
 
 # Used to delete the JSON file after it is no longer needed.
