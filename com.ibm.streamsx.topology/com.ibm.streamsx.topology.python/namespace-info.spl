@@ -125,6 +125,7 @@ Functions to create topologies and streams.
     int8,int16,int32,int64 : int
     uint8,uint16,uint32,uint64 : int
     float32,float64 : float
+    complex32,complex64 : complex
     rstring : str
     ustring : str
     boolean : boolean
@@ -807,14 +808,11 @@ A limited set of SPL types are supported.
   * `int8`, `int16`, `int32`, `int64` - maps to Python `int`
   * `uint8`, `uint16`, `uint32`, `uint64` - maps to Python `int`
   * `float32`, `float64` - maps to Python `float`
+  * `complex32`, `complex64` - maps to Python `complex`
   * `rstring`, `ustring` - maps to Python `String` - `rstring` values assume UTF-8 encoding
  * **Collection types**
   * `list<P>` where `P` is one of the supported primitive types. Passed into Python as a list.
   * `map<K,V>` where `K` and `V` are supported primitive types. Passed into Python as a dictionary.
-
-For an input port all the above types are supported.
-
-For an output port only primitive types are supported.
 
 ++ \@spl decorator options
 \@spl decorators support an number of options.

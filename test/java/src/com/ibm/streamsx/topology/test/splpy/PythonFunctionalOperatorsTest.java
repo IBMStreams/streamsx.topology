@@ -18,6 +18,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.math.complex.Complex;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,6 +27,7 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.meta.TupleType;
+import com.ibm.streams.operator.types.RString;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
@@ -306,5 +308,118 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(count, result.size());
         for (int i = 0; i < count; i++)
             assertEquals(i, result.get(i).getInt("seq"));
+    }
+    
+    /**
+     * Test that specific values in Python
+     * make their way into SPL correctly
+     * when returning as a tuple.
+     * @throws Exception
+     */
+    @Test
+    public void testValues() throws Exception {
+        Topology topology = new Topology("testValues");
+        
+        addTestToolkit(topology);
+        
+        SPLStream pysrc = SPL.invokeSource(topology,
+        		"com.ibm.streamsx.topology.pytest.pysource::SpecificValues",
+        		null, ALL_PYTHON_TYPES_SCHEMA);
+        
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(pysrc, 1);
+        Condition<List<Tuple>> outTuples = tester.tupleContents(pysrc);
+        
+        // getConfig().put(ContextProperties.TRACING_LEVEL, TraceLevel.DEBUG);
+                
+        complete(tester, expectedCount, 20, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.valid());
+        
+        Tuple r1 = outTuples.getResult().get(0);
+        
+        assertTrue(r1.getBoolean("b"));
+        
+        // signed integers
+        // 23, -2525, 3252352, -2624565653,
+        assertEquals(r1.getByte("i8"), 23);
+        assertEquals(r1.getShort("i16"), -2525);
+        assertEquals(r1.getInt("i32"), 3252352);
+        assertEquals(r1.getLong("i64"), -2624565653L);
+        
+        // unsigned int
+        // 72, 6873, 43665588, 357568872
+        assertEquals(r1.getString("u8"), "72");
+        assertEquals(r1.getString("u16"), "6873");
+        assertEquals(r1.getString("u32"), "43665588");
+        assertEquals(r1.getString("u64"), "357568872");
+        
+        // floats
+        // 4367.34, -87657525334.22
+        assertEquals(r1.getFloat("f32"), 4367.34f, 0.1);
+        assertEquals(r1.getDouble("f64"), -87657525334.22d, 0.1);
+        
+        // rstring, Unicode data
+        assertEquals("⡍⠔⠙⠖ ⡊ ⠙⠕⠝⠰⠞ ⠍⠑⠁⠝ ⠞⠕ ⠎⠁⠹ ⠹⠁⠞ ⡊ ⠅⠝⠪⠂ ⠕⠋ ⠍⠹", r1.getString("r"));
+        
+        // complex(-23.0, 325.38), complex(-35346.234, 952524.93)
+        assertEquals(((Complex) r1.getObject("c32")).getReal(), -23.0, 0.1);
+        assertEquals(((Complex) r1.getObject("c32")).getImaginary(), 325.38, 0.1);
+        
+        assertEquals(((Complex) r1.getObject("c64")).getReal(), -35346.234, 0.1);
+        assertEquals(((Complex) r1.getObject("c64")).getImaginary(), 952524.93, 0.1);
+        
+        // ["a", "Streams!", "2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm"]
+        {
+        @SuppressWarnings("unchecked")
+		List<RString> lr = (List<RString>) r1.getObject("lr");
+        assertEquals(3, lr.size());
+        assertEquals("a", lr.get(0).getString());
+        assertEquals("Streams!", lr.get(1).getString());
+        assertEquals("2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm", lr.get(2).getString());
+        }
+        
+        //  [345,-4578],
+        {
+        int[] li32 = (int[]) r1.getObject("li32");
+        assertEquals(2, li32.length);
+        assertEquals(345, li32[0]);
+        assertEquals(-4578, li32[1]);
+        }
+
+        // [9983, -4647787587, 0]
+        {
+        long[] li64 = (long[]) r1.getObject("li64");
+        assertEquals(3, li64.length);
+        assertEquals(9983L, li64[0]);
+        assertEquals(-4647787587L, li64[1]);
+        assertEquals(0L, li64[2]);
+        }
+        
+        {
+        @SuppressWarnings("unchecked")
+		List<Integer> lui32 = (List<Integer>) r1.getObject("lui32");
+        assertEquals(1, lui32.size());
+        assertEquals("87346", Integer.toUnsignedString(lui32.get(0)));
+        }
+        
+        {
+        @SuppressWarnings("unchecked")
+		List<Long> lui64 = (List<Long>) r1.getObject("lui64");
+        assertEquals(2, lui64.size());
+        assertEquals("45433674", Long.toUnsignedString(lui64.get(0)));
+        assertEquals("41876984848", Long.toUnsignedString(lui64.get(1)));
+        }
+        
+        // 4.269986E+05, -8.072285E+02 -6.917091E-08 7.735085E8
+        {
+            float[] li32 = (float[]) r1.getObject("lf32");
+            assertEquals(4, li32.length);
+            assertEquals(4.269986E+05f, li32[0], 0.1);
+            assertEquals(-8.072285E+02f, li32[1], 0.1);
+            assertEquals(-6.917091E-08f, li32[2], 0.1);
+            assertEquals(7.735085E8f, li32[3], 0.1);
+        }
+
     }
 }
