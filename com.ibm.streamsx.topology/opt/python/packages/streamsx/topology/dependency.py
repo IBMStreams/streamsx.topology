@@ -14,7 +14,7 @@ class _DependencyResolver(object):
     Finds dependencies given a module object
     """
     
-    def __init__(self, topology_packages):
+    def __init__(self):
         self._modules = set()
         self._packages = collections.OrderedDict() # need an ordered set when merging namespace directories
         self._processed_modules = set()
@@ -25,15 +25,15 @@ class _DependencyResolver(object):
         self._streamsx_topology_dir = dir
         self._topology_packages = topology_packages
         
-    def add_dependencies(self, module):
+    def add_dependencies(self, module, include_packages=None, exclude_packages=None):
         """
         Adds a module and its dependencies to the list of dependencies
         """
         # add the module as a dependency
-        self._add_dependency(module)
+        self._add_dependency(module, include_packages, exclude_packages)
         # recursively get the module's imports and add those as dependencies
         imported_modules = {}
-        if self._include_module(module):
+        if self._include_module(module, include_packages, exclude_packages):
           imported_modules = _get_imported_modules(module)
         for imported_module_name,imported_module in imported_modules.items():
             if imported_module not in self._processed_modules:
@@ -54,7 +54,7 @@ class _DependencyResolver(object):
         """
         return tuple(self._packages.keys())   
 
-    def _include_module(self, module):
+    def _include_module(self, module, include_packages, exclude_packages):
         # As some packages have the following format:
         # 
         # scipy.special.specfun
@@ -64,11 +64,11 @@ class _DependencyResolver(object):
         # we don't want to do a direct comparison. Instead, we want to excluse packages
         # which are either exactly "<package_name>", or start with "<package_name>".
         
-        for include_package in self._topology_packages.include_packages:
+        for include_package in include_packages:
             if include_package == module.__name__ or module.__name__.startswith(include_package + '.'):
                 return True
             
-        for exclude_package in self._topology_packages.exclude_packages:
+        for exclude_package in exclude_packages:
             if exclude_package == module.__name__ or module.__name__.startswith(exclude_package + '.'):
                 return False
             

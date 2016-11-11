@@ -19,18 +19,17 @@ import streamsx.topology.functions
 import streamsx.topology.param
 from streamsx.topology.schema import CommonSchema
 from streamsx.topology.schema import _stream_schema
-from streamsx.topology.topologypackages import TopologyPackages
 
 class SPLGraph(object):
 
-    def __init__(self, name=None, packages=None):
+    def __init__(self, name=None):
         if name is None:
             name = str(uuid.uuid1()).replace("-", "")
         # Allows Topology or SPLGraph to be passed to submit
         self.graph = self
         self.name = name
         self.operators = []
-        self.resolver = streamsx.topology.dependency._DependencyResolver(packages)
+        self.resolver = streamsx.topology.dependency._DependencyResolver()
         self._views = []
 
     def get_views(self):
@@ -39,7 +38,7 @@ class SPLGraph(object):
     def add_views(self, view):
         self._views.append(view)
 
-    def addOperator(self, kind, function=None, name=None, params=None):
+    def addOperator(self, kind, function=None, name=None, params=None, include_packages=None, exclude_packages=None):
         if(params is None):
             params = {}
         if name is None:
@@ -63,7 +62,7 @@ class SPLGraph(object):
                 dep_instance = type(function._it)
 
             if not inspect.isbuiltin(dep_instance):
-                self.resolver.add_dependencies(inspect.getmodule(dep_instance))
+                self.resolver.add_dependencies(inspect.getmodule(dep_instance), include_packages, exclude_packages)
         return op
     
     def addPassThruOperator(self):
