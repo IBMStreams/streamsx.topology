@@ -250,10 +250,10 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
         _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
 
         # Get the username, password, and rest API URL
-        services = config['topology.service.vcap']['streaming-analytics']
+        services = config[ConfigParams.VCAP_INFO]['streaming-analytics']
         creds = None
         for service in services:
-            if service['name'] == config['topology.service.name']:
+            if service['name'] == config[ConfigParams.VCAP_NAME]:
                 creds = service['credentials']
                 break
         if creds is None:
@@ -332,15 +332,15 @@ class _SubmitContextFactory:
         # are supported.
         streams_install = os.environ.get('STREAMS_INSTALL')
         if streams_install is None:
-            if not (ctxtype == 'REMOTE_BUILD_AND_SUBMIT' or ctxtype == 'TOOLKIT' or ctxtype == 'BUILD_ARCHIVE'):
+            if not (ctxtype == ContextTypes.REMOTE_BUILD_AND_SUBMIT or ctxtype == ContextTypes.TOOLKIT or ctxtype == ContextTypes.BUILD_ARCHIVE):
                 raise UnsupportedContextException(ctxtype + " must be submitted when a streams install is present.")
 
 
-        if ctxtype == 'JUPYTER':
+        if ctxtype == ContextTypes.JUPYTER:
             return _JupyterSubmitter(ctxtype, self.config, self.app_topology)
-        elif ctxtype == 'REMOTE_BUILD_AND_SUBMIT':
+        elif ctxtype == ContextTypes.REMOTE_BUILD_AND_SUBMIT:
             return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
-        elif ctxtype == 'DISTRIBUTED':
+        elif ctxtype == ContextTypes.DISTRIBUTED:
             return _DistributedSubmitter(ctxtype, self.config, self.app_topology, self.username, self.password)
         else:
             return _BaseSubmitter(ctxtype, self.config, self.app_topology)
