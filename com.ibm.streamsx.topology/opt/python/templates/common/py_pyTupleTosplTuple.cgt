@@ -49,12 +49,12 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=
 %>
     if (<%=$ai%> < frs) {
          // Value from the Python function
-         PyObject *pyAttrValue = PyTuple_GetItem(pyTuple, <%=$ai%>);
+         PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, <%=$ai%>);
 <%
 
     my $ce = "__ERROR__";
 	     if ($atype eq 'list') {
-		 my $assign_string = pythonToCppPrimitiveConversion("PyList_GetItem(pyAttrValue, i)", $element_type);
+		 my $assign_string = pythonToCppPrimitiveConversion("PyList_GET_ITEM(pyAttrValue, i)", $element_type);
 		 %>
 		     SPL::list< <%=$element_type%> > li = SPL::list< <%=$element_type%> >(PyList_Size(pyAttrValue));
 		 for(int i = 0; i < li.size(); i++){
