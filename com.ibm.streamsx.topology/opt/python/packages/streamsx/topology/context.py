@@ -32,7 +32,7 @@ logger = logging.getLogger('streamsx.topology.py_submit')
 # SPL, the toolkit, the bundle and submits it to the relevant
 # environment
 #
-def submit(ctxtype, app_topology, config=None, username=None, password=None, log_level=logging.INFO):
+def submit(ctxtype, graph, config=None, username=None, password=None, log_level=logging.INFO):
     """
     Submits a topology with the specified context type.
     
@@ -53,7 +53,7 @@ def submit(ctxtype, app_topology, config=None, username=None, password=None, log
           analytics Bluemix remote build service.
         * REMOTE_BUILD_AND_SUBMIT - the application is submitted to and built on a Bluemix streaming analytics service.
           It is then submitted as a job.
-        app_topology: a Topology object or Topology.graph object
+        graph: a Topology object.
         config (dict): a configuration object containing job configurations and/or submission information. Keys include:
         * 'topology.service.vcap' - a json representation of a VCAP object.
         * 'topology.service.name' - the name of the streaming analytics service for submission.
@@ -66,7 +66,7 @@ def submit(ctxtype, app_topology, config=None, username=None, password=None, log
         An output stream of bytes if submitting with JUPYTER, otherwise returns None.
     """    
     logger.setLevel(log_level)
-    context_submitter = _SubmitContextFactory(app_topology, config, username, password).get_submit_context(ctxtype)
+    context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
     try:
         context_submitter.submit()
     except:
