@@ -781,7 +781,7 @@ When `None` is return then no tuple will be submitted to the operator's output p
 
 When a single Python tuple is returned is is converted to an SPL tuple and submitted to the output port.
 
-When a list of Python tuples is returned, each Python tuple is converted to an SPL tuple and submitted to the output port, in order of the list starting with the first tuple (position 0).
+When a list of Python tuples is returned, each Python tuple is converted to an SPL tuple and submitted to the output port, in order of the list starting with the first tuple (position 0). If the list contains `None` at an index instead of a Python tuple then no SPL tuple is submitted for that index.
 
 The values of a Python tuple are assigned to an output SPL tuple by position, so the first value in the Python tuple is assigned to the first attribute in the SPL tuple.
 
@@ -879,8 +879,9 @@ are less values in the Python tuple than attributes in the SPL
 tuple's schema then the remaining SPL attributes are set to their
 default value.
 
-When the *iterator* completes, a final punctuation mark is submitted
-to the output port and no more tuples are submitted to the output port.
+When the *iterator* completes, a window mark followed by a final mark
+are submitted to the output port and no more tuples are
+submitted to the output port.
 
 # Decorated iterable class
 When a Python *iterable class* is decorated with `@spl.source`
@@ -935,6 +936,8 @@ If the return value evaluates to true (as defined by Python) then the same tuple
 is submitted to the first (mandatory) output port. If the return value
 evaluates to false then the same tuple is submitted to the second (optional)
 output port if it exists otherwise it is discarded.  
+
+A filter operator is punctuation perserving.
 
 # Decorated callable class
 
@@ -991,6 +994,8 @@ If the class has instance fields then they are the state of the
 operator and are private to each invocation of the operator and maintained
 across calls to its `__call__` function.
 
+A map operator is punctuation perserving.
+
 # Decorated function
 
 When a Python *function* is decorated with `@spl.map`
@@ -1021,9 +1026,12 @@ When a Python *callable class* is decorated with `@spl.for_each`
 a stateful SPL operator is created with a single input port
 and no output ports.  For each input tuple the `__call__` function is called
 passing the tuple.
+
 If the Python class has instance fields then they are the state of the
 operator and are private to each invocation of the operator and maintained
 across calls to its `__call__` function.
+
+A for_each operator is oblivious to punctuation.
 
 # Function
 
@@ -1043,6 +1051,8 @@ When the function returns a tuple containing less values than attributes
 in the SPL output schema then the remaining attributes are copied from
 the input tuple if a matching attribute is found, otherwise they are set
 to the SPL default value.
+
+A pipe operator is punctuation perserving.
 
 `@spl.map` is preferred to `@spl.pipe`.
 
@@ -1075,6 +1085,8 @@ If the Python function is decorated with `@spl.sink`
 then the operator is a sink operator, with a single
 input port and no output ports.
 For each input tuple the function is called.
+
+A sink operator is oblivious to punctuation.
 
 `@spl.for_each` is preferred to `@spl.sink`.
 

@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -168,24 +169,8 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         }, TEST_SCHEMA_SF);        
     }
     
-    private static final AtomicBoolean extractedTestTookit = new AtomicBoolean();
-    static void addTestToolkit(TopologyElement te) throws Exception {
-        // Need to run extract to ensure the operators match the python
-        // version we are testing.
-    	
+    static void addTestToolkit(TopologyElement te) throws Exception {    	
         File toolkitRoot = new File(getTestRoot(), "python/spl/testtkpy");
-        
-        // Only need to do this once.
-		if (!extractedTestTookit.getAndSet(true)) {
-			File lf = new File(toolkitRoot, ".lock");
-			try (RandomAccessFile lff = new RandomAccessFile(lf, "rw");
-					FileChannel channel = lff.getChannel();
-					FileLock lock = channel.lock();
-			) {
-				int rc = PythonExtractTest.extract(toolkitRoot, true);
-				assertEquals(0, rc);
-			}
-		}  
         
         SPL.addToolkit(te, toolkitRoot);
     }

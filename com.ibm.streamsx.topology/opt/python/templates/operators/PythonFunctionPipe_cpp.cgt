@@ -87,6 +87,10 @@ void MY_OPERATOR::prepareToShutdown()
     streamsx::topology::flush_PyErrPyOut();
 }
 
+<%
+  my $no_tuples_action = "";
+%>
+
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
@@ -103,6 +107,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
  for(int i = 0; i < output_tuples.size();i++)
    submit(output_tuples[i], 0);   
 }
+
+// Create member function that converts Python tuple to SPL tuple
+@include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
 
 // Punctuation processing
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
