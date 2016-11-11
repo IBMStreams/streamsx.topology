@@ -7,6 +7,10 @@
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
+<%
+  my $oport = $model->getOutputPortAt(0);
+%>
+
 class MY_OPERATOR : public MY_BASE_OPERATOR 
 {
 public:
@@ -29,6 +33,9 @@ private:
   // Members
     PyObject *function_;
     PyObject *pyOutNames_;
+
+    void fromPythonToPort0(PyObject * pyTuple, <%=$oport->getCppTupleType()%> & otuple);
+
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

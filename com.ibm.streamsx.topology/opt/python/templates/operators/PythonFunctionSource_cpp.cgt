@@ -87,6 +87,10 @@ void MY_OPERATOR::prepareToShutdown()
     streamsx::topology::flush_PyErrPyOut();
 }
 
+<%
+  my $no_tuples_action = "submit(Punctuation::WindowMarker, 0);";
+%>
+
 void MY_OPERATOR::process(uint32_t idx)
 {
   while(!getPE().getShutdownRequested()) {
@@ -100,17 +104,14 @@ void MY_OPERATOR::process(uint32_t idx)
       PyObject *pyDict = NULL;
 
 @include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
-//      Py_DECREF(pyTuple);
-   
-    }
- 
-    if (output_tuples.size() == 0) {
-        break;
     }
  
     for(int i = 0; i < output_tuples.size();i++)
        submit(output_tuples[i], 0);   
   }
 }
+
+// Create member function that converts Python tuple to SPL tuple
+@include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
 
 <%SPL::CodeGen::implementationEpilogue($model);%>
