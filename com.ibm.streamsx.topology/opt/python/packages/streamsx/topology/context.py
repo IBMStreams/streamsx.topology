@@ -20,6 +20,7 @@ import json
 import subprocess
 import threading
 import sys
+import enum
 
 from platform import python_version
 
@@ -392,3 +393,48 @@ class UnsupportedContextException(Exception):
     """
     def __init__(self, msg):
         Exception.__init__(self, msg)
+
+@enum.unique
+class ContextTypes(enum.Enum):
+    """
+        Types of submission contexts:
+
+        DISTRIBUTED - the topology is submitted to a Streams instance.
+        The bundle is submitted using `streamtool` which must be setup to submit without requiring authentication
+        input. Additionally, a username and password may optionally be provided to enable retrieving data from remote
+        views.
+        STANDALONE - the topology is executed directly as an Streams standalone application.
+        The standalone execution is spawned as a separate process
+        BUNDLE - execution of the topology produces an SPL application bundle
+        (.sab file) that can be submitted to an IBM Streams instance as a distributed application.
+        STANDALONE_BUNDLE - execution of the topology produces an SPL application bundle that, when executed,
+        is spawned as a separate process.
+        JUPYTER - the topology is run in standalone mode, and context.submit returns a stdout streams of bytes which
+        can be read from to visualize the output of the application.
+        BUILD_ARCHIVE - Creates a Bluemix-compatible build archive.
+        execution of the topology produces a build archive, which can be submitted to a streaming
+        analytics Bluemix remote build service.
+        REMOTE_BUILD_AND_SUBMIT - the application is submitted to and built on a Bluemix streaming analytics service.
+        It is then submitted as a job.
+        TOOLKIT - Execution of the topology produces a toolkit.
+    """
+    TOOLKIT = 'TOOLKIT'
+    BUILD_ARCHIVE = 'BUILD_ARCHIVE'
+    REMOTE_BUILD_AND_SUBMIT = 'REMOTE_BUILD_AND_SUBMIT'
+    BUNDLE = 'BUNDLE'
+    STANDALONE_BUNDLE = 'STANDALONG_BUNDLE'
+    STANDALONE = 'STANDALONE'
+    DISTRIBUTED = 'DISTRIBUTED'
+    JUPYTER = 'JUPYTER'
+
+
+@enum.unique
+class ConfigParams(enum.Enum):
+    """
+    Configuration options which may be used as keys in the submit's config parameter.
+
+    VCAP_INFO - a json object containing the VCAP information used to submit to BlueMix
+    VCAP_NAME - the name of the streaming analytics service to use from VCAP_INFO.
+    """
+    VCAP_INFO = 'topology.service.vcap'
+    VCAP_NAME = 'topology.service.name'
