@@ -785,20 +785,63 @@ When a list of Python tuples is returned, each Python tuple is converted to an S
 
 The values of a Python tuple are assigned to an output SPL tuple by position, so the first value in the Python tuple is assigned to the first attribute in the SPL tuple.
 
+    # SPL input schema: tuple<int32 x, float64 y>
     # SPL output schema: tuple<int32 x, float64 y, float32 z>
     \@spl.pipe
     def myfunc(a,b):
-       return a,b,a+b
+       return (a,b,a+b)
 
     # The SPL output will be:
-    # x is set to: a
-    # y is set to: b 
-    # z is set to: a+b
+    # All values explictly set by returned Python tuple
+    # based on the x,y values from the input tuple
+    # x is set to: x 
+    # y is set to: y
+    # z is set to: x+y
+
+The returned tuple may be *sparse*, any attribute value in the tuple
+that is `None` will be set to their SPL default or copied from the input tuple, depending on the operator type.
+    
+    # SPL input schema: tuple<int32 x, float64 x>
+    # SPL output schema: tuple<int32 x, float64 y, float32 z>
+    \@spl.pipe
+    def myfunc(a,b):
+       return (a,None,a+b)
+
+    # The SPL output will be:
+    # x is set to: x (explictly set by returned Python tuple)
+    # y is set to: y (set by matching input SPL attribute)
+    # z is set to: x+y
 
 When a returned tuple has less values than attributes in the SPL output schema the attributes not set by the Python function will be set to their SPL default or copied from the input tuple, depending on the operator type.
+    
+    # SPL input schema: tuple<int32 x, float64 x>
+    # SPL output schema: tuple<int32 x, float64 y, float32 z>
+    \@spl.pipe
+    def myfunc(a,b):
+       return a,
+
+    # The SPL output will be:
+    # x is set to: x (explictly set by returned Python tuple)
+    # y is set to: y (set by matching input SPL attribute)
+    # z is set to: 0 (default int32 value)
 
 When a returned tuple has more values than attributes in the SPL output schema then the additional values are ignored.
 
+    # SPL input schema: tuple<int32 x, float64 x>
+    # SPL output schema: tuple<int32 x, float64 y, float32 z>
+    \@spl.pipe
+    def myfunc(a,b):
+       return (a,b,a+b,a/b)
+
+    # The SPL output will be:
+    # All values explictly set by returned Python tuple
+    # based on the x,y values from the input tuple
+    # x is set to: x
+    # y is set to: y
+    # z is set to: x+y
+    #
+    # The fourth value in the tuple a/b = x/y is ignored.
+ 
 ++ Supported SPL types
 
 A limited set of SPL types are supported.
