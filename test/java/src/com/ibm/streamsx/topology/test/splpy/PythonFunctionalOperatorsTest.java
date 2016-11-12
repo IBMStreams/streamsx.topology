@@ -313,15 +313,32 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         		"com.ibm.streamsx.topology.pytest.pysource::SpecificValues",
         		null, ALL_PYTHON_TYPES_SCHEMA);
         
+        StreamSchema sparseSchema = Type.Factory.getStreamSchema("tuple<int32 a, int32 b, int32 c, int32 d, int32 e>");
+        
+              
         Tester tester = topology.getTester();
         Condition<Long> expectedCount = tester.tupleCount(pysrc, 1);
         Condition<List<Tuple>> outTuples = tester.tupleContents(pysrc);
         
+        SPLStream pysparse = SPL.invokeSource(topology,
+        		"com.ibm.streamsx.topology.pytest.pysource::SparseTuple",
+        		null, sparseSchema);
+        SPLStream pysparsemap = SPL.invokeOperator("com.ibm.streamsx.topology.pytest.pymap::SparseTupleMap",
+        		pysparse, sparseSchema.extend("int32", "f"), null);
+
+        Condition<Long> expectedCountSparse = tester.tupleCount(pysparse, 1);
+        Condition<List<Tuple>> sparseTupleOut = tester.tupleContents(pysparse);
+        
+        Condition<Long> expectedCountSparseMap = tester.tupleCount(pysparsemap, 1);
+        Condition<List<Tuple>> sparseTupleMapOut = tester.tupleContents(pysparsemap);
+        
         // getConfig().put(ContextProperties.TRACING_LEVEL, TraceLevel.DEBUG);
                 
-        complete(tester, expectedCount, 20, TimeUnit.SECONDS);
+        complete(tester, expectedCount.and(expectedCountSparse, expectedCountSparseMap), 20, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.valid());
+        assertTrue(expectedCountSparse.valid());
+        assertTrue(expectedCountSparseMap.valid());
         
         Tuple r1 = outTuples.getResult().get(0);
         
@@ -445,5 +462,24 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertTrue(r1.getMap("mf64u32").isEmpty());
         assertTrue(r1.getMap("mf64r").isEmpty());
         assertTrue(r1.getMap("mrf64").isEmpty());
+        
+        // Sparse tuple handling - source
+        assertEquals(1, sparseTupleOut.getResult().size());
+        Tuple st = sparseTupleOut.getResult().get(0);
+        assertEquals(37, st.getInt("a")); // set by op
+        assertEquals(0, st.getInt("b")); // default as None in tuple
+        assertEquals(0, st.getInt("c")); // default as None in tuple
+        assertEquals(-46, st.getInt("d")); // set by op
+        assertEquals(0, st.getInt("e")); // default as no value (short tuple)
+        
+        // Sparse tuple handling - map
+        assertEquals(1, sparseTupleMapOut.getResult().size());
+        Tuple stm = sparseTupleMapOut.getResult().get(0);
+        assertEquals(37+81, stm.getInt("a")); // set by op
+        assertEquals(23, stm.getInt("b")); // set by op
+        assertEquals(0, stm.getInt("c")); // default as None in tuple
+        assertEquals(-46, stm.getInt("d")); // default to matching input
+        assertEquals(34, stm.getInt("e")); // set by op
+        assertEquals(0, stm.getInt("f")); // default as no value (short tuple)
     }
 }

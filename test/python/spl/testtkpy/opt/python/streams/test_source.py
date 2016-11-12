@@ -41,3 +41,14 @@ class SpecificValues:
            {'abc':35320, 'многоязычных':-236325}
            )
         return itertools.repeat(rv, 1)
+
+@spl.source()
+class SparseTuple:
+    def __init__(self):
+        pass
+
+    def __iter__(self):
+        rv = (
+           37, None, None, -46
+           )
+        return itertools.repeat(rv, 1)
