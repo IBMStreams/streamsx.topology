@@ -26,3 +26,11 @@ class OffByOne:
             rv = (rv["a"], rv["b"], rv["vl"])
         self.last = tuple
         return rv
+
+@spl.map()
+class SparseTupleMap:
+    def __init__(self):
+       pass
+
+    def __call__(self, *t):
+        return (t[0]+81, 23, None, None, 34) 

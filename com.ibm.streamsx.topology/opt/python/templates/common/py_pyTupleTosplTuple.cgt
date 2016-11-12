@@ -17,6 +17,10 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=
   Py_ssize_t frs = PyTuple_Size(pyTuple); 
     
 <%
+  if (defined $iport) {
+    print 'bool setAttr = false;';
+  }
+
   for (my $ai = 0; $ai < $oport->getNumberOfAttributes(); ++$ai) {
     
     my $attribute = $oport->getAttributeAt($ai);
@@ -46,11 +50,18 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=
       $atype = "list";
     }
 
+    if (defined $iport) {
+             print 'setAttr = false;';
+    }
 %>
     if (<%=$ai%> < frs) {
          // Value from the Python function
          PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, <%=$ai%>);
+         if (pyAttrValue != Py_None) {
 <%
+    if (defined $iport) {
+             print 'setAttr = true;';
+    }
 
     my $ce = "__ERROR__";
 	     if ($atype eq 'list') {
@@ -84,6 +95,7 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=
 	     
 %>
       otuple.set_<%=$name%>(<%=$ce%>);
+      }
    }
 <%
     if (defined $iport) {
@@ -93,7 +105,7 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=
     if (defined $matchInputAttr) {
        if ($matchInputAttr->getSPLType() eq $attribute->getSPLType()) {
 %>
-    else {
+    if (!setAttr) {
       // value from the input attribute
       otuple.set_<%=$name%>(ituple.get_<%=$name%>());
     }
