@@ -360,6 +360,27 @@ namespace streamsx {
         return function;
       }
 
+    /*
+    * Wrap a function F by calling a wrap creation function that
+    * returns a function that calls F performing additional
+    * actions before or after the call.
+    */
+    static PyObject * wrapFunction(const char * module, const char *wrapFnCreator, PyObject * function, PyObject * arg) {
+         PyObject *wfc = loadFunction(module, wrapFnCreator);
+
+         PyObject *tc = PyTuple_New(arg == NULL ? 1 : 2);
+         PyTuple_SET_ITEM(tc, 0, function);
+         if (arg != NULL)
+             PyTuple_SET_ITEM(tc, 1, arg);
+
+         function = PyObject_Call(wfc, tc, NULL);
+
+         Py_DECREF(tc);
+         Py_DECREF(wfc);
+
+         return function;
+    }
+
     // Call the function passing an SPL attribute
     // converted to a Python object and discard the return 
     template <class T>
