@@ -361,24 +361,26 @@ namespace streamsx {
       }
 
     /*
-    * Wrap a function F by calling a wrap creation function that
-    * returns a function that calls F performing additional
-    * actions before or after the call.
+    * One off generic call a function by name passing one or two arguments
+    * returning its return. Used for setup calls in operator constructors
+    * as the reference to the method is not kept, assuming it is not
+    * called frequently.
+    * References to the arguments are stolen by this function.
     */
-    static PyObject * wrapFunction(const char * module, const char *wrapFnCreator, PyObject * function, PyObject * arg) {
-         PyObject *wfc = loadFunction(module, wrapFnCreator);
+    static PyObject * callFunction(const char * module, const char *name, PyObject * arg1, PyObject * arg2) {
+         PyObject *fn = loadFunction(module, name);
 
-         PyObject *tc = PyTuple_New(arg == NULL ? 1 : 2);
-         PyTuple_SET_ITEM(tc, 0, function);
-         if (arg != NULL)
-             PyTuple_SET_ITEM(tc, 1, arg);
+         PyObject *tc = PyTuple_New(arg2 == NULL ? 1 : 2);
+         PyTuple_SET_ITEM(tc, 0, arg1);
+         if (arg2 != NULL)
+             PyTuple_SET_ITEM(tc, 1, arg2);
 
-         function = PyObject_Call(wfc, tc, NULL);
+         PyObject * ret = PyObject_Call(fn, tc, NULL);
 
          Py_DECREF(tc);
-         Py_DECREF(wfc);
+         Py_DECREF(fn);
 
-         return function;
+         return ret;
     }
 
     // Call the function passing an SPL attribute

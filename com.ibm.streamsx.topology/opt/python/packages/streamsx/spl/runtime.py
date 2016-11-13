@@ -18,3 +18,45 @@ def _splpy_iter_source(iterable) :
      except StopIteration:
        return None
   return _wf
+
+
+# The decorated operators only support converting
+# Python tuples or a list of Python tuples to
+# an SPL output tuple. To simplify the generated code
+# we handle any other type by using a wrapper function
+# and converting to a Python tuple or list of Python
+# tuples.
+#
+# A Python tuple returned by the wrapped function
+# may be sparse, values not set by the dictionary
+# (etc.) are set to None in the Python tuple.
+
+def _splpy_to_tuples(fn, attributes):
+   attr_count = len(attributes)
+   attr_map = dict()
+   for idx, name in enumerate(attributes):
+       attr_map[name] = idx
+   def _dict_to_tuple(value):
+      if isinstance(value, dict):
+         to_assign = set.intersection(set(value.keys()), attributes) 
+         tl = [None] * attr_count
+         for name in to_assign:
+             tl[attr_map[name]] = value[name]
+         return tuple(tl)
+      return value
+
+   def _to_tuples(*args, **kwargs):
+      value = fn(*args, **kwargs)
+      if isinstance(value, tuple):
+          return value
+      if isinstance(value, dict):
+         return _dict_to_tuple(value)
+      if isinstance(value, list):
+         lt = list()
+         for ev in value:
+             if isinstance(ev, dict):
+                ev = _dict_to_tuple(ev)
+             lt.append(ev)
+         return lt
+      return value
+   return _to_tuples
