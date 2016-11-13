@@ -360,6 +360,29 @@ namespace streamsx {
         return function;
       }
 
+    /*
+    * One off generic call a function by name passing one or two arguments
+    * returning its return. Used for setup calls in operator constructors
+    * as the reference to the method is not kept, assuming it is not
+    * called frequently.
+    * References to the arguments are stolen by this function.
+    */
+    static PyObject * callFunction(const char * module, const char *name, PyObject * arg1, PyObject * arg2) {
+         PyObject *fn = loadFunction(module, name);
+
+         PyObject *tc = PyTuple_New(arg2 == NULL ? 1 : 2);
+         PyTuple_SET_ITEM(tc, 0, arg1);
+         if (arg2 != NULL)
+             PyTuple_SET_ITEM(tc, 1, arg2);
+
+         PyObject * ret = PyObject_Call(fn, tc, NULL);
+
+         Py_DECREF(tc);
+         Py_DECREF(fn);
+
+         return ret;
+    }
+
     // Call the function passing an SPL attribute
     // converted to a Python object and discard the return 
     template <class T>

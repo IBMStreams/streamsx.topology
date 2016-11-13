@@ -52,3 +52,27 @@ class SparseTuple:
            37, None, None, -46
            )
         return itertools.repeat(rv, 1)
+
+@spl.source()
+class DictTuple:
+    def __init__(self):
+        pass
+
+    def __iter__(self):
+        rv1 = dict()
+        rv1['a'] = 3245;
+        rv1['c'] = 93;
+        rv1['f'] = -25;
+
+        rv2 = dict()
+        rv2['a'] = 831;
+        rv2['b'] = 421;
+        rv2['d'] = -4455;
+
+        rv3 = (1,2,3,4,5)
+
+        rv4 = dict()
+        rv4['b'] = -32;
+        rv4['e'] = -64;
+        
+        return iter([rv1, rv2, [rv3, rv4]])

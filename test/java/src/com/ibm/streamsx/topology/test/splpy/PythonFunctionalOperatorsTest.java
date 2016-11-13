@@ -482,4 +482,92 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(34, stm.getInt("e")); // set by op
         assertEquals(0, stm.getInt("f")); // default as no value (short tuple)
     }
+    /**
+     * Test that specific values in Python
+     * make their way into SPL correctly
+     * when returning as a tuple.
+     * @throws Exception
+     */
+    @Test
+    public void testReturnDict() throws Exception {
+        Topology topology = new Topology("testReturnDict");
+        
+        addTestToolkit(topology);
+               
+        StreamSchema schema = Type.Factory.getStreamSchema("tuple<int32 a, int32 b, int32 c, int32 d, int32 e>");
+        
+        SPLStream pyds = SPL.invokeSource(topology,
+        		"com.ibm.streamsx.topology.pytest.pysource::DictTuple",
+        		null, schema);
+        
+        SPLStream pydm = SPL.invokeOperator("com.ibm.streamsx.topology.pytest.pymap::DictTupleMap",
+        		pyds, schema, null);
+            
+        Tester tester = topology.getTester();
+        Condition<?> expectedCount = tester.tupleCount(pyds, 4).and(tester.tupleCount(pydm, 4));
+        Condition<List<Tuple>> outTuples = tester.tupleContents(pyds);
+        Condition<List<Tuple>> outTuplesMap = tester.tupleContents(pydm);
+                      
+        complete(tester, expectedCount, 20, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.valid());  
+        
+        // Dict tuple handling - source
+        Tuple r1 = outTuples.getResult().get(0);
+        assertEquals(3245, r1.getInt("a"));
+        assertEquals(0, r1.getInt("b"));
+        assertEquals(93, r1.getInt("c"));
+        assertEquals(0, r1.getInt("d"));
+        assertEquals(0, r1.getInt("e"));
+        
+        Tuple r2 = outTuples.getResult().get(1);
+        assertEquals(831, r2.getInt("a"));
+        assertEquals(421, r2.getInt("b"));
+        assertEquals(0, r2.getInt("c"));
+        assertEquals(-4455, r2.getInt("d"));
+        assertEquals(0, r2.getInt("e"));
+        
+        Tuple r3 = outTuples.getResult().get(2);
+        assertEquals(1, r3.getInt("a"));
+        assertEquals(2, r3.getInt("b"));
+        assertEquals(3, r3.getInt("c"));
+        assertEquals(4, r3.getInt("d"));
+        assertEquals(5, r3.getInt("e"));
+        
+        Tuple r4 = outTuples.getResult().get(3);
+        assertEquals(0, r4.getInt("a"));
+        assertEquals(-32, r4.getInt("b"));
+        assertEquals(0, r4.getInt("c"));
+        assertEquals(0, r4.getInt("d"));
+        assertEquals(-64, r4.getInt("e"));
+        
+        // Now the map
+        Tuple m1 = outTuplesMap.getResult().get(0);
+        assertEquals(3245, m1.getInt("a"));
+        assertEquals(120, m1.getInt("b"));
+        assertEquals(93, m1.getInt("c"));
+        assertEquals(0, m1.getInt("d"));
+        assertEquals(0, m1.getInt("e"));
+        
+        Tuple m2 = outTuplesMap.getResult().get(1);
+        assertEquals(1, m2.getInt("a"));
+        assertEquals(2, m2.getInt("b"));
+        assertEquals(3, m2.getInt("c"));
+        assertEquals(4, m2.getInt("d"));
+        assertEquals(5, m2.getInt("e"));
+        
+        Tuple m3 = outTuplesMap.getResult().get(2);
+        assertEquals(1, m3.getInt("a"));
+        assertEquals(2, m3.getInt("b"));
+        assertEquals(23, m3.getInt("c"));
+        assertEquals(24, m3.getInt("d"));
+        assertEquals(25, m3.getInt("e"));
+        
+        Tuple m4 = outTuplesMap.getResult().get(3);
+        assertEquals(0, m4.getInt("a"));
+        assertEquals(-39, m4.getInt("b"));
+        assertEquals(0, m4.getInt("c"));
+        assertEquals(0, m4.getInt("d"));
+        assertEquals(-64, m4.getInt("e"));
+    }
 }

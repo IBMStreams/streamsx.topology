@@ -47,20 +47,22 @@ MY_OPERATOR::MY_OPERATOR() :
 
       // function_ is an instance of the callable class
       // then when called returns an iterable
-      PyObject *iterSource =
-      streamsx::topology::Splpy::loadFunction("streamsx.spl.runtime",
-             "_splpy_iter_source");   
+     function_ = streamsx::topology::Splpy::callFunction(
+             "streamsx.spl.runtime", "_splpy_iter_source",
+             function_, NULL);   
 
-      PyObject *tc = PyTuple_New(1);
-      PyTuple_SetItem(tc, 0, function_);
-
-      function_ = PyObject_Call(iterSource, tc, NULL);
-
-      Py_DECREF(tc);
-      Py_DECREF(iterSource);
-   
-      pyOutNames_ = streamsx::topology::Splpy::pyAttributeNames(
+     pyOutNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getOutputPortAt(0));
+
+     // Now create the wrapper function that converts
+     // other types returned by the user's function
+     // (e.g. dictionaries) to Python tuples as the
+     // decorated operators only handle tuples to
+     // simplify the generated code.
+     Py_INCREF(pyOutNames_); // callFunction steals the reference
+     function_ = streamsx::topology::Splpy::callFunction(
+             "streamsx.spl.runtime", "_splpy_to_tuples",
+             function_, pyOutNames_);   
    }
 }
 
