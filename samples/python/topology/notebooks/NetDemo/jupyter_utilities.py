@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import sys
 import numpy as np
 
 def get_next_line(stdout):
@@ -9,6 +10,7 @@ def get_next_line(stdout):
         return line
     except:
         sys.stderr.write("Error reading next line")
+        raise
         
 def graph_from_outstream(out, xvalues, xmin, xmax, ymin, ymax):
     # Plot data
