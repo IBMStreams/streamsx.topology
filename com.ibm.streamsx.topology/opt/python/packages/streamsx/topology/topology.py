@@ -495,6 +495,7 @@ class View(threading.Thread):
         self.streams_context_config = {'username': '', 'password': '', 'rest_api_url': ''}
 
         self._last_collection_time = -1
+        self._last_collection_time_count = 0
         self.is_rest_initialized = False
 
     def initialize_rest(self):
@@ -524,7 +525,7 @@ class View(threading.Thread):
     def __call__(self):
         while not self._stopped():
             time.sleep(1)
-            _items = self._get_view_items(unseen=True)
+            _items = self._get_view_items()
             if _items is not None:
                 for itm in _items:
                     self.items.put(itm)
@@ -552,7 +553,8 @@ class View(threading.Thread):
         if self.view_object is None:
             raise "Error finding view."
 
-    def _get_view_items(self, unseen=False):
+    def _get_view_items(self):
+        # Retrieve the view object
         view = self.view_object
         if self.view_object is None:
             return None
@@ -561,12 +563,35 @@ class View(threading.Thread):
         items = view.get_view_items()
         data = []
 
+        # The number of already seen tuples to ignore on the last millisecond time boundary
+        ignore_last_collection_time_count = self._last_collection_time_count
+
         for item in items:
-            if not unseen or item.collectionTime > self._last_collection_time:
+            # Ignore tuples from milliseconds we've already seen
+            if item.collectionTime < self._last_collection_time:
+                continue
+            elif item.collectionTime == self._last_collection_time:
+                # Ignore tuples within the millisecond which we've already seen.
+                if ignore_last_collection_time_count > 0:
+                    ignore_last_collection_time_count -= 1
+                    continue
+
+                # If we haven't seen it, continue
+                data.append(json.loads(item.data[data_name]))
+            else:
                 data.append(json.loads(item.data[data_name]))
 
         if len(items) > 0:
-            self._last_collection_time = items[-1].collectionTime
+            # Record the current millisecond time boundary.
+            _last_collection_time = items[-1].collectionTime
+            _last_collection_time_count = 0
+            backwards_counter = len(items) - 1
+            while backwards_counter > 0 and items[backwards_counter] == _last_collection_time:
+                _last_collection_time_count += 1
+                backwards_counter -= 1
+
+            self._last_collection_time = _last_collection_time
+            self._last_collection_time_count = _last_collection_time_count
 
         return data
 
