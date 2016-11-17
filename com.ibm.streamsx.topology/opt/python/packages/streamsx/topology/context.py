@@ -303,6 +303,7 @@ class _DistributedSubmitter(_BaseSubmitter):
             process = subprocess.Popen(['streamtool', 'geturl', '--api'],
                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             rest_api_url = process.stdout.readline().strip().decode('utf-8')
+            logger.debug("The rest API URL obtained from streamtool is " + rest_api_url)
         except:
             logger.exception("Error getting SWS rest api url via streamtool")
             raise
@@ -337,14 +338,17 @@ class _SubmitContextFactory:
             if not (ctxtype == ContextTypes.REMOTE_BUILD_AND_SUBMIT or ctxtype == ContextTypes.TOOLKIT or ctxtype == ContextTypes.BUILD_ARCHIVE):
                 raise UnsupportedContextException(ctxtype + " must be submitted when a streams install is present.")
 
-
         if ctxtype == ContextTypes.JUPYTER:
+            logger.debug("Selecting the JUPYTER context for submission")
             return _JupyterSubmitter(ctxtype, self.config, self.app_topology)
         elif ctxtype == ContextTypes.REMOTE_BUILD_AND_SUBMIT:
+            logger.debug("Selecting the REMOTE_BUILD_AND_SUBMIT context for submission")
             return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
         elif ctxtype == ContextTypes.DISTRIBUTED:
+            logger.debug("Selecting the DISTRIBUTED context for submission")
             return _DistributedSubmitter(ctxtype, self.config, self.app_topology, self.username, self.password)
         else:
+            logger.debug("Using the BaseSubmitter, and passing the context type through to java.")
             return _BaseSubmitter(ctxtype, self.config, self.app_topology)
 
 
@@ -396,8 +400,7 @@ class UnsupportedContextException(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
 
-@enum.unique
-class ContextTypes(enum.Enum):
+class ContextTypes:
     """
         Types of submission contexts:
 
@@ -430,8 +433,7 @@ class ContextTypes(enum.Enum):
     JUPYTER = 'JUPYTER'
 
 
-@enum.unique
-class ConfigParams(enum.Enum):
+class ConfigParams:
     """
     Configuration options which may be used as keys in the submit's config parameter.
 
