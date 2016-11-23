@@ -31,3 +31,4 @@ samples/java/functional/classes/
 samples/java/functional/functionalsamples.jar
 samples/python/com.ibm.streamsx.topology.pysamples/doc/
 samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/__pycache__/
+/.project
