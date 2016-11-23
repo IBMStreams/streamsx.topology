@@ -47,20 +47,22 @@ MY_OPERATOR::MY_OPERATOR() :
 
       // function_ is an instance of the callable class
       // then when called returns an iterable
-      PyObject *iterSource =
-      streamsx::topology::Splpy::loadFunction("streamsx.spl.runtime",
-             "_splpy_iter_source");   
+     function_ = streamsx::topology::Splpy::callFunction(
+             "streamsx.spl.runtime", "_splpy_iter_source",
+             function_, NULL);   
 
-      PyObject *tc = PyTuple_New(1);
-      PyTuple_SetItem(tc, 0, function_);
-
-      function_ = PyObject_Call(iterSource, tc, NULL);
-
-      Py_DECREF(tc);
-      Py_DECREF(iterSource);
-   
-      pyOutNames_ = streamsx::topology::Splpy::pyAttributeNames(
+     pyOutNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getOutputPortAt(0));
+
+     // Now create the wrapper function that converts
+     // other types returned by the user's function
+     // (e.g. dictionaries) to Python tuples as the
+     // decorated operators only handle tuples to
+     // simplify the generated code.
+     Py_INCREF(pyOutNames_); // callFunction steals the reference
+     function_ = streamsx::topology::Splpy::callFunction(
+             "streamsx.spl.runtime", "_splpy_to_tuples",
+             function_, pyOutNames_);   
    }
 }
 
@@ -87,6 +89,10 @@ void MY_OPERATOR::prepareToShutdown()
     streamsx::topology::flush_PyErrPyOut();
 }
 
+<%
+  my $no_tuples_action = "submit(Punctuation::WindowMarker, 0);";
+%>
+
 void MY_OPERATOR::process(uint32_t idx)
 {
   while(!getPE().getShutdownRequested()) {
@@ -100,17 +106,14 @@ void MY_OPERATOR::process(uint32_t idx)
       PyObject *pyDict = NULL;
 
 @include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
-//      Py_DECREF(pyTuple);
-   
-    }
- 
-    if (output_tuples.size() == 0) {
-        break;
     }
  
     for(int i = 0; i < output_tuples.size();i++)
        submit(output_tuples[i], 0);   
   }
 }
+
+// Create member function that converts Python tuple to SPL tuple
+@include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
 
 <%SPL::CodeGen::implementationEpilogue($model);%>

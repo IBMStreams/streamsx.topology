@@ -125,6 +125,7 @@ Functions to create topologies and streams.
     int8,int16,int32,int64 : int
     uint8,uint16,uint32,uint64 : int
     float32,float64 : float
+    complex32,complex64 : complex
     rstring : str
     ustring : str
     boolean : boolean
@@ -774,30 +775,98 @@ remaining attributes are optional (having a default).
 
 The return from a decorated callable results in submission of SPL tuples on the associated outut port.
 
-A Python function must return `None`, a Python tuple or a list of Python tuples.
+A Python function must return:
+* `None`
+* a Python tuple
+* a Python dictionary
+* a list containing any of the above.
 
+# None
 When `None` is return then no tuple will be submitted to the operator's output port.
 
-When a single Python tuple is returned is is converted to an SPL tuple and submitted to the output port.
-
-When a list of Python tuples is returned, each Python tuple is converted to an SPL tuple and submitted to the output port, in order of the list starting with the first tuple (position 0).
+# Python tuple
+When a Python tuple is returned is is converted to an SPL tuple and submitted to the output port.
 
 The values of a Python tuple are assigned to an output SPL tuple by position, so the first value in the Python tuple is assigned to the first attribute in the SPL tuple.
 
+    # SPL input schema: tuple<int32 x, float64 y>
     # SPL output schema: tuple<int32 x, float64 y, float32 z>
     \@spl.pipe
     def myfunc(a,b):
-       return a,b,a+b
+       return (a,b,a+b)
 
     # The SPL output will be:
-    # x is set to: a
-    # y is set to: b 
-    # z is set to: a+b
+    # All values explictly set by returned Python tuple
+    # based on the x,y values from the input tuple
+    # x is set to: x 
+    # y is set to: y
+    # z is set to: x+y
 
-When a returned tuple has less values than attributes in the SPL output schema the attributes not set by the Python function will be set to their SPL default or copied from the input tuple, depending on the operator type.
+The returned tuple may be *sparse*, any attribute value in the tuple
+that is `None` will be set to their SPL default or copied from the input tuple, depending on the operator kind.
+    
+    # SPL input schema: tuple<int32 x, float64 x>
+    # SPL output schema: tuple<int32 x, float64 y, float32 z>
+    \@spl.pipe
+    def myfunc(a,b):
+       return (a,None,a+b)
+
+    # The SPL output will be:
+    # x is set to: x (explictly set by returned Python tuple)
+    # y is set to: y (set by matching input SPL attribute)
+    # z is set to: x+y
+
+When a returned tuple has less values than attributes in the SPL output schema the attributes not set by the Python function will be set to their SPL default or copied from the input tuple, depending on the operator kind.
+    
+    # SPL input schema: tuple<int32 x, float64 x>
+    # SPL output schema: tuple<int32 x, float64 y, float32 z>
+    \@spl.pipe
+    def myfunc(a,b):
+       return a,
+
+    # The SPL output will be:
+    # x is set to: x (explictly set by returned Python tuple)
+    # y is set to: y (set by matching input SPL attribute)
+    # z is set to: 0 (default int32 value)
 
 When a returned tuple has more values than attributes in the SPL output schema then the additional values are ignored.
 
+    # SPL input schema: tuple<int32 x, float64 x>
+    # SPL output schema: tuple<int32 x, float64 y, float32 z>
+    \@spl.pipe
+    def myfunc(a,b):
+       return (a,b,a+b,a/b)
+
+    # The SPL output will be:
+    # All values explictly set by returned Python tuple
+    # based on the x,y values from the input tuple
+    # x is set to: x
+    # y is set to: y
+    # z is set to: x+y
+    #
+    # The fourth value in the tuple a/b = x/y is ignored.
+
+# Python dictionary
+A Python dictionary is converted to a SPL tuple for submission to
+the associated output port. An SPL attribute is set from the
+dictionary if the dictionary contains a key equal to the attribute
+name. The value is used to set the attribute, unless the attribute is
+`None`.
+
+If the value in the dictionary is `None` or no matching key exists
+then the attribute's value is set fom the input tuple or to its
+default value depending on the operator kind.
+
+Any keys in the dictionary that do not map to SPL attribute names are ignored.
+    
+# Python list
+When a list returned, each value is converted to an SPL tuple and submitted to the output port, in order of the list starting with the first tuple (position 0). If the list contains `None` at an index then no SPL tuple is submitted for that index.
+
+The list must only contain Python tuples, dictionaries or `None`. The list
+can contain a mix of valid values.
+
+The list may be empty resulting in no tuples being submitted.
+ 
 ++ Supported SPL types
 
 A limited set of SPL types are supported.
@@ -807,14 +876,11 @@ A limited set of SPL types are supported.
   * `int8`, `int16`, `int32`, `int64` - maps to Python `int`
   * `uint8`, `uint16`, `uint32`, `uint64` - maps to Python `int`
   * `float32`, `float64` - maps to Python `float`
+  * `complex32`, `complex64` - maps to Python `complex`
   * `rstring`, `ustring` - maps to Python `String` - `rstring` values assume UTF-8 encoding
  * **Collection types**
   * `list<P>` where `P` is one of the supported primitive types. Passed into Python as a list.
   * `map<K,V>` where `K` and `V` are supported primitive types. Passed into Python as a dictionary.
-
-For an input port all the above types are supported.
-
-For an output port only primitive types are supported.
 
 ++ \@spl decorator options
 \@spl decorators support an number of options.
@@ -881,8 +947,9 @@ are less values in the Python tuple than attributes in the SPL
 tuple's schema then the remaining SPL attributes are set to their
 default value.
 
-When the *iterator* completes, a final punctuation mark is submitted
-to the output port and no more tuples are submitted to the output port.
+When the *iterator* completes, a window mark followed by a final mark
+are submitted to the output port and no more tuples are
+submitted to the output port.
 
 # Decorated iterable class
 When a Python *iterable class* is decorated with `@spl.source`
@@ -937,6 +1004,8 @@ If the return value evaluates to true (as defined by Python) then the same tuple
 is submitted to the first (mandatory) output port. If the return value
 evaluates to false then the same tuple is submitted to the second (optional)
 output port if it exists otherwise it is discarded.  
+
+A filter operator is punctuation perserving.
 
 # Decorated callable class
 
@@ -993,6 +1062,8 @@ If the class has instance fields then they are the state of the
 operator and are private to each invocation of the operator and maintained
 across calls to its `__call__` function.
 
+A map operator is punctuation perserving.
+
 # Decorated function
 
 When a Python *function* is decorated with `@spl.map`
@@ -1023,9 +1094,12 @@ When a Python *callable class* is decorated with `@spl.for_each`
 a stateful SPL operator is created with a single input port
 and no output ports.  For each input tuple the `__call__` function is called
 passing the tuple.
+
 If the Python class has instance fields then they are the state of the
 operator and are private to each invocation of the operator and maintained
 across calls to its `__call__` function.
+
+A for_each operator is oblivious to punctuation.
 
 # Function
 
@@ -1045,6 +1119,8 @@ When the function returns a tuple containing less values than attributes
 in the SPL output schema then the remaining attributes are copied from
 the input tuple if a matching attribute is found, otherwise they are set
 to the SPL default value.
+
+A pipe operator is punctuation perserving.
 
 `@spl.map` is preferred to `@spl.pipe`.
 
@@ -1077,6 +1153,8 @@ If the Python function is decorated with `@spl.sink`
 then the operator is a sink operator, with a single
 input port and no output ports.
 For each input tuple the function is called.
+
+A sink operator is oblivious to punctuation.
 
 `@spl.for_each` is preferred to `@spl.sink`.
 

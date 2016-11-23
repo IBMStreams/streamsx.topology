@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.test.splpy;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -12,12 +13,15 @@ import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.math.complex.Complex;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,6 +30,7 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.meta.TupleType;
+import com.ibm.streams.operator.types.RString;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
@@ -164,24 +169,8 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         }, TEST_SCHEMA_SF);        
     }
     
-    private static final AtomicBoolean extractedTestTookit = new AtomicBoolean();
-    static void addTestToolkit(TopologyElement te) throws Exception {
-        // Need to run extract to ensure the operators match the python
-        // version we are testing.
-    	
+    static void addTestToolkit(TopologyElement te) throws Exception {    	
         File toolkitRoot = new File(getTestRoot(), "python/spl/testtkpy");
-        
-        // Only need to do this once.
-		if (!extractedTestTookit.getAndSet(true)) {
-			File lf = new File(toolkitRoot, ".lock");
-			try (RandomAccessFile lff = new RandomAccessFile(lf, "rw");
-					FileChannel channel = lff.getChannel();
-					FileLock lock = channel.lock();
-			) {
-				int rc = PythonExtractTest.extract(toolkitRoot, true);
-				assertEquals(0, rc);
-			}
-		}  
         
         SPL.addToolkit(te, toolkitRoot);
     }
@@ -306,5 +295,279 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(count, result.size());
         for (int i = 0; i < count; i++)
             assertEquals(i, result.get(i).getInt("seq"));
+    }
+    
+    /**
+     * Test that specific values in Python
+     * make their way into SPL correctly
+     * when returning as a tuple.
+     * @throws Exception
+     */
+    @Test
+    public void testValues() throws Exception {
+        Topology topology = new Topology("testValues");
+        
+        addTestToolkit(topology);
+        
+        SPLStream pysrc = SPL.invokeSource(topology,
+        		"com.ibm.streamsx.topology.pytest.pysource::SpecificValues",
+        		null, ALL_PYTHON_TYPES_SCHEMA);
+        
+        StreamSchema sparseSchema = Type.Factory.getStreamSchema("tuple<int32 a, int32 b, int32 c, int32 d, int32 e>");
+        
+              
+        Tester tester = topology.getTester();
+        Condition<Long> expectedCount = tester.tupleCount(pysrc, 1);
+        Condition<List<Tuple>> outTuples = tester.tupleContents(pysrc);
+        
+        SPLStream pysparse = SPL.invokeSource(topology,
+        		"com.ibm.streamsx.topology.pytest.pysource::SparseTuple",
+        		null, sparseSchema);
+        SPLStream pysparsemap = SPL.invokeOperator("com.ibm.streamsx.topology.pytest.pymap::SparseTupleMap",
+        		pysparse, sparseSchema.extend("int32", "f"), null);
+
+        Condition<Long> expectedCountSparse = tester.tupleCount(pysparse, 1);
+        Condition<List<Tuple>> sparseTupleOut = tester.tupleContents(pysparse);
+        
+        Condition<Long> expectedCountSparseMap = tester.tupleCount(pysparsemap, 1);
+        Condition<List<Tuple>> sparseTupleMapOut = tester.tupleContents(pysparsemap);
+        
+        // getConfig().put(ContextProperties.TRACING_LEVEL, TraceLevel.DEBUG);
+                
+        complete(tester, expectedCount.and(expectedCountSparse, expectedCountSparseMap), 20, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.valid());
+        assertTrue(expectedCountSparse.valid());
+        assertTrue(expectedCountSparseMap.valid());
+        
+        Tuple r1 = outTuples.getResult().get(0);
+        
+        assertTrue(r1.getBoolean("b"));
+        
+        // signed integers
+        // 23, -2525, 3252352, -2624565653,
+        assertEquals(r1.getByte("i8"), 23);
+        assertEquals(r1.getShort("i16"), -2525);
+        assertEquals(r1.getInt("i32"), 3252352);
+        assertEquals(r1.getLong("i64"), -2624565653L);
+        
+        // unsigned int
+        // 72, 6873, 43665588, 357568872
+        assertEquals(r1.getString("u8"), "72");
+        assertEquals(r1.getString("u16"), "6873");
+        assertEquals(r1.getString("u32"), "43665588");
+        assertEquals(r1.getString("u64"), "357568872");
+        
+        // floats
+        // 4367.34, -87657525334.22
+        assertEquals(r1.getFloat("f32"), 4367.34f, 0.1);
+        assertEquals(r1.getDouble("f64"), -87657525334.22d, 0.1);
+        
+        // rstring, Unicode data
+        assertEquals("⡍⠔⠙⠖ ⡊ ⠙⠕⠝⠰⠞ ⠍⠑⠁⠝ ⠞⠕ ⠎⠁⠹ ⠹⠁⠞ ⡊ ⠅⠝⠪⠂ ⠕⠋ ⠍⠹", r1.getString("r"));
+        
+        // complex(-23.0, 325.38), complex(-35346.234, 952524.93)
+        assertEquals(((Complex) r1.getObject("c32")).getReal(), -23.0, 0.1);
+        assertEquals(((Complex) r1.getObject("c32")).getImaginary(), 325.38, 0.1);
+        
+        assertEquals(((Complex) r1.getObject("c64")).getReal(), -35346.234, 0.1);
+        assertEquals(((Complex) r1.getObject("c64")).getImaginary(), 952524.93, 0.1);
+        
+        // ["a", "Streams!", "2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm"]
+        {
+        @SuppressWarnings("unchecked")
+		List<RString> lr = (List<RString>) r1.getObject("lr");
+        assertEquals(3, lr.size());
+        assertEquals("a", lr.get(0).getString());
+        assertEquals("Streams!", lr.get(1).getString());
+        assertEquals("2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm", lr.get(2).getString());
+        }
+        
+        //  [345,-4578],
+        {
+        int[] li32 = (int[]) r1.getObject("li32");
+        assertEquals(2, li32.length);
+        assertEquals(345, li32[0]);
+        assertEquals(-4578, li32[1]);
+        }
+
+        // [9983, -4647787587, 0]
+        {
+        long[] li64 = (long[]) r1.getObject("li64");
+        assertEquals(3, li64.length);
+        assertEquals(9983L, li64[0]);
+        assertEquals(-4647787587L, li64[1]);
+        assertEquals(0L, li64[2]);
+        }
+        
+        {
+        @SuppressWarnings("unchecked")
+		List<Integer> lui32 = (List<Integer>) r1.getObject("lui32");
+        assertEquals(1, lui32.size());
+        assertEquals("87346", Integer.toUnsignedString(lui32.get(0)));
+        }
+        
+        {
+        @SuppressWarnings("unchecked")
+		List<Long> lui64 = (List<Long>) r1.getObject("lui64");
+        assertEquals(2, lui64.size());
+        assertEquals("45433674", Long.toUnsignedString(lui64.get(0)));
+        assertEquals("41876984848", Long.toUnsignedString(lui64.get(1)));
+        }
+        
+        // 4.269986E+05, -8.072285E+02 -6.917091E-08 7.735085E8
+        {
+            float[] li32 = (float[]) r1.getObject("lf32");
+            assertEquals(4, li32.length);
+            assertEquals(4.269986E+05f, li32[0], 0.1);
+            assertEquals(-8.072285E+02f, li32[1], 0.1);
+            assertEquals(-6.917091E-08f, li32[2], 0.1);
+            assertEquals(7.735085E8f, li32[3], 0.1);
+        }
+        
+        {
+            double[] lf64 = (double[]) r1.getObject("lf64");
+            assertEquals(1, lf64.length);
+            assertEquals(765.46477e19, lf64[0], 0.1);
+        }
+        
+        {
+            boolean[] lb = (boolean[]) r1.getObject("lb");
+            assertEquals(3, lb.length);
+            assertTrue(lb[0]);
+            assertFalse(lb[1]);
+            assertTrue(lb[2]);
+        }
+        
+        assertTrue(r1.getMap("mi32r").isEmpty());
+        assertTrue(r1.getMap("mru32").isEmpty());
+        
+        {
+            Map<?,?> mri32  = r1.getMap("mri32");
+            assertEquals(2, mri32.size());
+            System.out.println("mri32:"  + mri32);
+            assertTrue(mri32.containsKey(new RString("abc")));
+            assertTrue(mri32.containsKey(new RString("многоязычных")));
+            
+            assertEquals(35320, mri32.get(new RString("abc")));
+            assertEquals(-236325, mri32.get(new RString("многоязычных")));
+        }
+        
+        assertTrue(r1.getMap("mu32r").isEmpty());
+        assertTrue(r1.getMap("mi32i32").isEmpty());
+        assertTrue(r1.getMap("mu32u32").isEmpty());
+        assertTrue(r1.getMap("mrr").isEmpty());
+        assertTrue(r1.getMap("mf64f64").isEmpty());
+        assertTrue(r1.getMap("mf64i32").isEmpty());
+        assertTrue(r1.getMap("mf64u32").isEmpty());
+        assertTrue(r1.getMap("mf64r").isEmpty());
+        assertTrue(r1.getMap("mrf64").isEmpty());
+        
+        // Sparse tuple handling - source
+        assertEquals(1, sparseTupleOut.getResult().size());
+        Tuple st = sparseTupleOut.getResult().get(0);
+        assertEquals(37, st.getInt("a")); // set by op
+        assertEquals(0, st.getInt("b")); // default as None in tuple
+        assertEquals(0, st.getInt("c")); // default as None in tuple
+        assertEquals(-46, st.getInt("d")); // set by op
+        assertEquals(0, st.getInt("e")); // default as no value (short tuple)
+        
+        // Sparse tuple handling - map
+        assertEquals(1, sparseTupleMapOut.getResult().size());
+        Tuple stm = sparseTupleMapOut.getResult().get(0);
+        assertEquals(37+81, stm.getInt("a")); // set by op
+        assertEquals(23, stm.getInt("b")); // set by op
+        assertEquals(0, stm.getInt("c")); // default as None in tuple
+        assertEquals(-46, stm.getInt("d")); // default to matching input
+        assertEquals(34, stm.getInt("e")); // set by op
+        assertEquals(0, stm.getInt("f")); // default as no value (short tuple)
+    }
+    /**
+     * Test that specific values in Python
+     * make their way into SPL correctly
+     * when returning as a tuple.
+     * @throws Exception
+     */
+    @Test
+    public void testReturnDict() throws Exception {
+        Topology topology = new Topology("testReturnDict");
+        
+        addTestToolkit(topology);
+               
+        StreamSchema schema = Type.Factory.getStreamSchema("tuple<int32 a, int32 b, int32 c, int32 d, int32 e>");
+        
+        SPLStream pyds = SPL.invokeSource(topology,
+        		"com.ibm.streamsx.topology.pytest.pysource::DictTuple",
+        		null, schema);
+        
+        SPLStream pydm = SPL.invokeOperator("com.ibm.streamsx.topology.pytest.pymap::DictTupleMap",
+        		pyds, schema, null);
+            
+        Tester tester = topology.getTester();
+        Condition<?> expectedCount = tester.tupleCount(pyds, 4).and(tester.tupleCount(pydm, 4));
+        Condition<List<Tuple>> outTuples = tester.tupleContents(pyds);
+        Condition<List<Tuple>> outTuplesMap = tester.tupleContents(pydm);
+                      
+        complete(tester, expectedCount, 20, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.valid());  
+        
+        // Dict tuple handling - source
+        Tuple r1 = outTuples.getResult().get(0);
+        assertEquals(3245, r1.getInt("a"));
+        assertEquals(0, r1.getInt("b"));
+        assertEquals(93, r1.getInt("c"));
+        assertEquals(0, r1.getInt("d"));
+        assertEquals(0, r1.getInt("e"));
+        
+        Tuple r2 = outTuples.getResult().get(1);
+        assertEquals(831, r2.getInt("a"));
+        assertEquals(421, r2.getInt("b"));
+        assertEquals(0, r2.getInt("c"));
+        assertEquals(-4455, r2.getInt("d"));
+        assertEquals(0, r2.getInt("e"));
+        
+        Tuple r3 = outTuples.getResult().get(2);
+        assertEquals(1, r3.getInt("a"));
+        assertEquals(2, r3.getInt("b"));
+        assertEquals(3, r3.getInt("c"));
+        assertEquals(4, r3.getInt("d"));
+        assertEquals(5, r3.getInt("e"));
+        
+        Tuple r4 = outTuples.getResult().get(3);
+        assertEquals(0, r4.getInt("a"));
+        assertEquals(-32, r4.getInt("b"));
+        assertEquals(0, r4.getInt("c"));
+        assertEquals(0, r4.getInt("d"));
+        assertEquals(-64, r4.getInt("e"));
+        
+        // Now the map
+        Tuple m1 = outTuplesMap.getResult().get(0);
+        assertEquals(3245, m1.getInt("a"));
+        assertEquals(120, m1.getInt("b"));
+        assertEquals(93, m1.getInt("c"));
+        assertEquals(0, m1.getInt("d"));
+        assertEquals(0, m1.getInt("e"));
+        
+        Tuple m2 = outTuplesMap.getResult().get(1);
+        assertEquals(1, m2.getInt("a"));
+        assertEquals(2, m2.getInt("b"));
+        assertEquals(3, m2.getInt("c"));
+        assertEquals(4, m2.getInt("d"));
+        assertEquals(5, m2.getInt("e"));
+        
+        Tuple m3 = outTuplesMap.getResult().get(2);
+        assertEquals(1, m3.getInt("a"));
+        assertEquals(2, m3.getInt("b"));
+        assertEquals(23, m3.getInt("c"));
+        assertEquals(24, m3.getInt("d"));
+        assertEquals(25, m3.getInt("e"));
+        
+        Tuple m4 = outTuplesMap.getResult().get(3);
+        assertEquals(0, m4.getInt("a"));
+        assertEquals(-39, m4.getInt("b"));
+        assertEquals(0, m4.getInt("c"));
+        assertEquals(0, m4.getInt("d"));
+        assertEquals(-64, m4.getInt("e"));
     }
 }

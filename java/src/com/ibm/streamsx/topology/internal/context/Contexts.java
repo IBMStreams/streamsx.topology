@@ -45,6 +45,9 @@ public class Contexts {
         else if (rawServices instanceof String) {
         	return JSONObject.parse((String)rawServices);
         }
+	else if (rawServices instanceof JSONObject) {
+	    return (JSONObject)rawServices;
+        }
         else {
             throw new IllegalArgumentException();
         }       

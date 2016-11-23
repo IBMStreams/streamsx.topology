@@ -1,6 +1,7 @@
    // Calls the Python function and
    // converts the returned value into
-   // Tuples and submits them.
+   // SPL Tuples and submits them.
+   // Returns if the Python function returns None.
 
     PyObject * pyReturnVar = PyObject_Call(function_, pyTuple, pyDict);
 
@@ -17,6 +18,7 @@
 
     if (pyReturnVar == Py_None) {
          Py_DECREF(pyReturnVar);
+         <%=$no_tuples_action%>
          return;
     }
 if (!PyTuple_Check(pyReturnVar) && !PyList_Check(pyReturnVar)) {
@@ -24,208 +26,33 @@ if (!PyTuple_Check(pyReturnVar) && !PyList_Check(pyReturnVar)) {
         throw;
     }
 
+<%
+  my $ituplearg = "";
+  if (defined $iport) {
+     $ituplearg = ", " . $iport->getCppTupleName();
+  }
+%>
+
 if(PyTuple_Check(pyReturnVar)){    
   OPort0Type otuple;    
-  Py_ssize_t frs = PyTuple_Size(pyReturnVar); 
-    
-<%
-  for (my $ai = 0; $ai < $oport->getNumberOfAttributes(); ++$ai) {
-    
-    my $attribute = $oport->getAttributeAt($ai);
-    my $name = $attribute->getName();
-    my $atype = $attribute->getSPLType();
-    
-    my $key_type = "";
-    my $value_type = "";
-    my $element_type = "";
-
-
-# For some reason, in the code generation API, getSPLType() does not
-# return a type, but string. As such, we need to use regex to extract
-# the list or map types.
-  
-    if($atype =~ m/^map.*/){
-      $atype =~ /.*<(.*),.*/;
-      $key_type = $1;
-      $atype =~ /.*,(.*)>/;
-      $value_type = $1;
-      $atype = "map";
-    }
-
-    if($atype =~ m/^list.*/){
-      $atype =~ /.*<(.*)>.*/;
-      $element_type = $1;
-      $atype = "list";
-    }
-
-%>
-    if (<%=$ai%> < frs) {
-         // Value from the Python function
-         PyObject *pyAttrValue = PyTuple_GetItem(pyReturnVar, <%=$ai%>);
-<%
-
-    my $ce = "__ERROR__";
-	     if ($atype eq 'list') {
-		 my $assign_string = pythonToCppPrimitiveConversion("PyList_GetItem(pyAttrValue, i)", $element_type);
-		 %>
-		     SPL::list< <%=$element_type%> > li = SPL::list< <%=$element_type%> >(PyList_Size(pyAttrValue));
-		 for(int i = 0; i < li.size(); i++){
-		     li[i] = <%=$assign_string%>;
-		 }
-		 <%
-		     $ce = "li";
-	     }
-	     
-       elsif ($atype eq 'map') {
-		 my $key_assign_string = pythonToCppPrimitiveConversion("k", $key_type);
-		 my $value_assign_string = pythonToCppPrimitiveConversion("v", $value_type);
-		 %>
-		 SPL::map< <%=$key_type%>, <%=$value_type%> > ma = SPL::map< <%=$key_type%>, <%=$value_type%> >();
-		 PyObject *k,*v;
-		 Py_ssize_t pos = 0;
-		 while(PyDict_Next(pyAttrValue, &pos, &k, &v)){
-		     ma[ <%=$key_assign_string%> ] = <%=$value_assign_string%>;
-		 }
-		 <%
-		     $ce = "ma";
-	     }
-	     else {
-		  $ce = pythonToCppPrimitiveConversion("pyAttrValue", $atype);		     
-	     }
-	     
-	     
-%>
-      otuple.set_<%=$name%>(<%=$ce%>);
-
-    } else {
-      // value from the input attribute
-<%
-    if ($model->getNumberOfInputPorts() != 0) {
-    # Only copy attributes across if they match on name and type
-    my $matchInputAttr = $iport->getAttributeByName($name);
-    if (defined $matchInputAttr) {
-       if ($matchInputAttr->getSPLType() eq $attribute->getSPLType()) {
-%>
-      otuple.set_<%=$name%>(<%=$ituple%>.get_<%=$name%>());
-<%
-      }
-    }
-   }
-%>
-         
-         
-    }
-<%
-}
- %>
+  fromPythonToPort<%=$oport->getIndex()%>(pyReturnVar, otuple <%=$ituplearg%>);
   output_tuples.push_back(otuple);
 }
 
 /* Logic for if a list of tuples is returned */
 
  else if(PyList_Check(pyReturnVar)){
-   for(int k = 0; k < PyList_Size(pyReturnVar); k++){    
-     OPort0Type otuple;
-     PyObject *tuple = PyList_GET_ITEM(pyReturnVar, k);
-     Py_ssize_t frs = PyTuple_Size(tuple); 
-     <%
-     for (my $ai = 0; $ai < $oport->getNumberOfAttributes(); ++$ai) {
-    
-	 my $attribute = $oport->getAttributeAt($ai);
-	 my $name = $attribute->getName();
-	 my $atype = $attribute->getSPLType();
-
-	 my $key_type = "DEFAULT";
-	 my $value_type = "DEFAULT";
-	 my $element_type = "DEFAULT";
-	 
-
-# For some reason, in the code generation API, getSPLType() does not
-# return a type, but string. As such, we need to use regex to extract
-# the list or map types.
-
-	 if($atype =~ m/^map/){
-	     $atype =~ /.*<(.*),/;
-	     $key_type = $1;
-	     $atype =~ /.*,(.*)>/;
-	     $value_type = $1;
-	     $atype = "map";
-	 }
-	 
-	 if($atype =~ m/^list/){
-	     $atype =~ /.*<(.*)>/;
-	     $element_type = $1;
-	     $atype = "list";
-	 }
-	 
-	 
-	 
-    %>
-    if (<%=$ai%> < frs) {
-         // Value from the Python function
-         // Can use GET_ITEM as we have checked the index
-         PyObject *pyAttrValue = PyTuple_GET_ITEM(tuple, <%=$ai%>);
-         <%
-
-         # TODO: do error checking for the conversions. E.g., 
-         # char * str = PyUnicode_AsUTF8(pyAttrValue)
-
-	 my $ce = "__ERROR__";
-	     if ($atype eq 'list') {
-		 my $assign_string = pythonToCppPrimitiveConversion("PyList_GetItem(pyAttrValue, i)", $element_type);
-		 %>
-		     SPL::list< <%=$element_type%> > li = SPL::list< <%=$element_type%> >(PyList_Size(pyAttrValue));
-		 for(int i = 0; i < li.size(); i++){
-		     li[i] = <%=$assign_string%>;
-		 }
-		 <%
-		     $ce = "li";
-	     }
-	     
-	     elsif($atype eq 'map') {
-		 my $key_assign_string = pythonToCppPrimitiveConversion("k", $key_type);
-		 my $value_assign_string = pythonToCppPrimitiveConversion("v", $value_type);
-		 %>
-		 SPL::map< <%=$key_type%>, <%=$value_type%> > ma = SPL::map< <%=$key_type%>, <%=$value_type%> >();
-		 PyObject *k,*v;
-		 Py_ssize_t pos = 0;
-		 while(PyDict_Next(pyAttrValue, &pos, &k, &v)){
-		     ma[ <%=$key_assign_string%> ] = <%=$value_assign_string%>;
-		 }
-		 <%
-		     $ce = "ma";
-	     }
-	     else {
-		  $ce = pythonToCppPrimitiveConversion("pyAttrValue", $atype);		     
-	     }
-         %>
-	 otuple.set_<%=$name%>(<%=$ce%>);
-	 
-     } else {
-	 // value from the input attribute
-	  <%
-          if ($model->getNumberOfInputPorts() != 0) {
-	  # Only copy attributes across if they match on name and type
-	  my $matchInputAttr = $iport->getAttributeByName($name);
-	  if (defined $matchInputAttr) {
-	      if ($matchInputAttr->getSPLType() eq $attribute->getSPLType()) {
-	  %>
-	  otuple.set_<%=$name%>(<%=$ituple%>.get_<%=$name%>());
-	  <%
-	      }
-	  }
-          }
-	  %>                  
+   Py_ssize_t tc = PyList_Size(pyReturnVar);
+   for(int k = 0; k < tc; k++){    
+     PyObject *ltuple = PyList_GET_ITEM(pyReturnVar, k);
+     if (ltuple == Py_None) continue;
+     if(!PyTuple_Check(ltuple)){    
      }
-     <%
-}
- %>
+     
+     OPort0Type otuple;
+     fromPythonToPort<%=$oport->getIndex()%>(ltuple, otuple <%=$ituplearg%>);
      output_tuples.push_back(otuple);
    }
-   
 }
 
-
-
-    
-    Py_DECREF(pyReturnVar);
+Py_DECREF(pyReturnVar);

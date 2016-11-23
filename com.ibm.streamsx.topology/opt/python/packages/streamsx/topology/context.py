@@ -3,138 +3,360 @@ from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 try:
-  from future import standard_library
-  standard_library.install_aliases()
-except (ImportError,NameError):
-  # nothing to do here
-  pass 
+    from future import standard_library
+    standard_library.install_aliases()
+except (ImportError, NameError):
+    # nothing to do here
+    pass
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015
 
+from streamsx.topology import logging_utils
+import logging
 import tempfile
 import os
 import os.path
 import json
 import subprocess
 import threading
-import sys, traceback
+import sys
+import enum
+
 from platform import python_version
 
-#
-# Utilities
-#
+logging_utils.initialize_logging()
+logger = logging.getLogger('streamsx.topology.py_submit')
 
-def _print_exception(msg):
-    sys.stderr.write(msg + "\n")
-    exc_type, exc_value, exc_traceback = sys.exc_info()
-    traceback.print_tb(exc_traceback, limit=1, file=sys.stderr)
-    traceback.print_exception(exc_type, exc_value, exc_traceback,
-                              limit=2, file=sys.stderr)
-
-def _delete_json(fn):
-    if os.path.isfile(fn):
-        os.remove(fn)
-
-    
 #
 # Submission of a python graph using the Java Application API
-# The JAA is reused to have a single set of code that creates
+# The JAA is reused to have a single set of code_createJSONFile that creates
 # SPL, the toolkit, the bundle and submits it to the relevant
 # environment
 #
-def submit(ctxtype, graph, config = None, username = None, password = None, rest_api_url = None):
+def submit(ctxtype, graph, config=None, username=None, password=None, log_level=logging.INFO):
     """
     Submits a topology with the specified context type.
     
     Args:
         ctxtype (string): context type.  Values include:
         * DISTRIBUTED - the topology is submitted to a Streams instance.
-          The bundle is submitted using `streamtool` which must be setup to submit without requiring authentication input.
+          The bundle is submitted using `streamtool` which must be setup to submit without requiring authentication
+          input. Additionally, a username and password may optionally be provided to enable retrieving data from remote
+          views.
         * STANDALONE - the topology is executed directly as an Streams standalone application.
           The standalone execution is spawned as a separate process
         * BUNDLE - execution of the topology produces an SPL application bundle
           (.sab file) that can be submitted to an IBM Streams instance as a distributed application.
         * JUPYTER - the topology is run in standalone mode, and context.submit returns a stdout streams of bytes which 
           can be read from to visualize the output of the application.
-        graph: a Topology object or Topology.graph object
+        * BUILD_ARCHIVE - Creates a Bluemix-compatible build archive.
+          execution of the topology produces a build archive, which can be submitted to a streaming
+          analytics Bluemix remote build service.
+        * REMOTE_BUILD_AND_SUBMIT - the application is submitted to and built on a Bluemix streaming analytics service.
+          It is then submitted as a job.
+        graph: a Topology object.
+        config (dict): a configuration object containing job configurations and/or submission information. Keys include:
+        * 'topology.service.vcap' - a json representation of a VCAP object.
+        * 'topology.service.name' - the name of the streaming analytics service for submission.
+        username (string): an optional SWS username. Needed for retrieving remote view data.
+        password (string): an optional SWS password. Used in conjunction with the username, and needed for retrieving
+        remote view data.
+        log_level: The maximum logging level for log output.
         
     Returns:
         An output stream of bytes if submitting with JUPYTER, otherwise returns None.
     """    
-    # path to python binary
-    pythonbin = sys.executable
-    pythonreal = os.path.realpath(pythonbin)
-    pythondir = os.path.dirname(pythonbin) 
-    pythonfile = os.path.basename(pythonbin)
-    pythonrealfile = os.path.basename(pythonreal)
-    pythonconfig = pythondir+"/"+pythonfile+"-config"
-    pythonrealconfig = os.path.realpath(pythondir+"/"+pythonrealfile+"-config")
-    pythonversion = python_version()
-
-    if config is None:
-        config = {}
-
-    # place the fullpaths to the python binary that is running and 
-    # the python-config that will used into the config
-    config["pythonversion"] = {}
-    config["pythonversion"]["version"] = pythonversion
-    config["pythonversion"]["binaries"] = []
-    bf = {}
-    bf["python"] = pythonreal
-    bf["pythonconfig"] = pythonrealconfig
-    config["pythonversion"]["binaries"].append(bf)
-
-    # Allows a graph or topology to be passed
-    graph = graph.graph
-
-    # deserialize vcap config if present and streams is unset
-    streams_install = os.environ.get('STREAMS_INSTALL')
-    if 'topology.service.vcap' in config and streams_install is None:
-        config['topology.service.vcap'] = json.loads(config['topology.service.vcap'])
-
-    fj = _createFullJSON(graph, config)
-    fn = _createJSONFile(fj)
-    # Create connection to SWS
-    if username is not None and password is not None:
-        rc = None
-        if rest_api_url is None:
-            try:
-                process = subprocess.Popen(['streamtool', 'geturl', '--api'],
-                                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                rest_api_url = process.stdout.readline().strip().decode('utf-8')
-            except:
-                _print_exception("Error getting SWS rest api url ")               
-                raise
-
-        for view in graph.get_views():
-            view.set_streams_context_config({'username': username, 'password': password, 'rest_api_url': rest_api_url})
+    logger.setLevel(log_level)
+    context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
     try:
-        return _submitUsingJava(ctxtype, fn)
+        context_submitter.submit()
     except:
-        _print_exception("Error submitting with java")
-        _delete_json(fn)
-        raise
+        logger.exception("Error while submitting application.")
 
-def _createFullJSON(graph, config):
-    fj = {}
-    fj["deploy"] = config
-    fj["graph"] = graph.generateSPLGraph()
-    return fj
-   
 
-def _createJSONFile(fj) :
-    if sys.hexversion < 0x03000000:
-      tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", prefix="splpytmp", delete=False)
-    else:
-      tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", encoding="UTF-8", prefix="splpytmp", delete=False)
-    tf.write(json.dumps(fj, sort_keys=True, indent=2, separators=(',', ': ')))
-    tf.close()
-    return tf.name
-    
+class _BaseSubmitter:
+    """
+    A submitter which handles submit operations common across all submitter types..
+    """
+    def __init__(self, ctxtype, config, app_topology):
+        self.ctxtype = ctxtype
+        self.config = config
+        self.app_topology = app_topology
+
+        # encode the relevant python version information into the config
+        self._do_pyversion_initialization()
+
+        # Create the json file containing the representation of the application
+        try:
+            self.fn = self._create_json_file(self._create_full_json())
+        except Exception:
+            logger.exception("Error generating SPL and creating JSON file.")
+            raise
+
+    def submit(self):
+        tk_root = self._get_toolkit_root()
+
+        cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
+
+        streams_install = os.environ.get('STREAMS_INSTALL')
+        # If there is no streams install, get java from JAVA_HOME and use the remote contexts.
+        if streams_install is None:
+            java_home = os.environ.get('JAVA_HOME')
+            if java_home is None:
+                raise ValueError("JAVA_HOME not found. Please set the JAVA_HOME system variable")
+
+            jvm = os.path.join(java_home, "bin", "java")
+            submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
+        # Otherwise, use the Java version from the streams install
+        else:
+            jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
+            submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
+            cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
+
+        args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
+        logger.info("Generating SPL and submitting application.")
+        process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+        try:
+            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
+            stderr_thread.daemon = True
+            stderr_thread.start()
+
+            stdout_thread = threading.Thread(target=_print_process_stdout, args=([process]))
+            stdout_thread.daemon = True
+            stdout_thread.start()
+            process.wait()
+            return None
+
+        except:
+            logger.exception("Error starting java subprocess for submission")
+            raise
+
+    def _do_pyversion_initialization(self):
+        # path to python binary
+        pythonbin = sys.executable
+        pythonreal = os.path.realpath(pythonbin)
+        pythondir = os.path.dirname(pythonbin)
+        pythonrealfile = os.path.basename(pythonreal)
+        pythonrealconfig = os.path.realpath(pythondir + "/" + pythonrealfile + "-config")
+        pythonversion = python_version()
+
+        # place the fullpaths to the python binary that is running and
+        # the python-config that will used into the config
+        self.config["pythonversion"] = {}
+        self.config["pythonversion"]["version"] = pythonversion
+        self.config["pythonversion"]["binaries"] = []
+        bf = dict()
+        bf["python"] = pythonreal
+        bf["pythonconfig"] = pythonrealconfig
+        self.config["pythonversion"]["binaries"].append(bf)
+
+    def _create_full_json(self):
+        fj = dict()
+        fj["deploy"] = self.config
+        fj["graph"] = self.app_topology.generateSPLGraph()
+        return fj
+
+    def _create_json_file(self, fj):
+        if sys.hexversion < 0x03000000:
+            tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", prefix="splpytmp", delete=False)
+        else:
+            tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", encoding="UTF-8", prefix="splpytmp",
+                                             delete=False)
+        tf.write(json.dumps(fj, sort_keys=True, indent=2, separators=(',', ': ')))
+        tf.close()
+        return tf.name
+
+
+    # There are two modes for execution.
+    #
+    # Pypi (Python focused)
+    #  Pypi (pip install) package includes the SPL toolkit as
+    #      streamsx/.toolkit/com.ibm.streamsx.topology
+    #      However the streamsx Python packages have been moved out
+    #      of the toolkit's (opt/python/package) compared
+    #      to the original toolkit layout. They are moved to the
+    #      top level of the pypi package.
+    #
+    # SPL Toolkit (SPL focused):
+    #   Streamsx Python packages are executed from opt/python/packages
+    #
+    # This function determines the root of the SPL toolkit based
+    # upon the existance of the '.toolkit' directory.
+    #
+    @staticmethod
+    def _get_toolkit_root():
+        # Directory of this file (streamsx/topology)
+        dir = os.path.dirname(os.path.abspath(__file__))
+
+        # This is streamsx
+        dir = os.path.dirname(dir)
+
+        # See if .toolkit exists, if so executing from
+        # a pip install
+        tk_root = os.path.join(dir, '.toolkit', 'com.ibm.streamsx.topology')
+        if os.path.isdir(tk_root):
+            return tk_root
+
+        # Else dir is tk/opt/python/packages/streamsx
+
+        dir = os.path.dirname(dir)
+        dir = os.path.dirname(dir)
+        dir = os.path.dirname(dir)
+        tk_root = os.path.dirname(dir)
+        return tk_root
+
+
+
+class _JupyterSubmitter(_BaseSubmitter):
+    def submit(self):
+        tk_root = self._get_toolkit_root()
+
+        cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
+
+        streams_install = os.environ.get('STREAMS_INSTALL')
+        # If there is no streams install, get java from JAVA_HOME and use the remote contexts.
+        if streams_install is None:
+            java_home = os.environ.get('JAVA_HOME')
+            if java_home is None:
+                raise ValueError("JAVA_HOME not found. Please set the JAVA_HOME system variable")
+
+            jvm = os.path.join(java_home, "bin", "java")
+            submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
+        # Otherwise, use the Java version from the streams install
+        else:
+            jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
+            submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
+            cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
+
+        args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
+        process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+        try:
+            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
+            stderr_thread.daemon = True
+            stderr_thread.start()
+
+            return process.stdout
+        except:
+            logger.exception("Error starting java subprocess for submission")
+            raise
+
+
+class _RemoteBuildSubmitter(_BaseSubmitter):
+    """
+    A submitter which retrieves the SWS REST API URL and then submits the application to be built and submitted
+    on BlueMix within a Streaming Analytics service.
+    """
+    def __init__(self, ctxtype, config, app_topology):
+        _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
+
+        # Get the username, password, and rest API URL
+        services = config[ConfigParams.VCAP_INFO]['streaming-analytics']
+        creds = None
+        for service in services:
+            if service['name'] == config[ConfigParams.VCAP_NAME]:
+                creds = service['credentials']
+                break
+        if creds is None:
+            raise ValueError(config['topology.service.name'] + " service was not found in the supplied VCAP")
+        username = creds['userid']
+        password = creds['password']
+
+        # Obtain REST only when needed. Otherwise, submitting "Hello World" without requests fails.
+        try:
+            import requests
+        except (ImportError, NameError):
+            logger.exception('Unable to import the optional "Requests" module. This is needed when performing'
+                             ' a remote build or retrieving view data.')
+            raise
+
+        # Obtain the streams SWS REST URL
+        resources_url = creds['rest_url'] + creds['resources_path']
+        #print("Rest host is ", creds['rest_url'], " resources_url is ", resources_url)
+        try:
+            response = requests.get(resources_url, auth=(username, password)).json()
+        except:
+            logger.exception("Error while querying url: " + resources_url)
+            raise
+
+        rest_api_url = response['streams_rest_url'] + '/resources'
+
+        # Give each view in the app the necessary information to connect to SWS.
+        for view in app_topology.get_views():
+            view.set_streams_context_config(
+                {'username': username, 'password': password, 'rest_api_url': rest_api_url})
+
+
+class _DistributedSubmitter(_BaseSubmitter):
+    """
+    A submitter which retrieves the SWS REST API URL and then submits the application to be built and submitted
+    on BlueMix within a Streaming Analytics service.
+    """
+    def __init__(self, ctxtype, config, app_topology, username, password):
+        _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
+
+        # If a username or password isn't supplied, don't attempt to retrieve view data.
+        if username is None or password is None:
+            return
+        try:
+            process = subprocess.Popen(['streamtool', 'geturl', '--api'],
+                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            rest_api_url = process.stdout.readline().strip().decode('utf-8')
+        except:
+            logger.exception("Error getting SWS rest api url via streamtool")
+            raise
+
+        # Give each view in the app the necessary information to connect to SWS.
+        for view in app_topology.get_views():
+            view.set_streams_context_config(
+                {'username': username, 'password': password, 'rest_api_url': rest_api_url})
+
+
+class _SubmitContextFactory:
+    """
+    ContextSubmitter:
+        Responsible for performing the correct submission depending on a number of factors, including: the
+        presence/absence of a streams install, the type of context, and whether the user seeks to retrieve data via rest
+    """
+    def __init__(self, app_topology, config=None, username=None, password=None):
+        self.app_topology = app_topology.graph
+        self.config = config
+        self.username = username
+        self.password = password
+
+        if self.config is None:
+            self.config = {}
+
+    def get_submit_context(self, ctxtype):
+
+        # If there is no streams install present, currently only REMOTE_BUILD_AND_SUBMIT, TOOLKIT, and BUILD_ARCHIVE
+        # are supported.
+        streams_install = os.environ.get('STREAMS_INSTALL')
+        if streams_install is None:
+            if not (ctxtype == ContextTypes.REMOTE_BUILD_AND_SUBMIT or ctxtype == ContextTypes.TOOLKIT or ctxtype == ContextTypes.BUILD_ARCHIVE):
+                raise UnsupportedContextException(ctxtype + " must be submitted when a streams install is present.")
+
+
+        if ctxtype == ContextTypes.JUPYTER:
+            return _JupyterSubmitter(ctxtype, self.config, self.app_topology)
+        elif ctxtype == ContextTypes.REMOTE_BUILD_AND_SUBMIT:
+            return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
+        elif ctxtype == ContextTypes.DISTRIBUTED:
+            return _DistributedSubmitter(ctxtype, self.config, self.app_topology, self.username, self.password)
+        else:
+            return _BaseSubmitter(ctxtype, self.config, self.app_topology)
+
+
+# Used to delete the JSON file after it is no longer needed.
+def _delete_json(fn):
+    if os.path.isfile(fn):
+        os.remove(fn)
+
+
+# Used by a thread which polls a subprocess's stdout and writes it to stdout
 def _print_process_stdout(process):
     try:
         while True:
-            line = process.stdout.readline();
+            line = process.stdout.readline()
             if len(line) == 0:
                 process.stdout.close()
                 break
@@ -142,9 +364,12 @@ def _print_process_stdout(process):
             print(line)
     except:
         process.stdout.close()
-        _print_exception("Error reading from process stdout")
+        logger.exception("Error reading from process stdout")
         raise
 
+
+# Used by a thread which polls a subprocess's stderr and writes it to stderr, until the sc compilation
+# has begun.
 def _print_process_stderr(process, fn):
     try:
         while True:
@@ -158,82 +383,58 @@ def _print_process_stderr(process, fn):
                 _delete_json(fn)
     except:
         process.stderr.close()
-        _print_exception("Error reading from process stderr")
+        logger.exception("Error reading from process stderr")
         raise
 
-# There are two modes for execution.
-#
-# Pypi (Python focused)
-#  Pypi (pip install) package includes the SPL toolkit as
-#      streamsx/.toolkit/com.ibm.streamsx.topology
-#      However the streamsx Python packages have been moved out
-#      of the toolkit's (opt/python/package) compared
-#      to the original toolkit layout. They are moved to the
-#      top level of the pypi package.
-#
-# SPL Toolkit (SPL focused):
-#   Streamsx Python packages are executed from opt/python/packages
-#   
-# This function determines the root of the SPL toolkit based
-# upon the existance of the '.toolkit' directory.
-#
-def _get_toolkit_root():
-    # Directory of this file (streamsx/topology)
-    dir = os.path.dirname(os.path.abspath(__file__))
 
-    # This is streamsx
-    dir = os.path.dirname(dir)
+class UnsupportedContextException(Exception):
+    """
+    An exeption class for when something goes wrong with submitting using a particular context.
+    """
+    def __init__(self, msg):
+        Exception.__init__(self, msg)
 
-    # See if .toolkit exists, if so executing from
-    # a pip install
-    tk_root = os.path.join(dir, '.toolkit', 'com.ibm.streamsx.topology')
-    if os.path.isdir(tk_root):
-        return tk_root
+@enum.unique
+class ContextTypes(enum.Enum):
+    """
+        Types of submission contexts:
 
-    # Else dir is tk/opt/python/packages/streamsx
+        DISTRIBUTED - the topology is submitted to a Streams instance.
+        The bundle is submitted using `streamtool` which must be setup to submit without requiring authentication
+        input. Additionally, a username and password may optionally be provided to enable retrieving data from remote
+        views.
+        STANDALONE - the topology is executed directly as an Streams standalone application.
+        The standalone execution is spawned as a separate process
+        BUNDLE - execution of the topology produces an SPL application bundle
+        (.sab file) that can be submitted to an IBM Streams instance as a distributed application.
+        STANDALONE_BUNDLE - execution of the topology produces an SPL application bundle that, when executed,
+        is spawned as a separate process.
+        JUPYTER - the topology is run in standalone mode, and context.submit returns a stdout streams of bytes which
+        can be read from to visualize the output of the application.
+        BUILD_ARCHIVE - Creates a Bluemix-compatible build archive.
+        execution of the topology produces a build archive, which can be submitted to a streaming
+        analytics Bluemix remote build service.
+        REMOTE_BUILD_AND_SUBMIT - the application is submitted to and built on a Bluemix streaming analytics service.
+        It is then submitted as a job.
+        TOOLKIT - Execution of the topology produces a toolkit.
+    """
+    TOOLKIT = 'TOOLKIT'
+    BUILD_ARCHIVE = 'BUILD_ARCHIVE'
+    REMOTE_BUILD_AND_SUBMIT = 'REMOTE_BUILD_AND_SUBMIT'
+    BUNDLE = 'BUNDLE'
+    STANDALONE_BUNDLE = 'STANDALONE_BUNDLE'
+    STANDALONE = 'STANDALONE'
+    DISTRIBUTED = 'DISTRIBUTED'
+    JUPYTER = 'JUPYTER'
 
-    dir = os.path.dirname(dir)
-    dir = os.path.dirname(dir)
-    dir = os.path.dirname(dir)
-    tk_root = os.path.dirname(dir)
-    return tk_root
 
-def _submitUsingJava(ctxtype, fn):
-    ctxtype_was = ctxtype
-    if ctxtype == "JUPYTER":
-        ctxtype = "STANDALONE"
+@enum.unique
+class ConfigParams(enum.Enum):
+    """
+    Configuration options which may be used as keys in the submit's config parameter.
 
-    tk_root = _get_toolkit_root()
-
-    cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
-
-    streams_install = os.environ.get('STREAMS_INSTALL')
-    if streams_install is None:
-        java_home = os.environ.get('JAVA_HOME')
-        if java_home is None:
-            raise "Please set the JAVA_HOME system variable"
-   
-        jvm = os.path.join(java_home, "bin", "java")
-        submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
-    else:
-        jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
-        submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
-        cp = cp + ':' +  os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
-
-    args = [ jvm, '-classpath', cp, submit_class, ctxtype, fn]
-    process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
-    try:
-        stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, fn]))
-        stderr_thread.daemon = True            
-        stderr_thread.start()
-        if not ctxtype_was == "JUPYTER":
-            stdout_thread = threading.Thread(target=_print_process_stdout, args=([process]))
-            stdout_thread.daemon = True
-            stdout_thread.start()                
-            process.wait()
-            return None
-        else:            
-            return process.stdout
-    except:
-        _print_exception("Error starting java subprocess for submission")
-        raise
+    VCAP_INFO - a json object containing the VCAP information used to submit to BlueMix
+    VCAP_NAME - the name of the streaming analytics service to use from VCAP_INFO.
+    """
+    VCAP_INFO = 'topology.service.vcap'
+    VCAP_NAME = 'topology.service.name'

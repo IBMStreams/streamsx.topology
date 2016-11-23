@@ -61,6 +61,17 @@ MY_OPERATOR::MY_OPERATOR() :
       streamsx::topology::PyGILLock lock;
       pyOutNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getOutputPortAt(0));
+
+     // Now create the wrapper function that converts
+     // other types returned by the user's function
+     // (e.g. dictionaries) to Python tuples as the
+     // decorated operators only handle tuples to
+     // simplify the generated code.
+     Py_INCREF(pyOutNames_); // callFunction steals the reference
+     function_ = streamsx::topology::Splpy::callFunction(
+             "streamsx.spl.runtime", "_splpy_to_tuples",
+             function_, pyOutNames_);   
+
 <% if ($paramStyle eq 'dictionary') { %>
       pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getInputPortAt(0));
@@ -87,6 +98,10 @@ void MY_OPERATOR::prepareToShutdown()
     streamsx::topology::flush_PyErrPyOut();
 }
 
+<%
+  my $no_tuples_action = "";
+%>
+
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
@@ -103,6 +118,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
  for(int i = 0; i < output_tuples.size();i++)
    submit(output_tuples[i], 0);   
 }
+
+// Create member function that converts Python tuple to SPL tuple
+@include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
 
 // Punctuation processing
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
