@@ -38,3 +38,4 @@ java/classes/
 samples/java/functional/classes/
 samples/java/functional/functionalsamples.jar
 /.project
+/.pydevproject
