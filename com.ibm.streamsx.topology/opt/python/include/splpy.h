@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <memory>
 #include <dlfcn.h>
-#include <TopologyResource.h>
+#include <TopologySplpyResource.h>
 
 #include <SPL/Runtime/Type/Meta/BaseType.h>
 #include <SPL/Runtime/ProcessingElement/PE.h>
@@ -281,9 +281,9 @@ namespace streamsx {
         // Provide info on the setting of LD_LIBRARY_PATH
         char * pyLDD = getenv("LD_LIBRARY_PATH");
         if (pyLDD != NULL) {
-            SPLAPPLOG(L_INFO, LD_LIB_PATH(pyLDD), "python");
+            SPLAPPLOG(L_INFO, TOPOLOGY_LD_LIB_PATH(pyLDD), "python");
         } else {
-            SPLAPPLOG(L_INFO, LD_LIB_PATH_NO, "python");
+            SPLAPPLOG(L_INFO, TOPOLOGY_LD_LIB_PATH_NO, "python");
         }
 
         // declare pylib and its value  
@@ -296,11 +296,11 @@ namespace streamsx {
 
             pyLib = wk;
         }
-        SPLAPPLOG(L_INFO, LOAD_LIB(pyLib), "python");
+        SPLAPPLOG(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
 
         if(NULL == dlopen(pyLib.c_str(), RTLD_LAZY |
                                          RTLD_GLOBAL)){
-          SPLAPPLOG(L_ERROR, LOAD_LIB_ERROR(pyLib), "python");
+          SPLAPPLOG(L_ERROR, TOPOLOGY_LOAD_LIB_ERROR(pyLib), "python");
           throw;
         }
 
@@ -335,11 +335,11 @@ namespace streamsx {
       PyObject * module = PyImport_Import(moduleName);
       Py_DECREF(moduleName);
       if (module == NULL) {
-        SPLAPPLOG(L_ERROR, IMPORT_MODULE_ERROR(moduleNameC), "python");
+        SPLAPPLOG(L_ERROR, TOPOLOGY_IMPORT_MODULE_ERROR(moduleNameC), "python");
         streamsx::topology::flush_PyErr_Print();
         throw;
       }
-      SPLAPPLOG(L_INFO, IMPORT_MODULE(moduleNameC), "python");
+      SPLAPPLOG(L_INFO, TOPOLOGY_IMPORT_MODULE(moduleNameC), "python");
       return module;
     }
 

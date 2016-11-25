@@ -19,6 +19,8 @@ com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.java/HashRemover/
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.java/PassThrough/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.testing/TesterSink/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python/Py*/*.pm
+com.ibm.streamsx.topology/impl/nl/*.dat
+com.ibm.streamsx.topology/impl/nl/include/
 test/python/topology/tk*
 samples/python/com.ibm.streamsx.topology.pysamples/com.ibm.streamsx.topology.pysamples.mail/
 samples/python/com.ibm.streamsx.topology.pysamples/com.ibm.streamsx.topology.pysamples.positional/

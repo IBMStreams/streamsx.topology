@@ -8,6 +8,12 @@
   <file datatype="plaintext" original="root.txt" source-language="en" target-language="en" xml:space="preserve">
     <body>
       <!-- =============================================================== -->
+      <!--                                                                 -->
+      <!-- This is the resource file which is used commonly in the Python  -->
+      <!-- Application API :                                               -->
+      <!-- to Develop IBM Streams applications with Python and             -->
+      <!-- to create SPL operators from Python code.                       -->
+      <!--                                                                 -->
       <!-- TRNOTE Please refer to the "XML Localization Interchange File   -->
       <!-- Format (.xlf) files" section in the translation instructions    -->
       <!-- file for more information on this file.                         -->
@@ -46,26 +52,26 @@
       <group>
         <!-- NOTE:  The Topology Toolkit is assigned message ID range CDIST0300 - CDIST0349 -->
         
-        <trans-unit id="StreamsTopologyMessages_CDIST0301" extraData="LD_LIB_PATH" resname="CDIST0301I">
+        <trans-unit id="StreamsTopologyMessages_CDIST0301" extraData="TOPOLOGY_LD_LIB_PATH" resname="CDIST0301I">
           <source>LD_LIBRARY_PATH={0}.</source>
           <!--TRNOTE Do not translate the word LD_LIBRARY_PATH -->
         </trans-unit>
-        <trans-unit id="StreamsTopologyMessages_CDIST0302" extraData="LD_LIB_PATH_NO" resname="CDIST0302I">
+        <trans-unit id="StreamsTopologyMessages_CDIST0302" extraData="TOPOLOGY_LD_LIB_PATH_NO" resname="CDIST0302I">
           <source>LD_LIBRARY_PATH not set.</source>
           <!--TRNOTE Do not translate the word LD_LIBRARY_PATH -->
         </trans-unit>
-        <trans-unit id="StreamsTopologyMessages_CDIST0303" extraData="LOAD_LIB" resname="CDIST0303I">
+        <trans-unit id="StreamsTopologyMessages_CDIST0303" extraData="TOPOLOGY_LOAD_LIB" resname="CDIST0303I">
           <source>Loading Python library: {0}.</source>
           <!--TRNOTE Do not translate the word Python -->
         </trans-unit>
-        <trans-unit id="StreamsTopologyMessages_CDIST0304" extraData="LOAD_LIB_ERROR" resname="CDIST0304E">
+        <trans-unit id="StreamsTopologyMessages_CDIST0304" extraData="TOPOLOGY_LOAD_LIB_ERROR" resname="CDIST0304E">
           <source>Fatal error: could not open Python library: {0}.</source>
           <!--TRNOTE Do not translate the word Python -->
         </trans-unit>
-        <trans-unit id="StreamsTopologyMessages_CDIST0305" extraData="IMPORT_MODULE_ERROR" resname="CDIST0305E">
+        <trans-unit id="StreamsTopologyMessages_CDIST0305" extraData="TOPOLOGY_IMPORT_MODULE_ERROR" resname="CDIST0305E">
           <source>Fatal error: missing module: {0}.</source>
         </trans-unit>
-        <trans-unit id="StreamsTopologyMessages_CDIST0306" extraData="IMPORT_MODULE" resname="CDIST0306I">
+        <trans-unit id="StreamsTopologyMessages_CDIST0306" extraData="TOPOLOGY_IMPORT_MODULE" resname="CDIST0306I">
           <source>Imported  module: {0}.</source>
         </trans-unit>
       </group>
