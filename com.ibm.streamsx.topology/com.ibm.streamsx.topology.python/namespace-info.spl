@@ -1210,6 +1210,9 @@ paths to the Python runtime are set from the version of Python used to execute `
 
 The toolkit has no dependency on this toolkit (`com.ibm.streamsx.topology`) once `spl-python-extract.py` has been executed.
 
+The toolkit is extended with resources files `impl/nl/<locale>/TopologySplpyResource.xlf`. These resource files must be added to the 
+the `resource` section in file `info.xml`. See the sample `info.xml` file in `samples/python/com.ibm.streamsx.topology.pysamples`.
+
 The sample SPL toolkit `samples/python/com.ibm.streamsx.topology.pysamples` contains `opt/python/streams/spl_samples.py` for
 examples of how data is passed into and out of Python from SPL,
 using positional arguments.

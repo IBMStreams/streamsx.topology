@@ -37,13 +37,15 @@
   <target name="clean" >
     <delete dir="${pytk}/output"/>
     <delete dir="${pytk}/doc"/>
+    <delete dir="${pytk}/impl"/>
     <delete dir="${pytk}/opt/.__splpy"/>
     <delete file="${pytk}/toolkit.xml"/>
     <delete includeemptydirs="true" >
        <fileset dir="${pytk}">
+          <include name="com.ibm.streamsx.topology.pysamples.kwargs/**"/>
           <include name="com.ibm.streamsx.topology.pysamples.mail/**"/>
           <include name="com.ibm.streamsx.topology.pysamples.positional/**"/>
-          <include name="opt/.__splpy/**"/>
+          <include name="com.ibm.streamsx.topology.pysamples.sources/**"/>
           <exclude name="**/namespace-info.spl"/>
        </fileset>
     </delete>

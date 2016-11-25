@@ -94,6 +94,26 @@ def copyPythonDir(dir):
         shutil.rmtree(cmn_dst)
     shutil.copytree(cmn_src, cmn_dst)
 
+def copyGlobalizationResources():
+    '''Copy the resource files for python api functions'''
+    rootDir = os.path.join(topologyToolkitDir(), "impl", "nl")
+    for dirName in os.listdir(rootDir):
+        srcDir = os.path.join(topologyToolkitDir(), "impl", "nl", dirName)
+        if (os.path.isdir(srcDir)) and (dirName != "include"):
+            dstDir = os.path.join(userToolkitDir(), "impl", "nl", dirName)
+            try:
+                print("Copy globalization resources " + dirName)
+                os.makedirs(dstDir)
+            except OSError as e:
+                if (e.errno == 17) and (os.path.isdir(dstDir)):
+                    print(" dir exists")
+                else:
+                    raise
+            srcFile = os.path.join(srcDir, "TopologySplpyResource.xlf")
+            if os.path.isfile(srcFile):
+                res = shutil.copy2(srcFile, dstDir)
+                print("Written: " + res)
+
 # Create SPL operator parameters from the Python class
 # (functions cannot have parameters)
 # The parameters are taken from the signature of
@@ -290,6 +310,8 @@ for mf in glob.glob(os.path.join(tk_streams, '*.py')):
     streamsPythonFile = inspect.getsourcefile(dynm)
     process_operators(dynm, name, inspect.getmembers(dynm, inspect.isfunction))
     process_operators(dynm, name, inspect.getmembers(dynm, inspect.isclass))
+
+copyGlobalizationResources()
 
 # Now make the toolkit if required
 if cmd_args.make_toolkit:

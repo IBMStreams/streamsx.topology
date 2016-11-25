@@ -47,6 +47,7 @@ See the documentation under [namespace:com.ibm.streamsx.topology.python|com.ibm.
   <resources>
     <messageSet name="TopologySplpyResource">
       <lang default="true">en_US/TopologySplpyResource.xlf</lang>
+      <!-- <lang>de_DE/TopologySplpyResource.xlf</lang> -->
     </messageSet>
   </resources>
   <sabFiles>
