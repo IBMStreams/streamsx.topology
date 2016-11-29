@@ -50,11 +50,11 @@ def train_nn(xvalues, yvalues, rate = 0.0001, batch = False, layers = [100, 100,
     #----------
     # train
     #----------
-
+    fig, ax = plt.subplots()
     plt.title("Engine Temp Vs. Probability of Failure")
     plt.ylabel("Probability of Failure")
     plt.xlabel("Engine Temp in Degrees Celcius")
-    fig, ax = plt.subplots()
+    
     
     trainer = BackpropTrainer(net, ds, learningrate = rate, momentum=0, verbose = False, batchlearning=batch)
     #trainer.trainUntilConvergence(maxEpochs = 100)
@@ -65,9 +65,9 @@ def train_nn(xvalues, yvalues, rate = 0.0001, batch = False, layers = [100, 100,
             [ net.activate([x]) for x in nn_xvalues ], linewidth = 2,
             color = 'blue', label = 'NN output')
     
-        # target function
+    # target function
     ax.plot(xvalues,
-            yvalues, "ro", linewidth = 2, color = 'red', label = 'target')
+            yvalues, "ro", linewidth = 2, color = 'red')
     
     set_range(xvalues, yvalues, magnification, ax)
     for i in range(iterations):

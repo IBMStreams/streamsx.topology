@@ -69,7 +69,7 @@ def submit(ctxtype, graph, config=None, username=None, password=None, log_level=
     logger.setLevel(log_level)
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
     try:
-        context_submitter.submit()
+        return context_submitter.submit()
     except:
         logger.exception("Error while submitting application.")
 
@@ -228,13 +228,15 @@ class _JupyterSubmitter(_BaseSubmitter):
             submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
             cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
 
-        args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
+        args = [jvm, '-classpath', cp, submit_class, ContextTypes.STANDALONE, self.fn]
         process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
         try:
             stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
             stderr_thread.daemon = True
             stderr_thread.start()
 
+            if process.stdout is None:
+                raise ValueError("The returned stdout from the spawned process is None.")
             return process.stdout
         except:
             logger.exception("Error starting java subprocess for submission")
