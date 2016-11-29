@@ -250,9 +250,9 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         Condition<List<Tuple>> outFilteredTuples = tester.tupleContents(viaPythonFiltered);
         
         
-        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
+        complete(tester, expectedCount, 20, TimeUnit.SECONDS);
 
-        assertTrue(expectedCount.valid());
+        assertTrue(expectedCount.getResult().toString(), expectedCount.valid());
         
         List<Tuple> result = outTuples.getResult();
         
