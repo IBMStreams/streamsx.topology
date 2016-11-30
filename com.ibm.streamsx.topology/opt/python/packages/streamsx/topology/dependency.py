@@ -7,8 +7,6 @@ import inspect
 import types
 import collections
     
-from streamsx.topology.topologypackages import TopologyPackages
-
 class _DependencyResolver(object):
     """
     Finds dependencies given a module object
@@ -23,7 +21,6 @@ class _DependencyResolver(object):
         dir = os.path.dirname(os.path.abspath(my_module.__file__))
         dir = os.path.dirname(dir)
         self._streamsx_topology_dir = dir
-        self._topology_packages = topology_packages
         
     def add_dependencies(self, module, include_packages=None, exclude_packages=None):
         """
