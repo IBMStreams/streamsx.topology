@@ -1,13 +1,5 @@
 /* Additional includes go here */
 
-#include <Python.h>
-#include <string>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <memory>
-
 #include "splpy.h"
 
 <%SPL::CodeGen::implementationPrologue($model);%>

@@ -9,7 +9,9 @@
  *
  */
 
-#define Py_LIMITED_API 0x03050000
+
+#ifndef __SPL__SPLPY_H
+#define __SPL__SPLPY_H
 
 #include "Python.h"
 #include <string>
@@ -28,8 +30,6 @@
 #include <SPL/Runtime/Operator/OperatorContext.h>
 #include <SPL/Runtime/Operator/Operator.h>
 
-#ifndef __SPL__SPLPY_H
-#define __SPL__SPLPY_H
 
 /**
  * Functionality for executing Python within IBM Streams.
