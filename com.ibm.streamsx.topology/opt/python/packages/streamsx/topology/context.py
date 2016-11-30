@@ -296,8 +296,11 @@ class _DistributedSubmitter(_BaseSubmitter):
     def __init__(self, ctxtype, config, app_topology, username, password):
         _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
 
-        # If a username or password isn't supplied, don't attempt to retrieve view data.
-        if username is None or password is None:
+        # If a username or password isn't supplied, don't attempt to retrieve view data, but throw an error if views
+        # were created
+        if (username is None or password is None) and len(app_topology.get_views()) > 0:
+            raise ValueError("To access views data, both a username and a password must be supplied when submitting.")
+        elif username is None or password is None:
             return
         try:
             process = subprocess.Popen(['streamtool', 'geturl', '--api'],
