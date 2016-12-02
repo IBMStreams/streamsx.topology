@@ -28,7 +28,9 @@ from platform import python_version
 from enum import Enum
 
 class Topology(object):
-    """Topology that contains graph + operators"""
+    """The Topology class is used to define data sources, and is passed as a parameter when submittion an application.
+       Topology keeps track of all sources, sinks, and data operations within your application.
+    """
     def __init__(self, name, files=None):
         self.name = name
         self.pythonversion = python_version()
@@ -111,7 +113,9 @@ class Topology(object):
 
 class Stream(object):
     """
-    Definition of a data stream in python.
+    The Stream class is the primary abstraction within a streaming application. It represents a potentially infinite 
+    series of tuples which can be operated upon to produce another stream, as in the case of Stream.map(), or 
+    terminate a stream, as in the case of Stream.sink().
     """
     def __init__(self, topology, oport):
         self.topology = topology
