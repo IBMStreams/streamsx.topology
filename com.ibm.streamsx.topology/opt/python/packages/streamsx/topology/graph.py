@@ -38,7 +38,7 @@ class SPLGraph(object):
     def add_views(self, view):
         self._views.append(view)
 
-    def addOperator(self, kind, function=None, name=None, params=None, include_packages=None, exclude_packages=None):
+    def addOperator(self, kind, function=None, name=None, params=None, included_packages=None, excluded_packages=None):
         if(params is None):
             params = {}
         if name is None:
@@ -62,7 +62,7 @@ class SPLGraph(object):
                 dep_instance = type(function._it)
 
             if not inspect.isbuiltin(dep_instance):
-                self.resolver.add_dependencies(inspect.getmodule(dep_instance), include_packages, exclude_packages)
+                self.resolver.add_dependencies(inspect.getmodule(dep_instance), included_packages=included_packages, excluded_packages=excluded_packages)
         return op
     
     def addPassThruOperator(self):
