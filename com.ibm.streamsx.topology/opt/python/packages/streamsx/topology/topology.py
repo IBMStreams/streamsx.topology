@@ -118,7 +118,7 @@ class Topology(object):
         Returns:
             A Stream whose tuples have been published to the topic by other Streams applications.
         """
-        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", include_packes=self.included_packages, excluded_packages=self.exclude_packages)
+        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", included_packages=self.include_packages, excluded_packages=self.exclude_packages)
         oport = op.addOutputPort(schema=schema)
         subscribeParams = {'topic': [topic], 'streamType': schema}
         op.setParameters(subscribeParams)
@@ -131,7 +131,7 @@ class Stream(object):
     series of tuples which can be operated upon to produce another stream, as in the case of Stream.map(), or 
     terminate a stream, as in the case of Stream.sink().
     """
-    def __init__(self, topology, oport, included_packages=None, excluded_packages=None):
+    def __init__(self, topology, oport, included_packages=set(), excluded_packages=set()):
         self.topology = topology
         self.oport = oport
         self.include_packages = included_packages
@@ -366,7 +366,7 @@ class Stream(object):
         elif(routing == Routing.HASH_PARTITIONED ) :
             if (func is None) :
                 func = hash   
-            op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func, include_packes=self.include_packages, exclude_packages=self.exclude_packages)
+            op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
             hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int32 __spl_hash>"))
             parentOp = op.addOutputPort(schema=hash_schema)
             op.addInputPort(outputPort=self.oport)

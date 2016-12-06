@@ -22,7 +22,7 @@ class _DependencyResolver(object):
         dir = os.path.dirname(dir)
         self._streamsx_topology_dir = dir
         
-    def add_dependencies(self, module, included_packages=None, excluded_packages=None):
+    def add_dependencies(self, module, included_packages=set(), excluded_packages=set()):
         """
         Adds a module and its dependencies to the list of dependencies
         """
@@ -35,7 +35,7 @@ class _DependencyResolver(object):
         for imported_module_name,imported_module in imported_modules.items():
             if imported_module not in self._processed_modules:
                 #print ("add_dependencies for {0} {1}".format(imported_module.__name__, imported_module))
-                self.add_dependencies(imported_module)
+                self.add_dependencies(imported_module, included_packages=included_packages, excluded_packages=excluded_packages)
     
     @property
     def modules(self):
@@ -51,7 +51,7 @@ class _DependencyResolver(object):
         """
         return tuple(self._packages.keys())   
 
-    def _include_module(self, module, included_packages=None, excluded_packages=None):
+    def _include_module(self, module, included_packages=set(), excluded_packages=set()):
         # As some packages have the following format:
         # 
         # scipy.special.specfun
@@ -75,7 +75,7 @@ class _DependencyResolver(object):
 
 
     
-    def _add_dependency(self, module, included_packages=None, excluded_packages=None):
+    def _add_dependency(self, module, included_packages=set(), excluded_packages=set()):
         """
         Adds a module to the list of dependencies
         """
