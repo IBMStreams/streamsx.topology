@@ -134,7 +134,7 @@ _INFO_XML_TEMPLATE="""<?xml version="1.0" encoding="UTF-8"?>
     <name>__SPLPY_TOOLKIT_NAME__</name>
     <description>Automatic generated toolkit description file.</description>
     <version>1.0.0</version>
-    <requiredProductVersion>4.1.0.0</requiredProductVersion>
+    <requiredProductVersion>4.0.1.0</requiredProductVersion>
   </identity>
   <dependencies/>
   <resources>
