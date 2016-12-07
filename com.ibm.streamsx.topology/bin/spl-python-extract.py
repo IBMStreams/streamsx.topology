@@ -12,6 +12,7 @@ import os
 import shutil
 import argparse
 import subprocess
+import xml.etree.ElementTree as ET
 
 ############################################
 # Argument parsing
@@ -20,6 +21,8 @@ cmd_parser.add_argument('-i', '--directory', required=True,
                    help='Toolkit directory')
 cmd_parser.add_argument('--make-toolkit', action='store_true',
                    help='Index toolkit using spl-make-toolkit')
+cmd_parser.add_argument('-v', '--verbose', action='store_true',
+                   help='Print more diagnostics')
 cmd_args = cmd_parser.parse_args()
 
 ############################################
@@ -95,8 +98,13 @@ def copyPythonDir(dir):
     shutil.copytree(cmn_src, cmn_dst)
 
 def copyGlobalizationResources():
-    '''Copy the resource files for python api functions'''
+    '''Copy the language resource files for python api functions
+    
+    This function copies the TopologySplpy Resource files from Topology toolkit directory
+    into the impl/nl folder of the project.
+    Returns: the list with the copied locale strings'''
     rootDir = os.path.join(topologyToolkitDir(), "impl", "nl")
+    languageList = []
     for dirName in os.listdir(rootDir):
         srcDir = os.path.join(topologyToolkitDir(), "impl", "nl", dirName)
         if (os.path.isdir(srcDir)) and (dirName != "include"):
@@ -106,13 +114,101 @@ def copyGlobalizationResources():
                 os.makedirs(dstDir)
             except OSError as e:
                 if (e.errno == 17) and (os.path.isdir(dstDir)):
-                    print(" dir exists")
+                    if cmd_args.verbose:
+                        print("Directory", dstDir, "exists")
                 else:
                     raise
             srcFile = os.path.join(srcDir, "TopologySplpyResource.xlf")
             if os.path.isfile(srcFile):
                 res = shutil.copy2(srcFile, dstDir)
-                print("Written: " + res)
+                languageList.append(dirName)
+                if cmd_args.verbose:
+                    print("Written: " + res)
+    return languageList
+
+_INFO_XML_TEMPLATE="""<?xml version="1.0" encoding="UTF-8"?>
+<toolkitInfoModel
+  xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo"
+  xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common">
+  <identity>
+    <name>__SPLPY_TOOLKIT_NAME__</name>
+    <description>Automatic generated toolkit description file.</description>
+    <version>1.0.0</version>
+    <requiredProductVersion>4.1.0.0</requiredProductVersion>
+  </identity>
+  <dependencies/>
+  <resources>
+    <messageSet name="TopologySplpyResource">
+      <lang default="true">en_US/TopologySplpyResource.xlf</lang>
+      <!-- <lang>de_DE/TopologySplpyResource.xlf</lang> -->
+    </messageSet>
+  </resources>
+</toolkitInfoModel>
+"""
+
+def setupInfoXml(languageList):
+    '''Setup the info.xml file
+    
+    This function prepares or checks the info.xml file in the project directory
+    - if the info.xml does not exist in the project directory, it copies the template info.xml into the project directory.
+      The project name is obtained from the project directory name
+    - If there is a info.xml file, the resource section is inspected. If the resource section has no valid message set
+      description for the TopologySplpy Resource a warning message is printed'''
+    infoXmlFile = os.path.join(userToolkitDir(), 'info.xml')
+    print('Check info.xml:', infoXmlFile)
+    try:
+        TopologySplpyResourceMessageSetFound = False
+        TopologySplpyResourceLanguages = []
+        tree = ET.parse(infoXmlFile)
+        root = tree.getroot()
+        for resources in root.findall('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}resources'):
+            if cmd_args.verbose:
+                print('Resource: ', resources.tag)
+            for messageSet in resources.findall('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}messageSet'):
+                if cmd_args.verbose:
+                    print('Message set:', messageSet.tag, messageSet.attrib)
+                if 'name' in messageSet.attrib:
+                    if messageSet.attrib['name'] == 'TopologySplpyResource':
+                        TopologySplpyResourceMessageSetFound = True
+                        for lang in messageSet.findall('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}lang'):
+                            language = os.path.dirname(lang.text)
+                            TopologySplpyResourceLanguages.append(language)
+        if TopologySplpyResourceMessageSetFound:
+            if cmd_args.verbose:
+                print("TopologySplpyResource was found: ", TopologySplpyResourceLanguages)
+            copiedLanguagesSet = set(languageList)
+            resourceLanguageSet = set(TopologySplpyResourceLanguages)
+            if copiedLanguagesSet == resourceLanguageSet:
+                print('Resource section of info.xml verified')
+            else:
+                print(""""Message set for the "TopologySplpyResource" is incomplete or invalid.
+                Correct the resource section in info.xml file or continue at your one's peril.
+                
+                Sample info xml:
+                """)
+                print(_INFO_XML_TEMPLATE)
+        else:
+            print(""""Message set for the "TopologySplpyResource" is missing.
+                Correct the resource section in info.xml file.
+                
+                Sample info xml:
+                """)
+            print(_INFO_XML_TEMPLATE)
+    except FileNotFoundError as e:
+        print("File info.xml not found. Create info.xml from template")
+        #Get default project name from project directory
+        projectRootDir = os.path.abspath(userToolkitDir()) #os.path.abspath returns the path without trailing /
+        projectName = os.path.basename(projectRootDir)
+        infoXml=_INFO_XML_TEMPLATE.replace('__SPLPY_TOOLKIT_NAME__', projectName)
+        f = open(infoXmlFile, 'w')
+        f.write(infoXml)
+        f.close()
+    except:
+        print("""File info.xml is invalid or not accessible
+            
+            Sample info xml:
+            """)
+        print(_INFO_XML_TEMPLATE)
 
 # Create SPL operator parameters from the Python class
 # (functions cannot have parameters)
@@ -311,7 +407,10 @@ for mf in glob.glob(os.path.join(tk_streams, '*.py')):
     process_operators(dynm, name, inspect.getmembers(dynm, inspect.isfunction))
     process_operators(dynm, name, inspect.getmembers(dynm, inspect.isclass))
 
-copyGlobalizationResources()
+langList = copyGlobalizationResources()
+if cmd_args.verbose:
+    print("Available languages for TopologySplpy resource:", langList)
+setupInfoXml(langList)
 
 # Now make the toolkit if required
 if cmd_args.make_toolkit:

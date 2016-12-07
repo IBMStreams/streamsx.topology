@@ -22,8 +22,6 @@
 	  	toDir="${testtk}/opt/python/streams"/>
 	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/spl_sources.py"
 	  	toDir="${testtk}/opt/python/streams"/>
-	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/info.xml"
-	  	toDir="${testtk}"/>
 	  <target name="test.toolkit">
 		   <exec executable="${topology.test.python}" dir="${testtk}" failonerror="true">
 		     <arg value="${tk}/bin/spl-python-extract.py"/>
