@@ -120,22 +120,11 @@ sub cppToPythonMapConversion {
       return "streamsx::topology::pySplMapToPyDict($iv);";
 }
 
+# Returns a string that can be used as an assignment statement
 sub cppToPythonSetConversion {
       my ($iv, $type) = @_;
 
-      my $element_type = SPL::CodeGen::Type::getElementType($type);
-
-      $get = "PySet_New(NULL);\n";
-
-      my $loop = "for(std::tr1::unordered_set<SPL::$element_type>::const_iterator it = $iv.begin();\n";
-      $loop = $loop . "it!=$iv.end(); it++){\n";
-      $loop = $loop . "PyObject *v = " . cppToPythonPrimitiveConversion("*it", $element_type) . ";\n";
-      $loop = $loop . "PySet_Add(pyValue, v);\n";
-      $loop = $loop . "Py_DECREF(v);\n";
-      $loop = $loop . "}";
-      $get = $get . $loop;
-
-      return $get;
+      return "streamsx::topology::pySplSetToPySet($iv);";
 }
 
 #

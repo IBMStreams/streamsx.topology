@@ -223,6 +223,21 @@ namespace streamsx {
         return pyDict;
     }
 
+    /*
+    ** SPL Set Conversion to Python objects
+    */
+    template <typename T>
+    inline PyObject * pySplSetToPySet(const SPL::set<T> & s) {
+        PyObject * pySet = PySet_New(NULL);
+        for (typename std::tr1::unordered_set<T>::const_iterator it = s.begin();
+             it != s.end(); it++) {
+             PyObject * e = pyAttributeToPyObject(*it);
+             PySet_Add(pySet, e);
+             Py_DECREF(e);
+        }
+        return pySet;
+    }
+
     /**
      * Integer conversions.
     */
