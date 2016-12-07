@@ -4,9 +4,12 @@
 */
 
 /*
- * Compile using the stable abi assuming 3.5.
- * https://docs.python.org/3/c-api/stable.html
+ * Internal header file supporting Python
+ * for com.ibm.streamsx.topology.
  *
+ * This is not part of any public api for
+ * the toolkit or toolkit with decorated
+ * SPL Python operators.
  */
 
 

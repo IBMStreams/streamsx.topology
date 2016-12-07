@@ -105,26 +105,26 @@ sub pythonToCppPrimitiveConversion{
   }
 }
 
-# Returns a string that can be used as an assignment statement
+# Returns a string with the C++ expression
 sub cppToPythonListConversion {
 
     my ($iv, $type) = @_;
 
-    return "streamsx::topology::pySplListToPyList($iv);";
+    return "streamsx::topology::pySplListToPyList($iv)";
 }
 
-# Returns a string that can be used as an assignment statement
+# Returns a string with the C++ expression
 sub cppToPythonMapConversion {
       my ($iv, $type) = @_;
 
-      return "streamsx::topology::pySplMapToPyDict($iv);";
+      return "streamsx::topology::pySplMapToPyDict($iv)";
 }
 
-# Returns a string that can be used as an assignment statement
+# Returns a string with the C++ expression
 sub cppToPythonSetConversion {
       my ($iv, $type) = @_;
 
-      return "streamsx::topology::pySplSetToPySet($iv);";
+      return "streamsx::topology::pySplSetToPySet($iv)";
 }
 
 #
@@ -140,11 +140,13 @@ sub convertToPythonValue {
   # input value
   my $iv = $ituple . ".get_" . $name . "()";
 
-  return convertToPythonValueFromExpr($type, $iv);
+  return convertToPythonValueFromExpr($type, $iv) . ";\n";
 }
 
 ##
 ## Convert to a Python value from an expression
+## Returns a string with a C++ expression
+## representing the Python value
 ##
 sub convertToPythonValueFromExpr {
   my $type = $_[0];
