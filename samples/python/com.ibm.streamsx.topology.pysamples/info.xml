@@ -9,4 +9,9 @@
  </info:identity>
  <info:dependencies>
  </info:dependencies>
+ <info:resources>
+   <info:messageSet name="TopologySplpyResource">
+     <info:lang default="true">en_US/TopologySplpyResource.xlf</info:lang>
+   </info:messageSet>
+  </info:resources>
 </info:toolkitInfoModel>

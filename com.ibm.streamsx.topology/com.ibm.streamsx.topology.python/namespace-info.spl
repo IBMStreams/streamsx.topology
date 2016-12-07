@@ -1203,12 +1203,21 @@ These directories in a toolkit are automatically added to the Python search path
  * `opt/python/streams` - Contains modules that define Python functions that will be created as SPL operators
  * `opt/python/packages` - Root directory for Python [https://docs.python.org/3.4/tutorial/modules.html#packages|packages] hierarchy.
  * `opt/python/modules` - Arbitrary [https://docs.python.org/3.4/tutorial/modules.html#modules|modules], not defined as a packages.
+ * `impl/nl             - The directory for the resource files.
 
 A single Python embedded runtime is used by an SPL processing element (PE), thus when multiple operators
 implemented in python are fused into the same PE they share the same runtime. The library and include
 paths to the Python runtime are set from the version of Python used to execute `spl-python-extract.py`.
 
 The toolkit has no dependency on this toolkit (`com.ibm.streamsx.topology`) once `spl-python-extract.py` has been executed.
+
+The toolkit is extended with resources files `impl/nl/<locale>/TopologySplpyResource.xlf`. These resource files must be added to the 
+the `resource` section in file `info.xml`.
+The spl-python-extract.py program prepares or checks the info.xml file in the project directory
+ * if the info.xml does not exist in the project directory, it copies the template info.xml into the project directory.
+   The project name is obtained from the project directory name
+ * If there is a info.xml file, the resource section is inspected. If the resource section has no valid message set
+   description for the TopologySplpy Resource a warning message is printed'''.
 
 The sample SPL toolkit `samples/python/com.ibm.streamsx.topology.pysamples` contains `opt/python/streams/spl_samples.py` for
 examples of how data is passed into and out of Python from SPL,

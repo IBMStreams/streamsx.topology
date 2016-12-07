@@ -28,12 +28,17 @@
   <target name="clean" >
     <ant dir="java" target="clean"/>
     <ant dir="samples/java/functional" target="clean"/>
+  	<ant dir="samples/python" target="clean"/>
     <ant dir="toolkit" target="clean"/>
     <ant dir="test/java" target="clean"/>
     <delete dir="${tk}/doc/javadoc"/>
     <delete dir="${tk}/doc/spldoc"/>
     <delete dir="${tk}/doc/scaladoc"/>
     <delete dir="${tk}/doc/pydoc"/>
+    <delete dir="${tk}/impl/nl/include"/>
+    <delete>
+      <fileset dir="${tk}/impl/nl" includes="*.dat"/>
+    </delete>
     <delete dir="${release.base}"/>
     <delete dir="streamsx.utility"/>
     <delete file="${streamsx.py}/rest.py"/>
