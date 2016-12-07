@@ -16,10 +16,10 @@ sub cppToPythonPrimitiveConversion{
     my $supported = 0;
 
     if(SPL::CodeGen::Type::isSigned($type)) {
-      return "PyLong_FromLong($convert_from_string)";
+      $supported = 1;
     } 
     elsif(SPL::CodeGen::Type::isUnsigned($type)) {
-      return "PyLong_FromUnsignedLong($convert_from_string)";
+      $supported = 1;
     } 
     elsif(SPL::CodeGen::Type::isFloatingpoint($type)) {
       $supported = 1;
@@ -105,43 +105,19 @@ sub pythonToCppPrimitiveConversion{
   }
 }
 
+# Returns a string that can be used as an assignment statement
 sub cppToPythonListConversion {
 
     my ($iv, $type) = @_;
 
-      my $element_type = SPL::CodeGen::Type::getElementType($type);
-
-      my $size = $iv . ".size()";
-      my $get = "PyList_New($size);\n";
-
-      my $loop = "for(int i = 0; i < $size; i++){\n";
-      $loop = $loop . "PyObject *o =" . cppToPythonPrimitiveConversion("($iv)[i]", $element_type) . ";\n";      
-      $loop = $loop . "PyList_SetItem(pyValue, i, o);\n";
-      $loop = $loop . "}\n";
-
-      $get = $get . $loop;
-      return $get;
+    return "streamsx::topology::pySplListToPyList($iv);";
 }
 
+# Returns a string that can be used as an assignment statement
 sub cppToPythonMapConversion {
       my ($iv, $type) = @_;
 
-      my $key_type = SPL::CodeGen::Type::getKeyType($type);
-      my $value_type = SPL::CodeGen::Type::getValueType($type);
-
-      my $get = "PyDict_New();\n";
-
-      my $loop = "for(std::tr1::unordered_map<SPL::$key_type,SPL::$value_type>::const_iterator it = $iv.begin();\n";
-      $loop = $loop . "it!=$iv.end(); it++){\n";
-      $loop = $loop . "PyObject *k = " . cppToPythonPrimitiveConversion("it->first", $key_type) . ";\n";
-      $loop = $loop . "PyObject *v = " . cppToPythonPrimitiveConversion("it->second", $value_type) . ";\n";
-      $loop = $loop . "PyDict_SetItem(pyValue, k, v);\n";
-      $loop =  $loop . "  Py_DECREF(k);\n";
-      $loop =  $loop . "  Py_DECREF(v);\n";
-      $loop = $loop . "}";
-      $get = $get . $loop;
-
-      return $get;
+      return "streamsx::topology::pySplMapToPyDict($iv);";
 }
 
 sub cppToPythonSetConversion {

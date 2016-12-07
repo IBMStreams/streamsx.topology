@@ -189,9 +189,56 @@ namespace streamsx {
     /**************************************************************/
 
     /*
-    ** Conversion of SPL attributes to Python objects
+    ** Conversion of SPL attributes or value to Python objects
     */
 
+
+    /*
+    ** SPL List Conversion to Python objects
+    */
+    template <typename T>
+    inline PyObject * pySplListToPyList(const SPL::list<T> & l) {
+        PyObject * pyList = PyList_New(l.size());
+        for (int i = 0; i < l.size(); i++) {
+            PyList_SET_ITEM(pyList, i, pyAttributeToPyObject(l[i]));
+        }
+        return pyList;
+    }
+
+    /*
+    ** SPL Map Conversion to Python objects
+    */
+    template <typename K, typename V>
+    inline PyObject * pySplMapToPyDict(const SPL::map<K,V> & m) {
+        PyObject * pyDict = PyDict_New();
+        for (typename std::tr1::unordered_map<K,V>::const_iterator it = m.begin();
+             it != m.end(); it++) {
+             PyObject *k = pyAttributeToPyObject(it->first);
+             PyObject *v = pyAttributeToPyObject(it->second);
+             PyDict_SetItem(pyDict, k, v);
+             Py_DECREF(k);
+             Py_DECREF(v);
+        }
+      
+        return pyDict;
+    }
+
+    /**
+     * Integer conversions.
+    */
+
+    inline PyObject * pyAttributeToPyObject(const SPL::int32 & attr) {
+      return PyLong_FromLong(attr);
+    }
+    inline PyObject * pyAttributeToPyObject(const SPL::int64 & attr) {
+      return PyLong_FromLong(attr);
+    }
+    inline PyObject * pyAttributeToPyObject(const SPL::uint32 & attr) {
+      return PyLong_FromUnsignedLong(attr);
+    }
+    inline PyObject * pyAttributeToPyObject(const SPL::uint64 & attr) {
+      return PyLong_FromUnsignedLong(attr);
+    }
 
     /**
      * Convert a SPL blob into a Python Memory view object.
