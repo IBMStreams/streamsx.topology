@@ -38,7 +38,7 @@ sub cppToPythonPrimitiveConversion{
     }
 
     if ($supported == 1) {
-      return "streamsx::topology::pyAttributeToPyObject($convert_from_string)";
+      return "streamsx::topology::pySplValueToPyObject($convert_from_string)";
     }
     else{
       SPL::CodeGen::errorln("An unknown type was encountered when converting to python types." . $type ); 
@@ -110,21 +110,21 @@ sub cppToPythonListConversion {
 
     my ($iv, $type) = @_;
 
-    return "streamsx::topology::pySplListToPyList($iv)";
+    return "streamsx::topology::pySplValueToPyObject($iv)";
 }
 
 # Returns a string with the C++ expression
 sub cppToPythonMapConversion {
       my ($iv, $type) = @_;
 
-      return "streamsx::topology::pySplMapToPyDict($iv)";
+      return "streamsx::topology::pySplValueToPyObject($iv)";
 }
 
 # Returns a string with the C++ expression
 sub cppToPythonSetConversion {
       my ($iv, $type) = @_;
 
-      return "streamsx::topology::pySplSetToPySet($iv)";
+      return "streamsx::topology::pySplValueToPyObject($iv)";
 }
 
 #
