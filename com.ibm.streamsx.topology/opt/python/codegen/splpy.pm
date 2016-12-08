@@ -1,51 +1,49 @@
 
-# This function takes the string of a value to be converted and its
-# type, and generates the corresponding code to convert the type from
-# c++ to Python. Note that the $type argument is a SPL::CodeGen type,
-# and not a string literal
+# Check if a SPL type is supported for conversion
+# to a Python value.
 #
-sub cppToPythonPrimitiveConversion{
-# TODO: do error checking for the conversions. E.g., 
-# char * str = PyUnicode_AsUTF8(pyAttrValue)
-# if(str==NULL) exit(0);
-#
-# (or the equivalent for this function)
+sub splToPythonConversionCheck{
 
-    my ($convert_from_string, $type) = @_;
+    my ($type) = @_;
 
-    my $supported = 0;
-
-    if(SPL::CodeGen::Type::isSigned($type)) {
-      $supported = 1;
+    if (SPL::CodeGen::Type::isList($type) || SPL::CodeGen::Type::isSet($type)) {
+        my $element_type = SPL::CodeGen::Type::getElementType($type);
+        splToPythonConversionCheck($element_type);
+        return;
+    }
+    elsif (SPL::CodeGen::Type::isMap($type)) {
+        my $key_type = SPL::CodeGen::Type::getKeyType($type);
+        my $value_type = SPL::CodeGen::Type::getValueType($type);
+        splToPythonConversionCheck($key_type);
+        splToPythonConversionCheck($value_type);
+        return;
+    }
+    elsif(SPL::CodeGen::Type::isSigned($type)) {
+      return;
     } 
     elsif(SPL::CodeGen::Type::isUnsigned($type)) {
-      $supported = 1;
+      return;
     } 
     elsif(SPL::CodeGen::Type::isFloatingpoint($type)) {
-      $supported = 1;
+      return;
     } 
     elsif (SPL::CodeGen::Type::isRString($type) || SPL::CodeGen::Type::isBString($type)) {
-      $supported = 1;
+      return;
     } 
     elsif (SPL::CodeGen::Type::isUString($type)) {
-      $supported = 1;
+      return;
     } 
     elsif(SPL::CodeGen::Type::isBoolean($type)) {
-      $supported = 1;
+      return;
     } 
     elsif (SPL::CodeGen::Type::isComplex32($type) || SPL::CodeGen::Type::isComplex64($type)) {
-      $supported = 1;
+      return;
     }
 
-    if ($supported == 1) {
-      return "streamsx::topology::pySplValueToPyObject($convert_from_string)";
-    }
-    else{
-      SPL::CodeGen::errorln("An unknown type was encountered when converting to python types." . $type ); 
-    }
+    SPL::CodeGen::errorln("An unsupported SPL type was encountered when converting to python types. " . $type ); 
 }
 
-# This function does the reverse, converting a Python type back to a
+# Convert a Python type back to a
 # c++ type based on the $type argument which is a string literal.
 #
 # $convert_from_string - C++ expression representing PyObject * 
@@ -105,28 +103,6 @@ sub pythonToCppPrimitiveConversion{
   }
 }
 
-# Returns a string with the C++ expression
-sub cppToPythonListConversion {
-
-    my ($iv, $type) = @_;
-
-    return "streamsx::topology::pySplValueToPyObject($iv)";
-}
-
-# Returns a string with the C++ expression
-sub cppToPythonMapConversion {
-      my ($iv, $type) = @_;
-
-      return "streamsx::topology::pySplValueToPyObject($iv)";
-}
-
-# Returns a string with the C++ expression
-sub cppToPythonSetConversion {
-      my ($iv, $type) = @_;
-
-      return "streamsx::topology::pySplValueToPyObject($iv)";
-}
-
 #
 # Return a C++ statement converting a input attribute
 # from an SPL input tuple to a Python object
@@ -151,29 +127,11 @@ sub convertToPythonValue {
 sub convertToPythonValueFromExpr {
   my $type = $_[0];
   my $iv = $_[1];
-  
-  # If the type is a list, get the element type and make the
-  # corresponding Python type. The List needsto be iterated through at
-  # runtime becaues it could be of variable length.
-  if (SPL::CodeGen::Type::isList($type)) {
-      return cppToPythonListConversion($iv, $type);
-  }  
-  # If the type is a set, get the value type, then
-  # iterate through the set to copy its contents.
-  elsif(SPL::CodeGen::Type::isSet($type)){      
-      return cppToPythonSetConversion($iv, $type);
-  }
-  # If the type is a map, again, get the key and value types, then
-  # iterate through the map to copy its contents.
-  elsif(SPL::CodeGen::Type::isMap($type)){      
-      return cppToPythonMapConversion($iv, $type);
-  }
-  elsif(SPL::CodeGen::Type::isPrimitive($type)) { 
-      return cppToPythonPrimitiveConversion($iv, $type) . ";\n";
-  }
-  else {
-      SPL::CodeGen::errorln("An unknown type was encountered when converting to python types." . $type ); 
-  }
+
+  # Check the type is supported
+  splToPythonConversionCheck($type);
+
+  return "streamsx::topology::pySplValueToPyObject($iv)";
 }
 
 #
