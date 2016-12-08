@@ -104,11 +104,10 @@ sub pythonToCppPrimitiveConversion{
 }
 
 #
-# Return a C++ statement converting a input attribute
+# Return a C++ expression converting a input attribute
 # from an SPL input tuple to a Python object
-# Assumes a C++ variable pyValue is defined.
 #
-sub convertToPythonValue {
+sub convertAttributeToPythonValue {
   my $ituple = $_[0];
   my $type = $_[1];
   my $name = $_[2];
@@ -116,7 +115,7 @@ sub convertToPythonValue {
   # input value
   my $iv = $ituple . ".get_" . $name . "()";
 
-  return convertToPythonValueFromExpr($type, $iv) . ";\n";
+  return convertToPythonValueFromExpr($type, $iv);
 }
 
 ##
@@ -138,7 +137,7 @@ sub convertToPythonValueFromExpr {
 # Return a C++ statement converting a input attribute
 # from an SPL input tuple to a Python object and
 # setting it into pyTuple (as a Python Tuple).
-# Assumes a C++ variable pyValue and pyTuple are defined.
+# Assumes a C++ variable pyTuple are defined.
 #
 sub convertToPythonValueAsTuple {
   my $ituple = $_[0];
@@ -146,10 +145,10 @@ sub convertToPythonValueAsTuple {
   my $type = $_[2];
   my $name = $_[3];
 
-  my $get = "pyValue = " . convertToPythonValue($ituple, $type, $name);
+  my $getAndConvert = convertAttributeToPythonValue($ituple, $type, $name);
   
   # Note PyTuple_SetItem steals the reference to the value
-  my $assign =  "    PyTuple_SetItem(pyTuple, " . $i  .", pyValue);\n";
+  my $assign =  "    PyTuple_SET_ITEM(pyTuple, $i, $getAndConvert);\n";
 
   return $get . $assign ;
 }
@@ -244,7 +243,8 @@ sub convertAndAddToPythonDictionaryObject {
   my $names = $_[4];
 
   my $get = '{ PyObject * pyValue = ';
-  $get = $get . convertToPythonValue($ituple, $type, $name);
+  $get = $get . convertAttributeToPythonValue($ituple, $type, $name);
+  $get = $get . ";\n";
 
   # PyTuple_GET_ITEM returns a borrowed reference.
   $getkey = '{ PyObject * pyDictKey = PyTuple_GET_ITEM(' . $names . ',' . $i . ") ;\n";
