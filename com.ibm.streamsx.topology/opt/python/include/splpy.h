@@ -46,15 +46,6 @@
 #define TOPOLOGY_PYTHON_LIBNAME "libpython2.7.so"
 #endif
     
-#define GET_PYTHON_VALUE_THROWIFERROR(pbytes)                            \
-do {                                                                     \
-      if (pbytes == 0) {                                                 \
-         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python"); \
-         throw;                                                          \
-      }                                                                  \
-   }                                                                     \
-while(0) 
-
 #if PY_MAJOR_VERSION == 3
 #define GET_PYTHON_ATTR_FROM_MEMORY(pbytes,psizeb)                       \
      PyMemoryView_FromMemory((char *) pbytes, psizeb, PyBUF_READ);
@@ -101,25 +92,10 @@ namespace streamsx {
     }
 
     /*
-    ** Conversion of Python objects to SPL attributes.
-    */
-    template <class T>
-       inline void pyAttributeFromPyObject(T & attr, PyObject *);
-
-
-    /*
-    ** Convert to a SPL blob from a Python bytes object.
-    */
-    inline void pyAttributeFromPyObject(SPL::blob & attr, PyObject * value) {
-      long int size = PyBytes_Size(value);
-      char * bytes = PyBytes_AsString(value);          
-      attr.setData((const unsigned char *)bytes, size);
-    }
-
-    /*
     ** Convert to a SPL rstring from a Python string object.
+    ** Returns 0 if successful, non-zero if error.
     */
-    inline void pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
+    inline int pyRStringFromPyObject(SPL::rstring & attr, PyObject * value) {
       Py_ssize_t size = 0;
       PyObject * converted = NULL;
       char * bytes = NULL;
@@ -155,9 +131,7 @@ namespace streamsx {
       if (bytes == NULL) {
          if (converted != NULL)
              Py_DECREF(converted);
-         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
-         streamsx::topology::flush_PyErr_Print();
-         throw;
+         return -1;
       }
 
       // This copies from bytes into the rstring.
@@ -168,6 +142,63 @@ namespace streamsx {
       // into the Python object.
       if (converted != NULL)
           Py_DECREF(converted);
+
+      return 0;
+    }
+
+    /**
+     * Return an SPL runtime exception that can be thrown
+     * based upon the Python error. Also flushes Python stdout
+     * and stderr to ensure any additional info is visible
+     * in the PE console.
+    */
+    inline SPL::SPLRuntimeException pythonException(std::string const & 	location) {
+      PyObject *pyType, *pyValue, *pyTraceback;
+      PyErr_Fetch(&pyType, &pyValue, &pyTraceback);
+
+      if (pyType != NULL)
+          Py_DECREF(pyType);
+      if (pyTraceback != NULL)
+          Py_DECREF(pyTraceback);
+
+      SPL::rstring msg("Unknown Python error");
+      if (pyValue != NULL) {
+          streamsx::topology::pyRStringFromPyObject(msg, pyValue);
+          Py_DECREF(pyValue);
+      }
+
+      streamsx::topology::flush_PyErr_Print();
+
+      SPL::SPLRuntimeOperatorException exc(location, msg);
+      
+      return exc;
+    }
+
+    /*
+    ** Conversion of Python objects to SPL attributes.
+    */
+    template <class T>
+       inline void pyAttributeFromPyObject(T & attr, PyObject *);
+
+
+    /*
+    ** Convert to a SPL blob from a Python bytes object.
+    */
+    inline void pyAttributeFromPyObject(SPL::blob & attr, PyObject * value) {
+      long int size = PyBytes_Size(value);
+      char * bytes = PyBytes_AsString(value);          
+      attr.setData((const unsigned char *)bytes, size);
+    }
+
+    /*
+    ** Convert to a SPL rstring from a Python string object.
+    */
+    inline void pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
+      if (pyRStringFromPyObject(attr, value) != 0) {
+         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
+         streamsx::topology::flush_PyErr_Print();
+         throw;
+      }
     }
 
     inline void pyAttributeFromPyObject(SPL::ustring & attr, PyObject * value) {
@@ -372,8 +403,7 @@ namespace streamsx {
         PyGILLock lock;
         if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
           SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
-          streamsx::topology::flush_PyErr_Print();
-          throw;
+          throw streamsx::topology::pythonException("splpy_setup.py");
         }
       }
 
@@ -388,8 +418,7 @@ namespace streamsx {
       Py_DECREF(moduleName);
       if (module == NULL) {
         SPLAPPLOG(L_ERROR, TOPOLOGY_IMPORT_MODULE_ERROR(moduleNameC), "python");
-        streamsx::topology::flush_PyErr_Print();
-        throw;
+        throw streamsx::topology::pythonException(moduleNameC);
       }
       SPLAPPLOG(L_INFO, TOPOLOGY_IMPORT_MODULE(moduleNameC), "python");
       return module;
@@ -447,8 +476,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
       if(pyReturnVar == 0){
-        streamsx::topology::flush_PyErr_Print();
-        throw;
+        throw streamsx::topology::pythonException("sink");
       }
 
       Py_DECREF(pyReturnVar);
@@ -478,8 +506,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
       if(pyReturnVar == 0){
-        streamsx::topology::flush_PyErr_Print();
-        throw;
+        throw streamsx::topology::pythonException("filter");
       }
 
       int ret = PyObject_IsTrue(pyReturnVar);
@@ -505,8 +532,7 @@ namespace streamsx {
         Py_DECREF(pyReturnVar);
         return 0;
       } else if(pyReturnVar == 0){
-        streamsx::topology::flush_PyErr_Print();
-        throw;
+         throw streamsx::topology::pythonException("transform");
       } 
 
       pyAttributeFromPyObject(retSplVal, pyReturnVar);
@@ -584,34 +610,6 @@ namespace streamsx {
     }
 
     };
-
-    /**
-     * Return an SPL runtime exception that can be thrown
-     * based upon the Python error. Also flushes Python stdout
-     * and stderr to ensure any additional info is visible
-     * in the PE console.
-    */
-    static SPL::SPLRuntimeException pythonException(std::string const & 	location) {
-      PyObject *pyType, *pyValue, *pyTraceback;
-      PyErr_Fetch(&pyType, &pyValue, &pyTraceback);
-
-      if (pyType != NULL)
-          Py_DECREF(pyType);
-      if (pyTraceback != NULL)
-          Py_DECREF(pyTraceback);
-
-      SPL::rstring msg("Unknown Python error");
-      if (pyValue != NULL) {
-          pyAttributeFromPyObject(msg, pyValue);
-          Py_DECREF(pyValue);
-      }
-
-      streamsx::topology::flush_PyErr_Print();
-
-      SPL::SPLRuntimeOperatorException exc(location, msg);
-      
-      return exc;
-    }
   }
 }
 #endif
