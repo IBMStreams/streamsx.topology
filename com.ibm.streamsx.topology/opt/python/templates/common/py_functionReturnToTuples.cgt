@@ -12,8 +12,7 @@
     if (pyReturnVar == NULL) {
         SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
        
-        streamsx::topology::flush_PyErr_Print();
-        throw;
+        throw streamsx::topology::pythonException("<%=$functionName%>");
     }
 
     if (pyReturnVar == Py_None) {

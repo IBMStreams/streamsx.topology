@@ -26,6 +26,7 @@
 #include <dlfcn.h>
 #include <TopologySplpyResource.h>
 
+#include <SPL/Runtime/Common/RuntimeException.h>
 #include <SPL/Runtime/Type/Meta/BaseType.h>
 #include <SPL/Runtime/ProcessingElement/PE.h>
 #include <SPL/Runtime/Operator/Port/OperatorPort.h>
@@ -583,7 +584,34 @@ namespace streamsx {
     }
 
     };
-   
+
+    /**
+     * Return an SPL runtime exception that can be thrown
+     * based upon the Python error. Also flushes Python stdout
+     * and stderr to ensure any additional info is visible
+     * in the PE console.
+    */
+    static SPL::SPLRuntimeException pythonException(std::string const & 	location) {
+      PyObject *pyType, *pyValue, *pyTraceback;
+      PyErr_Fetch(&pyType, &pyValue, &pyTraceback);
+
+      if (pyType != NULL)
+          Py_DECREF(pyType);
+      if (pyTraceback != NULL)
+          Py_DECREF(pyTraceback);
+
+      SPL::rstring msg("Unknown Python error");
+      if (pyValue != NULL) {
+          pyAttributeFromPyObject(msg, pyValue);
+          Py_DECREF(pyValue);
+      }
+
+      streamsx::topology::flush_PyErr_Print();
+
+      SPL::SPLRuntimeOperatorException exc(location, msg);
+      
+      return exc;
+    }
   }
 }
 #endif
