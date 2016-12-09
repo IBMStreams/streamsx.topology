@@ -82,7 +82,7 @@ print splpy_inputtuple2value($pystyle);
 
     streamsx::topology::PyGILLock lock;
     // convert spl attribute to python object
-    PyObject * pyArg = streamsx::topology::pyAttributeToPyObject(value);
+    PyObject * pyArg = streamsx::topology::pySplValueToPyObject(value);
 
     PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyArg);
 
