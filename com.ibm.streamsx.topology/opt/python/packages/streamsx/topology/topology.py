@@ -49,13 +49,12 @@ class Topology(object):
           self.opnamespace = "com.ibm.streamsx.topology.functional.python2"
         else:
           raise ValueError("Python version not supported.")
-        self._conda_packages_to_exclude = set(["numpy", "scipy", "matplotlib", "h5py"])
         self.include_packages = set() 
         if "Anaconda" in sys.version:
-          self.exclude_packages = self._conda_packages_to_exclude
+          self.exclude_packages = set(["numpy", "scipy", "matplotlib", "h5py"])
         else: 
           self.exclude_packages = set() 
-        self.graph = graph.SPLGraph(name)
+        self.graph = graph.SPLGraph(name, topology=self)
         if files is not None:
             self.files = files
         else:
@@ -88,9 +87,9 @@ class Topology(object):
         else:
              func = streamsx.topology.functions._IterableInstance(func)
         
-        op = self.graph.addOperator(self.opnamespace+"::PyFunctionSource", func, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        op = self.graph.addOperator(self.opnamespace+"::PyFunctionSource", func)
         oport = op.addOutputPort()
-        return Stream(self, oport, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        return Stream(self, oport)
 
     def subscribe(self, topic, schema=schema.CommonSchema.Python):
         """
@@ -118,11 +117,11 @@ class Topology(object):
         Returns:
             A Stream whose tuples have been published to the topic by other Streams applications.
         """
-        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe")
         oport = op.addOutputPort(schema=schema)
         subscribeParams = {'topic': [topic], 'streamType': schema}
         op.setParameters(subscribeParams)
-        return Stream(self, oport, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        return Stream(self, oport)
     
 
 class Stream(object):
@@ -131,11 +130,9 @@ class Stream(object):
     series of tuples which can be operated upon to produce another stream, as in the case of Stream.map(), or 
     terminate a stream, as in the case of Stream.sink().
     """
-    def __init__(self, topology, oport, included_packages=set(), excluded_packages=set()):
+    def __init__(self, topology, oport):
         self.topology = topology
         self.oport = oport
-        self.include_packages = included_packages
-        self.exclude_packages = excluded_packages
 
     def sink(self, func):
         """
@@ -154,7 +151,7 @@ class Stream(object):
         Returns:
             None
         """
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionSink", func, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionSink", func)
         op.addInputPort(outputPort=self.oport)
 
     def filter(self, func):
@@ -178,16 +175,16 @@ class Stream(object):
         Returns:
             A Stream containing tuples that have not been filtered out.
         """
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionFilter", func, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionFilter", func)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
-        return Stream(self.topology, oport, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        return Stream(self.topology, oport)
 
     def _map(self, func, schema):
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionTransform", func, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionTransform", func)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=schema)
-        return Stream(self.topology, oport, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        return Stream(self.topology, oport)
 
     def view(self, buffer_time = 10.0, sample_size = 10000, name=None):
         """
@@ -263,10 +260,10 @@ class Stream(object):
         Raises:
             TypeError: if `func` does not return an iterator nor None
         """     
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionMultiTransform", func, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionMultiTransform", func)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
-        return Stream(self.topology, oport, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        return Stream(self.topology, oport)
     
     def flat_map(self, func):
         """
@@ -287,7 +284,7 @@ class Stream(object):
         # does the addOperator above need the packages
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
-        return Stream(self.topology, oport, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        return Stream(self.topology, oport)
 
     def low_latency(self):
         """
@@ -306,7 +303,7 @@ class Stream(object):
         # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
-        return Stream(self.topology, oport, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        return Stream(self.topology, oport)
 
     def end_low_latency(self):
         """
@@ -321,7 +318,7 @@ class Stream(object):
         op = self.topology.graph.addOperator("$EndLowLatency$")
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
-        return Stream(self.topology, oport, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        return Stream(self.topology, oport)
     
     def parallel(self, width, routing=None, func=None):
         """
@@ -362,11 +359,11 @@ class Stream(object):
             op2 = self.topology.graph.addOperator("$Parallel$")
             op2.addInputPort(outputPort=iop.oport)
             oport = op2.addOutputPort(width)
-            return Stream(self.topology, oport, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+            return Stream(self.topology, oport)
         elif(routing == Routing.HASH_PARTITIONED ) :
             if (func is None) :
                 func = hash   
-            op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+            op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func)
             hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int32 __spl_hash>"))
             parentOp = op.addOutputPort(schema=hash_schema)
             op.addInputPort(outputPort=self.oport)
@@ -380,7 +377,7 @@ class Stream(object):
             hrop = self.topology.graph.addPassThruOperator()
             hrop.addInputPort(outputPort=o2port)
             hrOport = hrop.addOutputPort(schema=self.oport.schema)
-            return Stream(self.topology, hrOport, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+            return Stream(self.topology, hrOport)
         else :
             raise TypeError("Invalid routing type supplied to the parallel operator")    
 
@@ -424,7 +421,7 @@ class Stream(object):
         for stream in streamSet:
             op.addInputPort(outputPort=stream.oport)
         oport = op.addOutputPort()
-        return Stream(self.topology, oport, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        return Stream(self.topology, oport)
 
     def print(self):
         """
@@ -492,7 +489,7 @@ class Stream(object):
         op = self.topology.graph.addOperator("$Autonomous$")
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
-        return Stream(self.topology, oport, included_packages=self.include_packages, excluded_packages=self.exclude_packages)
+        return Stream(self.topology, oport)
 
 class Routing(Enum):
     ROUND_ROBIN=1
