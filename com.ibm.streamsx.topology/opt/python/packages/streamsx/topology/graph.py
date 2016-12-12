@@ -22,7 +22,7 @@ from streamsx.topology.schema import _stream_schema
 
 class SPLGraph(object):
 
-    def __init__(self, name=None, topology=None):
+    def __init__(self, topology, name=None):
         if name is None:
             name = str(uuid.uuid1()).replace("-", "")
         # Allows Topology or SPLGraph to be passed to submit
@@ -30,7 +30,7 @@ class SPLGraph(object):
         self.name = name
         self.topology = topology
         self.operators = []
-        self.resolver = streamsx.topology.dependency._DependencyResolver(topology=self.topology)
+        self.resolver = streamsx.topology.dependency._DependencyResolver(self.topology)
         self._views = []
 
     def get_views(self):

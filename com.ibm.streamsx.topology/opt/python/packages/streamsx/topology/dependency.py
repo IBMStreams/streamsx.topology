@@ -12,7 +12,7 @@ class _DependencyResolver(object):
     Finds dependencies given a module object
     """
     
-    def __init__(self, topology=None):
+    def __init__(self, topology):
         self._modules = set()
         self._packages = collections.OrderedDict() # need an ordered set when merging namespace directories
         self._processed_modules = set()
@@ -62,16 +62,15 @@ class _DependencyResolver(object):
         # we don't want to do a direct comparison. Instead, we want to excluse packages
         # which are either exactly "<package_name>", or start with "<package_name>".
         
-        if self.topology is not None:
-          # print("included_packages:", self.topology.include_packages);
-          for include_package in self.topology.include_packages:
-              if include_package == module.__name__ or module.__name__.startswith(include_package + '.'):
-                  return True
-              
-          # print("excluded_packages:", self.topology.exclude_packages);
-          for exclude_package in self.topology.exclude_packages:
-              if exclude_package == module.__name__ or module.__name__.startswith(exclude_package + '.'):
-                  return False
+        # print("included_packages:", self.topology.include_packages);
+        for include_package in self.topology.include_packages:
+            if include_package == module.__name__ or module.__name__.startswith(include_package + '.'):
+                return True
+            
+        # print("excluded_packages:", self.topology.exclude_packages);
+        for exclude_package in self.topology.exclude_packages:
+            if exclude_package == module.__name__ or module.__name__.startswith(exclude_package + '.'):
+                return False
             
         return True
 

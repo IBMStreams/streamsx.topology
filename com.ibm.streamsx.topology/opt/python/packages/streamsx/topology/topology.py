@@ -54,7 +54,7 @@ class Topology(object):
           self.exclude_packages = set(["numpy", "scipy", "matplotlib", "h5py"])
         else: 
           self.exclude_packages = set() 
-        self.graph = graph.SPLGraph(name, topology=self)
+        self.graph = graph.SPLGraph(self, name)
         if files is not None:
             self.files = files
         else:
