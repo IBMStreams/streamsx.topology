@@ -7,14 +7,12 @@ import inspect
 import types
 import collections
     
-from streamsx.topology.topologypackages import TopologyPackages
-
 class _DependencyResolver(object):
     """
     Finds dependencies given a module object
     """
     
-    def __init__(self, topology_packages):
+    def __init__(self, topology):
         self._modules = set()
         self._packages = collections.OrderedDict() # need an ordered set when merging namespace directories
         self._processed_modules = set()
@@ -23,7 +21,7 @@ class _DependencyResolver(object):
         dir = os.path.dirname(os.path.abspath(my_module.__file__))
         dir = os.path.dirname(dir)
         self._streamsx_topology_dir = dir
-        self._topology_packages = topology_packages
+        self.topology = topology
         
     def add_dependencies(self, module):
         """
@@ -64,11 +62,13 @@ class _DependencyResolver(object):
         # we don't want to do a direct comparison. Instead, we want to excluse packages
         # which are either exactly "<package_name>", or start with "<package_name>".
         
-        for include_package in self._topology_packages.include_packages:
+        # print("included_packages:", self.topology.include_packages);
+        for include_package in self.topology.include_packages:
             if include_package == module.__name__ or module.__name__.startswith(include_package + '.'):
                 return True
             
-        for exclude_package in self._topology_packages.exclude_packages:
+        # print("excluded_packages:", self.topology.exclude_packages);
+        for exclude_package in self.topology.exclude_packages:
             if exclude_package == module.__name__ or module.__name__.startswith(exclude_package + '.'):
                 return False
             
