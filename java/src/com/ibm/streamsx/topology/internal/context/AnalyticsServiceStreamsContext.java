@@ -68,6 +68,20 @@ public class AnalyticsServiceStreamsContext extends
         
         return new CompletedFuture<BigInteger>(jobId);
     }
+
+    @Override
+    public Future<BigInteger> submit(JSONObject submission) throws Exception{
+	Map<String, Object> config = Contexts.jsonDeployToMap(
+		        (JSONObject)submission.get("deploy"));
+
+	preBundle(config);
+	File bundle = bundler.submit(submission).get();
+	preInvoke();
+
+        BigInteger jobId = submitJobToService(bundle, config);
+        
+        return new CompletedFuture<BigInteger>(jobId);
+    }
     
     void preInvoke() {
         
@@ -92,7 +106,11 @@ public class AnalyticsServiceStreamsContext extends
                 return JSONObject.parse(fis);
             }
             
-        } else {
+        }
+	else if (rawServices instanceof JSONObject){
+	    return (JSONObject)rawServices;
+	}
+	else {
             throw new IllegalArgumentException();
         }       
     }
