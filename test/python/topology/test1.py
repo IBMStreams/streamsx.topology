@@ -28,6 +28,13 @@ class TestTopologyMethods(unittest.TestCase):
      hwf = hw.filter(test_functions.filter)
      hwf.sink(test_functions.check_hello_world_filter)
      streamsx.topology.context.submit("STANDALONE", topo.graph)
+
+  def test_TopologyLambdaFilter(self):
+     topo = Topology("test_TopologyLambdaFilter")
+     hw = topo.source(test_functions.hello_world)
+     hwf = hw.filter(lambda t : "Wor" in t)
+     hwf.sink(test_functions.check_hello_world_filter)
+     streamsx.topology.context.submit("STANDALONE", topo.graph)
         
   def test_TopologyLengthFilter(self):
      topo = Topology("test_TopologyLengthFilter")
