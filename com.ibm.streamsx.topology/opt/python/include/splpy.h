@@ -180,7 +180,6 @@ namespace streamsx {
     template <class T>
        inline void pyAttributeFromPyObject(T & attr, PyObject *);
 
-
     /*
     ** Convert to a SPL blob from a Python bytes object.
     */
@@ -196,8 +195,7 @@ namespace streamsx {
     inline void pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
       if (pyRStringFromPyObject(attr, value) != 0) {
          SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
-         streamsx::topology::flush_PyErr_Print();
-         throw;
+         throw streamsx::topology::pythonException("rstring");
       }
     }
 
