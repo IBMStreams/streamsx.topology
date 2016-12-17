@@ -89,7 +89,15 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=
 		     $ce = "ma";
 	     }
 	     else {
-		  $ce = pythonToCppPrimitiveConversion("pyAttrValue", $atype);		     
+                  %>
+                  streamsx::topology::pySplValueFromPyObject(
+                               otuple.get_<%=$name%>(), pyAttrValue);
+                  <%
+
+                 
+		  # $ce = pythonToCppPrimitiveConversion("pyAttrValue", $atype);		     
+                  # temp - the function call above sets the attr
+                  $ce = "otuple.get_$name()";
 	     }
 	     
 	     
