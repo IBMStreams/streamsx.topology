@@ -273,20 +273,41 @@ namespace streamsx {
         );
     }
 
-    // list
-    /*
+    // SPL list from Python list
     template <typename T>
     inline void pySplValueFromPyObject(SPL::list<T> & l, PyObject *value) {
-        Py_ssize_t size = PyList_Size(value);
+        const Py_ssize_t size = PyList_Size(value);
 
-        for (int i = 0; i < size; i++) {
-            PyObject e = PyList_GET_ITEM(value, i);
-            T se;
-            pySplValueFromPyObject(se, e);
-            l.add(se);
+        for (Py_ssize_t i = 0; i < size; i++) {
+            SPL::ValueHandle vhe = l.createElement();
+            l.add(vhe); // Add takes a copy of the value
+            vhe.deleteValue();
+
+            PyObject * e = PyList_GET_ITEM(value, i);
+            pySplValueFromPyObject(l.at(i), e);
         }
     }
-    */
+
+    // SPL map from Python dictionary
+    template <typename K, typename V>
+    inline void pySplValueFromPyObject(SPL::map<K,V> & m, PyObject *value) {
+        PyObject *k,*v;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(value, &pos, &k, &v)) {
+           SPL::ValueHandle vhk = m.createKey();
+           K & sk = vhk;
+
+           // Set the SPL key
+           pySplValueFromPyObject(sk, k);
+
+           // map[] creates the value if it does not exist
+           V & sv = m[sk];
+           vhk.deleteValue();
+ 
+           // Set the SPL value 
+           pySplValueFromPyObject(sv, v);
+        }
+    }
 
     /**************************************************************/
 

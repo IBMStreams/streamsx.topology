@@ -67,26 +67,32 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=
 	     if ($atype eq 'list') {
 		 my $assign_string = pythonToCppPrimitiveConversion("PyList_GET_ITEM(pyAttrValue, i)", $element_type);
 		 %>
-		     SPL::list< <%=$element_type%> > li = SPL::list< <%=$element_type%> >(PyList_Size(pyAttrValue));
-		 for(int i = 0; i < li.size(); i++){
-		     li[i] = <%=$assign_string%>;
-		 }
+		  //   SPL::list< <%=$element_type%> > li = SPL::list< <%=$element_type%> >(PyList_Size(pyAttrValue));
+		 //for(int i = 0; i < li.size(); i++){
+		 //    li[i] = <%=$assign_string%>;
+		 //}
+                  streamsx::topology::pySplValueFromPyObject(
+                               otuple.get_<%=$name%>(), pyAttrValue);
 		 <%
 		     $ce = "li";
+                  $ce = "otuple.get_$name()";
 	     }
 	     
        elsif ($atype eq 'map') {
 		 my $key_assign_string = pythonToCppPrimitiveConversion("k", $key_type);
 		 my $value_assign_string = pythonToCppPrimitiveConversion("v", $value_type);
 		 %>
-		 SPL::map< <%=$key_type%>, <%=$value_type%> > ma = SPL::map< <%=$key_type%>, <%=$value_type%> >();
-		 PyObject *k,*v;
-		 Py_ssize_t pos = 0;
-		 while(PyDict_Next(pyAttrValue, &pos, &k, &v)){
-		     ma[ <%=$key_assign_string%> ] = <%=$value_assign_string%>;
-		 }
+                  streamsx::topology::pySplValueFromPyObject(
+                               otuple.get_<%=$name%>(), pyAttrValue);
+		 //SPL::map< <%=$key_type%>, <%=$value_type%> > ma = SPL::map< <%=$key_type%>, <%=$value_type%> >();
+		 //PyObject *k,*v;
+		 //Py_ssize_t pos = 0;
+		 //while(PyDict_Next(pyAttrValue, &pos, &k, &v)){
+		 //    ma[ <%=$key_assign_string%> ] = <%=$value_assign_string%>;
+		 //}
 		 <%
-		     $ce = "ma";
+		  #   $ce = "ma";
+                  $ce = "otuple.get_$name()";
 	     }
 	     else {
                   %>
