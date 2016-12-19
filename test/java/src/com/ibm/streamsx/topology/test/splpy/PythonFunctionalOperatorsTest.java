@@ -10,16 +10,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.math.complex.Complex;
 import org.junit.Before;
@@ -45,6 +40,8 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 public class PythonFunctionalOperatorsTest extends TestTopology {
+    
+  // Need to match schema in test/python/pubsub/pytest_schema.py
   public static final StreamSchema ALL_PYTHON_TYPES_SCHEMA=
           Type.Factory.getStreamSchema("tuple<boolean b," +
     		  "int8 i8, int16 i16, int32 i32, int64 i64," +
@@ -72,7 +69,12 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     		  "map<float64,int32> mf64i32," +
     		  "map<float64,uint32> mf64u32," +
     		  "map<float64,rstring> mf64r," +
-    		  "map<rstring,float64> mrf64>");
+    		  "map<rstring,float64> mrf64," +
+    		  "list<list<float64>> llf64," +
+    		  "map<rstring,list<int32>> mrli32," +
+    		  "map<rstring,map<rstring,float64>> mrmrf64" +
+    		  // "map<list<int8>,int8> mli8i8" +
+    		  ">");
 
     public static final StreamSchema ALL_PYTHON_TYPES_WITH_SETS_SCHEMA = ALL_PYTHON_TYPES_SCHEMA.extend("set<int32>", "si32"); 
     

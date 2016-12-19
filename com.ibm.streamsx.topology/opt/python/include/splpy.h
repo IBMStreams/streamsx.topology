@@ -279,9 +279,8 @@ namespace streamsx {
         const Py_ssize_t size = PyList_Size(value);
 
         for (Py_ssize_t i = 0; i < size; i++) {
-            SPL::ValueHandle vhe = l.createElement();
-            l.add(vhe); // Add takes a copy of the value
-            vhe.deleteValue();
+            T se;
+            l.add(se); // Add takes a copy of the value
 
             PyObject * e = PyList_GET_ITEM(value, i);
             pySplValueFromPyObject(l.at(i), e);
@@ -294,15 +293,13 @@ namespace streamsx {
         PyObject *k,*v;
         Py_ssize_t pos = 0;
         while (PyDict_Next(value, &pos, &k, &v)) {
-           SPL::ValueHandle vhk = m.createKey();
-           K & sk = vhk;
+           K sk;
 
            // Set the SPL key
            pySplValueFromPyObject(sk, k);
 
            // map[] creates the value if it does not exist
            V & sv = m[sk];
-           vhk.deleteValue();
  
            // Set the SPL value 
            pySplValueFromPyObject(sv, v);
