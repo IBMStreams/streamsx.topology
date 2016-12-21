@@ -584,15 +584,26 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     }
     
     @Test(expected=Exception.class)
-    public void testNonHashableSet() throws Exception {
+    public void testNonHashableSetInput() throws Exception {
         StreamSchema bad = Type.Factory.getStreamSchema("tuple<set<list<int32>> a>");
         _testSchemaBuild(bad, INT32_SCHEMA);
     }
     
     @Test(expected=Exception.class)
-    public void testNonHashableMap() throws Exception {
+    public void testNonHashableMapInput() throws Exception {
         StreamSchema bad = Type.Factory.getStreamSchema("tuple<map<set<int32>,rstring> a>");
         _testSchemaBuild(bad, INT32_SCHEMA);
+    }
+    @Test(expected=Exception.class)
+    public void testNonHashableSetOutput() throws Exception {
+        StreamSchema bad = Type.Factory.getStreamSchema("tuple<set<list<int32>> a>");
+        _testSchemaBuild(INT32_SCHEMA, bad);
+    }
+    
+    @Test(expected=Exception.class)
+    public void testNonHashableMapOutput() throws Exception {
+        StreamSchema bad = Type.Factory.getStreamSchema("tuple<map<set<int32>,rstring> a>");
+        _testSchemaBuild(INT32_SCHEMA, bad);
     }
     
     /**

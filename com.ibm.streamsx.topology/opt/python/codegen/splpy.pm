@@ -1,6 +1,6 @@
 
 # Check if a SPL type is supported for conversion
-# to a Python value.
+# to/from a Python value.
 #
 sub splToPythonConversionCheck{
 

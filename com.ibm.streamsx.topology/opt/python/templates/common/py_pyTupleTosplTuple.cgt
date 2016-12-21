@@ -26,6 +26,7 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=
     my $attribute = $oport->getAttributeAt($ai);
     my $name = $attribute->getName();
     my $atype = $attribute->getSPLType();
+    splToPythonConversionCheck($atype);
     
     if (defined $iport) {
              print 'setAttr = false;';
