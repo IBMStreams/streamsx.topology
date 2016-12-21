@@ -30,6 +30,7 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -572,4 +573,44 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(0, m4.getInt("d"));
         assertEquals(-64, m4.getInt("e"));
     }
+    
+    private final StreamSchema INT32_SCHEMA =
+            Type.Factory.getStreamSchema("tuple<int32 a>");
+    
+    @Test
+    public void testGoodSchema() throws Exception {
+        // Just verify that _testSchemaBuild works with a good schema.
+        _testSchemaBuild(INT32_SCHEMA, INT32_SCHEMA);
+    }
+    
+    @Test(expected=Exception.class)
+    public void testNonHashableSet() throws Exception {
+        StreamSchema bad = Type.Factory.getStreamSchema("tuple<set<list<int32>> a>");
+        _testSchemaBuild(bad, INT32_SCHEMA);
+    }
+    
+    @Test(expected=Exception.class)
+    public void testNonHashableMap() throws Exception {
+        StreamSchema bad = Type.Factory.getStreamSchema("tuple<map<set<int32>,rstring> a>");
+        _testSchemaBuild(bad, INT32_SCHEMA);
+    }
+    
+    /**
+     * Just create a Beacon feeding a Python Noop to allow
+     * checking of input and output schemas.
+     */
+    private void _testSchemaBuild(StreamSchema input, StreamSchema output) throws Exception{
+        Topology topology = new Topology("testNonHashableSet");
+        
+        
+        SPLStream s = SPL.invokeSource(topology, "spl.utility::Beacon", Collections.emptyMap(), input);
+                
+        addTestToolkit(topology);
+        SPL.invokeOperator("com.ibm.streamsx.topology.pysamples.positional::Noop", s, output, null);
+        
+        File bundle = (File) StreamsContextFactory.getStreamsContext(StreamsContext.Type.BUNDLE).submit(topology).get();
+        bundle.delete();
+    }
+    
+    
 }
