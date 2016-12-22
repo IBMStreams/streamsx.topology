@@ -286,6 +286,26 @@ namespace streamsx {
             pySplValueFromPyObject(l.at(i), e);
         }
     }
+ 
+    // SPL set from Python set
+    template <typename T>
+    inline void pySplValueFromPyObject(SPL::set<T> & s, PyObject *value) {
+        // validates that value is a Python set
+        const Py_ssize_t size = PySet_Size(value);
+
+        PyObject * iterator = PyObject_GetIter(value);
+        if (iterator == 0) {
+            throw streamsx::topology::pythonException("iter(set)");
+        }
+        PyObject *item;
+        while (item = PyIter_Next(iterator)) {
+            T se;
+            pySplValueFromPyObject(se, item);
+            Py_DECREF(item);
+            s.add(se);
+        }
+        Py_DECREF(iterator);
+    }
 
     // SPL map from Python dictionary
     template <typename K, typename V>
