@@ -1,22 +1,38 @@
 
 # Check if a SPL type is supported for conversion
-# to a Python value.
+# to/from a Python value.
 #
 sub splToPythonConversionCheck{
 
     my ($type) = @_;
 
-    if (SPL::CodeGen::Type::isList($type) || SPL::CodeGen::Type::isSet($type)) {
+    if (SPL::CodeGen::Type::isList($type)) {
         my $element_type = SPL::CodeGen::Type::getElementType($type);
         splToPythonConversionCheck($element_type);
         return;
     }
+    elsif (SPL::CodeGen::Type::isSet($type)) {
+        my $element_type = SPL::CodeGen::Type::getElementType($type);
+        # Python sets must have hashable keys
+        # (which excludes Python collection type such as list,map,set)
+        # so for now restrict to primitive types)
+        if (SPL::CodeGen::Type::isPrimitive($element_type)) {
+            splToPythonConversionCheck($element_type);
+            return;
+        }
+    }
     elsif (SPL::CodeGen::Type::isMap($type)) {
         my $key_type = SPL::CodeGen::Type::getKeyType($type);
-        my $value_type = SPL::CodeGen::Type::getValueType($type);
-        splToPythonConversionCheck($key_type);
-        splToPythonConversionCheck($value_type);
-        return;
+        # Python maps must have hashable keys
+        # (which excludes Python collection type such as list,map,set)
+        # so for now restrict to primitive types)
+        if (SPL::CodeGen::Type::isPrimitive($key_type)) {
+            splToPythonConversionCheck($key_type);
+
+           my $value_type = SPL::CodeGen::Type::getValueType($type);
+           splToPythonConversionCheck($value_type);
+           return;
+        }
     }
     elsif(SPL::CodeGen::Type::isSigned($type)) {
       return;
@@ -40,7 +56,7 @@ sub splToPythonConversionCheck{
       return;
     }
 
-    SPL::CodeGen::errorln("An unsupported SPL type was encountered when converting to python types. " . $type ); 
+    SPL::CodeGen::errorln("SPL type: " . $type . " is not supported for conversion to or from Python."); 
 }
 
 # Convert a Python type back to a

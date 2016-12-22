@@ -29,6 +29,9 @@ all_spl_types = StreamSchema("tuple<boolean b,"
     		  "map<float64,uint32> mf64u32,"
     		  "map<float64,rstring> mf64r,"
     		  "map<rstring,float64> mrf64,"
+                  "list<list<float64>> llf64,"
+                  "map<rstring,list<int32>> mrli32,"
+                  "map<rstring,map<rstring,float64>> mrmrf64,"
     		  "set<int32> si32>"
                   )
 
