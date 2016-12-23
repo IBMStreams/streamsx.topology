@@ -119,7 +119,7 @@ class Topology(object):
         """
         op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe")
         oport = op.addOutputPort(schema=schema)
-        subscribeParams = {'topic': [topic], 'streamType': schema}
+        subscribeParams = {'topic': topic, 'streamType': schema}
         op.setParameters(subscribeParams)
         return Stream(self, oport)
     
@@ -461,7 +461,7 @@ class Stream(object):
             self._map(streamsx.topology.functions.identity,schema=schema).publish(topic, schema=schema);
             return None
 
-        publishParams = {'topic': [topic]}
+        publishParams = {'topic': topic}
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params=publishParams)
         op.addInputPort(outputPort=self.oport)
 
