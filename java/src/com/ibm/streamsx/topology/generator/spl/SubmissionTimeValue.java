@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.generator.spl;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_COMPOSITE_PARAMETER;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties.FUNCTIONAL_LOGIC_PARAM;
 
@@ -82,15 +83,100 @@ public class SubmissionTimeValue {
         
         if (params != null) {
             for (Entry<String, JsonElement> e : params.entrySet()) {
-                String key = e.getKey();
                 JsonObject param = e.getValue().getAsJsonObject();
                 if (TYPE_SUBMISSION_PARAMETER.equals(jstring(param, "type"))) {
                     JsonObject sp = jobject(param, "value");
-                    all.put(mkOpParamName(jstring(sp, "name")), param);
+                    all.put(mkOpParamName(jstring(sp, "name")), param);                  
                 }
             }
         }
+        
+        for (JsonObject param : all.values())
+            addMainCompositeParameter(params, param);
+        
         return all;
+    }
+    
+    /**
+     * Create a main composite to represent a submission parameter.
+     * 
+     * A parameter with name width,  type int32 default 3 is mapped to in the main composite:
+     * 
+     * expression<int32> $__spl_stv_width : (int32) getSubmissionTimeValue("width", "3");
+     * 
+     */
+    private void addMainCompositeParameter(JsonObject params, JsonObject param) {
+        
+        JsonObject spv = jobject(param, "value");
+        String spname = jstring(spv, "name");
+        String metaType = jstring(spv, "metaType");
+        String cpname  = "XX" + mkOpParamName(spname);
+        
+        
+        JsonObject cp = new JsonObject();
+        cp.addProperty("type", TYPE_COMPOSITE_PARAMETER);
+        
+        JsonObject cpv = new JsonObject();
+        cpv.addProperty("name", cpname);
+        cpv.addProperty("metaType", metaType);
+        
+        String splspname = SPLGenerator.stringLiteral(spname);
+        String splType = Types.metaTypeToSPL(metaType);
+        
+        String cpdv;
+        if (!spv.has("defaultValue")) {
+            cpdv = String.format("(%s) getSubmissionTimeValue(%s)", splType, splspname);
+        } else {
+            JsonPrimitive defaultValueJson = spv.get("defaultValue").getAsJsonPrimitive();
+            String defaultValue;
+            
+            if (metaType.startsWith("UINT")) {
+                StringBuilder sbunsigned = new StringBuilder();
+                sbunsigned.append("(rstring) ");                
+                SPLGenerator.numberLiteral(sbunsigned, defaultValueJson, metaType);
+                defaultValue = sbunsigned.toString();
+            } else {
+                defaultValue = SPLGenerator.stringLiteral(defaultValueJson.getAsString());
+            }         
+            
+            cpdv = String.format("(%s) getSubmissionTimeValue(%s, %s)", splType, splspname, defaultValue);
+        }
+        cpv.addProperty("defaultValue", cpdv);
+        
+        cp.add("value", cpv);
+        
+        params.add(cpname, cp);
+    }
+    
+    /**
+     * Create a inner composite to access a submission parameter defined in
+     * a main composite..
+     * 
+     * A parameter with name width,  type int32 default 3 is mapped to in the main composite:
+     * 
+     * expression<int32> $__spl_stv_width;
+     * 
+     */
+    private void addInnerCompositeParameter(JsonObject params, JsonObject param) {
+        
+        JsonObject spv = jobject(param, "value");
+        String spname = jstring(spv, "name");
+        String metaType = jstring(spv, "metaType");
+        String cpname  = "XX" + mkOpParamName(spname);
+        
+        if (params.has(cpname))
+            return;
+              
+        JsonObject cp = new JsonObject();
+        cp.addProperty("type", TYPE_COMPOSITE_PARAMETER);
+        
+        JsonObject cpv = new JsonObject();
+        cpv.addProperty("name", cpname);
+        cpv.addProperty("metaType", metaType);
+        
+        cp.add("value", cpv);
+        
+        params.add(cpname, cp);       
     }
     
     /**
@@ -156,7 +242,7 @@ public class SubmissionTimeValue {
                 boolean addAll = false;
                 for (Entry<String, JsonElement> p : params.entrySet()) {
                     // if functional logic add "submissionParameters" param
-                    if (params.get(FUNCTIONAL_LOGIC_PARAM) != null) {
+                    if (params.has(FUNCTIONAL_LOGIC_PARAM)) {
                         functionalOps.put(jstring(op, "name"), op);
                         addAll = true;
                     }
@@ -167,12 +253,15 @@ public class SubmissionTimeValue {
                             JsonObject spval = param.get("value").getAsJsonObject();
                             String name = mkOpParamName(jstring(spval, "name"));
                             spParams.add(name, param);
+                            addInnerCompositeParameter(spParams, param);
                         }
                     }
                 }
                 if (addAll && !addedAll.getAndSet(true)) {
-                    for (String name : allSubmissionParams.keySet())
+                    for (String name : allSubmissionParams.keySet()) {
                         spParams.add(name, allSubmissionParams.get(name));
+                        addInnerCompositeParameter(spParams, allSubmissionParams.get(name));
+                    }
                 }
             }
             boolean isParallel = jboolean(op, "parallelOperator"); 
@@ -185,6 +274,7 @@ public class SubmissionTimeValue {
                         JsonObject spval = jwidth.get("value").getAsJsonObject();
                         String pname = mkOpParamName(jstring(spval,"name")); 
                         spParams.add(pname, jwidth);
+                        addInnerCompositeParameter(spParams, jwidth);
                     }
                 }
             }

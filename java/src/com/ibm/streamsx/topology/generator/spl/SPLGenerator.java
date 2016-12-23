@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_COMPOSITE_PARAMETER;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
@@ -129,6 +130,8 @@ public class SPLGenerator {
                         stvHelper.generateInnerDef(value, sb);
                     sb.append(";\n");
                 }
+                else if (TYPE_COMPOSITE_PARAMETER.equals(type))
+                    ; // TODO
                 else
                     throw new IllegalArgumentException("Unhandled param name=" + name + " jo=" + param);
             }
