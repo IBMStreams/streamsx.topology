@@ -339,7 +339,7 @@ class _SubmitContextFactory:
         streams_install = os.environ.get('STREAMS_INSTALL')
         if streams_install is None:
             if not (ctxtype == ContextTypes.REMOTE_BUILD_AND_SUBMIT or ctxtype == ContextTypes.TOOLKIT or ctxtype == ContextTypes.BUILD_ARCHIVE
-                    or ctxtype == ContextTypes.STREAMING_ANALYTICS):
+                    or ctxtype == ContextTypes.ANALYTICS_SERVICE):
                 raise UnsupportedContextException(ctxtype + " must be submitted when a streams install is present.")
 
         if ctxtype == ContextTypes.JUPYTER:
@@ -351,8 +351,8 @@ class _SubmitContextFactory:
         elif ctxtype == ContextTypes.DISTRIBUTED:
             logger.debug("Selecting the DISTRIBUTED context for submission")
             return _DistributedSubmitter(ctxtype, self.config, self.app_topology, self.username, self.password)
-        elif ctxtype == ContextTypes.STREAMING_ANALYTICS:
-            logger.debug("Selecting the STREAMING_ANALYTICS context for submission")
+        elif ctxtype == ContextTypes.ANALYTICS_SERVICE:
+            logger.debug("Selecting the ANALYTICS_SERVICE context for submission")
             return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
         else:
             logger.debug("Using the BaseSubmitter, and passing the context type through to java.")
@@ -438,7 +438,7 @@ class ContextTypes:
     STANDALONE = 'STANDALONE'
     DISTRIBUTED = 'DISTRIBUTED'
     JUPYTER = 'JUPYTER'
-    STREAMING_ANALYTICS = 'STREAMING_ANALYTICS'
+    ANALYTICS_SERVICE = 'ANALYTICS_SERVICE'
 
 
 class ConfigParams:
