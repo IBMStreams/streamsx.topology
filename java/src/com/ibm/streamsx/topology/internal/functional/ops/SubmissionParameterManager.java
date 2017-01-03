@@ -172,7 +172,7 @@ public class SubmissionParameterManager {
         // good to go. initialize params
         params = new HashMap<>();
         for (Map.Entry<String, String> e : allsp.entrySet()) {
-            params.put(SubmissionTimeValue.mkOpParamName(e.getKey()), e.getValue());
+            params.put(e.getKey(), e.getValue());
         }
         // System.out.println("SPM.initializeEmbedded() " + params);
     }
@@ -188,7 +188,7 @@ public class SubmissionParameterManager {
      *          may be null.
      */
     public static Object getValue(String spName, MetaType metaType) {
-        String value = params.get(SubmissionTimeValue.mkOpParamName(spName));
+        String value = params.get(spName);
         if (value == null) {
             // System.out.println("SPM.getValue "+spName+" "+metaType+ " params " + params);
             throw new IllegalArgumentException("Unexpected submission parameter name " + spName);
