@@ -16,7 +16,6 @@ except (ImportError,NameError):
 import random
 from streamsx.topology import graph
 from streamsx.topology import schema
-from streamsx.topology import topologypackages
 import streamsx.topology.functions
 import json
 import threading
@@ -30,7 +29,17 @@ from enum import Enum
 class Topology(object):
     """The Topology class is used to define data sources, and is passed as a parameter when submittion an application.
        Topology keeps track of all sources, sinks, and data operations within your application.
-    """
+
+       Instance variables:
+           include_packages: Set of Python package names to be included in the built application. 
+
+           exclude_packages: Set of Python package names to be excluded from the built application.
+           When compiling the application using Anaconda this set is pre-loaded with Python pacakges from the 
+           Anaconda pre-loaded  set of applications.
+
+           package names in the include_packages set take precedence over package namers in the exclude_pacakges set.
+    """  
+
     def __init__(self, name, files=None):
         self.name = name
         self.pythonversion = python_version()
@@ -40,8 +49,12 @@ class Topology(object):
           self.opnamespace = "com.ibm.streamsx.topology.functional.python2"
         else:
           raise ValueError("Python version not supported.")
-        self.dependent_packages = topologypackages.TopologyPackages()
-        self.graph = graph.SPLGraph(name, self.dependent_packages)
+        self.include_packages = set() 
+        if "Anaconda" in sys.version:
+          self.exclude_packages = set(["numpy", "scipy", "matplotlib", "h5py"])
+        else: 
+          self.exclude_packages = set() 
+        self.graph = graph.SPLGraph(self, name)
         if files is not None:
             self.files = files
         else:
@@ -106,9 +119,9 @@ class Topology(object):
         """
         op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe")
         oport = op.addOutputPort(schema=schema)
-        subscribeParams = {'topic': [topic], 'streamType': schema}
+        subscribeParams = {'topic': topic, 'streamType': schema}
         op.setParameters(subscribeParams)
-        return Stream(self, oport)    
+        return Stream(self, oport)
     
 
 class Stream(object):
@@ -268,6 +281,7 @@ class Stream(object):
             Stream
         """
         op = self.topology.graph.addOperator("$Isolate$")
+        # does the addOperator above need the packages
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
@@ -285,6 +299,8 @@ class Stream(object):
             Stream
         """
         op = self.topology.graph.addOperator("$LowLatency$")
+        # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
+        # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
@@ -445,7 +461,7 @@ class Stream(object):
             self._map(streamsx.topology.functions.identity,schema=schema).publish(topic, schema=schema);
             return None
 
-        publishParams = {'topic': [topic]}
+        publishParams = {'topic': topic}
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params=publishParams)
         op.addInputPort(outputPort=self.oport)
 

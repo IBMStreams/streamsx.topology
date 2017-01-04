@@ -28,17 +28,17 @@
          my $tp = $model->getParameterAt($i);
 
          print '{';
-         print 'PyObject * pk = PyUnicode_DecodeUTF8((const char*)  "' . $tp->getName() . '", ((int)(sizeof("' . $tp->getName() . '")))-1 , NULL);';
+         print 'PyObject * param_key = PyUnicode_DecodeUTF8((const char*)  "' . $tp->getName() . '", ((int)(sizeof("' . $tp->getName() . '")))-1 , NULL);';
 
          # cardinality == 1
-         print 'PyObject * pv = ';
-         print convertToPythonValueFromExpr(
+         print 'PyObject * param_value = ' .
+              convertToPythonValueFromExpr(
                  $tp->getValueAt(0)->getSPLType(),
-                 $tp->getValueAt(0)->getCppExpression());
+                 $tp->getValueAt(0)->getCppExpression()) . ";\n";
 
-         print " PyDict_SetItem(param_dict, pk, pv);\n";
-         print " Py_DECREF(pk);\n";
-         print " Py_DECREF(pv);\n";
+         print " PyDict_SetItem(param_dict, param_key, param_value);\n";
+         print " Py_DECREF(param_key);\n";
+         print " Py_DECREF(param_value);\n";
          print "}\n";
      }
 %>

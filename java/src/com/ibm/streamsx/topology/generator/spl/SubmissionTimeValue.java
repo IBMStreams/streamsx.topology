@@ -108,13 +108,14 @@ public class SubmissionTimeValue {
         for (String opParamName : allSubmissionParams.keySet()) {
             JsonObject spParam = allSubmissionParams.get(opParamName);
             JsonObject spval = jobject(spParam, "value");
+            String name = jstring(spval, "name");
             if (first)
                 first = false;
             else {
                 namesSb.append(", ");
                 valuesSb.append(", ");
             }
-            namesSb.append(SPLGenerator.stringLiteral(opParamName));
+            namesSb.append(SPLGenerator.stringLiteral(name));
             valuesSb.append("(rstring) ").append(generateCompParamName(spval));
         }
 

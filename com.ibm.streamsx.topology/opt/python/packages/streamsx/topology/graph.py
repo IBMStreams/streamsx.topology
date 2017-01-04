@@ -19,18 +19,18 @@ import streamsx.topology.functions
 import streamsx.topology.param
 from streamsx.topology.schema import CommonSchema
 from streamsx.topology.schema import _stream_schema
-from streamsx.topology.topologypackages import TopologyPackages
 
 class SPLGraph(object):
 
-    def __init__(self, name=None, packages=None):
+    def __init__(self, topology, name=None):
         if name is None:
             name = str(uuid.uuid1()).replace("-", "")
         # Allows Topology or SPLGraph to be passed to submit
         self.graph = self
         self.name = name
+        self.topology = topology
         self.operators = []
-        self.resolver = streamsx.topology.dependency._DependencyResolver(packages)
+        self.resolver = streamsx.topology.dependency._DependencyResolver(self.topology)
         self._views = []
 
     def get_views(self):

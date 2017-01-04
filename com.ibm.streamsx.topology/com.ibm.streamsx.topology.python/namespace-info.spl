@@ -879,8 +879,9 @@ A limited set of SPL types are supported.
   * `complex32`, `complex64` - maps to Python `complex`
   * `rstring`, `ustring` - maps to Python `String` - `rstring` values assume UTF-8 encoding
  * **Collection types**
-  * `list<P>` where `P` is one of the supported primitive types. Passed into Python as a list.
-  * `map<K,V>` where `K` and `V` are supported primitive types. Passed into Python as a dictionary.
+  * `list<T>` where `T` is any supported type. Passed into Python as a list.
+  * `set<T>` where `T` is any supported primitive type. Passed into Python as a set. `T` must be primitive to match Python's requirement that an element of a set is hashable.
+  * `map<K,V>` where `K` is any supported primitive type and `V` is any supported type. Passed into Python as a dictionary.  `K` must be primitive to match Python's requirement that a key of a map is hashable.
 
 ++ \@spl decorator options
 \@spl decorators support an number of options.

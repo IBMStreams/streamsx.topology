@@ -4,9 +4,12 @@
 */
 
 /*
- * Compile using the stable abi assuming 3.5.
- * https://docs.python.org/3/c-api/stable.html
+ * Internal header file supporting Python
+ * for com.ibm.streamsx.topology.
  *
+ * This is not part of any public api for
+ * the toolkit or toolkit with decorated
+ * SPL Python operators.
  */
 
 
@@ -23,6 +26,7 @@
 #include <dlfcn.h>
 #include <TopologySplpyResource.h>
 
+#include <SPL/Runtime/Common/RuntimeException.h>
 #include <SPL/Runtime/Type/Meta/BaseType.h>
 #include <SPL/Runtime/ProcessingElement/PE.h>
 #include <SPL/Runtime/Operator/Port/OperatorPort.h>
@@ -42,15 +46,6 @@
 #define TOPOLOGY_PYTHON_LIBNAME "libpython2.7.so"
 #endif
     
-#define GET_PYTHON_VALUE_THROWIFERROR(pbytes)                            \
-do {                                                                     \
-      if (pbytes == 0) {                                                 \
-         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python"); \
-         throw;                                                          \
-      }                                                                  \
-   }                                                                     \
-while(0) 
-
 #if PY_MAJOR_VERSION == 3
 #define GET_PYTHON_ATTR_FROM_MEMORY(pbytes,psizeb)                       \
      PyMemoryView_FromMemory((char *) pbytes, psizeb, PyBUF_READ);
@@ -97,25 +92,10 @@ namespace streamsx {
     }
 
     /*
-    ** Conversion of Python objects to SPL attributes.
-    */
-
-    template <class T>
-    inline void pyAttributeFromPyObject(T & attr, PyObject *);
-    
-    /*
-    ** Convert to a SPL blob from a Python bytes object.
-    */
-    inline void pyAttributeFromPyObject(SPL::blob & attr, PyObject * value) {
-      long int size = PyBytes_Size(value);
-      char * bytes = PyBytes_AsString(value);          
-      attr.setData((const unsigned char *)bytes, size);
-    }
-
-    /*
     ** Convert to a SPL rstring from a Python string object.
+    ** Returns 0 if successful, non-zero if error.
     */
-    inline void pyAttributeFromPyObject(SPL::rstring & attr, PyObject * value) {
+    inline int pyRStringFromPyObject(SPL::rstring & attr, PyObject * value) {
       Py_ssize_t size = 0;
       PyObject * converted = NULL;
       char * bytes = NULL;
@@ -151,9 +131,7 @@ namespace streamsx {
       if (bytes == NULL) {
          if (converted != NULL)
              Py_DECREF(converted);
-         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
-         streamsx::topology::flush_PyErr_Print();
-         throw;
+         return -1;
       }
 
       // This copies from bytes into the rstring.
@@ -164,41 +142,219 @@ namespace streamsx {
       // into the Python object.
       if (converted != NULL)
           Py_DECREF(converted);
+
+      return 0;
     }
 
-    inline void pyAttributeFromPyObject(SPL::ustring & attr, PyObject * value) {
-         SPL::rstring rs;
-         pyAttributeFromPyObject(rs, value);
+    /**
+     * Return an SPL runtime exception that can be thrown
+     * based upon the Python error. Also flushes Python stdout
+     * and stderr to ensure any additional info is visible
+     * in the PE console.
+    */
+    inline SPL::SPLRuntimeException pythonException(std::string const & 	location) {
+      PyObject *pyType, *pyValue, *pyTraceback;
+      PyErr_Fetch(&pyType, &pyValue, &pyTraceback);
 
-         attr = SPL::ustring::fromUTF8(rs);
+      if (pyType != NULL)
+          Py_DECREF(pyType);
+      if (pyTraceback != NULL)
+          Py_DECREF(pyTraceback);
+
+      SPL::rstring msg("Unknown Python error");
+      if (pyValue != NULL) {
+          streamsx::topology::pyRStringFromPyObject(msg, pyValue);
+          Py_DECREF(pyValue);
+      }
+
+      streamsx::topology::flush_PyErr_Print();
+
+      SPL::SPLRuntimeOperatorException exc(location, msg);
+      
+      return exc;
+    }
+
+    /*
+    ** Conversion of Python objects to SPL values.
+    */
+    //inline PyObject * pySplValueToPyObject(const SPL::int32 & value) {
+
+    /*
+    ** Convert to a SPL blob from a Python bytes object.
+    */
+    inline void pySplValueFromPyObject(SPL::blob & splv, PyObject * value) {
+      long int size = PyBytes_Size(value);
+      char * bytes = PyBytes_AsString(value);          
+      splv.setData((const unsigned char *)bytes, size);
+    }
+
+    /*
+    ** Convert to a SPL rstring from a Python string object.
+    */
+    inline void pySplValueFromPyObject(SPL::rstring & splv, PyObject * value) {
+      if (pyRStringFromPyObject(splv, value) != 0) {
+         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
+         throw streamsx::topology::pythonException("rstring");
+      }
+    }
+
+    inline void pySplValueFromPyObject(SPL::ustring & splv, PyObject * value) {
+         SPL::rstring rs;
+         pySplValueFromPyObject(rs, value);
+
+         splv = SPL::ustring::fromUTF8(rs);
     }
 
     inline SPL::rstring pyRstringFromPyObject(PyObject * value)
     {
         SPL::rstring rs;
-        pyAttributeFromPyObject(rs, value);
+        pySplValueFromPyObject(rs, value);
         return rs ;
     }
     inline SPL::ustring pyUstringFromPyObject(PyObject * value)
     {
         SPL::ustring us;
-        pyAttributeFromPyObject(us, value);
+        pySplValueFromPyObject(us, value);
         return us ;
+    }
+
+    // signed integers
+    inline void pySplValueFromPyObject(SPL::int8 & splv, PyObject * value) {
+       splv = (SPL::int8) PyLong_AsLong(value);
+    }
+    inline void pySplValueFromPyObject(SPL::int16 & splv, PyObject * value) {
+       splv = (SPL::int16) PyLong_AsLong(value);
+    }
+    inline void pySplValueFromPyObject(SPL::int32 & splv, PyObject * value) {
+       splv = (SPL::int32) PyLong_AsLong(value);
+    }
+    inline void pySplValueFromPyObject(SPL::int64 & splv, PyObject * value) {
+       splv = (SPL::int64) PyLong_AsLong(value);
+    }
+
+    // unsigned integers
+    inline void pySplValueFromPyObject(SPL::uint8 & splv, PyObject * value) {
+       splv = (SPL::uint8) PyLong_AsUnsignedLong(value);
+    }
+    inline void pySplValueFromPyObject(SPL::uint16 & splv, PyObject * value) {
+       splv = (SPL::uint16) PyLong_AsUnsignedLong(value);
+    }
+    inline void pySplValueFromPyObject(SPL::uint32 & splv, PyObject * value) {
+       splv = (SPL::uint32) PyLong_AsUnsignedLong(value);
+    }
+    inline void pySplValueFromPyObject(SPL::uint64 & splv, PyObject * value) {
+       splv = (SPL::uint64) PyLong_AsUnsignedLong(value);
+    }
+
+    // boolean
+    inline void pySplValueFromPyObject(SPL::boolean & splv, PyObject * value) {
+       splv = PyObject_IsTrue(value);
+    }
+ 
+    // floats
+    inline void pySplValueFromPyObject(SPL::float32 & splv, PyObject * value) {
+       splv = (SPL::float32) PyFloat_AsDouble(value);
+    }
+    inline void pySplValueFromPyObject(SPL::float64 & splv, PyObject * value) {
+       splv = PyFloat_AsDouble(value);
+    }
+
+    // complex
+    inline void pySplValueFromPyObject(SPL::complex32 & splv, PyObject * value) {
+        splv = SPL::complex32(
+          (SPL::float32) PyComplex_RealAsDouble(value),
+          (SPL::float32) PyComplex_ImagAsDouble(value)
+        );
+    }
+    inline void pySplValueFromPyObject(SPL::complex64 & splv, PyObject * value) {
+        splv = SPL::complex64(
+          (SPL::float64) PyComplex_RealAsDouble(value),
+          (SPL::float64) PyComplex_ImagAsDouble(value)
+        );
+    }
+
+    // SPL list from Python list
+    template <typename T>
+    inline void pySplValueFromPyObject(SPL::list<T> & l, PyObject *value) {
+        const Py_ssize_t size = PyList_Size(value);
+
+        for (Py_ssize_t i = 0; i < size; i++) {
+            T se;
+            l.add(se); // Add takes a copy of the value
+
+            PyObject * e = PyList_GET_ITEM(value, i);
+            pySplValueFromPyObject(l.at(i), e);
+        }
+    }
+ 
+    // SPL set from Python set
+    template <typename T>
+    inline void pySplValueFromPyObject(SPL::set<T> & s, PyObject *value) {
+        // validates that value is a Python set
+        const Py_ssize_t size = PySet_Size(value);
+
+        PyObject * iterator = PyObject_GetIter(value);
+        if (iterator == 0) {
+            throw streamsx::topology::pythonException("iter(set)");
+        }
+        PyObject *item;
+        while (item = PyIter_Next(iterator)) {
+            T se;
+            pySplValueFromPyObject(se, item);
+            Py_DECREF(item);
+            s.add(se);
+        }
+        Py_DECREF(iterator);
+    }
+
+    // SPL map from Python dictionary
+    template <typename K, typename V>
+    inline void pySplValueFromPyObject(SPL::map<K,V> & m, PyObject *value) {
+        PyObject *k,*v;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(value, &pos, &k, &v)) {
+           K sk;
+
+           // Set the SPL key
+           pySplValueFromPyObject(sk, k);
+
+           // map[] creates the value if it does not exist
+           V & sv = m[sk];
+ 
+           // Set the SPL value 
+           pySplValueFromPyObject(sv, v);
+        }
     }
 
     /**************************************************************/
 
     /*
-    ** Conversion of SPL attributes to Python objects
+    ** Conversion of SPL attributes or value to Python objects
     */
 
+    /**
+     * Integer conversions.
+    */
+
+    inline PyObject * pySplValueToPyObject(const SPL::int32 & value) {
+      return PyLong_FromLong(value);
+    }
+    inline PyObject * pySplValueToPyObject(const SPL::int64 & value) {
+      return PyLong_FromLong(value);
+    }
+    inline PyObject * pySplValueToPyObject(const SPL::uint32 & value) {
+      return PyLong_FromUnsignedLong(value);
+    }
+    inline PyObject * pySplValueToPyObject(const SPL::uint64 & value) {
+      return PyLong_FromUnsignedLong(value);
+    }
 
     /**
      * Convert a SPL blob into a Python Memory view object.
      */
-    inline PyObject * pyAttributeToPyObject(const SPL::blob & attr) {
-      long int sizeb = attr.getSize();
-      const unsigned char * bytes = attr.getData();
+    inline PyObject * pySplValueToPyObject(const SPL::blob & value) {
+      long int sizeb = value.getSize();
+      const unsigned char * bytes = value.getData();
 
       return GET_PYTHON_ATTR_FROM_MEMORY(bytes, sizeb);
     }
@@ -206,39 +362,39 @@ namespace streamsx {
     /**
      * Convert a SPL rstring into a Python Unicode string 
      */
-    inline PyObject * pyAttributeToPyObject(const SPL::rstring & attr) {
-      long int sizeb = attr.size();
-      const char * pybytes = attr.data();
+    inline PyObject * pySplValueToPyObject(const SPL::rstring & value) {
+      long int sizeb = value.size();
+      const char * pybytes = value.data();
 
       return PyUnicode_DecodeUTF8(pybytes, sizeb, NULL);
     }
     /**
      * Convert a SPL ustring into a Python Unicode string 
      */
-    inline PyObject * pyAttributeToPyObject(const SPL::ustring & attr) {
-      long int sizeb = attr.length() * 2; // Need number of bytes
-      const char * pybytes =  (const char*) (attr.getBuffer());
+    inline PyObject * pySplValueToPyObject(const SPL::ustring & value) {
+      long int sizeb = value.length() * 2; // Need number of bytes
+      const char * pybytes =  (const char*) (value.getBuffer());
 
       return PyUnicode_DecodeUTF16(pybytes, sizeb, NULL, NULL);
     }
 
-    inline PyObject * pyAttributeToPyObject(const SPL::complex32 & attr) {
-       return PyComplex_FromDoubles(attr.real(), attr.imag());
+    inline PyObject * pySplValueToPyObject(const SPL::complex32 & value) {
+       return PyComplex_FromDoubles(value.real(), value.imag());
     }
-    inline PyObject * pyAttributeToPyObject(const SPL::complex64 & attr) {
-       return PyComplex_FromDoubles(attr.real(), attr.imag());
+    inline PyObject * pySplValueToPyObject(const SPL::complex64 & value) {
+       return PyComplex_FromDoubles(value.real(), value.imag());
     }
 
-    inline PyObject * pyAttributeToPyObject(const SPL::boolean & attr) {
-       PyObject * value = attr ? Py_True : Py_False;
-       Py_INCREF(value);
-       return value;
+    inline PyObject * pySplValueToPyObject(const SPL::boolean & value) {
+       PyObject * pyValue = value ? Py_True : Py_False;
+       Py_INCREF(pyValue);
+       return pyValue;
     }
-    inline PyObject * pyAttributeToPyObject(const SPL::float32 & attr) {
-       return PyFloat_FromDouble(attr);
+    inline PyObject * pySplValueToPyObject(const SPL::float32 & value) {
+       return PyFloat_FromDouble(value);
     }
-    inline PyObject * pyAttributeToPyObject(const SPL::float64 & attr) {
-       return PyFloat_FromDouble(attr);
+    inline PyObject * pySplValueToPyObject(const SPL::float64 & value) {
+       return PyFloat_FromDouble(value);
     }
 
     /**
@@ -246,22 +402,54 @@ namespace streamsx {
      * nb. that if object has it ref count decremented to 0 the 
      * "copied" pointer is no longer valid
      */
-    inline PyObject * pyAttributeToPyObject(PyObject * object) {
+    inline PyObject * pySplValueToPyObject(PyObject * object) {
       return object;
     }
 
-/*
-
-    template <class T>
-    inline PyObject * pyAttributeToPyObjectT(T & attr);
-
-    inline PyObject * pyAttributeToPyObjectT(SPL::blob & attr) {
-        return pyAttributeToPyObject(attr);
+    /*
+    ** SPL List Conversion to Python list
+    */
+    template <typename T>
+    inline PyObject * pySplValueToPyObject(const SPL::list<T> & l) {
+        PyObject * pyList = PyList_New(l.size());
+        for (int i = 0; i < l.size(); i++) {
+            PyList_SET_ITEM(pyList, i, pySplValueToPyObject(l[i]));
+        }
+        return pyList;
     }
-    inline PyObject * pyAttributeToPyObjectT(SPL::rstring & attr) {
-        return pyAttributeToPyObject(attr);
+
+    /*
+    ** SPL Map Conversion to Python dict.
+    */
+    template <typename K, typename V>
+    inline PyObject * pySplValueToPyObject(const SPL::map<K,V> & m) {
+        PyObject * pyDict = PyDict_New();
+        for (typename std::tr1::unordered_map<K,V>::const_iterator it = m.begin();
+             it != m.end(); it++) {
+             PyObject *k = pySplValueToPyObject(it->first);
+             PyObject *v = pySplValueToPyObject(it->second);
+             PyDict_SetItem(pyDict, k, v);
+             Py_DECREF(k);
+             Py_DECREF(v);
+        }
+      
+        return pyDict;
     }
-*/
+
+    /*
+    ** SPL Set Conversion to Python set
+    */
+    template <typename T>
+    inline PyObject * pySplValueToPyObject(const SPL::set<T> & s) {
+        PyObject * pySet = PySet_New(NULL);
+        for (typename std::tr1::unordered_set<T>::const_iterator it = s.begin();
+             it != s.end(); it++) {
+             PyObject * e = pySplValueToPyObject(*it);
+             PySet_Add(pySet, e);
+             Py_DECREF(e);
+        }
+        return pySet;
+    }
 
     class Splpy {
 
@@ -320,8 +508,7 @@ namespace streamsx {
         PyGILLock lock;
         if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
           SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
-          streamsx::topology::flush_PyErr_Print();
-          throw;
+          throw streamsx::topology::pythonException("splpy_setup.py");
         }
       }
 
@@ -336,8 +523,7 @@ namespace streamsx {
       Py_DECREF(moduleName);
       if (module == NULL) {
         SPLAPPLOG(L_ERROR, TOPOLOGY_IMPORT_MODULE_ERROR(moduleNameC), "python");
-        streamsx::topology::flush_PyErr_Print();
-        throw;
+        throw streamsx::topology::pythonException(moduleNameC);
       }
       SPLAPPLOG(L_INFO, TOPOLOGY_IMPORT_MODULE(moduleNameC), "python");
       return module;
@@ -390,13 +576,12 @@ namespace streamsx {
     static void pyTupleSink(PyObject * function, T & splVal) {
       PyGILLock lock;
 
-      PyObject * arg = pyAttributeToPyObject(splVal);
+      PyObject * arg = pySplValueToPyObject(splVal);
 
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
       if(pyReturnVar == 0){
-        streamsx::topology::flush_PyErr_Print();
-        throw;
+        throw streamsx::topology::pythonException("sink");
       }
 
       Py_DECREF(pyReturnVar);
@@ -421,13 +606,12 @@ namespace streamsx {
 
       PyGILLock lock;
 
-      PyObject * arg = pyAttributeToPyObject(splVal);
+      PyObject * arg = pySplValueToPyObject(splVal);
 
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
       if(pyReturnVar == 0){
-        streamsx::topology::flush_PyErr_Print();
-        throw;
+        throw streamsx::topology::pythonException("filter");
       }
 
       int ret = PyObject_IsTrue(pyReturnVar);
@@ -444,7 +628,7 @@ namespace streamsx {
     static int pyTupleTransform(PyObject * function, T & splVal, R & retSplVal) {
       PyGILLock lock;
 
-      PyObject * arg = pyAttributeToPyObject(splVal);
+      PyObject * arg = pySplValueToPyObject(splVal);
 
       // invoke python nested function that calls the application function
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
@@ -453,11 +637,10 @@ namespace streamsx {
         Py_DECREF(pyReturnVar);
         return 0;
       } else if(pyReturnVar == 0){
-        streamsx::topology::flush_PyErr_Print();
-        throw;
+         throw streamsx::topology::pythonException("transform");
       } 
 
-      pyAttributeFromPyObject(retSplVal, pyReturnVar);
+      pySplValueFromPyObject(retSplVal, pyReturnVar);
       Py_DECREF(pyReturnVar);
 
       return 1;
@@ -469,7 +652,7 @@ namespace streamsx {
 
       PyGILLock lock;
 
-      PyObject * arg = pyAttributeToPyObject(splVal);
+      PyObject * arg = pySplValueToPyObject(splVal);
 
       // invoke python nested function that generates the int32 hash
       // clear any indication of an error and then check later for an 
@@ -532,7 +715,6 @@ namespace streamsx {
     }
 
     };
-   
   }
 }
 #endif
