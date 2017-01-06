@@ -17,6 +17,8 @@ import java.net.URLEncoder;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import javax.xml.bind.DatatypeConverter;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
@@ -140,18 +142,24 @@ public class AnalyticsServiceStreamsContext extends
     
     private CloseableHttpClient createHttpClient(JSONObject credentials) {
         
-        
-        UsernamePasswordCredentials upc = new UsernamePasswordCredentials(
-                credentials.get("userid").toString(),
-                credentials.get("password").toString());
-        CredentialsProvider credsProvider = new BasicCredentialsProvider();
-        credsProvider.setCredentials(
-                new AuthScope(credentials.get("rest_host").toString(),  AuthScope.ANY_PORT),
-                upc);
-        CloseableHttpClient httpClient = HttpClients.custom()
-                .setDefaultCredentialsProvider(credsProvider)
-                .build();
-        return httpClient;
+	// Commented out do to authentication issues with BlueMix when using
+	// Apache http authentication in this manner. The token must be set
+	// explicitly.
+	
+	// UsernamePasswordCredentials upc = new UsernamePasswordCredentials(
+	//         credentials.get("userid").toString(),
+	//         credentials.get("password").toString());
+	// CredentialsProvider credsProvider = new BasicCredentialsProvider();
+	// credsProvider.setCredentials(
+	//         new AuthScope(credentials.get("rest_host").toString(),  AuthScope.ANY_PORT),
+	//         upc);
+	// CloseableHttpClient httpClient = HttpClients.custom()
+	//         .setDefaultCredentialsProvider(credsProvider)
+	//         .build();
+
+	CloseableHttpClient httpClient = HttpClients.custom()
+	    .build();
+	return httpClient;
     }
     
     private String getStatusURL(JSONObject credentials) {
@@ -167,7 +175,9 @@ public class AnalyticsServiceStreamsContext extends
         String url = getStatusURL(credentials);
 
         HttpGet getStatus = new HttpGet(url);
-        JSONObject jsonResponse = getJsonResponse(httpClient, getStatus);
+        getStatus.addHeader("Authorization", getAPIKey(credentials.get("userid").toString(),
+						       credentials.get("password").toString()));
+	JSONObject jsonResponse = getJsonResponse(httpClient, getStatus);
         
         Topology.STREAMS_LOGGER.info("Streaming Analytics Service instance status response:" + jsonResponse.serialize());
         
@@ -229,7 +239,8 @@ public class AnalyticsServiceStreamsContext extends
         
         HttpPost postJobWithConfig = new HttpPost(url);
         postJobWithConfig.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
-
+	postJobWithConfig.addHeader("Authorization", getAPIKey(credentials.get("userid").toString(),
+						       credentials.get("password").toString()));
         FileBody bundleBody = new FileBody(bundle,
                 ContentType.APPLICATION_OCTET_STREAM);
         StringBody configBody = new StringBody(submitConfig.serialize(),
@@ -305,4 +316,11 @@ public class AnalyticsServiceStreamsContext extends
             httpClient.close();
         }
     }
+
+    static String getAPIKey(String userid, String password) throws UnsupportedEncodingException{
+	String api_creds = userid + ":" + password;
+        String apiKey = "Basic " + DatatypeConverter.printBase64Binary(api_creds.getBytes("UTF-8"));
+	return apiKey;
+    }      
+
 }
