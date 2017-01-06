@@ -5,6 +5,8 @@
 
 #include "splpy.h"
 
+using namespace streamsx::topolgy;
+
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 <%
@@ -78,8 +80,7 @@ void MY_OPERATOR::allPortsReady()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    streamsx::topology::PyGILLock lock;
-    streamsx::topology::flush_PyErrPyOut();
+    SplpyOp::prepareToShutdown();
 }
 
 <%

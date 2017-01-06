@@ -16,6 +16,9 @@
 #ifndef __SPL__SPLPY_H
 #define __SPL__SPLPY_H
 
+#include "splpy_general.h"
+#include "splpy_op.h"
+
 #include "Python.h"
 #include <string>
 #include <sys/types.h>
@@ -56,40 +59,6 @@
 
 namespace streamsx {
   namespace topology {
-
-    class PyGILLock {
-      public:
-        PyGILLock() {
-          gstate_ = PyGILState_Ensure();
-        }
-        ~PyGILLock() {
-          PyGILState_Release(gstate_);
-        }
-        
-      private:
-        PyGILState_STATE gstate_;
-    };
-
-    /*
-    * Flush Python stderr and stdout.
-    */
-    inline void flush_PyErrPyOut() {
-        PyRun_SimpleString("sys.stdout.flush()");
-        PyRun_SimpleString("sys.stderr.flush()");
-    }
-
-    /*
-    * Call PyErr_Print() and then flush stderr.
-    * This is because CPython buffers stderr (and stdout)
-    * when it is not connected to a terminal.
-    * Without the flush output is lost in distributed
-    * (since stderr is conncted to a file) and
-    * makes diagnosing errors impossible.
-    */
-    inline void flush_PyErr_Print() {
-        PyErr_Print();
-        flush_PyErrPyOut();
-    }
 
     /*
     ** Convert to a SPL rstring from a Python string object.
@@ -167,7 +136,7 @@ namespace streamsx {
           Py_DECREF(pyValue);
       }
 
-      streamsx::topology::flush_PyErr_Print();
+      SplpyGeneral::flush_PyErr_Print();
 
       SPL::SPLRuntimeOperatorException exc(location, msg);
       
@@ -666,13 +635,13 @@ namespace streamsx {
       	retval = PyLong_AsLong(pyReturnVar);
       } catch(...) {
         Py_DECREF(pyReturnVar);
-        streamsx::topology::flush_PyErr_Print();
+        SplpyGeneral::flush_PyErr_Print();
         throw;
       }
       // PyLong_AsLong will return an error without 
       // throwing an error, so check if an error happened
       if (PyErr_Occurred()) {
-        streamsx::topology::flush_PyErr_Print();
+        SplpyGeneral::flush_PyErr_Print();
       }
       else {
         Py_DECREF(pyReturnVar);

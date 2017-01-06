@@ -2,6 +2,8 @@
 
 #include "splpy.h"
 
+using namespace streamsx::topology;
+
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 @include "../pyspltuple.cgt"
@@ -59,8 +61,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    streamsx::topology::PyGILLock lock;
-    streamsx::topology::flush_PyErrPyOut();
+    SplpyOp::prepareToShutdown();
 }
 
 // Tuple processing for non-mutating ports

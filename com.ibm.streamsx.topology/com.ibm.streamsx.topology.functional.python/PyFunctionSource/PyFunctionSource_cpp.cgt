@@ -2,6 +2,8 @@
 
 #include "splpy.h"
 
+using namespace streamsx::topology;
+
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 
@@ -54,8 +56,7 @@ void MY_OPERATOR::allPortsReady()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    streamsx::topology::PyGILLock lock;
-    streamsx::topology::flush_PyErrPyOut();
+    SplpyOp::prepareToShutdown();
 }
 
 // Processing for source and threaded operators   
@@ -66,13 +67,13 @@ void MY_OPERATOR::process(uint32_t idx)
     OPort0Type otuple;
 
     { // start lock
-      streamsx::topology::PyGILLock lock;
+      PyGILLock lock;
       PyObject * pyReturnVar = PyObject_CallObject(function_, NULL);
       if(pyReturnVar == Py_None){
         Py_DECREF(pyReturnVar);
         break;
       } else if(pyReturnVar == 0){
-        streamsx::topology::flush_PyErr_Print();
+        SplpyGeneral::flush_PyErrPyOut();
         throw;
       }
 
