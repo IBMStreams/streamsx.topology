@@ -141,22 +141,6 @@ public class AnalyticsServiceStreamsContext extends
     }
     
     private CloseableHttpClient createHttpClient(JSONObject credentials) {
-        
-	// Commented out do to authentication issues with BlueMix when using
-	// Apache http authentication in this manner. The token must be set
-	// explicitly.
-	
-	// UsernamePasswordCredentials upc = new UsernamePasswordCredentials(
-	//         credentials.get("userid").toString(),
-	//         credentials.get("password").toString());
-	// CredentialsProvider credsProvider = new BasicCredentialsProvider();
-	// credsProvider.setCredentials(
-	//         new AuthScope(credentials.get("rest_host").toString(),  AuthScope.ANY_PORT),
-	//         upc);
-	// CloseableHttpClient httpClient = HttpClients.custom()
-	//         .setDefaultCredentialsProvider(credsProvider)
-	//         .build();
-
 	CloseableHttpClient httpClient = HttpClients.custom()
 	    .build();
 	return httpClient;

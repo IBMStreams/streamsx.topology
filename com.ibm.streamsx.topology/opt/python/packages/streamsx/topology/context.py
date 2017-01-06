@@ -53,14 +53,14 @@ def submit(ctxtype, graph, config=None, username=None, password=None, log_level=
           execution of the topology produces a build archive, which can be submitted to a streaming
           analytics Bluemix remote build service.
         * ANALYTICS_SERVICE - If a local Streams install is present, the application is built locally and then submitted
-          to a BlueMix streaming analytics service. If a local Streams install is not present, the application is 
+          to a Bluemix streaming analytics service. If a local Streams install is not present, the application is 
           submitted to, built, and executed on a Bluemix streaming analytics service. If the ConfigParams.REMOTE_BUILD
-          flag is set to true, the application will be built on BlueMix even if a local Streams install is present.
+          flag is set to true, the application will be built on Bluemix even if a local Streams install is present.
         graph: a Topology object.
         config (dict): a configuration object containing job configurations and/or submission information. Keys include:
         * 'topology.service.vcap' - a json representation of a VCAP object.
         * 'topology.service.name' - the name of the streaming analytics service for submission.
-        * 'topology.remote_submit' - A flag which will force the application to be compiled and submitted remotely, if possible.
+        * 'topology.forceRemote' - A flag which will force the application to be compiled and submitted remotely, if possible.
         username (string): an optional SWS username. Needed for retrieving remote view data.
         password (string): an optional SWS password. Used in conjunction with the username, and needed for retrieving
         remote view data.
@@ -113,7 +113,7 @@ class _BaseSubmitter:
         # Otherwise, use the Java version from the streams install
         else:
             jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
-            if config[ConfigParams.REMOTE_SUBMIT] == True:
+            if config[ConfigParams.FORCE_REMOTE] == True:
                 submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
             submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
             cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
@@ -251,7 +251,7 @@ class _JupyterSubmitter(_BaseSubmitter):
 class _RemoteBuildSubmitter(_BaseSubmitter):
     """
     A submitter which retrieves the SWS REST API URL and then submits the application to be built and submitted
-    on BlueMix within a Streaming Analytics service.
+    on Bluemix within a Streaming Analytics service.
     """
     def __init__(self, ctxtype, config, app_topology):
         _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
@@ -296,7 +296,7 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
 class _DistributedSubmitter(_BaseSubmitter):
     """
     A submitter which retrieves the SWS REST API URL and then submits the application to be built and submitted
-    on BlueMix within a Streaming Analytics service.
+    on Bluemix within a Streaming Analytics service.
     """
     def __init__(self, ctxtype, config, app_topology, username, password):
         _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
@@ -430,9 +430,9 @@ class ContextTypes:
         analytics Bluemix remote build service.
         TOOLKIT - Execution of the topology produces a toolkit.
         ANALYTICS_SERVICE - If a local Streams install is present, the application is built locally and then submitted
-        to a BlueMix streaming analytics service. If a local Streams install is not present, the application is 
+        to a Bluemix streaming analytics service. If a local Streams install is not present, the application is 
         submitted to, built, and executed on a Bluemix streaming analytics service. If the ConfigParams.REMOTE_BUILD
-        flag is set to true, the application will be built on BlueMix even if a local Streams install is present.
+        flag is set to true, the application will be built on Bluemix even if a local Streams install is present.
     """
     TOOLKIT = 'TOOLKIT'
     BUILD_ARCHIVE = 'BUILD_ARCHIVE'
@@ -448,9 +448,9 @@ class ConfigParams:
     """
     Configuration options which may be used as keys in the submit's config parameter.
 
-    VCAP_INFO - a json object containing the VCAP information used to submit to BlueMix
+    VCAP_INFO - a json object containing the VCAP information used to submit to Bluemix
     VCAP_NAME - the name of the streaming analytics service to use from VCAP_INFO.
     """
     VCAP_INFO = 'topology.service.vcap'
     VCAP_NAME = 'topology.service.name'
-    REMOTE_SUBMIT = 'topology.remote_submit'
+    FORCE_REMOTE = 'topology.forceRemote'
