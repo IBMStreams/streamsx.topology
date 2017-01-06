@@ -687,7 +687,7 @@ namespace streamsx {
     */
     static PyObject * pyTupleFunc(PyObject * function, PyObject * value) {
       PyObject * pyTuple = PyTuple_New(1);
-      PyTuple_SetItem(pyTuple, 0, value);
+      PyTuple_SET_ITEM(pyTuple, 0, value);
 
       PyObject * pyReturnVar = PyObject_CallObject(function, pyTuple);
       Py_DECREF(pyTuple);
@@ -709,7 +709,7 @@ namespace streamsx {
 
             PyObject * pyName = PyUnicode_DecodeUTF8(
                            name.c_str(), name.size(), NULL);
-            PyTuple_SetItem(pyNames, i, pyName);
+            PyTuple_SET_ITEM(pyNames, i, pyName);
        }
        return pyNames;
     }
