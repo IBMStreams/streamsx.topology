@@ -113,9 +113,10 @@ class _BaseSubmitter:
         # Otherwise, use the Java version from the streams install
         else:
             jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
-            if config[ConfigParams.FORCE_REMOTE] == True:
+            if self.config[ConfigParams.FORCE_REMOTE] == True:
                 submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
-            submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
+            else:
+                submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
             cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
 
         args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]

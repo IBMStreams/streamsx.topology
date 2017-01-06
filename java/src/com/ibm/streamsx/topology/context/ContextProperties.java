@@ -105,4 +105,20 @@ public interface ContextProperties {
      * See {@link com.ibm.streamsx.topology.Topology#createSubmissionParameter(String, Class)}
      */
     String SUBMISSION_PARAMS = "topology.submissionParams";
+
+    /**
+     * Flag to be supplied to force the compilation to occur on a 
+     * Bluemix instance, if possible. Currently only be used in
+     * conjunction with the {@code ANALYTICS_SERVICE} context.
+     * <p>
+     * Its values can be {@code true} and {@code false}. The
+     * former will force remote compilation when possible, while
+     * the latter will force local compilation, if possible.
+     * <p>
+     * If the {@code FORCE_REMOTE} parameter is supplied with a
+     * value of {@code true}, the {@code SERVICE_NAME} and 
+     * {@code VCAP_SERVICES} parameters must also supplied. 
+     * Otherwise, an error will be thrown.
+     */
+    String FORCE_REMOTE = "topology.forceRemote";
 }

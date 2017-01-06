@@ -47,6 +47,7 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
+import com.ibm.streamsx.topology.context.ContextProperties;
 
 public class AnalyticsServiceStreamsContext extends
         BundleUserStreamsContext<BigInteger> {
@@ -64,10 +65,9 @@ public class AnalyticsServiceStreamsContext extends
     public Future<BigInteger> submit(Topology app, Map<String, Object> config)
             throws Exception {
 
-	Boolean forceRemote = (Boolean)config.get("forceRemote");
-	if(forceRemote != null && forceRemote.equals(true)){
-	    StreamsContext<BigInteger> sc = new RemoteBuildAndSubmitStreamsContext();
-            return sc.submit(app, config);
+	Boolean forceRemote = (Boolean)config.get(ContextProperties.FORCE_REMOTE);
+	if(forceRemote != null && forceRemote.equals(true)){	    
+	    return new RemoteBuildAndSubmitter().submit(app, config);
 	}
 
         preBundle(config);
