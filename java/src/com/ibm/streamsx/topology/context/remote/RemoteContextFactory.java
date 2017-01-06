@@ -16,8 +16,6 @@ public class RemoteContextFactory {
             return new ToolkitRemoteContext();
         case BUILD_ARCHIVE:
             return new ZippedToolkitRemoteContext();
-        case REMOTE_BUILD_AND_SUBMIT:
-            return new RemoteBuildAndSubmitRemoteContext();
 	case ANALYTICS_SERVICE:
 	    return new RemoteBuildAndSubmitRemoteContext();
         default:

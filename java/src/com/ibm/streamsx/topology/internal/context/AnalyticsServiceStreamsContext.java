@@ -43,6 +43,7 @@ import org.apache.http.auth.AUTH;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
@@ -62,6 +63,12 @@ public class AnalyticsServiceStreamsContext extends
     @Override
     public Future<BigInteger> submit(Topology app, Map<String, Object> config)
             throws Exception {
+
+	Boolean forceRemote = (Boolean)config.get("forceRemote");
+	if(forceRemote != null && forceRemote.equals(true)){
+	    StreamsContext<BigInteger> sc = new RemoteBuildAndSubmitStreamsContext();
+            return sc.submit(app, config);
+	}
 
         preBundle(config);
         File bundle = bundler.submit(app, config).get();
