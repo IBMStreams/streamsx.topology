@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 import javax.xml.bind.DatatypeConverter;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -37,6 +38,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.http.auth.AUTH;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
@@ -159,7 +161,7 @@ public class AnalyticsServiceStreamsContext extends
         String url = getStatusURL(credentials);
 
         HttpGet getStatus = new HttpGet(url);
-        getStatus.addHeader("Authorization", getAPIKey(credentials.get("userid").toString(),
+        getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAPIKey(credentials.get("userid").toString(),
 						       credentials.get("password").toString()));
 	JSONObject jsonResponse = getJsonResponse(httpClient, getStatus);
         
@@ -211,7 +213,7 @@ public class AnalyticsServiceStreamsContext extends
         sb.append(credentials.get("jobs_path"));
         sb.append("?");
         sb.append("bundle_id=");
-        sb.append(URLEncoder.encode(bundle.getName(), "UTF-8"));
+        sb.append(URLEncoder.encode(bundle.getName(), StandardCharsets.UTF_8.toString()));
         return sb.toString();
     }
     
@@ -223,7 +225,7 @@ public class AnalyticsServiceStreamsContext extends
         
         HttpPost postJobWithConfig = new HttpPost(url);
         postJobWithConfig.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
-	postJobWithConfig.addHeader("Authorization", getAPIKey(credentials.get("userid").toString(),
+	postJobWithConfig.addHeader(AUTH.WWW_AUTH_RESP, getAPIKey(credentials.get("userid").toString(),
 						       credentials.get("password").toString()));
         FileBody bundleBody = new FileBody(bundle,
                 ContentType.APPLICATION_OCTET_STREAM);
