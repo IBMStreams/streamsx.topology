@@ -163,7 +163,7 @@ sub convertToPythonValueAsTuple {
 
   my $getAndConvert = convertAttributeToPythonValue($ituple, $type, $name);
   
-  # Note PyTuple_SetItem steals the reference to the value
+  # Note PyTuple_SET_ITEM steals the reference to the value
   my $assign =  "    PyTuple_SET_ITEM(pyTuple, $i, $getAndConvert);\n";
 
   return $get . $assign ;

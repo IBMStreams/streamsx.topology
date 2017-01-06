@@ -27,7 +27,7 @@
 
      PyObject * depickleInput = streamsx::topology::Splpy::loadFunction("streamsx.topology.runtime", "<%=$pywrapfunc%>");
     PyObject * funcArg = PyTuple_New(1);
-    PyTuple_SetItem(funcArg, 0, appCallable);
+    PyTuple_SET_ITEM(funcArg, 0, appCallable);
     function_ = PyObject_CallObject(depickleInput, funcArg);
     Py_DECREF(depickleInput);
     Py_DECREF(funcArg);
