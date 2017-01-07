@@ -87,7 +87,7 @@ print splpy_inputtuple2value($pystyle);
     PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyArg);
 
     if (pyIterator == 0) {
-         throw streamsx::topology::pythonException(
+         throw SplpyGeneral::pythonException(
                getParameterValues("pyName").at(0)->getValue().toString());
     }
     if (pyIterator == Py_None) {
