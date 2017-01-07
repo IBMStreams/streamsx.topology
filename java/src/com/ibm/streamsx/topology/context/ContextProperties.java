@@ -120,5 +120,5 @@ public interface ContextProperties {
      * {@code VCAP_SERVICES} parameters must also supplied. 
      * Otherwise, an error will be thrown.
      */
-    String FORCE_REMOTE = "topology.forceRemote";
+    String FORCE_REMOTE_BUILD = "topology.forceRemoteBuild";
 }

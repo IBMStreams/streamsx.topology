@@ -65,8 +65,8 @@ public class AnalyticsServiceStreamsContext extends
     public Future<BigInteger> submit(Topology app, Map<String, Object> config)
             throws Exception {
 
-	Boolean forceRemote = (Boolean)config.get(ContextProperties.FORCE_REMOTE);
-	if(forceRemote != null && forceRemote.equals(true)){	    
+	Boolean forceRemote = (Boolean)config.get(ContextProperties.FORCE_REMOTE_BUILD);
+	if(forceRemote != null && forceRemote){	    
 	    return new RemoteBuildAndSubmitter().submit(app, config);
 	}
 

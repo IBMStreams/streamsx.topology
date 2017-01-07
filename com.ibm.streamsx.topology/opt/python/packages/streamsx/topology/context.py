@@ -60,7 +60,7 @@ def submit(ctxtype, graph, config=None, username=None, password=None, log_level=
         config (dict): a configuration object containing job configurations and/or submission information. Keys include:
         * 'topology.service.vcap' - a json representation of a VCAP object.
         * 'topology.service.name' - the name of the streaming analytics service for submission.
-        * 'topology.forceRemote' - A flag which will force the application to be compiled and submitted remotely, if possible.
+        * 'topology.forceRemoteBuild' - A flag which will force the application to be compiled and submitted remotely, if possible.
         username (string): an optional SWS username. Needed for retrieving remote view data.
         password (string): an optional SWS password. Used in conjunction with the username, and needed for retrieving
         remote view data.
@@ -113,7 +113,7 @@ class _BaseSubmitter:
         # Otherwise, use the Java version from the streams install
         else:
             jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
-            if self.config[ConfigParams.FORCE_REMOTE] == True:
+            if self.config[ConfigParams.FORCE_REMOTE_BUILD] == True:
                 submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
             else:
                 submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
@@ -454,4 +454,4 @@ class ConfigParams:
     """
     VCAP_INFO = 'topology.service.vcap'
     VCAP_NAME = 'topology.service.name'
-    FORCE_REMOTE = 'topology.forceRemote'
+    FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
