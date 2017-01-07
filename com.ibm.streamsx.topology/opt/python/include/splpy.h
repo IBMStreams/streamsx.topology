@@ -61,41 +61,9 @@
 namespace streamsx {
   namespace topology {
 
-
-    /**
-     * Return an SPL runtime exception that can be thrown
-     * based upon the Python error. Also flushes Python stdout
-     * and stderr to ensure any additional info is visible
-     * in the PE console.
-    */
-/*
-    inline SPL::SPLRuntimeException pythonException(std::string const & 	location) {
-      PyObject *pyType, *pyValue, *pyTraceback;
-      PyErr_Fetch(&pyType, &pyValue, &pyTraceback);
-
-      if (pyType != NULL)
-          Py_DECREF(pyType);
-      if (pyTraceback != NULL)
-          Py_DECREF(pyTraceback);
-
-      SPL::rstring msg("Unknown Python error");
-      if (pyValue != NULL) {
-          streamsx::topology::pyRStringFromPyObject(msg, pyValue);
-          Py_DECREF(pyValue);
-      }
-
-      SplpyGeneral::flush_PyErr_Print();
-
-      SPL::SPLRuntimeOperatorException exc(location, msg);
-      
-      return exc;
-    }
-*/
-
     /*
     ** Conversion of Python objects to SPL values.
     */
-    //inline PyObject * pySplValueToPyObject(const SPL::int32 & value) {
 
     /*
     ** Convert to a SPL blob from a Python bytes object.
@@ -372,47 +340,6 @@ namespace streamsx {
     class Splpy {
 
       public:
-      /**
-       * Load the C Python runtime and execute a setup
-       * script splpy_setup.py at the given path.
-      */
-      static void loadCPython(const char* spl_setup_py_path) {
-      	// If the Python runtime is being embedded in a shared library
-      	// (as is the case with IBM Streams), there is a bug where the 
-      	// symbols from libpython*.*.so are not resolved properly. As
-      	// as workaround, it's necessary to manually rediscover the
-      	// symbols by calling dlopen().
-      	//
-
-        // Provide info on the setting of LD_LIBRARY_PATH
-        char * pyLDD = getenv("LD_LIBRARY_PATH");
-        if (pyLDD != NULL) {
-            SPLAPPLOG(L_INFO, TOPOLOGY_LD_LIB_PATH(pyLDD), "python");
-        } else {
-            SPLAPPLOG(L_INFO, TOPOLOGY_LD_LIB_PATH_NO, "python");
-        }
-
-        // declare pylib and its value  
-        std::string pyLib(TOPOLOGY_PYTHON_LIBNAME);
-        char * pyHome = getenv("PYTHONHOME");
-        if (pyHome != NULL) {
-            std::string wk(pyHome);
-            wk.append("/lib/");
-            wk.append(pyLib);
-
-            pyLib = wk;
-        }
-        SPLAPPLOG(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
-
-        if(NULL == dlopen(pyLib.c_str(), RTLD_LAZY |
-                                         RTLD_GLOBAL)){
-          SPLAPPLOG(L_ERROR, TOPOLOGY_LOAD_LIB_ERROR(pyLib), "python");
-          throw;
-        }
-
-        SplpySetup::loadCPython(spl_setup_py_path);
-      }
-
     /*
      * Import a module, returning the reference to the module.
      * Caller must hold the GILState

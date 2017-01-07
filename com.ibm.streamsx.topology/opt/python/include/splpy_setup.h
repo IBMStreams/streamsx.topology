@@ -58,11 +58,34 @@ class SplpySetup {
      * the location of spl_setup.py
      */
     static void loadCPython(const char* spl_setup_py_path) {
+        loadPythonLib();
         startPython();
         runSplSetup(spl_setup_py_path);
     }
 
   private:
+    static void loadPythonLib() {
+        // declare pylib and its value  
+        std::string pyLib(TOPOLOGY_PYTHON_LIBNAME);
+        char * pyHome = getenv("PYTHONHOME");
+        if (pyHome != NULL) {
+            std::string wk(pyHome);
+            wk.append("/lib/");
+            wk.append(pyLib);
+
+            pyLib = wk;
+        }
+        SPLAPPLOG(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
+        SPLAPPTRC(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
+
+        if(NULL == dlopen(pyLib.c_str(), RTLD_LAZY |
+                                         RTLD_GLOBAL | RTLD_DEEPBIND)){
+          SPLAPPLOG(L_ERROR, TOPOLOGY_LOAD_LIB_ERROR(pyLib), "python");
+          throw;
+        }
+        SPLAPPTRC(L_INFO, "Loaded Python library", "python");
+    }
+
     /**
      * Start the embedded Python runtime.
      */
