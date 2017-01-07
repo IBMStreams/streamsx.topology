@@ -5,7 +5,7 @@
 
 #include "splpy.h"
 
-using namespace streamsx::topolgy;
+using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 

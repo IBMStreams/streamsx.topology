@@ -17,6 +17,7 @@
 #define __SPL__SPLPY_H
 
 #include "splpy_general.h"
+#include "splpy_setup.h"
 #include "splpy_op.h"
 
 #include "Python.h"
@@ -60,60 +61,6 @@
 namespace streamsx {
   namespace topology {
 
-    /*
-    ** Convert to a SPL rstring from a Python string object.
-    ** Returns 0 if successful, non-zero if error.
-    */
-    inline int pyRStringFromPyObject(SPL::rstring & attr, PyObject * value) {
-      Py_ssize_t size = 0;
-      PyObject * converted = NULL;
-      char * bytes = NULL;
-
-#if PY_MAJOR_VERSION == 3
-      // Python 3 character strings are unicode objects
-      // Caller is not responsible for deallocating buffer
-      // returned by PyUnicode_AsUTF8AndSize
-      //
-      if (!PyUnicode_Check(value)) {
-          // Create a string from the object
-          value = converted = PyObject_Str(value);
-      }
-      bytes = PyUnicode_AsUTF8AndSize(value, &size);
-#else
-      // Python 2 supports Unicode and byte character strings 
-      // Default is byte character strings.
-      // PyString_AsStringAndSize returns a pointer to an
-      // internal buffer that must not be modified or deallocated
-      if (PyUnicode_Check(value)) {
-          value = converted = PyUnicode_AsUTF8String(value);
-      } else if (PyString_Check(value)) {
-           // no coversion needed
-      } else {
-          // Create a string from the object
-          value = converted = PyObject_Str(value);
-      }
-      int rc = PyString_AsStringAndSize(value, &bytes, &size);
-      if (rc != 0)
-          bytes = NULL;
-#endif
-
-      if (bytes == NULL) {
-         if (converted != NULL)
-             Py_DECREF(converted);
-         return -1;
-      }
-
-      // This copies from bytes into the rstring.
-      attr.assign((const char *)bytes, (size_t) size);
-
-      // Need to decrement the reference after we
-      // have copied the bytes out as bytes points
-      // into the Python object.
-      if (converted != NULL)
-          Py_DECREF(converted);
-
-      return 0;
-    }
 
     /**
      * Return an SPL runtime exception that can be thrown
@@ -121,6 +68,7 @@ namespace streamsx {
      * and stderr to ensure any additional info is visible
      * in the PE console.
     */
+/*
     inline SPL::SPLRuntimeException pythonException(std::string const & 	location) {
       PyObject *pyType, *pyValue, *pyTraceback;
       PyErr_Fetch(&pyType, &pyValue, &pyTraceback);
@@ -142,6 +90,7 @@ namespace streamsx {
       
       return exc;
     }
+*/
 
     /*
     ** Conversion of Python objects to SPL values.
@@ -163,7 +112,7 @@ namespace streamsx {
     inline void pySplValueFromPyObject(SPL::rstring & splv, PyObject * value) {
       if (pyRStringFromPyObject(splv, value) != 0) {
          SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
-         throw streamsx::topology::pythonException("rstring");
+         throw SplpyGeneral::pythonException("rstring");
       }
     }
 
@@ -264,7 +213,7 @@ namespace streamsx {
 
         PyObject * iterator = PyObject_GetIter(value);
         if (iterator == 0) {
-            throw streamsx::topology::pythonException("iter(set)");
+            throw SplpyGeneral::pythonException("iter(set)");
         }
         PyObject *item;
         while (item = PyIter_Next(iterator)) {
@@ -461,11 +410,15 @@ namespace streamsx {
           throw;
         }
 
+        SplpySetup::loadCPython();
+
+/*
         if (Py_IsInitialized() == 0) {
           Py_InitializeEx(0);
           PyEval_InitThreads();
           PyEval_SaveThread();
         }
+*/
 
         int fd = open(spl_setup_py, O_RDONLY);
         if (fd < 0) {
@@ -477,7 +430,7 @@ namespace streamsx {
         PyGILLock lock;
         if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
           SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
-          throw streamsx::topology::pythonException("splpy_setup.py");
+          throw SplpyGeneral::pythonException("splpy_setup.py");
         }
       }
 
@@ -492,7 +445,7 @@ namespace streamsx {
       Py_DECREF(moduleName);
       if (module == NULL) {
         SPLAPPLOG(L_ERROR, TOPOLOGY_IMPORT_MODULE_ERROR(moduleNameC), "python");
-        throw streamsx::topology::pythonException(moduleNameC);
+        throw SplpyGeneral::pythonException(moduleNameC);
       }
       SPLAPPLOG(L_INFO, TOPOLOGY_IMPORT_MODULE(moduleNameC), "python");
       return module;
@@ -550,7 +503,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
       if(pyReturnVar == 0){
-        throw streamsx::topology::pythonException("sink");
+        throw SplpyGeneral::pythonException("sink");
       }
 
       Py_DECREF(pyReturnVar);
@@ -580,7 +533,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
       if(pyReturnVar == 0){
-        throw streamsx::topology::pythonException("filter");
+        throw SplpyGeneral::pythonException("filter");
       }
 
       int ret = PyObject_IsTrue(pyReturnVar);
@@ -606,7 +559,7 @@ namespace streamsx {
         Py_DECREF(pyReturnVar);
         return 0;
       } else if(pyReturnVar == 0){
-         throw streamsx::topology::pythonException("transform");
+         throw SplpyGeneral::pythonException("transform");
       } 
 
       pySplValueFromPyObject(retSplVal, pyReturnVar);

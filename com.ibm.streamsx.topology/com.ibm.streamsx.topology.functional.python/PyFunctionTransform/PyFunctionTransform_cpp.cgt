@@ -36,7 +36,7 @@ MY_OPERATOR::MY_OPERATOR() :
     const char* spl_setup_appdir = appDirSetup.c_str();
     if (PyRun_SimpleString(spl_setup_appdir) != 0) {
          SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
-         throw streamsx::topology::pythonException("splpy_setup.py");
+         throw SplpyGeneral::pythonException("splpy_setup.py");
     }
 
 <%

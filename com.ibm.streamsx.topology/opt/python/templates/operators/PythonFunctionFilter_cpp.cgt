@@ -5,7 +5,7 @@
 
 #include "splpy.h"
 
-using namespace streamsx::topolgy;
+using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
@@ -101,7 +101,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
     if (pyReturnVar == NULL) {
         SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
-        throw streamsx::topology::pythonException("<%=$functionName%>");
+        throw SplpyGeneral::pythonException("<%=$functionName%>");
     }
     ret = PyObject_IsTrue(pyReturnVar);
 
