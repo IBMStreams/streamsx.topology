@@ -8,7 +8,7 @@
 
     // Set the function the operator will call as a member field
     function_ =
-      streamsx::topology::Splpy::loadFunction("<%=$module%>", "<%=$functionName%>");   
+      SplpyGeneral::loadFunction("<%=$module%>", "<%=$functionName%>");   
 <%
     if (splpy_OperatorCallable() eq 'class') {
 %>

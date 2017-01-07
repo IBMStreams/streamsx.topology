@@ -340,40 +340,7 @@ namespace streamsx {
     class Splpy {
 
       public:
-    /*
-     * Import a module, returning the reference to the module.
-     * Caller must hold the GILState
-     */
-    static PyObject * importModule(const char * moduleNameC) 
-    {
-      PyObject * moduleName = PyUnicode_FromString(moduleNameC);
-      PyObject * module = PyImport_Import(moduleName);
-      Py_DECREF(moduleName);
-      if (module == NULL) {
-        SPLAPPLOG(L_ERROR, TOPOLOGY_IMPORT_MODULE_ERROR(moduleNameC), "python");
-        throw SplpyGeneral::pythonException(moduleNameC);
-      }
-      SPLAPPLOG(L_INFO, TOPOLOGY_IMPORT_MODULE(moduleNameC), "python");
-      return module;
-    }
 
-    /*
-     * Load a function, returning the reference to the function.
-     * Caller must hold the GILState
-     */
-    static PyObject * loadFunction(const char * moduleNameC, const char * functionNameC)
-     {    
-       PyObject * module = importModule(moduleNameC);
-       PyObject * function = PyObject_GetAttrString(module, functionNameC);
-       Py_DECREF(module);
-    
-       if (!PyCallable_Check(function)) {
-         SPLAPPTRC(L_ERROR, "Fatal error: function " << functionNameC << " in module " << moduleNameC << " not callable", "python");
-         throw;
-        }
-        SPLAPPTRC(L_INFO, "Callable function: " << functionNameC, "python");
-        return function;
-      }
 
     /*
     * One off generic call a function by name passing one or two arguments
@@ -383,7 +350,7 @@ namespace streamsx {
     * References to the arguments are stolen by this function.
     */
     static PyObject * callFunction(const char * module, const char *name, PyObject * arg1, PyObject * arg2) {
-         PyObject *fn = loadFunction(module, name);
+         PyObject *fn = SplpyGeneral::loadFunction(module, name);
 
          PyObject *tc = PyTuple_New(arg2 == NULL ? 1 : 2);
          PyTuple_SET_ITEM(tc, 0, arg1);
