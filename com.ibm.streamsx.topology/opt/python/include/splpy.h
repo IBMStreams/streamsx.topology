@@ -376,7 +376,7 @@ namespace streamsx {
        * Load the C Python runtime and execute a setup
        * script splpy_setup.py at the given path.
       */
-      static void loadCPython(const char* spl_setup_py) {
+      static void loadCPython(const char* spl_setup_py_path) {
       	// If the Python runtime is being embedded in a shared library
       	// (as is the case with IBM Streams), there is a bug where the 
       	// symbols from libpython*.*.so are not resolved properly. As
@@ -410,28 +410,7 @@ namespace streamsx {
           throw;
         }
 
-        SplpySetup::loadCPython();
-
-/*
-        if (Py_IsInitialized() == 0) {
-          Py_InitializeEx(0);
-          PyEval_InitThreads();
-          PyEval_SaveThread();
-        }
-*/
-
-        int fd = open(spl_setup_py, O_RDONLY);
-        if (fd < 0) {
-          SPLAPPTRC(L_ERROR,
-            "Python script splpy_setup.py not found!:" << spl_setup_py,
-                             "python");
-          throw;
-        }
-        PyGILLock lock;
-        if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
-          SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
-          throw SplpyGeneral::pythonException("splpy_setup.py");
-        }
+        SplpySetup::loadCPython(spl_setup_py_path);
       }
 
     /*

@@ -1,12 +1,7 @@
     // Common code for the constructor of SPL Python operators
     // that are created from Python functions
     // Loads the Python runtime and initializes the function and module variables.
-    // Setup up script that the extractor copies into the toolkit
-    std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
-    std::string splpySetup = tkDir + "/opt/.__splpy/common/splpy_setup.py";
-    const char* spl_setup_py = splpySetup.c_str();
-    
-    streamsx::topology::Splpy::loadCPython(spl_setup_py);
+    SplpyPyOp::initialize();
     
     {
     streamsx::topology::PyGILLock lock;

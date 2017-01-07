@@ -1,6 +1,7 @@
 /* Additional includes go here */
 
 #include "splpy.h"
+#include "splpy_funcop.h"
 
 using namespace streamsx::topology;
 
@@ -13,14 +14,9 @@ MY_OPERATOR::MY_OPERATOR() :
    function_(NULL),
    pyInNames_(NULL)
 {
-  std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
-  std::string streamsxDir = tkDir + "/opt/python/packages/streamsx/topology";
-  std::string splpySetup = streamsxDir + "/splpy_setup.py";
-  const char* spl_setup_py = splpySetup.c_str();
-
-  streamsx::topology::Splpy::loadCPython(spl_setup_py);
+    SplpyFuncOp::initialize();
   
-    streamsx::topology::PyGILLock lock;
+    PyGILLock lock;
 
     PyObject *_module_;
     PyObject *_function_;

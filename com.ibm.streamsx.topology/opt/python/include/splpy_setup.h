@@ -51,8 +51,15 @@ namespace streamsx {
 
 class SplpySetup {
   public:
-    static void loadCPython() {
+    /*
+     * Load embedded Python and execute the toolkit's
+     * spl_setup.py script.
+     * Argument is path (relative to the toolkit root) of
+     * the location of spl_setup.py
+     */
+    static void loadCPython(const char* spl_setup_py_path) {
         startPython();
+        runSplSetup(spl_setup_py_path);
     }
 
   private:
@@ -74,6 +81,31 @@ class SplpySetup {
           SPLAPPTRC(L_DEBUG, "Python runtime already started", "python");
         }
         SPLAPPTRC(L_INFO, "Started Python runtime", "python");
+    }
+
+    static void runSplSetup(const char* spl_setup_py_path) {
+        std::string tkDir = SPL::ProcessingElement::pe().getToolkitDirectory();
+        std::string streamsxDir = tkDir + spl_setup_py_path;
+        std::string splpySetup = streamsxDir + "/splpy_setup.py";
+        const char* spl_setup_py = splpySetup.c_str();
+
+        SPLAPPTRC(L_DEBUG, "Python script splpy_setup.py: " << spl_setup_py, "python");
+
+        int fd = open(spl_setup_py, O_RDONLY);
+        if (fd < 0) {
+          SPLAPPTRC(L_ERROR,
+            "Python script splpy_setup.py not found!:" << spl_setup_py,
+                             "python");
+          throw;
+        }
+
+        PyGILLock lock;
+        // The 1 closes the file.
+        if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
+          SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
+          throw SplpyGeneral::pythonException("splpy_setup.py");
+        }
+        SPLAPPTRC(L_DEBUG, "Python script splpy_setup.py ran ok.", "python");
     }
 };
 
