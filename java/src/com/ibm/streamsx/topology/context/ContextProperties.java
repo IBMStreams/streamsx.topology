@@ -111,9 +111,9 @@ public interface ContextProperties {
      * Bluemix instance, if possible. Currently only be used in
      * conjunction with the {@code ANALYTICS_SERVICE} context.
      * <p>
-     * Its values can be {@code true} and {@code false}. The
-     * former will force remote compilation when possible, while
-     * the latter will force local compilation, if possible.
+     * Its values can be {@code true} and {@code false}. If true,
+     * it will force remote compilation when possible. If false
+     * (or unset), the parameter will have no impact.
      * <p>
      * If the {@code FORCE_REMOTE} parameter is supplied with a
      * value of {@code true}, the {@code SERVICE_NAME} and 
