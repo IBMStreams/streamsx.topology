@@ -4,7 +4,7 @@
     SplpyPyOp::initialize();
     
     {
-    streamsx::topology::PyGILLock lock;
+    SplpyGILLock lock;
 
     // Set the function the operator will call as a member field
     function_ =

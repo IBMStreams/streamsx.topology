@@ -16,7 +16,7 @@ MY_OPERATOR::MY_OPERATOR() :
 { 
     SplpyFuncOp::initialize();
 
-    PyGILLock lock;
+    SplpyGILLock lock;
 
     PyObject *_module_;
     PyObject *_function_;
@@ -47,7 +47,7 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-  streamsx::topology::PyGILLock lock;
+  SplpyGILLock lock;
   if (function_)
     Py_DECREF(function_);
   if (pyInNames_)
@@ -76,7 +76,7 @@ print splpy_inputtuple2value($pystyle);
 @include "../pyspltuple2dict.cgt"
 <%}%>
 
-    streamsx::topology::PyGILLock lock;
+    SplpyGILLock lock;
     // convert spl attribute to python object
     PyObject * pyArg = streamsx::topology::pySplValueToPyObject(value);
 

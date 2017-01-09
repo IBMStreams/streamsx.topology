@@ -64,7 +64,7 @@ MY_OPERATOR::MY_OPERATOR() :
 
 <% if ($paramStyle eq 'dictionary') { %>
    {
-      streamsx::topology::PyGILLock lock;
+      SplpyGILLock lock;
       pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getInputPortAt(0));
    }
@@ -74,7 +74,7 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-   streamsx::topology::PyGILLock lock;
+   SplpyGILLock lock;
    if (function_)
       Py_DECREF(function_);
    if (pyInNames_)
@@ -93,7 +93,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
    int ret = 0;
    {
     // Don't hold the lock across submission
-    streamsx::topology::PyGILLock lock;
+    SplpyGILLock lock;
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
 

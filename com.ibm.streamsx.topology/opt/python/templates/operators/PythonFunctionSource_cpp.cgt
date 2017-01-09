@@ -39,7 +39,7 @@ MY_OPERATOR::MY_OPERATOR() :
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
    
    {
-      streamsx::topology::PyGILLock lock;
+      SplpyGILLock lock;
 
       // function_ is an instance of the callable class
       // then when called returns an iterable
@@ -65,7 +65,7 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-   streamsx::topology::PyGILLock lock;
+   SplpyGILLock lock;
    if (function_)
       Py_DECREF(function_);
    if (pyOutNames_)
@@ -95,7 +95,7 @@ void MY_OPERATOR::process(uint32_t idx)
     std::vector<OPort0Type> output_tuples;  
     {
       // Don't hold the lock across submission
-      streamsx::topology::PyGILLock lock;
+      SplpyGILLock lock;
 
       PyObject *pyTuple = PyTuple_New(0);
       PyObject *pyDict = NULL;

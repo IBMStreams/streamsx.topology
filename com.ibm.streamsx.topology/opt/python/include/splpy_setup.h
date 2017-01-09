@@ -122,7 +122,7 @@ class SplpySetup {
           throw;
         }
 
-        PyGILLock lock;
+        SplpyGILLock lock;
         // The 1 closes the file.
         if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
           SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");

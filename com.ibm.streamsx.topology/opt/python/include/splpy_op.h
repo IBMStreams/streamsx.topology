@@ -29,7 +29,7 @@ class SplpyOp {
        * Flush any pending output.
       */
       static void prepareToShutdown() {
-          PyGILLock lock;
+          SplpyGILLock lock;
           SplpyGeneral::flush_PyErrPyOut();
       }
 };
