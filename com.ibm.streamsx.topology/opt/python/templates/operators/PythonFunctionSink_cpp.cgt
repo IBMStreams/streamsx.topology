@@ -4,6 +4,9 @@
  */
 
 #include "splpy.h"
+#include "splpy_pyop.h"
+
+using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
@@ -44,7 +47,7 @@ MY_OPERATOR::MY_OPERATOR() :
 
 <% if ($paramStyle eq 'dictionary') { %>
    {
-      streamsx::topology::PyGILLock lock;
+      SplpyGILLock lock;
       pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getInputPortAt(0));
    }
@@ -54,7 +57,7 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-   streamsx::topology::PyGILLock lock;
+   SplpyGILLock lock;
    if (function_)
       Py_DECREF(function_);
    if (pyInNames_)
@@ -64,14 +67,13 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    streamsx::topology::PyGILLock lock;
-    streamsx::topology::flush_PyErrPyOut();
+    SplpyOp::prepareToShutdown();
 }
 
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
-   streamsx::topology::PyGILLock lock;
+   SplpyGILLock lock;
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
   
@@ -80,7 +82,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     Py_DECREF(pyTuple);
     if (pyReturnNone == NULL) {
         SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
-        throw streamsx::topology::pythonException("<%=$functionName%>");
+        throw SplpyGeneral::pythonException("<%=$functionName%>");
     }
 
     Py_DECREF(pyReturnNone);

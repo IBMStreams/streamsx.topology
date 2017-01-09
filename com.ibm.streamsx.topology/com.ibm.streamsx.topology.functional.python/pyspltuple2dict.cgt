@@ -3,7 +3,7 @@
 // into a python dictionary object
   PyObject *value = 0;
   {
-  streamsx::topology::PyGILLock lockdict;
+  SplpyGILLock lockdict;
   PyObject * pyDict = PyDict_New();
 <%
      for (my $i = 0; $i < $pynumattrs; ++$i) {

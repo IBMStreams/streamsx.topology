@@ -1,6 +1,9 @@
 /* Additional includes go here */
 
 #include "splpy.h"
+#include "splpy_funcop.h"
+
+using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
@@ -11,14 +14,9 @@ MY_OPERATOR::MY_OPERATOR() :
    function_(NULL),
    pyInNames_(NULL)
 { 
-  std::string tkDir = ProcessingElement::pe().getToolkitDirectory();
-  std::string streamsxDir = tkDir + "/opt/python/packages/streamsx/topology";
-  std::string splpySetup = streamsxDir + "/splpy_setup.py";
-  const char* spl_setup_py = splpySetup.c_str();
+    SplpyFuncOp::initialize();
 
-  streamsx::topology::Splpy::loadCPython(spl_setup_py);
-
-  streamsx::topology::PyGILLock lock;
+    SplpyGILLock lock;
 
     PyObject *_module_;
     PyObject *_function_;
@@ -31,7 +29,7 @@ MY_OPERATOR::MY_OPERATOR() :
     const char* spl_setup_appdir = appDirSetup.c_str();
     if (PyRun_SimpleString(spl_setup_appdir) != 0) {
          SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
-         throw streamsx::topology::pythonException("splpy_setup.py");
+         throw SplpyGeneral::pythonException("splpy_setup.py");
     }
 
 <%
@@ -49,7 +47,7 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-  streamsx::topology::PyGILLock lock;
+  SplpyGILLock lock;
   if (function_)
     Py_DECREF(function_);
   if (pyInNames_)
@@ -59,8 +57,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    streamsx::topology::PyGILLock lock;
-    streamsx::topology::flush_PyErrPyOut();
+    SplpyOp::prepareToShutdown();
 }
 
 // Tuple processing for non-mutating ports
@@ -79,14 +76,14 @@ print splpy_inputtuple2value($pystyle);
 @include "../pyspltuple2dict.cgt"
 <%}%>
 
-    streamsx::topology::PyGILLock lock;
+    SplpyGILLock lock;
     // convert spl attribute to python object
     PyObject * pyArg = streamsx::topology::pySplValueToPyObject(value);
 
     PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyArg);
 
     if (pyIterator == 0) {
-         throw streamsx::topology::pythonException(
+         throw SplpyGeneral::pythonException(
                getParameterValues("pyName").at(0)->getValue().toString());
     }
     if (pyIterator == Py_None) {

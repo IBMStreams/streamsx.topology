@@ -4,6 +4,9 @@
  */
 
 #include "splpy.h"
+#include "splpy_pyop.h"
+
+using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
@@ -51,7 +54,7 @@ MY_OPERATOR::MY_OPERATOR() :
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
    
    {
-      streamsx::topology::PyGILLock lock;
+      SplpyGILLock lock;
       pyOutNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getOutputPortAt(0));
 
@@ -75,7 +78,7 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-   streamsx::topology::PyGILLock lock;
+   SplpyGILLock lock;
    if (function_)
       Py_DECREF(function_);
    if (pyInNames_)
@@ -87,8 +90,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    streamsx::topology::PyGILLock lock;
-    streamsx::topology::flush_PyErrPyOut();
+    SplpyOp::prepareToShutdown();
 }
 
 <%
@@ -101,7 +103,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
    std::vector<OPort0Type> output_tuples;  
    {
     // Don't hold the lock across submission
-    streamsx::topology::PyGILLock lock;
+    SplpyGILLock lock;
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
 
