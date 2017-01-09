@@ -425,6 +425,8 @@ public class KafkaStreamsTest extends TestTopology {
     
     @Test
     public void testReusableApp() throws Exception {
+        // Threads per topic not supported in 4.2 onwards
+        skipVersion("kafka.threadsPerTopic", 4, 2);
         
         checkAssumes();
         
