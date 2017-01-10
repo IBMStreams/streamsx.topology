@@ -45,7 +45,7 @@
 #else
 #define TOPOLOGY_PYTHON_LIBNAME "libpython2.7.so"
 #endif
-    
+
 namespace streamsx {
   namespace topology {
 
@@ -88,17 +88,38 @@ class SplpySetup {
 
     /**
      * Start the embedded Python runtime.
+     * 
+     * Py functions are accessed indirectly to allow
+     * relocation (dynamic loading) of the Python runtime.
      */
     static void startPython() {
         SPLAPPTRC(L_DEBUG, "Checking Python runtime", "python");
 
-        if (Py_IsInitialized() == 0) {
+        typedef int (*__splpy_ii)(void);
+
+        __splpy_ii _SPLPy_IsInitialized =
+             (__splpy_ii) dlsym(RTLD_DEFAULT, "Py_IsInitialized");
+
+
+        if (_SPLPy_IsInitialized() == 0) {
+          typedef void (*__splpy_ie)(int);
+          typedef void (*__splpy_eit)(void);
+          typedef PyThreadState * (*__splpy_est)(void);
 
           SPLAPPTRC(L_DEBUG, "Starting Python runtime", "python");
 
-          Py_InitializeEx(0);
-          PyEval_InitThreads();
-          PyEval_SaveThread();
+          __splpy_ie _SPLPy_InitializeEx =
+             (__splpy_ie) dlsym(RTLD_DEFAULT, "Py_InitializeEx");
+
+          __splpy_eit _SPLPyEval_InitThreads =
+             (__splpy_eit) dlsym(RTLD_DEFAULT, "PyEval_InitThreads");
+
+          __splpy_est _SPLPyEval_SaveThread =
+             (__splpy_est) dlsym(RTLD_DEFAULT, "PyEval_SaveThread");
+
+          _SPLPy_InitializeEx(0);
+          _SPLPyEval_InitThreads();
+          _SPLPyEval_SaveThread();
 
         } else {
           SPLAPPTRC(L_DEBUG, "Python runtime already started", "python");
