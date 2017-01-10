@@ -14,23 +14,12 @@ MY_OPERATOR::MY_OPERATOR() :
    function_(NULL),
    pyInNames_(NULL)
 { 
-    SplpyFuncOp::initialize();
+    SplpyFuncOp::initialize(this);
 
     SplpyGILLock lock;
 
     PyObject *_module_;
     PyObject *_function_;
-
-    std::string appDirSetup = "import streamsx.topology.runtime\n";
-    appDirSetup += "streamsx.topology.runtime.setupOperator(\"";
-    appDirSetup += <%=$model->getParameterByName("toolkitDir")->getValueAt(0)->getCppExpression()%>;
-    appDirSetup += "\")\n";
-
-    const char* spl_setup_appdir = appDirSetup.c_str();
-    if (PyRun_SimpleString(spl_setup_appdir) != 0) {
-         SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
-         throw SplpyGeneral::pythonException("splpy_setup.py");
-    }
 
 <%
  # Select the Python wrapper function
