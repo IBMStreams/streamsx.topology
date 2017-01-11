@@ -11,7 +11,7 @@
  * the toolkit or toolkit with decorated
  * SPL Python operators.
  *
- * Functionality related to operators
+ * Functionality related to Python decorated SPL operators
  */
 
 #ifndef __SPL__SPLPY_PYOP_H

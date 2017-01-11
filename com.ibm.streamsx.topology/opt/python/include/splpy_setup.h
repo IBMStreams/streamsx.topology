@@ -57,15 +57,16 @@ class SplpySetup {
      * Argument is path (relative to the toolkit root) of
      * the location of spl_setup.py
      */
-    static void loadCPython(const char* spl_setup_py_path) {
-        loadPythonLib();
+    static void * loadCPython(const char* spl_setup_py_path) {
+        void * pydl = loadPythonLib();
         startPython();
         runSplSetup(spl_setup_py_path);
+        return pydl;
     }
 
   private:
-    static void loadPythonLib() {
-        // declare pylib and its value  
+    static void * loadPythonLib() {
+
         std::string pyLib(TOPOLOGY_PYTHON_LIBNAME);
         char * pyHome = getenv("PYTHONHOME");
         if (pyHome != NULL) {
@@ -75,15 +76,19 @@ class SplpySetup {
 
             pyLib = wk;
         }
+        // Log & trace
         SPLAPPLOG(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
         SPLAPPTRC(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
 
-        if(NULL == dlopen(pyLib.c_str(), RTLD_LAZY |
-                                         RTLD_GLOBAL | RTLD_DEEPBIND)){
+        void * pydl = dlopen(pyLib.c_str(),
+                         RTLD_LAZY | RTLD_GLOBAL | RTLD_DEEPBIND);
+
+        if (NULL == pydl) {
           SPLAPPLOG(L_ERROR, TOPOLOGY_LOAD_LIB_ERROR(pyLib), "python");
           throw;
         }
         SPLAPPTRC(L_INFO, "Loaded Python library", "python");
+        return pydl;
     }
 
     /**

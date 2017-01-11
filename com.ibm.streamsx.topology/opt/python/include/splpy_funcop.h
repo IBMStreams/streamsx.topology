@@ -28,25 +28,27 @@
 namespace streamsx {
   namespace topology {
 
-class SplpyFuncOp {
+class SplpyFuncOp : public SplpyOp {
   public:
-      static void initialize(SPL::Operator * op) {
-          SplpySetup::loadCPython("/opt/python/packages/streamsx/topology");
-          addAppPythonPackages(op);
+      SplpyFuncOp(SPL::Operator * op) :
+         SplpyOp(op, "/opt/python/packages/streamsx/topology") {
+         addAppPythonPackages();
       }
+
   private:
+
       /*
        *  Add any packages in the application directory which
        *  is passed to each invocation of the functional 
        *  operators as the paramter toolkitDir. The value
        *  passed is the toolkit of the invocation of the operator.
        */
-      static void addAppPythonPackages(SPL::Operator * op) {
+      void addAppPythonPackages() {
           SplpyGILLock lock;
 
           std::string appDirSetup = "import streamsx.topology.runtime\n";
           appDirSetup += "streamsx.topology.runtime.setupOperator(\"";
-          appDirSetup += static_cast<SPL::rstring>(op->getParameterValues("toolkitDir")[0]->getValue());
+          appDirSetup += static_cast<SPL::rstring>(op()->getParameterValues("toolkitDir")[0]->getValue());
           appDirSetup += "\")\n";
 
           const char* spl_setup_appdir = appDirSetup.c_str();
