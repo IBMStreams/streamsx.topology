@@ -24,11 +24,10 @@
 namespace streamsx {
   namespace topology {
 
-class SplpyPyOp {
+class SplpyPyOp : public SplpyOp {
   public:
-      static void initialize() {
-          // Setup up script that the extractor copies into the toolkit
-          SplpySetup::loadCPython("/opt/.__splpy/common");
+      SplpyPyOp(SPL::Operator * op) :
+         SplpyOp(op, "/opt/.__splpy/common") {
       }
 };
 

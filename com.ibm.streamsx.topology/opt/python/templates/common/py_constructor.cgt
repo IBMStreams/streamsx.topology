@@ -1,7 +1,7 @@
     // Common code for the constructor of SPL Python operators
     // that are created from Python functions
     // Loads the Python runtime and initializes the function and module variables.
-    SplpyPyOp::initialize();
+    pyop_ = new SplpyPyOp(this);
     
     {
     SplpyGILLock lock;

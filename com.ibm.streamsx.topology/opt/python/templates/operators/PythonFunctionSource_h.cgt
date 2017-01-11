@@ -3,7 +3,9 @@
  * # Copyright IBM Corp. 2015  
  */
 
-#include <Python.h>
+#include "splpy_pyop.h"
+
+using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
@@ -31,6 +33,7 @@ public:
 
 private:
   // Members
+    SplpyPyOp *pyop_;
     PyObject *function_;
     PyObject *pyOutNames_;
 
