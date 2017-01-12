@@ -53,10 +53,10 @@ public class BuildServiceRemoteRESTWrapper {
         	if(status.equals("building")){
         		RemoteContext.REMOTE_LOGGER.info("Build Service Remote REST Wrapper: the remote application status is 'building'");
         		try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				}
+			    Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			    Thread.currentThread().interrupt();
+			}
         		continue;
         	}
         	else if(status.equals("failed")){

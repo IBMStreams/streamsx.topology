@@ -52,10 +52,10 @@ public class BuildServiceRESTWrapper {
         	if(status.equals("building")){
         		Topology.STREAMS_LOGGER.info("Build Service REST Wrapper: the remote application status is 'building'");
         		try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				}
+			    Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			    Thread.currentThread().interrupt();
+			}
         		continue;
         	}
         	else if(status.equals("failed")){
