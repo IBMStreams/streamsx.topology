@@ -113,7 +113,7 @@ class _BaseSubmitter:
         # Otherwise, use the Java version from the streams install
         else:
             jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
-            if self.config[ConfigParams.FORCE_REMOTE_BUILD] == True:
+            if ConfigParams.FORCE_REMOTE_BUILD in config and self.config[ConfigParams.FORCE_REMOTE_BUILD] == True:
                 submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
             else:
                 submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
