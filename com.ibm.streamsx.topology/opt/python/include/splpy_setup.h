@@ -60,7 +60,7 @@ class SplpySetup {
     static void * loadCPython(const char* spl_setup_py_path) {
         void * pydl = loadPythonLib();
         startPython(pydl);
-        runSplSetup(spl_setup_py_path);
+        runSplSetup(pydl, spl_setup_py_path);
         return pydl;
     }
 
@@ -132,7 +132,7 @@ class SplpySetup {
         SPLAPPTRC(L_INFO, "Started Python runtime", "python");
     }
 
-    static void runSplSetup(const char* spl_setup_py_path) {
+    static void runSplSetup(void * pydl, const char* spl_setup_py_path) {
         std::string tkDir = SPL::ProcessingElement::pe().getToolkitDirectory();
         std::string streamsxDir = tkDir + spl_setup_py_path;
         std::string splpySetup = streamsxDir + "/splpy_setup.py";
@@ -148,9 +148,13 @@ class SplpySetup {
           throw;
         }
 
+        typedef int (*__splpy_rsfef)(FILE *, const char *, int, PyCompilerFlags *);
+        __splpy_rsfef _SPLPyRun_SimpleFileEx = 
+             (__splpy_rsfef) dlsym(pydl, "PyRun_SimpleFileExFlags");
+
         SplpyGILLock lock;
         // The 1 closes the file.
-        if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
+        if (_SPLPyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1, NULL) != 0) {
           SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
           throw SplpyGeneral::pythonException("splpy_setup.py");
         }
