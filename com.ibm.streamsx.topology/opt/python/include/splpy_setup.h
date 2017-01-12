@@ -39,6 +39,7 @@
 #include <SPL/Runtime/Operator/OperatorContext.h>
 #include <SPL/Runtime/Operator/Operator.h>
 
+#include "splpy_sym.h"
 
 #if PY_MAJOR_VERSION == 3
 #define TOPOLOGY_PYTHON_LIBNAME "libpython3.5m.so"
@@ -60,6 +61,7 @@ class SplpySetup {
     static void * loadCPython(const char* spl_setup_py_path) {
         void * pydl = loadPythonLib();
         startPython(pydl);
+        SplpySym::fixSymbols(pydl);
         runSplSetup(pydl, spl_setup_py_path);
         return pydl;
     }
