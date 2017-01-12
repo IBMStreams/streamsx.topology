@@ -133,7 +133,8 @@ class SplpyGeneral {
     * makes diagnosing errors impossible.
     */
     static void flush_PyErr_Print() {
-        PyErr_Print();
+        if (PyErr_Occurred() != NULL)
+            PyErr_Print();
         SplpyGeneral::flush_PyErrPyOut();
     }
 

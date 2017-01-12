@@ -42,14 +42,6 @@
  * Functionality for executing Python within IBM Streams.
  */
 
-#if PY_MAJOR_VERSION == 3
-#define GET_PYTHON_ATTR_FROM_MEMORY(pbytes,psizeb)                       \
-     PyMemoryView_FromMemory((char *) pbytes, psizeb, PyBUF_READ);
-#else
-#define GET_PYTHON_ATTR_FROM_MEMORY(pbytes,psizeb)                       \
-     PyBuffer_FromMemory((void *)bytes, sizeb);
-#endif
-
 namespace streamsx {
   namespace topology {
 
@@ -61,8 +53,12 @@ namespace streamsx {
     ** Convert to a SPL blob from a Python bytes object.
     */
     inline void pySplValueFromPyObject(SPL::blob & splv, PyObject * value) {
-      long int size = PyBytes_Size(value);
       char * bytes = PyBytes_AsString(value);          
+      if (bytes == NULL) {
+         SPLAPPTRC(L_ERROR, "Python can't convert to SPL blob!", "python");
+         throw SplpyGeneral::pythonException("blob");
+      }
+      long int size = PyBytes_GET_SIZE(value);
       splv.setData((const unsigned char *)bytes, size);
     }
 
@@ -234,7 +230,11 @@ namespace streamsx {
       long int sizeb = value.getSize();
       const unsigned char * bytes = value.getData();
 
-      return GET_PYTHON_ATTR_FROM_MEMORY(bytes, sizeb);
+#if PY_MAJOR_VERSION == 3
+      return PyMemoryView_FromMemory((char *) bytes, sizeb, PyBUF_READ);
+#else
+      return PyBuffer_FromMemory((void *)bytes, sizeb);
+#endif
     }
 
     /**
