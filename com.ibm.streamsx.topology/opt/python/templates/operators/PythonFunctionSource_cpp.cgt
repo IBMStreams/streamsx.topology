@@ -33,6 +33,7 @@ using namespace streamsx::topology;
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
+   pyop_(NULL),
    function_(NULL),
    pyOutNames_(NULL)
 {
@@ -65,11 +66,14 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
+   {
    SplpyGILLock lock;
    if (function_)
       Py_DECREF(function_);
    if (pyOutNames_)
       Py_DECREF(pyOutNames_);
+   }
+   delete pyop_;
 }
 
 // Notify port readiness

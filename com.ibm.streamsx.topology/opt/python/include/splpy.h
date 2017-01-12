@@ -20,14 +20,12 @@
 #include "splpy_setup.h"
 #include "splpy_op.h"
 
-#include "Python.h"
 #include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <memory>
-#include <dlfcn.h>
 #include <TopologySplpyResource.h>
 
 #include <SPL/Runtime/Common/RuntimeException.h>
@@ -44,12 +42,6 @@
  * Functionality for executing Python within IBM Streams.
  */
 
-#if PY_MAJOR_VERSION == 3
-#define TOPOLOGY_PYTHON_LIBNAME "libpython3.5m.so"
-#else
-#define TOPOLOGY_PYTHON_LIBNAME "libpython2.7.so"
-#endif
-    
 #if PY_MAJOR_VERSION == 3
 #define GET_PYTHON_ATTR_FROM_MEMORY(pbytes,psizeb)                       \
      PyMemoryView_FromMemory((char *) pbytes, psizeb, PyBUF_READ);

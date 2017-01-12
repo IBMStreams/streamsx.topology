@@ -57,15 +57,16 @@ class SplpySetup {
      * Argument is path (relative to the toolkit root) of
      * the location of spl_setup.py
      */
-    static void loadCPython(const char* spl_setup_py_path) {
-        loadPythonLib();
-        startPython();
+    static void * loadCPython(const char* spl_setup_py_path) {
+        void * pydl = loadPythonLib();
+        startPython(pydl);
         runSplSetup(spl_setup_py_path);
+        return pydl;
     }
 
   private:
-    static void loadPythonLib() {
-        // declare pylib and its value  
+    static void * loadPythonLib() {
+
         std::string pyLib(TOPOLOGY_PYTHON_LIBNAME);
         char * pyHome = getenv("PYTHONHOME");
         if (pyHome != NULL) {
@@ -75,15 +76,19 @@ class SplpySetup {
 
             pyLib = wk;
         }
+        // Log & trace
         SPLAPPLOG(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
         SPLAPPTRC(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
 
-        if(NULL == dlopen(pyLib.c_str(), RTLD_LAZY |
-                                         RTLD_GLOBAL | RTLD_DEEPBIND)){
+        void * pydl = dlopen(pyLib.c_str(),
+                         RTLD_LAZY | RTLD_GLOBAL | RTLD_DEEPBIND);
+
+        if (NULL == pydl) {
           SPLAPPLOG(L_ERROR, TOPOLOGY_LOAD_LIB_ERROR(pyLib), "python");
           throw;
         }
         SPLAPPTRC(L_INFO, "Loaded Python library", "python");
+        return pydl;
     }
 
     /**
@@ -92,13 +97,13 @@ class SplpySetup {
      * Py functions are accessed indirectly to allow
      * relocation (dynamic loading) of the Python runtime.
      */
-    static void startPython() {
+    static void startPython(void *pydl) {
         SPLAPPTRC(L_DEBUG, "Checking Python runtime", "python");
 
         typedef int (*__splpy_ii)(void);
 
         __splpy_ii _SPLPy_IsInitialized =
-             (__splpy_ii) dlsym(RTLD_DEFAULT, "Py_IsInitialized");
+             (__splpy_ii) dlsym(pydl, "Py_IsInitialized");
 
 
         if (_SPLPy_IsInitialized() == 0) {
@@ -109,13 +114,13 @@ class SplpySetup {
           SPLAPPTRC(L_DEBUG, "Starting Python runtime", "python");
 
           __splpy_ie _SPLPy_InitializeEx =
-             (__splpy_ie) dlsym(RTLD_DEFAULT, "Py_InitializeEx");
+             (__splpy_ie) dlsym(pydl, "Py_InitializeEx");
 
           __splpy_eit _SPLPyEval_InitThreads =
-             (__splpy_eit) dlsym(RTLD_DEFAULT, "PyEval_InitThreads");
+             (__splpy_eit) dlsym(pydl, "PyEval_InitThreads");
 
           __splpy_est _SPLPyEval_SaveThread =
-             (__splpy_est) dlsym(RTLD_DEFAULT, "PyEval_SaveThread");
+             (__splpy_est) dlsym(pydl, "PyEval_SaveThread");
 
           _SPLPy_InitializeEx(0);
           _SPLPyEval_InitThreads();

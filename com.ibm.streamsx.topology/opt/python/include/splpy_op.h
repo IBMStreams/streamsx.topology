@@ -24,6 +24,21 @@ namespace streamsx {
 
 class SplpyOp {
   public:
+      SplpyOp(SPL::Operator *op, const char * spl_setup_py) :
+          op_(op),
+          pydl_(NULL) {
+          pydl_ = SplpySetup::loadCPython(spl_setup_py);
+      }
+
+      ~SplpyOp() {
+          if (pydl_ != NULL)
+             (void) dlclose(pydl_);
+      }
+
+      SPL::Operator * op() {
+         return op_;
+      }
+
       /**
        * Actions for a Python operator on prepareToShutdown
        * Flush any pending output.
@@ -32,6 +47,11 @@ class SplpyOp {
           SplpyGILLock lock;
           SplpyGeneral::flush_PyErrPyOut();
       }
+
+   private:
+      SPL::Operator *op_;
+      // Handle to libpythonX.Y.so
+      void * pydl_;
 };
 
 }}

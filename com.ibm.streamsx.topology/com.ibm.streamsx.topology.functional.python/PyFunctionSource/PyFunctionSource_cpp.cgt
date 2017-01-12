@@ -9,9 +9,11 @@ using namespace streamsx::topology;
 
 
 // Constructor
-MY_OPERATOR::MY_OPERATOR() : function_(NULL)
+MY_OPERATOR::MY_OPERATOR() :
+    funcop_(NULL),
+    function_(NULL)
 {
-    SplpyFuncOp::initialize(this);
+    funcop_ = new SplpyFuncOp(this);
 
     SplpyGILLock lock;
 
@@ -30,6 +32,8 @@ MY_OPERATOR::~MY_OPERATOR()
       SplpyGILLock lock;
       Py_DECREF(function_);
     }
+
+    delete funcop_;
 }
 
 // Notify port readiness

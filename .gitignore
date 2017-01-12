@@ -1,5 +1,6 @@
 __pycache__
 *.sab
+*.pyc
 toolkit.xml
 
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.file/DirectoryWatcher/*

@@ -11,10 +11,11 @@ using namespace streamsx::topology;
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR():
+   funcop_(NULL),
    function_(NULL),
    pyInNames_(NULL)
 {
-    SplpyFuncOp::initialize(this);
+    funcop_ = new SplpyFuncOp(this);
 
     SplpyGILLock lock;
 
@@ -36,11 +37,15 @@ MY_OPERATOR::MY_OPERATOR():
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
+  {
   SplpyGILLock lock;
   if (function_)
     Py_DECREF(function_);
   if (pyInNames_)
-    Py_DECREF(pyInNames_);
+     Py_DECREF(pyInNames_);
+  }
+
+  delete funcop_;
 }
 
 // Notify pending shutdown
