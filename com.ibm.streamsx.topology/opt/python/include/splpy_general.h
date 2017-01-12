@@ -114,8 +114,24 @@ class SplpyGILLock {
         PyGILState_STATE gstate_;
     };
 
+static PyObject * __splpy_None = NULL;
+
 class SplpyGeneral {
+
   public:
+    /*
+     * We load Py_None indirectly to avoid
+     * having a reference to it when the
+     * operator shared library is loaded.
+     */
+    static void setup(PyObject * none) {
+        __splpy_None = none;
+    }
+
+    static bool isNone(PyObject *o) {
+        return o == __splpy_None;
+    }
+
     /*
      * Flush Python stderr and stdout.
     */
@@ -184,6 +200,7 @@ class SplpyGeneral {
         return function;
       }
    private:
+
     /*
      * Import a module, returning the reference to the module.
      * Caller must hold the GILState

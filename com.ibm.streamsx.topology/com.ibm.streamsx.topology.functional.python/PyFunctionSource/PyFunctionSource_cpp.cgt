@@ -58,7 +58,7 @@ void MY_OPERATOR::process(uint32_t idx)
     { // start lock
       SplpyGILLock lock;
       PyObject * pyReturnVar = PyObject_CallObject(function_, NULL);
-      if(pyReturnVar == Py_None){
+      if (SplpyGeneral::isNone(pyReturnVar)) {
         Py_DECREF(pyReturnVar);
         break;
       } else if(pyReturnVar == 0){

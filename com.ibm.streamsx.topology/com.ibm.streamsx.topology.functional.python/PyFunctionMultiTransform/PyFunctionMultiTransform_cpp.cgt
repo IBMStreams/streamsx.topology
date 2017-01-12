@@ -80,7 +80,7 @@ print splpy_inputtuple2value($pystyle);
          throw SplpyGeneral::pythonException(
                getParameterValues("pyName").at(0)->getValue().toString());
     }
-    if (pyIterator == Py_None) {
+    if (SplpyGeneral::isNone(pyIterator)) {
         Py_DECREF(pyIterator);
         return;
     }

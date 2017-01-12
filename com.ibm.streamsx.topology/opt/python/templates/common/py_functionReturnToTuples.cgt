@@ -15,7 +15,7 @@
         throw SplpyGeneral::pythonException("<%=$functionName%>");
     }
 
-    if (pyReturnVar == Py_None) {
+    if (SplpyGeneral::isNone(pyReturnVar)) {
          Py_DECREF(pyReturnVar);
          <%=$no_tuples_action%>
          return;

@@ -420,7 +420,7 @@ namespace streamsx {
       // invoke python nested function that calls the application function
       PyObject * pyReturnVar = pyTupleFunc(function, arg);
 
-      if (pyReturnVar == Py_None){
+      if (SplpyGeneral::isNone(pyReturnVar)) {
         Py_DECREF(pyReturnVar);
         return 0;
       } else if(pyReturnVar == 0){

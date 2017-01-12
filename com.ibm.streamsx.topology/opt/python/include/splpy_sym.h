@@ -20,8 +20,6 @@
 #ifndef __SPL__SPLPY_SYM_H
 #define __SPL__SPLPY_SYM_H
 
-#pragma weak _Py_NoneStruct
-
 #include "Python.h"
 
 /**

@@ -60,6 +60,7 @@ class SplpySetup {
      */
     static void * loadCPython(const char* spl_setup_py_path) {
         void * pydl = loadPythonLib();
+        setupGeneral(pydl);
         SplpySym::fixSymbols(pydl);
         startPython(pydl);
         runSplSetup(pydl, spl_setup_py_path);
@@ -132,6 +133,18 @@ class SplpySetup {
           SPLAPPTRC(L_DEBUG, "Python runtime already started", "python");
         }
         SPLAPPTRC(L_INFO, "Started Python runtime", "python");
+    }
+
+    static void setupGeneral(void * pydl) {
+        typedef PyObject * (*__splpy_bv)(const char *, ...);
+
+        __splpy_bv _SPLPy_BuildValue =
+             (__splpy_bv) dlsym(pydl, "Py_BuildValue");
+
+        PyObject * none = _SPLPy_BuildValue("");
+
+        // empty format returns None
+        SplpyGeneral::setup(none);
     }
 
     static void runSplSetup(void * pydl, const char* spl_setup_py_path) {
