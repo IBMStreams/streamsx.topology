@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContext {
@@ -16,6 +17,7 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	
 	@Override
 	public Future<File> submit(JsonObject submission) throws Exception {
+		RemoteContext.REMOTE_LOGGER.info("Remote Build And Submit Remote Context: beginning remote build of application.");
 		Future<File> archive = super.submit(submission);
 		Map<String, Object> config = RemoteContexts.gsonDeployToMap(
 				GsonUtilities.object(submission, "deploy"));

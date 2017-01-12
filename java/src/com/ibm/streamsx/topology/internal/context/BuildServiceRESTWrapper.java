@@ -20,6 +20,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.Topology;
 import com.ibm.json.java.JSONArray;
 
 public class BuildServiceRESTWrapper {
@@ -37,6 +38,7 @@ public class BuildServiceRESTWrapper {
         
         
         // Perform initial post of the archive
+        Topology.STREAMS_LOGGER.info("Build Service REST Wrapper: uploading archive : " + archive.getName() + " to " + this.credentials.get("builds_path"));
         JSONObject jso = doArchivePost(httpclient, apiKey, archive);
         
         JSONObject build = (JSONObject)jso.get("build");
@@ -48,9 +50,16 @@ public class BuildServiceRESTWrapper {
         while(!status.equals("built")){
         	status = buildStatusGet(buildId, httpclient, apiKey);
         	if(status.equals("building")){
+        		Topology.STREAMS_LOGGER.info("Build Service REST Wrapper: the remote application status is 'building'");
+        		try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
         		continue;
         	}
         	else if(status.equals("failed")){
+        		Topology.STREAMS_LOGGER.info("Build Service REST Wrapper: the remote application status is 'failed'");
         		JSONObject output = getBuildOutput(buildId, outputId, httpclient, apiKey);
         		String strOutput = "";
         		if(output!=null)
@@ -60,6 +69,7 @@ public class BuildServiceRESTWrapper {
         	}
         }
         
+        Topology.STREAMS_LOGGER.info("Build Service REST Wrapper: the remote application status is 'built'");
         // Now perform archive put
         build = getBuild(buildId, httpclient, apiKey);
         
@@ -70,6 +80,8 @@ public class BuildServiceRESTWrapper {
         
         // TODO: support multiple artifacts associated with a single build.
         String artifactId = (String)((JSONObject)artifacts.get(0)).get("id");
+        
+        Topology.STREAMS_LOGGER.info("Build Service REST Wrapper: submitting remote application for execution.");
         return doArchivePut(httpclient, apiKey, artifactId);
 	}
 	

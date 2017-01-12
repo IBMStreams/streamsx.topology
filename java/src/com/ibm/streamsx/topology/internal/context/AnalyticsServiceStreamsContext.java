@@ -69,6 +69,8 @@ public class AnalyticsServiceStreamsContext extends
 	if(forceRemote != null && forceRemote){	    
 	    return new RemoteBuildAndSubmitter().submit(app, config);
 	}
+	
+	Topology.STREAMS_LOGGER.info("Beginning local build of application.");
 
         preBundle(config);
         File bundle = bundler.submit(app, config).get();
