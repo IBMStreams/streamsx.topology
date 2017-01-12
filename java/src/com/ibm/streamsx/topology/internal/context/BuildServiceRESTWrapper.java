@@ -30,7 +30,7 @@ public class BuildServiceRESTWrapper {
 		this.credentials = credentials;
 	}
 	
-	public void remoteBuildAndSubmit(File archive) throws ClientProtocolException, IOException{
+	public JSONObject remoteBuildAndSubmit(File archive) throws ClientProtocolException, IOException{
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         
         String apiKey = getAPIKey((String)credentials.get("userid"), (String)credentials.get("password"));
@@ -70,7 +70,7 @@ public class BuildServiceRESTWrapper {
         
         // TODO: support multiple artifacts associated with a single build.
         String artifactId = (String)((JSONObject)artifacts.get(0)).get("id");
-        doArchivePut(httpclient, apiKey, artifactId);
+        return doArchivePut(httpclient, apiKey, artifactId);
 	}
 	
 	private JSONObject doArchivePut(CloseableHttpClient httpclient,

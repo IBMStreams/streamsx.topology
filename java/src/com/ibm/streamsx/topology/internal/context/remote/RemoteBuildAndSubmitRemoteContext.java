@@ -11,7 +11,7 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContext {
 	@Override
     public Type getType() {
-        return Type.REMOTE_BUILD_AND_SUBMIT;
+        return Type.ANALYTICS_SERVICE;
     }
 	
 	@Override

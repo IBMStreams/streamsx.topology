@@ -17,6 +17,9 @@ import java.net.URLEncoder;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import javax.xml.bind.DatatypeConverter;
+import java.nio.charset.StandardCharsets;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
@@ -35,13 +38,16 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.http.auth.AUTH;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
+import com.ibm.streamsx.topology.context.ContextProperties;
 
 public class AnalyticsServiceStreamsContext extends
         BundleUserStreamsContext<BigInteger> {
@@ -59,10 +65,29 @@ public class AnalyticsServiceStreamsContext extends
     public Future<BigInteger> submit(Topology app, Map<String, Object> config)
             throws Exception {
 
+	Boolean forceRemote = (Boolean)config.get(ContextProperties.FORCE_REMOTE_BUILD);
+	if(forceRemote != null && forceRemote){	    
+	    return new RemoteBuildAndSubmitter().submit(app, config);
+	}
+
         preBundle(config);
         File bundle = bundler.submit(app, config).get();
 
         preInvoke();
+
+        BigInteger jobId = submitJobToService(bundle, config);
+        
+        return new CompletedFuture<BigInteger>(jobId);
+    }
+
+    @Override
+    public Future<BigInteger> submit(JSONObject submission) throws Exception{
+	Map<String, Object> config = Contexts.jsonDeployToMap(
+		        (JSONObject)submission.get("deploy"));
+
+	preBundle(config);
+	File bundle = bundler.submit(submission).get();
+	preInvoke();
 
         BigInteger jobId = submitJobToService(bundle, config);
         
@@ -92,7 +117,11 @@ public class AnalyticsServiceStreamsContext extends
                 return JSONObject.parse(fis);
             }
             
-        } else {
+        }
+	else if (rawServices instanceof JSONObject){
+	    return (JSONObject)rawServices;
+	}
+	else {
             throw new IllegalArgumentException();
         }       
     }
@@ -121,19 +150,9 @@ public class AnalyticsServiceStreamsContext extends
     }
     
     private CloseableHttpClient createHttpClient(JSONObject credentials) {
-        
-        
-        UsernamePasswordCredentials upc = new UsernamePasswordCredentials(
-                credentials.get("userid").toString(),
-                credentials.get("password").toString());
-        CredentialsProvider credsProvider = new BasicCredentialsProvider();
-        credsProvider.setCredentials(
-                new AuthScope(credentials.get("rest_host").toString(),  AuthScope.ANY_PORT),
-                upc);
-        CloseableHttpClient httpClient = HttpClients.custom()
-                .setDefaultCredentialsProvider(credsProvider)
-                .build();
-        return httpClient;
+	CloseableHttpClient httpClient = HttpClients.custom()
+	    .build();
+	return httpClient;
     }
     
     private String getStatusURL(JSONObject credentials) {
@@ -149,7 +168,9 @@ public class AnalyticsServiceStreamsContext extends
         String url = getStatusURL(credentials);
 
         HttpGet getStatus = new HttpGet(url);
-        JSONObject jsonResponse = getJsonResponse(httpClient, getStatus);
+        getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAPIKey(credentials.get("userid").toString(),
+						       credentials.get("password").toString()));
+	JSONObject jsonResponse = getJsonResponse(httpClient, getStatus);
         
         Topology.STREAMS_LOGGER.info("Streaming Analytics Service instance status response:" + jsonResponse.serialize());
         
@@ -199,7 +220,7 @@ public class AnalyticsServiceStreamsContext extends
         sb.append(credentials.get("jobs_path"));
         sb.append("?");
         sb.append("bundle_id=");
-        sb.append(URLEncoder.encode(bundle.getName(), "UTF-8"));
+        sb.append(URLEncoder.encode(bundle.getName(), StandardCharsets.UTF_8.toString()));
         return sb.toString();
     }
     
@@ -211,7 +232,8 @@ public class AnalyticsServiceStreamsContext extends
         
         HttpPost postJobWithConfig = new HttpPost(url);
         postJobWithConfig.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
-
+	postJobWithConfig.addHeader(AUTH.WWW_AUTH_RESP, getAPIKey(credentials.get("userid").toString(),
+						       credentials.get("password").toString()));
         FileBody bundleBody = new FileBody(bundle,
                 ContentType.APPLICATION_OCTET_STREAM);
         StringBody configBody = new StringBody(submitConfig.serialize(),
@@ -287,4 +309,11 @@ public class AnalyticsServiceStreamsContext extends
             httpClient.close();
         }
     }
+
+    static String getAPIKey(String userid, String password) throws UnsupportedEncodingException{
+	String api_creds = userid + ":" + password;
+        String apiKey = "Basic " + DatatypeConverter.printBase64Binary(api_creds.getBytes("UTF-8"));
+	return apiKey;
+    }      
+
 }
