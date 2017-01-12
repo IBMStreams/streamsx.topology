@@ -22,7 +22,7 @@
     <% if ($pyCallable) { %>
       // argument is the serialized callable instance
       Py_DECREF(appCallable);
-      appCallable = Py_BuildValue("s", <%=$pyCallable%>);
+      appCallable = pyUnicode_FromUTF8(<%=$pyCallable%>);
     <%}%>
 
      PyObject * depickleInput = SplpyGeneral::loadFunction("streamsx.topology.runtime", "<%=$pywrapfunc%>");
