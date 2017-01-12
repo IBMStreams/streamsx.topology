@@ -17,7 +17,6 @@ public interface RemoteContext<T> {
         TOOLKIT,        
         BUILD_ARCHIVE,
 	ANALYTICS_SERVICE,    
-	REMOTE_BUILD_AND_SUBMIT
     }
     
     

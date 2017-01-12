@@ -54,7 +54,7 @@ def submit(ctxtype, graph, config=None, username=None, password=None, log_level=
           analytics Bluemix remote build service.
         * ANALYTICS_SERVICE - If a local Streams install is present, the application is built locally and then submitted
           to a Bluemix streaming analytics service. If a local Streams install is not present, the application is 
-          submitted to, built, and executed on a Bluemix streaming analytics service. If the ConfigParams.REMOTE_BUILD
+          submitted to, built, and executed on a Bluemix streaming analytics service. If the ConfigParams.FORCE_REMOTE_BUILD
           flag is set to true, the application will be built on Bluemix even if a local Streams install is present.
         graph: a Topology object.
         config (dict): a configuration object containing job configurations and/or submission information. Keys include:
