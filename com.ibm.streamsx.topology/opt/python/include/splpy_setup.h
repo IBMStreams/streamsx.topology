@@ -60,8 +60,8 @@ class SplpySetup {
      */
     static void * loadCPython(const char* spl_setup_py_path) {
         void * pydl = loadPythonLib();
-        startPython(pydl);
         SplpySym::fixSymbols(pydl);
+        startPython(pydl);
         runSplSetup(pydl, spl_setup_py_path);
         return pydl;
     }

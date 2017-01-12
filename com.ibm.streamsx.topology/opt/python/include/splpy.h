@@ -492,10 +492,7 @@ namespace streamsx {
        uint32_t ac = tt.getNumberOfAttributes();
        PyObject * pyNames = PyTuple_New(ac);
        for (uint32_t i = 0; i < ac; i++) {
-            std::string const & name = tt.getAttributeName(i);
-
-            PyObject * pyName = PyUnicode_DecodeUTF8(
-                           name.c_str(), name.size(), NULL);
+            PyObject * pyName = pyUnicode_FromUTF8(tt.getAttributeName(i));
             PyTuple_SET_ITEM(pyNames, i, pyName);
        }
        return pyNames;

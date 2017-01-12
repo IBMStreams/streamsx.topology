@@ -33,6 +33,19 @@
 namespace streamsx {
   namespace topology {
 
+    inline PyObject * _pyUnicode_FromUTF8(const char * str, int len) {
+        PyObject * val = PyUnicode_DecodeUTF8(str, len, NULL);
+        return val;
+    }
+
+    inline PyObject * pyUnicode_FromUTF8(const char * str) {
+        return _pyUnicode_FromUTF8(str, strlen(str));
+    }
+    inline PyObject * pyUnicode_FromUTF8(std::string const & str) {
+        return _pyUnicode_FromUTF8(str.c_str(), str.size());
+    }
+
+
     /*
     ** Convert to a SPL rstring from a Python string object.
     ** Returns 0 if successful, non-zero if error.
@@ -141,7 +154,7 @@ class SplpyGeneral {
 
       SPL::rstring msg("Unknown Python error");
       if (pyValue != NULL) {
-          streamsx::topology::pyRStringFromPyObject(msg, pyValue);
+          pyRStringFromPyObject(msg, pyValue);
           Py_DECREF(pyValue);
       }
 
@@ -176,7 +189,7 @@ class SplpyGeneral {
      */
     static PyObject * importModule(const char * moduleNameC) 
     {
-      PyObject * moduleName = PyUnicode_FromString(moduleNameC);
+      PyObject * moduleName = pyUnicode_FromUTF8(moduleNameC);
       PyObject * module = PyImport_Import(moduleName);
       Py_DECREF(moduleName);
       if (module == NULL) {

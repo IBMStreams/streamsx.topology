@@ -22,6 +22,7 @@
 
 #include "Python.h"
 
+
 /**
  * For a Python C API function symbol PyXXX we create
  * - typedef matching the function
@@ -44,6 +45,11 @@
  *   library to be set by PYTHONHOME and loaded at runtime.
  */
 
+/**
+ * Generic typedefs potentially shared by more than one function.
+ */
+typedef PyObject * (*__splpy_p_p_fp)(PyObject *);
+
 /*
  * GIL State locks
  */
@@ -65,6 +71,46 @@ extern "C" {
 #pragma weak PyGILState_Ensure = __spl_fi_PyGILState_Ensure
 #pragma weak PyGILState_Release = __spl_fi_PyGILState_Release
 
+/*
+ * String handling
+ */
+typedef PyObject* (*__splpy_udu_fp)(const char *, Py_ssize_t, const char *);
+
+extern "C" {
+  static __splpy_p_p_fp __spl_fp_PyObject_Str;
+  static __splpy_udu_fp __spl_fp_PyUnicode_DecodeUTF8;
+
+  static PyObject * __spl_fi_PyObject_Str(PyObject *v) {
+     return __spl_fp_PyObject_Str(v);
+  }
+  static PyObject * __spl_fi_PyUnicode_DecodeUTF8(const char *s, Py_ssize_t size, const char * errors) {
+     return __spl_fp_PyUnicode_DecodeUTF8(s, size, errors);
+  }
+}
+#pragma weak PyObject_Str = __spl_fi_PyObject_Str
+#pragma weak PyUnicode_DecodeUTF8 = __spl_fi_PyUnicode_DecodeUTF8
+
+/*
+ * Loading modules, running code
+ */
+
+typedef PyObject* (*__splpy_ogas_fp)(PyObject *, const char *);
+typedef int (*__splpy_rssf_fp)(const char *, PyCompilerFlags *);
+
+extern "C" {
+  static __splpy_ogas_fp __spl_fp_PyObject_GetAttrString;
+  static __splpy_rssf_fp __spl_fp_PyRun_SimpleStringFlags;
+
+  static PyObject * __spl_fi_PyObject_GetAttrString(PyObject *o, const char * attr_name) {
+     return __spl_fp_PyObject_GetAttrString(o, attr_name);
+  }
+  static int __spl_fi_PyRun_SimpleStringFlags(const char * command, PyCompilerFlags *flags) {
+     return __spl_fp_PyRun_SimpleStringFlags(command, flags);
+  }
+}
+#pragma weak PyObject_GetAttrString = __spl_fi_PyObject_GetAttrString
+#pragma weak PyRun_SimpleStringFlags = __spl_fi_PyRun_SimpleStringFlags
+
 #define __SPLFIX(_NAME, _TYPE) \
      __spl_fp_##_NAME = ( _TYPE ) dlsym(pydl, #_NAME )
 
@@ -76,9 +122,14 @@ class SplpySym {
   public:
    static void fixSymbols(void * pydl) {
 
-     __SPLFIX(PyGILState_Ensure,  __splpy_gil_v_fp);
-     __SPLFIX(PyGILState_Release,  __splpy_v_gil_fp);
+     __SPLFIX(PyGILState_Ensure, __splpy_gil_v_fp);
+     __SPLFIX(PyGILState_Release, __splpy_v_gil_fp);
 
+     __SPLFIX(PyObject_Str, __splpy_p_p_fp);
+     __SPLFIX(PyUnicode_DecodeUTF8, __splpy_udu_fp);
+
+     __SPLFIX(PyObject_GetAttrString, __splpy_ogas_fp);
+     __SPLFIX(PyRun_SimpleStringFlags, __splpy_rssf_fp);
    }
 };
 
