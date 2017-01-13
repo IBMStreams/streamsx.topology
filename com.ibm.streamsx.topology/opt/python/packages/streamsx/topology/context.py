@@ -258,9 +258,9 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
         _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
 
         # Get the username, password, and rest API URL
-        if ConfigParams.VCAP_INFO not in config or ConfigParams.SERVICE_NAME not in config:
-            raise ValueError("The ConfigParams.VCAP_INFO and ConfigParams.SERVICE_NAME parameters were not supplied.")
-        services = config[ConfigParams.VCAP_INFO]['streaming-analytics']
+        if ConfigParams.VCAP_SERVICES not in config or ConfigParams.SERVICE_NAME not in config:
+            raise ValueError("The ConfigParams.VCAP_SERVICES and ConfigParams.SERVICE_NAME parameters were not supplied.")
+        services = config[ConfigParams.VCAP_SERVICES]['streaming-analytics']
         creds = None
         for service in services:
             if service['name'] == config[ConfigParams.SERVICE_NAME]:
@@ -451,9 +451,9 @@ class ConfigParams:
     """
     Configuration options which may be used as keys in the submit's config parameter.
 
-    VCAP_INFO - a json object containing the VCAP information used to submit to Bluemix
-    VCAP_NAME - the name of the streaming analytics service to use from VCAP_INFO.
+    VCAP_SERVICES - a json object containing the VCAP information used to submit to Bluemix
+    SERVICE_NAME - the name of the streaming analytics service to use from VCAP_SERVICES.
     """
-    VCAP_INFO = 'topology.service.vcap'
+    VCAP_SERVICES = 'topology.service.vcap'
     SERVICE_NAME = 'topology.service.name'
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
