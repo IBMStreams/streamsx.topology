@@ -258,10 +258,12 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
         _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
 
         # Get the username, password, and rest API URL
+        if ConfigParams.VCAP_INFO not in config or ConfigParams.SERVICE_NAME not in config:
+            raise ValueError("The ConfigParams.VCAP_INFO and ConfigParams.SERVICE_NAME parameters were not supplied.")
         services = config[ConfigParams.VCAP_INFO]['streaming-analytics']
         creds = None
         for service in services:
-            if service['name'] == config[ConfigParams.VCAP_NAME]:
+            if service['name'] == config[ConfigParams.SERVICE_NAME]:
                 creds = service['credentials']
                 break
         if creds is None:
@@ -453,5 +455,5 @@ class ConfigParams:
     VCAP_NAME - the name of the streaming analytics service to use from VCAP_INFO.
     """
     VCAP_INFO = 'topology.service.vcap'
-    VCAP_NAME = 'topology.service.name'
+    SERVICE_NAME = 'topology.service.name'
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
