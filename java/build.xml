@@ -46,6 +46,9 @@
                  ${cisxt}/internal/context/remote/*.java
                  "
     />
+    <copy toDir="${classes}">
+      <fileset dir="${src}" includes="**/*.properties"/>
+    </copy>
   </target>
 
   <target name="compile" depends="init,compile.pure">
