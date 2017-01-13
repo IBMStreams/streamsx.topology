@@ -38,7 +38,7 @@ public class BuildServiceRESTWrapper {
         
         
         // Perform initial post of the archive
-        Topology.STREAMS_LOGGER.info("Build Service REST Wrapper: uploading archive : " + archive.getName() + " to " + this.credentials.get("builds_path"));
+        Topology.STREAMS_LOGGER.info("Submitting application to remote build.");
         JSONObject jso = doArchivePost(httpclient, apiKey, archive);
         
         JSONObject build = (JSONObject)jso.get("build");
@@ -50,7 +50,6 @@ public class BuildServiceRESTWrapper {
         while(!status.equals("built")){
         	status = buildStatusGet(buildId, httpclient, apiKey);
         	if(status.equals("building")){
-        		Topology.STREAMS_LOGGER.info("Build Service REST Wrapper: the remote application status is 'building'");
         		try {
 			    Thread.sleep(1000);
 			} catch (InterruptedException e) {
@@ -59,7 +58,7 @@ public class BuildServiceRESTWrapper {
         		continue;
         	}
         	else if(status.equals("failed")){
-        		Topology.STREAMS_LOGGER.info("Build Service REST Wrapper: the remote application status is 'failed'");
+   		        Topology.STREAMS_LOGGER.severe("The application failed to build.");
         		JSONObject output = getBuildOutput(buildId, outputId, httpclient, apiKey);
         		String strOutput = "";
         		if(output!=null)
@@ -69,7 +68,7 @@ public class BuildServiceRESTWrapper {
         	}
         }
         
-        Topology.STREAMS_LOGGER.info("Build Service REST Wrapper: the remote application status is 'built'");
+        Topology.STREAMS_LOGGER.info("The application built successfully.");
         // Now perform archive put
         build = getBuild(buildId, httpclient, apiKey);
         
@@ -81,7 +80,7 @@ public class BuildServiceRESTWrapper {
         // TODO: support multiple artifacts associated with a single build.
         String artifactId = (String)((JSONObject)artifacts.get(0)).get("id");
         
-        Topology.STREAMS_LOGGER.info("Build Service REST Wrapper: submitting remote application for execution.");
+        Topology.STREAMS_LOGGER.info("Submitting job to remote instance.");
         return doArchivePut(httpclient, apiKey, artifactId);
 	}
 	

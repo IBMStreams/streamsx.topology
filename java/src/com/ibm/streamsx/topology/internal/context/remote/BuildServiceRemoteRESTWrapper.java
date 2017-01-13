@@ -39,7 +39,7 @@ public class BuildServiceRemoteRESTWrapper {
         String apiKey = getAPIKey(GsonUtilities.jstring(credentials,  "userid"), GsonUtilities.jstring(credentials, "password"));
         
         // Perform initial post of the archive
-        RemoteContext.REMOTE_LOGGER.info("Build Service Remote REST Wrapper: uploading archive : " + archive.getName() + " to " + this.credentials.get("builds_path"));
+        RemoteContext.REMOTE_LOGGER.info("Submitting application to remote build.");
         JsonObject jso = doArchivePost(httpclient, apiKey, archive);
         
         JsonObject build = GsonUtilities.object(jso, "build");
@@ -51,7 +51,6 @@ public class BuildServiceRemoteRESTWrapper {
         while(!status.equals("built")){
         	status = buildStatusGet(buildId, httpclient, apiKey);
         	if(status.equals("building")){
-        		RemoteContext.REMOTE_LOGGER.info("Build Service Remote REST Wrapper: the remote application status is 'building'");
         		try {
 			    Thread.sleep(1000);
 			} catch (InterruptedException e) {
@@ -60,7 +59,7 @@ public class BuildServiceRemoteRESTWrapper {
         		continue;
         	}
         	else if(status.equals("failed")){
-        		RemoteContext.REMOTE_LOGGER.info("Build Service Remote REST Wrapper: the remote application status is 'failed'");
+        		RemoteContext.REMOTE_LOGGER.severe("The application failed to build.");
         		JsonObject output = getBuildOutput(buildId, outputId, httpclient, apiKey);
         		String strOutput = "";
         		if(output!=null)
@@ -69,7 +68,7 @@ public class BuildServiceRemoteRESTWrapper {
         				+ strOutput);
         	}
         }
-        RemoteContext.REMOTE_LOGGER.info("Build Service Remote REST Wrapper: the remote application status is 'built'");
+        RemoteContext.REMOTE_LOGGER.info("The application built successfully.");
         
         // Now perform archive put
         build = getBuild(buildId, httpclient, apiKey);
@@ -81,7 +80,7 @@ public class BuildServiceRemoteRESTWrapper {
         
         // TODO: support multiple artifacts associated with a single build.
         String artifactId = GsonUtilities.jstring(artifacts.get(0).getAsJsonObject(), "id");
-        RemoteContext.REMOTE_LOGGER.info("Build Service Remote REST Wrapper: submitting remote application for execution.");
+        RemoteContext.REMOTE_LOGGER.info("Submitting job to remote instance.");
         doArchivePut(httpclient, apiKey, artifactId);
 	}
 	
