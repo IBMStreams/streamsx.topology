@@ -1,10 +1,18 @@
 package com.ibm.streamsx.topology.context.remote;
 
 import java.util.concurrent.Future;
+import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
 
 public interface RemoteContext<T> {
+	/**
+     * Logger used for the Topology API, name {@code com.ibm.streamsx.topology}. Must be defined here,
+     * in addition to {@link com.ibm.streamsx.topology.Topology}, since 
+     * {@link com.ibm.streamsx.topology.Topology} depends on JSON4j.jar.
+     */
+    public static Logger REMOTE_LOGGER = Logger.getLogger("com.ibm.streamsx.topology");
+	
     String SUBMISSION_DEPLOY = "deploy";
     String SUBMISSION_GRAPH = "graph";
     

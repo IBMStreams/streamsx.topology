@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContext {

@@ -13,7 +13,7 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 
 public class RemoteBuildAndSubmitter{ 
 
-	public Future<BigInteger> submit(Topology app, Map<String, Object> config) throws Exception { 
+	public Future<BigInteger> submit(Topology app, Map<String, Object> config) throws Exception {
 	    StreamsContext<File> zippedSc = new ZippedToolkitStreamsContext();
 	    
 	    Future<File> archive = zippedSc.submit(app, config);

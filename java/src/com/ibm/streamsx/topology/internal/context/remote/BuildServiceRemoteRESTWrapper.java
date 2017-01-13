@@ -3,6 +3,7 @@ package com.ibm.streamsx.topology.internal.context.remote;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import java.util.Random;
 
 import javax.xml.bind.DatatypeConverter;
@@ -20,6 +21,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -37,6 +39,7 @@ public class BuildServiceRemoteRESTWrapper {
         String apiKey = getAPIKey(GsonUtilities.jstring(credentials,  "userid"), GsonUtilities.jstring(credentials, "password"));
         
         // Perform initial post of the archive
+        RemoteContext.REMOTE_LOGGER.info("Submitting application to remote build.");
         JsonObject jso = doArchivePost(httpclient, apiKey, archive);
         
         JsonObject build = GsonUtilities.object(jso, "build");
@@ -48,9 +51,15 @@ public class BuildServiceRemoteRESTWrapper {
         while(!status.equals("built")){
         	status = buildStatusGet(buildId, httpclient, apiKey);
         	if(status.equals("building")){
+        		try {
+			    Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			    Thread.currentThread().interrupt();
+			}
         		continue;
         	}
         	else if(status.equals("failed")){
+        		RemoteContext.REMOTE_LOGGER.severe("The application failed to build.");
         		JsonObject output = getBuildOutput(buildId, outputId, httpclient, apiKey);
         		String strOutput = "";
         		if(output!=null)
@@ -59,6 +68,7 @@ public class BuildServiceRemoteRESTWrapper {
         				+ strOutput);
         	}
         }
+        RemoteContext.REMOTE_LOGGER.info("The application built successfully.");
         
         // Now perform archive put
         build = getBuild(buildId, httpclient, apiKey);
@@ -70,6 +80,7 @@ public class BuildServiceRemoteRESTWrapper {
         
         // TODO: support multiple artifacts associated with a single build.
         String artifactId = GsonUtilities.jstring(artifacts.get(0).getAsJsonObject(), "id");
+        RemoteContext.REMOTE_LOGGER.info("Submitting job to remote instance.");
         doArchivePut(httpclient, apiKey, artifactId);
 	}
 	

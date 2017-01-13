@@ -20,6 +20,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.Topology;
 import com.ibm.json.java.JSONArray;
 
 public class BuildServiceRESTWrapper {
@@ -37,6 +38,7 @@ public class BuildServiceRESTWrapper {
         
         
         // Perform initial post of the archive
+        Topology.STREAMS_LOGGER.info("Submitting application to remote build.");
         JSONObject jso = doArchivePost(httpclient, apiKey, archive);
         
         JSONObject build = (JSONObject)jso.get("build");
@@ -48,9 +50,15 @@ public class BuildServiceRESTWrapper {
         while(!status.equals("built")){
         	status = buildStatusGet(buildId, httpclient, apiKey);
         	if(status.equals("building")){
+        		try {
+			    Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			    Thread.currentThread().interrupt();
+			}
         		continue;
         	}
         	else if(status.equals("failed")){
+   		        Topology.STREAMS_LOGGER.severe("The application failed to build.");
         		JSONObject output = getBuildOutput(buildId, outputId, httpclient, apiKey);
         		String strOutput = "";
         		if(output!=null)
@@ -60,6 +68,7 @@ public class BuildServiceRESTWrapper {
         	}
         }
         
+        Topology.STREAMS_LOGGER.info("The application built successfully.");
         // Now perform archive put
         build = getBuild(buildId, httpclient, apiKey);
         
@@ -70,6 +79,8 @@ public class BuildServiceRESTWrapper {
         
         // TODO: support multiple artifacts associated with a single build.
         String artifactId = (String)((JSONObject)artifacts.get(0)).get("id");
+        
+        Topology.STREAMS_LOGGER.info("Submitting job to remote instance.");
         return doArchivePut(httpclient, apiKey, artifactId);
 	}
 	
