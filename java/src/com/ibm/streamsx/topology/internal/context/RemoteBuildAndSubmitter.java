@@ -14,7 +14,6 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 public class RemoteBuildAndSubmitter{ 
 
 	public Future<BigInteger> submit(Topology app, Map<String, Object> config) throws Exception {
-	    Topology.STREAMS_LOGGER.info("Remote Build And Submitter: beginning remote build of application.");
 	    StreamsContext<File> zippedSc = new ZippedToolkitStreamsContext();
 	    
 	    Future<File> archive = zippedSc.submit(app, config);
@@ -23,7 +22,6 @@ public class RemoteBuildAndSubmitter{
 	
 
 	public Future<BigInteger> submit(JSONObject submission) throws Exception {
-	    Topology.STREAMS_LOGGER.info("Remote Build And Submitter: beginning remote build of application.");
 	    StreamsContext<File> zippedSc = new ZippedToolkitStreamsContext();
 	    
 	    Future<File> archive = zippedSc.submit(submission);
