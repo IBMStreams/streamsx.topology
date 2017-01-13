@@ -293,8 +293,7 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
         # Give each view in the app the necessary information to connect to SWS.
         for view in app_topology.get_views():
             connection_info = {'username': username, 'password': password, 'rest_api_url': rest_api_url}
-            view.set_streams_context_config(connection_info)
-                
+            view.set_streams_context_config(connection_info)                
 
 
 class _DistributedSubmitter(_BaseSubmitter):
