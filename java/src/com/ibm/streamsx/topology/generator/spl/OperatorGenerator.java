@@ -137,12 +137,7 @@ class OperatorGenerator {
                 sb.append(width.getAsString());
             }
             else {
-                JsonObject jo = width.getAsJsonObject();
-                String jsonType = jo.get("type").getAsString();
-                if (TYPE_SUBMISSION_PARAMETER.equals(jsonType))
-                    sb.append(SubmissionTimeValue.generateCompParamName(jo.get("value").getAsJsonObject()));
-                else
-                    throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
+                splValueSupportingSubmission(width.getAsJsonObject(), sb);
             }
             boolean partitioned = jboolean(op, "partitioned");
             if (partitioned) {
@@ -388,7 +383,7 @@ class OperatorGenerator {
             sb.append("      ");
             sb.append(name);
             sb.append(": ");
-            parameterValue(param, sb);
+            splValueSupportingSubmission(param, sb);
             sb.append(";\n");
         }
 
@@ -399,7 +394,7 @@ class OperatorGenerator {
             sb.append("vmArg");
             sb.append(": ");
 
-            parameterValue(tmpVMArgParam, sb);
+            splValueSupportingSubmission(tmpVMArgParam, sb);
             sb.append(";\n");
         }
         
@@ -418,16 +413,16 @@ class OperatorGenerator {
         }
     }
 
-    private void parameterValue(JsonObject param, StringBuilder sb) {
-        JsonElement value = param.get("value");
+    private void splValueSupportingSubmission(JsonObject param, StringBuilder sb) {
+               
         JsonElement type = param.get("type");
         if (param.has("type") && TYPE_SUBMISSION_PARAMETER.equals(type.getAsString())) {
-            sb.append(stvHelper.generateCompParamName(value.getAsJsonObject()));
-            return;
+            param = stvHelper.getSPLExpression(param);
         }
         
         SPLGenerator.value(sb, param);
     }
+     
 
     static void configClause(JsonObject graphConfig, JsonObject op,
             StringBuilder sb) {
