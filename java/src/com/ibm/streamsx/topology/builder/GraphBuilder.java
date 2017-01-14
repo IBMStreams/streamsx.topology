@@ -27,7 +27,6 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
-import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
@@ -57,7 +56,6 @@ public class GraphBuilder extends BJSONObject {
     private final JSONObject config = new OrderedJSONObject();
 
     private final JSONObject params = new OrderedJSONObject();
-    private final JSONObject spParams = new JSONObject();
     
     public GraphBuilder(String namespace, String name) {
         super();
@@ -318,10 +316,8 @@ public class GraphBuilder extends BJSONObject {
      * @param jo the SubmissionParameter parameter value object
      */
     public void createSubmissionParameter(String name, JSONObject jo) {
-        if (spParams.containsKey(name))
+        if (params.containsKey(name))
             throw new IllegalArgumentException("name is already defined");
-        spParams.put(name, jo);
-        params.put(SubmissionTimeValue.mkOpParamName(name), jo);
+        params.put(name, jo);
     }
-
 }

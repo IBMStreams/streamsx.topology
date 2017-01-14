@@ -121,17 +121,31 @@ public class SPLGenerator {
                 String name = on.getKey();
                 JsonObject param = on.getValue().getAsJsonObject();
                 String type = jstring(param, "type");
-                JsonObject value = param.get("value").getAsJsonObject();
-                if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
+                
+                if (TYPE_COMPOSITE_PARAMETER.equals(type)) {
+                    JsonObject value = param.get("value").getAsJsonObject();
+                    
                     sb.append("  ");
+                    String metaType = jstring(value, "metaType");
+                    String splType = Types.metaTypeToSPL(metaType);
+                    
+                    sb.append(String.format("expression<%s> $%s", splType, name));
+                    if (value.has("defaultValue")) {
+                        sb.append(" : ");
+                        sb.append(value.get("defaultValue").getAsString());
+                    }
+                                        
+                    if (false) {
                     if (isMainComposite)
                         stvHelper.generateMainDef(value, sb);
                     else
                         stvHelper.generateInnerDef(value, sb);
+                    }
+                        
                     sb.append(";\n");
                 }
-                else if (TYPE_COMPOSITE_PARAMETER.equals(type))
-                    ; // TODO
+                else if (TYPE_SUBMISSION_PARAMETER.equals(type))
+                    ; // ignore - as it was converted to a TYPE_COMPOSITE_PARAMETER
                 else
                     throw new IllegalArgumentException("Unhandled param name=" + name + " jo=" + param);
             }
