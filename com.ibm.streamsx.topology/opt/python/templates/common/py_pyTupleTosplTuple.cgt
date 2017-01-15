@@ -35,7 +35,7 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=
     if (<%=$ai%> < frs) {
          // Value from the Python function
          PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, <%=$ai%>);
-         if (SplpyGeneral::isNone(pyAttrValue)) {
+         if (!SplpyGeneral::isNone(pyAttrValue)) {
                   streamsx::topology::pySplValueFromPyObject(
                                otuple.get_<%=$name%>(), pyAttrValue);
 <%
