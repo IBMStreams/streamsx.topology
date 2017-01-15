@@ -264,7 +264,7 @@ namespace streamsx {
     }
 
     inline PyObject * pySplValueToPyObject(const SPL::boolean & value) {
-       PyObject * pyValue = value ? Py_True : Py_False;
+       PyObject * pyValue = SplpyGeneral::getBool(value);
        Py_INCREF(pyValue);
        return pyValue;
     }

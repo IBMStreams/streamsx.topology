@@ -137,14 +137,20 @@ class SplpySetup {
 
     static void setupGeneral(void * pydl) {
         typedef PyObject * (*__splpy_bv)(const char *, ...);
+        typedef PyObject * (*__splpy_bfl)(long);
 
         __splpy_bv _SPLPy_BuildValue =
              (__splpy_bv) dlsym(pydl, "Py_BuildValue");
-
-        PyObject * none = _SPLPy_BuildValue("");
+        __splpy_bfl _SPLPyBool_FromLong =
+             (__splpy_bfl) dlsym(pydl, "PyBool_FromLong");
 
         // empty format returns None
-        SplpyGeneral::setup(none);
+        PyObject * none = _SPLPy_BuildValue("");
+
+        PyObject * f = _SPLPyBool_FromLong(0);
+        PyObject * t = _SPLPyBool_FromLong(1);
+
+        SplpyGeneral::setup(none, f, t);
     }
 
     static void runSplSetup(void * pydl, const char* spl_setup_py_path) {
