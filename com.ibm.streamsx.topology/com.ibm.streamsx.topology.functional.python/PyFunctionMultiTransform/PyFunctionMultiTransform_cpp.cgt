@@ -80,7 +80,7 @@ print splpy_inputtuple2value($pystyle);
          throw SplpyGeneral::pythonException(
                getParameterValues("pyName").at(0)->getValue().toString());
     }
-    if (pyIterator == Py_None) {
+    if (SplpyGeneral::isNone(pyIterator)) {
         Py_DECREF(pyIterator);
         return;
     }
@@ -90,10 +90,8 @@ print splpy_inputtuple2value($pystyle);
           &&  ((item = PyIter_Next(pyIterator)) != NULL) ) {
 
       // construct spl blob and tuple from pickled return value
-      long int size = PyBytes_Size(item);
-      char * bytes = PyBytes_AsString(item);
       OPort0Type otuple;
-      otuple.get___spl_po().setData((const unsigned char *)bytes, size);
+      pySplValueFromPyObject(otuple.get___spl_po(), item);
       Py_DECREF(item); 
       output_tuples.push_back(otuple);
     }

@@ -33,6 +33,19 @@
 namespace streamsx {
   namespace topology {
 
+    inline PyObject * _pyUnicode_FromUTF8(const char * str, int len) {
+        PyObject * val = PyUnicode_DecodeUTF8(str, len, NULL);
+        return val;
+    }
+
+    inline PyObject * pyUnicode_FromUTF8(const char * str) {
+        return _pyUnicode_FromUTF8(str, strlen(str));
+    }
+    inline PyObject * pyUnicode_FromUTF8(std::string const & str) {
+        return _pyUnicode_FromUTF8(str.c_str(), str.size());
+    }
+
+
     /*
     ** Convert to a SPL rstring from a Python string object.
     ** Returns 0 if successful, non-zero if error.
@@ -101,8 +114,31 @@ class SplpyGILLock {
         PyGILState_STATE gstate_;
     };
 
+static PyObject * __splpy_None = NULL;
+static PyObject * __splpy_False = NULL;
+static PyObject * __splpy_True = NULL;
+
 class SplpyGeneral {
+
   public:
+    /*
+     * We load Py_None indirectly to avoid
+     * having a reference to it when the
+     * operator shared library is loaded.
+     */
+    static void setup(PyObject * none, PyObject *f, PyObject *t) {
+        __splpy_None = none;
+        __splpy_False = f;
+        __splpy_True = t;
+    }
+
+    static bool isNone(PyObject *o) {
+        return o == __splpy_None;
+    }
+    static PyObject * getBool(const SPL::boolean & value) {
+       return value ? __splpy_True : __splpy_False;
+     }
+
     /*
      * Flush Python stderr and stdout.
     */
@@ -120,7 +156,8 @@ class SplpyGeneral {
     * makes diagnosing errors impossible.
     */
     static void flush_PyErr_Print() {
-        PyErr_Print();
+        if (PyErr_Occurred() != NULL)
+            PyErr_Print();
         SplpyGeneral::flush_PyErrPyOut();
     }
 
@@ -141,7 +178,7 @@ class SplpyGeneral {
 
       SPL::rstring msg("Unknown Python error");
       if (pyValue != NULL) {
-          streamsx::topology::pyRStringFromPyObject(msg, pyValue);
+          pyRStringFromPyObject(msg, pyValue);
           Py_DECREF(pyValue);
       }
 
@@ -170,13 +207,14 @@ class SplpyGeneral {
         return function;
       }
    private:
+
     /*
      * Import a module, returning the reference to the module.
      * Caller must hold the GILState
      */
     static PyObject * importModule(const char * moduleNameC) 
     {
-      PyObject * moduleName = PyUnicode_FromString(moduleNameC);
+      PyObject * moduleName = pyUnicode_FromUTF8(moduleNameC);
       PyObject * module = PyImport_Import(moduleName);
       Py_DECREF(moduleName);
       if (module == NULL) {

@@ -39,6 +39,7 @@
 #include <SPL/Runtime/Operator/OperatorContext.h>
 #include <SPL/Runtime/Operator/Operator.h>
 
+#include "splpy_sym.h"
 
 #if PY_MAJOR_VERSION == 3
 #define TOPOLOGY_PYTHON_LIBNAME "libpython3.5m.so"
@@ -59,8 +60,10 @@ class SplpySetup {
      */
     static void * loadCPython(const char* spl_setup_py_path) {
         void * pydl = loadPythonLib();
+        setupGeneral(pydl);
+        SplpySym::fixSymbols(pydl);
         startPython(pydl);
-        runSplSetup(spl_setup_py_path);
+        runSplSetup(pydl, spl_setup_py_path);
         return pydl;
     }
 
@@ -132,7 +135,25 @@ class SplpySetup {
         SPLAPPTRC(L_INFO, "Started Python runtime", "python");
     }
 
-    static void runSplSetup(const char* spl_setup_py_path) {
+    static void setupGeneral(void * pydl) {
+        typedef PyObject * (*__splpy_bv)(const char *, ...);
+        typedef PyObject * (*__splpy_bfl)(long);
+
+        __splpy_bv _SPLPy_BuildValue =
+             (__splpy_bv) dlsym(pydl, "Py_BuildValue");
+        __splpy_bfl _SPLPyBool_FromLong =
+             (__splpy_bfl) dlsym(pydl, "PyBool_FromLong");
+
+        // empty format returns None
+        PyObject * none = _SPLPy_BuildValue("");
+
+        PyObject * f = _SPLPyBool_FromLong(0);
+        PyObject * t = _SPLPyBool_FromLong(1);
+
+        SplpyGeneral::setup(none, f, t);
+    }
+
+    static void runSplSetup(void * pydl, const char* spl_setup_py_path) {
         std::string tkDir = SPL::ProcessingElement::pe().getToolkitDirectory();
         std::string streamsxDir = tkDir + spl_setup_py_path;
         std::string splpySetup = streamsxDir + "/splpy_setup.py";
@@ -148,9 +169,13 @@ class SplpySetup {
           throw;
         }
 
+        typedef int (*__splpy_rsfef)(FILE *, const char *, int, PyCompilerFlags *);
+        __splpy_rsfef _SPLPyRun_SimpleFileEx = 
+             (__splpy_rsfef) dlsym(pydl, "PyRun_SimpleFileExFlags");
+
         SplpyGILLock lock;
         // The 1 closes the file.
-        if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
+        if (_SPLPyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1, NULL) != 0) {
           SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
           throw SplpyGeneral::pythonException("splpy_setup.py");
         }

@@ -15,7 +15,7 @@
         throw SplpyGeneral::pythonException("<%=$functionName%>");
     }
 
-    if (pyReturnVar == Py_None) {
+    if (SplpyGeneral::isNone(pyReturnVar)) {
          Py_DECREF(pyReturnVar);
          <%=$no_tuples_action%>
          return;
@@ -41,10 +41,11 @@ if(PyTuple_Check(pyReturnVar)){
 /* Logic for if a list of tuples is returned */
 
  else if(PyList_Check(pyReturnVar)){
-   Py_ssize_t tc = PyList_Size(pyReturnVar);
-   for(int k = 0; k < tc; k++){    
+   Py_ssize_t tc = PyList_GET_SIZE(pyReturnVar);
+   for (Py_ssize_t k = 0; k < tc; k++){    
      PyObject *ltuple = PyList_GET_ITEM(pyReturnVar, k);
-     if (ltuple == Py_None) continue;
+     if (SplpyGeneral::isNone(ltuple))
+         continue;
      if(!PyTuple_Check(ltuple)){    
      }
      
