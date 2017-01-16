@@ -47,6 +47,7 @@
 /**
  * Generic typedefs potentially shared by more than one function.
  */
+typedef void (*__splpy_v_v_fp)(void);
 typedef PyObject * (*__splpy_p_p_fp)(PyObject *);
 typedef PyObject * (*__splpy_p_pp_fp)(PyObject *, PyObject *);
 typedef PyObject * (*__splpy_p_ppp_fp)(PyObject *, PyObject *, PyObject *);
@@ -300,11 +301,11 @@ extern "C" {
  */
 typedef void (*__splpy_ef_fp)(PyObject **, PyObject **, PyObject **);
 typedef PyObject * (*__splpy_eo_fp)(void);
-typedef void (*__splpy_ep_fp)(void);
 extern "C" {
   static __splpy_ef_fp __spl_fp_PyErr_Fetch;
   static __splpy_eo_fp __spl_fp_PyErr_Occurred;
-  static __splpy_ep_fp __spl_fp_PyErr_Print;
+  static __splpy_v_v_fp __spl_fp_PyErr_Print;
+  static __splpy_v_v_fp __spl_fp_PyErr_Clear;
 
   static void __spl_fi_PyErr_Fetch(PyObject **t, PyObject **v, PyObject **tb) {
      __spl_fp_PyErr_Fetch(t,v,tb);
@@ -315,10 +316,14 @@ extern "C" {
   static void  __spl_fi_PyErr_Print() {
      __spl_fp_PyErr_Print();
   }
+  static void  __spl_fi_PyErr_Clear() {
+     __spl_fp_PyErr_Clear();
+  }
 }
 #pragma weak PyErr_Fetch = __spl_fi_PyErr_Fetch
 #pragma weak PyErr_Occurred = __spl_fi_PyErr_Occurred
 #pragma weak PyErr_Print = __spl_fi_PyErr_Print
+#pragma weak PyErr_Clear = __spl_fi_PyErr_Clear
 
 #define __SPLFIX(_NAME, _TYPE) \
      __spl_fp_##_NAME = ( _TYPE ) dlsym(pydl, #_NAME )
@@ -375,7 +380,8 @@ class SplpySym {
 
      __SPLFIX(PyErr_Fetch, __splpy_ef_fp);
      __SPLFIX(PyErr_Occurred, __splpy_eo_fp);
-     __SPLFIX(PyErr_Print, __splpy_ep_fp);
+     __SPLFIX(PyErr_Print, __splpy_v_v_fp);
+     __SPLFIX(PyErr_Clear, __splpy_v_v_fp);
    }
 };
 
