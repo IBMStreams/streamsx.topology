@@ -191,7 +191,7 @@ def setupInfoXml(languageList):
                 Sample info xml:\n""" + _INFO_XML_TEMPLATE
             sys.exit(errstr)
     except FileNotFoundError as e:
-        print("WARNING: File info.xml not found. Create info.xml from template")
+        print("WARNING: File info.xml not found. Creating info.xml from template")
         #Get default project name from project directory
         projectRootDir = os.path.abspath(userToolkitDir()) #os.path.abspath returns the path without trailing /
         projectName = os.path.basename(projectRootDir)
