@@ -50,10 +50,10 @@ class Topology(object):
         else:
           raise ValueError("Python version not supported.")
         self.include_packages = set() 
+        self.exclude_packages = set() 
         if "Anaconda" in sys.version:
-          self.exclude_packages = set(["numpy", "scipy", "matplotlib", "h5py"])
-        else: 
-          self.exclude_packages = set() 
+            import streamsx.topology.condapkgs
+            self.exclude_packages.update(streamsx.topology.condapkgs._CONDA_PACKAGES)
         self.graph = graph.SPLGraph(self, name)
         if files is not None:
             self.files = files
