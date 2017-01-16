@@ -181,21 +181,17 @@ def setupInfoXml(languageList):
             if copiedLanguagesSet == resourceLanguageSet:
                 print('Resource section of info.xml verified')
             else:
-                print(""""Message set for the "TopologySplpyResource" is incomplete or invalid.
-                Correct the resource section in info.xml file or continue at your one's peril.
-                
-                Sample info xml:
-                """)
-                print(_INFO_XML_TEMPLATE)
+                errstr = """"ERROR: Message set for the "TopologySplpyResource" is incomplete or invalid. Correct the resource section in info.xml file.
+
+                Sample info xml:\n""" + _INFO_XML_TEMPLATE
+                sys.exit(errstr)
         else:
-            print(""""Message set for the "TopologySplpyResource" is missing.
-                Correct the resource section in info.xml file.
-                
-                Sample info xml:
-                """)
-            print(_INFO_XML_TEMPLATE)
+            errstr = """"ERROR: Message set for the "TopologySplpyResource" is missing. Correct the resource section in info.xml file.
+
+                Sample info xml:\n""" + _INFO_XML_TEMPLATE
+            sys.exit(errstr)
     except FileNotFoundError as e:
-        print("File info.xml not found. Create info.xml from template")
+        print("WARNING: File info.xml not found. Creating info.xml from template")
         #Get default project name from project directory
         projectRootDir = os.path.abspath(userToolkitDir()) #os.path.abspath returns the path without trailing /
         projectName = os.path.basename(projectRootDir)
@@ -203,12 +199,13 @@ def setupInfoXml(languageList):
         f = open(infoXmlFile, 'w')
         f.write(infoXml)
         f.close()
+    except SystemExit as e:
+        raise e
     except:
-        print("""File info.xml is invalid or not accessible
-            
-            Sample info xml:
-            """)
-        print(_INFO_XML_TEMPLATE)
+        errstr = """ERROR: File info.xml is invalid or not accessible
+
+            Sample info xml:\n""" + _INFO_XML_TEMPLATE
+        sys.exit(errstr)
 
 # Create SPL operator parameters from the Python class
 # (functions cannot have parameters)
