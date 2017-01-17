@@ -60,7 +60,7 @@ public class InvokeSubmit {
         commands.add("--outfile");
         commands.add(jobidFile.getAbsolutePath());
         
-        // Fot IBM Streams 4.2 or later use the job config overlay
+        // For IBM Streams 4.2 or later use the job config overlay
         // V.R.M.F
         File jcoFile = null;
         Version ver = Product.getVersion();
@@ -153,8 +153,8 @@ public class InvokeSubmit {
     }
     
     /**
-     * Set the job configuration as explicit streamtool submitjob arguments.
-     * Used for 4.1 and older.
+     * Set the job configuration as a job config overlay
+     * Used for 4.2 and later.
      */
     private File fileJobConfig(List<String> commands, final JobConfig jobConfig) throws IOException {
         
