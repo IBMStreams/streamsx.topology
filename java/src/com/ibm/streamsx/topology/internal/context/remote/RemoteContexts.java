@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016, 2017  
+ */
 package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
