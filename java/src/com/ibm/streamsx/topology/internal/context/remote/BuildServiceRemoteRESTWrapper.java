@@ -116,9 +116,8 @@ class BuildServiceRemoteRESTWrapper {
         httppost.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httppost.addHeader("Authorization", apiKey);
         
-        @SuppressWarnings("deprecation")
 		FileBody archiveBody = new FileBody(archive,
-        		"application/zip");
+        		ContentType.create("application/zip"));
         
         HttpEntity reqEntity = MultipartEntityBuilder.create()
                 .addPart(archive.getName(), archiveBody).build();
