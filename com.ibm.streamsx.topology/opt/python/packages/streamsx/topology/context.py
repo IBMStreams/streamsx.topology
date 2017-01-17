@@ -83,8 +83,15 @@ class _BaseSubmitter:
     """
     def __init__(self, ctxtype, config, app_topology):
         self.ctxtype = ctxtype
-        self.config = config
+        self.config = dict()
+        if config is not None:
+            # Make copy of config to avoid modifying
+            # the callers config
+            self.config.update(config)
         self.app_topology = app_topology
+
+        # Convert the JobConfig into overlays
+        self._create_job_config_overlays()
 
         # encode the relevant python version information into the config
         self._do_pyversion_initialization()
@@ -156,6 +163,12 @@ class _BaseSubmitter:
         bf["pythonconfig"] = pythonrealconfig
         self.config["pythonversion"]["binaries"].append(bf)
 
+    def _create_job_config_overlays(self):
+        if ConfigParams.JOB_CONFIG in self.config:
+            jco = self.config[ConfigParams.JOB_CONFIG]
+            del self.config[ConfigParams.JOB_CONFIG]
+            jco._add_overlays(self.config)
+ 
     def _create_full_json(self):
         fj = dict()
         fj["deploy"] = self.config
@@ -457,3 +470,31 @@ class ConfigParams:
     VCAP_SERVICES = 'topology.service.vcap'
     SERVICE_NAME = 'topology.service.name'
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
+    JOB_CONFIG = 'topology.jobConfigOverlays'
+
+class JobConfig:
+    """
+    Job configuration
+    """
+    def __init__(self, job_name=None, job_group=None, data_directory=None):
+        self.job_name = job_name
+        self.job_group = job_group
+        self.data_directory = data_directory
+
+    def _add_overlays(self, config):
+       """
+       {"jobConfigOverlays":[{"jobConfig":{"jobName":"BluemixSubmitSample"},"deploymentConfig":{"fusionScheme":"legacy"}}]}
+       """
+       jco = {}
+       config["jobConfigOverlays"] = [jco]
+       jc = {}
+
+       if self.job_name is not None:
+            jc["jobName"] = self.job_name
+       if self.job_group is not None:
+           jc["jobGroup"] = self.job_group
+       if self.data_directory is not None:
+           jc["dataDirectory"] = self.data_directory
+
+       if jc:
+           jco["jobConfig"] = jc
