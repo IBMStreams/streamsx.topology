@@ -1,5 +1,9 @@
 package com.ibm.streamsx.topology.internal.context.remote;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -23,7 +27,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class BuildServiceRemoteRESTWrapper {
 	
@@ -35,15 +38,15 @@ class BuildServiceRemoteRESTWrapper {
 	
 	void remoteBuildAndSubmit(File archive) throws ClientProtocolException, IOException{
 		CloseableHttpClient httpclient = HttpClients.createDefault();
-        String apiKey = getAPIKey(GsonUtilities.jstring(credentials,  "userid"), GsonUtilities.jstring(credentials, "password"));
+        String apiKey = getAPIKey(jstring(credentials,  "userid"), jstring(credentials, "password"));
         
         // Perform initial post of the archive
         RemoteContext.REMOTE_LOGGER.info("Submitting application to remote build.");
-        JsonObject jso = doArchivePost(httpclient, apiKey, archive);
+        JsonObject jso = doUploadBuildArchivePost(httpclient, apiKey, archive);
         
-        JsonObject build = GsonUtilities.object(jso, "build");
-        String buildId = GsonUtilities.jstring(build, "id");
-        String outputId = GsonUtilities.jstring(build,  "output_id");
+        JsonObject build = object(jso, "build");
+        String buildId = jstring(build, "id");
+        String outputId = jstring(build,  "output_id");
         
         // Loop until built
         String status = "";
@@ -72,44 +75,45 @@ class BuildServiceRemoteRESTWrapper {
         // Now perform archive put
         build = getBuild(buildId, httpclient, apiKey);
         
-        JsonArray artifacts = GsonUtilities.array(build, "artifacts");
-        if(artifacts.size() == 0){
+        JsonArray artifacts = array(build, "artifacts");
+        if(artifacts == null){
         	throw new IllegalStateException("No artifacts associated with build " + buildId);
         }
         
         // TODO: support multiple artifacts associated with a single build.
-        String artifactId = GsonUtilities.jstring(artifacts.get(0).getAsJsonObject(), "id");
+        String artifactId = jstring(artifacts.get(0).getAsJsonObject(), "id");
         RemoteContext.REMOTE_LOGGER.info("Submitting job to remote instance.");
-        doArchivePut(httpclient, apiKey, artifactId);
+        doSubmitJobFromBuildArtifactPut(httpclient, apiKey, artifactId);
 	}
 	
-	private JsonObject doArchivePut(CloseableHttpClient httpclient,
+	/**
+	 * Submit the job from the built artifact.
+	 */
+	private JsonObject doSubmitJobFromBuildArtifactPut(CloseableHttpClient httpclient,
 			String apiKey, String artifactId) throws ClientProtocolException, IOException{
 		String putURL = getBuildsURL(credentials) + "?artifact_id=" + artifactId;
 		HttpPut httpput = new HttpPut(putURL);
         httpput.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpput.addHeader("Authorization", apiKey);
-        //httpput.addHeader("Content-Length", "2");
-        httpput.addHeader("content-type", "application/json");
+        httpput.addHeader("content-type", ContentType.APPLICATION_JSON.getMimeType());
         
         StringEntity params =new StringEntity("{}","UTF-8");    
         httpput.setEntity(params);
        
-        //System.out.println(httppost.getAllHeaders()[1]);
         JsonObject jso = RemoteContexts.getGsonResponse(httpclient, httpput);
 		return jso;
 	}
 	
 	private String prettyPrintOutput(JsonObject output) {
-		StringBuffer sb = new StringBuffer();
-		for(JsonElement messageElem : GsonUtilities.array(output, "output")){
+		StringBuilder sb = new StringBuilder();
+		for(JsonElement messageElem : array(output, "output")){
 			JsonObject message = messageElem.getAsJsonObject();
 			sb.append(message.get("message_text") + "\n");
 		}
 		return sb.toString();
 	}
 
-	private JsonObject doArchivePost(CloseableHttpClient httpclient,
+	private JsonObject doUploadBuildArchivePost(CloseableHttpClient httpclient,
 			String apiKey, File archive) throws ClientProtocolException, IOException{
 		String newBuildURL = getBuildsURL(credentials) + "?build_name=" + newBuildName(16);
 		HttpPost httppost = new HttpPost(newBuildURL);
@@ -141,7 +145,7 @@ class BuildServiceRemoteRESTWrapper {
 			String apiKey) throws ClientProtocolException, IOException{
         JsonObject build = getBuild(buildId, httpclient, apiKey);   
 		if(build != null)
-			return GsonUtilities.jstring(build, "status");
+			return jstring(build, "status");
 		else
 			return null;
 	}
@@ -156,10 +160,10 @@ class BuildServiceRemoteRESTWrapper {
 		JsonObject response = RemoteContexts.getGsonResponse(httpclient, httpget);
 		// Get the correct build
 		JsonObject build = null;
-		JsonArray builds = GsonUtilities.array(response, "builds");
+		JsonArray builds = array(response, "builds");
 		for (JsonElement iterBuildElem : builds) {
 			JsonObject iterBuild = iterBuildElem.getAsJsonObject();
-			if (GsonUtilities.jstring(iterBuild, "id").equals(buildId))
+			if (jstring(iterBuild, "id").equals(buildId))
 				build = iterBuild;
 		}
 		return build;
@@ -175,9 +179,9 @@ class BuildServiceRemoteRESTWrapper {
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
 		
 		JsonObject response = RemoteContexts.getGsonResponse(httpclient, httpget);
-		for(JsonElement outputElem : GsonUtilities.array(response, "builds")){
+		for(JsonElement outputElem : array(response, "builds")){
 			JsonObject output = outputElem.getAsJsonObject();
-			if(GsonUtilities.jstring(output, "id").equals(buildId))
+			if(jstring(output, "id").equals(buildId))
 				return output;
 		}
 		
@@ -204,8 +208,8 @@ class BuildServiceRemoteRESTWrapper {
 
 	
 	private String getBuildsURL(JsonObject credentials){
-		String buildURL = (GsonUtilities.jstring(credentials, "jobs_path").replace("jobs", "builds"));
-		return GsonUtilities.jstring(credentials, "rest_url") + buildURL;
+		String buildURL = jstring(credentials, "jobs_path").replace("jobs", "builds");
+		return jstring(credentials, "rest_url") + buildURL;
 	}
 }
 

@@ -23,7 +23,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class RemoteContexts {
     static JsonObject getGsonResponse(CloseableHttpClient httpClient,
@@ -72,7 +71,7 @@ class RemoteContexts {
         JsonObject service = null;
         for (JsonElement je : streamsServices) {
             JsonObject possibleService = je.getAsJsonObject();
-            if (serviceName.equals(GsonUtilities.jstring(possibleService, "name"))) {
+            if (serviceName.equals(jstring(possibleService, "name"))) {
                 service = possibleService;
                 break;
             }
