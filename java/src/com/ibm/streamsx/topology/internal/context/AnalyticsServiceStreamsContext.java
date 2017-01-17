@@ -300,9 +300,7 @@ public class AnalyticsServiceStreamsContext extends
         }
         if (!submitConfigConfig.isEmpty())
             submitConfig.put("configurationSettings", submitConfigConfig);
-        
-        Topology.STREAMS_LOGGER.info("Streaming Analytics Service submit job request:" + submitConfig.serialize());
-        
+                
         return submitConfig;
     }
     
@@ -322,7 +320,12 @@ public class AnalyticsServiceStreamsContext extends
             checkInstanceStatus(httpClient, credentials);
             
             Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Submitting bundle : " + bundle.getName() + " to " + service.get("name"));
-            return postJob(httpClient, credentials, bundle, getBluemixSubmitConfig(config));
+            
+            JSONObject jcojson = getBluemixSubmitConfig(config);
+            
+            Topology.STREAMS_LOGGER.info("Streaming Analytics Service submit job request:" + jcojson.serialize());
+
+            return postJob(httpClient, credentials, bundle, jcojson);
         } finally {
             httpClient.close();
         }
