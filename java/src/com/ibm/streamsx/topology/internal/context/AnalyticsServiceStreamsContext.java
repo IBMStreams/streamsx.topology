@@ -42,6 +42,7 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.version.Product;
 import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
@@ -233,7 +234,7 @@ public class AnalyticsServiceStreamsContext extends
                 ContentType.APPLICATION_JSON);
 
         HttpEntity reqEntity = MultipartEntityBuilder.create()
-                .addPart("bin", bundleBody).addPart("json", configBody)
+                .addPart("sab", bundleBody).addPart(DeployKeys.JOB_CONFIG_OVERLAYS, configBody)
                 .build();
 
         postJobWithConfig.setEntity(reqEntity);

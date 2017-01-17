@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016, 2017  
+ */
 package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
@@ -36,7 +40,7 @@ class BuildServiceRemoteRESTWrapper {
 		this.credentials = credentials;
 	}
 	
-	void remoteBuildAndSubmit(File archive) throws ClientProtocolException, IOException{
+	void remoteBuildAndSubmit(JsonObject deploy, File archive) throws ClientProtocolException, IOException{
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         String apiKey = getAPIKey(jstring(credentials,  "userid"), jstring(credentials, "password"));
         
@@ -83,13 +87,14 @@ class BuildServiceRemoteRESTWrapper {
         // TODO: support multiple artifacts associated with a single build.
         String artifactId = jstring(artifacts.get(0).getAsJsonObject(), "id");
         RemoteContext.REMOTE_LOGGER.info("Submitting job to remote instance.");
-        doSubmitJobFromBuildArtifactPut(httpclient, apiKey, artifactId);
+        doSubmitJobFromBuildArtifactPut(httpclient, deploy, apiKey, artifactId);
 	}
 	
 	/**
 	 * Submit the job from the built artifact.
 	 */
 	private JsonObject doSubmitJobFromBuildArtifactPut(CloseableHttpClient httpclient,
+	        JsonObject deploy,
 			String apiKey, String artifactId) throws ClientProtocolException, IOException{
 		String putURL = getBuildsURL(credentials) + "?artifact_id=" + artifactId;
 		HttpPut httpput = new HttpPut(putURL);
@@ -97,7 +102,14 @@ class BuildServiceRemoteRESTWrapper {
         httpput.addHeader("Authorization", apiKey);
         httpput.addHeader("content-type", ContentType.APPLICATION_JSON.getMimeType());
         
-        StringEntity params =new StringEntity("{}","UTF-8");    
+        JsonObject jobConfigOverlays = new JsonObject();
+        if (deploy.has(DeployKeys.JOB_CONFIG_OVERLAYS))
+            jobConfigOverlays.add(DeployKeys.JOB_CONFIG_OVERLAYS,
+                    deploy.get(DeployKeys.JOB_CONFIG_OVERLAYS));
+        
+        
+        StringEntity params =new StringEntity(jobConfigOverlays.toString(),
+                ContentType.APPLICATION_JSON);    
         httpput.setEntity(params);
        
         JsonObject jso = RemoteContexts.getGsonResponse(httpclient, httpput);

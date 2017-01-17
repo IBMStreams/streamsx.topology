@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016, 2017  
+ */
 package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -27,6 +31,6 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
         JsonObject credentials = object(service,  "credentials");
      
         BuildServiceRemoteRESTWrapper wrapper = new BuildServiceRemoteRESTWrapper(credentials);
-        wrapper.remoteBuildAndSubmit(archive);
+        wrapper.remoteBuildAndSubmit(deploy, archive);
 	}
 }

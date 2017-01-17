@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.internal.streams;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 
 /**
@@ -15,7 +16,7 @@ import com.ibm.streamsx.topology.jobconfig.JobConfig;
  *
  */
 public class JobConfigOverlay {
-    
+        
     private final JobConfig jobConfig;
     
     public JobConfigOverlay(JobConfig jobConfig) {  
@@ -43,7 +44,7 @@ public class JobConfigOverlay {
         JsonObject fullJco = new JsonObject();
         JsonArray jcos = new JsonArray();
         jcos.add(overlay);
-        fullJco.add("jobConfigOverlays", jcos);
+        fullJco.add(DeployKeys.JOB_CONFIG_OVERLAYS, jcos);
                
         return gson.toJson(fullJco);
     }
