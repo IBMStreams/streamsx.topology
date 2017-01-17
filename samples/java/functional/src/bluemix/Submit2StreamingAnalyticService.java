@@ -5,13 +5,13 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
 import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.jobconfig.JobConfig;
 
 /**
  * Sample demonstrating submission of a topology
@@ -52,7 +52,10 @@ public class Submit2StreamingAnalyticService {
         
         // Optionally we can specify a job name
         // (note job names must be unique within the instance).
-        config.put(JobProperties.NAME, "BluemixSubmitSample");
+        JobConfig jco = new JobConfig();
+        jco.setJobName("BluemixSubmitSample");
+        
+        config.put(JobProperties.CONFIG, jco);
         
         // Submit to the ANALYICS_SERVICE context
         @SuppressWarnings("unchecked")
