@@ -3,7 +3,6 @@ package com.ibm.streamsx.topology.internal.context.remote;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import java.util.Random;
 
 import javax.xml.bind.DatatypeConverter;
@@ -20,21 +19,21 @@ import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
-public class BuildServiceRemoteRESTWrapper {
+class BuildServiceRemoteRESTWrapper {
 	
-	JsonObject credentials;
+	private JsonObject credentials;
 	
-	public BuildServiceRemoteRESTWrapper(JsonObject credentials){
+	BuildServiceRemoteRESTWrapper(JsonObject credentials){
 		this.credentials = credentials;
 	}
 	
-	public void remoteBuildAndSubmit(File archive) throws ClientProtocolException, IOException{
+	void remoteBuildAndSubmit(File archive) throws ClientProtocolException, IOException{
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         String apiKey = getAPIKey(GsonUtilities.jstring(credentials,  "userid"), GsonUtilities.jstring(credentials, "password"));
         

@@ -1,12 +1,12 @@
 package com.ibm.streamsx.topology.internal.context.remote;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContext {
@@ -18,15 +18,14 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	@Override
 	public Future<File> submit(JsonObject submission) throws Exception {
 		Future<File> archive = super.submit(submission);
-		Map<String, Object> config = RemoteContexts.gsonDeployToMap(
-				GsonUtilities.object(submission, "deploy"));
-		doSubmit(config, archive.get());
+		JsonObject deploy = GsonUtilities.object(submission, "deploy");
+		doSubmit(deploy, archive.get());
        return archive;
 	}
 	
-	private void doSubmit(Map<String, Object> config, File archive) throws IOException{
-		JsonObject service = RemoteContexts.getVCAPService(config);        
-        JsonObject credentials = GsonUtilities.object(service,  "credentials");
+	private void doSubmit(JsonObject deploy, File archive) throws IOException{
+		JsonObject service = RemoteContexts.getVCAPService(deploy);        
+        JsonObject credentials = object(service,  "credentials");
      
         BuildServiceRemoteRESTWrapper wrapper = new BuildServiceRemoteRESTWrapper(credentials);
         wrapper.remoteBuildAndSubmit(archive);

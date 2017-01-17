@@ -2,12 +2,13 @@ package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -24,8 +25,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
-public class RemoteContexts {
-    public static JsonObject getGsonResponse(CloseableHttpClient httpClient,
+class RemoteContexts {
+    static JsonObject getGsonResponse(CloseableHttpClient httpClient,
             HttpRequestBase request) throws IOException, ClientProtocolException {
         request.addHeader("accept",
                 ContentType.APPLICATION_JSON.getMimeType());
@@ -59,23 +60,14 @@ public class RemoteContexts {
         return jsonResponse;
     }
     
-	public static Map<String, Object> gsonDeployToMap(JsonObject deploy) {
-		Map<String, Object> config = new HashMap<>();
-		if(deploy.has(VCAP_SERVICES))
-			config.put(VCAP_SERVICES, GsonUtilities.object(deploy, VCAP_SERVICES));
-		if(deploy.has(SERVICE_NAME))
-			config.put(SERVICE_NAME, GsonUtilities.jstring(deploy, SERVICE_NAME));
-		return config;
-	}
 
-
-    public static JsonObject getVCAPService(Map<String, Object> config) throws IOException {
-        JsonObject services = (JsonObject)config.get(VCAP_SERVICES);
-        JsonArray streamsServices = GsonUtilities.array(services, "streaming-analytics");
-        if (streamsServices == null || streamsServices.size() == 0)
+    static JsonObject getVCAPService(JsonObject deploy) throws IOException {
+        JsonObject services = object(deploy, VCAP_SERVICES);
+        JsonArray streamsServices = array(services, "streaming-analytics");
+        if (streamsServices == null)
             throw new IllegalStateException("No streaming-analytics services defined in VCAP_SERVICES");
         
-        String serviceName = config.get(SERVICE_NAME).toString();
+        String serviceName = jstring(deploy, SERVICE_NAME);
         
         JsonObject service = null;
         for (JsonElement je : streamsServices) {
