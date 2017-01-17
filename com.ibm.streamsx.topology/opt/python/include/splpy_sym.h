@@ -47,13 +47,21 @@
 /**
  * Generic typedefs potentially shared by more than one function.
  */
+typedef void (*__splpy_v_v_fp)(void);
 typedef PyObject * (*__splpy_p_p_fp)(PyObject *);
 typedef PyObject * (*__splpy_p_pp_fp)(PyObject *, PyObject *);
 typedef PyObject * (*__splpy_p_ppp_fp)(PyObject *, PyObject *, PyObject *);
+typedef int (*__splpy_i_pp_fp)(PyObject *, PyObject *);
+typedef int (*__splpy_i_ppp_fp)(PyObject *, PyObject *, PyObject *);
 typedef PyObject * (*__splpy_p_s_fp)(Py_ssize_t);
+typedef PyObject * (*__splpy_v_p_fp)(void);
 typedef char * (*__splpy_c_p_fp)(PyObject *);
 typedef int (*__splpy_i_p_fp)(PyObject *);
+typedef Py_ssize_t (*__splpy_s_p_fp)(PyObject *);
 typedef long (*__splpy_l_p_fp)(PyObject *);
+typedef PyObject * (*__splpy_p_l_fp)(long);
+typedef PyObject * (*__splpy_p_d_fp)(double);
+typedef double (*__splpy_d_p_fp)(PyObject *);
 
 /*
  * GIL State locks
@@ -164,9 +172,21 @@ extern "C" {
 /*
  * Container Objects
  */
+
+typedef int (*__splpy_dn_fp)(PyObject *, Py_ssize_t *, PyObject **, PyObject **);
+
 extern "C" {
   static __splpy_p_s_fp __spl_fp_PyTuple_New;
   static __splpy_p_p_fp __spl_fp_PyIter_Next;
+  static __splpy_v_p_fp __spl_fp_PyDict_New;
+  static __splpy_i_ppp_fp __spl_fp_PyDict_SetItem;
+  static __splpy_dn_fp __spl_fp_PyDict_Next;
+  static __splpy_p_s_fp __spl_fp_PyList_New;
+  static __splpy_s_p_fp __spl_fp_PyList_Size;
+  static __splpy_p_p_fp __spl_fp_PySet_New;
+  static __splpy_s_p_fp __spl_fp_PySet_Size;
+  static __splpy_i_pp_fp __spl_fp_PySet_Add;
+  static __splpy_p_p_fp __spl_fp_PyObject_GetIter;
 
   static PyObject * __spl_fi_PyTuple_New(Py_ssize_t size) {
      return __spl_fp_PyTuple_New(size);
@@ -174,16 +194,65 @@ extern "C" {
   static PyObject * __spl_fi_PyIter_Next(PyObject * o) {
      return __spl_fp_PyIter_Next(o);
   }
+  static PyObject * __spl_fi_PyDict_New() {
+     return __spl_fp_PyDict_New();
+  }
+  static int __spl_fi_PyDict_SetItem(PyObject *d, PyObject *k, PyObject *v) {
+     return __spl_fp_PyDict_SetItem(d, k, v);
+  }
+  static int __spl_fi_PyDict_Next(PyObject *d, Py_ssize_t *o,PyObject **k, PyObject **v) {
+     return __spl_fp_PyDict_Next(d, o, k, v);
+  }
+  static PyObject * __spl_fi_PyList_New(Py_ssize_t size) {
+     return __spl_fp_PyList_New(size);
+  }
+  static Py_ssize_t __spl_fi_PyList_Size(PyObject *l) {
+     return __spl_fp_PyList_Size(l);
+  }
+  static PyObject * __spl_fi_PySet_New(PyObject *o) {
+     return __spl_fp_PySet_New(o);
+  }
+  static Py_ssize_t __spl_fi_PySet_Size(PyObject *s) {
+     return __spl_fp_PySet_Size(s);
+  }
+  static int __spl_fi_PySet_Add(PyObject *s, PyObject *v) {
+     return __spl_fp_PySet_Add(s, v);
+  }
+  static PyObject * __spl_fi_PyObject_GetIter(PyObject *o) {
+     return __spl_fp_PyObject_GetIter(o);
+  }
 }
 #pragma weak PyTuple_New = __spl_fi_PyTuple_New
 #pragma weak PyIter_Next = __spl_fi_PyIter_Next
+#pragma weak PyDict_New = __spl_fi_PyDict_New
+#pragma weak PyDict_SetItem = __spl_fi_PyDict_SetItem
+#pragma weak PyDict_Next = __spl_fi_PyDict_Next
+#pragma weak PyList_New = __spl_fi_PyList_New
+#pragma weak PyList_Size = __spl_fi_PyList_Size
+#pragma weak PySet_New = __spl_fi_PySet_New
+#pragma weak PySet_Size = __spl_fi_PySet_Size
+#pragma weak PySet_Add = __spl_fi_PySet_Add
+#pragma weak PyObject_GetIter = __spl_fi_PyObject_GetIter
 
 /*
  * Type conversion
  */
+
+typedef PyObject * (*__splpy_cfd_fp)(double, double);
+typedef unsigned long (*__splpy_laul_fp)(PyObject *);
+typedef PyObject * (*__splpy_lful_fp)(unsigned long);
+
 extern "C" {
   static __splpy_i_p_fp __spl_fp_PyObject_IsTrue;
   static __splpy_l_p_fp __spl_fp_PyLong_AsLong;
+  static __splpy_p_l_fp __spl_fp_PyLong_FromLong;
+  static __splpy_laul_fp __spl_fp_PyLong_AsUnsignedLong;
+  static __splpy_lful_fp __spl_fp_PyLong_FromUnsignedLong;
+  static __splpy_cfd_fp __spl_fp_PyComplex_FromDoubles;
+  static __splpy_p_d_fp __spl_fp_PyFloat_FromDouble;
+  static __splpy_d_p_fp __spl_fp_PyFloat_AsDouble;
+  static __splpy_d_p_fp __spl_fp_PyComplex_RealAsDouble;
+  static __splpy_d_p_fp __spl_fp_PyComplex_ImagAsDouble;
 
   static int __spl_fi_PyObject_IsTrue(PyObject *o) {
      return __spl_fp_PyObject_IsTrue(o);
@@ -191,20 +260,52 @@ extern "C" {
   static long __spl_fi_PyLong_AsLong(PyObject *o) {
      return __spl_fp_PyLong_AsLong(o);
   }
+  static PyObject * __spl_fi_PyLong_FromLong(long l) {
+     return __spl_fp_PyLong_FromLong(l);
+  }
+  static unsigned long __spl_fi_PyLong_AsUnsignedLong(PyObject *o) {
+     return __spl_fp_PyLong_AsUnsignedLong(o);
+  }
+  static PyObject * __spl_fi_PyLong_FromUnsignedLong(unsigned long l) {
+     return __spl_fp_PyLong_FromUnsignedLong(l);
+  }
+  static PyObject * __spl_fi_PyComplex_FromDoubles(double r, double i) {
+     return __spl_fp_PyComplex_FromDoubles(r, i);
+  }
+  static PyObject * __spl_fi_PyFloat_FromDouble(double d) {
+     return __spl_fp_PyFloat_FromDouble(d);
+  }
+  static double __spl_fi_PyFloat_AsDouble(PyObject *o) {
+     return __spl_fp_PyFloat_AsDouble(o);
+  }
+  static double __spl_fi_PyComplex_RealAsDouble(PyObject *o) {
+     return __spl_fp_PyComplex_RealAsDouble(o);
+  }
+  static double __spl_fi_PyComplex_ImagAsDouble(PyObject *o) {
+     return __spl_fp_PyComplex_ImagAsDouble(o);
+  }
 }
 #pragma weak PyObject_IsTrue = __spl_fi_PyObject_IsTrue
 #pragma weak PyLong_AsLong = __spl_fi_PyLong_AsLong
+#pragma weak PyLong_FromLong = __spl_fi_PyLong_FromLong
+#pragma weak PyLong_AsUnsignedLong = __spl_fi_PyLong_AsUnsignedLong
+#pragma weak PyLong_FromUnsignedLong = __spl_fi_PyLong_FromUnsignedLong
+#pragma weak PyComplex_FromDoubles = __spl_fi_PyComplex_FromDoubles
+#pragma weak PyFloat_FromDouble = __spl_fi_PyFloat_FromDouble
+#pragma weak PyFloat_AsDouble = __spl_fi_PyFloat_AsDouble
+#pragma weak PyComplex_RealAsDouble = __spl_fi_PyComplex_RealAsDouble
+#pragma weak PyComplex_ImagAsDouble = __spl_fi_PyComplex_ImagAsDouble
 
 /*
  * Err Objects
  */
 typedef void (*__splpy_ef_fp)(PyObject **, PyObject **, PyObject **);
 typedef PyObject * (*__splpy_eo_fp)(void);
-typedef void (*__splpy_ep_fp)(void);
 extern "C" {
   static __splpy_ef_fp __spl_fp_PyErr_Fetch;
   static __splpy_eo_fp __spl_fp_PyErr_Occurred;
-  static __splpy_ep_fp __spl_fp_PyErr_Print;
+  static __splpy_v_v_fp __spl_fp_PyErr_Print;
+  static __splpy_v_v_fp __spl_fp_PyErr_Clear;
 
   static void __spl_fi_PyErr_Fetch(PyObject **t, PyObject **v, PyObject **tb) {
      __spl_fp_PyErr_Fetch(t,v,tb);
@@ -215,10 +316,14 @@ extern "C" {
   static void  __spl_fi_PyErr_Print() {
      __spl_fp_PyErr_Print();
   }
+  static void  __spl_fi_PyErr_Clear() {
+     __spl_fp_PyErr_Clear();
+  }
 }
 #pragma weak PyErr_Fetch = __spl_fi_PyErr_Fetch
 #pragma weak PyErr_Occurred = __spl_fi_PyErr_Occurred
 #pragma weak PyErr_Print = __spl_fi_PyErr_Print
+#pragma weak PyErr_Clear = __spl_fi_PyErr_Clear
 
 #define __SPLFIX(_NAME, _TYPE) \
      __spl_fp_##_NAME = ( _TYPE ) dlsym(pydl, #_NAME )
@@ -252,13 +357,31 @@ class SplpySym {
  
      __SPLFIX(PyTuple_New, __splpy_p_s_fp);
      __SPLFIX(PyIter_Next, __splpy_p_p_fp);
+     __SPLFIX(PyDict_New, __splpy_v_p_fp);
+     __SPLFIX(PyDict_SetItem, __splpy_i_ppp_fp);
+     __SPLFIX(PyDict_Next, __splpy_dn_fp);
+     __SPLFIX(PyList_New, __splpy_p_s_fp);
+     __SPLFIX(PyList_Size, __splpy_s_p_fp);
+     __SPLFIX(PySet_New, __splpy_p_p_fp);
+     __SPLFIX(PySet_Size, __splpy_s_p_fp);
+     __SPLFIX(PySet_Add, __splpy_i_pp_fp);
+     __SPLFIX(PyObject_GetIter, __splpy_p_p_fp);
 
      __SPLFIX(PyObject_IsTrue, __splpy_i_p_fp);
      __SPLFIX(PyLong_AsLong, __splpy_l_p_fp);
+     __SPLFIX(PyLong_FromLong, __splpy_p_l_fp);
+     __SPLFIX(PyLong_AsUnsignedLong, __splpy_laul_fp);
+     __SPLFIX(PyLong_FromUnsignedLong, __splpy_lful_fp);
+     __SPLFIX(PyComplex_FromDoubles, __splpy_cfd_fp);
+     __SPLFIX(PyFloat_FromDouble, __splpy_p_d_fp);
+     __SPLFIX(PyFloat_AsDouble, __splpy_d_p_fp);
+     __SPLFIX(PyComplex_RealAsDouble, __splpy_d_p_fp);
+     __SPLFIX(PyComplex_ImagAsDouble, __splpy_d_p_fp);
 
      __SPLFIX(PyErr_Fetch, __splpy_ef_fp);
      __SPLFIX(PyErr_Occurred, __splpy_eo_fp);
-     __SPLFIX(PyErr_Print, __splpy_ep_fp);
+     __SPLFIX(PyErr_Print, __splpy_v_v_fp);
+     __SPLFIX(PyErr_Clear, __splpy_v_v_fp);
    }
 };
 

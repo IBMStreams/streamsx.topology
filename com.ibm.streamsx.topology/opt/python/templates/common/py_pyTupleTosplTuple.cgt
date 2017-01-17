@@ -14,7 +14,7 @@
  
 void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple <%=$itypeparam%>) {
 
-  Py_ssize_t frs = PyTuple_Size(pyTuple); 
+  Py_ssize_t frs = PyTuple_GET_SIZE(pyTuple); 
     
 <%
   if (defined $iport) {
