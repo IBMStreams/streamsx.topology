@@ -42,7 +42,8 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.version.Product;
 import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
@@ -64,11 +65,6 @@ public class AnalyticsServiceStreamsContext extends
     public Future<BigInteger> submit(Topology app, Map<String, Object> config)
             throws Exception {
 
-	Boolean forceRemote = (Boolean)config.get(ContextProperties.FORCE_REMOTE_BUILD);
-	if(forceRemote != null && forceRemote){	    
-	    return new RemoteBuildAndSubmitter().submit(app, config);
-	}
-
         preBundle(config);
         File bundle = bundler.submit(app, config).get();
 
@@ -80,19 +76,19 @@ public class AnalyticsServiceStreamsContext extends
     }
 
     @Override
-    public Future<BigInteger> submit(JSONObject submission) throws Exception{
-	Map<String, Object> config = Contexts.jsonDeployToMap(
-		        (JSONObject)submission.get("deploy"));
+    public Future<BigInteger> submit(JSONObject submission) throws Exception {
+        Map<String, Object> config = Contexts
+                .jsonDeployToMap((JSONObject) submission.get(RemoteContext.SUBMISSION_DEPLOY));
 
-	preBundle(config);
-	File bundle = bundler.submit(submission).get();
-	preInvoke();
+        preBundle(config);
+        File bundle = bundler.submit(submission).get();
+        preInvoke();
 
         BigInteger jobId = submitJobToService(bundle, config);
-        
+
         return new CompletedFuture<BigInteger>(jobId);
     }
-    
+
     void preInvoke() {
         
     }
@@ -111,18 +107,16 @@ public class AnalyticsServiceStreamsContext extends
         Object rawServices = config.get(VCAP_SERVICES);
         if (rawServices instanceof File) {
             File fServices = (File) rawServices;
-            
+
             try (FileInputStream fis = new FileInputStream(fServices)) {
                 return JSONObject.parse(fis);
             }
-            
-        }
-	else if (rawServices instanceof JSONObject){
-	    return (JSONObject)rawServices;
-	}
-	else {
+
+        } else if (rawServices instanceof JSONObject) {
+            return (JSONObject) rawServices;
+        } else {
             throw new IllegalArgumentException();
-        }       
+        }      
     }
     
     private JSONObject getVCAPService(Map<String, Object> config) throws IOException {
@@ -239,7 +233,7 @@ public class AnalyticsServiceStreamsContext extends
                 ContentType.APPLICATION_JSON);
 
         HttpEntity reqEntity = MultipartEntityBuilder.create()
-                .addPart("bin", bundleBody).addPart("json", configBody)
+                .addPart("sab", bundleBody).addPart(DeployKeys.JOB_CONFIG_OVERLAYS, configBody)
                 .build();
 
         postJobWithConfig.setEntity(reqEntity);

@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016, 2017  
+ */
 package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
@@ -23,7 +27,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class RemoteContexts {
     static JsonObject getGsonResponse(CloseableHttpClient httpClient,
@@ -72,7 +75,7 @@ class RemoteContexts {
         JsonObject service = null;
         for (JsonElement je : streamsServices) {
             JsonObject possibleService = je.getAsJsonObject();
-            if (serviceName.equals(GsonUtilities.jstring(possibleService, "name"))) {
+            if (serviceName.equals(jstring(possibleService, "name"))) {
                 service = possibleService;
                 break;
             }
