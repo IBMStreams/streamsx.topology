@@ -10,6 +10,14 @@ package com.ibm.streamsx.topology.internal.context.remote;
 public interface DeployKeys {
     
     /**
+     * Python information.
+     * A JSON object with:
+     * "prefix": sys.exec_prefix
+     * "version": sys.version
+     */
+    String PYTHON = "python";
+    
+    /**
      * Streams 4.2 job config overlays. Expect value
      * is an array of job config overlays, though
      * only a single one is supported.

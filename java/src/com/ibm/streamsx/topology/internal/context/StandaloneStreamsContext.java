@@ -11,6 +11,7 @@ import java.util.concurrent.Future;
 
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.streams.InvokeStandalone;
 
 public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> {
@@ -51,6 +52,12 @@ public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> 
 
     	File bundle = bundler.submit(json).get();
         InvokeStandalone invokeStandalone = new InvokeStandalone(bundle);
+        JSONObject deploy = (JSONObject) json.get("deploy");
+        if (deploy != null) {
+            JSONObject python = (JSONObject) deploy.get(DeployKeys.PYTHON);
+            if (python != null)
+                invokeStandalone.addEnvironmentVariable("PYTHONHOME", python.get("prefix").toString());
+        }
 
         preInvoke();
         Map<String, Object> config = Collections.emptyMap();

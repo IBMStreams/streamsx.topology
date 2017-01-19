@@ -22,8 +22,6 @@ import threading
 import sys
 import enum
 
-from platform import python_version
-
 logging_utils.initialize_logging()
 logger = logging.getLogger('streamsx.topology.py_submit')
 
@@ -94,7 +92,7 @@ class _BaseSubmitter:
         self._create_job_config_overlays()
 
         # encode the relevant python version information into the config
-        self._do_pyversion_initialization()
+        self._add_python_info()
 
         # Create the json file containing the representation of the application
         try:
@@ -144,24 +142,12 @@ class _BaseSubmitter:
             logger.exception("Error starting java subprocess for submission")
             raise
 
-    def _do_pyversion_initialization(self):
-        # path to python binary
-        pythonbin = sys.executable
-        pythonreal = os.path.realpath(pythonbin)
-        pythondir = os.path.dirname(pythonbin)
-        pythonrealfile = os.path.basename(pythonreal)
-        pythonrealconfig = os.path.realpath(pythondir + "/" + pythonrealfile + "-config")
-        pythonversion = python_version()
-
-        # place the fullpaths to the python binary that is running and
-        # the python-config that will used into the config
-        self.config["pythonversion"] = {}
-        self.config["pythonversion"]["version"] = pythonversion
-        self.config["pythonversion"]["binaries"] = []
-        bf = dict()
-        bf["python"] = pythonreal
-        bf["pythonconfig"] = pythonrealconfig
-        self.config["pythonversion"]["binaries"].append(bf)
+    def _add_python_info(self):
+        # Python information added to deployment
+        pi = {}
+        pi["prefix"] = sys.exec_prefix
+        pi["version"] = sys.version
+        self.config["python"] = pi
 
     def _create_job_config_overlays(self):
         if ConfigParams.JOB_CONFIG in self.config:
