@@ -20,6 +20,7 @@
 #ifndef __SPL__SPLPY_SYM_H
 #define __SPL__SPLPY_SYM_H
 
+#include <stdexcept>
 #include "Python.h"
 
 /**
@@ -110,9 +111,18 @@ extern "C" {
   }
 }
 #pragma weak PyObject_Str = __spl_fi_PyObject_Str
+
+#if PY_MAJOR_VERSION == 3
 #pragma weak PyUnicode_DecodeUTF8 = __spl_fi_PyUnicode_DecodeUTF8
 #pragma weak PyUnicode_AsUTF8String = __spl_fi_PyUnicode_AsUTF8String
 #pragma weak PyBytes_AsString = __spl_fi_PyBytes_AsString
+#else
+// In Python2 the original functions (e.g. PyUnicode_DecodeUTF8)
+// are #defined to different functions and hence symbols.
+#pragma weak PyUnicodeUCS4_DecodeUTF8 = __spl_fi_PyUnicode_DecodeUTF8
+#pragma weak PyUnicodeUCS4_AsUTF8String = __spl_fi_PyUnicode_AsUTF8String
+#pragma weak PyString_AsString = __spl_fi_PyBytes_AsString
+#endif
 
 #if PY_MAJOR_VERSION == 3
 typedef char * (*__splpy_uauas_fp)(PyObject *, Py_ssize_t);
@@ -345,8 +355,16 @@ extern "C" {
 #pragma weak PyErr_Print = __spl_fi_PyErr_Print
 #pragma weak PyErr_Clear = __spl_fi_PyErr_Clear
 
-#define __SPLFIX(_NAME, _TYPE) \
-     __spl_fp_##_NAME = ( _TYPE ) dlsym(pydl, #_NAME )
+
+#define __SPLFIX_EX(_CPPNAME, _NAME, _TYPE) \
+     { \
+     void * sym = dlsym(pydl, _NAME ); \
+     if (sym == NULL) \
+         throw std::invalid_argument("Python symbol not found: " _NAME); \
+     _CPPNAME = ( _TYPE ) sym; \
+     }
+
+#define __SPLFIX(_NAME, _TYPE) __SPLFIX_EX( __spl_fp_##_NAME, #_NAME, _TYPE ) 
 
 namespace streamsx {
   namespace topology {
@@ -359,9 +377,16 @@ class SplpySym {
      __SPLFIX(PyGILState_Release, __splpy_v_gil_fp);
 
      __SPLFIX(PyObject_Str, __splpy_p_p_fp);
+
+#if PY_MAJOR_VERSION == 3
      __SPLFIX(PyUnicode_DecodeUTF8, __splpy_udu_fp);
      __SPLFIX(PyUnicode_AsUTF8String, __splpy_uaus_fp);
      __SPLFIX(PyBytes_AsString, __splpy_c_p_fp);
+#else
+     __SPLFIX_EX(__spl_fp_PyUnicode_DecodeUTF8, "PyUnicodeUCS4_DecodeUTF8", __splpy_udu_fp);
+     __SPLFIX_EX(__spl_fp_PyUnicode_AsUTF8String, "PyUnicodeUCS4_AsUTF8String", __splpy_uaus_fp);
+     __SPLFIX_EX(__spl_fp_PyBytes_AsString, "PyString_AsString", __splpy_c_p_fp);
+#endif
 
 #if PY_MAJOR_VERSION == 3
      __SPLFIX(PyUnicode_AsUTF8AndSize, __splpy_uauas_fp);
