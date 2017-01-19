@@ -33,6 +33,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
+import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 class BuildServiceRemoteRESTWrapper {
 	
@@ -43,57 +44,62 @@ class BuildServiceRemoteRESTWrapper {
     }
 	
 
-    void remoteBuildAndSubmit(JsonObject deploy, File archive) throws ClientProtocolException, IOException{
-	CloseableHttpClient httpclient = HttpClients.createDefault();
+	void remoteBuildAndSubmit(JsonObject deploy, File archive) throws ClientProtocolException, IOException {
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+		try {
+			JsonObject serviceg = VcapServices.getVCAPService(key -> deploy.get(key));
 
-	RestUtils.checkInstanceStatus(httpclient, this.credentials);
-        String apiKey = getAPIKey(jstring(credentials,  "userid"), jstring(credentials, "password"));
-        
-        // Perform initial post of the archive
-        RemoteContext.REMOTE_LOGGER.info("Submitting application to remote build.");
-        JsonObject jso = doUploadBuildArchivePost(httpclient, apiKey, archive);
-        
-        JsonObject build = object(jso, "build");
-        String buildId = jstring(build, "id");
-        String outputId = jstring(build,  "output_id");
-        
-        // Loop until built
-        String status = "";
-        while(!status.equals("built")){
-        	status = buildStatusGet(buildId, httpclient, apiKey);
-        	if(status.equals("building")){
-        		try {
-			    Thread.sleep(1000);
-			} catch (InterruptedException e) {
-			    Thread.currentThread().interrupt();
+			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: Checking status :" + serviceg.get("name"));
+			RestUtils.checkInstanceStatus(httpclient, this.credentials);
+
+			String apiKey = getAPIKey(jstring(credentials, "userid"), jstring(credentials, "password"));
+
+			// Perform initial post of the archive
+			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: Submitting archive : " + archive.getName() + " to " + serviceg.get("name"));
+			JsonObject jso = doUploadBuildArchivePost(httpclient, apiKey, archive);
+
+			JsonObject build = object(jso, "build");
+			String buildId = jstring(build, "id");
+			String outputId = jstring(build, "output_id");
+
+			// Loop until built
+			String status = "";
+			while (!status.equals("built")) {
+				status = buildStatusGet(buildId, httpclient, apiKey);
+				if (status.equals("building")) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+					}
+					continue;
+				} else if (status.equals("failed")) {
+					RemoteContext.REMOTE_LOGGER.severe("Streaming Analytics Service: The submitted archive " + archive.getName() + " failed to build.");
+					JsonObject output = getBuildOutput(buildId, outputId, httpclient, apiKey);
+					String strOutput = "";
+					if (output != null)
+						strOutput = prettyPrintOutput(output);
+					throw new IllegalStateException("Error submitting archive for compilation: \n" + strOutput);
+				}
 			}
-        		continue;
-        	}
-        	else if(status.equals("failed")){
-        		RemoteContext.REMOTE_LOGGER.severe("The application failed to build.");
-        		JsonObject output = getBuildOutput(buildId, outputId, httpclient, apiKey);
-        		String strOutput = "";
-        		if(output!=null)
-        			strOutput = prettyPrintOutput(output);
-        		throw new IllegalStateException("Error submitting archive for compilation: \n"
-        				+ strOutput);
-        	}
-        }
-        RemoteContext.REMOTE_LOGGER.info("The application built successfully.");
-        
-        // Now perform archive put
-        build = getBuild(buildId, httpclient, apiKey);
-        
-        JsonArray artifacts = array(build, "artifacts");
-        if (artifacts == null || artifacts.size() == 0){
-        	throw new IllegalStateException("No artifacts associated with build " + buildId);
-        }
-        
-        // TODO: support multiple artifacts associated with a single build.
-        String artifactId = jstring(artifacts.get(0).getAsJsonObject(), "id");
-        RemoteContext.REMOTE_LOGGER.info("Submitting job to remote instance.");
-        doSubmitJobFromBuildArtifactPut(httpclient, deploy, apiKey, artifactId);
-    }
+
+			// Now perform archive put
+			build = getBuild(buildId, httpclient, apiKey);
+
+			JsonArray artifacts = array(build, "artifacts");
+			if (artifacts == null || artifacts.size() == 0) {
+				throw new IllegalStateException("No artifacts associated with build " + buildId);
+			}
+
+			// TODO: support multiple artifacts associated with a single build.
+			String artifactId = jstring(artifacts.get(0).getAsJsonObject(), "id");
+			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: submiting job request.");
+			doSubmitJobFromBuildArtifactPut(httpclient, deploy, apiKey, artifactId);
+		} finally {
+			httpclient.close();
+
+		}
+	}
 	
 	/**
 	 * Submit the job from the built artifact.
@@ -118,6 +124,7 @@ class BuildServiceRemoteRESTWrapper {
         httpput.setEntity(params);
        
         JsonObject jso = RestUtils.getGsonResponse(httpclient, httpput);
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: submit job response: " + jso.toString());
 		return jso;
 	}
 	
