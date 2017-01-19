@@ -2,6 +2,7 @@
 # Copyright IBM Corp. 2016
 import os
 import pickle
+from past.builtins import basestring
 
 try:
     import dill
@@ -77,7 +78,7 @@ def dict_in(callable) :
 def _getCallable(f):
     if callable(f):
         return f
-    if isinstance(f, str):
+    if isinstance(f, basestring):
         ci = dill.loads(base64.b64decode(f))
         if callable(ci):
             return ci
