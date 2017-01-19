@@ -64,26 +64,11 @@ MY_OPERATOR::~MY_OPERATOR()
     Py_DECREF(pyInNames_);
 }
 
-// Notify port readiness
-void MY_OPERATOR::allPortsReady() 
-{
-}
- 
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
     streamsx::topology::PyGILLock lock;
     streamsx::topology::flush_PyErrPyOut();
-}
-
-// Processing for source and threaded operators   
-void MY_OPERATOR::process(uint32_t idx)
-{
-}
-
-// Tuple processing for mutating ports 
-void MY_OPERATOR::process(Tuple & tuple, uint32_t port)
-{
 }
 
 // Tuple processing for non-mutating ports
@@ -100,8 +85,4 @@ print splpy_inputtuple2value($pystyle);
   streamsx::topology::Splpy::pyTupleSink(function_, value);
 }
 
-// Punctuation processing
-void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
-{
-}
 <%SPL::CodeGen::implementationEpilogue($model);%>

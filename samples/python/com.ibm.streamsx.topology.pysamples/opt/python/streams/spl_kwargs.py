@@ -43,3 +43,17 @@ class DeltaFilter:
         # Empty tuple will cause any matching input attributes
         # to be carried across to the output tuple
         return self.empty
+
+@spl.filter()
+class ContainsFilter:
+    """
+    Looks for a string term in any attribute in the tuple.
+    """
+    def __init__(self, term):
+        self.term = term;
+
+    def __call__(self, **tuple):
+        for s in tuple.values():
+            if self.term in str(s):
+                return True
+        return False

@@ -280,9 +280,9 @@ namespace streamsx {
         // Provide info on the setting of LD_LIBRARY_PATH
         char * pyLDD = getenv("LD_LIBRARY_PATH");
         if (pyLDD != NULL) {
-	      SPLAPPLOG(L_INFO, "LD_LIBRARY_PATH=" << pyLDD, "python");
+            SPLAPPLOG(L_INFO, "LD_LIBRARY_PATH=" << pyLDD, "python");
         } else {
-	      SPLAPPLOG(L_INFO, "LD_LIBRARY_PATH not set", "python");
+            SPLAPPLOG(L_INFO, "LD_LIBRARY_PATH not set", "python");
         }
 
         // declare pylib and its value  
@@ -295,33 +295,33 @@ namespace streamsx {
 
             pyLib = wk;
         }
-	SPLAPPLOG(L_INFO, "Loading Python library: " << pyLib  , "python");
+        SPLAPPLOG(L_INFO, "Loading Python library: " << pyLib  , "python");
 
-	if(NULL == dlopen(pyLib.c_str(), RTLD_LAZY |
-			  RTLD_GLOBAL)){
-	  SPLAPPLOG(L_ERROR, "Fatal error: could not open Python library:" << pyLib , "python");
-	  throw;
-	}
+        if(NULL == dlopen(pyLib.c_str(), RTLD_LAZY |
+                                         RTLD_GLOBAL)){
+          SPLAPPLOG(L_ERROR, "Fatal error: could not open Python library:" << pyLib , "python");
+          throw;
+        }
 
-       if (Py_IsInitialized() == 0) {
+        if (Py_IsInitialized() == 0) {
           Py_InitializeEx(0);
           PyEval_InitThreads();
           PyEval_SaveThread();
-       }
-    
-       int fd = open(spl_setup_py, O_RDONLY);
-       if (fd < 0) {
-         SPLAPPTRC(L_ERROR,
+        }
+
+        int fd = open(spl_setup_py, O_RDONLY);
+        if (fd < 0) {
+          SPLAPPTRC(L_ERROR,
             "Python script splpy_setup.py not found!:" << spl_setup_py,
                              "python");
-           throw;   
-       }
-       PyGILLock lock;
-       if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
-         SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
-         streamsx::topology::flush_PyErr_Print();
-         throw;
-       }
+          throw;
+        }
+        PyGILLock lock;
+        if (PyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1) != 0) {
+          SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");
+          streamsx::topology::flush_PyErr_Print();
+          throw;
+        }
       }
 
     /*
@@ -338,7 +338,7 @@ namespace streamsx {
         streamsx::topology::flush_PyErr_Print();
         throw;
       }
-      SPLAPPTRC(L_INFO, "Imported  module: " << moduleNameC, "python");
+      SPLAPPLOG(L_INFO, "Imported  module: " << moduleNameC, "python");
       return module;
     }
 
@@ -353,12 +353,35 @@ namespace streamsx {
        Py_DECREF(module);
     
        if (!PyCallable_Check(function)) {
-           SPLAPPLOG(L_ERROR, "Fatal error: function " << functionNameC << " in module " << moduleNameC << " not callable", "python");
+         SPLAPPTRC(L_ERROR, "Fatal error: function " << functionNameC << " in module " << moduleNameC << " not callable", "python");
          throw;
         }
         SPLAPPTRC(L_INFO, "Callable function: " << functionNameC, "python");
         return function;
       }
+
+    /*
+    * One off generic call a function by name passing one or two arguments
+    * returning its return. Used for setup calls in operator constructors
+    * as the reference to the method is not kept, assuming it is not
+    * called frequently.
+    * References to the arguments are stolen by this function.
+    */
+    static PyObject * callFunction(const char * module, const char *name, PyObject * arg1, PyObject * arg2) {
+         PyObject *fn = loadFunction(module, name);
+
+         PyObject *tc = PyTuple_New(arg2 == NULL ? 1 : 2);
+         PyTuple_SET_ITEM(tc, 0, arg1);
+         if (arg2 != NULL)
+             PyTuple_SET_ITEM(tc, 1, arg2);
+
+         PyObject * ret = PyObject_Call(fn, tc, NULL);
+
+         Py_DECREF(tc);
+         Py_DECREF(fn);
+
+         return ret;
+    }
 
     // Call the function passing an SPL attribute
     // converted to a Python object and discard the return 
@@ -461,14 +484,14 @@ namespace streamsx {
         Py_DECREF(pyReturnVar);
         streamsx::topology::flush_PyErr_Print();
         throw;
-      }  	 
+      }
       // PyLong_AsLong will return an error without 
       // throwing an error, so check if an error happened
       if (PyErr_Occurred()) {
         streamsx::topology::flush_PyErr_Print();
       }
       else {
-        Py_DECREF(pyReturnVar);		
+        Py_DECREF(pyReturnVar);
       }
       return retval;
    }

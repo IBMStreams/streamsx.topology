@@ -18,9 +18,11 @@ else:
   raise ValueError("Python version not supported.")
 ############################################
 
-OperatorType = Enum('OperatorType', 'Ignore Source Sink Pipe')
+OperatorType = Enum('OperatorType', 'Ignore Source Sink Pipe Filter')
+OperatorType.Source.spl_template = 'PythonFunctionSource'
 OperatorType.Pipe.spl_template = 'PythonFunctionPipe'
 OperatorType.Sink.spl_template = 'PythonFunctionSink'
+OperatorType.Filter.spl_template = 'PythonFunctionFilter'
 
 def pipe(wrapped):
     """
@@ -59,9 +61,15 @@ def _wrapforsplop(optype, wrapped, style, docpy):
             def __init__(self,*args,**kwargs):
                 self.__splpy_instance = wrapped(*args,**kwargs)
 
-            @functools.wraps(wrapped.__call__)
-            def __call__(self, *args,**kwargs):
-                return self.__splpy_instance.__call__(*args, **kwargs)
+            if hasattr(wrapped, "__call__"):
+                @functools.wraps(wrapped.__call__)
+                def __call__(self, *args,**kwargs):
+                    return self.__splpy_instance.__call__(*args, **kwargs)
+
+            if hasattr(wrapped, "__iter__"):
+                @functools.wraps(wrapped.__iter__)
+                def __iter__(self):
+                    return self.__splpy_instance.__iter__()
 
         _op_class.__wrapped__ = wrapped
         # _op_class.__doc__ = wrapped.__doc__
@@ -156,9 +164,39 @@ def _define_style(wrapped, fn, style):
          raise TypeError("Not yet implemented!")
     return style
 
+class source:
+    """
+    Create a source SPL operator from an iterable.
+    The resulting SPL operator has a single output port.
+
+    When decorating a class the class must be iterable
+    having an __iter__ function. When the SPL operator
+    is invoked an instance of the class is created
+    and an iteration is created using iter(instance). 
+
+    When decoratiing a function the function must have no
+    parameters and must return an iterable or iteration.
+    When the SPL operator is invoked the function is called
+    and an iteration is created using iter(value)
+    where value is the return of the function.
+
+    For each value in the iteration SPL tuples
+    are submitted dervied from the value. If the
+    value is None then no tuple is submitted.
+    If the iteration completes then no more tuples
+    are submitted and a final punctuation mark
+    is submitted to the output port.
+    """
+    def __init__(self, docpy=True):
+        self.style = None
+        self.docpy = docpy
+    
+    def __call__(self, wrapped):
+        return _wrapforsplop(OperatorType.Source, wrapped, self.style, self.docpy)
+
 class map:
     """
-    Create a SPL operator from a callable class or function.
+    Create a map SPL operator from a callable class or function.
 
     A map SPL operator with a single input port and a single
     output port. For each tuple on the input port the
@@ -170,6 +208,26 @@ class map:
     
     def __call__(self, wrapped):
         return _wrapforsplop(OperatorType.Pipe, wrapped, self.style, self.docpy)
+
+class filter:
+    """
+    Create a filter SPL operator from a callable class or function.
+
+    A filter SPL operator has a single input port and one mandatory
+    and one optional output port. The schema of each output port
+    must match the input port. For each tuple on the input port the
+    callable is called passing the contents of the tuple. if the
+    function returns a value that evaluates to True then it is
+    submitted to mandatory output port 0. Otherwise it it submitted to
+    the second optional output port (1) or discarded if the port is
+    not specified in the SPL invocation.
+    """
+    def __init__(self, style=None, docpy=True):
+        self.style = style
+        self.docpy = docpy
+    
+    def __call__(self, wrapped):
+        return _wrapforsplop(OperatorType.Filter, wrapped, self.style, self.docpy)
 
 # Allows functions in any module in opt/python/streams to be explicitly ignored.
 def ignore(wrapped):

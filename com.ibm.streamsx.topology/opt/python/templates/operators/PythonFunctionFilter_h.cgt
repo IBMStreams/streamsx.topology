@@ -1,16 +1,11 @@
 /*
  * # Licensed Materials - Property of IBM
- * # Copyright IBM Corp. 2015  
+ * # Copyright IBM Corp. 2015,2016
  */
 
 #include <Python.h>
 
 <%SPL::CodeGen::headerPrologue($model);%>
-
-<%
-  my $oport = $model->getOutputPortAt(0);
-  my $iport = $model->getInputPortAt(0);
-%>
 
 class MY_OPERATOR : public MY_BASE_OPERATOR 
 {
@@ -33,9 +28,7 @@ private:
   // Members
     PyObject *function_;
     PyObject *pyInNames_;
-    PyObject *pyOutNames_;
-
-    void fromPythonToPort0(PyObject * pyTuple, <%=$oport->getCppTupleType()%> & otuple, <%=$iport->getCppTupleType()%> const & ituple);
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
+
