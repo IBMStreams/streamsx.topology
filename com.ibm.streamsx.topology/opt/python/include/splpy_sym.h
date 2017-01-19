@@ -88,10 +88,12 @@ extern "C" {
  * String handling
  */
 typedef PyObject* (*__splpy_udu_fp)(const char *, Py_ssize_t, const char *);
+typedef PyObject* (*__splpy_uaus_fp)(PyObject *);
 
 extern "C" {
   static __splpy_p_p_fp __spl_fp_PyObject_Str;
   static __splpy_udu_fp __spl_fp_PyUnicode_DecodeUTF8;
+  static __splpy_uaus_fp __spl_fp_PyUnicode_AsUTF8String;
   static __splpy_c_p_fp __spl_fp_PyBytes_AsString;
 
   static PyObject * __spl_fi_PyObject_Str(PyObject *v) {
@@ -100,12 +102,16 @@ extern "C" {
   static PyObject * __spl_fi_PyUnicode_DecodeUTF8(const char *s, Py_ssize_t size, const char * errors) {
      return __spl_fp_PyUnicode_DecodeUTF8(s, size, errors);
   }
+  static PyObject * __spl_fi_PyUnicode_AsUTF8String(PyObject *s) {
+     return __spl_fp_PyUnicode_AsUTF8String(s);
+  }
   static char * __spl_fi_PyBytes_AsString(PyObject * o) {
      return __spl_fp_PyBytes_AsString(o);
   }
 }
 #pragma weak PyObject_Str = __spl_fi_PyObject_Str
 #pragma weak PyUnicode_DecodeUTF8 = __spl_fi_PyUnicode_DecodeUTF8
+#pragma weak PyUnicode_AsUTF8String = __spl_fi_PyUnicode_AsUTF8String
 #pragma weak PyBytes_AsString = __spl_fi_PyBytes_AsString
 
 #if PY_MAJOR_VERSION == 3
@@ -125,6 +131,20 @@ extern "C" {
 #pragma weak PyMemoryView_FromMemory = __spl_fi_PyMemoryView_FromMemory
 
 #else
+typedef int (*__splpy_sasas_fp)(PyObject *, char **, Py_ssize_t *);
+typedef PyObject * (*__splpy_bfm_fp)(void *, Py_ssize_t);
+extern "C" {
+  static __splpy_sasas_fp __spl_fp_PyString_AsStringAndSize;
+  static __splpy_bfm_fp __spl_fp_PyBuffer_FromMemory;
+  static int __spl_fi_PyString_AsStringAndSize(PyObject * o, char ** buf, Py_ssize_t *size) {
+     return __spl_fp_PyString_AsStringAndSize(o, buf, size);
+  }
+  static PyObject * __spl_fi_PyBuffer_FromMemory(void *mem, Py_ssize_t size) {
+     return __spl_fp_PyBuffer_FromMemory(mem, size);
+  }
+}
+#pragma weak PyString_AsStringAndSize = __spl_fi_PyString_AsStringAndSize
+#pragma weak PyBuffer_FromMemory = __spl_fi_PyBuffer_FromMemory
 #endif
 
 
@@ -340,12 +360,15 @@ class SplpySym {
 
      __SPLFIX(PyObject_Str, __splpy_p_p_fp);
      __SPLFIX(PyUnicode_DecodeUTF8, __splpy_udu_fp);
+     __SPLFIX(PyUnicode_AsUTF8String, __splpy_uaus_fp);
      __SPLFIX(PyBytes_AsString, __splpy_c_p_fp);
 
 #if PY_MAJOR_VERSION == 3
      __SPLFIX(PyUnicode_AsUTF8AndSize, __splpy_uauas_fp);
      __SPLFIX(PyMemoryView_FromMemory, __splpy_mvfm_fp);
 #else
+     __SPLFIX(PyString_AsStringAndSize, __splpy_sasas_fp);
+     __SPLFIX(PyBuffer_FromMemory, __splpy_bfm_fp);
 #endif
 
      __SPLFIX(PyObject_GetAttrString, __splpy_ogas_fp);
