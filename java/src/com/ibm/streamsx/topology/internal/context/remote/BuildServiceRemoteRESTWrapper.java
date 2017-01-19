@@ -15,6 +15,7 @@ import java.util.Random;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.http.auth.AUTH;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
@@ -34,14 +35,45 @@ import com.ibm.streamsx.topology.context.remote.RemoteContext;
 
 class BuildServiceRemoteRESTWrapper {
 	
-	private JsonObject credentials;
+    private JsonObject credentials;
 	
 	BuildServiceRemoteRESTWrapper(JsonObject credentials){
 		this.credentials = credentials;
-	}
+    }
 	
-	void remoteBuildAndSubmit(JsonObject deploy, File archive) throws ClientProtocolException, IOException{
-		CloseableHttpClient httpclient = HttpClients.createDefault();
+
+    private String getStatusURL() {
+        StringBuilder sb = new StringBuilder(500);
+        sb.append(jstring(this.credentials, "rest_url"));
+        sb.append(jstring(this.credentials, "status_path"));
+        return sb.toString();
+    }
+
+    private void checkInstanceStatus(CloseableHttpClient httpClient)
+            throws ClientProtocolException, IOException {
+
+        String url = getStatusURL();
+
+	String apiKey = getAPIKey(jstring(this.credentials,  "userid"), jstring(this.credentials, "password"));
+
+        HttpGet getStatus = new HttpGet(url);
+        getStatus.addHeader(AUTH.WWW_AUTH_RESP, apiKey);
+
+	JsonObject jsonResponse = RemoteContexts.getGsonResponse(httpClient, getStatus);
+        
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service instance status response:" + jsonResponse.toString());
+        
+        if (!"true".equals(jstring(jsonResponse, "enabled")))
+            throw new IllegalStateException("Service is not enabled!");
+        
+        if (!"running".equals(jstring(jsonResponse, "status")))
+            throw new IllegalStateException("Service is not running!");
+    }
+
+    void remoteBuildAndSubmit(JsonObject deploy, File archive) throws ClientProtocolException, IOException{
+	CloseableHttpClient httpclient = HttpClients.createDefault();
+
+	checkInstanceStatus(httpclient);
         String apiKey = getAPIKey(jstring(credentials,  "userid"), jstring(credentials, "password"));
         
         // Perform initial post of the archive
@@ -88,7 +120,7 @@ class BuildServiceRemoteRESTWrapper {
         String artifactId = jstring(artifacts.get(0).getAsJsonObject(), "id");
         RemoteContext.REMOTE_LOGGER.info("Submitting job to remote instance.");
         doSubmitJobFromBuildArtifactPut(httpclient, deploy, apiKey, artifactId);
-	}
+    }
 	
 	/**
 	 * Submit the job from the built artifact.
