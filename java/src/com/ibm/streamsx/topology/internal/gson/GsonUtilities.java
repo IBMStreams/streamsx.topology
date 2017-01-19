@@ -42,7 +42,7 @@ public class GsonUtilities {
      * Return a Json array. If the value is not
      * an array then an array containing the single
      * value is returned.
-     * Returns null if the array is empty or not present.
+     * Returns null if the array is not present or present as JSON null.
      */
     public static JsonArray array(JsonObject object, String property) {
         if (object.has(property)) {
