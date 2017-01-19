@@ -32,26 +32,29 @@ public class Contexts {
     }
     
     private static JSONObject getVCAPServices(Map<String, Object> config) throws IOException {
-        
+
         Object rawServices = config.get(VCAP_SERVICES);
         if (rawServices instanceof File) {
             File fServices = (File) rawServices;
-            
+
             try (FileInputStream fis = new FileInputStream(fServices)) {
                 return JSONObject.parse(fis);
             }
-            
-        } 
-        else if (rawServices instanceof String) {
-        	return JSONObject.parse((String)rawServices);
-        }
-	else if (rawServices instanceof JSONObject) {
-	    return (JSONObject)rawServices;
-        }
-        else {
+
+        } else if (rawServices instanceof String) {
+            return JSONObject.parse((String) rawServices);
+        } else if (rawServices instanceof JSONObject) {
+            return (JSONObject) rawServices;
+        } else {
             throw new IllegalArgumentException();
-        }       
+        }
     }
+    
+    /**
+     * Get the sepcific streaming analytics service from the service name
+     * and the vcap services.
+     * @throws IOException
+     */
     public static JSONObject getVCAPService(Map<String, Object> config) throws IOException {
         JSONObject services = getVCAPServices(config);
         JSONArray streamsServices = (JSONArray) services.get("streaming-analytics");
