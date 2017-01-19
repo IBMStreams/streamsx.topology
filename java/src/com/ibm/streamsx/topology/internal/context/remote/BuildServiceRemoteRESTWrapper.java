@@ -32,6 +32,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
 
 class BuildServiceRemoteRESTWrapper {
 	
@@ -42,38 +43,10 @@ class BuildServiceRemoteRESTWrapper {
     }
 	
 
-    private String getStatusURL() {
-        StringBuilder sb = new StringBuilder(500);
-        sb.append(jstring(this.credentials, "rest_url"));
-        sb.append(jstring(this.credentials, "status_path"));
-        return sb.toString();
-    }
-
-    private void checkInstanceStatus(CloseableHttpClient httpClient)
-            throws ClientProtocolException, IOException {
-
-        String url = getStatusURL();
-
-	String apiKey = getAPIKey(jstring(this.credentials,  "userid"), jstring(this.credentials, "password"));
-
-        HttpGet getStatus = new HttpGet(url);
-        getStatus.addHeader(AUTH.WWW_AUTH_RESP, apiKey);
-
-	JsonObject jsonResponse = RemoteContexts.getGsonResponse(httpClient, getStatus);
-        
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service instance status response:" + jsonResponse.toString());
-        
-        if (!"true".equals(jstring(jsonResponse, "enabled")))
-            throw new IllegalStateException("Service is not enabled!");
-        
-        if (!"running".equals(jstring(jsonResponse, "status")))
-            throw new IllegalStateException("Service is not running!");
-    }
-
     void remoteBuildAndSubmit(JsonObject deploy, File archive) throws ClientProtocolException, IOException{
 	CloseableHttpClient httpclient = HttpClients.createDefault();
 
-	checkInstanceStatus(httpclient);
+	RestUtils.checkInstanceStatus(httpclient, this.credentials);
         String apiKey = getAPIKey(jstring(credentials,  "userid"), jstring(credentials, "password"));
         
         // Perform initial post of the archive
@@ -144,7 +117,7 @@ class BuildServiceRemoteRESTWrapper {
                 ContentType.APPLICATION_JSON);    
         httpput.setEntity(params);
        
-        JsonObject jso = RemoteContexts.getGsonResponse(httpclient, httpput);
+        JsonObject jso = RestUtils.getGsonResponse(httpclient, httpput);
 		return jso;
 	}
 	
@@ -172,7 +145,7 @@ class BuildServiceRemoteRESTWrapper {
         
         httppost.setEntity(reqEntity);
         //System.out.println(httppost.getAllHeaders()[1]);
-        JsonObject jso = RemoteContexts.getGsonResponse(httpclient, httppost);
+        JsonObject jso = RestUtils.getGsonResponse(httpclient, httppost);
         return jso;
 	}
 	
@@ -201,7 +174,7 @@ class BuildServiceRemoteRESTWrapper {
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpget.addHeader("Authorization", apiKey);
 		
-		JsonObject response = RemoteContexts.getGsonResponse(httpclient, httpget);
+		JsonObject response = RestUtils.getGsonResponse(httpclient, httpget);
 		// Get the correct build
 		JsonObject build = null;
 		JsonArray builds = array(response, "builds");
@@ -222,7 +195,7 @@ class BuildServiceRemoteRESTWrapper {
 		httpget.addHeader("Authorization", apiKey);
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
 		
-		JsonObject response = RemoteContexts.getGsonResponse(httpclient, httpget);
+		JsonObject response = RestUtils.getGsonResponse(httpclient, httpget);
 		for(JsonElement outputElem : array(response, "builds")){
 			JsonObject output = outputElem.getAsJsonObject();
 			if(jstring(output, "id").equals(buildId))

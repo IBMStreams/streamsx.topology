@@ -43,6 +43,7 @@ import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
+import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
@@ -119,26 +120,7 @@ public class AnalyticsServiceStreamsContext extends
         sb.append(credentials.get("rest_url"));
         sb.append(credentials.get("status_path"));
         return sb.toString();
-    }
-    
-    private void checkInstanceStatus(CloseableHttpClient httpClient, JSONObject credentials)
-            throws ClientProtocolException, IOException {
-
-        String url = getStatusURL(credentials);
-
-        HttpGet getStatus = new HttpGet(url);
-        getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAPIKey(credentials.get("userid").toString(),
-						       credentials.get("password").toString()));
-	JSONObject jsonResponse = getJsonResponse(httpClient, getStatus);
-        
-        Topology.STREAMS_LOGGER.info("Streaming Analytics Service instance status response:" + jsonResponse.serialize());
-        
-        if (!Boolean.TRUE.equals(jsonResponse.get("enabled")))
-            throw new IllegalStateException("Service is not enabled!");
-        
-        if (!"running".equals(jsonResponse.get("status")))
-            throw new IllegalStateException("Service is not running!");
-    }
+    }   
 
     private JSONObject getJsonResponse(CloseableHttpClient httpClient,
             HttpRequestBase request) throws IOException, ClientProtocolException {
@@ -282,11 +264,13 @@ public class AnalyticsServiceStreamsContext extends
 
               
         final JSONObject credentials = (JSONObject) service.get("credentials");
+        final JsonObject credentialsg = serviceg.getAsJsonObject("credentials");
         
         final CloseableHttpClient httpClient = createHttpClient(credentials);
         try {
-            Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Checking status :" + service.get("name"));           
-            checkInstanceStatus(httpClient, credentials);
+            Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Checking status :" + service.get("name"));
+            
+            RestUtils.checkInstanceStatus(httpClient, credentialsg);
             
             Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Submitting bundle : " + bundle.getName() + " to " + service.get("name"));
             
