@@ -55,8 +55,9 @@ class BuildServiceRemoteRESTWrapper {
 			String apiKey = getAPIKey(jstring(credentials, "userid"), jstring(credentials, "password"));
 
 			// Perform initial post of the archive
-			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: Submitting archive : " + archive.getName() + " to " + serviceg.get("name"));
-			JsonObject jso = doUploadBuildArchivePost(httpclient, apiKey, archive);
+			String buildName = newBuildName(16);
+			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: Submitting build : \"" + buildName + "\" to " + serviceg.get("name"));
+			JsonObject jso = doUploadBuildArchivePost(httpclient, apiKey, archive, buildName);
 
 			JsonObject build = object(jso, "build");
 			String buildId = jstring(build, "id");
@@ -138,8 +139,8 @@ class BuildServiceRemoteRESTWrapper {
 	}
 
 	private JsonObject doUploadBuildArchivePost(CloseableHttpClient httpclient,
-			String apiKey, File archive) throws ClientProtocolException, IOException{
-		String newBuildURL = getBuildsURL(credentials) + "?build_name=" + newBuildName(16);
+						    String apiKey, File archive, String buildName) throws ClientProtocolException, IOException{
+	    String newBuildURL = getBuildsURL(credentials) + "?build_name=" + buildName;
 		HttpPost httppost = new HttpPost(newBuildURL);
         httppost.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httppost.addHeader("Authorization", apiKey);
