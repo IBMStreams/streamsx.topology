@@ -28,6 +28,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 
 import javax.xml.bind.DatatypeConverter;
+import java.nio.charset.StandardCharsets;
 
 public class RestUtils {
 
@@ -63,7 +64,7 @@ public class RestUtils {
 	String api_creds = userid + ":" + password;
 	String apiKey = "Basic "
 	    + DatatypeConverter.printBase64Binary(api_creds
-						  .getBytes("UTF-8"));			
+						  .getBytes(StandardCharsets.UTF_8));			
 	return apiKey;
     }
 
