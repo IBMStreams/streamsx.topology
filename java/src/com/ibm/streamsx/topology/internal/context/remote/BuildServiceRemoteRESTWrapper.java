@@ -80,7 +80,7 @@ class BuildServiceRemoteRESTWrapper {
         build = getBuild(buildId, httpclient, apiKey);
         
         JsonArray artifacts = array(build, "artifacts");
-        if(artifacts == null){
+        if (artifacts == null || artifacts.size() == 0){
         	throw new IllegalStateException("No artifacts associated with build " + buildId);
         }
         
