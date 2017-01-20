@@ -9,12 +9,12 @@ import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -36,15 +36,17 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSON;
-import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.version.Product;
 import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
+import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
@@ -102,45 +104,6 @@ public class AnalyticsServiceStreamsContext extends
         }
     }
     
-    private JSONObject getVCAPServices(Map<String, Object> config) throws IOException {
-        
-        Object rawServices = config.get(VCAP_SERVICES);
-        if (rawServices instanceof File) {
-            File fServices = (File) rawServices;
-
-            try (FileInputStream fis = new FileInputStream(fServices)) {
-                return JSONObject.parse(fis);
-            }
-
-        } else if (rawServices instanceof JSONObject) {
-            return (JSONObject) rawServices;
-        } else {
-            throw new IllegalArgumentException();
-        }      
-    }
-    
-    private JSONObject getVCAPService(Map<String, Object> config) throws IOException {
-        JSONObject services = getVCAPServices(config);
-        JSONArray streamsServices = (JSONArray) services.get("streaming-analytics");
-        if (streamsServices == null || streamsServices.isEmpty())
-            throw new IllegalStateException("No streaming-analytics services defined in VCAP_SERVICES");
-        
-        String serviceName = config.get(SERVICE_NAME).toString();
-        
-        JSONObject service = null;
-        for (Object jo : streamsServices) {
-            JSONObject possibleService = (JSONObject) jo;
-            if (serviceName.equals(possibleService.get("name"))) {
-                service = possibleService;
-                break;
-            }
-        }
-        if (service == null)
-            throw new IllegalStateException(
-                    "No streaming-analytics services defined in VCAP_SERVICES with name: " + serviceName);
-        
-        return service;
-    }
     
     private CloseableHttpClient createHttpClient(JSONObject credentials) {
 	CloseableHttpClient httpClient = HttpClients.custom()
@@ -304,8 +267,22 @@ public class AnalyticsServiceStreamsContext extends
     }
     
     private BigInteger submitJobToService(File bundle, Map<String, Object> config) throws IOException {
-        JSONObject service = getVCAPService(config);
         
+        final JsonObject serviceg;
+        final Map<String, Object> confign;
+        Object vco = config.get(AnalyticsServiceProperties.VCAP_SERVICES);
+        if (vco instanceof JSONObject) {
+            JSONObject servicej = (JSONObject) vco;
+            confign = new HashMap<>(config);
+            confign.put(AnalyticsServiceProperties.VCAP_SERVICES, servicej.serialize());
+            
+        } else {
+            confign = config;
+        }
+        serviceg = VcapServices.getVCAPService(key -> confign.get(key));
+        JSONObject service = JSONObject.parse(serviceg.toString()); //temp            
+
+              
         final JSONObject credentials = (JSONObject) service.get("credentials");
         
         final CloseableHttpClient httpClient = createHttpClient(credentials);
@@ -325,10 +302,10 @@ public class AnalyticsServiceStreamsContext extends
         }
     }
 
-    static String getAPIKey(String userid, String password) throws UnsupportedEncodingException{
-	String api_creds = userid + ":" + password;
-        String apiKey = "Basic " + DatatypeConverter.printBase64Binary(api_creds.getBytes("UTF-8"));
-	return apiKey;
-    }      
-
+    static String getAPIKey(String userid, String password) {
+        String api_creds = userid + ":" + password;
+        String apiKey = "Basic " + DatatypeConverter.printBase64Binary(
+                api_creds.getBytes(StandardCharsets.UTF_8));
+        return apiKey;
+    }
 }

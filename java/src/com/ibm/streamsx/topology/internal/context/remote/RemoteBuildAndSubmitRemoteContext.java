@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContext {
 	@Override
@@ -27,7 +28,7 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	}
 	
 	private void doSubmit(JsonObject deploy, File archive) throws IOException{
-		JsonObject service = RemoteContexts.getVCAPService(deploy);        
+		JsonObject service = VcapServices.getVCAPService(key -> deploy.get(key));        
         JsonObject credentials = object(service,  "credentials");
      
         BuildServiceRemoteRESTWrapper wrapper = new BuildServiceRemoteRESTWrapper(credentials);
