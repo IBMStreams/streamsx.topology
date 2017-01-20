@@ -78,19 +78,23 @@ public class VcapServices {
         if (streamsServices == null || streamsServices.size() == 0)
             throw new IllegalStateException("No streaming-analytics services defined in VCAP_SERVICES");
         
-        final String serviceName;
+        String serviceName;
         Object sno = getter.apply(SERVICE_NAME);
         if (sno instanceof JsonPrimitive)
             serviceName = ((JsonPrimitive) sno).getAsString();
         else
             serviceName = sno.toString();
+        
+        serviceName = serviceName.trim();
                 
         JsonObject service = null;
-        for (JsonElement ja : streamsServices) {
-            JsonObject possibleService = ja.getAsJsonObject();
-            if (serviceName.equals(possibleService.get("name").getAsString())) {
-                service = possibleService;
-                break;
+        if (!serviceName.isEmpty()) {
+            for (JsonElement ja : streamsServices) {
+                JsonObject possibleService = ja.getAsJsonObject();
+                if (serviceName.equals(possibleService.get("name").getAsString())) {
+                    service = possibleService;
+                    break;
+                }
             }
         }
         if (service == null)
