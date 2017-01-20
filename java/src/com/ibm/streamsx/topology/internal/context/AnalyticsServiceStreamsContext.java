@@ -95,15 +95,21 @@ public class AnalyticsServiceStreamsContext extends
         
     }
     
+    /**
+     * Verify we have a valid Streaming Analytic service
+     * information before we attempt anything.
+     */
     void preBundle(Map<String, Object> config) {
-        if (!config.containsKey(SERVICE_NAME))
-            throw new IllegalStateException("Service name is not defined, please set property: " + SERVICE_NAME);
-        
-        if (!config.containsKey(VCAP_SERVICES)) {
-            throw new IllegalStateException("VCAP services are not defined, please set property: " + VCAP_SERVICES);
+        try {
+            getVCAPService(config);
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
         }
     }
     
+    JsonObject getVCAPService(Map<String, Object> config) throws IOException {
+        return VcapServices.getVCAPService(key -> config.get(key));
+    }
     
     private CloseableHttpClient createHttpClient(JSONObject credentials) {
 	CloseableHttpClient httpClient = HttpClients.custom()
@@ -279,7 +285,7 @@ public class AnalyticsServiceStreamsContext extends
         } else {
             confign = config;
         }
-        serviceg = VcapServices.getVCAPService(key -> confign.get(key));
+        serviceg = getVCAPService(confign);
         JSONObject service = JSONObject.parse(serviceg.toString()); //temp            
 
               
