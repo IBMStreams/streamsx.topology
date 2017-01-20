@@ -17,6 +17,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.function.Function;
 
 /**
@@ -35,6 +36,10 @@ public class VcapServices {
      * File - assumed to be a file containing serialized VCAP_SERVICES JSON
      */
     private static JsonObject getVCAPServices(Object rawServices) throws IOException {
+        
+        if (rawServices != null)
+        System.out.println("rawServicesClass:" + rawServices.getClass());
+        System.out.println("rawServices:" + rawServices);
 
         if (rawServices instanceof JsonObject)
             return (JsonObject) rawServices;
@@ -46,7 +51,10 @@ public class VcapServices {
             File fServices = (File) rawServices;          
             vcapString = new String(Files.readAllBytes(fServices.toPath()), StandardCharsets.UTF_8);
 
-        } else if (rawServices instanceof String) {
+        } else if (rawServices instanceof JsonPrimitive) {
+            vcapString = ((JsonPrimitive) rawServices).getAsString();
+        }
+        else if (rawServices instanceof String) {
             vcapString = rawServices.toString();
             
         } else {
@@ -70,7 +78,12 @@ public class VcapServices {
         if (streamsServices == null || streamsServices.size() == 0)
             throw new IllegalStateException("No streaming-analytics services defined in VCAP_SERVICES");
         
-        String serviceName = getter.apply(SERVICE_NAME).toString();
+        final String serviceName;
+        Object sno = getter.apply(SERVICE_NAME);
+        if (sno instanceof JsonPrimitive)
+            serviceName = ((JsonPrimitive) sno).getAsString();
+        else
+            serviceName = sno.toString();
                 
         JsonObject service = null;
         for (JsonElement ja : streamsServices) {

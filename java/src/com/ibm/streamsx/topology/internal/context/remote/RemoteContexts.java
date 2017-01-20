@@ -4,12 +4,6 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
-import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
-import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -24,8 +18,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 class RemoteContexts {
@@ -61,29 +53,5 @@ class RemoteContexts {
             response.close();
         }
         return jsonResponse;
-    }
-    
-
-    static JsonObject getVCAPService(JsonObject deploy) throws IOException {
-        JsonObject services = object(deploy, VCAP_SERVICES);
-        JsonArray streamsServices = array(services, "streaming-analytics");
-        if (streamsServices == null)
-            throw new IllegalStateException("No streaming-analytics services defined in VCAP_SERVICES");
-        
-        String serviceName = jstring(deploy, SERVICE_NAME);
-        
-        JsonObject service = null;
-        for (JsonElement je : streamsServices) {
-            JsonObject possibleService = je.getAsJsonObject();
-            if (serviceName.equals(jstring(possibleService, "name"))) {
-                service = possibleService;
-                break;
-            }
-        }
-        if (service == null)
-            throw new IllegalStateException(
-                    "No streaming-analytics services defined in VCAP_SERVICES with name: " + serviceName);
-        
-        return service;
     }
 }
