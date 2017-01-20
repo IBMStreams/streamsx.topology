@@ -44,6 +44,7 @@
                  ${cisxt}/generator/**
                  ${cisxt}/context/remote/*.java
                  ${cisxt}/internal/context/remote/*.java
+                 ${cisxt}/internal/streaminganalytics/*.java
                  "
     />
     <copy toDir="${classes}">
