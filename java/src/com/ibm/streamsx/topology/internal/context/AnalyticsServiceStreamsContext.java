@@ -4,9 +4,6 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
-import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
-import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
