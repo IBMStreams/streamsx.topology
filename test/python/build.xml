@@ -61,7 +61,7 @@
      <target name="test.python3" description="Run all Python tests with python executable (assumed to be Python 3)" depends="test.python2">
         <!-- SPL Python operators are only supported in Python 3 -->
          <ant inheritAll="no" dir="../java">
-            <property name="topology.test.python" value="python"/>
+            <property name="topology.test.python" value="python3"/>
             <property name="topology.test.base.pattern" value="**/splpy/*Test.java"/>
             <target name="unittest.standalone"/>
             <target name="unittest.distributed"/>

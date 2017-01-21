@@ -185,6 +185,7 @@
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
            threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
+       <env key="PYTHONHOME" value="${topology.test.python.prefix}"/>
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>
        <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>

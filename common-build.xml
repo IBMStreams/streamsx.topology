@@ -26,6 +26,11 @@
   <property name="topology.test.root" location="${streamsx.topology}/test"/>
   <property name="topology.test.python" value="python3"/>
 
+  <exec executable="${topology.test.python}-config"
+       outputproperty="topology.test.python.prefix">
+       <arg value="--prefix"/>
+  </exec>
+
   <!-- Use the full class path as scalac doesn't seem to always pick
        up jars theough the manifest, even if -usemanifestcp is set -->
   <path id="streams.classpath">
