@@ -21,14 +21,20 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	
 	@Override
 	public Future<File> submit(JsonObject submission) throws Exception {
+	    
+	    // Get the VCAP service info which also verifies we have the
+	    // right information before we do any work.
+	    JsonObject deploy = object(submission, "deploy");
+	    JsonObject service = VcapServices.getVCAPService(key -> deploy.get(key));
+	    
 		Future<File> archive = super.submit(submission);
-		JsonObject deploy = object(submission, "deploy");
-		doSubmit(deploy, archive.get());
+		
+		doSubmit(deploy, service, archive.get());
        return archive;
 	}
 	
-	private void doSubmit(JsonObject deploy, File archive) throws IOException{
-		JsonObject service = VcapServices.getVCAPService(key -> deploy.get(key));        
+	private void doSubmit(JsonObject deploy, JsonObject service, File archive) throws IOException{
+		        
         JsonObject credentials = object(service,  "credentials");
      
         BuildServiceRemoteRESTWrapper wrapper = new BuildServiceRemoteRESTWrapper(credentials);

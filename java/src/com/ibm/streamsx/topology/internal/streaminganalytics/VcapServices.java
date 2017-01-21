@@ -37,17 +37,19 @@ public class VcapServices {
      */
     private static JsonObject getVCAPServices(Object rawServices) throws IOException {
         
-        if (rawServices != null)
-        System.out.println("rawServicesClass:" + rawServices.getClass());
-        System.out.println("rawServices:" + rawServices);
-
         if (rawServices instanceof JsonObject)
             return (JsonObject) rawServices;
         
         JsonParser parser = new JsonParser();
-        
         String vcapString;
-        if (rawServices instanceof File) {
+
+        if (rawServices == null) {
+            vcapString = System.getenv("VCAP_SERVICES");
+            if (vcapString == null) {
+                throw new IllegalStateException("VCAP_SERVICES are not defined, please set environment variable VCAP_SERVICES or configuration property: " + VCAP_SERVICES);
+            }
+        }     
+        else if (rawServices instanceof File) {
             File fServices = (File) rawServices;          
             vcapString = new String(Files.readAllBytes(fServices.toPath()), StandardCharsets.UTF_8);
 
@@ -58,7 +60,7 @@ public class VcapServices {
             vcapString = rawServices.toString();
             
         } else {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Unknown VCAP_SERVICES object class: " + rawServices.getClass());
         }
         
         return parser.parse(vcapString).getAsJsonObject();
@@ -78,19 +80,25 @@ public class VcapServices {
         if (streamsServices == null || streamsServices.size() == 0)
             throw new IllegalStateException("No streaming-analytics services defined in VCAP_SERVICES");
         
-        final String serviceName;
+        String serviceName = null;
         Object sno = getter.apply(SERVICE_NAME);
+
         if (sno instanceof JsonPrimitive)
-            serviceName = ((JsonPrimitive) sno).getAsString();
-        else
-            serviceName = sno.toString();
+            serviceName = ((JsonPrimitive) sno).getAsString().trim();
+        else if (sno != null)
+            serviceName = sno.toString().trim();
+        
+        if (serviceName == null || serviceName.isEmpty())
+            throw new IllegalStateException("Streaming Analytics service name is not defined, please set configuration property: " + SERVICE_NAME);
                 
         JsonObject service = null;
-        for (JsonElement ja : streamsServices) {
-            JsonObject possibleService = ja.getAsJsonObject();
-            if (serviceName.equals(possibleService.get("name").getAsString())) {
-                service = possibleService;
-                break;
+        if (!serviceName.isEmpty()) {
+            for (JsonElement ja : streamsServices) {
+                JsonObject possibleService = ja.getAsJsonObject();
+                if (serviceName.equals(possibleService.get("name").getAsString())) {
+                    service = possibleService;
+                    break;
+                }
             }
         }
         if (service == null)
