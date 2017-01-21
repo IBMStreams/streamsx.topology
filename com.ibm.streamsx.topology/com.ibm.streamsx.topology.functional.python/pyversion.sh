@@ -4,10 +4,15 @@ action=$1
 
 if [ $action = "lib" ]
 then
-    python3-config --libs | sed -e 's/^-l//;s/ -l/ /g;s/ \+/\n/g'
+    # Don't provide a lib since the
+    # libpython3.x will be loaded
+    # dynamically based upon $PYTHONHOME
+    echo
 elif [ $action = "libPath" ]
 then
-    echo `python3-config --prefix`/lib
+    # Don't provide a libPath to ensure
+    # the sab is not tied to a fixed path
+    echo
 elif [ $action = "includePath" ]
 then
     python3-config --includes

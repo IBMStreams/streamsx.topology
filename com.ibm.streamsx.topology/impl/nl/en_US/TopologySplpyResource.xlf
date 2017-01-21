@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2012-2014, International Business Machines Corporation -->
+<!-- Copyright (C) 2012-2017, International Business Machines Corporation -->
 <!-- All Rights Reserved                                                   -->
 
 <xliff version="1.1" xmlns="urn:oasis:names:tc:xliff:document:1.1" 
@@ -52,21 +52,21 @@
       <group>
         <!-- NOTE:  The Topology Toolkit is assigned message ID range CDIST0300 - CDIST0349 -->
         
-        <trans-unit id="StreamsTopologyMessages_CDIST0301" extraData="TOPOLOGY_LD_LIB_PATH" resname="CDIST0301I">
-          <source>LD_LIBRARY_PATH={0}.</source>
-          <!--TRNOTE Do not translate the word LD_LIBRARY_PATH -->
+        <trans-unit id="StreamsTopologyMessages_CDIST0301" extraData="TOPOLOGY_PYTHONHOME" resname="CDIST0301I">
+          <source>PYTHONHOME={0}.</source>
+          <!--TRNOTE Do not translate the word PYTHONHOME -->
         </trans-unit>
-        <trans-unit id="StreamsTopologyMessages_CDIST0302" extraData="TOPOLOGY_LD_LIB_PATH_NO" resname="CDIST0302I">
-          <source>LD_LIBRARY_PATH not set.</source>
-          <!--TRNOTE Do not translate the word LD_LIBRARY_PATH -->
+        <trans-unit id="StreamsTopologyMessages_CDIST0302" extraData="TOPOLOGY_PYTHONHOME_NO" resname="CDIST0302I">
+          <source>PYTHONHOME environment variable not set. Please set PYTHONHOME to a valid Python {0} install.</source>
+          <!--TRNOTE Do not translate the word PYTHONHOME -->
         </trans-unit>
         <trans-unit id="StreamsTopologyMessages_CDIST0303" extraData="TOPOLOGY_LOAD_LIB" resname="CDIST0303I">
           <source>Loading Python library: {0}.</source>
           <!--TRNOTE Do not translate the word Python -->
         </trans-unit>
         <trans-unit id="StreamsTopologyMessages_CDIST0304" extraData="TOPOLOGY_LOAD_LIB_ERROR" resname="CDIST0304E">
-          <source>Fatal error: could not open Python library: {0}.</source>
-          <!--TRNOTE Do not translate the word Python -->
+          <source>Fatal error: could not open Python library: {0} : {2}. Please set PYTHONHOME to a valid Python {1} install.</source>
+          <!--TRNOTE Do not translate the words Python, PYTHONHOME -->
         </trans-unit>
         <trans-unit id="StreamsTopologyMessages_CDIST0305" extraData="TOPOLOGY_IMPORT_MODULE_ERROR" resname="CDIST0305E">
           <source>Fatal error: missing module: {0}.</source>

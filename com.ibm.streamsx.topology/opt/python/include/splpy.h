@@ -374,16 +374,6 @@ namespace streamsx {
       Py_DECREF(pyReturnVar);
     }
     
-    // prints a string representation of the PyObject for debugging purposes
-    static void printPyObject(PyObject * pyObject) {
-      PyObject* pyRepr = PyObject_Repr(pyObject);
-      PyObject* pyStrBytes = PyUnicode_AsUTF8String(pyRepr);
-      const char* s = PyBytes_AsString(pyStrBytes);
-      std::cout << "pyObject=" << s << std::endl;
-      Py_DECREF(pyStrBytes);
-      Py_DECREF(pyRepr);
-    }
-
     /*
     * Call a function passing the SPL attribute value of type T
     * and return the function return as a boolean

@@ -8,8 +8,10 @@ import static com.ibm.streamsx.topology.internal.streams.InvokeSc.trace;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -23,11 +25,16 @@ import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
 
 public class InvokeStandalone {
 
-    private File bundle;
+    private final File bundle;
+    private final Map<String,String> envVars = new HashMap<>();
 
     public InvokeStandalone(File bundle) {
         super();
         this.bundle = bundle;
+    }
+    
+    public void addEnvironmentVariable(String key, String value) {
+        envVars.put(key, value);
     }
 
     public Future<Integer> invoke(Map<String, ? extends Object> config)
@@ -81,6 +88,12 @@ public class InvokeStandalone {
 
         ProcessBuilder pb = new ProcessBuilder(commands);
         pb.inheritIO();
+
+        for (Entry<String,String> ev : envVars.entrySet()) {
+            trace.fine("Setting environment variable for standalone: " + ev.getKey() + "=" + ev.getValue());
+            pb.environment().put(ev.getKey(), ev.getValue());
+        }
+
         Process standaloneProcess = pb.start();
 
         return new ProcessFuture(standaloneProcess);

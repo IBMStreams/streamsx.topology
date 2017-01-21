@@ -23,7 +23,6 @@ import queue
 import sys
 import time
 import inspect
-from platform import python_version
 from enum import Enum
 
 class Topology(object):
@@ -42,8 +41,7 @@ class Topology(object):
 
     def __init__(self, name, files=None):
         self.name = name
-        self.pythonversion = python_version()
-        if sys.version_info.major == 3 and sys.version_info.minor == 5:
+        if sys.version_info.major == 3:
           self.opnamespace = "com.ibm.streamsx.topology.functional.python"
         elif sys.version_info.major == 2 and sys.version_info.minor == 7:
           self.opnamespace = "com.ibm.streamsx.topology.functional.python2"

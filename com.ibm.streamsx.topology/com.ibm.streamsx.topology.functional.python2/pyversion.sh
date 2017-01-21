@@ -4,10 +4,15 @@ action=$1
 
 if [ $action = "lib" ]
 then
-    python-config --libs | sed -e 's/^-l//;s/ -l/ /g;s/ \+/\n/g'
+    # Don't provide a lib since the
+    # libpython2.7 will be loaded
+    # dynamically based upon $PYTHONHOME
+    echo
 elif [ $action = "libPath" ]
 then
-    echo `python-config --prefix`/lib
+    # Don't provide a libPath to ensure
+    # the sab is not tied to a fixed path
+    echo
 elif [ $action = "includePath" ]
 then
     python-config --includes
