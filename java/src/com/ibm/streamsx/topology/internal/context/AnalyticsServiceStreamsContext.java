@@ -272,17 +272,12 @@ public class AnalyticsServiceStreamsContext extends
     private BigInteger submitJobToService(File bundle, Map<String, Object> config) throws IOException {
         
         final JsonObject serviceg;
-        final Map<String, Object> confign;
         Object vco = config.get(AnalyticsServiceProperties.VCAP_SERVICES);
         if (vco instanceof JSONObject) {
             JSONObject servicej = (JSONObject) vco;
-            confign = new HashMap<>(config);
-            confign.put(AnalyticsServiceProperties.VCAP_SERVICES, servicej.serialize());
-            
-        } else {
-            confign = config;
+            config.put(AnalyticsServiceProperties.VCAP_SERVICES, servicej.serialize());           
         }
-        serviceg = getVCAPService(confign);
+        serviceg = getVCAPService(config);
         JSONObject service = JSONObject.parse(serviceg.toString()); //temp            
 
               
