@@ -136,7 +136,7 @@ class _BaseSubmitter:
             stdout_thread.daemon = True
             stdout_thread.start()
             process.wait()
-            return None
+            return process.returncode
 
         except:
             logger.exception("Error starting java subprocess for submission")
