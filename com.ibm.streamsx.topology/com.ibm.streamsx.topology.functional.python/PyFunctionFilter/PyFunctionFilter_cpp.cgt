@@ -19,7 +19,7 @@ MY_OPERATOR::MY_OPERATOR() :
    function_(NULL),
    pyInNames_(NULL)
 {
-    funcop_ = new SplpyFuncOp(this);
+    funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
   
     SplpyGILLock lock;
 
