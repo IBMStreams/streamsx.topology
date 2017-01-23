@@ -8,6 +8,10 @@ using namespace streamsx::topology;
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 @include "../pyspltuple.cgt"
+<%
+ # Select the Python wrapper function
+ my $pywrapfunc= $pystyle . '_in';
+%>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR():
@@ -22,10 +26,6 @@ MY_OPERATOR::MY_OPERATOR():
     PyObject *_module_;
     PyObject *_function_;
 
-<%
- # Select the Python wrapper function
- my $pywrapfunc= $pystyle . '_in';
-%>
 @include "../pywrapfunction.cgt"
 
 <% if ($pystyle eq 'dict') { %>

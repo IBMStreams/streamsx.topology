@@ -7,6 +7,7 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
+<% my $pywrapfunc='iterableSource'; %>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
@@ -20,7 +21,6 @@ MY_OPERATOR::MY_OPERATOR() :
     PyObject *_module_;
     PyObject *_function_;
 
-<% my $pywrapfunc='iterableSource'; %>
 @include "../pywrapfunction.cgt"
 }
 
