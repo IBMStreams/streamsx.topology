@@ -189,35 +189,34 @@ class SplpyGeneral {
      * Load a function, returning the reference to the function.
      * Caller must hold the GILState
      */
-    static PyObject * loadFunction(const char * moduleNameC, const char * functionNameC)
+    static PyObject * loadFunction(const std::string & mn, const std::string & fn)
      {    
-       PyObject * module = importModule(moduleNameC);
-       PyObject * function = PyObject_GetAttrString(module, functionNameC);
+       PyObject * module = importModule(mn);
+       PyObject * function = PyObject_GetAttrString(module, fn.c_str());
        Py_DECREF(module);
     
        if (!PyCallable_Check(function)) {
-         SPLAPPTRC(L_ERROR, "Fatal error: function " << functionNameC << " in module " << moduleNameC << " not callable", "python");
+         SPLAPPTRC(L_ERROR, "Fatal error: function " << fn << " in module " << mn << " not callable", "python");
          throw;
         }
-        SPLAPPTRC(L_INFO, "Callable function: " << functionNameC, "python");
+        SPLAPPTRC(L_INFO, "Callable function: " << fn, "python");
         return function;
       }
-   private:
 
     /*
      * Import a module, returning the reference to the module.
      * Caller must hold the GILState
      */
-    static PyObject * importModule(const char * moduleNameC) 
+    static PyObject * importModule(const std::string & mn) 
     {
-      PyObject * moduleName = pyUnicode_FromUTF8(moduleNameC);
+      PyObject * moduleName = pyUnicode_FromUTF8(mn.c_str());
       PyObject * module = PyImport_Import(moduleName);
       Py_DECREF(moduleName);
       if (module == NULL) {
-        SPLAPPLOG(L_ERROR, TOPOLOGY_IMPORT_MODULE_ERROR(moduleNameC), "python");
-        throw SplpyGeneral::pythonException(moduleNameC);
+        SPLAPPLOG(L_ERROR, TOPOLOGY_IMPORT_MODULE_ERROR(mn), "python");
+        throw SplpyGeneral::pythonException(mn);
       }
-      SPLAPPLOG(L_INFO, TOPOLOGY_IMPORT_MODULE(moduleNameC), "python");
+      SPLAPPLOG(L_INFO, TOPOLOGY_IMPORT_MODULE(mn), "python");
       return module;
     }
 };
