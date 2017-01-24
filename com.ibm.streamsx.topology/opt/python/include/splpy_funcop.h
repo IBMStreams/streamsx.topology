@@ -37,7 +37,7 @@ class SplpyFuncOp : public SplpyOp {
          function_(NULL)
       {
          addAppPythonPackages();
-         //loadAndWrapCallable(wrapfn);
+         loadAndWrapCallable(wrapfn);
       }
  
       ~SplpyFuncOp() {
@@ -72,9 +72,10 @@ class SplpyFuncOp : public SplpyOp {
           // or a pickled encoded class instance
           // represented as a string in parameter pyCallable
     
+          PyObject * appClass = NULL;
           if (hasParam("pyCallable")) {
              // argument is the serialized callable instance
-             Py_DECREF(appCallable);
+             appClass = appCallable;
              appCallable = pyUnicode_FromUTF8(param("pyCallable").c_str());
           }
 
@@ -84,12 +85,13 @@ class SplpyFuncOp : public SplpyOp {
           function_ = PyObject_CallObject(depickleInput, funcArg);
           Py_DECREF(depickleInput);
           Py_DECREF(funcArg);
+          if (appClass)
+              Py_DECREF(appClass);
 
           if (function_ == NULL){
             SplpyGeneral::flush_PyErr_Print();
             throw;
           }
-          Py_DECREF(appCallable);
       }
 
       /*
