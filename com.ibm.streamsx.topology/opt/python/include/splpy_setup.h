@@ -77,11 +77,32 @@ class SplpySetup {
      */
     static void * loadCPython(const char* spl_setup_py_path) {
         void * pydl = loadPythonLib();
-        setupGeneral(pydl);
+        setupNone(pydl);
         SplpySym::fixSymbols(pydl);
         startPython(pydl);
         runSplSetup(pydl, spl_setup_py_path);
         return pydl;
+    }
+
+    /*
+     * Load 'None' dynamically to avoid a dependency
+     * on the variable from libpythonX.Y.so.
+     */
+    static void setupNone(void * pydl) {
+        typedef PyObject * (*__splpy_bv)(const char *, ...);
+
+        // empty format returns None
+        PyObject * none =
+                ((__splpy_bv) dlsym(pydl, "Py_BuildValue"))("");
+        
+        // Call the isNone passing in none which will
+        // be the first caller (as this is in setup)
+        // and thus set the local pointer to None (effectively Py_None).
+        bool in = SplpyGeneral::isNone(none);
+        if (!in) {
+          SPL::SPLRuntimeOperatorException exc("setup", "Internal error - None handling");
+          throw exc;
+        }
     }
 
   private:
@@ -103,7 +124,6 @@ class SplpySetup {
           SPLAPPLOG(L_ERROR, errtxt, "python");
 
           SPL::SPLRuntimeOperatorException exc("setup", errtxt);
-
           throw exc;
         }
         SPLAPPLOG(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
@@ -164,24 +184,6 @@ class SplpySetup {
           SPLAPPTRC(L_DEBUG, "Python runtime already started", "python");
         }
         SPLAPPTRC(L_INFO, "Started Python runtime", "python");
-    }
-
-    static void setupGeneral(void * pydl) {
-        typedef PyObject * (*__splpy_bv)(const char *, ...);
-        typedef PyObject * (*__splpy_bfl)(long);
-
-        __splpy_bv _SPLPy_BuildValue =
-             (__splpy_bv) dlsym(pydl, "Py_BuildValue");
-        __splpy_bfl _SPLPyBool_FromLong =
-             (__splpy_bfl) dlsym(pydl, "PyBool_FromLong");
-
-        // empty format returns None
-        PyObject * none = _SPLPy_BuildValue("");
-
-        PyObject * f = _SPLPyBool_FromLong(0);
-        PyObject * t = _SPLPyBool_FromLong(1);
-
-        SplpyGeneral::setup(none, f, t);
     }
 
     static void runSplSetup(void * pydl, const char* spl_setup_py_path) {

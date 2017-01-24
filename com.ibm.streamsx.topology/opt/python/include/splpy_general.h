@@ -114,10 +114,6 @@ class SplpyGILLock {
         PyGILState_STATE gstate_;
     };
 
-static PyObject * __splpy_None = NULL;
-static PyObject * __splpy_False = NULL;
-static PyObject * __splpy_True = NULL;
-
 class SplpyGeneral {
 
   public:
@@ -126,17 +122,17 @@ class SplpyGeneral {
      * having a reference to it when the
      * operator shared library is loaded.
      */
-    static void setup(PyObject * none, PyObject *f, PyObject *t) {
-        __splpy_None = none;
-        __splpy_False = f;
-        __splpy_True = t;
-    }
-
     static bool isNone(PyObject *o) {
-        return o == __splpy_None;
+
+        static PyObject * none = o;
+
+        return o == none;
     }
     static PyObject * getBool(const SPL::boolean & value) {
-       return value ? __splpy_True : __splpy_False;
+       static PyObject * f = PyBool_FromLong(0);
+       static PyObject * t = PyBool_FromLong(1);
+
+       return value ? t : f;
      }
 
     /*
