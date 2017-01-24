@@ -8,27 +8,21 @@ using namespace streamsx::topology;
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 @include "../pyspltuple.cgt"
-
-// Constructor
-MY_OPERATOR::MY_OPERATOR() :
-   funcop_(NULL),
-   function_(NULL),
-   pyInNames_(NULL)
-{ 
-    funcop_ = new SplpyFuncOp(this);
-
-    SplpyGILLock lock;
-
-    PyObject *_module_;
-    PyObject *_function_;
-
 <%
  # Select the Python wrapper function
  my $pywrapfunc= $pystyle . '_in__pickle_iter';
 %>
-@include "../pywrapfunction.cgt"
+
+// Constructor
+MY_OPERATOR::MY_OPERATOR() :
+   funcop_(NULL),
+   pyInNames_(NULL)
+{ 
+    funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
 
 <% if ($pystyle eq 'dict') { %>
+     SplpyGIL lock;
+ 
      pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getInputPortAt(0));
 <% } %>
@@ -38,9 +32,7 @@ MY_OPERATOR::MY_OPERATOR() :
 MY_OPERATOR::~MY_OPERATOR() 
 {
   {
-  SplpyGILLock lock;
-  if (function_)
-    Py_DECREF(function_);
+  SplpyGIL lock;
   if (pyInNames_)
     Py_DECREF(pyInNames_);
   }
@@ -70,11 +62,11 @@ print splpy_inputtuple2value($pystyle);
 @include "../pyspltuple2dict.cgt"
 <%}%>
 
-    SplpyGILLock lock;
+    SplpyGIL lock;
     // convert spl attribute to python object
     PyObject * pyArg = streamsx::topology::pySplValueToPyObject(value);
 
-    PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(function_, pyArg);
+    PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(funcop_->function_, pyArg);
 
     if (pyIterator == 0) {
          throw SplpyGeneral::pythonException(

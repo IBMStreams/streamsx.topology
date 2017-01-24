@@ -48,7 +48,7 @@ MY_OPERATOR::MY_OPERATOR() :
 
 <% if ($paramStyle eq 'dictionary') { %>
    {
-      SplpyGILLock lock;
+      SplpyGIL lock;
       pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getInputPortAt(0));
    }
@@ -59,7 +59,7 @@ MY_OPERATOR::MY_OPERATOR() :
 MY_OPERATOR::~MY_OPERATOR() 
 {
    {
-   SplpyGILLock lock;
+   SplpyGIL lock;
    if (function_)
       Py_DECREF(function_);
    if (pyInNames_)
@@ -77,7 +77,7 @@ void MY_OPERATOR::prepareToShutdown()
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
-   SplpyGILLock lock;
+   SplpyGIL lock;
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
   

@@ -271,6 +271,7 @@ extern "C" {
 typedef PyObject * (*__splpy_cfd_fp)(double, double);
 typedef unsigned long (*__splpy_laul_fp)(PyObject *);
 typedef PyObject * (*__splpy_lful_fp)(unsigned long);
+typedef PyObject * (*__splpy_bfl_fp)(long);
 
 extern "C" {
   static __splpy_i_p_fp __spl_fp_PyObject_IsTrue;
@@ -283,6 +284,7 @@ extern "C" {
   static __splpy_d_p_fp __spl_fp_PyFloat_AsDouble;
   static __splpy_d_p_fp __spl_fp_PyComplex_RealAsDouble;
   static __splpy_d_p_fp __spl_fp_PyComplex_ImagAsDouble;
+  static __splpy_p_l_fp __spl_fp_PyBool_FromLong;
 
   static int __spl_fi_PyObject_IsTrue(PyObject *o) {
      return __spl_fp_PyObject_IsTrue(o);
@@ -314,6 +316,9 @@ extern "C" {
   static double __spl_fi_PyComplex_ImagAsDouble(PyObject *o) {
      return __spl_fp_PyComplex_ImagAsDouble(o);
   }
+  static PyObject * __spl_fi_PyBool_FromLong(long l) {
+     return __spl_fp_PyBool_FromLong(l);
+  }
 }
 #pragma weak PyObject_IsTrue = __spl_fi_PyObject_IsTrue
 #pragma weak PyLong_AsLong = __spl_fi_PyLong_AsLong
@@ -325,6 +330,7 @@ extern "C" {
 #pragma weak PyFloat_AsDouble = __spl_fi_PyFloat_AsDouble
 #pragma weak PyComplex_RealAsDouble = __spl_fi_PyComplex_RealAsDouble
 #pragma weak PyComplex_ImagAsDouble = __spl_fi_PyComplex_ImagAsDouble
+#pragma weak PyBool_FromLong = __spl_fi_PyBool_FromLong
 
 /*
  * Err Objects
@@ -425,6 +431,7 @@ class SplpySym {
      __SPLFIX(PyFloat_AsDouble, __splpy_d_p_fp);
      __SPLFIX(PyComplex_RealAsDouble, __splpy_d_p_fp);
      __SPLFIX(PyComplex_ImagAsDouble, __splpy_d_p_fp);
+     __SPLFIX(PyBool_FromLong, __splpy_p_l_fp);
 
      __SPLFIX(PyErr_Fetch, __splpy_ef_fp);
      __SPLFIX(PyErr_Occurred, __splpy_eo_fp);

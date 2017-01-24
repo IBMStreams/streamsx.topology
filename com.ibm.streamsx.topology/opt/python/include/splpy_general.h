@@ -101,22 +101,18 @@ namespace streamsx {
       return 0;
     }
 
-class SplpyGILLock {
+class SplpyGIL {
    public:
-        SplpyGILLock() {
+        SplpyGIL() {
           gstate_ = PyGILState_Ensure();
         }
-        ~SplpyGILLock() {
+        ~SplpyGIL() {
           PyGILState_Release(gstate_);
         }
         
       private:
         PyGILState_STATE gstate_;
     };
-
-static PyObject * __splpy_None = NULL;
-static PyObject * __splpy_False = NULL;
-static PyObject * __splpy_True = NULL;
 
 class SplpyGeneral {
 
@@ -126,17 +122,17 @@ class SplpyGeneral {
      * having a reference to it when the
      * operator shared library is loaded.
      */
-    static void setup(PyObject * none, PyObject *f, PyObject *t) {
-        __splpy_None = none;
-        __splpy_False = f;
-        __splpy_True = t;
-    }
-
     static bool isNone(PyObject *o) {
-        return o == __splpy_None;
+
+        static PyObject * none = o;
+
+        return o == none;
     }
     static PyObject * getBool(const SPL::boolean & value) {
-       return value ? __splpy_True : __splpy_False;
+       static PyObject * f = PyBool_FromLong(0);
+       static PyObject * t = PyBool_FromLong(1);
+
+       return value ? t : f;
      }
 
     /*
@@ -193,35 +189,34 @@ class SplpyGeneral {
      * Load a function, returning the reference to the function.
      * Caller must hold the GILState
      */
-    static PyObject * loadFunction(const char * moduleNameC, const char * functionNameC)
+    static PyObject * loadFunction(const std::string & mn, const std::string & fn)
      {    
-       PyObject * module = importModule(moduleNameC);
-       PyObject * function = PyObject_GetAttrString(module, functionNameC);
+       PyObject * module = importModule(mn);
+       PyObject * function = PyObject_GetAttrString(module, fn.c_str());
        Py_DECREF(module);
     
        if (!PyCallable_Check(function)) {
-         SPLAPPTRC(L_ERROR, "Fatal error: function " << functionNameC << " in module " << moduleNameC << " not callable", "python");
+         SPLAPPTRC(L_ERROR, "Fatal error: function " << fn << " in module " << mn << " not callable", "python");
          throw;
         }
-        SPLAPPTRC(L_INFO, "Callable function: " << functionNameC, "python");
+        SPLAPPTRC(L_INFO, "Callable function: " << fn, "python");
         return function;
       }
-   private:
 
     /*
      * Import a module, returning the reference to the module.
      * Caller must hold the GILState
      */
-    static PyObject * importModule(const char * moduleNameC) 
+    static PyObject * importModule(const std::string & mn) 
     {
-      PyObject * moduleName = pyUnicode_FromUTF8(moduleNameC);
+      PyObject * moduleName = pyUnicode_FromUTF8(mn.c_str());
       PyObject * module = PyImport_Import(moduleName);
       Py_DECREF(moduleName);
       if (module == NULL) {
-        SPLAPPLOG(L_ERROR, TOPOLOGY_IMPORT_MODULE_ERROR(moduleNameC), "python");
-        throw SplpyGeneral::pythonException(moduleNameC);
+        SPLAPPLOG(L_ERROR, TOPOLOGY_IMPORT_MODULE_ERROR(mn), "python");
+        throw SplpyGeneral::pythonException(mn);
       }
-      SPLAPPLOG(L_INFO, TOPOLOGY_IMPORT_MODULE(moduleNameC), "python");
+      SPLAPPLOG(L_INFO, TOPOLOGY_IMPORT_MODULE(mn), "python");
       return module;
     }
 };

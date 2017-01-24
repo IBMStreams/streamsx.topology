@@ -9,32 +9,20 @@ using namespace streamsx::topology;
 
 @include "../pyspltuple.cgt"
 <%
+ # Select the Python wrapper function
  my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
+ my $pywrapfunc= $pystyle . '_in__' . $pyoutstyle . '_out';
 %>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
-   function_(NULL),
    pyInNames_(NULL)
 {
-    funcop_ = new SplpyFuncOp(this);
-
-    SplpyGILLock lock;
-
-    PyObject *_module_;
-    PyObject *_function_;
-
-<%
- # Select the Python wrapper function
-
- my $pywrapfunc= $pystyle . '_in__' . $pyoutstyle . '_out';
- 
-%>
-
-@include "../pywrapfunction.cgt"
+    funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
 
 <% if ($pystyle eq 'dict') { %>
+     SplpyGIL lock;
      pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getInputPortAt(0));
 <% } %>
@@ -44,9 +32,7 @@ MY_OPERATOR::MY_OPERATOR() :
 MY_OPERATOR::~MY_OPERATOR() 
 {
   {
-  SplpyGILLock lock;
-  if (function_)
-    Py_DECREF(function_);
+  SplpyGIL lock;
   if (pyInNames_)
     Py_DECREF(pyInNames_);
   }
@@ -72,7 +58,7 @@ print splpy_inputtuple2value($pystyle, $pyoutstyle);
 @include "../pyspltuple2dict.cgt"
 <%}%>
   OPort0Type otuple;
-  if (streamsx::topology::Splpy::pyTupleTransform(function_, value,
+  if (streamsx::topology::Splpy::pyTupleTransform(funcop_->function_, value,
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>()))
      submit(otuple, 0);
 }

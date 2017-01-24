@@ -8,27 +8,20 @@ using namespace streamsx::topology;
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 @include "../pyspltuple.cgt"
-
-// Constructor
-MY_OPERATOR::MY_OPERATOR() :
-   funcop_(NULL),
-   function_(NULL),
-   pyInNames_(NULL)
-{
-    funcop_ = new SplpyFuncOp(this);
-  
-    SplpyGILLock lock;
-
-    PyObject *_module_;
-    PyObject *_function_;
-
 <%
  # Select the Python wrapper function
  my $pywrapfunc= $pystyle . '_in';
 %>
-@include "../pywrapfunction.cgt"
 
+// Constructor
+MY_OPERATOR::MY_OPERATOR() :
+   funcop_(NULL),
+   pyInNames_(NULL)
+{
+    funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
+  
 <% if ($pystyle eq 'dict') { %>
+     SplpyGIL lock;
      pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getInputPortAt(0));
 <% } %>
@@ -38,9 +31,7 @@ MY_OPERATOR::MY_OPERATOR() :
 MY_OPERATOR::~MY_OPERATOR() 
 {
     {
-    SplpyGILLock lock;
-    if (function_)
-      Py_DECREF(function_);
+    SplpyGIL lock;
     if (pyInNames_)
       Py_DECREF(pyInNames_);
     }
@@ -66,7 +57,7 @@ print splpy_inputtuple2value($pystyle);
 <%if ($pystyle eq 'dict') {%>
 @include "../pyspltuple2dict.cgt"
 <%}%>
-  if (streamsx::topology::Splpy::pyTupleFilter(function_, value)) {
+  if (streamsx::topology::Splpy::pyTupleFilter(funcop_->function_, value)) {
       submit(tuple, 0);
   }
 }

@@ -7,32 +7,18 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
+<% my $pywrapfunc='iterableSource'; %>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
-    funcop_(NULL),
-    function_(NULL)
+    funcop_(NULL)
 {
-    funcop_ = new SplpyFuncOp(this);
-
-    SplpyGILLock lock;
-
-    PyObject *_module_;
-    PyObject *_function_;
-
-<% my $pywrapfunc='iterableSource'; %>
-@include "../pywrapfunction.cgt"
+    funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-    // Finalization code goes here
-    if (function_) {
-      SplpyGILLock lock;
-      Py_DECREF(function_);
-    }
-
     delete funcop_;
 }
 
@@ -56,8 +42,8 @@ void MY_OPERATOR::process(uint32_t idx)
     OPort0Type otuple;
 
     { // start lock
-      SplpyGILLock lock;
-      PyObject * pyReturnVar = PyObject_CallObject(function_, NULL);
+      SplpyGIL lock;
+      PyObject * pyReturnVar = PyObject_CallObject(funcop_->function_, NULL);
       if (SplpyGeneral::isNone(pyReturnVar)) {
         Py_DECREF(pyReturnVar);
         break;
