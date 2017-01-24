@@ -25,10 +25,6 @@ private:
     // Control for interaction with Python
     SplpyFuncOp *funcop_;
     
-    // Python nested function that depickles the input value
-    // and calls the application function
-    PyObject *function_;
-
     // Names of input attributes
     PyObject *pyInNames_;
 }; 

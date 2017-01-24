@@ -27,9 +27,6 @@ private:
   // Members
   // Control for interaction with Python
   SplpyFuncOp *funcop_;
-  
-  // Python iterator of pickled tuples
-  PyObject *function_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
