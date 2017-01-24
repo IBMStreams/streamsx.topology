@@ -105,6 +105,13 @@ public class AnalyticsServiceStreamsContext extends
     }
     
     JsonObject getVCAPService(Map<String, Object> config) throws IOException {
+        // Convert from JSON4J to a string since the common code
+        // does not reference JSON4J
+        Object vco = config.get(AnalyticsServiceProperties.VCAP_SERVICES);
+        if (vco instanceof JSONObject) {
+            JSONObject servicej = (JSONObject) vco;
+            config.put(AnalyticsServiceProperties.VCAP_SERVICES, servicej.serialize());           
+        }
         return VcapServices.getVCAPService(key -> config.get(key));
     }
     
@@ -271,13 +278,7 @@ public class AnalyticsServiceStreamsContext extends
     
     private BigInteger submitJobToService(File bundle, Map<String, Object> config) throws IOException {
         
-        final JsonObject serviceg;
-        Object vco = config.get(AnalyticsServiceProperties.VCAP_SERVICES);
-        if (vco instanceof JSONObject) {
-            JSONObject servicej = (JSONObject) vco;
-            config.put(AnalyticsServiceProperties.VCAP_SERVICES, servicej.serialize());           
-        }
-        serviceg = getVCAPService(config);
+        final JsonObject serviceg = getVCAPService(config);
         JSONObject service = JSONObject.parse(serviceg.toString()); //temp            
 
               
