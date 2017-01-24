@@ -219,6 +219,39 @@ class SplpyGeneral {
       SPLAPPLOG(L_INFO, TOPOLOGY_IMPORT_MODULE(mn), "python");
       return module;
     }
+
+    /*
+    * One off generic call a function by name passing one or two arguments
+    * returning its return. Used for setup calls in operator constructors
+    * as the reference to the method is not kept, assuming it is not
+    * called frequently.
+    * References to the arguments are stolen by this function.
+    */
+    static PyObject * callFunction(const std::string & mn, const std::string & fn, PyObject *arg1, PyObject *arg2) {
+        SPLAPPTRC(L_DEBUG, "Executing function " << mn << "." << fn , "python");
+        PyObject * function = loadFunction(mn, fn);
+        PyObject * funcArg = PyTuple_New(arg1 ? (arg2 ? 2 : 1) : 0);
+        if (arg1)
+            PyTuple_SET_ITEM(funcArg, 0, arg1);
+        if (arg2)
+            PyTuple_SET_ITEM(funcArg, 1, arg2);
+        PyObject *ret = PyObject_CallObject(function, funcArg);
+        Py_DECREF(funcArg);
+        Py_DECREF(function);
+        if (ret == NULL) {
+            SPLAPPTRC(L_ERROR, "Failed function execution " << mn << "." << fn, "python");
+            throw SplpyGeneral::pythonException(mn+"."+fn);
+        }
+        SPLAPPTRC(L_DEBUG, "Executed function " << mn << "." << fn , "python");
+        return ret;
+    }
+    /**
+     * Version of callFunction() that discards the returned value.
+    */
+    static void callVoidFunction(const std::string & mn, const std::string & fn, PyObject *arg1, PyObject * arg2) {
+        PyObject * ret = callFunction(mn, fn, arg1, arg2);
+        Py_DECREF(ret);
+    }
 };
 
 }}

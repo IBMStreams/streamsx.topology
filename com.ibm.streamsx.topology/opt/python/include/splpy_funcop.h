@@ -72,26 +72,15 @@ class SplpyFuncOp : public SplpyOp {
           // or a pickled encoded class instance
           // represented as a string in parameter pyCallable
     
-          PyObject * appClass = NULL;
           if (hasParam("pyCallable")) {
              // argument is the serialized callable instance
-             appClass = appCallable;
+             PyObject * appClass = appCallable;
              appCallable = pyUnicode_FromUTF8(param("pyCallable").c_str());
+             Py_DECREF(appClass);
           }
 
-          PyObject * depickleInput = SplpyGeneral::loadFunction("streamsx.topology.runtime", wrapfn);
-          PyObject * funcArg = PyTuple_New(1);
-          PyTuple_SET_ITEM(funcArg, 0, appCallable);
-          function_ = PyObject_CallObject(depickleInput, funcArg);
-          Py_DECREF(depickleInput);
-          Py_DECREF(funcArg);
-          if (appClass)
-              Py_DECREF(appClass);
-
-          if (function_ == NULL){
-            SplpyGeneral::flush_PyErr_Print();
-            throw;
-          }
+          function_ = SplpyGeneral::callFunction(
+               "streamsx.topology.runtime", wrapfn, appCallable, NULL);
       }
 
       /*
@@ -102,22 +91,13 @@ class SplpyFuncOp : public SplpyOp {
        *  passed is the toolkit of the invocation of the operator.
        */
       void addAppPythonPackages() {
-
-          std::string appDirSetup = "import streamsx.topology.runtime\n";
-          appDirSetup += "streamsx.topology.runtime.setupOperator(\"";
-          appDirSetup += param("toolkitDir");
-          appDirSetup += "\")\n";
-
-          const char* spl_setup_appdir = appDirSetup.c_str();
-
-          SPLAPPTRC(L_DEBUG, "Executing setupOperator: " << appDirSetup , "python");
-
           SplpyGIL lock;
-          if (PyRun_SimpleString(spl_setup_appdir) != 0) {
-              SPLAPPTRC(L_ERROR, "Python streamsx.topology.runtime.setupOperator failed!", "python");
-              throw SplpyGeneral::pythonException("streamsx.topology.runtime.setupOperator");
-          }
-          SPLAPPTRC(L_DEBUG, "Executing setupOperator complete." , "python");
+
+          PyObject * tkDir =
+            streamsx::topology::pyUnicode_FromUTF8(param("toolkitDir"));
+
+          SplpyGeneral::callVoidFunction(
+              "streamsx.topology.runtime", "setupOperator", tkDir, NULL);
       }
 };
 

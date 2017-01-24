@@ -56,8 +56,7 @@ MY_OPERATOR::MY_OPERATOR() :
    
    {
       SplpyGIL lock;
-      pyOutNames_ = streamsx::topology::Splpy::pyAttributeNames(
-               getOutputPortAt(0));
+      pyOutNames_ = Splpy::pyAttributeNames(getOutputPortAt(0));
 
      // Now create the wrapper function that converts
      // other types returned by the user's function
@@ -65,12 +64,12 @@ MY_OPERATOR::MY_OPERATOR() :
      // decorated operators only handle tuples to
      // simplify the generated code.
      Py_INCREF(pyOutNames_); // callFunction steals the reference
-     function_ = streamsx::topology::Splpy::callFunction(
+     function_ = SplpyGeneral::callFunction(
              "streamsx.spl.runtime", "_splpy_to_tuples",
              function_, pyOutNames_);   
 
 <% if ($paramStyle eq 'dictionary') { %>
-      pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
+      pyInNames_ = Splpy::pyAttributeNames(
                getInputPortAt(0));
 <% } %>
    }
