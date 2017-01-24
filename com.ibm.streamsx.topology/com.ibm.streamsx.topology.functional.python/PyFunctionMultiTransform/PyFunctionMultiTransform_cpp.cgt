@@ -21,7 +21,7 @@ MY_OPERATOR::MY_OPERATOR() :
     funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
 
 <% if ($pystyle eq 'dict') { %>
-     SplpyGILLock lock;
+     SplpyGIL lock;
  
      pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getInputPortAt(0));
@@ -32,7 +32,7 @@ MY_OPERATOR::MY_OPERATOR() :
 MY_OPERATOR::~MY_OPERATOR() 
 {
   {
-  SplpyGILLock lock;
+  SplpyGIL lock;
   if (pyInNames_)
     Py_DECREF(pyInNames_);
   }
@@ -62,7 +62,7 @@ print splpy_inputtuple2value($pystyle);
 @include "../pyspltuple2dict.cgt"
 <%}%>
 
-    SplpyGILLock lock;
+    SplpyGIL lock;
     // convert spl attribute to python object
     PyObject * pyArg = streamsx::topology::pySplValueToPyObject(value);
 

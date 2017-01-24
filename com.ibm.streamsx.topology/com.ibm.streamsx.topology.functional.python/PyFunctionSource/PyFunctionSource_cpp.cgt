@@ -42,7 +42,7 @@ void MY_OPERATOR::process(uint32_t idx)
     OPort0Type otuple;
 
     { // start lock
-      SplpyGILLock lock;
+      SplpyGIL lock;
       PyObject * pyReturnVar = PyObject_CallObject(funcop_->function_, NULL);
       if (SplpyGeneral::isNone(pyReturnVar)) {
         Py_DECREF(pyReturnVar);

@@ -101,12 +101,12 @@ namespace streamsx {
       return 0;
     }
 
-class SplpyGILLock {
+class SplpyGIL {
    public:
-        SplpyGILLock() {
+        SplpyGIL() {
           gstate_ = PyGILState_Ensure();
         }
-        ~SplpyGILLock() {
+        ~SplpyGIL() {
           PyGILState_Release(gstate_);
         }
         

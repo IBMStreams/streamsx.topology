@@ -206,7 +206,7 @@ class SplpySetup {
         __splpy_rsfef _SPLPyRun_SimpleFileEx = 
              (__splpy_rsfef) dlsym(pydl, "PyRun_SimpleFileExFlags");
 
-        SplpyGILLock lock;
+        SplpyGIL lock;
         // The 1 closes the file.
         if (_SPLPyRun_SimpleFileEx(fdopen(fd, "r"), spl_setup_py, 1, NULL) != 0) {
           SPLAPPTRC(L_ERROR, "Python script splpy_setup.py failed!", "python");

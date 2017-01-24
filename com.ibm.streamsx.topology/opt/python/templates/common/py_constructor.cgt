@@ -4,7 +4,7 @@
     pyop_ = new SplpyPyOp(this);
     
     {
-    SplpyGILLock lock;
+    SplpyGIL lock;
 
     // Set the function the operator will call as a member field
     function_ =

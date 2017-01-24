@@ -44,7 +44,7 @@ class SplpyOp {
        * Flush any pending output.
       */
       static void prepareToShutdown() {
-          SplpyGILLock lock;
+          SplpyGIL lock;
           SplpyGeneral::flush_PyErrPyOut();
       }
 

@@ -361,7 +361,7 @@ namespace streamsx {
     // converted to a Python object and discard the return 
     template <class T>
     static void pyTupleSink(PyObject * function, T & splVal) {
-      SplpyGILLock lock;
+      SplpyGIL lock;
 
       PyObject * arg = pySplValueToPyObject(splVal);
 
@@ -381,7 +381,7 @@ namespace streamsx {
     template <class T>
     static int pyTupleFilter(PyObject * function, T & splVal) {
 
-      SplpyGILLock lock;
+      SplpyGIL lock;
 
       PyObject * arg = pySplValueToPyObject(splVal);
 
@@ -403,7 +403,7 @@ namespace streamsx {
     */
     template <class T, class R>
     static int pyTupleTransform(PyObject * function, T & splVal, R & retSplVal) {
-      SplpyGILLock lock;
+      SplpyGIL lock;
 
       PyObject * arg = pySplValueToPyObject(splVal);
 
@@ -427,7 +427,7 @@ namespace streamsx {
     template <class T>
     static SPL::int32 pyTupleHash(PyObject * function, T & splVal) {
 
-      SplpyGILLock lock;
+      SplpyGIL lock;
 
       PyObject * arg = pySplValueToPyObject(splVal);
 

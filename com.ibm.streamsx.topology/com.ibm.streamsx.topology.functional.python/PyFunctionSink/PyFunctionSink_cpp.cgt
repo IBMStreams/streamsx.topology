@@ -21,7 +21,7 @@ MY_OPERATOR::MY_OPERATOR():
     funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
 
 <% if ($pystyle eq 'dict') { %>
-     SplpyGILLock lock;
+     SplpyGIL lock;
      pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getInputPortAt(0));
 <% } %>
@@ -31,7 +31,7 @@ MY_OPERATOR::MY_OPERATOR():
 MY_OPERATOR::~MY_OPERATOR() 
 {
   {
-  SplpyGILLock lock;
+  SplpyGIL lock;
   if (pyInNames_)
      Py_DECREF(pyInNames_);
   }

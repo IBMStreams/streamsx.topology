@@ -41,7 +41,7 @@ class SplpyFuncOp : public SplpyOp {
       }
  
       ~SplpyFuncOp() {
-          SplpyGILLock lock;
+          SplpyGIL lock;
           if (function_)
              Py_DECREF(function_);
       }
@@ -61,7 +61,7 @@ class SplpyFuncOp : public SplpyOp {
        * by the operator.
       */
       void loadAndWrapCallable(const std::string & wrapfn) {
-          SplpyGILLock lock;
+          SplpyGIL lock;
 
           // pointer to the application function or callable class
           PyObject * appCallable =
@@ -112,7 +112,7 @@ class SplpyFuncOp : public SplpyOp {
 
           SPLAPPTRC(L_DEBUG, "Executing setupOperator: " << appDirSetup , "python");
 
-          SplpyGILLock lock;
+          SplpyGIL lock;
           if (PyRun_SimpleString(spl_setup_appdir) != 0) {
               SPLAPPTRC(L_ERROR, "Python streamsx.topology.runtime.setupOperator failed!", "python");
               throw SplpyGeneral::pythonException("streamsx.topology.runtime.setupOperator");

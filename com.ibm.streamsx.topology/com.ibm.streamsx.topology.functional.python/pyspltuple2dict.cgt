@@ -3,7 +3,7 @@
 // into a python dictionary object
   PyObject *value = 0;
   {
-  SplpyGILLock lockdict;
+  SplpyGIL lockdict;
   PyObject * pyDict = PyDict_New();
 <%
      for (my $i = 0; $i < $pynumattrs; ++$i) {
