@@ -485,7 +485,7 @@ operator and are private to each invocation of the operator.
 If the `__init__` method has parameters beyond the first
 `self` parameter then they are mapped to operator parameters.
 Any parameter that has a default value becomes an optional parameter
-to the SPL operator. Parameters of the form `*args` and `**kwargs`
+to the SPL operator. Parameters of the form `\*args` and `\*\*kwargs`
 are not supported.
 
 The value of the operator parameters at SPL operator invocation are passed
@@ -1204,7 +1204,7 @@ These directories in a toolkit are automatically added to the Python search path
  * `opt/python/streams` - Contains modules that define Python functions that will be created as SPL operators
  * `opt/python/packages` - Root directory for Python [https://docs.python.org/3.4/tutorial/modules.html#packages|packages] hierarchy.
  * `opt/python/modules` - Arbitrary [https://docs.python.org/3.4/tutorial/modules.html#modules|modules], not defined as a packages.
- * `impl/nl             - The directory for the resource files.
+ * `impl/nl` - The directory for the resource files.
 
 A single Python embedded runtime is used by an SPL processing element (PE), thus when multiple operators
 implemented in python are fused into the same PE they share the same runtime. The library and include
