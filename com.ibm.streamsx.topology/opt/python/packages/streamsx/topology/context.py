@@ -1,3 +1,5 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016,2017
 from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import division
@@ -50,15 +52,16 @@ def submit(ctxtype, graph, config=None, username=None, password=None, log_level=
         * BUILD_ARCHIVE - Creates a Bluemix-compatible build archive.
           execution of the topology produces a build archive, which can be submitted to a streaming
           analytics Bluemix remote build service.
-        * ANALYTICS_SERVICE - If a local Streams install is present, the application is built locally and then submitted
-          to a Bluemix streaming analytics service. If a local Streams install is not present, the application is 
-          submitted to, built, and executed on a Bluemix streaming analytics service. If the ConfigParams.FORCE_REMOTE_BUILD
-          flag is set to true, the application will be built on Bluemix even if a local Streams install is present.
+        * ANALYTICS_SERVICE - If a local IBM Streams install is present, the application is built locally and then submitted
+          to an IBM Bluemix Streaming Analytics service. If a local IBM Streams install is not present, the application is 
+          submitted to, built, and executed on an IBM Bluemix Streaming Analytics service. If the ConfigParams.FORCE_REMOTE_BUILD
+          flag is set to True, the application will be built by the service even if a local Streams install is present.
+          The service is described by its VCAP services and a service name pointing to an instance within the VCAP services. The VCAP services is either set in the configuration object or as the environment variable VCAP_SERVICES. 
         graph: a Topology object.
         config (dict): a configuration object containing job configurations and/or submission information. Keys include:
-        * 'topology.service.vcap' - a json representation of a VCAP object.
-        * 'topology.service.name' - the name of the streaming analytics service for submission.
-        * 'topology.forceRemoteBuild' - A flag which will force the application to be compiled and submitted remotely, if possible.
+        * ConfigParams.VCAP_SERVICES ('topology.service.vcap') - VCAP services information for the ANALYTICS_SERVICE context. Supported formats are a dict obtained from the JSON VCAP services, a string containing the serialized JSON form or a file name pointing to a file containing the JSON form.
+        * ConfigParams.SERVICE_NAME ('topology.service.name') - the name of the Streaming Analytics service for submission.
+        * ConfigParams.FORCE_REMOTE_BUILD ('topology.forceRemoteBuild') - A flag which will force the application to be compiled and submitted remotely, if possible.
         username (string): an optional SWS username. Needed for retrieving remote view data.
         password (string): an optional SWS password. Used in conjunction with the username, and needed for retrieving
         remote view data.
@@ -101,6 +104,11 @@ class _BaseSubmitter:
             logger.exception("Error generating SPL and creating JSON file.")
             raise
 
+    
+    def _config(self):
+        "Return the submit configuration"
+        return self.config
+
     def submit(self):
         tk_root = self._get_toolkit_root()
 
@@ -126,7 +134,7 @@ class _BaseSubmitter:
 
         args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
         logger.info("Generating SPL and submitting application.")
-        process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+        process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0, env=self._get_java_env())
         try:
             stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
             stderr_thread.daemon = True
@@ -141,6 +149,10 @@ class _BaseSubmitter:
         except:
             logger.exception("Error starting java subprocess for submission")
             raise
+
+    def _get_java_env(self):
+        "Get the environment to be passed to the Java execution"
+        return dict(os.environ)
 
     def _add_python_info(self):
         # Python information added to deployment
@@ -254,21 +266,13 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
     on Bluemix within a Streaming Analytics service.
     """
     def __init__(self, ctxtype, config, app_topology):
-        _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
+        super(_RemoteBuildSubmitter, self).__init__(ctxtype, config, app_topology)
 
-        # Get the username, password, and rest API URL
-        if ConfigParams.VCAP_SERVICES not in config or ConfigParams.SERVICE_NAME not in config:
-            raise ValueError("The ConfigParams.VCAP_SERVICES and ConfigParams.SERVICE_NAME parameters were not supplied.")
-        services = config[ConfigParams.VCAP_SERVICES]['streaming-analytics']
-        creds = None
-        for service in services:
-            if service['name'] == config[ConfigParams.SERVICE_NAME]:
-                creds = service['credentials']
-                break
-        if creds is None:
-            raise ValueError(config['topology.service.name'] + " service was not found in the supplied VCAP")
-        username = creds['userid']
-        password = creds['password']
+        self._set_vcap()
+        self._set_credentials()
+
+        username = self.credentials['userid']
+        password = self.credentials['password']
 
         # Obtain REST only when needed. Otherwise, submitting "Hello World" without requests fails.
         try:
@@ -279,8 +283,7 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
             raise
 
         # Obtain the streams SWS REST URL
-        resources_url = creds['rest_url'] + creds['resources_path']
-        #print("Rest host is ", creds['rest_url'], " resources_url is ", resources_url)
+        resources_url = self.credentials['rest_url'] + self.credentials['resources_path']
         try:
             response = requests.get(resources_url, auth=(username, password)).json()
         except:
@@ -294,7 +297,51 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
             connection_info = {'username': username, 'password': password, 'rest_api_url': rest_api_url}
             view.set_streams_context_config(connection_info)
 
+    def _set_vcap(self):
+        "Set self.vcap to the VCAP services, from env var or the config"
+        try:
+            vs = self._config()[ConfigParams.VCAP_SERVICES]
+            del self._config()[ConfigParams.VCAP_SERVICES]
+        except KeyError:
+            try:
+                vs = os.environ['VCAP_SERVICES']
+            except KeyError:
+                raise ValueError("VCAP_SERVICES information must be supplied in config[ConfigParams.VCAP_SERVICES] or as environment variable 'VCAP_SERVICES'")
 
+        if isinstance(vs, dict):
+            self._vcap = vs
+            return None
+        try:
+            self._vcap = json.loads(vs)
+        except json.JSONDecodeError:
+           try:
+               with open(vs) as vcap_json_data:
+                   self._vcap = json.load(vcap_json_data)
+           except:
+               raise ValueError("VCAP_SERVICES information is not JSON or a file containing JSON:", vs)
+
+    def _set_credentials(self):
+        "Set self.credentials for the selected service, from self.vcap"
+        try:
+            self.service_name = self._config()[ConfigParams.SERVICE_NAME]
+        except KeyError:
+            raise ValueError("Service name was not supplied in config[ConfigParams.SERVICE_NAME.")
+        services = self._vcap['streaming-analytics']
+        creds = None
+        for service in services:
+            if service['name'] == self.service_name:
+                creds = service['credentials']
+                break
+        if creds is None:
+            raise ValueError("Streaming Analytics service " + self.service_name + " was not found in VCAP_SERVICES")
+        self.credentials = creds
+
+    def _get_java_env(self):
+        "Pass the VCAP through the environment to the java submission"
+        env = super(_RemoteBuildSubmitter, self)._get_java_env()
+        env['VCAP_SERVICES'] = json.dumps(self._vcap)
+        return env
+           
 class _DistributedSubmitter(_BaseSubmitter):
     """
     A submitter which retrieves the SWS REST API URL and then submits the application to be built and submitted

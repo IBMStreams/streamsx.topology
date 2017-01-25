@@ -1,3 +1,6 @@
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015,2017
+
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
@@ -10,8 +13,6 @@ try:
 except (ImportError,NameError):
   # nothing to do here
   pass 
-# Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015
 
 import random
 from streamsx.topology import graph
