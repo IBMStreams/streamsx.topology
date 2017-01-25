@@ -19,7 +19,9 @@ def require_vcap(test):
     if 'topology_test_vcap_service_name' not in os.environ:
         raise unittest.SkipTest("No service name provided: env var topology_test_vcap_service_name")
 
-    vs = json.loads(os.environ['topology_test_vcap_services'])
+    
+    with open(os.environ['topology_test_vcap_services']) as vcap_json_data:
+        vs = json.load(vcap_json_data)
     sn = os.environ['topology_test_vcap_service_name']
     return {'vcap': vs, 'service_name': sn}
 
@@ -54,5 +56,23 @@ class TestStreamingAnalytics(unittest.TestCase):
     topo = build_simple_app("test_vcap_json")
     cfg = {}
     cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap']
+    cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
+    submit("ANALYTICS_SERVICE", topo, cfg)
+
+  def test_vcap_json_remote(self):
+    vsi = require_vcap(self)
+    topo = build_simple_app("test_vcap_json_remote")
+    cfg = {}
+    cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
+    cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap']
+    cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
+    submit("ANALYTICS_SERVICE", topo, cfg)
+
+  def test_vcap_string_remote(self):
+    vsi = require_vcap(self)
+    topo = build_simple_app("test_vcap_json_remote")
+    cfg = {}
+    cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
+    cfg[ConfigParams.VCAP_SERVICES] = json.dumps(vsi['vcap'])
     cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
     submit("ANALYTICS_SERVICE", topo, cfg)

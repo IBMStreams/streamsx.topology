@@ -52,15 +52,16 @@ def submit(ctxtype, graph, config=None, username=None, password=None, log_level=
         * BUILD_ARCHIVE - Creates a Bluemix-compatible build archive.
           execution of the topology produces a build archive, which can be submitted to a streaming
           analytics Bluemix remote build service.
-        * ANALYTICS_SERVICE - If a local Streams install is present, the application is built locally and then submitted
-          to a Bluemix streaming analytics service. If a local Streams install is not present, the application is 
-          submitted to, built, and executed on a Bluemix streaming analytics service. If the ConfigParams.FORCE_REMOTE_BUILD
-          flag is set to true, the application will be built on Bluemix even if a local Streams install is present.
+        * ANALYTICS_SERVICE - If a local IBM Streams install is present, the application is built locally and then submitted
+          to an IBM Bluemix Streaming Analytics service. If a local IBM Streams install is not present, the application is 
+          submitted to, built, and executed on an IBM Bluemix Streaming Analytics service. If the ConfigParams.FORCE_REMOTE_BUILD
+          flag is set to True, the application will be built by the service even if a local Streams install is present.
+          The service is described by its VCAP services and a service name pointing to an instance within the VCAP services. The VCAP services is either set in the configuration object or as the environment variable VCAP_SERVICES. 
         graph: a Topology object.
         config (dict): a configuration object containing job configurations and/or submission information. Keys include:
-        * 'topology.service.vcap' - a json representation of a VCAP object.
-        * 'topology.service.name' - the name of the streaming analytics service for submission.
-        * 'topology.forceRemoteBuild' - A flag which will force the application to be compiled and submitted remotely, if possible.
+        * ConfigParams.VCAP_SERVICES ('topology.service.vcap') - VCAP services information for the ANALYTICS_SERVICE context. Supported formats are a dict obtained from the JSON VCAP services, a string containing the serialized JSON form or a file name pointing to a file containing the JSON form.
+        * ConfigParams.SERVICE_NAME ('topology.service.name') - the name of the Streaming Analytics service for submission.
+        * ConfigParams.FORCE_REMOTE_BUILD ('topology.forceRemoteBuild') - A flag which will force the application to be compiled and submitted remotely, if possible.
         username (string): an optional SWS username. Needed for retrieving remote view data.
         password (string): an optional SWS password. Used in conjunction with the username, and needed for retrieving
         remote view data.
@@ -151,7 +152,7 @@ class _BaseSubmitter:
 
     def _get_java_env(self):
         "Get the environment to be passed to the Java execution"
-        return os.environ
+        return dict(os.environ)
 
     def _add_python_info(self):
         # Python information added to deployment
