@@ -1243,6 +1243,34 @@ E.g.
 
 A toolkit with a number of decorated Python functions and SPL applications that invoke them is supplied under `samples/python/com.ibm.streamsx.topology.pysamples`.
 
++ Executing applications using Python
+
+++ PYTHONHOME
+The location of Python at runtime is defined by the environment
+variable `PYTHONHOME`. The location at runtime can be different
+to the location used when compiling the Streams application
+containing Python code.
+
+When running in a distributed instance `PYTHONHOME` should be set
+as an application environment variable. This can be set using the
+Instance Management capability of the IBM Streams Console or
+`streamtool` follows:
+    streamtool setproperty --application-ev PYTHONHOME=/opt/anaconda3
+
+When running standalone `PYTHONHOME` must be set in the user's environment.
+    export PYTHONHOME=/opt/anaconda3
+
+The application will use `PYTHONHOME` to locate the Python shared library
+as follows:
+
+*Python 3.5*
+* `$PYTHONHOME/lib/libpython3.5m.so`
+* `$PYTHONHOME/lib64/libpython3.5m.so` if the path about does not exist.
+
+*Python 2.7*
+* `$PYTHONHOME/lib/libpython2.7.so`
+* `$PYTHONHOME/lib64/libpython2.7.so` if the path about does not exist.
+  
 */
 
 namespace com.ibm.streamsx.topology.python;
