@@ -26,9 +26,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 import javax.xml.bind.DatatypeConverter;
-import java.nio.charset.StandardCharsets;
 
 public class RestUtils {
 
