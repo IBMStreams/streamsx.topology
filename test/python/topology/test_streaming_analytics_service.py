@@ -15,15 +15,16 @@ def check_setup(test):
 def require_vcap(test):
     check_setup(test)
     if 'topology_test_vcap_services' not in os.environ:
-        raise unittest.SkipTest("No VCAP provided: env var topology_test_vcap_services")
+        raise unittest.SkipTest("No VCAP file provided: env var topology_test_vcap_services")
     if 'topology_test_vcap_service_name' not in os.environ:
         raise unittest.SkipTest("No service name provided: env var topology_test_vcap_service_name")
 
     
-    with open(os.environ['topology_test_vcap_services']) as vcap_json_data:
+    fn = os.environ['topology_test_vcap_services']
+    with open(fn) as vcap_json_data:
         vs = json.load(vcap_json_data)
     sn = os.environ['topology_test_vcap_service_name']
-    return {'vcap': vs, 'service_name': sn}
+    return {'vcap': vs, 'service_name': sn, 'vcap_file': fn}
 
 def build_simple_app(name):
     topo = Topology(name)
@@ -31,6 +32,9 @@ def build_simple_app(name):
     hw.print()
     return topo
 
+def submit_to_service(test, topo, cfg):
+    rc = submit("ANALYTICS_SERVICE", topo, cfg)
+    test.assertEqual(0, rc)
 
 class TestStreamingAnalytics(unittest.TestCase):
 
@@ -57,7 +61,7 @@ class TestStreamingAnalytics(unittest.TestCase):
     cfg = {}
     cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap']
     cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
-    submit("ANALYTICS_SERVICE", topo, cfg)
+    submit_to_service(self, topo, cfg)
 
   def test_vcap_json_remote(self):
     vsi = require_vcap(self)
@@ -66,13 +70,22 @@ class TestStreamingAnalytics(unittest.TestCase):
     cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
     cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap']
     cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
-    submit("ANALYTICS_SERVICE", topo, cfg)
+    submit_to_service(self, topo, cfg)
 
   def test_vcap_string_remote(self):
     vsi = require_vcap(self)
-    topo = build_simple_app("test_vcap_json_remote")
+    topo = build_simple_app("test_vcap_string_remote")
     cfg = {}
     cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
     cfg[ConfigParams.VCAP_SERVICES] = json.dumps(vsi['vcap'])
     cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
-    submit("ANALYTICS_SERVICE", topo, cfg)
+    submit_to_service(self, topo, cfg)
+
+  def test_vcap_file_remote(self):
+    vsi = require_vcap(self)
+    topo = build_simple_app("test_vcap_file_remote")
+    cfg = {}
+    cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
+    cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap_file']
+    cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
+    submit_to_service(self, topo, cfg)
