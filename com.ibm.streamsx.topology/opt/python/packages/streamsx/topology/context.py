@@ -91,6 +91,11 @@ class _BaseSubmitter:
             self.config.update(config)
         self.app_topology = app_topology
 
+    def _config(self):
+        "Return the submit configuration"
+        return self.config
+
+    def submit(self):
         # Convert the JobConfig into overlays
         self._create_job_config_overlays()
 
@@ -104,12 +109,6 @@ class _BaseSubmitter:
             logger.exception("Error generating SPL and creating JSON file.")
             raise
 
-    
-    def _config(self):
-        "Return the submit configuration"
-        return self.config
-
-    def submit(self):
         tk_root = self._get_toolkit_root()
 
         cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
