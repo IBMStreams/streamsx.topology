@@ -15,6 +15,7 @@ import java.util.Random;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.http.auth.AUTH;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
@@ -31,17 +32,21 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
 
 class BuildServiceRemoteRESTWrapper {
 	
-	private JsonObject credentials;
+    private JsonObject credentials;
 	
 	BuildServiceRemoteRESTWrapper(JsonObject credentials){
 		this.credentials = credentials;
-	}
+    }
 	
-	void remoteBuildAndSubmit(JsonObject deploy, File archive) throws ClientProtocolException, IOException{
-		CloseableHttpClient httpclient = HttpClients.createDefault();
+
+    void remoteBuildAndSubmit(JsonObject deploy, File archive) throws ClientProtocolException, IOException{
+	CloseableHttpClient httpclient = HttpClients.createDefault();
+
+	RestUtils.checkInstanceStatus(httpclient, this.credentials);
         String apiKey = getAPIKey(jstring(credentials,  "userid"), jstring(credentials, "password"));
         
         // Perform initial post of the archive
@@ -88,7 +93,7 @@ class BuildServiceRemoteRESTWrapper {
         String artifactId = jstring(artifacts.get(0).getAsJsonObject(), "id");
         RemoteContext.REMOTE_LOGGER.info("Submitting job to remote instance.");
         doSubmitJobFromBuildArtifactPut(httpclient, deploy, apiKey, artifactId);
-	}
+    }
 	
 	/**
 	 * Submit the job from the built artifact.
@@ -112,7 +117,7 @@ class BuildServiceRemoteRESTWrapper {
                 ContentType.APPLICATION_JSON);    
         httpput.setEntity(params);
        
-        JsonObject jso = RemoteContexts.getGsonResponse(httpclient, httpput);
+        JsonObject jso = RestUtils.getGsonResponse(httpclient, httpput);
 		return jso;
 	}
 	
@@ -140,7 +145,7 @@ class BuildServiceRemoteRESTWrapper {
         
         httppost.setEntity(reqEntity);
         //System.out.println(httppost.getAllHeaders()[1]);
-        JsonObject jso = RemoteContexts.getGsonResponse(httpclient, httppost);
+        JsonObject jso = RestUtils.getGsonResponse(httpclient, httppost);
         return jso;
 	}
 	
@@ -169,7 +174,7 @@ class BuildServiceRemoteRESTWrapper {
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpget.addHeader("Authorization", apiKey);
 		
-		JsonObject response = RemoteContexts.getGsonResponse(httpclient, httpget);
+		JsonObject response = RestUtils.getGsonResponse(httpclient, httpget);
 		// Get the correct build
 		JsonObject build = null;
 		JsonArray builds = array(response, "builds");
@@ -190,7 +195,7 @@ class BuildServiceRemoteRESTWrapper {
 		httpget.addHeader("Authorization", apiKey);
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
 		
-		JsonObject response = RemoteContexts.getGsonResponse(httpclient, httpget);
+		JsonObject response = RestUtils.getGsonResponse(httpclient, httpget);
 		for(JsonElement outputElem : array(response, "builds")){
 			JsonObject output = outputElem.getAsJsonObject();
 			if(jstring(output, "id").equals(buildId))
