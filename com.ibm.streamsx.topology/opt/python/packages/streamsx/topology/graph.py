@@ -215,7 +215,11 @@ class SPLInvocation(object):
         # Wrap a lambda as a callable class instance
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
             function = streamsx.topology.functions._Callable(function)
-                 
+        elif inspect.isroutine(function) and function.__module__ == '__main__':
+            # Function defined in main, create a callable wrapping its
+            # dill'ed form
+            function = streamsx.topology.functions._Callable(function)
+         
         if inspect.isroutine(function):
             # callable is a function
             self.params["pyName"] = function.__name__
