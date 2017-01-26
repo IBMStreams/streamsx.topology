@@ -11,7 +11,6 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -22,7 +21,6 @@ import org.apache.http.HttpStatus;
 import org.apache.http.auth.AUTH;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
@@ -36,8 +34,6 @@ import org.apache.http.util.EntityUtils;
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSON;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streams.operator.version.Product;
-import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
@@ -47,7 +43,6 @@ import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
-import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
 
 public class AnalyticsServiceStreamsContext extends
         BundleUserStreamsContext<BigInteger> {
@@ -120,13 +115,6 @@ public class AnalyticsServiceStreamsContext extends
 	CloseableHttpClient httpClient = HttpClients.custom()
 	    .build();
 	return httpClient;
-    }
-    
-    private String getStatusURL(JSONObject credentials) {
-        StringBuilder sb = new StringBuilder(500);
-        sb.append(credentials.get("rest_url"));
-        sb.append(credentials.get("status_path"));
-        return sb.toString();
     }   
 
     private JSONObject getJsonResponse(CloseableHttpClient httpClient,
@@ -172,7 +160,7 @@ public class AnalyticsServiceStreamsContext extends
         return sb.toString();
     }
     
-    private BigInteger postJob(CloseableHttpClient httpClient, JSONObject credentials, File bundle, JSONObject submitConfig)
+    private BigInteger postJob(CloseableHttpClient httpClient, JSONObject credentials, File bundle, JsonObject jobConfigOverlay)
             throws ClientProtocolException, IOException {
 
         
@@ -184,7 +172,7 @@ public class AnalyticsServiceStreamsContext extends
 						       credentials.get("password").toString()));
         FileBody bundleBody = new FileBody(bundle,
                 ContentType.APPLICATION_OCTET_STREAM);
-        StringBody configBody = new StringBody(submitConfig.serialize(),
+        StringBody configBody = new StringBody(jobConfigOverlay.toString(),
                 ContentType.APPLICATION_JSON);
 
         HttpEntity reqEntity = MultipartEntityBuilder.create()
@@ -203,59 +191,16 @@ public class AnalyticsServiceStreamsContext extends
         return new BigInteger(jobId.toString());
     }
     
-    private JSONObject getBluemixSubmitConfig( Map<String, Object> config) throws IOException {
+    private JsonObject getBluemixSubmitConfig( Map<String, Object> config) throws IOException {
         
         JobConfig jc = JobConfig.fromProperties(config);
         
-        // For IBM Streams 4.2 or later use the job config overlay
-        // V.R.M.F
-        Version ver = Product.getVersion();
-        if (ver.getVersion() > 4 ||
-                (ver.getVersion() ==4 && ver.getRelease() >= 2)) {
+        // Streaming Analytics service is always using 4.2 or later
+        // so use the job config overlay
             
-            JobConfigOverlay jco = new JobConfigOverlay(jc);
-
-            String jcoJson = jco.fullOverlay();
-            if (jcoJson == null)
-                return new JSONObject();
-            
-            return (JSONObject) JSON.parse(jcoJson);
-        }
-
+        JobConfigOverlay jco = new JobConfigOverlay(jc);
         
-        JSONObject submitConfig = new JSONObject();
-        
-        
-        addSubmitValue(submitConfig, jc.getJobName(), "jobName");
-        addSubmitValue(submitConfig, jc.getJobGroup(), "jobGroup");
-        addSubmitValue(submitConfig, jc.getDataDirectory(), "data-directory");
-        if (jc.hasSubmissionParameters()) {
-            JSONObject joParams = new JSONObject();
-            for(SubmissionParameter param :  jc.getSubmissionParameters()) {
-                joParams.put(param.getName(), param.getValue());
-            }
-            addSubmitValue(submitConfig, joParams, "submissionParameters");
-        }
-
-        addSubmitValue(submitConfig, jc.getOverrideResourceLoadProtection(),
-                "overrideResourceLoadProtection");
-        
-        JSONObject submitConfigConfig = new JSONObject();
-        Boolean preLoad = jc.getPreloadApplicationBundles();
-        if (preLoad != null && preLoad)
-            addSubmitValue(submitConfigConfig, preLoad.toString(), "preloadApplicationBundles");
-        if (jc.getTracing() != null) {
-            submitConfigConfig.put("tracing", jc.getStreamsTracing());
-        }
-        if (!submitConfigConfig.isEmpty())
-            submitConfig.put("configurationSettings", submitConfigConfig);
-                
-        return submitConfig;
-    }
-    
-    private static void addSubmitValue(JSONObject json, Object value, String jsonKey) {
-        if (value != null)
-            json.put(jsonKey, value);
+        return jco.fullOverlayAsJSON();
     }
     
     private BigInteger submitJobToService(File bundle, Map<String, Object> config) throws IOException {
@@ -275,9 +220,9 @@ public class AnalyticsServiceStreamsContext extends
             
             Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Submitting bundle : " + bundle.getName() + " to " + service.get("name"));
             
-            JSONObject jcojson = getBluemixSubmitConfig(config);
+            JsonObject jcojson = getBluemixSubmitConfig(config);
             
-            Topology.STREAMS_LOGGER.info("Streaming Analytics Service submit job request:" + jcojson.serialize());
+            Topology.STREAMS_LOGGER.info("Streaming Analytics Service submit job request:" + jcojson.toString());
 
             return postJob(httpClient, credentials, bundle, jcojson);
         } finally {

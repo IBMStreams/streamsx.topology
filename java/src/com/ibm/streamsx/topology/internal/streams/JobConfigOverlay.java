@@ -18,15 +18,14 @@ import com.ibm.streamsx.topology.jobconfig.JobConfig;
 public class JobConfigOverlay {
         
     private final JobConfig jobConfig;
+    private final Gson gson = new Gson();
     
     public JobConfigOverlay(JobConfig jobConfig) {  
         this.jobConfig = jobConfig;
     }
-    
-    
-    public String fullOverlay() {
-        Gson gson = new Gson();
-             
+        
+    public JsonObject fullOverlayAsJSON() {
+                     
         JsonObject overlay = new JsonObject();
         
         // JobConfig
@@ -45,7 +44,11 @@ public class JobConfigOverlay {
         JsonArray jcos = new JsonArray();
         jcos.add(overlay);
         fullJco.add(DeployKeys.JOB_CONFIG_OVERLAYS, jcos);
-               
-        return gson.toJson(fullJco);
+        
+        return fullJco;
+    }
+    
+    public String fullOverlay() {
+        return gson.toJson(fullOverlayAsJSON());
     }
 }
