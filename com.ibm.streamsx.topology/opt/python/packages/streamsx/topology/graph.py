@@ -46,11 +46,18 @@ class SPLGraph(object):
         if name is None:
             if function is not None:
                if hasattr(function, '__name__'):
-                   name = function.__name__ + "_" + str(len(self.operators))
+                   n = function.__name__
+                   if n == '<lambda>':
+                       # Avoid use of <> characters in name
+                       # as they are converted to unicode
+                       # escapes in SPL identifier
+                       n = 'lambda'
+                   name = n + "_"
                elif hasattr(function, '__class__'):
-                   name = function.__class__.__name__ + "_" + str(len(self.operators))
+                   name = function.__class__.__name__ + "_"
             else:
-               name = self.name + "_OP"+str(len(self.operators))
+               name = self.name + "_OP"
+        name = name + str(len(self.operators))
         if(kind.startswith("$")):    
             op = Marker(len(self.operators), kind, name, {}, self)                           
         else:
