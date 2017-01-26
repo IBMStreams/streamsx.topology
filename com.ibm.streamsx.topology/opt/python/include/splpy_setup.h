@@ -116,8 +116,15 @@ class SplpySetup {
             std::string wk(pyHome);
             wk.append("/lib/");
             wk.append(pyLib);
-
-            pyLib = wk;
+            struct stat st;
+            if (stat(wk.c_str(), &st) != 0) {
+               std::string wk64(pyHome);
+               wk64.append("/lib64/");
+               wk64.append(pyLib);
+               pyLib = wk64;
+            } else {
+               pyLib = wk;
+            }
         } else {
           std::string errtxt(TOPOLOGY_PYTHONHOME_NO(__SPLPY_VERSION));
 
