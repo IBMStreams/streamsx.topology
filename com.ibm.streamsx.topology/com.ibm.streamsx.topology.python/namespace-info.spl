@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015  
+# Copyright IBM Corp. 2015, 2017 
  */
 
 /**
@@ -1265,11 +1265,11 @@ as follows:
 
 *Python 3.5*
 * `$PYTHONHOME/lib/libpython3.5m.so`
-* `$PYTHONHOME/lib64/libpython3.5m.so` if the path about does not exist.
+* `$PYTHONHOME/lib64/libpython3.5m.so` if the path above does not exist.
 
 *Python 2.7*
 * `$PYTHONHOME/lib/libpython2.7.so`
-* `$PYTHONHOME/lib64/libpython2.7.so` if the path about does not exist.
+* `$PYTHONHOME/lib64/libpython2.7.so` if the path above does not exist.
   
 */
 
