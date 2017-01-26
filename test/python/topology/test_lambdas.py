@@ -17,8 +17,6 @@ class TestLambdas(unittest.TestCase):
 
   def test_TopologyLambdaFilter(self):
      topo = Topology("test_TopologyLambdaFilter")
-     if topo is not None:
-         return None
      hw = topo.source(test_functions.hello_world)
      hwf = hw.filter(lambda t : "Wor" in t)
      hwf.sink(test_functions.check_hello_world_filter)
