@@ -141,7 +141,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         Condition<List<Tuple>> viaSPLResult = tester.tupleContents(viaSPL);
         Condition<List<Tuple>> viaPythonResult = tester.tupleContents(viaPython);
         
-        complete(tester, expectedCount, 20, TimeUnit.SECONDS);
+        complete(tester, expectedCount, 60, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.getResult().toString(), expectedCount.valid());
         assertEquals(viaSPLResult.getResult(), viaPythonResult.getResult());
@@ -253,7 +253,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         Condition<List<Tuple>> outFilteredTuples = tester.tupleContents(viaPythonFiltered);
         
         
-        complete(tester, expectedCount, 20, TimeUnit.SECONDS);
+        complete(tester, expectedCount, 60, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.getResult().toString(), expectedCount.valid());
         
