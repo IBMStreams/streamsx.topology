@@ -30,13 +30,6 @@ class TestTopologyMethods(unittest.TestCase):
      hwf.sink(test_functions.check_hello_world_filter)
      standalone(self, topo)
 
-  def test_TopologyLambdaFilter(self):
-     topo = Topology("test_TopologyLambdaFilter")
-     hw = topo.source(test_functions.hello_world)
-     hwf = hw.filter(lambda t : "Wor" in t)
-     hwf.sink(test_functions.check_hello_world_filter)
-     standalone(self, topo)
-        
   def test_TopologyLengthFilter(self):
      topo = Topology("test_TopologyLengthFilter")
      hw = topo.source(test_functions.strings_length_filter) 
@@ -231,12 +224,3 @@ class TestTopologyMethods(unittest.TestCase):
           standalone(self, topo)
       finally:
           del test_functions2
-
-if __name__ == '__main__':
-    unittest.main()
-
-
-# stateful functions
-# import every known module implicitly
-# classes for stateful functions
-# take the complete packages directory.

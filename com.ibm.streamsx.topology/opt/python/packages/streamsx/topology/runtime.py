@@ -6,6 +6,7 @@ from past.builtins import basestring
 
 try:
     import dill
+    dill.settings['recurse'] = True
 except ImportError:
     dill = pickle
 
