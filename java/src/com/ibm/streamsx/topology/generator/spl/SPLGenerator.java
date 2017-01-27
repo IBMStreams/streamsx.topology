@@ -50,14 +50,14 @@ public class SPLGenerator {
         new Preprocessor(graph).preprocess();
        
         // Generate parallel composites
-        JsonObject comp = new JsonObject();
-        comp.addProperty("name", graph.get("name").getAsString());
-        comp.addProperty("public", true);
-        comp.add("parameters", graph.get("parameters"));
-        comp.addProperty("__spl_mainComposite", true);
+        JsonObject mainCompsiteDef = new JsonObject();
+        mainCompsiteDef.addProperty("kind", graph.get("name").getAsString());
+        mainCompsiteDef.addProperty("public", true);
+        mainCompsiteDef.add("parameters", graph.get("parameters"));
+        mainCompsiteDef.addProperty("__spl_mainComposite", true);
 
         Set<JsonObject> starts = GraphUtilities.findStarts(graph);
-        separateIntoComposites(starts, comp, graph);
+        separateIntoComposites(starts, mainCompsiteDef, graph);
         StringBuilder sb = new StringBuilder();
         generateGraph(graph, sb);
         return sb.toString();
@@ -107,15 +107,15 @@ public class SPLGenerator {
     void generateComposite(JsonObject graphConfig, JsonObject graph,
             StringBuilder compBuilder) throws IOException {
         boolean isPublic = jboolean(graph, "public");
-        String name = jstring(graph, "name");
-        name = getSPLCompatibleName(name);
+        String kind = jstring(graph, "kind");
+        kind = getSPLCompatibleName(kind);
         if (isPublic)
             compBuilder.append("public ");
 
         compBuilder.append("composite ");
 
-        compBuilder.append(name);
-        if (name.startsWith("__parallel_")) {
+        compBuilder.append(kind);
+        if (kind.startsWith("__parallel_")) {
             String iput = jstring(graph, "inputName");
             String oput = jstring(graph, "outputName");
 
@@ -263,7 +263,7 @@ public class SPLGenerator {
      *            Necessary to pass it to the GraphUtilities.getChildren
      *            function.
      */
-    JsonObject separateIntoComposites(Set<JsonObject> starts,
+    private JsonObject separateIntoComposites(Set<JsonObject> starts,
             JsonObject comp, JsonObject graph) {
         // Contains all ops which have been reached by graph traversal,
         // regardless of whether they are 'special' operators, such as the ones
@@ -312,116 +312,7 @@ public class SPLGenerator {
             // operators, and recursively call this function to populate the new
             // composite.
             else if (isParallelStart(visitOp)) {
-                // The new composite, represented in JSON
-                JsonObject subComp = new JsonObject();
-                // The operator to include in the graph that refers to the
-                // parallel composite.
-                JsonObject compOperator = new JsonObject();
-                subComp.addProperty(
-                        "name",
-                        "__parallel_Composite_"
-                                + Integer.toString(numParallelComposites));
-                subComp.addProperty("public", false);
-
-                compOperator.addProperty(
-                        "kind",
-                        "__parallel_Composite_"
-                                + Integer.toString(numParallelComposites));
-                compOperator.addProperty("name",
-                        "paraComp_" + Integer.toString(numParallelComposites));
-                compOperator.add("inputs", visitOp.get("inputs"));
-
-                
-                boolean partitioned = jboolean(
-                        visitOp.get("outputs").getAsJsonArray().get(0).getAsJsonObject(), "partitioned");
-                if (partitioned) {
-                    JsonArray inputs = visitOp.get("inputs").getAsJsonArray();
-                    String parallelInputPortName = null;
-
-                    // Get the first port that has the __spl_hash attribute
-                    for (int i = 0; i < inputs.size(); i++) {
-                        JsonObject input = inputs.get(i).getAsJsonObject();
-                        String type = jstring(input, "type");
-                        if (type.contains("__spl_hash")) {
-                            parallelInputPortName = jstring(input, "name");
-                        }
-                    }
-                    compOperator.addProperty("partitioned", true);
-                    compOperator.addProperty("parallelInputPortName",
-                            parallelInputPortName);
-                }
-
-                // Necessary to later indicate whether the composite the
-                // operator
-                // refers to is parallelized.
-                compOperator.addProperty("parallelOperator", true);
-
-                JsonArray outputs = visitOp.get("outputs").getAsJsonArray();
-                JsonObject output = outputs.get(0).getAsJsonObject();
-                compOperator.add("width", output.get("width"));
-                numParallelComposites++;
-
-                // Get the start operators in the parallel region -- the ones
-                // immediately downstream from the $Parallel operator
-                Set<JsonObject> parallelStarts = GraphUtilities
-                        .getDownstream(visitOp, graph);
-
-                // Once you have the start operators, recursively call the
-                // function
-                // to populate the parallel composite.
-                JsonObject parallelEnd = separateIntoComposites(parallelStarts,
-                        subComp, graph);
-                stvHelper.addJsonInstanceParams(compOperator, subComp);
-
-                // Set all relevant input port connections to the input port
-                // name of the parallel composite
-                String parallelStartOutputPortName = jstring(output, "name");
-                subComp.addProperty("inputName", "parallelInput");
-                for(JsonObject start : parallelStarts){
-                    JsonArray inputs = array(start, "inputs");
-                    for(JsonElement inputObj : inputs){
-                        JsonObject input = inputObj.getAsJsonObject();
-                        JsonArray connections = array(input, "connections");
-                        for(int i = 0; i < connections.size(); i++){
-                            if(connections.get(i).getAsString().equals(parallelStartOutputPortName)){
-                                connections.set(i, new JsonPrimitive("parallelInput"));
-                            }
-                        }
-                    }
-                }
-
-                if (parallelEnd != null) {
-                    Set<JsonObject> children = getDownstream(parallelEnd, graph);
-                    unvisited.addAll(children);
-                    compOperator.add("outputs", parallelEnd.get("outputs"));
-                    subComp.addProperty("outputName", "parallelOutput");
-
-                    // Set all relevant output port names to the output port of
-                    // the
-                    // parallel composite.
-                    JsonObject paraEndIn = array(parallelEnd, "inputs").get(0).getAsJsonObject();
-                    String parallelEndInputPortName = jstring(paraEndIn, "name");
-                    Set<JsonObject> parallelOutParents = getUpstream(parallelEnd, graph);
-                    for (JsonObject end : parallelOutParents) {
-                        if (jstring(end, "kind").equals("com.ibm.streamsx.topology.functional.java::HashAdder")) {
-                            
-                            String endType = jstring(array(end, "outputs").get(0).getAsJsonObject(), "type");
-                            array(compOperator, "outputs").get(0).getAsJsonObject().addProperty("type", endType);
-                        }
-                        JsonArray parallelOutputs = array(end, "outputs");
-                        for (JsonElement outputObj : parallelOutputs) {
-                            JsonObject paraOutput = outputObj.getAsJsonObject();
-                            JsonArray connections = array(paraOutput, "connections");
-                            for (int i = 0; i < connections.size(); i++) {
-                                if (connections.get(i).getAsString().equals(parallelEndInputPortName)) {
-                                    paraOutput.addProperty("name", "parallelOutput");
-                                }
-                            }
-                        }
-                    }
-
-                }
-
+                JsonObject compOperator = createCompositeDefinition(graph, unvisited, visitOp);
 
                 // Add comp operator to the list of physical operators
                 visited.add(compOperator);
@@ -448,6 +339,123 @@ public class SPLGenerator {
         // If one of the operators in the composite was the $unparallel operator
         // then return that $unparallel operator, otherwise return null.
         return unparallelOp;
+    }
+
+    /**
+     * Create a composite that contains a sub-section of the graph.
+     *  
+     * @param graph Complete graph representation.
+     * @param unvisited Operator invocations that have not yet been placed into a composite.
+     * @param startOp Marker operator
+     * @return The operator invocation of the created composite.
+     */
+    private JsonObject createCompositeDefinition(JsonObject graph, List<JsonObject> unvisited, JsonObject startOp) {
+        
+        String compositeKind = "__parallel_Composite_" + numParallelComposites;
+                
+        // The new composite definition, represented in JSON
+        JsonObject compositeDefinition = new JsonObject();
+        compositeDefinition.addProperty("kind", compositeKind);
+        compositeDefinition.addProperty("public", false);
+
+        // The operator to include in the graph that refers to the
+        // parallel composite.
+        JsonObject compositeInvocation = new JsonObject();
+
+        compositeInvocation.addProperty("kind", compositeKind);
+        compositeInvocation.addProperty("name", "paraComp_" + numParallelComposites);
+        compositeInvocation.add("inputs", startOp.get("inputs"));
+        
+        numParallelComposites++;
+        
+        boolean partitioned = jboolean(
+                startOp.get("outputs").getAsJsonArray().get(0).getAsJsonObject(), "partitioned");
+        if (partitioned) {
+            JsonArray inputs = startOp.get("inputs").getAsJsonArray();
+            String parallelInputPortName = null;
+
+            // Get the first port that has the __spl_hash attribute
+            for (int i = 0; i < inputs.size(); i++) {
+                JsonObject input = inputs.get(i).getAsJsonObject();
+                String type = jstring(input, "type");
+                if (type.contains("__spl_hash")) {
+                    parallelInputPortName = jstring(input, "name");
+                }
+            }
+            compositeInvocation.addProperty("partitioned", true);
+            compositeInvocation.addProperty("parallelInputPortName",
+                    parallelInputPortName);
+        }
+
+        // Necessary to later indicate whether the composite the
+        // operator
+        // refers to is parallelized.
+        compositeInvocation.addProperty("parallelOperator", true);
+
+        JsonArray outputs = startOp.get("outputs").getAsJsonArray();
+        JsonObject output = outputs.get(0).getAsJsonObject();
+        compositeInvocation.add("width", output.get("width"));
+
+        // Get the start operators in the parallel region -- the ones
+        // immediately downstream from the $Parallel operator
+        Set<JsonObject> parallelStarts = getDownstream(startOp, graph);
+
+        // Once you have the start operators, recursively call the
+        // function
+        // to populate the parallel composite.
+        JsonObject parallelEnd = separateIntoComposites(parallelStarts,
+                compositeDefinition, graph);
+        stvHelper.addJsonInstanceParams(compositeInvocation, compositeDefinition);
+
+        // Set all relevant input port connections to the input port
+        // name of the parallel composite
+        String parallelStartOutputPortName = jstring(output, "name");
+        compositeDefinition.addProperty("inputName", "parallelInput");
+        for(JsonObject start : parallelStarts){
+            JsonArray inputs = array(start, "inputs");
+            for(JsonElement inputObj : inputs){
+                JsonObject input = inputObj.getAsJsonObject();
+                JsonArray connections = array(input, "connections");
+                for(int i = 0; i < connections.size(); i++){
+                    if(connections.get(i).getAsString().equals(parallelStartOutputPortName)){
+                        connections.set(i, new JsonPrimitive("parallelInput"));
+                    }
+                }
+            }
+        }
+
+        if (parallelEnd != null) {
+            Set<JsonObject> children = getDownstream(parallelEnd, graph);
+            unvisited.addAll(children);
+            compositeInvocation.add("outputs", parallelEnd.get("outputs"));
+            compositeDefinition.addProperty("outputName", "parallelOutput");
+
+            // Set all relevant output port names to the output port of
+            // the
+            // parallel composite.
+            JsonObject paraEndIn = array(parallelEnd, "inputs").get(0).getAsJsonObject();
+            String parallelEndInputPortName = jstring(paraEndIn, "name");
+            Set<JsonObject> parallelOutParents = getUpstream(parallelEnd, graph);
+            for (JsonObject end : parallelOutParents) {
+                if (jstring(end, "kind").equals("com.ibm.streamsx.topology.functional.java::HashAdder")) {
+                    
+                    String endType = jstring(array(end, "outputs").get(0).getAsJsonObject(), "type");
+                    array(compositeInvocation, "outputs").get(0).getAsJsonObject().addProperty("type", endType);
+                }
+                JsonArray parallelOutputs = array(end, "outputs");
+                for (JsonElement outputObj : parallelOutputs) {
+                    JsonObject paraOutput = outputObj.getAsJsonObject();
+                    JsonArray connections = array(paraOutput, "connections");
+                    for (int i = 0; i < connections.size(); i++) {
+                        if (connections.get(i).getAsString().equals(parallelEndInputPortName)) {
+                            paraOutput.addProperty("name", "parallelOutput");
+                        }
+                    }
+                }
+            }
+
+        }
+        return compositeInvocation;
     }
 
 
