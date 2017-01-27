@@ -4,15 +4,15 @@
  */
 package com.ibm.streamsx.topology.builder;
 
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
-import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
 
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
@@ -21,6 +21,7 @@ import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.operator.Operator;
+import com.ibm.streams.operator.version.Product;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -65,6 +66,10 @@ public class GraphBuilder extends BJSONObject {
         json().put("public", true);
         json().put("config", config);
         json().put("parameters", params);
+        
+        // The version of IBM Streams being used to build
+        // the topology
+        config.put("streamsVersion", Product.getVersion().toString());
     }
 
    public BOperatorInvocation addOperator(Class<? extends Operator> opClass,

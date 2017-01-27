@@ -38,6 +38,11 @@ public class SPLGenerator {
     List<JsonObject> composites = new ArrayList<>();
     
     private SubmissionTimeValue stvHelper;
+    
+    private int targetVersion;
+    private int targetRelease;
+    @SuppressWarnings("unused")
+    private int targetMod;
 
     public String generateSPL(JsonObject graph) throws IOException {
                 
@@ -59,6 +64,8 @@ public class SPLGenerator {
     }
     
     void generateGraph(JsonObject graph, StringBuilder sb) throws IOException {
+        JsonObject graphConfig = getGraphConfig(graph);
+        breakoutVersion(graphConfig);
 
         String namespace = jstring(graph, "namespace");
         if (namespace != null && !namespace.isEmpty()) {
@@ -67,13 +74,34 @@ public class SPLGenerator {
             sb.append(";\n");
         }
 
-        JsonObject graphConfig = getGraphConfig(graph);
+        
 
         for (int i = 0; i < composites.size(); i++) {
             StringBuilder compBuilder = new StringBuilder();
             generateComposite(graphConfig, composites.get(i), compBuilder);
             sb.append(compBuilder.toString());
         }
+    }
+    
+    private void breakoutVersion(JsonObject graphConfig) {
+        String version = jstring(graphConfig, "streamsCompileVersion");
+        if (version == null) {
+            version = jstring(graphConfig, "streamsVersion");
+            if (version == null)
+                version = "4.0.1";
+        }
+        String[] vrmf = version.split("\\.");
+        targetVersion = Integer.valueOf(vrmf[0]);
+        targetRelease = Integer.valueOf(vrmf[1]);
+        targetMod = Integer.valueOf(vrmf[2]);
+    }
+    
+    boolean versionAtLeast(int version, int mod) {
+        if (targetVersion > version)
+            return true;
+        if (targetVersion == version)
+            return targetRelease >= mod;
+        return false;
     }
 
     void generateComposite(JsonObject graphConfig, JsonObject graph,
@@ -115,7 +143,6 @@ public class SPLGenerator {
     private void generateCompParams(JsonObject graph, StringBuilder sb) {
         JsonObject jparams = GsonUtilities.jobject(graph, "parameters");
         if (jparams != null && jparams.entrySet().size() > 0) {
-            boolean isMainComposite = jboolean(graph, "__spl_mainComposite");
             sb.append("param\n");
             for (Entry<String, JsonElement> on : jparams.entrySet()) {
                 String name = on.getKey();
@@ -133,13 +160,6 @@ public class SPLGenerator {
                     if (value.has("defaultValue")) {
                         sb.append(" : ");
                         sb.append(value.get("defaultValue").getAsString());
-                    }
-                                        
-                    if (false) {
-                    if (isMainComposite)
-                        stvHelper.generateMainDef(value, sb);
-                    else
-                        stvHelper.generateInnerDef(value, sb);
                     }
                         
                     sb.append(";\n");

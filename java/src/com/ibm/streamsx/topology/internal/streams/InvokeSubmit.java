@@ -161,8 +161,6 @@ public class InvokeSubmit {
         JobConfigOverlay jco = new JobConfigOverlay(jobConfig);
 
         String jcoJson = jco.fullOverlay();
-        if (jcoJson == null)
-            return null;
                      
         File jcoFile = File.createTempFile("streamsjco", ".json");
         Files.write(jcoFile.toPath(), jcoJson.getBytes(StandardCharsets.UTF_8));
