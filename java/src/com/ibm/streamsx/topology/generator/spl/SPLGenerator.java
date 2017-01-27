@@ -143,7 +143,6 @@ public class SPLGenerator {
     private void generateCompParams(JsonObject graph, StringBuilder sb) {
         JsonObject jparams = GsonUtilities.jobject(graph, "parameters");
         if (jparams != null && jparams.entrySet().size() > 0) {
-            boolean isMainComposite = jboolean(graph, "__spl_mainComposite");
             sb.append("param\n");
             for (Entry<String, JsonElement> on : jparams.entrySet()) {
                 String name = on.getKey();
@@ -161,13 +160,6 @@ public class SPLGenerator {
                     if (value.has("defaultValue")) {
                         sb.append(" : ");
                         sb.append(value.get("defaultValue").getAsString());
-                    }
-                                        
-                    if (false) {
-                    if (isMainComposite)
-                        stvHelper.generateMainDef(value, sb);
-                    else
-                        stvHelper.generateInnerDef(value, sb);
                     }
                         
                     sb.append(";\n");
