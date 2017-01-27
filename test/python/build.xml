@@ -49,6 +49,7 @@
 		     <arg value="-m"/>
 		     <arg value="unittest"/>
 		     <arg value="test1"/>
+		     <arg value="test_lambdas"/>
 		     <arg value="test_streaming_analytics_service"/>
 		   </exec>
 	   </target>

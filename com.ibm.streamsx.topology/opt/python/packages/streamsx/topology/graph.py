@@ -9,6 +9,7 @@ import pickle
 
 try:
     import dill
+    dill.settings['recurse'] = True
 except ImportError:
     dill = pickle
 
