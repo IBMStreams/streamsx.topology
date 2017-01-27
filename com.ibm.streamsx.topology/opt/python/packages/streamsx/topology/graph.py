@@ -63,7 +63,7 @@ class SPLGraph(object):
         else:
             if function is not None:
                 params['toolkitDir'] = streamsx.topology.param.toolkit_dir()
-            op = SPLInvocation(len(self.operators), kind, function, name, params, self)
+            op = _SPLInvocation(len(self.operators), kind, function, name, params, self)
         self.operators.append(op)
         if not function is None:
             dep_instance = function
@@ -76,7 +76,7 @@ class SPLGraph(object):
     
     def addPassThruOperator(self):
         name = self.name + "_OP"+str(len(self.operators))
-        op = SPLInvocation(len(self.operators), "spl.relational::Functor", None, name, {}, self)
+        op = _SPLInvocation(len(self.operators), "spl.relational::Functor", None, name, {}, self)
         self.operators.append(op)
         return op
 
@@ -116,7 +116,7 @@ class SPLGraph(object):
     def printJSON(self):
       print(json.dumps(self.generateSPLGraph(), sort_keys=True, indent=4, separators=(',', ': ')))
 
-class SPLInvocation(object):
+class _SPLInvocation(object):
 
     def __init__(self, index, kind, function, name, params, graph, view_configs = None):
         self.index = index
@@ -127,6 +127,7 @@ class SPLInvocation(object):
         self.setParameters(params)
         self._addOperatorFunction(self.function)
         self.graph = graph
+        self.viewable = True
 
         if view_configs is None:
             self.view_configs = []
@@ -141,6 +142,8 @@ class SPLInvocation(object):
             name = self.name + "_OUT"+str(len(self.outputPorts))
         oport = OPort(name, self, len(self.outputPorts), schema, oWidth, partitioned)
         self.outputPorts.append(oport)
+        if schema == CommonSchema.Python:
+            self.viewable = False
 
         if not inputPort is None:
             oport.connect(inputPort)
@@ -196,6 +199,7 @@ class SPLInvocation(object):
         _op["outputs"] = _outputs
         _op["inputs"] = _inputs
         _op["config"] = {}
+        _op["config"]["streamViewability"] = self.viewable
         _op["config"]["viewConfigs"] = self.view_configs
         _params = {}
         # Add parameters as their string representation
@@ -300,7 +304,7 @@ class OPort(object):
             _oport["partitioned"] = self.partitioned
         return _oport
 
-class Marker(SPLInvocation):
+class Marker(_SPLInvocation):
 
     def __init__(self, index, kind, name, params, graph):
         self.index = index
