@@ -39,7 +39,7 @@ See the documentation under [namespace:com.ibm.streamsx.topology.python|com.ibm.
 
     </description>
     <!-- This is currently development for the 1.5 release -->
-    <version>1.5.7.__dev__</version>
+    <version>1.5.8.__dev__</version>
     <!-- Require Java 8 so minimium is 4.0.1.0 -->
     <requiredProductVersion>4.0.1.0</requiredProductVersion>
     </identity>
