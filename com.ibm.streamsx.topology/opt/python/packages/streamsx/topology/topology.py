@@ -59,7 +59,7 @@ class Topology(object):
         else:
             self.files = []
 
-    def source(self, func):
+    def source(self, func, name=None):
         """
         Fetches information from an external system and presents that information as a stream.
         Tuples are obtained from an iterator obtained from the passed iterable
@@ -70,9 +70,10 @@ class Topology(object):
         Args:
             func: An iterable or a zero-argument callable that returns an iterable of tuples.
             The callable must be either 
-            * the name of a function defined at the top level of a module that takes no arguments, or
-            * an instance of a callable class defined at the top level of a module that implements
-              the method `__call__(self)` and be picklable.
+            * an iterable object
+            * a function 
+            * a lambda function
+            * an instance of a callable class that implements the method `__call__(self)` and be picklable.
             Using a callable class allows state information such as user-defined parameters to be stored during class 
             initialization and utilized when the instance is called.
             A tuple is represented as a Python object that must be picklable.
@@ -86,7 +87,7 @@ class Topology(object):
         else:
              func = streamsx.topology.functions._IterableInstance(func)
         
-        op = self.graph.addOperator(self.opnamespace+"::PyFunctionSource", func)
+        op = self.graph.addOperator(self.opnamespace+"::PyFunctionSource", func, name=name)
         oport = op.addOutputPort()
         return Stream(self, oport)
 
@@ -133,16 +134,18 @@ class Stream(object):
         self.topology = topology
         self.oport = oport
 
-    def sink(self, func):
+    def for_each(self, func, name=None):
         """
         Sends information as a stream to an external system.
         Takes a user provided callable that does not return a value.
+        For each tuple that is on the stream `func(tuple)` is called.
         
         Args:
             func: A callable that takes a single parameter for the tuple and returns None.
-            The callable must be either 
-            * the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
-            * an instance of a callable class defined at the top level of a module that implements 
+            The callable must be one of: 
+            * a function 
+            * a lambda function
+            * an instance of a callable class that implements 
               the method `__call__(self, tuple)` and be picklable.
             Using a callable class allows state information such as user-defined parameters to be stored during class 
             initialization and utilized when the instance is called.
@@ -150,10 +153,16 @@ class Stream(object):
         Returns:
             None
         """
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionSink", func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionSink", func, name=name)
         op.addInputPort(outputPort=self.oport)
 
-    def filter(self, func):
+    def sink(self, func, name=None):
+        """
+        Equivalent to calling the for_each() function
+        """
+        return self.for_each(func, name)
+
+    def filter(self, func, name=None):
         """
         Filters tuples from a stream using the supplied callable `func`.
         For each tuple on the stream the callable is called passing
@@ -164,9 +173,10 @@ class Stream(object):
         Args:
             func: A callable that takes a single parameter for the tuple, and returns True or False.
             If True, the tuple is included on the returned stream.  If False, the tuple is filtered out.
-            The callable must be either
-            * the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
-            * an instance of a callable class defined at the top level of a module that implements 
+            The callable must be one of:
+            * a function
+            * a lambda function
+            * an instance of a callable class that implements 
               the method `__call__(self, tuple)` and be picklable.
             Using a callable class allows state information such as user-defined parameters to be stored during class 
             initialization and utilized when the instance is called.
@@ -174,13 +184,13 @@ class Stream(object):
         Returns:
             A Stream containing tuples that have not been filtered out.
         """
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionFilter", func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionFilter", func, name=name)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
-    def _map(self, func, schema):
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionTransform", func)
+    def _map(self, func, schema, name=None):
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionTransform", func, name=name)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=schema)
         return Stream(self.topology, oport)
@@ -206,9 +216,9 @@ class Stream(object):
         return _view
         
 
-    def transform(self, func):
+    def map(self, func, name=None):
         """
-        Transforms each tuple from this stream into 0 or 1 tuples using the supplied callable `func`.
+        Maps each tuple from this stream into 0 or 1 tuples using the supplied callable `func`.
         For each tuple on this stream, the returned stream will contain a tuple
         that is the result of the callable when the return is not None.
         If the callable returns None then no tuple is submitted to the returned 
@@ -217,8 +227,9 @@ class Stream(object):
         Args:
             func: A callable that takes a single parameter for the tuple, and returns a tuple or None.
             The callable must be either
-            * the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
-            * an instance of a callable class defined at the top level of a module that implements 
+            * a function
+            * a lambda function
+            * an instance of a callable class that implements 
               the method `__call__(self, tuple)` and be picklable.
             Using a callable class allows state information such as user-defined parameters to be stored during class 
             initialization and utilized when the instance is called.
@@ -226,15 +237,15 @@ class Stream(object):
         Returns:
             A Stream containing transformed tuples.
         """
-        return self._map(func, schema=schema.CommonSchema.Python)
+        return self._map(func, schema=schema.CommonSchema.Python, name=name)
 
-    def map(self, func):
+    def transform(self, func, name=None):
         """
-        Equivalent to calling the transform() function
+        Equivalent to calling the map() function
         """
-        return self.transform(func)
+        return self.map(func, name)
              
-    def multi_transform(self, func):
+    def flat_map(self, func, name=None):
         """
         Transforms each tuple from this stream into 0 or more tuples using the supplied callable `func`. 
         For each tuple on this stream, the returned stream will contain all non-None tuples from
@@ -248,8 +259,9 @@ class Stream(object):
             func: A callable that takes a single parameter for the tuple, and returns an iterable of tuples or None.
             The callable must return an iterable or None, otherwise a TypeError is raised.
             The callable must be either
-            * the name of a function defined at the top level of a module that takes a single parameter for the tuple, or
-            * an instance of a callable class defined at the top level of a module that implements 
+            * a function
+            * a lambda function
+            * an instance of a callable class that implements 
               the method `__call__(self, tuple)` and be picklable.
             Using a callable class allows state information such as user-defined parameters to be stored during class 
             initialization and utilized when the instance is called.
@@ -259,16 +271,16 @@ class Stream(object):
         Raises:
             TypeError: if `func` does not return an iterator nor None
         """     
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionMultiTransform", func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionMultiTransform", func, name=name)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
     
-    def flat_map(self, func):
+    def multi_transform(self, func, name=None):
         """
-        Equivalent to calling the multi_transform() function
+        Equivalent to calling the flat_map() function
         """
-        return self.multi_transform(func)
+        return self.flat_map(func, name)
 
     def isolate(self):
         """

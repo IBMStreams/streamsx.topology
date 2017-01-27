@@ -1,5 +1,5 @@
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015,2016
+# Copyright IBM Corp. 2015,2017
 
 from __future__ import print_function
 import sys
@@ -31,7 +31,8 @@ class _IterableInstance(object):
 
 # Wraps an callable instance 
 # When this is called, the callable is called.
-# Used to wrap a lambda object
+# Used to wrap a lambda object or a function/class
+# defined in __main__
 class _Callable(object):
     def __init__(self, callable):
         self._callable = callable
