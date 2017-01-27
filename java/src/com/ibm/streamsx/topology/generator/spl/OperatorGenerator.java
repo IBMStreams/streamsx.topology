@@ -18,6 +18,7 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectArray;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.stringArray;
 
@@ -42,8 +43,10 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 class OperatorGenerator {
     
     private final SubmissionTimeValue stvHelper;
+    private final SPLGenerator splGenerator;
     
     OperatorGenerator(SPLGenerator splGenerator) {
+        this.splGenerator = splGenerator;
         this.stvHelper = splGenerator.stvHelper();
     }
 
@@ -55,6 +58,7 @@ class OperatorGenerator {
         parallelAnnotation(_op, sb);
         viewAnnotation(_op, sb);
         AutonomousRegions.autonomousAnnotation(_op, sb);
+        threadingAnnotation(graphConfig, _op, sb);
         outputClause(_op, sb);
         operatorNameAndKind(_op, sb);
         inputClause(_op, sb);
@@ -146,6 +150,22 @@ class OperatorGenerator {
                 sb.append(", partitionBy=[{port=" + parallelInputPortName
                         + ", attributes=[__spl_hash]}]");
             }
+            sb.append(")\n");
+        }
+    }
+    
+    /**
+     * Add threading annotation but only for 4.2 onwards.
+     */
+    private void threadingAnnotation(JsonObject graphConfig, JsonObject op, StringBuilder sb) {
+        if (!splGenerator.versionAtLeast(4, 2))
+            return;
+        
+        JsonObject threading = object(op, "threading");
+        if (threading != null) {
+            sb.append("@threading(");
+            sb.append("model=");
+            sb.append(jstring(threading, "model"));
             sb.append(")\n");
         }
     }
