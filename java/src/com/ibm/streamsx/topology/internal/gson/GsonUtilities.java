@@ -84,7 +84,12 @@ public class GsonUtilities {
             it.remove();
     }
     
-    
+    /**
+     * Returns a property as a String.
+     * @param object
+     * @param property
+     * @return Value or null if it is not set.
+     */
     public static String jstring(JsonObject object, String property) {
         if (object.has(property)) {
             JsonElement je = object.get(property);
@@ -116,6 +121,12 @@ public class GsonUtilities {
         return jobject(nester, property);
     }
     
+    /**
+     * Get a json object from a property or properties.
+     * @param object
+     * @param property
+     * @return Valid object of null if any element of the properties does not exist.
+     */
     public static JsonObject object(JsonObject object,  String ...property) {
         
         assert property.length > 0;
