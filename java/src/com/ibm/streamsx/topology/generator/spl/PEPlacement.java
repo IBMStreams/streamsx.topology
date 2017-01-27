@@ -200,9 +200,9 @@ class PEPlacement {
                         // Add a manual threading annotation
                         // to ensure low latency by not allowing
                         // any scheduled ports to be added
-                        JsonObject threading = new JsonObject();
-                        threading.addProperty("model", "manual");
-                        op.add("threading", threading);
+                        //JsonObject threading = new JsonObject();
+                        //threading.addProperty("model", "manual");
+                        // op.add("threading", threading);
                                             
                         // If the region has already been assigned a
                         // lowLatency tag, simply return.
