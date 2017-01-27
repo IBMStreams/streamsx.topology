@@ -32,7 +32,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSON;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
