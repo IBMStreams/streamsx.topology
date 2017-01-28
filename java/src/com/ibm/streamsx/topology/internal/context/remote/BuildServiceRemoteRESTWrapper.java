@@ -10,12 +10,8 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Random;
 
-import javax.xml.bind.DatatypeConverter;
-
-import org.apache.http.auth.AUTH;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
@@ -52,7 +48,7 @@ class BuildServiceRemoteRESTWrapper {
 			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: Checking status :" + serviceg.get("name"));
 			RestUtils.checkInstanceStatus(httpclient, this.credentials);
 
-			String apiKey = getAPIKey(jstring(credentials, "userid"), jstring(credentials, "password"));
+			String apiKey = RestUtils.getAPIKey(credentials);
 
 			// Perform initial post of the archive
 			String buildName = newBuildName(16);
@@ -222,15 +218,6 @@ class BuildServiceRemoteRESTWrapper {
 		}
 		return name;
 	}
-	
-	private String getAPIKey(String userid, String password) throws UnsupportedEncodingException{
-		String api_creds = userid + ":" + password;
-		String apiKey = "Basic "
-						+ DatatypeConverter.printBase64Binary(api_creds
-								.getBytes("UTF-8"));			
-		return apiKey;
-	}
-
 	
 	private String getBuildsURL(JsonObject credentials){
 		String buildURL = jstring(credentials, "jobs_path").replace("jobs", "builds");
