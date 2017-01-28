@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
@@ -69,10 +70,10 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
     }
     
     @Override
-    public Future<File> submit(JSONObject submission) throws Exception {
+    Future<File> _submit(JsonObject submission) throws Exception {
     	
-    	File appDir = super.submit(submission).get();
-    	return doSPLCompile(appDir,submission);
+    	File appDir = super._submit(submission).get();
+    	return doSPLCompile(appDir, JSON4JUtilities.json4j(submission));
     }
     
     private Future<File> doSPLCompile(File appDir, JSONObject submission) throws Exception {

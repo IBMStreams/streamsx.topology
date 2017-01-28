@@ -10,8 +10,10 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
 
@@ -59,9 +61,12 @@ public class DistributedStreamsContext extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Future<BigInteger> submit(JSONObject json) throws Exception {
+    Future<BigInteger> _submit(JsonObject submission) throws Exception {
 
-    	File bundle = bundler.submit(json).get();
+    	File bundle = bundler._submit(submission).get();
+    	
+    	// TODO - Gson
+    	JSONObject json = JSON4JUtilities.json4j(submission);
     	
     	Map<String, Object> config = Collections.emptyMap();
     	if (json.containsKey(SUBMISSION_DEPLOY)) {

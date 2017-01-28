@@ -38,12 +38,12 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	}
 	
 	@Override
-	public Future<File> submit(JSONObject submission) throws Exception {
+	Future<File> _submit(JsonObject submission) throws Exception {
 	    // Let the remote archive do all the work.
 	    @SuppressWarnings("unchecked")
         RemoteContext<File> ztrc = (RemoteContext<File>) RemoteContextFactory.getRemoteContext(RemoteContext.Type.BUILD_ARCHIVE);
 	    
-	    return ztrc.submit(gson(submission));
+	    return ztrc.submit(submission);
 	}
 	
 	@Override

@@ -63,36 +63,31 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         if (config.containsKey(ContextProperties.KEEP_ARTIFACTS))
             deploy.put(KEEP_ARTIFACTS, config.get(KEEP_ARTIFACTS));
         
-        JSONObject submission = new JSONObject();
-        submission.put(SUBMISSION_DEPLOY, deploy);
-        submission.put(SUBMISSION_GRAPH, jsonGraph);
+        JsonObject submission = new JsonObject();
+        submission.add(SUBMISSION_DEPLOY, gson(deploy)); // TODO pure Gson
+        submission.add(SUBMISSION_GRAPH, gson(jsonGraph)); // TODO pure Gson
         
         return createToolkit(submission);
     }
     
     @Override
-    public Future<File> submit(JSONObject submission) throws Exception {
+    Future<File> _submit(JsonObject submission) throws Exception {
         return createToolkit(submission);
     }
     
-    private Future<File> createToolkit(JSONObject submission) throws Exception {
+    private Future<File> createToolkit(JsonObject submission) throws Exception {
         
         // use the remote context to build the toolkit.
         @SuppressWarnings("unchecked")
         RemoteContext<File> tkrc = (RemoteContext<File>) getRemoteContext(RemoteContext.Type.TOOLKIT);
         
-        JsonObject gsonSubmission = gson(submission);
-        final Future<File> future = tkrc.submit(gsonSubmission);
+        final Future<File> future = tkrc.submit(submission);
         final File toolkitRoot = future.get();
         
-        JsonObject gsonDeploy = object(gsonSubmission, SUBMISSION_DEPLOY);
-        
-        // Patch up the returned deploy info.
-        JSONObject deployInfo = json4j(gsonDeploy);
-        submission.put(SUBMISSION_DEPLOY, deployInfo);
-        
+        JsonObject deploy = object(submission, SUBMISSION_DEPLOY);
+                
         // Index the toolkit
-        makeToolkit(gsonDeploy, toolkitRoot);
+        makeToolkit(deploy, toolkitRoot);
         
         return future;
     }

@@ -4,14 +4,19 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.streams.InvokeStandalone;
 
 public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> {
@@ -47,16 +52,13 @@ public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> 
     }
     
     @Override
-    public Future<Integer> submit(JSONObject json) throws Exception {
+    Future<Integer> _submit(JsonObject submission) throws Exception {
 
-    	File bundle = bundler.submit(json).get();
+    	File bundle = bundler._submit(submission).get();
         InvokeStandalone invokeStandalone = new InvokeStandalone(bundle);
-        JSONObject deploy = (JSONObject) json.get("deploy");
-        if (deploy != null) {
-            JSONObject python = (JSONObject) deploy.get(DeployKeys.PYTHON);
-            if (python != null)
-                invokeStandalone.addEnvironmentVariable("PYTHONHOME", python.get("prefix").toString());
-        }
+        JsonObject python = object(submission, "deploy", DeployKeys.PYTHON);
+        if (python != null)
+            invokeStandalone.addEnvironmentVariable("PYTHONHOME", jstring(python, "prefix"));
 
         Map<String, Object> config = Collections.emptyMap();
         Future<Integer> future = invokeStandalone.invoke(config);

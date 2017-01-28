@@ -20,6 +20,7 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
@@ -53,12 +54,15 @@ public class AnalyticsServiceStreamsContext extends
     }
 
     @Override
-    public Future<BigInteger> submit(JSONObject submission) throws Exception {
+    Future<BigInteger> _submit(JsonObject submission) throws Exception {
+        
+        JSONObject _submission = JSON4JUtilities.json4j(submission);
+        
         Map<String, Object> config = Contexts
-                .jsonDeployToMap((JSONObject) submission.get(RemoteContext.SUBMISSION_DEPLOY));
+                .jsonDeployToMap((JSONObject) _submission.get(RemoteContext.SUBMISSION_DEPLOY));
 
         preBundle(config);
-        File bundle = bundler.submit(submission).get();
+        File bundle = bundler._submit(submission).get();
         preInvoke();
 
         BigInteger jobId = submitJobToService(bundle, config);
