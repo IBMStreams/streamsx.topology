@@ -39,11 +39,11 @@ public class AnalyticsServiceStreamsContext extends
     }
 
     @Override
-    public Future<BigInteger> submit(Topology app, Map<String, Object> config)
+    Future<BigInteger> _submit(Topology app, Map<String, Object> config)
             throws Exception {
 
         preBundle(config);
-        File bundle = bundler.submit(app, config).get();
+        File bundle = bundler._submit(app, config).get();
 
         preInvoke();
 

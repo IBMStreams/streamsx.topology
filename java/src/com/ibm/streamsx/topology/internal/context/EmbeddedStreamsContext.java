@@ -23,7 +23,7 @@ public class EmbeddedStreamsContext extends
     }
 
     @Override
-    public Future<JavaTestableGraph> submit(Topology app,
+    Future<JavaTestableGraph> _submit(Topology app,
             Map<String, Object> config) throws Exception {
 
         app.builder().checkSupportsEmbeddedMode();
@@ -31,7 +31,6 @@ public class EmbeddedStreamsContext extends
         SubmissionParameterManager.initializeEmbedded(app.builder(), config);
         
         return jot.executable(app.graph()).execute();
-        // jot.executable(app.graph()).executeToCompletion();
     }
 
     @Override

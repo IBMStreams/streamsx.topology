@@ -23,7 +23,7 @@ public class EmbeddedTester extends StreamsContextImpl<JavaTestableGraph> {
     }
 
     @Override
-    public Future<JavaTestableGraph> submit(Topology app,
+    Future<JavaTestableGraph> _submit(Topology app,
             Map<String, Object> config) throws Exception {
 
         app.builder().checkSupportsEmbeddedMode();

@@ -28,11 +28,11 @@ public class DistributedStreamsContext extends
     }
 
     @Override
-    public Future<BigInteger> submit(Topology app, Map<String, Object> config)
+    Future<BigInteger> _submit(Topology app, Map<String, Object> config)
             throws Exception {
 
         preBundle();
-        File bundle = bundler.submit(app, config).get();
+        File bundle = bundler._submit(app, config).get();
         
         return submitBundle(bundle, config);
     }

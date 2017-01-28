@@ -40,11 +40,8 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
     }
 
     @Override
-    public Future<File> submit(Topology app, Map<String, Object> config)
+    Future<File> _submit(Topology app, Map<String, Object> config)
             throws Exception {
-
-        if (config == null)
-            config = new HashMap<>();
 
         // If the toolkit path is not given, then create one in the
         // currrent directory.
