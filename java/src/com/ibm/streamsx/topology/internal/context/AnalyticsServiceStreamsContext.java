@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -105,18 +107,18 @@ public class AnalyticsServiceStreamsContext extends
     
     private BigInteger submitJobToService(File bundle, Map<String, Object> config) throws IOException {
         
-        final JsonObject serviceg = getVCAPService(config);
-        JSONObject service = JSONObject.parse(serviceg.toString()); //temp            
+        final JsonObject service = getVCAPService(config);
+        final String serviceName = jstring(service, "name");
               
-        final JsonObject credentials = serviceg.getAsJsonObject("credentials");
+        final JsonObject credentials = service.getAsJsonObject("credentials");
         
         final CloseableHttpClient httpClient = HttpClients.createDefault();
         try {
-            Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Checking status :" + service.get("name"));
+            Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Checking status :" + serviceName);
             
             RestUtils.checkInstanceStatus(httpClient, credentials);
             
-            Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Submitting bundle : " + bundle.getName() + " to " + service.get("name"));
+            Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Submitting bundle : " + bundle.getName() + " to " + serviceName);
             
             JsonObject jcojson = getBluemixSubmitConfig(config);
             
