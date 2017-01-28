@@ -98,14 +98,14 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         submission.put(SUBMISSION_DEPLOY, deployInfo);
         
         // Index the toolkit
-        makeToolkit(deployInfo, toolkitRoot);
+        makeToolkit(gsonDeploy, toolkitRoot);
         
         return future;
     }
     
-    protected void makeToolkit(JSONObject deployInfo, File toolkitRoot) throws InterruptedException, Exception{
+    protected void makeToolkit(JsonObject deploy, File toolkitRoot) throws InterruptedException, Exception{
         // Invoke spl-make-toolkit 
-        InvokeMakeToolkit imt = new InvokeMakeToolkit(deployInfo, toolkitRoot);
+        InvokeMakeToolkit imt = new InvokeMakeToolkit(deploy, toolkitRoot);
         imt.invoke();
     }
 

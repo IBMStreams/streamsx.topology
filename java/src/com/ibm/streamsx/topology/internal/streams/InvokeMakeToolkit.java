@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
@@ -23,11 +23,11 @@ public class InvokeMakeToolkit {
     private final File toolkitDir;
     private final String installDir;
 
-    public InvokeMakeToolkit(JSONObject deployConfig, File toolkitDir) throws URISyntaxException, IOException {
+    public InvokeMakeToolkit(JsonObject deploy, File toolkitDir) throws URISyntaxException, IOException {
         super();
         this.toolkitDir = toolkitDir;
         
-        installDir = Util.getStreamsInstall(deployConfig, ContextProperties.COMPILE_INSTALL_DIR);
+        installDir = Util.getStreamsInstall(deploy, ContextProperties.COMPILE_INSTALL_DIR);
     }
 
     public void invoke() throws Exception, InterruptedException {

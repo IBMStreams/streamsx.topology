@@ -7,6 +7,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
@@ -46,7 +47,7 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	}
 	
 	@Override
-    protected void makeToolkit(JSONObject deployInfo, File toolkitRoot) throws InterruptedException, Exception{
+    protected void makeToolkit(JsonObject deploy, File toolkitRoot) throws InterruptedException, Exception{
         // Do nothing
     }
 
