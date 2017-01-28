@@ -4,8 +4,6 @@
  */
 package com.ibm.streamsx.topology.context;
 
-import static com.ibm.streamsx.topology.context.StreamsContextWrapper.wrap;
-
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streamsx.topology.internal.context.AnalyticsServiceStreamsContext;
 import com.ibm.streamsx.topology.internal.context.BundleStreamsContext;
@@ -21,7 +19,7 @@ import com.ibm.streamsx.topology.internal.context.ZippedToolkitStreamsContext;
 public class StreamsContextFactory {
 
     public static StreamsContext<JavaTestableGraph> getEmbedded() {
-        return wrap(new EmbeddedStreamsContext());
+        return new EmbeddedStreamsContext();
     }
 
     public static StreamsContext<?> getStreamsContext(String type) {
@@ -33,25 +31,25 @@ public class StreamsContextFactory {
         case EMBEDDED:
             return getEmbedded();
         case TOOLKIT:
-            return wrap(new ToolkitStreamsContext());
+            return new ToolkitStreamsContext();
         case BUILD_ARCHIVE:
-            return wrap(new ZippedToolkitStreamsContext());
+            return new ZippedToolkitStreamsContext();
         case STANDALONE_BUNDLE:
-            return wrap(new BundleStreamsContext(true));
+            return new BundleStreamsContext(true);
         case BUNDLE:
-            return wrap(new BundleStreamsContext(false));
+            return new BundleStreamsContext(false);
         case STANDALONE:
-            return wrap(new StandaloneStreamsContext());
+            return new StandaloneStreamsContext();
         case DISTRIBUTED:
-            return wrap(new DistributedStreamsContext());
+            return new DistributedStreamsContext();
         case STANDALONE_TESTER:
-            return wrap(new StandaloneTester());
+            return new StandaloneTester();
         case EMBEDDED_TESTER:
-            return wrap(new EmbeddedTester());
+            return new EmbeddedTester();
         case DISTRIBUTED_TESTER:
-            return wrap(new DistributedTester());
+            return new DistributedTester();
         case ANALYTICS_SERVICE:
-            return wrap(new AnalyticsServiceStreamsContext());
+            return new AnalyticsServiceStreamsContext();
         default:
             throw new IllegalArgumentException("Unknown type:" + type);
         }
