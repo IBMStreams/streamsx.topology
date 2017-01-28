@@ -10,7 +10,6 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -36,11 +35,6 @@ public class InvokeSubmit {
     
     public static void checkPreconditions() throws IllegalStateException {
         Util.checkInvokeStreamtoolPreconditions();
-    }
-
-    public BigInteger invoke() throws Exception, InterruptedException {
-        Map<String,Object> config = Collections.emptyMap(); 
-        return invoke(config);
     }
 
     public BigInteger invoke(Map<String, ? extends Object> config) throws Exception, InterruptedException {

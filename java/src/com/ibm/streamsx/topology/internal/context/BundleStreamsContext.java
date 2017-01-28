@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -86,7 +87,8 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         String namespace = (String) jsonGraph.get("namespace");
         String name = (String) jsonGraph.get("name");
 
-        InvokeSc sc = new InvokeSc(deployInfo, standalone, namespace, name, appDir);
+        // TODO - full switch to Gson
+        InvokeSc sc = new InvokeSc(gson(deployInfo), standalone, namespace, name, appDir);
         
         // Add the toolkits
         JSONObject graphConfig  = (JSONObject) jsonGraph.get("config");
