@@ -4,12 +4,11 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
-import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+import static com.ibm.streamsx.topology.context.ContextProperties.TOOLKIT_DIR;
 import static com.ibm.streamsx.topology.context.remote.RemoteContextFactory.getRemoteContext;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.makeDirectoryStructure;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
-import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
-import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.json4j;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -54,18 +53,10 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         
         app.finalizeGraph(getType(), config);
         
-        addConfigToJSON(app.builder().getConfig(), config);
+        addConfigToJSON(app.builder().getConfig(), config);       
         
-        JSONObject jsonGraph = app.builder().complete();
-        
-        JSONObject deploy = new JSONObject();
-        deploy.put(ContextProperties.TOOLKIT_DIR, toolkitRoot.getAbsolutePath());
-        if (config.containsKey(ContextProperties.KEEP_ARTIFACTS))
-            deploy.put(KEEP_ARTIFACTS, config.get(KEEP_ARTIFACTS));
-        
-        JsonObject submission = new JsonObject();
-        submission.add(SUBMISSION_DEPLOY, gson(deploy)); // TODO pure Gson
-        submission.add(SUBMISSION_GRAPH, gson(jsonGraph)); // TODO pure Gson
+        JsonObject submission = createSubmission(app, config);
+        deploy(submission).addProperty(TOOLKIT_DIR, toolkitRoot.getAbsolutePath());
         
         return createToolkit(submission);
     }

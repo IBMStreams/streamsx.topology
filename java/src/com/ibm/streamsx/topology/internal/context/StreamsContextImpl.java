@@ -4,6 +4,10 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
+import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOY;
+import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,8 +16,10 @@ import java.util.concurrent.Future;
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 abstract class StreamsContextImpl<T> implements StreamsContext<T> {
 
@@ -59,4 +65,22 @@ abstract class StreamsContextImpl<T> implements StreamsContext<T> {
     Future<T> _submit(JsonObject submission) throws Exception {
         throw new UnsupportedOperationException();
     } 
+    
+    /**
+     * Create JSON form of the submission from a topology and config.
+     */
+    JsonObject createSubmission(Topology app, Map<String,Object> config) {
+        JsonObject deploy = new JsonObject();
+        
+        if (config.containsKey(ContextProperties.KEEP_ARTIFACTS)) {
+            boolean keep = Util.getConfigEntry(config, KEEP_ARTIFACTS, Boolean.class);
+            deploy.addProperty(KEEP_ARTIFACTS, keep);
+        }
+        
+        JsonObject submission = new JsonObject();
+        submission.add(DEPLOY,deploy);
+        submission.add(SUBMISSION_GRAPH, gson(app.builder().complete()));
+        
+        return submission;
+    }
 }

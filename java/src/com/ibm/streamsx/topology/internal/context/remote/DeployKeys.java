@@ -4,10 +4,26 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+
+import com.google.gson.JsonObject;
+
 /**
- * Keys in the JSON deploy objcet for job submission.
+ * Keys in the JSON deploy object for job submission.
  */
 public interface DeployKeys {
+    
+    /**
+     * Key for deploy information in top-level submission object.
+     */
+    String DEPLOY = "deploy";
+    
+    /**
+     * Get deploy object from submission.
+     */
+    static JsonObject deploy(JsonObject submission) {
+        return object(submission, DEPLOY);
+    }
     
     /**
      * Python information.

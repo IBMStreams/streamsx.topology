@@ -4,8 +4,11 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
-import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
-import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
+import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.deleteToolkit;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -14,14 +17,13 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
-import com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext;
 import com.ibm.streamsx.topology.internal.core.InternalProperties;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
+import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeSc;
 
@@ -55,16 +57,8 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         config.put(ContextProperties.TOOLKIT_DIR, appDir.getAbsolutePath());
 
         File appDirA = super._submit(app, config).get();
-        
-        JSONObject jsonGraph = app.builder().complete();
-        
-        JSONObject submission = new JSONObject();
-        JSONObject submissionDeploy = new JSONObject();
-        submission.put(SUBMISSION_DEPLOY, submissionDeploy);
-        if (config.containsKey(KEEP_ARTIFACTS)) {
-            submissionDeploy.put(KEEP_ARTIFACTS, config.get(KEEP_ARTIFACTS));
-        }
-        submission.put(SUBMISSION_GRAPH, jsonGraph);
+                
+        JsonObject submission = createSubmission(app, config);
         
         return doSPLCompile(appDirA, submission);
     }
@@ -73,34 +67,29 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
     Future<File> _submit(JsonObject submission) throws Exception {
     	
     	File appDir = super._submit(submission).get();
-    	return doSPLCompile(appDir, JSON4JUtilities.json4j(submission));
+    	return doSPLCompile(appDir, submission);
     }
     
-    private Future<File> doSPLCompile(File appDir, JSONObject submission) throws Exception {
+    private Future<File> doSPLCompile(File appDir, JsonObject submission) throws Exception {
     	 	
-    	JSONObject deployInfo = (JSONObject)  submission.get(SUBMISSION_DEPLOY);
-    	JSONObject jsonGraph = (JSONObject) submission.get(SUBMISSION_GRAPH);
+    	JsonObject deploy = deploy(submission);
+    	JsonObject graph = GraphKeys.graph(submission);
     	
-        String namespace = (String) jsonGraph.get("namespace");
-        String name = (String) jsonGraph.get("name");
+        String namespace = jstring(graph, "namespace");
+        String name = jstring(graph, "name");
 
-        // TODO - full switch to Gson
-        InvokeSc sc = new InvokeSc(gson(deployInfo), standalone, namespace, name, appDir);
+        InvokeSc sc = new InvokeSc(deploy, standalone, namespace, name, appDir);
         
         // Add the toolkits
-        JSONObject graphConfig  = (JSONObject) jsonGraph.get("config");
-        if (graphConfig != null) {
-            JSONObject splConfig = (JSONObject) graphConfig.get("spl");
-            if (splConfig != null) {
-                JSONArray toolkits = (JSONArray) splConfig.get(InternalProperties.TOOLKITS_JSON);
-                if (toolkits != null) {
-                    for (Object obj : toolkits) {
-                        JSONObject tkinfo = (JSONObject) obj;
-                        String root = (String) tkinfo.get("root");
-                        if (root != null)
-                            sc.addToolkit(new File(root));
-                    }
-                }
+        JsonObject splConfig = object(graph, "config", "spl");
+        if (splConfig != null) {
+            JsonArray toolkits = array(splConfig, InternalProperties.TOOLKITS_JSON);
+            
+            for (JsonElement obj : toolkits) {
+                JsonObject tkinfo = obj.getAsJsonObject();
+                String root = jstring(tkinfo, "root");
+                if (root != null)
+                    sc.addToolkit(new File(root));
             }
         }
 
@@ -115,14 +104,12 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         Files.copy(bundle.toPath(), localBundle.toPath(),
                 StandardCopyOption.REPLACE_EXISTING);
 
-        if (!ToolkitRemoteContext.deleteToolkit(appDir, JSON4JUtilities.gson(deployInfo)))
+        if (!deleteToolkit(appDir, deploy))
             trace.info("Keeping toolkit at: " + appDir.getAbsolutePath());
 
         trace.info("Streams Application Bundle produced: "
                 + localBundle.getName());
 
         return new CompletedFuture<File>(localBundle);
-    }
-
-    
+    }  
 }
