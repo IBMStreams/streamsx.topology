@@ -23,8 +23,8 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
     }
 	
 	@Override
-	public Future<File> submit(Topology app, Map<String, Object> config) throws Exception {        
-        File toolkitRoot = super.submit(app, config).get();
+	Future<File> _submit(Topology app, Map<String, Object> config) throws Exception {
+	    File toolkitRoot = super._submit(app, config).get();
         
         JSONObject deploy = new JSONObject();
         deploy.put(ContextProperties.TOOLKIT_DIR, toolkitRoot.getAbsolutePath());

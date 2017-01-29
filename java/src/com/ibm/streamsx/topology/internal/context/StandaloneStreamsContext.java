@@ -30,10 +30,10 @@ public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> 
      * running.
      */
     @Override
-    public Future<Integer> submit(Topology app, Map<String, Object> config)
+    Future<Integer> _submit(Topology app, Map<String, Object> config)
             throws Exception {
 
-        File bundle = bundler.submit(app, config).get();
+        File bundle = bundler._submit(app, config).get();
 
         InvokeStandalone invokeStandalone = new InvokeStandalone(bundle);
 

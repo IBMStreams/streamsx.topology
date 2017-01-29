@@ -4,7 +4,9 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Future;
 
 import com.ibm.json.java.JSONObject;
@@ -15,8 +17,23 @@ abstract class StreamsContextImpl<T> implements StreamsContext<T> {
 
     @Override
     public final Future<T> submit(Topology topology) throws Exception {
-        return submit(topology, new HashMap<String, Object>());
+        return submit(topology, Collections.emptyMap());
     }
+    
+    /**
+     * Force a copy of the config to avoid modifying the passed in config.
+     */
+    @Override
+    public final Future<T> submit(Topology topology, Map<String, Object> config) throws Exception {
+        return _submit(topology, new HashMap<>(config));
+    }
+    
+    /**
+     * The workhorse for submit, can modify its config so this
+     * variant (_submit) should be called by sub-classes instead
+     * of (submit) to allow data to be exchanged through config values.
+     */
+    abstract Future<T> _submit(Topology topology, Map<String, Object> config) throws Exception;
 
     /**
      * Default implementation.

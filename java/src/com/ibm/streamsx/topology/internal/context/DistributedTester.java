@@ -28,9 +28,9 @@ public class DistributedTester extends DistributedStreamsContext implements Auto
     }
 
     @Override
-    public Future<BigInteger> submit(Topology app, Map<String, Object> config)
+    Future<BigInteger> _submit(Topology app, Map<String, Object> config)
             throws Exception {
-        Future<BigInteger> distributed = super.submit(app, config);
+        Future<BigInteger> distributed = super._submit(app, config);
 
         return new DistributedTesterContextFuture(distributed.get(), this);
     }

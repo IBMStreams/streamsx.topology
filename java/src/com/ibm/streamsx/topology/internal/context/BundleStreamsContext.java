@@ -41,11 +41,8 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
     }
 
     @Override
-    public Future<File> submit(Topology app, Map<String, Object> config)
+    Future<File> _submit(Topology app, Map<String, Object> config)
             throws Exception {
-
-        if (config == null)
-            config = new HashMap<>();
 
         File appDir;
         if (!config.containsKey(ContextProperties.APP_DIR)) {
@@ -57,7 +54,7 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         }
         config.put(ContextProperties.TOOLKIT_DIR, appDir.getAbsolutePath());
 
-        File appDirA = super.submit(app, config).get();
+        File appDirA = super._submit(app, config).get();
         
         JSONObject jsonGraph = app.builder().complete();
         

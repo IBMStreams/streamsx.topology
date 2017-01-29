@@ -27,9 +27,9 @@ public class StandaloneTester extends StandaloneStreamsContext implements AutoCl
     }
 
     @Override
-    public Future<Integer> submit(Topology app, Map<String, Object> config)
+    public Future<Integer> _submit(Topology app, Map<String, Object> config)
             throws Exception {
-        Future<Integer> standalone = super.submit(app, config);
+        Future<Integer> standalone = super._submit(app, config);
 
         return new StandaloneTesterContextFuture<Integer>(standalone, this);
     }
