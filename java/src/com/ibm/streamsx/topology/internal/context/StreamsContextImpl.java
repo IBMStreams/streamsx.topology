@@ -4,22 +4,39 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
-import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+import static com.ibm.streamsx.topology.context.ContextProperties.SUBMISSION_PARAMS;
+import static com.ibm.streamsx.topology.context.ContextProperties.TRACING_LEVEL;
+import static com.ibm.streamsx.topology.context.JobProperties.DATA_DIRECTORY;
+import static com.ibm.streamsx.topology.context.JobProperties.GROUP;
+import static com.ibm.streamsx.topology.context.JobProperties.NAME;
+import static com.ibm.streamsx.topology.context.JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION;
+import static com.ibm.streamsx.topology.context.JobProperties.PRELOAD_APPLICATION_BUNDLES;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOY;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_CONFIG_OVERLAYS;
 import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
+import static com.ibm.streamsx.topology.internal.streams.Util.getConfigEntry;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
-import com.ibm.streamsx.topology.internal.streams.Util;
+import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
+import com.ibm.streamsx.topology.jobconfig.JobConfig;
 
 abstract class StreamsContextImpl<T> implements StreamsContext<T> {
 
@@ -70,17 +87,67 @@ abstract class StreamsContextImpl<T> implements StreamsContext<T> {
      * Create JSON form of the submission from a topology and config.
      */
     JsonObject createSubmission(Topology app, Map<String,Object> config) {
-        JsonObject deploy = new JsonObject();
-        
-        if (config.containsKey(ContextProperties.KEEP_ARTIFACTS)) {
-            boolean keep = Util.getConfigEntry(config, KEEP_ARTIFACTS, Boolean.class);
-            deploy.addProperty(KEEP_ARTIFACTS, keep);
-        }
+        JsonObject deploy = new JsonObject();        
+        addConfigToDeploy(deploy, config);
         
         JsonObject submission = new JsonObject();
         submission.add(DEPLOY,deploy);
         submission.add(SUBMISSION_GRAPH, gson(app.builder().complete()));
         
         return submission;
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static JsonElement convertConfigValue(Object value) {
+        if (value instanceof Boolean)
+            return new JsonPrimitive((Boolean) value); 
+        else if (value instanceof Number)
+            return new JsonPrimitive((Number) value);
+        else if (value instanceof String) {
+            return new JsonPrimitive((String) value);
+        } else if (value instanceof JSONObject) {
+            return gson((JSONObject) value);
+        } else if (value instanceof Collection) {
+            JsonArray array = new JsonArray();
+            for (Object e : (Collection<Object>) value) {
+                array.add(convertConfigValue(e));
+            }
+            return array;
+        }
+        throw new IllegalArgumentException(value.getClass().getName());
+    }
+    
+    /**
+     * Config keys that are skipped from being added generically in
+     * the deploy JSON.
+     */
+    private static final Set<String> CONFIG_SKIP_KEYS = new HashSet<>();
+    static {
+        // Keys handled by Job Config overlays
+        Collections.addAll(CONFIG_SKIP_KEYS, TRACING_LEVEL, SUBMISSION_PARAMS);
+        Collections.addAll(CONFIG_SKIP_KEYS, NAME, GROUP, DATA_DIRECTORY,
+                OVERRIDE_RESOURCE_LOAD_PROTECTION, PRELOAD_APPLICATION_BUNDLES);
+    }
+    
+    /**
+     * Convert the config information into the JSON deploy.
+     */
+    protected void addConfigToDeploy(JsonObject deploy, Map<String,Object> config) {
+        
+        // For job configuration information we convert to a job
+        // config overlay
+        JobConfig jc = JobConfig.fromProperties(config);
+        JobConfigOverlay jco = new JobConfigOverlay(jc);       
+        deploy.add(JOB_CONFIG_OVERLAYS, jco.fullOverlayAsJSON());
+        
+        for (String key : config.keySet()) {
+            if (CONFIG_SKIP_KEYS.contains(key))
+                continue;
+            try {
+                deploy.add(key, convertConfigValue(config.get(key)));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Unknown type for config:" + key + " - " + e.getMessage());
+            }
+        }
     }
 }

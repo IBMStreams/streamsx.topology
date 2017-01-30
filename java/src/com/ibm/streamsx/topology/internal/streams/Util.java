@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.streams;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -11,6 +13,7 @@ import java.util.Map;
 
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class Util {
     public static final String STREAMS_DOMAIN_ID = "STREAMS_DOMAIN_ID";
@@ -59,7 +62,7 @@ public class Util {
         if (!deploy.has(installKey))
             return getStreamsInstall();
         
-        return verifyStreamsInstall(deploy.get(installKey).toString());
+        return verifyStreamsInstall(jstring(deploy, installKey));
     }
     
     /**
