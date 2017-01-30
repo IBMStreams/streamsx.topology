@@ -521,18 +521,15 @@ public class Topology implements TopologyElement {
      * 
      * @throws Exception
      */
-    public Map<String, Object> finalizeGraph(StreamsContext.Type contextType,
+    public void finalizeGraph(StreamsContext.Type contextType,
             Map<String, Object> config) throws Exception {
 
-        Map<String, Object> graphItems = new HashMap<>();
         dependencyResolver.resolveDependencies(config);
         
         finalizeConfig();
-
-        if (tester != null)
-            tester.finalizeGraph(contextType, graphItems);
-
-        return graphItems;
+        
+        if (hasTester())
+           tester.finalizeGraph(contextType);
     }
     
     /**
@@ -683,8 +680,9 @@ public class Topology implements TopologyElement {
     }
 
     /**
-     * Get the tester for this topology.
-     * Testing added into the topology  through
+     * Get the tester for this topology. if the tester was
+     * not already created it is created.
+     * Testing added into the topology through
      * the returned {@link Tester} only impacts
      * the topology if submitted to a {@link StreamsContext}
      * of type
@@ -698,6 +696,14 @@ public class Topology implements TopologyElement {
             tester = new TupleCollection(this);
 
         return tester;
+    }
+    /**
+     * Has the tester been created for this topology.
+     * Returns true if {@link #getTester()} has been called.
+     * @return True if the tester has been created, false otherwise.
+     */
+    public final boolean hasTester() {
+        return tester != null;
     }
     
     /**

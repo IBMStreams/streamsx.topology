@@ -15,7 +15,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
@@ -31,8 +30,6 @@ import com.ibm.streamsx.topology.internal.streams.InvokeMakeToolkit;
 public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
 	static final Logger trace = Topology.TOPOLOGY_LOGGER;
-	
-    Map<String, Object> graphItems;
     
     @Override
     public Type getType() {
@@ -55,7 +52,7 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
         makeDirectoryStructure(toolkitRoot,
                 (String) app.builder().json().get("namespace"));
         
-        graphItems = app.finalizeGraph(getType(), config);
+        app.finalizeGraph(getType(), config);
         
         addConfigToJSON(app.builder().getConfig(), config);
         

@@ -33,12 +33,12 @@ public class DistributedStreamsContext extends
 
         preBundle();
         File bundle = bundler._submit(app, config).get();
-        
+        preInvoke(app);
         return submitBundle(bundle, config);
     }
     
     private Future<BigInteger> submitBundle(File bundle, Map<String, Object> config) throws InterruptedException, Exception {
-        preInvoke();
+        
         InvokeSubmit submitjob = new InvokeSubmit(bundle);
 
         BigInteger jobId = submitjob.invoke(config);
@@ -46,7 +46,7 @@ public class DistributedStreamsContext extends
         return new CompletedFuture<BigInteger>(jobId);
     }
     
-    void preInvoke() {
+    void preInvoke(Topology app) {
     }
     
     void preBundle() {
