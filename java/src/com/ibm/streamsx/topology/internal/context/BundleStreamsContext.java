@@ -10,7 +10,6 @@ import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;

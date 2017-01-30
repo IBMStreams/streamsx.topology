@@ -37,14 +37,13 @@ public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> 
 
         InvokeStandalone invokeStandalone = new InvokeStandalone(bundle);
 
-        preInvoke();
+        preInvoke(app);
         Future<Integer> future = invokeStandalone.invoke(config);
 
-        // bundle.delete();
         return future;
     }
 
-    void preInvoke() {
+    void preInvoke(Topology app) {
     }
     
     @Override
@@ -59,7 +58,6 @@ public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> 
                 invokeStandalone.addEnvironmentVariable("PYTHONHOME", python.get("prefix").toString());
         }
 
-        preInvoke();
         Map<String, Object> config = Collections.emptyMap();
         Future<Integer> future = invokeStandalone.invoke(config);
 
