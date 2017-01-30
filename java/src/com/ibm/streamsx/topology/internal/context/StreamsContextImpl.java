@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.context;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.SUBMISSION_PARAMS;
 import static com.ibm.streamsx.topology.context.ContextProperties.TRACING_LEVEL;
+import static com.ibm.streamsx.topology.context.JobProperties.CONFIG;
 import static com.ibm.streamsx.topology.context.JobProperties.DATA_DIRECTORY;
 import static com.ibm.streamsx.topology.context.JobProperties.GROUP;
 import static com.ibm.streamsx.topology.context.JobProperties.NAME;
@@ -16,6 +17,7 @@ import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_C
 import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
 import static com.ibm.streamsx.topology.internal.streams.Util.getConfigEntry;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -113,6 +115,8 @@ abstract class StreamsContextImpl<T> implements StreamsContext<T> {
                 array.add(convertConfigValue(e));
             }
             return array;
+        } else if (value instanceof File) {
+            return new JsonPrimitive(((File) value).getAbsolutePath());
         }
         throw new IllegalArgumentException(value.getClass().getName());
     }
@@ -124,8 +128,12 @@ abstract class StreamsContextImpl<T> implements StreamsContext<T> {
     private static final Set<String> CONFIG_SKIP_KEYS = new HashSet<>();
     static {
         // Keys handled by Job Config overlays
+        
+        // ContextProperties
         Collections.addAll(CONFIG_SKIP_KEYS, TRACING_LEVEL, SUBMISSION_PARAMS);
-        Collections.addAll(CONFIG_SKIP_KEYS, NAME, GROUP, DATA_DIRECTORY,
+        
+        // JobProperties
+        Collections.addAll(CONFIG_SKIP_KEYS, CONFIG, NAME, GROUP, DATA_DIRECTORY,
                 OVERRIDE_RESOURCE_LOAD_PROTECTION, PRELOAD_APPLICATION_BUNDLES);
     }
     
@@ -138,7 +146,7 @@ abstract class StreamsContextImpl<T> implements StreamsContext<T> {
         // config overlay
         JobConfig jc = JobConfig.fromProperties(config);
         JobConfigOverlay jco = new JobConfigOverlay(jc);       
-        deploy.add(JOB_CONFIG_OVERLAYS, jco.fullOverlayAsJSON());
+        jco.fullOverlayAsJSON(deploy);
         
         for (String key : config.keySet()) {
             if (CONFIG_SKIP_KEYS.contains(key))

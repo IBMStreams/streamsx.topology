@@ -106,7 +106,7 @@ public class AnalyticsServiceStreamsContext extends
             
         JobConfigOverlay jco = new JobConfigOverlay(jc);
         
-        return jco.fullOverlayAsJSON();
+        return jco.fullOverlayAsJSON(new JsonObject());
     }
     
     private BigInteger submitJobToService(File bundle, Map<String, Object> config) throws IOException {
