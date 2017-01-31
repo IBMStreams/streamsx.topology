@@ -78,7 +78,7 @@ def submit(ctxtype, graph, config=None, username=None, password=None, log_level=
         logger.exception("Error while submitting application.")
 
 
-class _BaseSubmitter:
+class _BaseSubmitter(object):
     """
     A submitter which handles submit operations common across all submitter types..
     """
@@ -370,7 +370,7 @@ class _DistributedSubmitter(_BaseSubmitter):
                 {'username': username, 'password': password, 'rest_api_url': rest_api_url})
 
 
-class _SubmitContextFactory:
+class _SubmitContextFactory(object):
     """
     ContextSubmitter:
         Responsible for performing the correct submission depending on a number of factors, including: the
@@ -457,7 +457,7 @@ class UnsupportedContextException(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
 
-class ContextTypes:
+class ContextTypes(object):
     """
         Types of submission contexts:
 
@@ -492,7 +492,7 @@ class ContextTypes:
     ANALYTICS_SERVICE = 'ANALYTICS_SERVICE'
 
 
-class ConfigParams:
+class ConfigParams(object):
     """
     Configuration options which may be used as keys in the submit's config parameter.
 
@@ -504,7 +504,7 @@ class ConfigParams:
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
     JOB_CONFIG = 'topology.jobConfigOverlays'
 
-class JobConfig:
+class JobConfig(object):
     """
     Job configuration
     """
