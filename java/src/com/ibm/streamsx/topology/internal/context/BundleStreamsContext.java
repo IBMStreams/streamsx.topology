@@ -56,11 +56,12 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         }
         config.put(ContextProperties.TOOLKIT_DIR, appDir.getAbsolutePath());
 
-        File appDirA = super._submit(app, config).get();
+        // File appDirA = super._submit(app, config).get();
                 
         JsonObject submission = createSubmission(app, config);
         
-        return doSPLCompile(appDirA, submission);
+        //return doSPLCompile(appDirA, submission);
+        return _submit(submission);
     }
     
     @Override

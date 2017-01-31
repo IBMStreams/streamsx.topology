@@ -28,6 +28,8 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
@@ -167,17 +169,22 @@ public class DependencyResolver {
     /**
      * Resolve the dependencies. Copies jars to the impl/lib part of the bundle
      * and file/directory dependencies to the bundle.
-     * @param config context configuration
      * @throws IOException
      * @throws URISyntaxException
      */
-    public void resolveDependencies(Map<String, Object> config)
+    public void resolveDependencies()
             throws IOException, URISyntaxException {
+        
+        JSONObject graphConfig = topology.builder().getConfig();
+        JSONArray includes = (JSONArray) graphConfig.get("includes");
+        if (includes == null)
+            graphConfig.put("includes", includes = new JSONArray());
+              
         for (BOperatorInvocation op : operatorToJarDependencies.keySet()) {    
             ArrayList<String> jars = new ArrayList<String>();
             
-            for (Path pa : operatorToJarDependencies.get(op)) {
-                String jarName = resolveDependency(pa, config);
+            for (Path source : operatorToJarDependencies.get(op)) {
+                String jarName = resolveDependency(source, includes);
                 jars.add("impl/lib/" + jarName);
             }
 
@@ -186,8 +193,8 @@ public class DependencyResolver {
         }
         
         ArrayList<String> jars = new ArrayList<String>();
-        for(Path dep : globalDependencies){
-            String jarName = resolveDependency(dep, config);
+        for(Path source : globalDependencies){
+            String jarName = resolveDependency(source, includes);
             jars.add("impl/lib/" + jarName);	    
         }	
         
@@ -217,54 +224,48 @@ public class DependencyResolver {
         }
 
         for(Artifact dep : globalFileDependencies)
-            resolveFileDependency(dep, config);
+            resolveFileDependency(dep, includes);
     }
     
-    private String resolveDependency(Path pa, Map<String, Object> config){ 
-        final File toolkitRoot = new File((String) (config
-                .get(ContextProperties.TOOLKIT_DIR)));
-        final File toolkitLib = new File(toolkitRoot, "impl/lib/");
+    private String resolveDependency(Path source, JSONArray includes){ 
         
-        String jarName=null;
+        String jarName;
         
-        if (!previouslyCopiedDependencies.containsKey(pa)) {
-            Path absolutePath = pa;
-            File absoluteFile = absolutePath.toFile();
-                    
+        if (!previouslyCopiedDependencies.containsKey(source)) {
+            
+            File sourceFile = source.toFile();
+            
+            JSONObject include = new JSONObject();
+                 
             // If it's a file, we assume its a jar file.
-            if (absoluteFile.isFile()) {
-                jarName = absolutePath.getFileName().toString();
-                try {
-                    Files.copy(absolutePath, new File(toolkitLib, jarName).toPath(),
-                        StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+            if (sourceFile.isFile()) {
+                jarName = source.getFileName().toString();
+                
+                include.put("source", source.toAbsolutePath().toString());
+                include.put("target", "impl/lib");
             } 
             
-            else if (absoluteFile.isDirectory()) {
-                try {
-                    jarName = createJarFile(toolkitLib, absoluteFile);
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+            else if (sourceFile.isDirectory()) {
+                jarName = "classes" + previouslyCopiedDependencies.size() + "_" + sourceFile.getName() + ".jar";
+                include.put("classes", source.toAbsolutePath().toString());
+                include.put("name", jarName);
+                include.put("target", "impl/lib");
             }
             
             else {
-                throw new IllegalArgumentException("Path not a file or directory:" + pa);
+                throw new IllegalArgumentException("Path not a file or directory:" + source);
             }
-            previouslyCopiedDependencies.put(pa, jarName);
+            includes.add(include);
+            previouslyCopiedDependencies.put(source, jarName);
         } 
         
         else {
-            jarName = previouslyCopiedDependencies.get(pa);
+            jarName = previouslyCopiedDependencies.get(source);
         }
         
         // Sanity check
         if(null == jarName){
-            throw new IllegalStateException("Error resolving dependency "+ pa);
+            throw new IllegalStateException("Error resolving dependency "+ source);
         }
         return jarName;
     }
@@ -272,13 +273,7 @@ public class DependencyResolver {
     /**
      * Copy the Artifact to the toolkit
      */
-    private void resolveFileDependency(Artifact a, Map<String, Object> config)
-            throws IOException {
-    	
-    	JSONArray includes = (JSONArray) topology.builder().getConfig().get("includes");
-    	if (includes == null)
-    		topology.builder().getConfig().put("includes", includes = new JSONArray());    	
-    	
+    private void resolveFileDependency(Artifact a, JSONArray includes)  {    	
         JSONObject include = new JSONObject();
         include.put("source", a.absPath.toString());
         include.put("target", a.dstDirName);

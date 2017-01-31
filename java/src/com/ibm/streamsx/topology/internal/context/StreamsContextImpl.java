@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.context;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.SUBMISSION_PARAMS;
 import static com.ibm.streamsx.topology.context.ContextProperties.TRACING_LEVEL;
+import static com.ibm.streamsx.topology.context.ContextProperties.VMARGS;
 import static com.ibm.streamsx.topology.context.JobProperties.CONFIG;
 import static com.ibm.streamsx.topology.context.JobProperties.DATA_DIRECTORY;
 import static com.ibm.streamsx.topology.context.JobProperties.GROUP;
@@ -14,6 +15,7 @@ import static com.ibm.streamsx.topology.context.JobProperties.OVERRIDE_RESOURCE_
 import static com.ibm.streamsx.topology.context.JobProperties.PRELOAD_APPLICATION_BUNDLES;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOY;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_CONFIG_OVERLAYS;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
 import static com.ibm.streamsx.topology.internal.streams.Util.getConfigEntry;
 
@@ -36,6 +38,7 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
@@ -87,10 +90,16 @@ abstract class StreamsContextImpl<T> implements StreamsContext<T> {
     
     /**
      * Create JSON form of the submission from a topology and config.
+     * @throws Exception 
      */
-    JsonObject createSubmission(Topology app, Map<String,Object> config) {
+    JsonObject createSubmission(Topology app, Map<String,Object> config) throws Exception {
+        
+        app.finalizeGraph(getType());
+        
         JsonObject deploy = new JsonObject();        
         addConfigToDeploy(deploy, config);
+        
+        
         
         JsonObject submission = new JsonObject();
         submission.add(DEPLOY,deploy);
@@ -140,7 +149,7 @@ abstract class StreamsContextImpl<T> implements StreamsContext<T> {
     /**
      * Convert the config information into the JSON deploy.
      */
-    protected void addConfigToDeploy(JsonObject deploy, Map<String,Object> config) {
+    private void addConfigToDeploy(JsonObject deploy, Map<String,Object> config) {
         
         // For job configuration information we convert to a job
         // config overlay

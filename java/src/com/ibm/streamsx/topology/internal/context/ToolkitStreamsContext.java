@@ -38,6 +38,8 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
     @Override
     Future<File> _submit(Topology app, Map<String, Object> config)
             throws Exception {
+        
+        if (false) {
 
         // If the toolkit path is not given, then create one in the
         // currrent directory.
@@ -50,15 +52,14 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
 
         makeDirectoryStructure(toolkitRoot,
                 (String) app.builder().json().get("namespace"));
-        
-        app.finalizeGraph(getType(), config);
+        }
         
         addConfigToJSON(app.builder().getConfig(), config);       
         
         JsonObject submission = createSubmission(app, config);
-        deploy(submission).addProperty(TOOLKIT_DIR, toolkitRoot.getAbsolutePath());
+        // deploy(submission).addProperty(TOOLKIT_DIR, toolkitRoot.getAbsolutePath());
         
-        return createToolkit(submission);
+        return _submit(submission);
     }
     
     @Override

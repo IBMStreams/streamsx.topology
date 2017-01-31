@@ -22,12 +22,14 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	
 	@Override
 	Future<File> _submit(Topology app, Map<String, Object> config) throws Exception {
-	    File toolkitRoot = super._submit(app, config).get();
+	    // File toolkitRoot = super._submit(app, config).get();
 	    	    
 	    JsonObject submission = createSubmission(app, config);
-	    deploy(submission).addProperty(TOOLKIT_DIR, toolkitRoot.getAbsolutePath());
+	    // deploy(submission).addProperty(TOOLKIT_DIR, toolkitRoot.getAbsolutePath());
         
-        return ZippedToolkitRemoteContext.createCodeArchive(toolkitRoot, submission);
+        // return ZippedToolkitRemoteContext.createCodeArchive(toolkitRoot, submission);
+	    
+	    return _submit(submission);
 	}
 	
 	@Override
