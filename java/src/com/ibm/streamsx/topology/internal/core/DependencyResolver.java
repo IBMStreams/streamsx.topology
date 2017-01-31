@@ -4,20 +4,11 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,17 +16,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.jar.JarEntry;
-import java.util.jar.JarOutputStream;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
-import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.functional.ops.Functional;
 import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 
@@ -167,10 +153,9 @@ public class DependencyResolver {
     }
 
     /**
-     * Resolve the dependencies. Copies jars to the impl/lib part of the bundle
-     * and file/directory dependencies to the bundle.
-     * @throws IOException
-     * @throws URISyntaxException
+     * Resolve the dependencies.
+     * Creates entries in the graph config that will
+     * result in files being copied into the toolkit.
      */
     public void resolveDependencies()
             throws IOException, URISyntaxException {
@@ -246,6 +231,7 @@ public class DependencyResolver {
             } 
             
             else if (sourceFile.isDirectory()) {
+                // Create an entry that will convert the classes dir into a jar file
                 jarName = "classes" + previouslyCopiedDependencies.size() + "_" + sourceFile.getName() + ".jar";
                 include.put("classes", source.toAbsolutePath().toString());
                 include.put("name", jarName);
@@ -279,73 +265,4 @@ public class DependencyResolver {
         include.put("target", a.dstDirName);
         includes.add(include);
    }
-    
-    /**
-     * Create a jar file from the classes directory, creating it directly in
-     * the toolkit.
-     */
-    private static String createJarFile(File toolkitLib, final File classesDir) throws IOException {
-        
-        final Path classesPath = classesDir.toPath();
-        Path jarPath = Files.createTempFile(toolkitLib.toPath(), "classes", ".jar");
-        try (final JarOutputStream jarOut =
-                new JarOutputStream(
-                new BufferedOutputStream(
-                        new FileOutputStream(jarPath.toFile()), 128*1024))) {
-        
-        Files.walkFileTree(classesDir.toPath(), new FileVisitor<Path>() {
-
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir,
-                    BasicFileAttributes attrs) throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file,
-                    BasicFileAttributes attrs) throws IOException {
-                File classFile = file.toFile();
-                if (classFile.isFile()) {
-                    //  Write the entry followed by the data.
-                    Path relativePath = classesPath.relativize(file);
-                    JarEntry je = new JarEntry(relativePath.toString());
-                    je.setTime(classFile.lastModified());
-                    jarOut.putNextEntry(je);
-                    
-                    final byte[] data = new byte[32*1024];
-                    try (final BufferedInputStream classIn =
-                            new BufferedInputStream(
-                                    new FileInputStream(classFile), data.length)) {
-                        
-                        for (;;) {
-                            int count = classIn.read(data);
-                            if (count == -1)
-                                break;
-                            jarOut.write(data, 0, count);
-                        }
-                    }
-                    jarOut.closeEntry();
-                }
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc)
-                    throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                    throws IOException {
-                dir.toFile().delete();
-                return FileVisitResult.CONTINUE;
-            }
-        });
-        
-        }
-        
-        return jarPath.getFileName().toString();
-    }
-
 }

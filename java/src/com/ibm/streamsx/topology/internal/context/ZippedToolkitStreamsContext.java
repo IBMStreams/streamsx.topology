@@ -1,8 +1,5 @@
 package com.ibm.streamsx.topology.internal.context;
 
-import static com.ibm.streamsx.topology.context.ContextProperties.TOOLKIT_DIR;
-import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
-
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -11,7 +8,6 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.context.remote.RemoteContextFactory;
-import com.ibm.streamsx.topology.internal.context.remote.ZippedToolkitRemoteContext;
 
 public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	
@@ -22,12 +18,8 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	
 	@Override
 	Future<File> _submit(Topology app, Map<String, Object> config) throws Exception {
-	    // File toolkitRoot = super._submit(app, config).get();
 	    	    
 	    JsonObject submission = createSubmission(app, config);
-	    // deploy(submission).addProperty(TOOLKIT_DIR, toolkitRoot.getAbsolutePath());
-        
-        // return ZippedToolkitRemoteContext.createCodeArchive(toolkitRoot, submission);
 	    
 	    return _submit(submission);
 	}

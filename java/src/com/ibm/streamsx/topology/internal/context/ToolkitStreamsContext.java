@@ -4,15 +4,10 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
-import static com.ibm.streamsx.topology.context.ContextProperties.TOOLKIT_DIR;
 import static com.ibm.streamsx.topology.context.remote.RemoteContextFactory.getRemoteContext;
-import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
-import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.makeDirectoryStructure;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -39,25 +34,7 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
     Future<File> _submit(Topology app, Map<String, Object> config)
             throws Exception {
         
-        if (false) {
-
-        // If the toolkit path is not given, then create one in the
-        // currrent directory.
-        if (!config.containsKey(ContextProperties.TOOLKIT_DIR)) {
-            config.put(ContextProperties.TOOLKIT_DIR, Files
-                    .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
-        }
-
-        File toolkitRoot = new File((String) config.get(ContextProperties.TOOLKIT_DIR));
-
-        makeDirectoryStructure(toolkitRoot,
-                (String) app.builder().json().get("namespace"));
-        }
-        
-        addConfigToJSON(app.builder().getConfig(), config);       
-        
         JsonObject submission = createSubmission(app, config);
-        // deploy(submission).addProperty(TOOLKIT_DIR, toolkitRoot.getAbsolutePath());
         
         return _submit(submission);
     }
