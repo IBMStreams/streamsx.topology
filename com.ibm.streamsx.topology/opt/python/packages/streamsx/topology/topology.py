@@ -618,7 +618,7 @@ class View(threading.Thread):
             _last_collection_time = items[-1].collectionTime
             _last_collection_time_count = 0
             backwards_counter = len(items) - 1
-            while backwards_counter > 0 and items[backwards_counter] == _last_collection_time:
+            while backwards_counter >= 0 and items[backwards_counter].collectionTime == _last_collection_time:
                 _last_collection_time_count += 1
                 backwards_counter -= 1
 
