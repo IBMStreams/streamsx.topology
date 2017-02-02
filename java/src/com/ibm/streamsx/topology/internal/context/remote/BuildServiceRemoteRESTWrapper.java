@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.getJobConfigOverlays;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -43,7 +44,7 @@ class BuildServiceRemoteRESTWrapper {
 	void remoteBuildAndSubmit(JsonObject deploy, File archive) throws ClientProtocolException, IOException {
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		try {
-			JsonObject serviceg = VcapServices.getVCAPService(key -> deploy.get(key));
+			JsonObject serviceg = VcapServices.getVCAPService(deploy);
 
 			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: Checking status :" + serviceg.get("name"));
 			RestUtils.checkInstanceStatus(httpclient, this.credentials);
@@ -110,11 +111,7 @@ class BuildServiceRemoteRESTWrapper {
         httpput.addHeader("Authorization", apiKey);
         httpput.addHeader("content-type", ContentType.APPLICATION_JSON.getMimeType());
         
-        JsonObject jobConfigOverlays = new JsonObject();
-        if (deploy.has(DeployKeys.JOB_CONFIG_OVERLAYS))
-            jobConfigOverlays.add(DeployKeys.JOB_CONFIG_OVERLAYS,
-                    deploy.get(DeployKeys.JOB_CONFIG_OVERLAYS));
-        
+        JsonObject jobConfigOverlays = getJobConfigOverlays(deploy);       
         
         StringEntity params =new StringEntity(jobConfigOverlays.toString(),
                 ContentType.APPLICATION_JSON);    

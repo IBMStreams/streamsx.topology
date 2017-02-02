@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.streams;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -59,7 +61,7 @@ public class Util {
         if (!deploy.has(installKey))
             return getStreamsInstall();
         
-        return verifyStreamsInstall(deploy.get(installKey).toString());
+        return verifyStreamsInstall(jstring(deploy, installKey));
     }
     
     /**

@@ -4,16 +4,10 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
-import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 import static com.ibm.streamsx.topology.context.remote.RemoteContextFactory.getRemoteContext;
-import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.makeDirectoryStructure;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
-import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
-import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.json4j;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -27,7 +21,7 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.streams.InvokeMakeToolkit;
 
-public class ToolkitStreamsContext extends StreamsContextImpl<File> {
+public class ToolkitStreamsContext extends JSONStreamsContext<File> {
 
 	static final Logger trace = Topology.TOPOLOGY_LOGGER;
     
@@ -35,64 +29,23 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
     public Type getType() {
         return Type.TOOLKIT;
     }
-
-    @Override
-    Future<File> _submit(Topology app, Map<String, Object> config)
-            throws Exception {
-
-        // If the toolkit path is not given, then create one in the
-        // currrent directory.
-        if (!config.containsKey(ContextProperties.TOOLKIT_DIR)) {
-            config.put(ContextProperties.TOOLKIT_DIR, Files
-                    .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
-        }
-
-        File toolkitRoot = new File((String) config.get(ContextProperties.TOOLKIT_DIR));
-
-        makeDirectoryStructure(toolkitRoot,
-                (String) app.builder().json().get("namespace"));
-        
-        app.finalizeGraph(getType(), config);
-        
-        addConfigToJSON(app.builder().getConfig(), config);
-        
-        JSONObject jsonGraph = app.builder().complete();
-        
-        JSONObject deploy = new JSONObject();
-        deploy.put(ContextProperties.TOOLKIT_DIR, toolkitRoot.getAbsolutePath());
-        if (config.containsKey(ContextProperties.KEEP_ARTIFACTS))
-            deploy.put(KEEP_ARTIFACTS, config.get(KEEP_ARTIFACTS));
-        
-        JSONObject submission = new JSONObject();
-        submission.put(SUBMISSION_DEPLOY, deploy);
-        submission.put(SUBMISSION_GRAPH, jsonGraph);
-        
-        return createToolkit(submission);
-    }
     
     @Override
-    public Future<File> submit(JSONObject submission) throws Exception {
-        return createToolkit(submission);
-    }
-    
-    private Future<File> createToolkit(JSONObject submission) throws Exception {
+    Future<File> action(AppEntity entity) throws Exception {
+        
+        JsonObject submission = entity.submission;
         
         // use the remote context to build the toolkit.
         @SuppressWarnings("unchecked")
         RemoteContext<File> tkrc = (RemoteContext<File>) getRemoteContext(RemoteContext.Type.TOOLKIT);
         
-        JsonObject gsonSubmission = gson(submission);
-        final Future<File> future = tkrc.submit(gsonSubmission);
+        final Future<File> future = tkrc.submit(submission);
         final File toolkitRoot = future.get();
         
-        JsonObject gsonDeploy = object(gsonSubmission, SUBMISSION_DEPLOY);
-        
-        // Patch up the returned deploy info.
-        JSONObject deployInfo = json4j(gsonDeploy);
-        submission.put(SUBMISSION_DEPLOY, deployInfo);
-        
+        JsonObject deploy = object(submission, SUBMISSION_DEPLOY);
+                
         // Index the toolkit
-        makeToolkit(gsonDeploy, toolkitRoot);
+        makeToolkit(deploy, toolkitRoot);
         
         return future;
     }

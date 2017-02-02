@@ -4,6 +4,9 @@
  */
 package com.ibm.streamsx.topology.internal.streams;
 
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_CONFIG_OVERLAYS;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -11,13 +14,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
+import com.google.gson.JsonObject;
 import com.ibm.streams.operator.version.Product;
 import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
@@ -37,7 +41,7 @@ public class InvokeSubmit {
         Util.checkInvokeStreamtoolPreconditions();
     }
 
-    public BigInteger invoke(Map<String, ? extends Object> config) throws Exception, InterruptedException {
+    public BigInteger invoke(JsonObject deploy) throws Exception, InterruptedException {
         String si = Util.getStreamsInstall();
         File sj = new File(si, "bin/streamtool");
         
@@ -46,8 +50,6 @@ public class InvokeSubmit {
         File jobidFile = Files.createTempFile("streamsjobid", "txt").toFile();
 
         List<String> commands = new ArrayList<>();
-        
-        final JobConfig jobConfig = JobConfig.fromProperties(config);
 
         commands.add(sj.getAbsolutePath());
         commands.add("submitjob");
@@ -60,16 +62,10 @@ public class InvokeSubmit {
         Version ver = Product.getVersion();
         if (ver.getVersion() > 4 ||
                 (ver.getVersion() ==4 && ver.getRelease() >= 2))
-            jcoFile = fileJobConfig(commands, jobConfig);
-        else
+            jcoFile = fileJobConfig(commands, deploy);
+        else {
+            final JobConfig jobConfig = JobConfigOverlay.fromFullOverlay(deploy);
             explicitJobConfig(commands, jobConfig);
-        
-        if (jobConfig.getOverrideResourceLoadProtection() != null) {
-            
-            if (jobConfig.getOverrideResourceLoadProtection()) {
-                commands.add("--override");
-                commands.add("HostLoadProtection");
-            }
         }
         
         commands.add(bundle.getAbsolutePath());
@@ -144,17 +140,25 @@ public class InvokeSubmit {
                                                 .replace("\\", "\\\\\\"));
             }
         }
+        if (jobConfig.getOverrideResourceLoadProtection() != null) {
+            
+            if (jobConfig.getOverrideResourceLoadProtection()) {
+                commands.add("--override");
+                commands.add("HostLoadProtection");
+            }
+        }
     }
     
     /**
      * Set the job configuration as a job config overlay
      * Used for 4.2 and later.
      */
-    private File fileJobConfig(List<String> commands, final JobConfig jobConfig) throws IOException {
+    private File fileJobConfig(List<String> commands, final JsonObject deploy) throws IOException {
         
-        JobConfigOverlay jco = new JobConfigOverlay(jobConfig);
+        JsonObject jobConfigInfo = new JsonObject();
+        jobConfigInfo.add(JOB_CONFIG_OVERLAYS, object(deploy, JOB_CONFIG_OVERLAYS));
 
-        String jcoJson = jco.fullOverlay();
+        String jcoJson = GsonUtilities.toJson(jobConfigInfo);
                      
         File jcoFile = File.createTempFile("streamsjco", ".json");
         Files.write(jcoFile.toPath(), jcoJson.getBytes(StandardCharsets.UTF_8));

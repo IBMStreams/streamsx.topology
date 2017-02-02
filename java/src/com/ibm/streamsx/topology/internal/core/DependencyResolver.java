@@ -4,20 +4,11 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,15 +16,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.jar.JarEntry;
-import java.util.jar.JarOutputStream;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
-import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.functional.ops.Functional;
 import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 
@@ -165,19 +153,23 @@ public class DependencyResolver {
     }
 
     /**
-     * Resolve the dependencies. Copies jars to the impl/lib part of the bundle
-     * and file/directory dependencies to the bundle.
-     * @param config context configuration
-     * @throws IOException
-     * @throws URISyntaxException
+     * Resolve the dependencies.
+     * Creates entries in the graph config that will
+     * result in files being copied into the toolkit.
      */
-    public void resolveDependencies(Map<String, Object> config)
+    public void resolveDependencies()
             throws IOException, URISyntaxException {
+        
+        JSONObject graphConfig = topology.builder().getConfig();
+        JSONArray includes = (JSONArray) graphConfig.get("includes");
+        if (includes == null)
+            graphConfig.put("includes", includes = new JSONArray());
+              
         for (BOperatorInvocation op : operatorToJarDependencies.keySet()) {    
             ArrayList<String> jars = new ArrayList<String>();
             
-            for (Path pa : operatorToJarDependencies.get(op)) {
-                String jarName = resolveDependency(pa, config);
+            for (Path source : operatorToJarDependencies.get(op)) {
+                String jarName = resolveDependency(source, includes);
                 jars.add("impl/lib/" + jarName);
             }
 
@@ -186,8 +178,8 @@ public class DependencyResolver {
         }
         
         ArrayList<String> jars = new ArrayList<String>();
-        for(Path dep : globalDependencies){
-            String jarName = resolveDependency(dep, config);
+        for(Path source : globalDependencies){
+            String jarName = resolveDependency(source, includes);
             jars.add("impl/lib/" + jarName);	    
         }	
         
@@ -217,54 +209,49 @@ public class DependencyResolver {
         }
 
         for(Artifact dep : globalFileDependencies)
-            resolveFileDependency(dep, config);
+            resolveFileDependency(dep, includes);
     }
     
-    private String resolveDependency(Path pa, Map<String, Object> config){ 
-        final File toolkitRoot = new File((String) (config
-                .get(ContextProperties.TOOLKIT_DIR)));
-        final File toolkitLib = new File(toolkitRoot, "impl/lib/");
+    private String resolveDependency(Path source, JSONArray includes){ 
         
-        String jarName=null;
+        String jarName;
         
-        if (!previouslyCopiedDependencies.containsKey(pa)) {
-            Path absolutePath = pa;
-            File absoluteFile = absolutePath.toFile();
-                    
+        if (!previouslyCopiedDependencies.containsKey(source)) {
+            
+            File sourceFile = source.toFile();
+            
+            JSONObject include = new JSONObject();
+                 
             // If it's a file, we assume its a jar file.
-            if (absoluteFile.isFile()) {
-                jarName = absolutePath.getFileName().toString();
-                try {
-                    Files.copy(absolutePath, new File(toolkitLib, jarName).toPath(),
-                        StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+            if (sourceFile.isFile()) {
+                jarName = source.getFileName().toString();
+                
+                include.put("source", source.toAbsolutePath().toString());
+                include.put("target", "impl/lib");
             } 
             
-            else if (absoluteFile.isDirectory()) {
-                try {
-                    jarName = createJarFile(toolkitLib, absoluteFile);
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+            else if (sourceFile.isDirectory()) {
+                // Create an entry that will convert the classes dir into a jar file
+                jarName = "classes" + previouslyCopiedDependencies.size() + "_" + sourceFile.getName() + ".jar";
+                include.put("classes", source.toAbsolutePath().toString());
+                include.put("name", jarName);
+                include.put("target", "impl/lib");
             }
             
             else {
-                throw new IllegalArgumentException("Path not a file or directory:" + pa);
+                throw new IllegalArgumentException("Path not a file or directory:" + source);
             }
-            previouslyCopiedDependencies.put(pa, jarName);
+            includes.add(include);
+            previouslyCopiedDependencies.put(source, jarName);
         } 
         
         else {
-            jarName = previouslyCopiedDependencies.get(pa);
+            jarName = previouslyCopiedDependencies.get(source);
         }
         
         // Sanity check
         if(null == jarName){
-            throw new IllegalStateException("Error resolving dependency "+ pa);
+            throw new IllegalStateException("Error resolving dependency "+ source);
         }
         return jarName;
     }
@@ -272,85 +259,10 @@ public class DependencyResolver {
     /**
      * Copy the Artifact to the toolkit
      */
-    private void resolveFileDependency(Artifact a, Map<String, Object> config)
-            throws IOException {
-    	
-    	JSONArray includes = (JSONArray) topology.builder().getConfig().get("includes");
-    	if (includes == null)
-    		topology.builder().getConfig().put("includes", includes = new JSONArray());    	
-    	
+    private void resolveFileDependency(Artifact a, JSONArray includes)  {    	
         JSONObject include = new JSONObject();
         include.put("source", a.absPath.toString());
         include.put("target", a.dstDirName);
         includes.add(include);
    }
-    
-    /**
-     * Create a jar file from the classes directory, creating it directly in
-     * the toolkit.
-     */
-    private static String createJarFile(File toolkitLib, final File classesDir) throws IOException {
-        
-        final Path classesPath = classesDir.toPath();
-        Path jarPath = Files.createTempFile(toolkitLib.toPath(), "classes", ".jar");
-        try (final JarOutputStream jarOut =
-                new JarOutputStream(
-                new BufferedOutputStream(
-                        new FileOutputStream(jarPath.toFile()), 128*1024))) {
-        
-        Files.walkFileTree(classesDir.toPath(), new FileVisitor<Path>() {
-
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir,
-                    BasicFileAttributes attrs) throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file,
-                    BasicFileAttributes attrs) throws IOException {
-                File classFile = file.toFile();
-                if (classFile.isFile()) {
-                    //  Write the entry followed by the data.
-                    Path relativePath = classesPath.relativize(file);
-                    JarEntry je = new JarEntry(relativePath.toString());
-                    je.setTime(classFile.lastModified());
-                    jarOut.putNextEntry(je);
-                    
-                    final byte[] data = new byte[32*1024];
-                    try (final BufferedInputStream classIn =
-                            new BufferedInputStream(
-                                    new FileInputStream(classFile), data.length)) {
-                        
-                        for (;;) {
-                            int count = classIn.read(data);
-                            if (count == -1)
-                                break;
-                            jarOut.write(data, 0, count);
-                        }
-                    }
-                    jarOut.closeEntry();
-                }
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc)
-                    throws IOException {
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                    throws IOException {
-                dir.toFile().delete();
-                return FileVisitResult.CONTINUE;
-            }
-        });
-        
-        }
-        
-        return jarPath.getFileName().toString();
-    }
-
 }

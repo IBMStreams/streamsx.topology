@@ -7,12 +7,24 @@ package com.ibm.streamsx.topology.internal.gson;
 import java.util.Collection;
 import java.util.Iterator;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.function.Consumer;
 
 public class GsonUtilities {
+    
+    private static final Gson gson = new Gson();
+    
+    public static Gson gson() {
+        return gson;
+    }
+    
+    public static String toJson(JsonElement element) {
+        return gson().toJson(element);
+    }
+    
     /**
      * Perform an action on every JsonObject in an array.
      */

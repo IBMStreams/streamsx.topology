@@ -4,10 +4,26 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+
+import com.google.gson.JsonObject;
+
 /**
- * Keys in the JSON deploy objcet for job submission.
+ * Keys in the JSON deploy object for job submission.
  */
 public interface DeployKeys {
+    
+    /**
+     * Key for deploy information in top-level submission object.
+     */
+    String DEPLOY = "deploy";
+    
+    /**
+     * Get deploy object from submission.
+     */
+    static JsonObject deploy(JsonObject submission) {
+        return object(submission, DEPLOY);
+    }
     
     /**
      * Python information.
@@ -23,4 +39,13 @@ public interface DeployKeys {
      * only a single one is supported.
      */
     String JOB_CONFIG_OVERLAYS = "jobConfigOverlays";
+    
+    static JsonObject getJobConfigOverlays(JsonObject deploy) {
+        JsonObject jcos = new JsonObject();
+
+        if (deploy.has(JOB_CONFIG_OVERLAYS))
+            jcos.add(JOB_CONFIG_OVERLAYS, deploy.get(JOB_CONFIG_OVERLAYS));
+        
+        return jcos;
+    }
 }

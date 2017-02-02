@@ -1,8 +1,10 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
+from __future__ import print_function
 import unittest
 import os
 import json
+import sys
 
 from streamsx.topology.topology import *
 from streamsx.topology import schema
@@ -36,6 +38,7 @@ def submit_to_service(test, topo, cfg):
     rc = submit("ANALYTICS_SERVICE", topo, cfg)
     test.assertEqual(0, rc)
 
+@unittest.skipIf(sys.version_info.major == 2, "Streaming Analytics service requires 3.5")
 class TestStreamingAnalytics(unittest.TestCase):
 
   def test_no_vcap(self):

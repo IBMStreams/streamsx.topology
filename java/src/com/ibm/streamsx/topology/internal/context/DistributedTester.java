@@ -4,8 +4,9 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
+import java.io.File;
 import java.math.BigInteger;
-import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import com.ibm.streamsx.topology.Topology;
@@ -18,20 +19,22 @@ public class DistributedTester extends DistributedStreamsContext {
     public Type getType() {
         return Type.DISTRIBUTED_TESTER;
     }
-
+    
     @Override
-    Future<BigInteger> _submit(Topology app, Map<String, Object> config)
-            throws Exception {
-        Future<BigInteger> distributed = super._submit(app, config);
-
-        return new DistributedTesterContextFuture(distributed.get(),
-                (TupleCollection) app.getTester());
+    Future<BigInteger> postSubmit(AppEntity entity, Future<BigInteger> future) throws InterruptedException, ExecutionException {
+        Topology app = entity.app;
+        if (app == null)
+            return future;
+        return new DistributedTesterContextFuture(future.get(),
+                (TupleCollection) (app.getTester()));
     }
+    
+    
 
     @Override
-    void preInvoke(Topology app) {
-        
-        if (app.hasTester()) {
+    void preInvoke(AppEntity entity, File bundle) {
+        Topology app = entity.app;
+        if (app != null && app.hasTester()) {
             TupleCollection collector = (TupleCollection) app.getTester();
             collector.startLocalCollector();
         }

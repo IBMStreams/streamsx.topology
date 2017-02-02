@@ -521,10 +521,9 @@ public class Topology implements TopologyElement {
      * 
      * @throws Exception
      */
-    public void finalizeGraph(StreamsContext.Type contextType,
-            Map<String, Object> config) throws Exception {
+    public void finalizeGraph(StreamsContext.Type contextType) throws Exception {
 
-        dependencyResolver.resolveDependencies(config);
+        dependencyResolver.resolveDependencies();
         
         finalizeConfig();
         

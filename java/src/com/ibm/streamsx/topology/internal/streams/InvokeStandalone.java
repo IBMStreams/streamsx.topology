@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 
+import com.google.gson.JsonObject;
 import com.ibm.streams.operator.logging.TraceLevel;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
@@ -37,12 +38,12 @@ public class InvokeStandalone {
         envVars.put(key, value);
     }
 
-    public Future<Integer> invoke(Map<String, ? extends Object> config)
+    public Future<Integer> invoke(JsonObject deploy)
             throws Exception, InterruptedException {
         String si = System.getProperty("java.home");
         File jvm = new File(si, "bin/java");
         
-        JobConfig jc = JobConfig.fromProperties(config);
+        JobConfig jc = JobConfigOverlay.fromFullOverlay(deploy);
 
         List<String> commands = new ArrayList<>();
         commands.add(jvm.getAbsolutePath());
