@@ -225,7 +225,7 @@ class Stream(object):
                 'port': port,
                 'bufferTime': buffer_time,
                 'sampleSize': sample_size})
-        _view = View(name, port, buffer_time, sample_size)
+        _view = View(name)
         self.topology.graph.get_views().append(_view)
         return _view
 
@@ -513,25 +513,17 @@ class Routing(Enum):
     HASH_PARTITIONED=3    
 
 
-class View(threading.Thread):
+class View(object):
     """
     A View is an object which is associated with a Stream, and provides access to the items on the stream.
     """
-    def __init__(self, name, port, buffer_time, sample_size):
-        super(View, self).__init__()
-        self._stop = threading.Event()
-        self.items = queue.Queue()
-
+    def __init__(self, name):
         self.name = name
-        self.port = port
-        self.buffer_time = buffer_time
-        self.sample_size = sample_size
+
         self.streams_context = None
         self.view_object = None
         self.streams_context_config = {'username': '', 'password': '', 'rest_api_url': ''}
 
-        self._last_collection_time = -1
-        self._last_collection_time_count = 0
         self.is_rest_initialized = False
 
     def initialize_rest(self):
@@ -549,87 +541,23 @@ class View(threading.Thread):
             self.set_streams_context(rc)
 
     def stop_data_fetch(self):
-        self._stop.set()
+        self.view_object.stop_data_fetch()
 
     def start_data_fetch(self):
         self.initialize_rest()
-        self._stop.clear()
         self._get_view_object()
-        t = threading.Thread(target=self)
-        t.start()
-        return self.items
-
-    def __call__(self):
-        while not self._stopped():
-            time.sleep(1)
-            _items = self._get_view_items()
-            if _items is not None:
-                for itm in _items:
-                    self.items.put(itm)
+        return self.view_object.start_data_fetch()
 
     def set_streams_context_config(self, conf):
         self.streams_context_config = conf
 
-    def get_streams_context_config(self):
-        return self.streams_context_config
-
     def set_streams_context(self, sc):
         self.streams_context = sc
-
-    def get_streams_context(self):
-        return self.streams_context
-
-
-    # Private
-    def _stopped(self):
-        return self._stop.isSet()
 
     def _get_view_object(self):
         self.view_object = self._get_view_obj_from_name()
         if self.view_object is None:
             raise ViewNotFoundError("Error finding view: '" + self.name + "'")
-
-    def _get_view_items(self):
-        # Retrieve the view object
-        view = self.view_object
-        if self.view_object is None:
-            return None
-
-        data_name = view.attributes[0]['name']
-        items = view.get_view_items()
-        data = []
-
-        # The number of already seen tuples to ignore on the last millisecond time boundary
-        ignore_last_collection_time_count = self._last_collection_time_count
-
-        for item in items:
-            # Ignore tuples from milliseconds we've already seen
-            if item.collectionTime < self._last_collection_time:
-                continue
-            elif item.collectionTime == self._last_collection_time:
-                # Ignore tuples within the millisecond which we've already seen.
-                if ignore_last_collection_time_count > 0:
-                    ignore_last_collection_time_count -= 1
-                    continue
-
-                # If we haven't seen it, continue
-                data.append(json.loads(item.data[data_name]))
-            else:
-                data.append(json.loads(item.data[data_name]))
-
-        if len(items) > 0:
-            # Record the current millisecond time boundary.
-            _last_collection_time = items[-1].collectionTime
-            _last_collection_time_count = 0
-            backwards_counter = len(items) - 1
-            while backwards_counter >= 0 and items[backwards_counter].collectionTime == _last_collection_time:
-                _last_collection_time_count += 1
-                backwards_counter -= 1
-
-            self._last_collection_time = _last_collection_time
-            self._last_collection_time_count = _last_collection_time_count
-
-        return data
 
     # TODO: update to use domain, instance, job *and* view name
     def _get_view_obj_from_name(self):
