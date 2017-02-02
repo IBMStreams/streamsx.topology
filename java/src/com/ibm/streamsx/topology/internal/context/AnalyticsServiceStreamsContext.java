@@ -11,25 +11,16 @@ import static com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Map;
 import java.util.concurrent.Future;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
-import com.ibm.streamsx.topology.context.remote.RemoteContext;
-import com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
-import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
-import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
-import com.ibm.streamsx.topology.jobconfig.JobConfig;
 
 public class AnalyticsServiceStreamsContext extends
         BundleUserStreamsContext<BigInteger> {

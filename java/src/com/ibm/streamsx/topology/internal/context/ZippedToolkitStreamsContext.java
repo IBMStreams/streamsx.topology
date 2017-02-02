@@ -1,11 +1,9 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import java.io.File;
-import java.util.Map;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.context.remote.RemoteContextFactory;
 

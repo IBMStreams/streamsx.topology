@@ -6,13 +6,11 @@ package com.ibm.streamsx.topology.internal.context;
 
 import java.io.File;
 import java.math.BigInteger;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.tester.DistributedTesterContextFuture;
-import com.ibm.streamsx.topology.internal.tester.StandaloneTesterContextFuture;
 import com.ibm.streamsx.topology.internal.tester.TupleCollection;
 
 public class DistributedTester extends DistributedStreamsContext {

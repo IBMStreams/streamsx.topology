@@ -9,11 +9,8 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.gson;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 
 /**

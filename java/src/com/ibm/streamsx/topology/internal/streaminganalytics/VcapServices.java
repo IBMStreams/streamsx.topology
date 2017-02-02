@@ -20,9 +20,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
-import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * Utilities to get the correct VCAP services

@@ -13,7 +13,6 @@ import java.util.Map;
 
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class Util {
     public static final String STREAMS_DOMAIN_ID = "STREAMS_DOMAIN_ID";
