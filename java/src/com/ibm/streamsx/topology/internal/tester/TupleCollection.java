@@ -323,12 +323,8 @@ public class TupleCollection implements Tester {
 
     public void finalizeGraph(StreamsContext.Type contextType) throws Exception {
         
-        System.err.println("finalizeGraph:" + this + " " + contextType);
-
         if (handlers.isEmpty())
             return;
-        
-        System.err.println("finalizeGraph:doing:" + this + " " + contextType);
 
         switch (contextType) {
         case EMBEDDED_TESTER:
