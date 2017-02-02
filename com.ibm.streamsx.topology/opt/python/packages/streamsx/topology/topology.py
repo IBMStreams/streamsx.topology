@@ -30,6 +30,7 @@ except (ImportError,NameError):
 import random
 from streamsx.topology import graph
 from streamsx.topology import schema
+from streamsx.topology.errors import ViewNotFoundError
 import streamsx.topology.functions
 import json
 import threading
@@ -580,14 +581,13 @@ class View(threading.Thread):
 
 
     # Private
-
     def _stopped(self):
         return self._stop.isSet()
 
     def _get_view_object(self):
         self.view_object = self._get_view_obj_from_name()
         if self.view_object is None:
-            raise "Error finding view."
+            raise ViewNotFoundError("Error finding view: '" + self.name + "'")
 
     def _get_view_items(self):
         # Retrieve the view object
