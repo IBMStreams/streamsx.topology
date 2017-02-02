@@ -30,7 +30,6 @@ except (ImportError,NameError):
 import random
 from streamsx.topology import graph
 from streamsx.topology import schema
-from streamsx.topology.errors import ViewNotFoundError
 import streamsx.topology.functions
 import json
 import threading
@@ -38,7 +37,10 @@ import queue
 import sys
 import time
 import inspect
+import logging
 from enum import Enum
+
+logger = logging.getLogger('streamsx.topology')
 
 class Topology(object):
     """The Topology class is used to define data sources, and is passed as a parameter when submitting an application.
@@ -545,7 +547,11 @@ class View(object):
 
     def start_data_fetch(self):
         self.initialize_rest()
-        self._get_view_object()
+        try:
+            self.view_object = self.streams_context.retrieve_view(self.name)
+        except:
+            logger.exception("Could not view: " + self.name)
+            raise
         return self.view_object.start_data_fetch()
 
     def set_streams_context_config(self, conf):
@@ -553,17 +559,3 @@ class View(object):
 
     def set_streams_context(self, sc):
         self.streams_context = sc
-
-    def _get_view_object(self):
-        self.view_object = self._get_view_obj_from_name()
-        if self.view_object is None:
-            raise ViewNotFoundError("Error finding view: '" + self.name + "'")
-
-    # TODO: update to use domain, instance, job *and* view name
-    def _get_view_obj_from_name(self):
-        for domain in self.streams_context.get_domains():
-            for instance in domain.get_instances():
-                for view in instance.get_views():
-                    if view.name == self.name:
-                        return view
-        return None
