@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
+import static com.ibm.streamsx.topology.context.ContextProperties.APP_DIR;
+import static com.ibm.streamsx.topology.context.ContextProperties.TOOLKIT_DIR;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.deleteToolkit;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
@@ -22,11 +24,15 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.core.InternalProperties;
 import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeSc;
 
+/**
+ * Create a Streams bundle using SPL compiler (sc) from a local Streams install.
+ */
 public class BundleStreamsContext extends ToolkitStreamsContext {
 
     static final Logger trace = Topology.TOPOLOGY_LOGGER;
@@ -41,33 +47,17 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
     public Type getType() {
         return standalone ? Type.STANDALONE_BUNDLE : Type.BUNDLE;
     }
-
-    @Override
-    Future<File> _submit(Topology app, Map<String, Object> config)
-            throws Exception {
-
-        File appDir;
-        if (!config.containsKey(ContextProperties.APP_DIR)) {
-            appDir = Files.createTempDirectory("apptk").toFile();
-            config.put(ContextProperties.APP_DIR, appDir.getAbsolutePath());
-
-        } else {
-            appDir = new File((String) (config.get(ContextProperties.APP_DIR)));
-        }
-        config.put(ContextProperties.TOOLKIT_DIR, appDir.getAbsolutePath());
-
-        // File appDirA = super._submit(app, config).get();
-                
-        JsonObject submission = createSubmission(app, config);
-        
-        //return doSPLCompile(appDirA, submission);
-        return _submit(submission);
-    }
     
     @Override
-    Future<File> _submit(JsonObject submission) throws Exception {
+    Future<File> action(AppEntity entity) throws Exception {
+        
+        JsonObject submission = entity.submission;
+        
+        JsonObject deploy = deploy(submission);
+        if (deploy.has(APP_DIR))
+            deploy.add(TOOLKIT_DIR, deploy.get(APP_DIR));
     	
-    	File appDir = super._submit(submission).get();
+    	File appDir = super.action(entity).get();
     	return doSPLCompile(appDir, submission);
     }
     

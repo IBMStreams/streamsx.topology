@@ -39,4 +39,13 @@ public interface DeployKeys {
      * only a single one is supported.
      */
     String JOB_CONFIG_OVERLAYS = "jobConfigOverlays";
+    
+    static JsonObject getJobConfigOverlays(JsonObject deploy) {
+        JsonObject jcos = new JsonObject();
+
+        if (deploy.has(JOB_CONFIG_OVERLAYS))
+            jcos.add(JOB_CONFIG_OVERLAYS, deploy.get(JOB_CONFIG_OVERLAYS));
+        
+        return jcos;
+    }
 }

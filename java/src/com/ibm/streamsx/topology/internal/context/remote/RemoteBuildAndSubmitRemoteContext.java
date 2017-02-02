@@ -25,7 +25,7 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	    // Get the VCAP service info which also verifies we have the
 	    // right information before we do any work.
 	    JsonObject deploy = object(submission, "deploy");
-	    JsonObject service = VcapServices.getVCAPService(key -> deploy.get(key));
+	    JsonObject service = VcapServices.getVCAPService(deploy);
 	    
 		Future<File> archive = super.submit(submission);
 		

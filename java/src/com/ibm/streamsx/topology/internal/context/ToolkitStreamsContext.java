@@ -21,7 +21,7 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.streams.InvokeMakeToolkit;
 
-public class ToolkitStreamsContext extends StreamsContextImpl<File> {
+public class ToolkitStreamsContext extends JSONStreamsContext<File> {
 
 	static final Logger trace = Topology.TOPOLOGY_LOGGER;
     
@@ -29,22 +29,11 @@ public class ToolkitStreamsContext extends StreamsContextImpl<File> {
     public Type getType() {
         return Type.TOOLKIT;
     }
-
-    @Override
-    Future<File> _submit(Topology app, Map<String, Object> config)
-            throws Exception {
-        
-        JsonObject submission = createSubmission(app, config);
-        
-        return _submit(submission);
-    }
     
     @Override
-    Future<File> _submit(JsonObject submission) throws Exception {
-        return createToolkit(submission);
-    }
-    
-    private Future<File> createToolkit(JsonObject submission) throws Exception {
+    Future<File> action(AppEntity entity) throws Exception {
+        
+        JsonObject submission = entity.submission;
         
         // use the remote context to build the toolkit.
         @SuppressWarnings("unchecked")

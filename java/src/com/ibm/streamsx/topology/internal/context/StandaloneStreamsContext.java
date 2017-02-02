@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
@@ -34,34 +35,17 @@ public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> 
      * bundle. Note, when this returns the application likely will still be
      * running.
      */
+   
     @Override
-    Future<Integer> _submit(Topology app, Map<String, Object> config)
-            throws Exception {
-
-        File bundle = bundler._submit(app, config).get();
-
+    Future<Integer> invoke(AppEntity entity, File bundle) throws Exception {
+    	
         InvokeStandalone invokeStandalone = new InvokeStandalone(bundle);
-
-        preInvoke(app);
-        Future<Integer> future = invokeStandalone.invoke(config);
-
-        return future;
-    }
-
-    void preInvoke(Topology app) {
-    }
-    
-    @Override
-    Future<Integer> _submit(JsonObject submission) throws Exception {
-
-    	File bundle = bundler._submit(submission).get();
-        InvokeStandalone invokeStandalone = new InvokeStandalone(bundle);
-        JsonObject python = object(submission, "deploy", DeployKeys.PYTHON);
+        JsonObject deploy = deploy(entity.submission);
+        JsonObject python = object(deploy, DeployKeys.PYTHON);
         if (python != null)
             invokeStandalone.addEnvironmentVariable("PYTHONHOME", jstring(python, "prefix"));
 
-        Map<String, Object> config = Collections.emptyMap();
-        Future<Integer> future = invokeStandalone.invoke(config);
+        Future<Integer> future = invokeStandalone.invoke(deploy);
 
         return future;
     }

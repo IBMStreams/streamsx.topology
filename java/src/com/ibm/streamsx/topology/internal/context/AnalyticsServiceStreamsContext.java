@@ -4,7 +4,9 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices.getVCAPService;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +22,8 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity;
+import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
@@ -38,64 +42,33 @@ public class AnalyticsServiceStreamsContext extends
     public Type getType() {
         return Type.ANALYTICS_SERVICE;
     }
-
+    
     @Override
-    Future<BigInteger> _submit(Topology app, Map<String, Object> config)
-            throws Exception {
-
-        preBundle(config);
-        File bundle = bundler._submit(app, config).get();
-
-        preInvoke();
-
-        BigInteger jobId = submitJobToService(bundle, config);
+    Future<BigInteger> invoke(AppEntity entity, File bundle) throws Exception {
+        JsonObject deploy =  deploy(entity.submission);
         
-        return new CompletedFuture<BigInteger>(jobId);
-    }
-
-    @Override
-    Future<BigInteger> _submit(JsonObject submission) throws Exception {
-        
-        JSONObject _submission = JSON4JUtilities.json4j(submission);
-        
-        Map<String, Object> config = Contexts
-                .jsonDeployToMap((JSONObject) _submission.get(RemoteContext.SUBMISSION_DEPLOY));
-
-        preBundle(config);
-        File bundle = bundler._submit(submission).get();
-        preInvoke();
-
-        BigInteger jobId = submitJobToService(bundle, config);
+        BigInteger jobId = submitJobToService(bundle, deploy);
 
         return new CompletedFuture<BigInteger>(jobId);
-    }
-
-    void preInvoke() {
-        
     }
     
     /**
      * Verify we have a valid Streaming Analytic service
      * information before we attempt anything.
      */
-    void preBundle(Map<String, Object> config) {
+    @Override
+    void preSubmit(AppEntity entity) {
+        
+            
         try {
-            getVCAPService(config);
+            if (entity.submission != null)
+                getVCAPService(deploy(entity.submission));
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
-    }
+    } 
     
-    JsonObject getVCAPService(Map<String, Object> config) throws IOException {
-        // Convert from JSON4J to a string since the common code
-        // does not reference JSON4J
-        Object vco = config.get(AnalyticsServiceProperties.VCAP_SERVICES);
-        if (vco instanceof JSONObject) {
-            JSONObject servicej = (JSONObject) vco;
-            config.put(AnalyticsServiceProperties.VCAP_SERVICES, servicej.serialize());           
-        }
-        return VcapServices.getVCAPService(key -> config.get(key));
-    }  
+    /*
    
     private JsonObject getBluemixSubmitConfig( Map<String, Object> config) throws IOException {
         
@@ -108,10 +81,11 @@ public class AnalyticsServiceStreamsContext extends
         
         return jco.fullOverlayAsJSON(new JsonObject());
     }
+    */
     
-    private BigInteger submitJobToService(File bundle, Map<String, Object> config) throws IOException {
+    private BigInteger submitJobToService(File bundle, JsonObject deploy) throws IOException {
         
-        final JsonObject service = getVCAPService(config);
+        final JsonObject service = getVCAPService(deploy);
         final String serviceName = jstring(service, "name");
               
         final JsonObject credentials = service.getAsJsonObject("credentials");
@@ -124,7 +98,7 @@ public class AnalyticsServiceStreamsContext extends
             
             Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Submitting bundle : " + bundle.getName() + " to " + serviceName);
             
-            JsonObject jcojson = getBluemixSubmitConfig(config);
+            JsonObject jcojson = DeployKeys.getJobConfigOverlays(deploy);
             
             Topology.STREAMS_LOGGER.info("Streaming Analytics Service submit job request:" + jcojson.toString());
 
