@@ -403,6 +403,8 @@ class _SubmitContextFactory(object):
             return _DistributedSubmitter(ctxtype, self.config, self.app_topology, self.username, self.password)
         elif ctxtype == ContextTypes.ANALYTICS_SERVICE:
             logger.debug("Selecting the ANALYTICS_SERVICE context for submission")
+            if not (sys.version_info.major == 3 and sys.version_info.minor == 5):
+                raise RuntimeError("The ANALYTICS_SERVICE context only supports Python version 3.5")
             return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
         else:
             logger.debug("Using the BaseSubmitter, and passing the context type through to java.")
