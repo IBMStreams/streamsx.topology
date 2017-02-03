@@ -89,17 +89,17 @@ public class AnalyticsServiceStreamsContext extends
         
         final CloseableHttpClient httpClient = HttpClients.createDefault();
         try {
-            Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Checking status :" + serviceName);
+            Topology.STREAMS_LOGGER.info("Streaming Analytics Service (" + serviceName + "): Checking status :" + serviceName);
             
-            RestUtils.checkInstanceStatus(httpClient, credentials);
+            RestUtils.checkInstanceStatus(httpClient, service);
             
-            Topology.STREAMS_LOGGER.info("Streaming Analytics Service: Submitting bundle : " + bundle.getName() + " to " + serviceName);
+            Topology.STREAMS_LOGGER.info("Streaming Analytics Service (" + serviceName + "): Submitting bundle : " + bundle.getName() + " to " + serviceName);
             
             JsonObject jcojson = DeployKeys.getJobConfigOverlays(deploy);
             
-            Topology.STREAMS_LOGGER.info("Streaming Analytics Service submit job request:" + jcojson.toString());
+            Topology.STREAMS_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submit job request:" + jcojson.toString());
 
-            return RestUtils.postJob(httpClient, credentials, bundle, jcojson);
+            return RestUtils.postJob(httpClient, service, bundle, jcojson);
         } finally {
             httpClient.close();
         }

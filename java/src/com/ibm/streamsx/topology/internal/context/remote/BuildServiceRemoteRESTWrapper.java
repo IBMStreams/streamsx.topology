@@ -45,8 +45,9 @@ class BuildServiceRemoteRESTWrapper {
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		try {
 			JsonObject serviceg = VcapServices.getVCAPService(deploy);
+			String serviceName = serviceg.get("name").toString();
 
-			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: Checking status :" + serviceg.get("name"));
+			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): Checking status :" + serviceName);
 			RestUtils.checkInstanceStatus(httpclient, this.credentials);
 
 			String apiKey = RestUtils.getAPIKey(credentials);
@@ -72,7 +73,7 @@ class BuildServiceRemoteRESTWrapper {
 					}
 					continue;
 				} else if (status.equals("failed")) {
-					RemoteContext.REMOTE_LOGGER.severe("Streaming Analytics Service: The submitted archive " + archive.getName() + " failed to build.");
+					RemoteContext.REMOTE_LOGGER.severe("Streaming Analytics Service (" + serviceName + "): The submitted archive " + archive.getName() + " failed to build.");
 					JsonObject output = getBuildOutput(buildId, outputId, httpclient, apiKey);
 					String strOutput = "";
 					if (output != null)
@@ -91,7 +92,7 @@ class BuildServiceRemoteRESTWrapper {
 
 			// TODO: support multiple artifacts associated with a single build.
 			String artifactId = jstring(artifacts.get(0).getAsJsonObject(), "id");
-			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: submiting job request.");
+			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submiting job request.");
 			doSubmitJobFromBuildArtifactPut(httpclient, deploy, apiKey, artifactId);
 		} finally {
 			httpclient.close();
@@ -118,7 +119,10 @@ class BuildServiceRemoteRESTWrapper {
         httpput.setEntity(params);
        
         JsonObject jso = RestUtils.getGsonResponse(httpclient, httpput);
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: submit job response: " + jso.toString());
+        
+        JsonObject serviceg = VcapServices.getVCAPService(deploy);
+        String serviceName = serviceg.get("name").toString();
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service(" + serviceName + "): submit job response: " + jso.toString());
 		return jso;
 	}
 	
@@ -145,7 +149,6 @@ class BuildServiceRemoteRESTWrapper {
                 .addPart(archive.getName(), archiveBody).build();
         
         httppost.setEntity(reqEntity);
-        //System.out.println(httppost.getAllHeaders()[1]);
         JsonObject jso = RestUtils.getGsonResponse(httpclient, httppost);
         return jso;
 	}
