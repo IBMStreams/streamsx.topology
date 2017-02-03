@@ -54,14 +54,14 @@ class BuildServiceRemoteRESTWrapper {
 			String serviceName = serviceg.get("name").toString();
 
 			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): Checking status :" + serviceName);
-			RestUtils.checkInstanceStatus(httpclient, this.credentials);
+			RestUtils.checkInstanceStatus(httpclient, serviceg);
 
 			String apiKey = RestUtils.getAPIKey(credentials);
 
 			// Perform initial post of the archive
 			String buildName = graphBuildName + randomHex(16);
 			buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
-			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: Submitting build : \"" + buildName + "\" to " + serviceg.get("name"));
+			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submitting build \"" + buildName + "\" to " + serviceg.get("name"));
 			JsonObject jso = doUploadBuildArchivePost(httpclient, apiKey, archive, buildName);
 
 			JsonObject build = object(jso, "build");
