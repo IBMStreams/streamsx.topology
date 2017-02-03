@@ -41,8 +41,8 @@ class BuildServiceRemoteRESTWrapper {
 	
 	BuildServiceRemoteRESTWrapper(JsonObject service){
 	    JsonObject credentials = object(service,  "credentials");
-		this.credentials = credentials;
-		this.service = service;
+	    this.credentials = credentials;
+	    this.service = service;
     }
 	
 
