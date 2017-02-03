@@ -66,6 +66,7 @@ public class SPLGenerator {
     void generateGraph(JsonObject graph, StringBuilder sb) throws IOException {
         JsonObject graphConfig = getGraphConfig(graph);
         breakoutVersion(graphConfig);
+        graphConfig.addProperty("supportsJobConfigOverlays", versionAtLeast(4,2));
 
         String namespace = jstring(graph, "namespace");
         if (namespace != null && !namespace.isEmpty()) {

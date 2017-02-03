@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.context;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.APP_DIR;
 import static com.ibm.streamsx.topology.context.ContextProperties.TOOLKIT_DIR;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.createJobConfigOverlayFile;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.deleteToolkit;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
@@ -35,9 +36,11 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
     static final Logger trace = Topology.TOPOLOGY_LOGGER;
 
     private final boolean standalone;
+    private final boolean byBundleUser;
 
-    public BundleStreamsContext(boolean standalone) {
+    public BundleStreamsContext(boolean standalone, boolean byBundleUser) {
         this.standalone = standalone;
+        this.byBundleUser = byBundleUser;
     }
 
     @Override
@@ -55,8 +58,15 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
             deploy.add(TOOLKIT_DIR, deploy.get(APP_DIR));
     	
     	File appDir = super.action(entity).get();
-    	return doSPLCompile(appDir, submission);
+    	Future<File> bundle = doSPLCompile(appDir, submission);
+    	    	
+    	if (!standalone && !byBundleUser)
+    	    createJobConfigOverlayFile(submission, deploy, bundle.get().getParentFile());
+    	
+    	return bundle;
     }
+    
+
     
     private Future<File> doSPLCompile(File appDir, JsonObject submission) throws Exception {
     	 	
