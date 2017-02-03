@@ -61,7 +61,7 @@ class BuildServiceRemoteRESTWrapper {
 			String apiKey = RestUtils.getAPIKey(credentials);
 
 			// Perform initial post of the archive
-			String buildName = graphBuildName + randomHex(16);
+			String buildName = graphBuildName + "_" + randomHex(16);
 			buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
 			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submitting build \"" + buildName);
 			JsonObject jso = doUploadBuildArchivePost(httpclient, apiKey, archive, buildName);
