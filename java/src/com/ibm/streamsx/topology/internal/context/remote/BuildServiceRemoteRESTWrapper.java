@@ -37,9 +37,12 @@ import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 class BuildServiceRemoteRESTWrapper {
 	
     private JsonObject credentials;
+    private JsonObject service;
 	
-	BuildServiceRemoteRESTWrapper(JsonObject credentials){
+	BuildServiceRemoteRESTWrapper(JsonObject service){
+	    JsonObject credentials = object(service,  "credentials");
 		this.credentials = credentials;
+		this.service = service;
     }
 	
 
@@ -50,11 +53,10 @@ class BuildServiceRemoteRESTWrapper {
 	    
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		try {
-			JsonObject serviceg = VcapServices.getVCAPService(deploy);
-			String serviceName = serviceg.get("name").toString();
+			String serviceName = this.service.get("name").toString();
 
 			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): Checking status");
-			RestUtils.checkInstanceStatus(httpclient, serviceg);
+			RestUtils.checkInstanceStatus(httpclient, this.service);
 
 			String apiKey = RestUtils.getAPIKey(credentials);
 
@@ -127,8 +129,7 @@ class BuildServiceRemoteRESTWrapper {
        
         JsonObject jso = RestUtils.getGsonResponse(httpclient, httpput);
         
-        JsonObject serviceg = VcapServices.getVCAPService(deploy);
-        String serviceName = serviceg.get("name").toString();
+        String serviceName = this.service.get("name").toString();
         RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service(" + serviceName + "): submit job response: " + jso.toString());
 		return jso;
 	}
