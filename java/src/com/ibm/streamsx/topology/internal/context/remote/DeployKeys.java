@@ -4,9 +4,19 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
+
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.graph;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.gson;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Date;
 
 import com.google.gson.JsonObject;
 
@@ -45,6 +55,10 @@ public interface DeployKeys {
      */
     String JOB_CONFIG_OVERLAYS = "jobConfigOverlays";
     
+    /**
+     * Create a new JsonObject that contains the JOB_CONFIG_OVERLAYS
+     * from  deploy
+     */
     static JsonObject getJobConfigOverlays(JsonObject deploy) {
         JsonObject jcos = new JsonObject();
 
@@ -52,5 +66,36 @@ public interface DeployKeys {
             jcos.add(JOB_CONFIG_OVERLAYS, deploy.get(JOB_CONFIG_OVERLAYS));
         
         return jcos;
+    }
+    
+    /**
+     * Save a JobConfig overlay file.
+     */
+    static File createJobConfigOverlayFile(JsonObject submission, JsonObject deploy, File dir) throws IOException {
+
+        if (deploy.has(DeployKeys.JOB_CONFIG_OVERLAYS)) {
+            JsonObject graph = graph(submission);
+            JsonObject graphConfig = object(graph, "config");
+
+            boolean jcos_ok = jboolean(graphConfig, "supportsJobConfigOverlays");
+            if (!jcos_ok)
+                return null;
+
+            String namespace = jstring(graph, "namespace");
+            String name = jstring(graph, "name");
+
+            File jcf = new File(dir, namespace + "." + name + "_JobConfig.json");
+
+            JsonObject jcos = getJobConfigOverlays(deploy);
+            jcos.addProperty("comment",
+                    String.format("Job Config Overlays for %s::%s - generated %s", namespace, name, new Date()));
+
+            String jcos_str = gson().toJson(jcos);
+
+            Files.write(jcf.toPath(), jcos_str.getBytes(StandardCharsets.UTF_8));
+            
+            return jcf;
+        }
+        return null;
     }
 }

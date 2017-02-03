@@ -35,9 +35,9 @@ public class StreamsContextFactory {
         case BUILD_ARCHIVE:
             return new ZippedToolkitStreamsContext();
         case STANDALONE_BUNDLE:
-            return new BundleStreamsContext(true);
+            return new BundleStreamsContext(true, false);
         case BUNDLE:
-            return new BundleStreamsContext(false);
+            return new BundleStreamsContext(false, false);
         case STANDALONE:
             return new StandaloneStreamsContext();
         case DISTRIBUTED:

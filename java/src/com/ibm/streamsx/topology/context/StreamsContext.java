@@ -66,27 +66,49 @@ public interface StreamsContext<T> {
         BUILD_ARCHIVE,
 
         /**
-         * Execution of the topology produces an SPL application bundle
-         * {@code .sab} file that can be submitted to an IBM Streams
-         * instances as a distributed application. The bundle is self-contained
-         * and 
+         * Submission of the topology produces an Streams application bundle.
+         * <P>
+         * A bundle ({@code .sab} file) can be submitted to a Streaming Analytics
+         * service running on IBM Bluemix using:
+         * <UL>
+         * <LI> Streaming Analytics Console</LI>
+         * <LI> Streaming Analytics REST API </LI>
+         * </UL>
+         * <BR>
+         * The {@link #ANALYTICS_SERVICE} context submits a topology directly to a
+         * Streaming Analytics service.
+         * </P>
          * <P>
          * A bundle ({@code .sab} file) can be submitted to an IBM Streams
          * instance using:
          * <UL>
          * <LI> {@code streamtool submitjob} from the command line</LI>
          * <LI> IBM Streams Console</LI>
-         * <LI> IBM Streams JMX api </LI>
+         * <LI> IBM Streams JMX API </LI>
          * </UL>
          * <BR>
-         * Using the {@link #DISTRIBUTED} context allows the topology to
-         * be submitted directly to a Streams instance.
+         * The {@link #DISTRIBUTED} context submits a topology directly to a Streams instance.
          * </P>
          * <P>
          * The returned type for the {@code submit} calls is
-         * a {@code Future&lt;File>} where the value is
+         * a {@code Future<File>} where the value is
          * the location of the bundle.
          * <BR>
+         * If running with IBM Streams 4.2 or later then additionally a
+         * <a href="https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.0/com.ibm.streams.admin.doc/doc/job_configuration_overlays.html">job configuration overlays</a>
+         * file is produced. This file provides the correct job deployment instructions
+         * to enforce any constraints declared in the {@code Topology}. The file is located
+         * in the same directory as the application bundle with a suffix of {@code json} and
+         * the name of the application bundle file (without the {@code sab} suffix} with {@code _JobConfig}
+         * appended. For example for the application bundle {@code simple.HelloWorld.sab}
+         * its job configuration overlays file would be {@code simple.HelloWorld_JobConfig.json}.
+         * <BR>
+         * <pre>
+         * Example of using job configuration overlays file at submit job time with {@code streamtool}:
+         * <code>
+         * streamtool submitjob --jobConfig simple.HelloWorld_JobConfig.json simple.HelloWorld.sab
+         * </code>
+         * </pre>
          * The {@code Future} returned from {@code submit()} will
          * always be complete when the {@code submit()} returns.
          * </P>
