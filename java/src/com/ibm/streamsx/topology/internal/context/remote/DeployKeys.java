@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
+import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import com.google.gson.JsonObject;
@@ -23,6 +25,9 @@ public interface DeployKeys {
      */
     static JsonObject deploy(JsonObject submission) {
         return object(submission, DEPLOY);
+    }
+    static boolean keepArtifacts(JsonObject submission) {;
+        return jboolean(deploy(submission), KEEP_ARTIFACTS);
     }
     
     /**

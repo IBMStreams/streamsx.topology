@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices.getVCAPService;
 
@@ -36,11 +37,16 @@ public class AnalyticsServiceStreamsContext extends
     
     @Override
     Future<BigInteger> invoke(AppEntity entity, File bundle) throws Exception {
-        JsonObject deploy =  deploy(entity.submission);
-        
-        BigInteger jobId = submitJobToService(bundle, deploy);
+        try {
+            JsonObject deploy =  deploy(entity.submission);
+            
+            BigInteger jobId = submitJobToService(bundle, deploy);
 
-        return new CompletedFuture<BigInteger>(jobId);
+            return new CompletedFuture<BigInteger>(jobId);
+        } finally {
+            if (!keepArtifacts(entity.submission))
+                bundle.delete();
+        }
     }
     
     /**

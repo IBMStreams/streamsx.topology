@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -33,10 +34,15 @@ public class DistributedStreamsContext extends
     @Override
     Future<BigInteger> invoke(AppEntity entity, File bundle) throws Exception {
 
-        InvokeSubmit submitjob = new InvokeSubmit(bundle);
+        try {
+            InvokeSubmit submitjob = new InvokeSubmit(bundle);
 
-        BigInteger jobId = submitjob.invoke(deploy(entity.submission));
+            BigInteger jobId = submitjob.invoke(deploy(entity.submission));
         
-        return new CompletedFuture<BigInteger>(jobId);
+            return new CompletedFuture<BigInteger>(jobId);
+        } finally {
+            if (!keepArtifacts(entity.submission))
+                bundle.delete();
+        }
     }
 }
