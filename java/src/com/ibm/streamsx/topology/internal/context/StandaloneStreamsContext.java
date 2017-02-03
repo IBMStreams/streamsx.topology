@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
@@ -34,7 +35,7 @@ public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> 
     @Override
     Future<Integer> invoke(AppEntity entity, File bundle) throws Exception {
     	
-        InvokeStandalone invokeStandalone = new InvokeStandalone(bundle);
+        InvokeStandalone invokeStandalone = new InvokeStandalone(bundle, keepArtifacts(entity.submission));
         JsonObject deploy = deploy(entity.submission);
         JsonObject python = object(deploy, DeployKeys.PYTHON);
         if (python != null)
