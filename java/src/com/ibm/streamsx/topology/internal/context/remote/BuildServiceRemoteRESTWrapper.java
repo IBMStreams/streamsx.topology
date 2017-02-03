@@ -44,7 +44,7 @@ class BuildServiceRemoteRESTWrapper {
 	
 
 	void remoteBuildAndSubmit(JsonObject submission, File archive) throws ClientProtocolException, IOException {
-	    JsonObject deploy = object(submission, "deploy");
+	    JsonObject deploy = DeployKeys.deploy(submission);
 	    JsonObject graph = object(submission, "graph");
 	    String graphBuildName = jstring(graph, "name");
 	    
