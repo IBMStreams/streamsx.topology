@@ -214,7 +214,6 @@ class Stream(object):
         _view = View(name, port, buffer_time, sample_size)
         self.topology.graph.get_views().append(_view)
         return _view
-        
 
     def map(self, func, name=None):
         """
