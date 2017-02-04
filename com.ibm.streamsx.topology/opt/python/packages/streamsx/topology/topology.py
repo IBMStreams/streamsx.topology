@@ -536,7 +536,7 @@ class View(object):
                 raise ValueError(
                     "WARNING: A username, a password, and a rest url must be present in order to access view data")
             from streamsx import rest
-            rc = rest.StreamsContext(self.streams_context_config['username'],
+            rc = rest.StreamsConnection(self.streams_context_config['username'],
                                      self.streams_context_config['password'],
                                      self.streams_context_config['rest_api_url'])
             self.is_rest_initialized = True
