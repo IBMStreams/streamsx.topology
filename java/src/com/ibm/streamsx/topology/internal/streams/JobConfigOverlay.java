@@ -98,10 +98,4 @@ public class JobConfigOverlay {
         
         return deploy;
     }
-    /*
-     * TODO
-    public statuc String fullOverlay(JsonObject deploy) {
-        return gson.toJson(fullOverlayAsJSON(new JsonObject()));
-    }
-    */
 }
