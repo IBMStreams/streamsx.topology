@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
-import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.getJobConfigOverlays;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.copyJobConfigOverlays;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -111,7 +111,7 @@ class BuildServiceRemoteRESTWrapper {
         httpput.addHeader("Authorization", apiKey);
         httpput.addHeader("content-type", ContentType.APPLICATION_JSON.getMimeType());
         
-        JsonObject jobConfigOverlays = getJobConfigOverlays(deploy);       
+        JsonObject jobConfigOverlays = copyJobConfigOverlays(deploy);       
         
         StringEntity params =new StringEntity(jobConfigOverlays.toString(),
                 ContentType.APPLICATION_JSON);    
