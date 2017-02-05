@@ -40,6 +40,12 @@ public class JobConfigOverlaysFileTest extends TestTopology {
     private File sab;
     private File jcos;
     
+    /**
+     * Runs these tests when in standalone so they are run
+     * for the default top-leve; test target. The JCO
+     * is for distributed use only, but here we just
+     * create a bundle and never execute it.
+     */
     @Before
     public void checkIsStandalone() {
         checkMinimumVersion("JobConfigOverlays", 4, 2);
@@ -152,6 +158,22 @@ public class JobConfigOverlaysFileTest extends TestTopology {
         assertMissing(jco, "jobConfig");
         assertMissing(jco, "operatorConfigs");
         assertMissing(jco, "configInstructions"); 
+    }
+    
+    @Test
+    public void testStandalone() throws Exception {
+        
+        // Just a simple graph, which won't be executed.
+        Topology topology = newTopology("testNoConfig");
+        topology.constants(Collections.emptyList());
+        
+        @SuppressWarnings("unchecked")
+        StreamsContext<File> sb = (StreamsContext<File>) StreamsContextFactory.getStreamsContext(Type.STANDALONE_BUNDLE);
+        
+        sab = sb.submit(topology).get();
+        String jconame = sab.getName().replace(".sab", "_JobConfig.json");
+        jcos = new File(sab.getParentFile(), jconame);
+        assertFalse(jcos.exists());
     }
     
     @Test

@@ -8,6 +8,7 @@ import static com.ibm.streamsx.topology.context.ContextProperties.APP_DIR;
 import static com.ibm.streamsx.topology.context.ContextProperties.TOOLKIT_DIR;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.createJobConfigOverlayFile;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.deleteToolkit;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
@@ -23,6 +24,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.core.InternalProperties;
 import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
@@ -59,8 +61,11 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
     	
     	File appDir = super.action(entity).get();
     	Future<File> bundle = doSPLCompile(appDir, submission);
-    	    	
-    	if (!standalone && !byBundleUser)
+    	   
+    	// Create a Job Config Overlays file if this is creating
+    	// a sab for subsequent distributed deployment
+    	// or keepArtifacts is set.
+    	if (!standalone && (!byBundleUser || keepArtifacts(submission)))
     	    createJobConfigOverlayFile(submission, deploy, bundle.get().getParentFile());
     	
     	return bundle;
