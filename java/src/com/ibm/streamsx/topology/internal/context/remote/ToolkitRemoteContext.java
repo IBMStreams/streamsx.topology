@@ -6,10 +6,13 @@ package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 import static com.ibm.streamsx.topology.context.ContextProperties.VMARGS;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOYMENT_CONFIG;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_CONFIG_OVERLAYS;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.TOOLKITS_JSON;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -90,9 +93,27 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
         copyIncludes(toolkitRoot, jsonGraph);
         
         generateSPL(toolkitRoot, jsonGraph);
+        
+        setupJobConfigOverlays(deploy, jsonGraph);
 
         return new CompletedFuture<File>(toolkitRoot);
     } 
+
+    /**
+     * Create a Job Config Overlays structure if it does not exist.
+     * Set the deployment from the graph config.
+     */
+    private void setupJobConfigOverlays(JsonObject deploy, JsonObject graph) {
+        JsonArray jcos = array(deploy, JOB_CONFIG_OVERLAYS);
+        if (jcos == null) {
+            deploy.add(JOB_CONFIG_OVERLAYS, jcos = new JsonArray());
+            jcos.add(new JsonObject());
+        }
+        JsonObject jco = jcos.get(0).getAsJsonObject();
+        
+        jco.add(DEPLOYMENT_CONFIG,
+                jobject(graph, "config").get(DEPLOYMENT_CONFIG));     
+    }
 
     private void generateSPL(File toolkitRoot, JsonObject jsonGraph)
             throws IOException {

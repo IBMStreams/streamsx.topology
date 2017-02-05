@@ -56,6 +56,15 @@ public interface DeployKeys {
     String JOB_CONFIG_OVERLAYS = "jobConfigOverlays";
     
     /**
+     * Deployment config within a Job Config Overlay
+     * or within the graph config element. The
+     * graph config element is set during SPL
+     * generation according to the requirements
+     * of the graph.
+     */
+    String DEPLOYMENT_CONFIG = "deploymentConfig";
+    
+    /**
      * Create a new JsonObject that contains the JOB_CONFIG_OVERLAYS
      * from  deploy
      */
