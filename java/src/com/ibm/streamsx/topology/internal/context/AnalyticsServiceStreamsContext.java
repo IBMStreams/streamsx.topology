@@ -95,7 +95,7 @@ public class AnalyticsServiceStreamsContext extends
             
             Topology.STREAMS_LOGGER.info("Streaming Analytics Service (" + serviceName + "): Submitting bundle : " + bundle.getName() + " to " + serviceName);
             
-            JsonObject jcojson = DeployKeys.getJobConfigOverlays(deploy);
+            JsonObject jcojson = DeployKeys.copyJobConfigOverlays(deploy);
             
             Topology.STREAMS_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submit job request:" + jcojson.toString());
 

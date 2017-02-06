@@ -85,11 +85,12 @@ public class JobConfigOverlay {
                     jobConfig.getOverrideResourceLoadProtection());
             overlay.add("operationConfig", operationConfig);
         }
-        
+        /*
         // DeploymentConfig
         JsonObject deploymentConfig = new JsonObject();
         deploymentConfig.addProperty("fusionScheme", "legacy");
         overlay.add("deploymentConfig", deploymentConfig);
+        */
         
         // Create the top-level structure.
         JsonArray jcos = new JsonArray();
@@ -98,10 +99,4 @@ public class JobConfigOverlay {
         
         return deploy;
     }
-    /*
-     * TODO
-    public statuc String fullOverlay(JsonObject deploy) {
-        return gson.toJson(fullOverlayAsJSON(new JsonObject()));
-    }
-    */
 }

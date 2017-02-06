@@ -8,6 +8,7 @@ import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_COMPOSITE_PARAM
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOYMENT_CONFIG;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
@@ -60,7 +61,26 @@ public class SPLGenerator {
         separateIntoComposites(starts, mainCompsiteDef, graph);
         StringBuilder sb = new StringBuilder();
         generateGraph(graph, sb);
+        
+        setDeployment(graph);
+        
         return sb.toString();
+    }
+    
+    /**
+     * Set any Job Config Overlay deployment options
+     * based upon the graph.
+     * Currently always sets fusion scheme legacy
+     * to ensure that isolation works.
+     */
+    private void setDeployment(JsonObject graph) {
+        
+        JsonObject config = GsonUtilities.jobject(graph, "config");
+                      
+        // DeploymentConfig
+        JsonObject deploymentConfig = new JsonObject();
+        deploymentConfig.addProperty("fusionScheme", "legacy");
+        config.add(DEPLOYMENT_CONFIG, deploymentConfig);
     }
     
     void generateGraph(JsonObject graph, StringBuilder sb) throws IOException {

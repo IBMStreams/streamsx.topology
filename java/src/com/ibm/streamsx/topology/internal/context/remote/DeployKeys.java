@@ -56,10 +56,19 @@ public interface DeployKeys {
     String JOB_CONFIG_OVERLAYS = "jobConfigOverlays";
     
     /**
+     * Deployment config within a Job Config Overlay
+     * or within the graph config element. The
+     * graph config element is set during SPL
+     * generation according to the requirements
+     * of the graph.
+     */
+    String DEPLOYMENT_CONFIG = "deploymentConfig";
+    
+    /**
      * Create a new JsonObject that contains the JOB_CONFIG_OVERLAYS
      * from  deploy
      */
-    static JsonObject getJobConfigOverlays(JsonObject deploy) {
+    static JsonObject copyJobConfigOverlays(JsonObject deploy) {
         JsonObject jcos = new JsonObject();
 
         if (deploy.has(JOB_CONFIG_OVERLAYS))
@@ -86,7 +95,7 @@ public interface DeployKeys {
 
             File jcf = new File(dir, namespace + "." + name + "_JobConfig.json");
 
-            JsonObject jcos = getJobConfigOverlays(deploy);
+            JsonObject jcos = copyJobConfigOverlays(deploy);
             jcos.addProperty("comment",
                     String.format("Job Config Overlays for %s::%s - generated %s", namespace, name, new Date()));
 

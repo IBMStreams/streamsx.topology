@@ -4,8 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.streams;
 
-import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_CONFIG_OVERLAYS;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.copyJobConfigOverlays;
 
 import java.io.File;
 import java.io.IOException;
@@ -155,15 +154,14 @@ public class InvokeSubmit {
      */
     private File fileJobConfig(List<String> commands, final JsonObject deploy) throws IOException {
         
-        JsonObject jobConfigInfo = new JsonObject();
-        jobConfigInfo.add(JOB_CONFIG_OVERLAYS, object(deploy, JOB_CONFIG_OVERLAYS));
+        JsonObject jobConfigInfo = copyJobConfigOverlays(deploy);
 
         String jcoJson = GsonUtilities.toJson(jobConfigInfo);
                      
         File jcoFile = File.createTempFile("streamsjco", ".json");
         Files.write(jcoFile.toPath(), jcoJson.getBytes(StandardCharsets.UTF_8));
         
-        trace.info("JobConfig: " + jcoJson);
+        trace.info("Job Config Overlays: " + jcoJson);
         
         commands.add("--jobConfig");
         commands.add(jcoFile.getAbsolutePath());

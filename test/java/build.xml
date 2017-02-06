@@ -181,6 +181,7 @@
      <property name="topology.test.perf_ok" value="true"/>
      <property name="topology.test.coverage" value="true"/>
      <property name="topology.test.resource_dir" location="resources"/>
+   <echo message="PYTHONHOME:${topology.test.python.prefix}"/>
    <jacoco:coverage enabled="${topology.test.coverage}">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
            threads="${topology.test.threads}"
