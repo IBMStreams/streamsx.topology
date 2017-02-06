@@ -548,7 +548,7 @@ class View(object):
     def start_data_fetch(self):
         self.initialize_rest()
         try:
-            self.view_object = self.streams_context.retrieve_view(self.name)
+            self.view_object = self.streams_context.get_view(self.name)
         except:
             logger.exception("Could not view: " + self.name)
             raise
