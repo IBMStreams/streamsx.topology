@@ -59,7 +59,6 @@ public class RestUtils {
 
     public static void checkInstanceStatus(CloseableHttpClient httpClient, JsonObject service)
             throws ClientProtocolException, IOException {
-        
         final String serviceName = jstring(service, "name");
         final JsonObject credentials = service.getAsJsonObject("credentials");
         
@@ -72,7 +71,7 @@ public class RestUtils {
 
         JsonObject jsonResponse = getGsonResponse(httpClient, getStatus);
         
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): instance status response:" + jsonResponse.toString());
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (\"" + serviceName + "\"): instance status response:" + jsonResponse.toString());
         
         if (!"true".equals(jstring(jsonResponse, "enabled")))
             throw new IllegalStateException("Service is not enabled!");
