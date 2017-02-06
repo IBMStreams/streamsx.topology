@@ -11,6 +11,8 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 import org.apache.http.HttpEntity;
@@ -41,7 +43,11 @@ class BuildServiceRemoteRESTWrapper {
     }
 	
 
-	void remoteBuildAndSubmit(JsonObject deploy, File archive) throws ClientProtocolException, IOException {
+	void remoteBuildAndSubmit(JsonObject submission, File archive) throws ClientProtocolException, IOException {
+	    JsonObject deploy = DeployKeys.deploy(submission);
+	    JsonObject graph = object(submission, "graph");
+	    String graphBuildName = jstring(graph, "name");
+	    
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		try {
 			JsonObject serviceg = VcapServices.getVCAPService(deploy);
@@ -52,7 +58,8 @@ class BuildServiceRemoteRESTWrapper {
 			String apiKey = RestUtils.getAPIKey(credentials);
 
 			// Perform initial post of the archive
-			String buildName = newBuildName(16);
+			String buildName = graphBuildName + randomHex(16);
+			buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
 			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service: Submitting build : \"" + buildName + "\" to " + serviceg.get("name"));
 			JsonObject jso = doUploadBuildArchivePost(httpclient, apiKey, archive, buildName);
 
@@ -206,7 +213,7 @@ class BuildServiceRemoteRESTWrapper {
 		return null;
 	}
 	
-	private String newBuildName(int length){
+	private String randomHex(int length){
 		char[] hexes = "0123456789ABCDEF".toCharArray();
 		Random r = new Random();
 		String name = "";

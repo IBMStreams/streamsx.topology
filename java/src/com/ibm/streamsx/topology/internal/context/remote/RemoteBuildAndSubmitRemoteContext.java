@@ -29,15 +29,15 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	    
 		Future<File> archive = super.submit(submission);
 		
-		doSubmit(deploy, service, archive.get());
+		doSubmit(submission, service, archive.get());
        return archive;
 	}
 	
-	private void doSubmit(JsonObject deploy, JsonObject service, File archive) throws IOException{
+	private void doSubmit(JsonObject submission, JsonObject service, File archive) throws IOException{
 		        
         JsonObject credentials = object(service,  "credentials");
      
         BuildServiceRemoteRESTWrapper wrapper = new BuildServiceRemoteRESTWrapper(credentials);
-        wrapper.remoteBuildAndSubmit(deploy, archive);
+        wrapper.remoteBuildAndSubmit(submission, archive);
 	}
 }
