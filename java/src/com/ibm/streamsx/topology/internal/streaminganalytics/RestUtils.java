@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.streaminganalytics;
 
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices.getVCAPService;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,9 +57,12 @@ public class RestUtils {
         return sb.toString();
     }
 
-    public static void checkInstanceStatus(CloseableHttpClient httpClient, JsonObject credentials)
+    public static void checkInstanceStatus(CloseableHttpClient httpClient, JsonObject service)
             throws ClientProtocolException, IOException {
-
+        
+        final String serviceName = jstring(service, "name");
+        final JsonObject credentials = service.getAsJsonObject("credentials");
+        
         String url = getStatusURL(credentials);
 
         String apiKey = getAPIKey(credentials);
@@ -66,9 +70,9 @@ public class RestUtils {
         HttpGet getStatus = new HttpGet(url);
         getStatus.addHeader(AUTH.WWW_AUTH_RESP, apiKey);
 
-	JsonObject jsonResponse = getGsonResponse(httpClient, getStatus);
+        JsonObject jsonResponse = getGsonResponse(httpClient, getStatus);
         
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service instance status response:" + jsonResponse.toString());
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): instance status response:" + jsonResponse.toString());
         
         if (!"true".equals(jstring(jsonResponse, "enabled")))
             throw new IllegalStateException("Service is not enabled!");
@@ -123,9 +127,12 @@ public class RestUtils {
 	/**
 	 * Submit an application bundle to execute as a job.
 	 */
-    public static BigInteger postJob(CloseableHttpClient httpClient, JsonObject credentials, File bundle,
+    public static BigInteger postJob(CloseableHttpClient httpClient, JsonObject service, File bundle,
             JsonObject jobConfigOverlay) throws ClientProtocolException, IOException {
-
+        
+        final String serviceName = jstring(service, "name");
+        final JsonObject credentials = service.getAsJsonObject("credentials");
+        
         String url = getJobSubmitURL(credentials, bundle);
 
         HttpPost postJobWithConfig = new HttpPost(url);
@@ -141,7 +148,7 @@ public class RestUtils {
 
         JsonObject jsonResponse = getGsonResponse(httpClient, postJobWithConfig);
 
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service submit job response:" + jsonResponse.toString());
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submit job response:" + jsonResponse.toString());
 
         String jobId = jstring(jsonResponse, "jobId");
         if (jobId == null)
