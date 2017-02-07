@@ -13,6 +13,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -29,6 +30,7 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -238,20 +240,27 @@ public class LowLatencyTest extends TestTopology {
     @Test
     public void testSameThread() throws Exception {
         final int tc = 2000;
-        final Topology topology = newTopology("nestedTest");
+        final Topology topology = newTopology("testSameThread");
         final Tester tester = topology.getTester();
         
-        TStream<Long> s = topology.limitedSource(new Rnd(), tc);
+        TStream<Long> s1 = topology.limitedSource(new Rnd(), tc);
+        TStream<Long> s2 = topology.limitedSource(new Rnd(), tc);
+        TStream<Long> s3 = topology.limitedSource(new Rnd(), tc);
+        TStream<Long> s4 = topology.limitedSource(new Rnd(), tc);
+        
+        TStream<Long> s = s1.union(new HashSet<>(Arrays.asList(s2, s3, s4)));
         s = s.lowLatency();
         s = s.transform(new SetThread());
         for (int i = 0 ; i < 20; i++)
             s = s.transform(new CheckThread());
         
-        s.transform(new ClearThread());
-        s.endLowLatency();
+        s = s.transform(new ClearThread());
+        s = s.endLowLatency();
         s = s.filter(t -> true);
         
-        Condition<Long> endCondition = tester.tupleCount(s, tc);
+        this.getConfig().put(com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS, Boolean.TRUE);
+        
+        Condition<Long> endCondition = tester.tupleCount(s, 4 * tc);
         
         this.complete(tester, endCondition, 30, TimeUnit.SECONDS);
         
