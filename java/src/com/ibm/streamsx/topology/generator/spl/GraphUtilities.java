@@ -459,10 +459,17 @@ public class GraphUtilities {
 
     }  
     
-    static void addBefore(JsonObject op, JsonObject addOp, JsonObject graph){
+    /**
+     * Add an operator before another operator.
+     * @param op Operator the new operator is to be added before.
+     * @param addOp Operator to be added
+     * @param graph The graph.
+     */
+    static void addBefore(JsonObject op, JsonObject addOp, JsonObject graph){        
         for(JsonObject parent : getUpstream(op, graph)){
             addBetween(parent, op, addOp);
-        }       
+        } 
+        graph.get("operators").getAsJsonArray().add(addOp);
     }
     
     static void addBetween(JsonObject parent, JsonObject child, JsonObject op){
@@ -476,7 +483,7 @@ public class GraphUtilities {
     
 	static void addBetween(List<JsonObject> parents, List<JsonObject> children, JsonObject op){
         for(JsonObject parent : parents){
-            for(JsonObject child : children){              
+            for(JsonObject child : children){      
                 JsonArray outputs = parent.get("outputs").getAsJsonArray();
                 JsonArray inputs = child.get("inputs").getAsJsonArray();
                 for(JsonElement output : outputs){

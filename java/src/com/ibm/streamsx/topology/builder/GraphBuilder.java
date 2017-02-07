@@ -6,6 +6,8 @@ package com.ibm.streamsx.topology.builder;
 
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +31,7 @@ import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
+import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.tuple.JSONAble;
@@ -107,6 +110,7 @@ public class GraphBuilder extends BJSONObject {
    }
     
     public BOutput lowLatency(BOutput parent){
+        getConfig().put(CFG_HAS_LOW_LATENCY, true);
         BOutput lowLatencyOutput = addPassThroughMarker(parent, BVirtualMarker.LOW_LATENCY, true);
         return lowLatencyOutput;
     }
@@ -156,6 +160,8 @@ public class GraphBuilder extends BJSONObject {
     }
     
     public BOutput isolate(BOutput parent){
+        
+        getConfig().put(CFG_HAS_ISOLATE, true);
         return addPassThroughMarker(parent, BVirtualMarker.ISOLATE, false);
     }
     public BOutput autonomous(BOutput parent){
