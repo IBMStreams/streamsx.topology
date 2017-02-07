@@ -34,10 +34,7 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	}
 	
 	private void doSubmit(JsonObject submission, JsonObject service, File archive) throws IOException{
-		        
-        JsonObject credentials = object(service,  "credentials");
-     
-        BuildServiceRemoteRESTWrapper wrapper = new BuildServiceRemoteRESTWrapper(credentials);
+        BuildServiceRemoteRESTWrapper wrapper = new BuildServiceRemoteRESTWrapper(service);
         wrapper.remoteBuildAndSubmit(submission, archive);
 	}
 }

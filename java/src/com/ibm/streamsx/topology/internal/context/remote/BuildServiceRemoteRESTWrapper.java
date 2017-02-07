@@ -37,9 +37,12 @@ import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 class BuildServiceRemoteRESTWrapper {
 	
     private JsonObject credentials;
+    private JsonObject service;
 	
-	BuildServiceRemoteRESTWrapper(JsonObject credentials){
-		this.credentials = credentials;
+	BuildServiceRemoteRESTWrapper(JsonObject service){
+	    JsonObject credentials = object(service,  "credentials");
+	    this.credentials = credentials;
+	    this.service = service;
     }
 	
 
@@ -50,18 +53,17 @@ class BuildServiceRemoteRESTWrapper {
 	    
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		try {
-			JsonObject serviceg = VcapServices.getVCAPService(deploy);
-			String serviceName = serviceg.get("name").toString();
+			String serviceName = this.service.get("name").toString();
 
-			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): Checking status :" + serviceName);
-			RestUtils.checkInstanceStatus(httpclient, serviceg);
+			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): Checking status");
+			RestUtils.checkInstanceStatus(httpclient, this.service);
 
 			String apiKey = RestUtils.getAPIKey(credentials);
 
 			// Perform initial post of the archive
-			String buildName = graphBuildName + randomHex(16);
+			String buildName = graphBuildName + "_" + randomHex(16);
 			buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
-			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submitting build \"" + buildName + "\" to " + serviceg.get("name"));
+			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submitting build \"" + buildName);
 			JsonObject jso = doUploadBuildArchivePost(httpclient, apiKey, archive, buildName);
 
 			JsonObject build = object(jso, "build");
@@ -127,8 +129,7 @@ class BuildServiceRemoteRESTWrapper {
        
         JsonObject jso = RestUtils.getGsonResponse(httpclient, httpput);
         
-        JsonObject serviceg = VcapServices.getVCAPService(deploy);
-        String serviceName = serviceg.get("name").toString();
+        String serviceName = this.service.get("name").toString();
         RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service(" + serviceName + "): submit job response: " + jso.toString());
 		return jso;
 	}
