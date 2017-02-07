@@ -15,6 +15,7 @@ import static org.junit.Assume.assumeTrue;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -30,6 +31,7 @@ import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
@@ -163,7 +165,6 @@ public class LowLatencyTest extends TestTopology {
     @SuppressWarnings("serial")
     static UnaryOperator<String> unaryGetPEId() {
         return new UnaryOperator<String>() {
-
             @Override
             public String apply(String v) {
                 return PERuntime.getPE().getPEId().toString();
@@ -228,5 +229,74 @@ public class LowLatencyTest extends TestTopology {
         Set<String> ids = getContainerIds(contents.getResult());
         assertEquals("ids: "+ids, 1, ids.size());
     }
+    
+    private static ThreadLocal<Long> sameThread = new ThreadLocal<>();
 
+    /**
+     * Test the same thread executes the low latency section.
+     */
+    @Test
+    public void testSameThread() throws Exception {
+        final int tc = 2000;
+        final Topology topology = newTopology("nestedTest");
+        final Tester tester = topology.getTester();
+        
+        TStream<Long> s = topology.limitedSource(new Rnd(), tc);
+        s = s.lowLatency();
+        s = s.transform(new SetThread());
+        for (int i = 0 ; i < 20; i++)
+            s = s.transform(new CheckThread());
+        
+        s.transform(new ClearThread());
+        s.endLowLatency();
+        s = s.filter(t -> true);
+        
+        Condition<Long> endCondition = tester.tupleCount(s, tc);
+        
+        this.complete(tester, endCondition, 30, TimeUnit.SECONDS);
+        
+    }
+    
+    @SuppressWarnings("serial")
+    public static class SetThread implements UnaryOperator<Long> {
+        @Override
+        public Long apply(Long v) {
+            sameThread.set(v);
+            return v;
+        }
+    }
+    @SuppressWarnings("serial")
+    public static class CheckThread implements UnaryOperator<Long> {
+        @Override
+        public Long apply(Long v) {
+            if (!v.equals(sameThread.get()))
+                throw new IllegalStateException("Thread mismatch:" +
+                   Thread.currentThread().getName() + " expected:" +
+                        v + " thread local:" + sameThread.get());
+            return v;
+        }
+    }
+    @SuppressWarnings("serial")
+    public static class ClearThread implements UnaryOperator<Long> {
+        @Override
+        public Long apply(Long v) {
+            sameThread.set(null);
+            return v;
+        }
+    }
+      
+    
+    @SuppressWarnings("serial")
+    public static class Rnd implements Supplier<Long> {
+        
+        private transient Random r;
+
+        @Override
+        public Long get() {
+            if (r == null)
+                r = new Random();
+            return r.nextLong();
+        }
+        
+    }
 }
