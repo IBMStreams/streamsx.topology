@@ -4,6 +4,9 @@
  */
 package com.ibm.streamsx.topology.test.api;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_LOW_LATENCY_REGION_ID;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerId;
@@ -27,13 +30,13 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.PERuntime;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
@@ -96,9 +99,9 @@ public class LowLatencyTest extends TestTopology {
         
         GsonUtilities.objectArray(ggraph , "operators", op -> {
             String lowLatencyTag = null;
-            JsonObject placement = object(op, JOperator.CONFIG, JOperatorConfig.PLACEMENT);
+            JsonObject placement = object(op, CONFIG, PLACEMENT);
             if (placement != null)
-                lowLatencyTag = jstring(placement, JOperator.PLACEMENT_LOW_LATENCY_REGION_ID);
+                lowLatencyTag = jstring(placement, PLACEMENT_LOW_LATENCY_REGION_ID);
             String kind = jstring(op, "kind");
             JsonObject queue = object(op, "queue");
             if(queue != null && (lowLatencyTag == null || lowLatencyTag.equals(""))){

@@ -5,6 +5,9 @@
 package com.ibm.streamsx.topology.internal.core;
 
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.ISOLATE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_RESOURCE_TAGS;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.lang.ref.WeakReference;
@@ -22,7 +25,6 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
-import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
@@ -176,14 +178,14 @@ class PlacementInfo {
      * Update an element's placement configuration.
      */
     private void updatePlacementJSON(Placeable<?> element) {
-        JSONObject placement = JOperatorConfig.createJSONItem(element.operator().json(), JOperatorConfig.PLACEMENT);
-        placement.put(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID, fusingIds.get(element));
+        JSONObject placement = JOperatorConfig.createJSONItem(element.operator().json(), PLACEMENT);
+        placement.put(PLACEMENT_EXPLICIT_COLOCATE_ID, fusingIds.get(element));
         
         Set<String> elementResourceTags = resourceTags.get(element);
         if (elementResourceTags != null && !elementResourceTags.isEmpty()) {
             JSONArray listOfTags = new JSONArray();
             listOfTags.addAll(elementResourceTags);    
-            placement.put(JOperator.PLACEMENT_RESOURCE_TAGS, listOfTags);    
+            placement.put(PLACEMENT_RESOURCE_TAGS, listOfTags);    
         } 
     }
 }

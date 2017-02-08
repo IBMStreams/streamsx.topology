@@ -9,6 +9,8 @@ import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARA
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOYMENT_CONFIG;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
@@ -86,8 +88,8 @@ public class SPLGenerator {
         JsonObject deploymentConfig = new JsonObject();
         config.add(DEPLOYMENT_CONFIG, deploymentConfig);
         
-        boolean hasIsolate = jboolean(config, GraphKeys.CFG_HAS_ISOLATE);
-        boolean hasLowLatency = jboolean(config, GraphKeys.CFG_HAS_LOW_LATENCY);
+        boolean hasIsolate = jboolean(config, CFG_HAS_ISOLATE);
+        boolean hasLowLatency = jboolean(config, CFG_HAS_LOW_LATENCY);
         
         if (hasIsolate)     
             deploymentConfig.addProperty("fusionScheme", "legacy");
