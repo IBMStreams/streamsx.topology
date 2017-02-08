@@ -191,11 +191,9 @@ class PEPlacement {
                     GraphUtilities.getDownstream(llStart, graph));
         }
 
-        List<JsonObject> allLowLatencyOps = new ArrayList<>();
-        allLowLatencyOps.addAll(lowLatencyEndOperators);
-        allLowLatencyOps.addAll(lowLatencyStartOperators);
-
-        GraphUtilities.removeOperators(allLowLatencyOps, graph);
+        // Remove all the markers
+        lowLatencyStartOperators.addAll(lowLatencyEndOperators);
+        GraphUtilities.removeOperators(lowLatencyStartOperators, graph);
     }
 
     @SuppressWarnings("serial")
