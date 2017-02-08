@@ -8,6 +8,8 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_ISOLATE_REGION_ID;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_LOW_LATENCY_REGION_ID;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
@@ -41,8 +43,16 @@ class PEPlacement {
         placement.addProperty(PLACEMENT_ISOLATE_REGION_ID, isolationRegionId);
     }
     
-    @SuppressWarnings("serial")
-    private void assignIsolateRegionIds(JsonObject isolate, Set<JsonObject> starts,
+    /**
+     * Assign a region isolate identifier to all operators
+     * in an isolate region. From the starts (which are immediately
+     * up/downstream of an isolate set the isolate region id for
+     * all reachable operators until another isolate or the edge is hit.
+     * 
+     * @param starts Set of operators upstream or downstream of an isolate marker.
+     * @param graph
+     */
+    private void assignIsolateRegionIds(Set<JsonObject> starts,
             JsonObject graph) {
 
         final String isolationRegionId = newIsolateRegionId();
@@ -50,14 +60,7 @@ class PEPlacement {
         Set<BVirtualMarker> boundaries = EnumSet.of(BVirtualMarker.ISOLATE);
 
         GraphUtilities.visitOnce(starts, boundaries, graph,
-                new Consumer<JsonObject>() {
-
-                    @Override
-                    public void accept(JsonObject op) {
-                        setIsolateRegionId(op, isolationRegionId);
-                    }
-
-                });
+                op -> setIsolateRegionId(op, isolationRegionId));
     }
 
     /**
@@ -111,18 +114,28 @@ class PEPlacement {
         }
 
         // Assign isolation regions their partition colocations
+        // by working upstream from the the isolate marker
+        // and then downstream to separate the regions with
+        // different isolate region identifiers.
         for (JsonObject isolate : isolateOperators) {
-            assignIsolateRegionIds(isolate,
-                    GraphUtilities.getUpstream(isolate, graph), graph);
-            assignIsolateRegionIds(isolate,
-                    GraphUtilities.getDownstream(isolate, graph), graph);
+            assignIsolateRegionIds(getUpstream(isolate, graph), graph);
+            assignIsolateRegionIds(getDownstream(isolate, graph), graph);
         }
  
         tagIslandIsolatedRegions(graph);
         GraphUtilities.removeOperators(isolateOperators, graph);
     }
     
-    @SuppressWarnings("serial")
+    /**
+     * Tag any "island" regions with their own isolated region id.
+     * This can occur when there are there sub-graphs that are
+     * not connected to a region already processed with an isolate.
+     * So two cases:
+     *   a) No isolates exist at all in the graph
+     *   b) Isolates exist in the whole graph but a disconnected
+     *   sub-graph has no isolates. 
+     * @param graph
+     */
     private void tagIslandIsolatedRegions(JsonObject graph){
         Set<JsonObject> starts = GraphUtilities.findStarts(graph);   
         
@@ -141,12 +154,7 @@ class PEPlacement {
             Set<BVirtualMarker> boundaries = EnumSet.of(BVirtualMarker.ISOLATE);
             
             GraphUtilities.visitOnce(startList, boundaries, graph,
-                    new Consumer<JsonObject>() {
-                        @Override
-                        public void accept(JsonObject op) {
-                            setIsolateRegionId(op, colocationTag);
-                        }
-                    });           
+                    op -> setIsolateRegionId(op, colocationTag));          
         }
     }
     
