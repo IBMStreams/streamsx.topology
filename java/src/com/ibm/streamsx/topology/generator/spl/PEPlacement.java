@@ -9,7 +9,7 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMEN
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_ISOLATE_REGION_ID;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_LOW_LATENCY_REGION_ID;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.nestedObjectCreate;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +29,7 @@ class PEPlacement {
     
     private void setIsolateRegionId(JsonObject op, String isolationRegionId) {
        
-        JsonObject placement = nestedObjectCreate(op, CONFIG, PLACEMENT);
+        JsonObject placement = objectCreate(op, CONFIG, PLACEMENT);
 
         // If the region has already been assigned a PLACEMENT_ISOLATE_REGION_ID
         // tag, simply return.
@@ -129,7 +129,7 @@ class PEPlacement {
         for(JsonObject start : starts){
             final String colocationTag = newIsolateRegionId();
             
-            JsonObject placement = nestedObjectCreate(start, CONFIG, PLACEMENT);
+            JsonObject placement = objectCreate(start, CONFIG, PLACEMENT);
                      
             String regionTag = jstring(placement, PLACEMENT_ISOLATE_REGION_ID);         
             if (regionTag != null && !regionTag.isEmpty()) {
@@ -206,7 +206,7 @@ class PEPlacement {
                                             
                         // If the region has already been assigned a
                         // lowLatency tag, simply return.
-                        JsonObject placement = nestedObjectCreate(op, CONFIG, PLACEMENT);
+                        JsonObject placement = objectCreate(op, CONFIG, PLACEMENT);
                         String regionTag = jstring(placement, PLACEMENT_LOW_LATENCY_REGION_ID);
                         if (regionTag != null && !regionTag.isEmpty()) {
                             return;
