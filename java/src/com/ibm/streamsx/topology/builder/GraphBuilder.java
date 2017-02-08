@@ -110,7 +110,6 @@ public class GraphBuilder extends BJSONObject {
    }
     
     public BOutput lowLatency(BOutput parent){
-        getConfig().put(CFG_HAS_LOW_LATENCY, true);
         BOutput lowLatencyOutput = addPassThroughMarker(parent, BVirtualMarker.LOW_LATENCY, true);
         return lowLatencyOutput;
     }
@@ -160,8 +159,6 @@ public class GraphBuilder extends BJSONObject {
     }
     
     public BOutput isolate(BOutput parent){
-        
-        getConfig().put(CFG_HAS_ISOLATE, true);
         return addPassThroughMarker(parent, BVirtualMarker.ISOLATE, false);
     }
     public BOutput autonomous(BOutput parent){

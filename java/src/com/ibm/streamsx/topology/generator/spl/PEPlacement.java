@@ -4,12 +4,17 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_ISOLATE_REGION_ID;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_LOW_LATENCY_REGION_ID;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.findOperatorByKind;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
@@ -23,6 +28,7 @@ import java.util.Set;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 
 class PEPlacement {
     
@@ -116,6 +122,9 @@ class PEPlacement {
         Set<JsonObject> isolateOperators = GraphUtilities.findOperatorByKind(
                 BVirtualMarker.ISOLATE, graph);
         
+        if (!isolateOperators.isEmpty())
+            graph.getAsJsonObject("config").addProperty(CFG_HAS_ISOLATE, true);
+        
         for (JsonObject jso : isolateOperators) {
             checkValidColocationRegion(jso);
         }
@@ -181,10 +190,13 @@ class PEPlacement {
     
     void tagLowLatencyRegions() {
         Set<JsonObject> lowLatencyStartOperators = GraphUtilities
-                .findOperatorByKind(BVirtualMarker.LOW_LATENCY, graph);
-        Set<JsonObject> lowLatencyEndOperators = GraphUtilities
-                .findOperatorByKind(BVirtualMarker.END_LOW_LATENCY, graph);
-
+                .findOperatorByKind(LOW_LATENCY, graph);
+        
+        if (lowLatencyStartOperators.isEmpty())
+            return;
+        
+        graph.getAsJsonObject("config").addProperty(CFG_HAS_LOW_LATENCY, true);
+        
         // Assign isolation regions their lowLatency tag
         for (JsonObject llStart : lowLatencyStartOperators) {
             assignLowLatency(llStart,
@@ -192,7 +204,7 @@ class PEPlacement {
         }
 
         // Remove all the markers
-        lowLatencyStartOperators.addAll(lowLatencyEndOperators);
+        lowLatencyStartOperators.addAll(findOperatorByKind(END_LOW_LATENCY, graph));
         GraphUtilities.removeOperators(lowLatencyStartOperators, graph);
     }
 

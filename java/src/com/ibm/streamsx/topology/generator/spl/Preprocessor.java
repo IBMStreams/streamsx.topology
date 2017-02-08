@@ -75,13 +75,6 @@ class Preprocessor {
     private void isolateParalleRegions() {
         boolean needExplicitIsolates = !generator.versionAtLeast(4, 2);
         
-        /*
-        Set<JsonObject> isos = findOperatorByKind(ISOLATE, graph);  
-        for (JsonObject op : isos)
-            System.err.println("ISOLATE:" + op);
-            
-            */
-        
         // TODO 4.2 checking
         
         if (!needExplicitIsolates)
@@ -91,7 +84,6 @@ class Preprocessor {
         Set<JsonObject> parallelOperators = findOperatorByKind(PARALLEL, graph);  
         parallelOperators.addAll(findOperatorByKind(END_PARALLEL, graph));
         for (JsonObject po : parallelOperators) {
-            graph.getAsJsonObject("config").addProperty(CFG_HAS_ISOLATE, true);
             String schema = po.get("inputs").getAsJsonArray().get(0).getAsJsonObject().get("type").getAsString();
                         
             addBefore(po, newMarker(schema, ISOLATE), graph);         
