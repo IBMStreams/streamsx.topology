@@ -26,8 +26,17 @@ import com.ibm.streamsx.topology.function.Consumer;
 
 class PEPlacement {
     
+    private final SPLGenerator generator;
+    private final JsonObject graph;
+
+    
     private int isolateRegionCount;
     private int lowLatencyRegionCount;
+    
+    PEPlacement(SPLGenerator generator, JsonObject graph) {
+        this.generator = generator;
+        this.graph = graph;
+    }
     
     private void setIsolateRegionId(JsonObject op, String isolationRegionId) {
        
@@ -50,10 +59,8 @@ class PEPlacement {
      * all reachable operators until another isolate or the edge is hit.
      * 
      * @param starts Set of operators upstream or downstream of an isolate marker.
-     * @param graph
      */
-    private void assignIsolateRegionIds(Set<JsonObject> starts,
-            JsonObject graph) {
+    private void assignIsolateRegionIds(Set<JsonObject> starts) {
 
         final String isolationRegionId = newIsolateRegionId();
 
@@ -81,7 +88,7 @@ class PEPlacement {
      *         merged with its parent.
      */
     @SuppressWarnings("serial")
-    private void checkValidColocationRegion(JsonObject isolate, JsonObject graph) {
+    private void checkValidColocationRegion(JsonObject isolate) {
         final Set<JsonObject> isolateChildren = GraphUtilities.getDownstream(
                 isolate, graph);
         Set<JsonObject> isoParents = GraphUtilities.getUpstream(isolate, graph);
@@ -104,13 +111,13 @@ class PEPlacement {
                 });
     }
 
-    void tagIsolationRegions(JsonObject graph) {
+    void tagIsolationRegions() {
         // Check whether graph is valid for colocations
         Set<JsonObject> isolateOperators = GraphUtilities.findOperatorByKind(
                 BVirtualMarker.ISOLATE, graph);
         
         for (JsonObject jso : isolateOperators) {
-            checkValidColocationRegion(jso, graph);
+            checkValidColocationRegion(jso);
         }
 
         // Assign isolation regions their partition colocations
@@ -118,11 +125,11 @@ class PEPlacement {
         // and then downstream to separate the regions with
         // different isolate region identifiers.
         for (JsonObject isolate : isolateOperators) {
-            assignIsolateRegionIds(getUpstream(isolate, graph), graph);
-            assignIsolateRegionIds(getDownstream(isolate, graph), graph);
+            assignIsolateRegionIds(getUpstream(isolate, graph));
+            assignIsolateRegionIds(getDownstream(isolate, graph));
         }
  
-        tagIslandIsolatedRegions(graph);
+        tagIslandIsolatedRegions();
         GraphUtilities.removeOperators(isolateOperators, graph);
     }
     
@@ -136,7 +143,7 @@ class PEPlacement {
      *   sub-graph has no isolates. 
      * @param graph
      */
-    private void tagIslandIsolatedRegions(JsonObject graph){
+    private void tagIslandIsolatedRegions(){
         Set<JsonObject> starts = GraphUtilities.findStarts(graph);   
         
         for(JsonObject start : starts){
@@ -172,7 +179,7 @@ class PEPlacement {
         }
     }
     
-    void tagLowLatencyRegions(JsonObject graph) {
+    void tagLowLatencyRegions() {
         Set<JsonObject> lowLatencyStartOperators = GraphUtilities
                 .findOperatorByKind(BVirtualMarker.LOW_LATENCY, graph);
         Set<JsonObject> lowLatencyEndOperators = GraphUtilities
@@ -181,7 +188,7 @@ class PEPlacement {
         // Assign isolation regions their lowLatency tag
         for (JsonObject llStart : lowLatencyStartOperators) {
             assignLowLatency(llStart,
-                    GraphUtilities.getDownstream(llStart, graph), graph);
+                    GraphUtilities.getDownstream(llStart, graph));
         }
 
         List<JsonObject> allLowLatencyOps = new ArrayList<>();
@@ -193,7 +200,7 @@ class PEPlacement {
 
     @SuppressWarnings("serial")
     private void assignLowLatency(JsonObject llStart,
-            Set<JsonObject> llStartChildren, JsonObject graph) {
+            Set<JsonObject> llStartChildren) {
 
         final String lowLatencyTag = "LowLatencyRegion"
                 + Integer.toString(lowLatencyRegionCount++);

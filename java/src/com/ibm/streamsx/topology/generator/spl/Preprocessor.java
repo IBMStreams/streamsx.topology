@@ -44,14 +44,14 @@ class Preprocessor {
         
         isolateParalleRegions();
         
-        PEPlacement pePlacementPreprocess = new PEPlacement();
+        PEPlacement pePlacementPreprocess = new PEPlacement(generator, graph);
 
         // The hash adder operators need to be relocated to enable directly 
 	// adjacent parallel regions
         relocateHashAdders();
         
-        pePlacementPreprocess.tagIsolationRegions(graph);
-        pePlacementPreprocess.tagLowLatencyRegions(graph);
+        pePlacementPreprocess.tagIsolationRegions();
+        pePlacementPreprocess.tagLowLatencyRegions();
         
         ThreadingModel.preProcessThreadedPorts(graph);
         
