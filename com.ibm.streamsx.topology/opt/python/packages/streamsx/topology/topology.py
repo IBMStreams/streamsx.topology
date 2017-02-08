@@ -365,27 +365,26 @@ class Stream(object):
 
         """
         if (routing == None or routing == Routing.ROUND_ROBIN) :
-            iop = self.isolate()                  
             op2 = self.topology.graph.addOperator("$Parallel$")
-            op2.addInputPort(outputPort=iop.oport)
+            op2.addInputPort(outputPort=self.oport)
             oport = op2.addOutputPort(width)
             return Stream(self.topology, oport)
         elif(routing == Routing.HASH_PARTITIONED ) :
             if (func is None) :
                 func = hash   
-            op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func)
+            hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func)
             hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int32 __spl_hash>"))
-            parentOp = op.addOutputPort(schema=hash_schema)
-            op.addInputPort(outputPort=self.oport)
-            iop = self.topology.graph.addOperator("$Isolate$")    
-            oport = iop.addOutputPort(schema=hash_schema)
-            iop.addInputPort(outputPort=parentOp)        
-            op2 = self.topology.graph.addOperator("$Parallel$")
-            op2.addInputPort(outputPort=oport)
-            o2port = op2.addOutputPort(oWidth=width, schema=hash_schema, partitioned=True)
+            hash_adder.addInputPort(outputPort=self.oport)
+            hash_adder_oport = hash_adder.addOutputPort(schema=hash_schema)
+
+
+            parallel_op = self.topology.graph.addOperator("$Parallel$")
+            parallel_op.addInputPort(outputPort=hash_adder_oport)
+            parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=hash_schema, partitioned=True)
+
             # use the Functor passthru operator to effectively remove the hash attribute by removing it from output port schema 
             hrop = self.topology.graph.addPassThruOperator()
-            hrop.addInputPort(outputPort=o2port)
+            hrop.addInputPort(outputPort=parallel_op_port)
             hrOport = hrop.addOutputPort(schema=self.oport.schema)
             return Stream(self.topology, hrOport)
         else :
@@ -411,7 +410,7 @@ class Stream(object):
         op.addInputPort(outputPort=outport)
         oport = op.addOutputPort()
         endP = Stream(self.topology, oport)
-        return endP.isolate()
+        return endP
 
     def union(self, streamSet):
         """
