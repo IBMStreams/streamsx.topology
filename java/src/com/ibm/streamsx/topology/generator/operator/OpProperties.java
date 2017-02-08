@@ -46,6 +46,12 @@ public interface OpProperties {
     
     /**
      * Attribute for placement of the operator, a JSON object.
+     * Can contain:
+     * PLACEMENT_ISOLATE_REGION_ID
+     * PLACEMENT_EXPLICIT_COLOCATE_ID
+     * PLACEMENT_LOW_LATENCY_REGION_ID
+     * PLACEMENT_RESOURCE_TAGS
+     * 
      * Stored within {@link OpProperties#CONFIG}.
      */
     String PLACEMENT = "placement";
