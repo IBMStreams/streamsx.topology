@@ -19,9 +19,8 @@
       <arg value="clone"/>
       <arg value="https://github.com/IBMStreams/streamsx.utility.git"/>
    </exec>
-    <copy todir="${streamsx.py}">
-      <fileset dir="streamsx.utility/python/packages/streamsx" excludes="**/__init__.py"/>
-    </copy>
+    <copy file="streamsx.utility/python/packages/streamsx/rest.py"
+      todir="${streamsx.py}"/>
    <delete dir="streamsx.utility"/>
   </target>
 
