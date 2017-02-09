@@ -48,7 +48,8 @@ class Preprocessor {
 
         // The hash adder operators need to be relocated to enable directly 
 	// adjacent parallel regions
-        relocateHashAdders();
+        // TODO: renable adjacent parallel regions optimization
+        //relocateHashAdders();
         
         pePlacementPreprocess.tagIsolationRegions();
         pePlacementPreprocess.tagLowLatencyRegions();
