@@ -54,17 +54,25 @@ public class InvokeSubmit {
         commands.add("submitjob");
         commands.add("--outfile");
         commands.add(jobidFile.getAbsolutePath());
+                
+        final JobConfig jobConfig = JobConfigOverlay.fromFullOverlay(deploy);
         
         // For IBM Streams 4.2 or later use the job config overlay
         // V.R.M.F
         File jcoFile = null;
         Version ver = Product.getVersion();
         if (ver.getVersion() > 4 ||
-                (ver.getVersion() ==4 && ver.getRelease() >= 2))
+                (ver.getVersion() ==4 && ver.getRelease() >= 2)) {
             jcoFile = fileJobConfig(commands, deploy);
-        else {
-            final JobConfig jobConfig = JobConfigOverlay.fromFullOverlay(deploy);
+        } else {         
             explicitJobConfig(commands, jobConfig);
+        }
+        
+        if (jobConfig.getOverrideResourceLoadProtection() != null) {            
+            if (jobConfig.getOverrideResourceLoadProtection()) {
+                commands.add("--override");
+                commands.add("HostLoadProtection");
+            }
         }
         
         commands.add(bundle.getAbsolutePath());
@@ -137,13 +145,6 @@ public class InvokeSubmit {
                 commands.add("-P");
                 commands.add(param.getName()+"="+param.getValue()
                                                 .replace("\\", "\\\\\\"));
-            }
-        }
-        if (jobConfig.getOverrideResourceLoadProtection() != null) {
-            
-            if (jobConfig.getOverrideResourceLoadProtection()) {
-                commands.add("--override");
-                commands.add("HostLoadProtection");
             }
         }
     }
