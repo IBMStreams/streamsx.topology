@@ -142,12 +142,14 @@
       <tar compression="gzip" longfile="gnu" destfile="${releasefilename}">
          <tarfileset dir="${basedir}" filemode="755" >
            <include name="**/pyversion*.sh"/>
+           <exclude name="test/**"/>
          </tarfileset>
          <tarfileset dir="${basedir}" >
            <include name="com.ibm.streamsx.topology/**"/>
            <include name="samples/**"/>
            <exclude name="**/.gitignore"/>
            <exclude name="**/pyversion*.sh"/>
+           <exclude name="test/**"/>
          </tarfileset>
       </tar>
       <checksum file="${releasefilename}"/>
