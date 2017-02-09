@@ -490,7 +490,6 @@ public class PlaceableTest extends TestTopology {
         
         final Topology topology = newTopology("testColocateLowLatancy");
         Tester tester = topology.getTester();
-        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         TStream<String> s1 = 
                 topology.strings("a")

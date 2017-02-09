@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_COUNT;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_DELTA;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_NONE;
@@ -14,6 +15,8 @@ import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_SLIDING;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_TUMBLING;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
+import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.stringLiteral;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_TAG_MAPPING;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
@@ -38,6 +41,7 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
+import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class OperatorGenerator {
@@ -471,18 +475,18 @@ class OperatorGenerator {
             }
         }
                
-        if (config.has(OpProperties.PLACEMENT)) {
-            JsonObject placement = jobject(config, OpProperties.PLACEMENT);
+        if (config.has(PLACEMENT)) {
+            JsonObject placement = jobject(config, PLACEMENT);
             StringBuilder sbPlacement = new StringBuilder();
             
             // Explicit placement takes precedence.
-            String colocationTag = jstring(placement, OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID);
-            if (colocationTag == null)
-                colocationTag = jstring(placement, OpProperties.PLACEMENT_ISOLATE_REGION_ID);
+            String colocationKey = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
+            if (colocationKey != null) {
+                JsonObject mapping = object(graphConfig, CFG_COLOCATE_TAG_MAPPING);
+                String colocationTag = jstring(mapping, colocationKey);
             
-            if (colocationTag != null && !colocationTag.isEmpty()) {
                 sbPlacement.append("      partitionColocation(");
-                SPLGenerator.stringLiteral(sbPlacement, colocationTag);
+                stringLiteral(sbPlacement, colocationTag);
                 sbPlacement.append(")\n");
             }
             

@@ -53,12 +53,16 @@ class Preprocessor {
         pePlacementPreprocess.tagIsolationRegions();
         pePlacementPreprocess.tagLowLatencyRegions();
         
+        
+        
         ThreadingModel.preProcessThreadedPorts(graph);
         
         // At this point, the $Union$ operators in the graph are just place holders.
         removeUnionOperators();
         
         AutonomousRegions.preprocessAutonomousRegions(graph);
+        
+        pePlacementPreprocess.resolveColocationTags();
     }
        
     /**

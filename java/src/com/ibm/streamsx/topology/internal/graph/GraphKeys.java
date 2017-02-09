@@ -30,12 +30,20 @@ public interface GraphKeys {
     
     /**
      * Does the graph include isolate virtual markers.
+     * Boolean.
      */
     String CFG_HAS_ISOLATE = "hasIsolate";
     
     /**
      * Does the graph include low latency virtual markers/regions.
+     * Boolean.
      */
     String CFG_HAS_LOW_LATENCY = "hasLowLatency";
+    
+    /**
+     * Mapping of colocation keys to actual colocate tag.
+     * Object containing string to string mapping. 
+     */
+    String CFG_COLOCATE_TAG_MAPPING = "colocateTagMapping";
 }
 

@@ -39,6 +39,17 @@ public interface OpProperties {
      * to be isolated.
      */
     String PLACEMENT_EXPLICIT_COLOCATE_ID = "explicitColocate";
+    
+    /**
+     * Attribute for derived colocation key.
+     * 
+     * Selected from one of the tags in the placement.
+     * Note at code generation the actual value to
+     * use must be looked up from the map object
+     * in the graph config.
+     * 
+     */
+    String PLACEMENT_COLOCATE_KEY = "colocateIdKey";
 
     /**
      * Attribute for low latency region identifier.
