@@ -45,6 +45,11 @@
      Py_DECREF(function_);
      Py_DECREF(empty_tuple);
      Py_DECREF(param_dict);
+     if (tmp_instance == NULL) {
+         SPLAPPTRC(L_ERROR, "Fatal error: cannot create instance of class " << "<%=$functionName%>" << " in module " << "<%=$module%>", "python");
+         throw SplpyGeneral::pythonException("<%=$module%>");
+     }
+   
      function_ = tmp_instance;
    }
 <%
