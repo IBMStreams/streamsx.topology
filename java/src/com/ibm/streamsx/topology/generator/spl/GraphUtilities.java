@@ -52,6 +52,20 @@ public class GraphUtilities {
         return backToJSON(_graph, findOperatorByKind(virtualMarker, gson(_graph)));
     }
     */
+    /**
+     * Get the kind of an operator.
+     */
+    static String kind(JsonObject op) {
+        String kind = jstring(op, "kind");
+        assert kind != null;
+        return kind;
+    }
+    /**
+     * Is an operator a specific kind.
+     */
+    static boolean isKind(JsonObject op, String kind) {
+        return kind.equals(kind(op));
+    }
     
     static Set<JsonObject> findOperatorByKind(BVirtualMarker virtualMarker,
                 JsonObject graph) {
@@ -59,7 +73,7 @@ public class GraphUtilities {
         Set<JsonObject> kindOperators = new HashSet<>();
         
         operators(graph, op -> {
-            if (virtualMarker.isThis(jstring(op, "kind")))
+            if (virtualMarker.isThis(kind(op)))
                 kindOperators.add(op);
         });
 
