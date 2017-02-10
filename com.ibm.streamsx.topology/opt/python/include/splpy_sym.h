@@ -336,15 +336,24 @@ extern "C" {
  * Err Objects
  */
 typedef void (*__splpy_ef_fp)(PyObject **, PyObject **, PyObject **);
+typedef void (*__splpy_er_fp)(PyObject *, PyObject *, PyObject *);
 typedef PyObject * (*__splpy_eo_fp)(void);
 extern "C" {
   static __splpy_ef_fp __spl_fp_PyErr_Fetch;
+  static __splpy_ef_fp __spl_fp_PyErr_NormalizeException;
+  static __splpy_er_fp __spl_fp_PyErr_Restore;
   static __splpy_eo_fp __spl_fp_PyErr_Occurred;
   static __splpy_v_v_fp __spl_fp_PyErr_Print;
   static __splpy_v_v_fp __spl_fp_PyErr_Clear;
 
   static void __spl_fi_PyErr_Fetch(PyObject **t, PyObject **v, PyObject **tb) {
      __spl_fp_PyErr_Fetch(t,v,tb);
+  }
+  static void __spl_fi_PyErr_NormalizeException(PyObject **t, PyObject **v, PyObject **tb) {
+     __spl_fp_PyErr_NormalizeException(t,v,tb);
+  }
+  static void __spl_fi_PyErr_Restore(PyObject *t, PyObject *v, PyObject *tb) {
+     __spl_fp_PyErr_Restore(t,v,tb);
   }
   static PyObject * __spl_fi_PyErr_Occurred() {
      return __spl_fp_PyErr_Occurred();
@@ -357,6 +366,8 @@ extern "C" {
   }
 }
 #pragma weak PyErr_Fetch = __spl_fi_PyErr_Fetch
+#pragma weak PyErr_NormalizeException = __spl_fi_PyErr_NormalizeException
+#pragma weak PyErr_Restore = __spl_fi_PyErr_Restore
 #pragma weak PyErr_Occurred = __spl_fi_PyErr_Occurred
 #pragma weak PyErr_Print = __spl_fi_PyErr_Print
 #pragma weak PyErr_Clear = __spl_fi_PyErr_Clear
@@ -434,6 +445,8 @@ class SplpySym {
      __SPLFIX(PyBool_FromLong, __splpy_p_l_fp);
 
      __SPLFIX(PyErr_Fetch, __splpy_ef_fp);
+     __SPLFIX(PyErr_NormalizeException, __splpy_ef_fp);
+     __SPLFIX(PyErr_Restore, __splpy_er_fp);
      __SPLFIX(PyErr_Occurred, __splpy_eo_fp);
      __SPLFIX(PyErr_Print, __splpy_v_v_fp);
      __SPLFIX(PyErr_Clear, __splpy_v_v_fp);

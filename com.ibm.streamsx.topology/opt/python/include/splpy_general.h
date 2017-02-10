@@ -164,20 +164,21 @@ class SplpyGeneral {
      * in the PE console.
     */
     static SPL::SPLRuntimeException pythonException(std::string const & 	location) {
+
       PyObject *pyType, *pyValue, *pyTraceback;
       PyErr_Fetch(&pyType, &pyValue, &pyTraceback);
+      PyErr_NormalizeException(&pyType, &pyValue, &pyTraceback);
+      
 
-      if (pyType != NULL)
-          Py_DECREF(pyType);
-      if (pyTraceback != NULL)
-          Py_DECREF(pyTraceback);
 
       SPL::rstring msg("Unknown Python error");
       if (pyValue != NULL) {
           pyRStringFromPyObject(msg, pyValue);
-          Py_DECREF(pyValue);
       }
 
+      // Restore the error to get the stack trace
+      // PeErr_Restore steals the references
+      PyErr_Restore(pyType, pyValue, pyTraceback);
       SplpyGeneral::flush_PyErr_Print();
 
       SPL::SPLRuntimeOperatorException exc(location, msg);
