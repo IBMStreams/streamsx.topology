@@ -52,6 +52,20 @@ public class GraphUtilities {
         return backToJSON(_graph, findOperatorByKind(virtualMarker, gson(_graph)));
     }
     */
+    /**
+     * Get the kind of an operator.
+     */
+    static String kind(JsonObject op) {
+        String kind = jstring(op, "kind");
+        assert kind != null;
+        return kind;
+    }
+    /**
+     * Is an operator a specific kind.
+     */
+    static boolean isKind(JsonObject op, String kind) {
+        return kind.equals(kind(op));
+    }
     
     static Set<JsonObject> findOperatorByKind(BVirtualMarker virtualMarker,
                 JsonObject graph) {
@@ -59,7 +73,7 @@ public class GraphUtilities {
         Set<JsonObject> kindOperators = new HashSet<>();
         
         operators(graph, op -> {
-            if (virtualMarker.isThis(jstring(op, "kind")))
+            if (virtualMarker.isThis(kind(op)))
                 kindOperators.add(op);
         });
 
@@ -459,10 +473,17 @@ public class GraphUtilities {
 
     }  
     
-    static void addBefore(JsonObject op, JsonObject addOp, JsonObject graph){
+    /**
+     * Add an operator before another operator.
+     * @param op Operator the new operator is to be added before.
+     * @param addOp Operator to be added
+     * @param graph The graph.
+     */
+    static void addBefore(JsonObject op, JsonObject addOp, JsonObject graph){        
         for(JsonObject parent : getUpstream(op, graph)){
             addBetween(parent, op, addOp);
-        }       
+        } 
+        graph.get("operators").getAsJsonArray().add(addOp);
     }
     
     static void addBetween(JsonObject parent, JsonObject child, JsonObject op){
@@ -476,7 +497,7 @@ public class GraphUtilities {
     
 	static void addBetween(List<JsonObject> parents, List<JsonObject> children, JsonObject op){
         for(JsonObject parent : parents){
-            for(JsonObject child : children){              
+            for(JsonObject child : children){      
                 JsonArray outputs = parent.get("outputs").getAsJsonArray();
                 JsonArray inputs = child.get("inputs").getAsJsonArray();
                 for(JsonElement output : outputs){

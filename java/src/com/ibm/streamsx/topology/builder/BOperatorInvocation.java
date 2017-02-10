@@ -4,6 +4,11 @@
  */
 package com.ibm.streamsx.topology.builder;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,8 +63,8 @@ public class BOperatorInvocation extends BOperator {
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put(JOperator.MODEL, JOperator.MODEL_SPL);
-            json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_JAVA);
+            json().put(MODEL, MODEL_SPL);
+            json().put(LANGUAGE, LANGUAGE_JAVA);
             json().put("kind", getKind(opClass));
             json().put("kind.javaclass", opClass.getCanonicalName());
         }
@@ -80,8 +85,8 @@ public class BOperatorInvocation extends BOperator {
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put(JOperator.MODEL, JOperator.MODEL_SPL);
-            json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_JAVA);
+            json().put(MODEL, MODEL_SPL);
+            json().put(LANGUAGE, LANGUAGE_JAVA);
             json().put("kind", getKind(opClass));
             json().put("kind.javaclass", opClass.getCanonicalName());
         }

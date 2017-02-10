@@ -26,16 +26,35 @@ public interface OpProperties {
     
     /**
      * Attribute for isolation region identifier.
+     * A region that is on either side of an isolate
+     * has a unique isolate region identifier.
      */
     String PLACEMENT_ISOLATE_REGION_ID = "isolateRegion";
 
     /**
      * Attribute for an explicit colocation identifier.
+     * 
+     * An explicit colocate identifier is an instruction
+     * from the application that it wants two (or more) operators
+     * to be isolated.
      */
     String PLACEMENT_EXPLICIT_COLOCATE_ID = "explicitColocate";
+    
+    /**
+     * Attribute for derived colocation key.
+     * 
+     * Selected from one of the tags in the placement.
+     * Note at code generation the actual value to
+     * use must be looked up from the map object
+     * in the graph config.
+     * 
+     */
+    String PLACEMENT_COLOCATE_KEY = "colocateIdKey";
 
     /**
      * Attribute for low latency region identifier.
+     * 
+     * A low latency region has a unique isolate region identifier.
      */
     String PLACEMENT_LOW_LATENCY_REGION_ID = "lowLatencyRegion";
 
@@ -46,6 +65,12 @@ public interface OpProperties {
     
     /**
      * Attribute for placement of the operator, a JSON object.
+     * Can contain:
+     * PLACEMENT_ISOLATE_REGION_ID
+     * PLACEMENT_EXPLICIT_COLOCATE_ID
+     * PLACEMENT_LOW_LATENCY_REGION_ID
+     * PLACEMENT_RESOURCE_TAGS
+     * 
      * Stored within {@link OpProperties#CONFIG}.
      */
     String PLACEMENT = "placement";

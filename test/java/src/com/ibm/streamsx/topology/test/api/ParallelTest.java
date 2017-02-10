@@ -54,6 +54,11 @@ import com.ibm.streamsx.topology.tester.Tester;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
 public class ParallelTest extends TestTopology {
+    /**
+     * Currently a fan-out before an endParallel
+     * is not supported. This is a limitation purely on
+     * code generation.
+     */
     @Test(expected=IllegalStateException.class)
     public void fanoutEndParallelException() throws Exception {
         checkUdpSupported();

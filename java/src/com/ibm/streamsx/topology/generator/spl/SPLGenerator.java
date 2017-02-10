@@ -9,8 +9,11 @@ import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARA
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOYMENT_CONFIG;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.IOException;
@@ -28,6 +31,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.builder.JParamTypes;
+import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class SPLGenerator {
@@ -46,9 +50,12 @@ public class SPLGenerator {
     private int targetMod;
 
     public String generateSPL(JsonObject graph) throws IOException {
+        
+        JsonObject graphConfig = getGraphConfig(graph);
+        breakoutVersion(graphConfig);
                 
         stvHelper = new SubmissionTimeValue(graph);
-        new Preprocessor(graph).preprocess();
+        new Preprocessor(this, graph).preprocess();
        
         // Generate parallel composites
         JsonObject mainCompsiteDef = new JsonObject();
@@ -75,17 +82,29 @@ public class SPLGenerator {
      */
     private void setDeployment(JsonObject graph) {
         
-        JsonObject config = GsonUtilities.jobject(graph, "config");
+        JsonObject config = jobject(graph, "config");
                       
         // DeploymentConfig
         JsonObject deploymentConfig = new JsonObject();
-        deploymentConfig.addProperty("fusionScheme", "legacy");
         config.add(DEPLOYMENT_CONFIG, deploymentConfig);
+        
+        boolean hasIsolate = jboolean(config, CFG_HAS_ISOLATE);
+        boolean hasLowLatency = jboolean(config, CFG_HAS_LOW_LATENCY);
+        
+        if (hasIsolate)     
+            deploymentConfig.addProperty("fusionScheme", "legacy");
+        else {
+            
+            // Default to isolating parallel channels.
+            JsonObject parallelRegionConfig = new JsonObject();
+            deploymentConfig.add("parallelRegionConfig ", parallelRegionConfig);
+            
+            parallelRegionConfig.addProperty("fusionType", "channelIsolation");
+        }
     }
     
     void generateGraph(JsonObject graph, StringBuilder sb) throws IOException {
         JsonObject graphConfig = getGraphConfig(graph);
-        breakoutVersion(graphConfig);
         graphConfig.addProperty("supportsJobConfigOverlays", versionAtLeast(4,2));
 
         String namespace = jstring(graph, "namespace");

@@ -6,6 +6,11 @@ package com.ibm.streamsx.topology.builder;
 
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_SPL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +30,7 @@ import com.ibm.streams.operator.version.Product;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
@@ -226,8 +232,8 @@ public class GraphBuilder extends BJSONObject {
         final BOperatorInvocation op = new BOperatorInvocation(this, params);
         op.json().put("kind", kind);
 
-        json().put(JOperator.MODEL, JOperator.MODEL_SPL);
-        json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_SPL);
+        json().put(MODEL, MODEL_SPL);
+        json().put(LANGUAGE, LANGUAGE_SPL);
 
         ops.add(op);
         return op;
@@ -238,8 +244,8 @@ public class GraphBuilder extends BJSONObject {
         final BOperatorInvocation op = new BOperatorInvocation(this, name, params);
         op.json().put("kind", kind);
         
-        json().put(JOperator.MODEL, JOperator.MODEL_SPL);
-        json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_SPL);
+        json().put(MODEL, MODEL_SPL);
+        json().put(LANGUAGE, LANGUAGE_SPL);
         
         ops.add(op);
         return op;
@@ -255,10 +261,10 @@ public class GraphBuilder extends BJSONObject {
                 continue;
             
             // note: runtime==null for markers
-            String runtime = (String) op.json().get(JOperator.MODEL);
-            String language = (String) op.json().get(JOperator.LANGUAGE);
+            String runtime = (String) op.json().get(OpProperties.MODEL);
+            String language = (String) op.json().get(OpProperties.LANGUAGE);
             
-            if (!JOperator.MODEL_SPL.equals(runtime) || !JOperator.LANGUAGE_JAVA.equals(language)) {
+            if (!MODEL_SPL.equals(runtime) || !LANGUAGE_JAVA.equals(language)) {
                     String namespace = (String) json().get("namespace");
                     String name = (String) json().get("name");
                     throw new IllegalStateException(
