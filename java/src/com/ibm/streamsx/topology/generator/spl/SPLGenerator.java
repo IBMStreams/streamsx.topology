@@ -133,14 +133,16 @@ public class SPLGenerator {
         String[] vrmf = version.split("\\.");
         targetVersion = Integer.valueOf(vrmf[0]);
         targetRelease = Integer.valueOf(vrmf[1]);
-        targetMod = Integer.valueOf(vrmf[2]);
+        // allow version to be only V.R (e.g. 4.2)
+        if (vrmf.length > 2)
+            targetMod = Integer.valueOf(vrmf[2]);
     }
     
-    boolean versionAtLeast(int version, int mod) {
+    boolean versionAtLeast(int version, int release) {
         if (targetVersion > version)
             return true;
         if (targetVersion == version)
-            return targetRelease >= mod;
+            return targetRelease >= release;
         return false;
     }
 
