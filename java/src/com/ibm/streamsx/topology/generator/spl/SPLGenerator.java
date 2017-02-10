@@ -11,6 +11,8 @@ import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOYMENT_CONFIG;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_COMPILE_VERSION;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
@@ -31,7 +33,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.builder.JParamTypes;
-import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class SPLGenerator {
@@ -124,9 +125,9 @@ public class SPLGenerator {
     }
     
     private void breakoutVersion(JsonObject graphConfig) {
-        String version = jstring(graphConfig, "streamsCompileVersion");
+        String version = jstring(graphConfig, CFG_STREAMS_COMPILE_VERSION);
         if (version == null) {
-            version = jstring(graphConfig, "streamsVersion");
+            version = jstring(graphConfig, CFG_STREAMS_VERSION);
             if (version == null)
                 version = "4.0.1";
         }
