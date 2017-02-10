@@ -98,7 +98,7 @@ public class SPLGenerator {
             
             // Default to isolating parallel channels.
             JsonObject parallelRegionConfig = new JsonObject();
-            deploymentConfig.add("parallelRegionConfig ", parallelRegionConfig);
+            deploymentConfig.add("parallelRegionConfig", parallelRegionConfig);
             
             parallelRegionConfig.addProperty("fusionType", "channelIsolation");
         }
