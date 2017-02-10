@@ -53,8 +53,7 @@ class BuildServiceRemoteRESTWrapper {
 	    
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		try {
-			String serviceName = this.service.get("name").toString();
-
+			String serviceName = jstring(service, "name");
 			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): Checking status");
 			RestUtils.checkInstanceStatus(httpclient, this.service);
 
@@ -63,7 +62,7 @@ class BuildServiceRemoteRESTWrapper {
 			// Perform initial post of the archive
 			String buildName = graphBuildName + "_" + randomHex(16);
 			buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
-			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submitting build \"" + buildName);
+			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submitting build " + buildName);
 			JsonObject jso = doUploadBuildArchivePost(httpclient, apiKey, archive, buildName);
 
 			JsonObject build = object(jso, "build");
@@ -129,7 +128,7 @@ class BuildServiceRemoteRESTWrapper {
        
         JsonObject jso = RestUtils.getGsonResponse(httpclient, httpput);
         
-        String serviceName = this.service.get("name").toString();
+        String serviceName = jstring(service, "name");
         RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service(" + serviceName + "): submit job response: " + jso.toString());
 		return jso;
 	}
