@@ -14,7 +14,13 @@
      <arg value="-o"/>
      <arg value="source"/>
      <arg value="${tk}/opt/python/packages"/>
+
+     <!-- excluded packages -->
+     <arg value="source/streamsx/topology/condapkgs.py"/>
+     <arg value="source/streamsx/topology/runtime.py"/>
+     <arg value="source/streamsx/topology/splpy_setup.py"/>
    </exec>
+
    <exec executable="make"
          dir="${sphinx.dir}" failonerror="true">
      <arg value="html"/>
