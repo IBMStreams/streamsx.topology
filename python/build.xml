@@ -33,5 +33,11 @@
 
   <target name="clean">
     <delete dir="${pydoc}"/>
+    <delete dir="${sphinx.dir}/build"/>
+    <delete>
+     <fileset dir="${sphinx.dir}/source"
+       includes="*.rst"
+       excludes="index.rst"/>
+   </delete>
   </target>
 </project>
