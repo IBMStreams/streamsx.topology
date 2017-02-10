@@ -273,6 +273,9 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
         self._set_vcap()
         self._set_credentials()
 
+        # Clear the VCAP_SERVICES key in config, since env var will contain the content
+        self._config().pop(ConfigParams.VCAP_SERVICES, None)
+
         username = self.credentials['userid']
         password = self.credentials['password']
 
