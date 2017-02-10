@@ -1,0 +1,31 @@
+<project name="streamsx.topology.python" default="all" >
+    <description>
+        Build the streamsx.topology Python doc.
+    </description>
+
+  <import file="../common-build.xml"/>
+  <property name="py.doc" location="${tk.doc}/pythondoc"/>
+  <property name="sphinx.dir" location="sphinx"/>
+
+  <target name="all">
+   <mkdir dir="${py.doc}"/>
+   <exec executable="sphinx-apidoc"
+         dir="${sphinx.dir}" failonerror="true">
+     <arg value="-o"/>
+     <arg value="source"/>
+     <arg value="${tk}/opt/python/packages"/>
+   </exec>
+   <exec executable="make"
+         dir="${sphinx.dir}" failonerror="true">
+     <arg value="html"/>
+   </exec>
+   <copy todir="${py.doc}">
+     <fileset dir="${sphinx.dir}/build/html"/>
+   </copy>
+
+   </target>
+
+  <target name="clean">
+    <delete dir="${pydoc}"/>
+  </target>
+</project>
