@@ -1,6 +1,20 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2017
 
+"""
+Python API to allow creation of streaming applications for
+IBM Streams & Streaming Analytics service on Bluemix.
+
+Overview
+########
+
+IBM® Streams is an advanced analytic platform that allows user-developed applications to quickly ingest,
+analyze and correlate information as it arrives from thousands of real-time sources.
+Streams can handle very high data throughput rates, millions of events or messages per second.
+With this API Python developers can build streaming applications that can be executed using IBM Streams,
+including the processing being distributed across multiple computing resources (hosts or machines) for scalability.
+"""
+
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
@@ -8,11 +22,10 @@ from __future__ import absolute_import
 from builtins import super
 from builtins import range
 try:
-  from future import standard_library
-  standard_library.install_aliases()
+    from future import standard_library
+    standard_library.install_aliases()
 except (ImportError,NameError):
-  # nothing to do here
-  pass 
+    pass
 
 import random
 from streamsx.topology import graph
@@ -27,7 +40,7 @@ import inspect
 from enum import Enum
 
 class Topology(object):
-    """The Topology class is used to define data sources, and is passed as a parameter when submittion an application.
+    """The Topology class is used to define data sources, and is passed as a parameter when submitting an application.
        Topology keeps track of all sources, sinks, and data operations within your application.
 
        Instance variables:
@@ -69,16 +82,16 @@ class Topology(object):
         
         Args:
             func: An iterable or a zero-argument callable that returns an iterable of tuples.
-            The callable must be either 
-            * an iterable object
-            * a function 
-            * a lambda function
-            * an instance of a callable class that implements the method `__call__(self)` and be picklable.
-            Using a callable class allows state information such as user-defined parameters to be stored during class 
-            initialization and utilized when the instance is called.
-            A tuple is represented as a Python object that must be picklable.
+                The callable must be either be an iterable object, a function, a lambda function
+                or an instance of a callable class that implements the method `__call__(self)` and be picklable.
+
+                Using a callable class allows state information such as user-defined parameters to be stored during class
+                initialization and utilized when the instance is called.
+
+                A tuple is represented as a Python object that must be picklable.
+
         Returns:
-            A Stream whose tuples are the result of the output obtained by invoking the provided callable or iterable.
+            Stream: A stream whose tuples are the result of the output obtained by invoking the provided callable or iterable.
         """
         if inspect.isroutine(func):
              pass
@@ -111,11 +124,11 @@ class Topology(object):
         Any publishing Streams application may have been implemented in any language.
 
         Args:
-            topic: Topic to subscribe to.
-            schema: schema.StreamSchema to subscribe to. Defaults to schema.CommonSchema.Python representing Python
+            topic(str): Topic to subscribe to.
+            schema(schema.StreamSchema): schema to subscribe to. Defaults to schema.CommonSchema.Python representing Python
                     objects.
         Returns:
-            A Stream whose tuples have been published to the topic by other Streams applications.
+            Stream:  A stream whose tuples have been published to the topic by other Streams applications.
         """
         op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe")
         oport = op.addOutputPort(schema=schema)
@@ -225,16 +238,15 @@ class Stream(object):
         
         Args:
             func: A callable that takes a single parameter for the tuple, and returns a tuple or None.
-            The callable must be either
-            * a function
-            * a lambda function
-            * an instance of a callable class that implements 
-              the method `__call__(self, tuple)` and be picklable.
-            Using a callable class allows state information such as user-defined parameters to be stored during class 
-            initialization and utilized when the instance is called.
-            The callable is invoked for each incoming tuple.
+                The callable must be either a function, a lambda function,
+                an instance of a callable class that implements the method `__call__(self, tuple)` and be picklable.
+
+                Using a callable class allows state information such as user-defined parameters to be stored during class
+                initialization and utilized when the instance is called.
+
+                The callable is invoked for each incoming tuple.
         Returns:
-            A Stream containing transformed tuples.
+            Stream: A stream containing tuples mapped by func.
         """
         return self._map(func, schema=schema.CommonSchema.Python, name=name)
 
@@ -284,9 +296,7 @@ class Stream(object):
     def isolate(self):
         """
         Guarantees that the upstream operation will run in a separate process from the downstream operation
-        
-        Args:
-            None
+
         Returns:
             Stream
         """
@@ -302,9 +312,7 @@ class Stream(object):
         upstream Stream function. All streams that are created from the returned stream 
         are also guaranteed to run in the same process until end_low_latency() 
         is called.
-        
-        Args:
-            None
+
         Returns:
             Stream
         """
@@ -319,9 +327,7 @@ class Stream(object):
         """
         Returns a Stream that is no longer guaranteed to run in the same process
         as the calling stream.
-        
-        Args:
-            None
+
         Returns:
             Stream
         """
@@ -352,12 +358,13 @@ class Stream(object):
         Every call to end_parallel() must have a call to parallel() preceding it.
         
         Args:
-            width (int): degree of parallelism
-            routing - denotes what type of tuple routing to use. 
-                ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators
+            width (int): Degree of parallelism.
+            routing: denotes what type of tuple routing to use.
+                ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators (the default when
+                no routing is specified).
                 HASH_PARTIONED: delivers to downstream operators based on the hash of the tuples being sent
                 or if a function is provided the function will be called to provide the hash
-            func - Optional function called when HASH_PARTIONED routing is specified.  The function provides an
+            func: Optional function called when HASH_PARTIONED routing is specified.  The function provides an
                 int32 value to be used as the hash that determines the tuple routing to downstream operators
 
         Returns:
@@ -393,11 +400,9 @@ class Stream(object):
     def end_parallel(self):
         """
         Ends a parallel region by merging the channels into a single stream
-        
-        Args:
-            None
+
         Returns:
-            A Stream for which subsequent transformations are no longer parallelized
+            Stream: Stream for which subsequent transformations are no longer parallelized
         """
         lastOp = self.topology.graph.getLastOperator()
         outport = self.oport
@@ -419,7 +424,7 @@ class Stream(object):
         Args:
             streamSet: a set of Stream objects to merge with this stream
         Returns:
-            Stream
+            Stream:
         """
         if(not isinstance(streamSet,set)) :
             raise TypeError("The union operator parameter must be a set object")
@@ -435,7 +440,9 @@ class Stream(object):
     def print(self):
         """
         Prints each tuple to stdout flushing after each tuple.
-        :returns: None
+
+        Returns:
+            None
         """
         self.sink(streamsx.topology.functions.print_flush)
 
@@ -461,17 +468,17 @@ class Stream(object):
         a string using str(tuple).
 
         Args:
-            topic: Topic to publish this stream to.
+            topic(str): Topic to publish this stream to.
             schema: Schema to publish. Defaults to CommonSchema.Python representing Python objects.
         Returns:
-            None.
+            None
         """
         if self.oport.schema.schema() != schema.schema():
-            self._map(streamsx.topology.functions.identity,schema=schema).publish(topic, schema=schema);
+            self._map(streamsx.topology.functions.identity,schema=schema).publish(topic, schema=schema)
             return None
 
-        publishParams = {'topic': topic}
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params=publishParams)
+        publish_arams = {'topic': topic}
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params=publish_arams)
         op.addInputPort(outputPort=self.oport)
 
     def autonomous(self):
@@ -490,10 +497,9 @@ class Stream(object):
 
         Supported since v1.5
 
-        Args:
-            None
+
         Returns:
-            Stream
+            Stream: Stream whose subsequent downstream processing is in an autonomous region.
         """
         op = self.topology.graph.addOperator("$Autonomous$")
         op.addInputPort(outputPort=self.oport)

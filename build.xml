@@ -27,6 +27,7 @@
 
   <target name="clean" >
     <ant dir="java" target="clean"/>
+    <ant dir="python" target="clean"/>
     <ant dir="samples/java/functional" target="clean"/>
   	<ant dir="samples/python" target="clean"/>
     <ant dir="toolkit" target="clean"/>
