@@ -10,6 +10,7 @@ import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLO
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_CONFIG_OVERLAYS;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.TOOLKITS_JSON;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
@@ -52,6 +53,7 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.internal.file.FileUtilities;
+import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.toolkit.info.DependenciesType;
@@ -76,6 +78,13 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
             submission.add(SUBMISSION_DEPLOY, deploy = new JsonObject());
         
         addSelectDeployToGraphConfig(submission);
+        
+        // If no version has been supplied use 4.2 as the
+        // Streaming Analytics service is at a minimum 4.2 
+        JsonObject graphConfig = GraphKeys.graphConfig(submission);
+        if (!graphConfig.has(CFG_STREAMS_VERSION)) {
+            graphConfig.addProperty(CFG_STREAMS_VERSION, "4.2");
+        }
                       
         if (!deploy.has(ContextProperties.TOOLKIT_DIR)) {
             deploy.addProperty(ContextProperties.TOOLKIT_DIR, Files

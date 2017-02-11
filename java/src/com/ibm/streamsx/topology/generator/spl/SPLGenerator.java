@@ -11,6 +11,8 @@ import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOYMENT_CONFIG;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_COMPILE_VERSION;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
@@ -31,7 +33,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.builder.JParamTypes;
-import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class SPLGenerator {
@@ -97,7 +98,7 @@ public class SPLGenerator {
             
             // Default to isolating parallel channels.
             JsonObject parallelRegionConfig = new JsonObject();
-            deploymentConfig.add("parallelRegionConfig ", parallelRegionConfig);
+            deploymentConfig.add("parallelRegionConfig", parallelRegionConfig);
             
             parallelRegionConfig.addProperty("fusionType", "channelIsolation");
         }
@@ -124,23 +125,25 @@ public class SPLGenerator {
     }
     
     private void breakoutVersion(JsonObject graphConfig) {
-        String version = jstring(graphConfig, "streamsCompileVersion");
+        String version = jstring(graphConfig, CFG_STREAMS_COMPILE_VERSION);
         if (version == null) {
-            version = jstring(graphConfig, "streamsVersion");
+            version = jstring(graphConfig, CFG_STREAMS_VERSION);
             if (version == null)
                 version = "4.0.1";
         }
         String[] vrmf = version.split("\\.");
         targetVersion = Integer.valueOf(vrmf[0]);
         targetRelease = Integer.valueOf(vrmf[1]);
-        targetMod = Integer.valueOf(vrmf[2]);
+        // allow version to be only V.R (e.g. 4.2)
+        if (vrmf.length > 2)
+            targetMod = Integer.valueOf(vrmf[2]);
     }
     
-    boolean versionAtLeast(int version, int mod) {
+    boolean versionAtLeast(int version, int release) {
         if (targetVersion > version)
             return true;
         if (targetVersion == version)
-            return targetRelease >= mod;
+            return targetRelease >= release;
         return false;
     }
 
