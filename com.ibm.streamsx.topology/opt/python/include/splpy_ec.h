@@ -18,12 +18,12 @@
  * references to its arguments from the caller. 
  */
 
-#ifndef __SPL__SPLPY_EXEC_H
-#define __SPL__SPLPY_EXEC_H
+#ifndef __SPL__SPLPY_EC_H
+#define __SPL__SPLPY_EC_H
 
-#include "splpy_exec_api.h"
+#include "splpy_ec_api.h"
 
-#if __SPLPY_EXEC_MODULE_OK
+#if __SPLPY_EC_MODULE_OK
 
 #include <SPL/Runtime/ProcessingElement/ProcessingElement.h>
 
@@ -69,7 +69,7 @@ static PyMethodDef __splpy_ec_methods[] = {
 
 static struct PyModuleDef __splpy_ec_module = {
    PyModuleDef_HEAD_INIT,
-   __SPLPY_EXEC_MODULE_NAME,   /* name of module */
+   __SPLPY_EC_MODULE_NAME,   /* name of module */
    "Internal module providing access to the Streams execution environment.",
    -1,       /* size of per-interpreter state of the module,
                 or -1 if the module keeps state in global variables. */
@@ -77,7 +77,7 @@ static struct PyModuleDef __splpy_ec_module = {
 };
 
 PyMODINIT_FUNC
-init_streamsx_exec(void)
+init_streamsx_ec(void)
 {
     return PyModule_Create(&__splpy_ec_module);
 }

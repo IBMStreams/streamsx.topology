@@ -40,7 +40,7 @@
 #include <SPL/Runtime/Operator/Operator.h>
 
 #include "splpy_sym.h"
-#include "splpy_exec.h"
+#include "splpy_ec.h"
 
 //#define __SPLPY_BUILD_VERS(_MAJOR, _MINOR) #_MAJOR "." #_MINOR
 #define __SPLPY_STR(X) #X
@@ -175,13 +175,13 @@ class SplpySetup {
 
           SPLAPPTRC(L_DEBUG, "Starting Python runtime", "python");
 
-#if __SPLPY_EXEC_MODULE_OK
+#if __SPLPY_EC_MODULE_OK
 {
           typedef PyObject *(__splpy_initfunc)(void);
           typedef int (*__splpy_iai)(const char * name, __splpy_initfunc);
           __splpy_iai _SPLPyImport_AppendInittab =
              (__splpy_iai) dlsym(pydl, "PyImport_AppendInittab");
-          _SPLPyImport_AppendInittab(__SPLPY_EXEC_MODULE_NAME, &init_streamsx_exec);
+          _SPLPyImport_AppendInittab(__SPLPY_EC_MODULE_NAME, &init_streamsx_ec);
 }
 #endif
 

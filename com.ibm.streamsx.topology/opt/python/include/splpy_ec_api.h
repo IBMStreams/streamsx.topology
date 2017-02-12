@@ -15,8 +15,8 @@
  * information from the pe/operator context.
  */
 
-#ifndef __SPL__SPLPY_EXEC_API_H
-#define __SPL__SPLPY_EXEC_API_H
+#ifndef __SPL__SPLPY_EC_API_H
+#define __SPL__SPLPY_EC_API_H
 
 #include <sstream>
 
@@ -24,10 +24,10 @@
      ((_IBM_STREAMS_VER_ > 4) || \
       ((_IBM_STREAMS_VER_ == 4) && (_IBM_STREAMS_REL_ >= 2)))
 
-#define __SPLPY_EXEC_MODULE_OK 1
-#define __SPLPY_EXEC_MODULE_NAME "_streamsx_ec"
+#define __SPLPY_EC_MODULE_OK 1
+#define __SPLPY_EC_MODULE_NAME "_streamsx_ec"
 
-#define __SPLPY_EXEC_MODULE_NAME_LIT "_streamsx_ec.op_"
+#define __SPLPY_EC_MODULE_NAME_LIT "_streamsx_ec.op_"
 
 namespace streamsx {
   namespace topology {
@@ -40,13 +40,13 @@ namespace streamsx {
      */
     inline const char * _opCaptureName(SPL::Operator *op) {
         std::stringstream cn;
-        cn << __SPLPY_EXEC_MODULE_NAME_LIT << op->getIndex();
+        cn << __SPLPY_EC_MODULE_NAME_LIT << op->getIndex();
         return strdup(cn.str().c_str());
     }
 }}
 
 #else
-#define __SPLPY_EXEC_MODULE_OK 0
+#define __SPLPY_EC_MODULE_OK 0
 #endif
 #endif
 

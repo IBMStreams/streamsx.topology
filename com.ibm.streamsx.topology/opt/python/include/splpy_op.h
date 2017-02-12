@@ -18,7 +18,7 @@
 #define __SPL__SPLPY_OP_H
 
 #include "splpy_general.h"
-#include "splpy_exec_api.h"
+#include "splpy_ec_api.h"
 
 namespace streamsx {
   namespace topology {
@@ -29,13 +29,13 @@ class SplpyOp {
           op_(op),
           pydl_(NULL)
 
-#if __SPLPY_EXEC_MODULE_OK
+#if __SPLPY_EC_MODULE_OK
           ,opcn_(NULL), opc_(NULL)
 #endif
 
       {
           pydl_ = SplpySetup::loadCPython(spl_setup_py);
-#if __SPLPY_EXEC_MODULE_OK
+#if __SPLPY_EC_MODULE_OK
           opcn_ = streamsx::topology::_opCaptureName(op);
 
           SplpyGIL lock;
@@ -46,7 +46,7 @@ class SplpyOp {
       }
 
       ~SplpyOp() {
-#if __SPLPY_EXEC_MODULE_OK
+#if __SPLPY_EC_MODULE_OK
           if (opc_ != NULL) {
               SplpyGIL lock;
               Py_DECREF(opc_);
@@ -62,7 +62,7 @@ class SplpyOp {
          return op_;
       }
 
-#if __SPLPY_EXEC_MODULE_OK
+#if __SPLPY_EC_MODULE_OK
       // Get the capture with a new ref
       PyObject * opc() {
          Py_INCREF(opc_);
@@ -84,7 +84,7 @@ class SplpyOp {
       // Handle to libpythonX.Y.so
       void * pydl_;
 
-#if __SPLPY_EXEC_MODULE_OK
+#if __SPLPY_EC_MODULE_OK
       // Operator capture name, must outlive
       // the capture
       const char *opcn_;
