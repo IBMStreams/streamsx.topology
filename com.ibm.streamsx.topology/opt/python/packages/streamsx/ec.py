@@ -45,8 +45,10 @@ being invoked in a Streams application.
 
 """
 
+import threading
+
 try:
-    import _streamsx_exec
+    import _streamsx_ec
     _supported = True
 except:
     _supported = False
@@ -60,11 +62,63 @@ def job_id():
     Return the job identifier.
     """
     _check()
-    return _streamsx_exec.job_id()
+    return _streamsx_ec.job_id()
 
 def pe_id():
     """
     Return the PE identifier.
     """
     _check()
-    return _streamsx_exec.pe_id()
+    return _streamsx_ec.pe_id()
+
+def channel(obj):
+    """
+    Return the parallel region channel number `obj` is executing in.
+    
+    Args:
+        obj: Instance of a class executing as an SPL Python operator.
+    """
+    return _streamsx_ec.channel(_get_opc(obj))
+
+
+####################
+# internal functions
+####################
+
+# Thread local of capsules during
+# operator class initialization
+_capsules = threading.local()
+
+# Sets the operator capsule as a thread
+# local to allow access from an operator's
+# class __init__ method.
+def _set_opc(opc):
+    _capsules._opc = opc
+
+# Clear the operator capsule from the
+# thread local
+def _clear_opc():
+    _capsules._opc = None
+
+# Save the opc in the operator class
+# (getting it from the thread local)
+def _save_opc(obj):
+    _capsules.obj = obj
+    if hasattr(_capsules, '_opc'):
+       opc = _capsules._opc
+       if opc is not None:
+           obj._streamsx_ec_op = opc
+
+def _get_opc(obj):
+    _check()
+    try:
+        opc = obj._streamsx_ec_op
+        return opc
+    except AttributeError:
+        try:
+            opc = _capsules._opc
+            if opc is not None:
+                return opc
+        except AttributeError:
+             pass
+        raise NameError("")

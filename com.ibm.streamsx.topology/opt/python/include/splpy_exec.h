@@ -13,21 +13,34 @@
  *
  * Functionality related to accessing
  * information from the pe/operator context.
+ *
+ * Note: When a C function is called from Python, it borrows
+ * references to its arguments from the caller. 
  */
 
-#ifndef __SPL__SPLPY_EXEC_CONTEXT_H
-#define __SPL__SPLPY_EXEC_CONTEXT_H
+#ifndef __SPL__SPLPY_EXEC_H
+#define __SPL__SPLPY_EXEC_H
 
-#if (PY_MAJOR_VERSION == 3) && \
-     ((_IBM_STREAMS_VER_ > 4) || \
-      ((_IBM_STREAMS_VER_ == 4) && (_IBM_STREAMS_REL_ >= 2)))
+#include "splpy_exec_api.h"
 
-#define __SPLPY_EXEC_MODULE_OK 1
-#define __SPLPY_EXEC_MODULE_NAME "_streamsx_exec"
+#if __SPLPY_EXEC_MODULE_OK
 
 #include <SPL/Runtime/ProcessingElement/ProcessingElement.h>
 
 extern "C" {
+
+/**
+* Utility function to get the operator context
+* reference from the args passed into an extension
+* function containing the capsule at position 0.
+*/
+static SPL::OperatorContext &  __splpy_ec_opcontext(PyObject *args) {
+    PyObject *capsule = PyTuple_GET_ITEM(args, 0);
+    void * opptr = PyCapsule_GetPointer(capsule, PyCapsule_GetName(capsule));
+    SPL::Operator * op = reinterpret_cast<SPL::Operator *>(opptr);
+   
+    return op->getContext();
+}
 
 static PyObject * __splpy_ec_job_id(PyObject *self, PyObject *args) {
    uint64_t id = SPL::ProcessingElement::pe().getJobId();
@@ -39,11 +52,18 @@ static PyObject * __splpy_ec_pe_id(PyObject *self, PyObject *args) {
    return PyLong_FromUnsignedLong(id);
 }
 
+// Operator functions
+static PyObject * __splpy_ec_channel(PyObject *self, PyObject *args) {
+   return PyLong_FromLong(__splpy_ec_opcontext(args).getChannel());
+}
+
 static PyMethodDef __splpy_ec_methods[] = {
     {"job_id", __splpy_ec_job_id, METH_VARARGS,
          "Return the job identifier of the running application."},
     {"pe_id", __splpy_ec_pe_id, METH_VARARGS,
          "Return the PE identifier hosting this code."},
+    {"channel", __splpy_ec_channel, METH_VARARGS,
+         "Return the parallel channel."},
     {NULL, NULL, 0, NULL}
 };
 
@@ -64,8 +84,6 @@ init_streamsx_exec(void)
 
 }
 
-#else
-#define __SPLPY_EXEC_MODULE_OK 0
 #endif
 #endif
 

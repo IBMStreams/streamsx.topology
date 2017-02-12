@@ -13,6 +13,13 @@
     if (splpy_OperatorCallable() eq 'class') {
 %>
    { 
+     // Set the operator capsule as a Python thread local
+     // use streamsx.ec._set_opc so that it is availble
+     // through the operator's class __init__ function.
+     SplpyGeneral::callVoidFunction(
+               "streamsx.ec", "_set_opc",
+               this->pyop_->opc(), NULL);
+ 
      // Pass all the arguments by name in a dictionary
      // object, effectively as **kwargs. Python will
      // unpack correctly to the actual __init__ args
@@ -51,6 +58,11 @@
      }
    
      function_ = tmp_instance;
+
+     // Clear the thread local for the operator capsule
+     SplpyGeneral::callVoidFunction(
+               "streamsx.ec", "_clear_opc",
+               NULL, NULL);
    }
 <%
     }
