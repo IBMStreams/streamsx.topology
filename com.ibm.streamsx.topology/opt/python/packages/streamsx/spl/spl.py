@@ -338,6 +338,120 @@ remaining attributes are optional (having a default).
     #     temp=23.7
     #     pressure=None
 
+Submission of SPL tuples from Python
+------------------------------------
+
+The return from a decorated callable results in submission of SPL tuples
+on the associated outut port.
+
+A Python function must return:
+ * ``None``
+ * a Python tuple
+ * a Python dictionary
+ * a list containing any of the above.
+
+None
+++++
+
+When ``None`` is return then no tuple will be submitted to
+the operator output port.
+
+Python tuple
+++++++++++++
+
+When a Python tuple is returned it is converted to an SPL tuple and
+submitted to the output port.
+
+The values of a Python tuple are assigned to an output SPL tuple by position,
+so the first value in the Python tuple is assigned to the first attribute
+in the SPL tuple::
+
+    # SPL input schema: tuple<int32 x, float64 y>
+    # SPL output schema: tuple<int32 x, float64 y, float32 z>
+    @spl.pipe
+    def myfunc(a,b):
+       return (a,b,a+b)
+
+    # The SPL output will be:
+    # All values explictly set by returned Python tuple
+    # based on the x,y values from the input tuple
+    # x is set to: x 
+    # y is set to: y
+    # z is set to: x+y
+
+The returned tuple may be *sparse*, any attribute value in the tuple
+that is ``None`` will be set to their SPL default or copied from the
+input tuple, depending on the operator kind::
+    
+    # SPL input schema: tuple<int32 x, float64 x>
+    # SPL output schema: tuple<int32 x, float64 y, float32 z>
+    @spl.pipe
+    def myfunc(a,b):
+       return (a,None,a+b)
+
+    # The SPL output will be:
+    # x is set to: x (explictly set by returned Python tuple)
+    # y is set to: y (set by matching input SPL attribute)
+    # z is set to: x+y
+
+When a returned tuple has less values than attributes in the SPL output
+schema the attributes not set by the Python function will be set
+to their SPL default or copied from the input tuple, depending on
+the operator kind::
+    
+    # SPL input schema: tuple<int32 x, float64 x>
+    # SPL output schema: tuple<int32 x, float64 y, float32 z>
+    @spl.pipe
+    def myfunc(a,b):
+       return a,
+
+    # The SPL output will be:
+    # x is set to: x (explictly set by returned Python tuple)
+    # y is set to: y (set by matching input SPL attribute)
+    # z is set to: 0 (default int32 value)
+
+When a returned tuple has more values than attributes in the SPL output schema then the additional values are ignored::
+
+    # SPL input schema: tuple<int32 x, float64 x>
+    # SPL output schema: tuple<int32 x, float64 y, float32 z>
+    @spl.pipe
+    def myfunc(a,b):
+       return (a,b,a+b,a/b)
+
+    # The SPL output will be:
+    # All values explictly set by returned Python tuple
+    # based on the x,y values from the input tuple
+    # x is set to: x
+    # y is set to: y
+    # z is set to: x+y
+    #
+    # The fourth value in the tuple a/b = x/y is ignored.
+
+Python dictionary
++++++++++++++++++
+A Python dictionary is converted to a SPL tuple for submission to
+the associated output port. An SPL attribute is set from the
+dictionary if the dictionary contains a key equal to the attribute
+name. The value is used to set the attribute, unless the attribute is
+``None``.
+
+If the value in the dictionary is ``None`` or no matching key exists
+then the attribute value is set fom the input tuple or to its
+default value depending on the operator kind.
+
+Any keys in the dictionary that do not map to SPL attribute names are ignored.
+    
+Python list
++++++++++++
+When a list returned, each value is converted to an SPL tuple and
+submitted to the output port, in order of the list starting with the
+first element (position 0). If the list contains `None` at an index
+then no SPL tuple is submitted for that index.
+
+The list must only contain Python tuples, dictionaries or `None`. The list
+can contain a mix of valid values.
+
+The list may be empty resulting in no tuples being submitted.
 """
 
 from enum import Enum
