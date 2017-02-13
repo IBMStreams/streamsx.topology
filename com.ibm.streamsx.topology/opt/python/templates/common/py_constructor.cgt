@@ -17,9 +17,7 @@
      // Set the operator capsule as a Python thread local
      // use streamsx.ec._set_opc so that it is availble
      // through the operator's class __init__ function.
-     SplpyGeneral::callVoidFunction(
-               "streamsx.ec", "_set_opc",
-               this->pyop_->opc(), NULL);
+     this->pyop_->setopc();
 #endif
  
      // Pass all the arguments by name in a dictionary
@@ -62,10 +60,7 @@
      function_ = tmp_instance;
 
 #if __SPLPY_EC_MODULE_OK
-     // Clear the thread local for the operator capsule
-     SplpyGeneral::callVoidFunction(
-               "streamsx.ec", "_clear_opc",
-               NULL, NULL);
+     this->pyop_->clearopc();
 #endif
    }
 <%

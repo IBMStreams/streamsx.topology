@@ -68,6 +68,21 @@ class SplpyOp {
          Py_INCREF(opc_);
          return opc_;
       }
+     
+      // Set the operator capsule as a Python thread local
+      // use streamsx.ec._set_opc so that it is availble
+      // through the operator's class __init__ function.
+      void setopc() {
+         SplpyGeneral::callVoidFunction(
+               "streamsx.ec", "_set_opc", opc(), NULL);
+      }
+
+      // Clear the thread local for the operator capsule
+      void clearopc() {
+          SplpyGeneral::callVoidFunction(
+               "streamsx.ec", "_clear_opc",
+               NULL, NULL);
+      }
 #endif
 
       /**
