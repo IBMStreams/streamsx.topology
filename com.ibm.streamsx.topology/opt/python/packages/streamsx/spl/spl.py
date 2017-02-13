@@ -7,8 +7,7 @@ import inspect
 import sys
 if sys.version_info.major == 2:
     import funcsigs
-if sys.version_info.major == 3:
-    import streamsx.ec
+import streamsx.ec
 
 
 ############################################
@@ -63,10 +62,8 @@ def _wrapforsplop(optype, wrapped, style, docpy):
             @functools.wraps(wrapped.__init__)
             def __init__(self,*args,**kwargs):
                 opi = wrapped(*args,**kwargs)
-                print("CALLED INIT ON CLASS:", opi, type(opi))
                 self.__splpy_instance = opi
-                if sys.version_info.major == 3:
-                    print("SETTING OPC ON CLASS:", opi, type(opi))
+                if streamsx.ec._supported:
                     streamsx.ec._save_opc(opi)
 
             if hasattr(wrapped, "__call__"):

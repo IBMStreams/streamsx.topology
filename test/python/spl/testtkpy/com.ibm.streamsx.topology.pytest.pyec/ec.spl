@@ -1,0 +1,11 @@
+namespace com.ibm.streamsx.topology.pytest.pyec;
+
+public composite TestOperatorContext(input I; output O) {
+   graph
+   stream<I> O = PyTestOperatorContext(I) {
+   param
+      job_id: jobID();
+      pe_id: PEID();
+      channel: getChannel();
+   }
+}

@@ -105,7 +105,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     public static SPLStream testTupleStream(Topology topology, boolean withSets) {
         TStream<Long> beacon = BeaconStreams.longBeacon(topology, TUPLE_COUNT);
 
-        return SPLStreams.convertStream(beacon, new BiFunction<Long, OutputTuple, OutputTuple>() {
+        SPLStream tuples = SPLStreams.convertStream(beacon, new BiFunction<Long, OutputTuple, OutputTuple>() {
             private static final long serialVersionUID = 1L;
             
             private transient TupleType type;
@@ -122,6 +122,11 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
                 return v2;
             }
         }, getPythonTypesSchema(withSets));
+
+        tuples = SPL.invokeOperator(
+            "com.ibm.streamsx.topology.pytest.pyec::TestOperatorContext",
+            tuples, tuples.getSchema(), null);
+        return tuples;
     }
     
     @Test
