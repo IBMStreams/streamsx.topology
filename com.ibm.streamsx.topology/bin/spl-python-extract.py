@@ -58,7 +58,7 @@ def setup():
 
 setup()
 
-from streamsx.spl.spl import OperatorType
+from streamsx.spl.spl import _OperatorType
 
 def makeNamespaceDir(ns):
      nsdir = os.path.join(userToolkitDir(), ns)
@@ -376,7 +376,7 @@ def process_operators(dynm, module, ops):
             continue
         if not hasattr(opobj, '__splpy_optype'):
             continue
-        if opobj.__splpy_optype == OperatorType.Ignore:
+        if opobj.__splpy_optype == _OperatorType.Ignore:
             continue
         if streamsPythonFile != opobj.__splpy_file:
             continue

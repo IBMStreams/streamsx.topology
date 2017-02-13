@@ -495,7 +495,7 @@ of the class passing the operator parameters into the constructor.
 For example, with this decorated class producing an SPL source
 operator:
 
-    \@spl.source
+    \@spl.source()
     class Range:
       def __init__(self, stop, start=0):
         self.start = start
