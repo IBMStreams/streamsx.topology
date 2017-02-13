@@ -7,5 +7,8 @@ public composite TestOperatorContext(input I; output O) {
       job_id: jobID();
       pe_id: PEID();
       channel: getChannel();
+      local_channel: getLocalChannel();
+      max_channels: getMaxChannels();
+      local_max_channels: getLocalMaxChannels();
    }
 }

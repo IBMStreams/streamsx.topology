@@ -56,6 +56,15 @@ static PyObject * __splpy_ec_pe_id(PyObject *self, PyObject *args) {
 static PyObject * __splpy_ec_channel(PyObject *self, PyObject *args) {
    return PyLong_FromLong(__splpy_ec_opcontext(args).getChannel());
 }
+static PyObject * __splpy_ec_local_channel(PyObject *self, PyObject *args) {
+   return PyLong_FromLong(__splpy_ec_opcontext(args).getLocalChannel());
+}
+static PyObject * __splpy_ec_max_channels(PyObject *self, PyObject *args) {
+   return PyLong_FromLong(__splpy_ec_opcontext(args).getMaxChannel());
+}
+static PyObject * __splpy_ec_local_max_channels(PyObject *self, PyObject *args) {
+   return PyLong_FromLong(__splpy_ec_opcontext(args).getLocalMaxChannel());
+}
 
 static PyMethodDef __splpy_ec_methods[] = {
     {"job_id", __splpy_ec_job_id, METH_VARARGS,
@@ -63,7 +72,13 @@ static PyMethodDef __splpy_ec_methods[] = {
     {"pe_id", __splpy_ec_pe_id, METH_VARARGS,
          "Return the PE identifier hosting this code."},
     {"channel", __splpy_ec_channel, METH_VARARGS,
-         "Return the parallel channel."},
+         "Return the global parallel channel."},
+    {"local_channel", __splpy_ec_local_channel, METH_VARARGS,
+         "Return the local parallel channel."},
+    {"max_channels", __splpy_ec_max_channels, METH_VARARGS,
+         "Return the global max channels."},
+    {"local_max_channels", __splpy_ec_local_max_channels, METH_VARARGS,
+         "Return the local max channels."},
     {NULL, NULL, 0, NULL}
 };
 

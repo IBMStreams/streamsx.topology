@@ -73,13 +73,71 @@ def pe_id():
 
 def channel(obj):
     """
-    Return the parallel region channel number `obj` is executing in.
+    Return the parallel region global channel number `obj` is executing in.
+
+    The channel number is in the range of 0 to ``max_channel(obj)``.
+
+    When the parallel region is not nested this is the same value
+    as ``local_channel(obj)``. 
+
+    If the parallel region is nested the value will be between
+    zero and ``(width*N - 1)`` where N is the number of times the
+    parallel region has been replicated due to nesting.
     
     Args:
         obj: Instance of a class executing as an SPL Python operator.
+
+    Returns:
+        int: Parallel region global channel number or -1 if not located in a parallel region.
     """
     return _streamsx_ec.channel(_get_opc(obj))
 
+def local_channel(obj):
+    """
+    Return the parallel region local channel number `obj` is executing in.
+
+    The channel number is in the range of zero to ``local_max_channel(obj)``.
+    
+    Args:
+        obj: Instance of a class executing as an SPL Python operator.
+
+    Returns:
+        int: Parallel region local channel number or -1 if not located in a parallel region.
+    """
+    return _streamsx_ec.local_channel(_get_opc(obj))
+
+def max_channels(obj):
+    """
+    Return the global maximum number of channels for the parallel
+    region `obj` is executing in.
+
+    When the parallel region is not nested this is the same value
+    as ``local_max_channels(obj)``. 
+
+    If the parallel region is nested the value will be
+    ``(width*N)`` where N is the number of times the
+    parallel region has been replicated due to nesting.
+    
+    Args:
+        obj: Instance of a class executing as an SPL Python operator.
+    Returns:
+        int: Parallel region global maximum number of channels or 0 if not located in a parallel region.
+    """
+    return _streamsx_ec.max_channels(_get_opc(obj))
+
+def local_max_channels(obj):
+    """
+    Return the local maximum number of channels for the parallel
+    region `obj` is executing in.
+
+    The maximum number of channels corresponds to the width of the region.
+
+    Args:
+        obj: Instance of a class executing as an SPL Python operator.
+    Returns:
+        int: Parallel region local maximum number of channels or 0 if not located in a parallel region.
+    """
+    return _streamsx_ec.local_max_channels(_get_opc(obj))
 
 ####################
 # internal functions
