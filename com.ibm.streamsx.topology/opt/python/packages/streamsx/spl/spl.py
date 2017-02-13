@@ -91,6 +91,7 @@ its conversion to a Python tuple::
         "Print each tuple to standard out."
          print(tuple, flush=True)
 
+.. _spl-tuple-to-python:
 
 Processing SPL tuples in Python
 ===============================
@@ -337,6 +338,8 @@ remaining attributes are optional (having a default).
     #     id='battery'
     #     temp=23.7
     #     pressure=None
+
+.. _submit-from-python:
 
 Submission of SPL tuples from Python
 ------------------------------------
@@ -622,22 +625,26 @@ class source:
     The resulting SPL operator has a single output port.
 
     When decorating a class the class must be iterable
-    having an __iter__ function. When the SPL operator
+    having an ``__iter__`` function. When the SPL operator
     is invoked an instance of the class is created
-    and an iteration is created using iter(instance). 
+    and an iteration is created using ``iter(instance)``. 
 
     When decoratiing a function the function must have no
     parameters and must return an iterable or iteration.
     When the SPL operator is invoked the function is called
-    and an iteration is created using iter(value)
-    where value is the return of the function.
+    and an iteration is created using ``iter(value)``
+    where ``value`` is the return of the function.
 
-    For each value in the iteration SPL tuples
-    are submitted dervied from the value. If the
-    value is None then no tuple is submitted.
+    For each value in the iteration SPL zero or more tuples
+    are submitted to the output port, dervied from the value,
+    see :ref:`submit-from-python`.
+    
     If the iteration completes then no more tuples
     are submitted and a final punctuation mark
     is submitted to the output port.
+
+    Args:
+       docpy: Copy Python docstrings into SPL operator model for SPLDOC.
     """
     def __init__(self, docpy=True):
         self.style = None
@@ -650,11 +657,17 @@ class map:
     """
     Decorator to create a map SPL operator from a callable class or function.
 
-    A `map` SPL operator has a single input port and a single
+    Creates an SPL operator with a single input port and a single
     output port. For each tuple on the input port the
-    function is called passing the contents of the tuple.
-    If the function returns `None` then no tuple is submitted to the
-    output port, otherwise the returned value is converted to
+    callable is called passing the contents of the tuple.
+
+    The value returned from the callable results in
+    zero or more tuples being submitted to the operator output
+    port, see :ref:`submit-from-python`.
+
+    Args:
+       style: How the SPL tuple is passed into Python callable or function, see  :ref:`spl-tuple-to-python`.
+       docpy: Copy Python docstrings into SPL operator model for SPLDOC.
     """
     def __init__(self, style=None, docpy=True):
         self.style = style
@@ -677,8 +690,8 @@ class filter(object):
     not specified in the SPL invocation.
 
     Args:
-       style: How the SPL tuple is passed into Python callable or function.
-       docpy: Copy Python docstrings into SPL operator module for SPLDOC.
+       style: How the SPL tuple is passed into Python callable or function, see  :ref:`spl-tuple-to-python`.
+       docpy: Copy Python docstrings into SPL operator model for SPLDOC.
 
     Example definition::
 
@@ -711,8 +724,16 @@ class filter(object):
     def __call__(self, wrapped):
         return _wrapforsplop(_OperatorType.Filter, wrapped, self.style, self.docpy)
 
-# Allows functions in any module in opt/python/streams to be explicitly ignored.
 def ignore(wrapped):
+    """
+     Decorator to ignore a Python function.
+
+     If a Python callable is decorated with ``@spl.ignore``
+     then function is ignored by ``spl-python-extract.py``.
+
+     Args:
+         wrapped: Function that will be ignored.
+    """
     @functools.wraps(wrapped)
     def _ignore(*args, **kwargs):
         return wrapped(*args, **kwargs)
@@ -730,11 +751,15 @@ def sink(wrapped):
 # Defines a function as a sink operator
 class for_each:
     """
-    Create a SPL operator from a callable class or function.
+    Decorator that creates an SPL operator from a callable class or function.
 
     A SPL operator with a single input port and no output ports.
-    For each tuple on the input port the
-    class or function is called passing the contents of the tuple.
+    For each tuple on the input port the decorated callable
+    is called passing the contents of the tuple.
+
+    Args:
+       style: How the SPL tuple is passed into Python callable or function, see  :ref:`spl-tuple-to-python`.
+       docpy: Copy Python docstrings into SPL operator model for SPLDOC.
     """
     def __init__(self, style=None, docpy=True):
         self.style = style
