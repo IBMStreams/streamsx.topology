@@ -38,7 +38,7 @@ class PyTestOperatorContext:
         ok = ok and self.same(self.channel, ec.channel(self))
         ok = ok and self.same(self.local_channel, ec.local_channel(self))
         ok = ok and self.same(self.max_channels, ec.max_channels(self))
-        ok = ok and self.same(self.local_max_channels, ec.local_max_channel(self))
+        ok = ok and self.same(self.local_max_channels, ec.local_max_channels(self))
         return ok
             
     def __call__(self, *tuple):
