@@ -60,10 +60,10 @@ static PyObject * __splpy_ec_local_channel(PyObject *self, PyObject *args) {
    return PyLong_FromLong(__splpy_ec_opcontext(args).getLocalChannel());
 }
 static PyObject * __splpy_ec_max_channels(PyObject *self, PyObject *args) {
-   return PyLong_FromLong(__splpy_ec_opcontext(args).getMaxChannel());
+   return PyLong_FromLong(__splpy_ec_opcontext(args).getMaxChannels());
 }
 static PyObject * __splpy_ec_local_max_channels(PyObject *self, PyObject *args) {
-   return PyLong_FromLong(__splpy_ec_opcontext(args).getLocalMaxChannel());
+   return PyLong_FromLong(__splpy_ec_opcontext(args).getLocalMaxChannels());
 }
 
 static PyMethodDef __splpy_ec_methods[] = {
