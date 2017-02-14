@@ -44,12 +44,14 @@ void MY_OPERATOR::process(uint32_t idx)
     { // start lock
       SplpyGIL lock;
       PyObject * pyReturnVar = PyObject_CallObject(funcop_->function_, NULL);
+
+      if (pyReturnVar == NULL) {
+         throw SplpyGeneral::pythonException("source");
+      }
+ 
       if (SplpyGeneral::isNone(pyReturnVar)) {
         Py_DECREF(pyReturnVar);
         break;
-      } else if(pyReturnVar == 0){
-        SplpyGeneral::flush_PyErrPyOut();
-        throw;
       }
 
       pySplValueFromPyObject(otuple.get___spl_po(), pyReturnVar);
