@@ -163,14 +163,12 @@ class SplpyGeneral {
      * and stderr to ensure any additional info is visible
      * in the PE console.
     */
-    static SPL::SPLRuntimeException pythonException(std::string const & 	location) {
+    static SPL::SPLRuntimeException pythonException(std::string const & location) {
 
       PyObject *pyType, *pyValue, *pyTraceback;
       PyErr_Fetch(&pyType, &pyValue, &pyTraceback);
       PyErr_NormalizeException(&pyType, &pyValue, &pyTraceback);
       
-
-
       SPL::rstring msg("Unknown Python error");
       if (pyValue != NULL) {
           pyRStringFromPyObject(msg, pyValue);
@@ -181,6 +179,22 @@ class SplpyGeneral {
       PyErr_Restore(pyType, pyValue, pyTraceback);
       SplpyGeneral::flush_PyErr_Print();
 
+      SPL::SPLRuntimeOperatorException exc(location, msg);
+      
+      return exc;
+    }
+
+    /**
+     * Return a general exception to be thrown.
+     * This is for an error situation not driven
+     * by a Python error. Output is still flushed
+     * to ensure any output that might be relevant
+     * is available.
+     */
+    static SPL::SPLRuntimeException generalException(
+       std::string const & location, std::string const & msg) {
+
+      SPLAPPTRC(L_ERROR, msg, "python");
       SPL::SPLRuntimeOperatorException exc(location, msg);
       
       return exc;
@@ -197,8 +211,9 @@ class SplpyGeneral {
        Py_DECREF(module);
     
        if (!PyCallable_Check(function)) {
-         SPLAPPTRC(L_ERROR, "Fatal error: function " << fn << " in module " << mn << " not callable", "python");
-         throw;
+         std::stringstream msg;
+         msg << "Fatal error: function " << fn << " in module " << mn << " not callable.";
+         throw SplpyGeneral::generalException("setup", msg.str());
         }
         SPLAPPTRC(L_INFO, "Callable function: " << fn, "python");
         return function;

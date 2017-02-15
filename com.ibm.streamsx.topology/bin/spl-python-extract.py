@@ -58,7 +58,7 @@ def setup():
 
 setup()
 
-from streamsx.spl.spl import OperatorType
+from streamsx.spl.spl import _OperatorType
 
 def makeNamespaceDir(ns):
      nsdir = os.path.join(userToolkitDir(), ns)
@@ -140,7 +140,14 @@ _INFO_XML_TEMPLATE="""<?xml version="1.0" encoding="UTF-8"?>
   <resources>
     <messageSet name="TopologySplpyResource">
       <lang default="true">en_US/TopologySplpyResource.xlf</lang>
-      <!-- <lang>de_DE/TopologySplpyResource.xlf</lang> -->
+      <lang>fr_FR/TopologySplpyResource.xlf</lang>
+      <lang>it_IT/TopologySplpyResource.xlf</lang>
+      <lang>ja_JP/TopologySplpyResource.xlf</lang>
+      <lang>ko_KR/TopologySplpyResource.xlf</lang>
+      <lang>pt_BR/TopologySplpyResource.xlf</lang>
+      <lang>ru_RU/TopologySplpyResource.xlf</lang>
+      <lang>zh_CN/TopologySplpyResource.xlf</lang>
+      <lang>zh_TW/TopologySplpyResource.xlf</lang>
     </messageSet>
   </resources>
 </toolkitInfoModel>
@@ -174,10 +181,13 @@ def setupInfoXml(languageList):
                             language = os.path.dirname(lang.text)
                             TopologySplpyResourceLanguages.append(language)
         if TopologySplpyResourceMessageSetFound:
-            if cmd_args.verbose:
-                print("TopologySplpyResource was found: ", TopologySplpyResourceLanguages)
+            TopologySplpyResourceLanguages.sort()
+            languageList.sort()
             copiedLanguagesSet = set(languageList)
             resourceLanguageSet = set(TopologySplpyResourceLanguages)
+            if cmd_args.verbose:
+                print('copied language resources:\n', languageList)
+                print('TopologySplpyResource from info.xml:\n', TopologySplpyResourceLanguages)
             if copiedLanguagesSet == resourceLanguageSet:
                 print('Resource section of info.xml verified')
             else:
@@ -376,7 +386,7 @@ def process_operators(dynm, module, ops):
             continue
         if not hasattr(opobj, '__splpy_optype'):
             continue
-        if opobj.__splpy_optype == OperatorType.Ignore:
+        if opobj.__splpy_optype == _OperatorType.Ignore:
             continue
         if streamsPythonFile != opobj.__splpy_file:
             continue

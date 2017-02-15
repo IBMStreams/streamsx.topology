@@ -12,6 +12,14 @@
  <info:resources>
    <info:messageSet name="TopologySplpyResource">
      <info:lang default="true">en_US/TopologySplpyResource.xlf</info:lang>
+     <info:lang>fr_FR/TopologySplpyResource.xlf</info:lang>
+      <info:lang>it_IT/TopologySplpyResource.xlf</info:lang>
+      <info:lang>ja_JP/TopologySplpyResource.xlf</info:lang>
+      <info:lang>ko_KR/TopologySplpyResource.xlf</info:lang>
+      <info:lang>pt_BR/TopologySplpyResource.xlf</info:lang>
+      <info:lang>ru_RU/TopologySplpyResource.xlf</info:lang>
+      <info:lang>zh_CN/TopologySplpyResource.xlf</info:lang>
+      <info:lang>zh_TW/TopologySplpyResource.xlf</info:lang>
    </info:messageSet>
   </info:resources>
 </info:toolkitInfoModel>

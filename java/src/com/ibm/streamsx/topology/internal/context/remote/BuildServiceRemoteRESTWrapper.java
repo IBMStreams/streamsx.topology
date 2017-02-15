@@ -114,7 +114,7 @@ class BuildServiceRemoteRESTWrapper {
 	private JsonObject doSubmitJobFromBuildArtifactPut(CloseableHttpClient httpclient,
 	        JsonObject deploy,
 			String apiKey, String artifactId) throws ClientProtocolException, IOException{
-		String putURL = getBuildsURL(credentials) + "?artifact_id=" + artifactId;
+		String putURL = getBuildsURL() + "?artifact_id=" + artifactId;
 		HttpPut httpput = new HttpPut(putURL);
         httpput.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpput.addHeader("Authorization", apiKey);
@@ -144,7 +144,7 @@ class BuildServiceRemoteRESTWrapper {
 
 	private JsonObject doUploadBuildArchivePost(CloseableHttpClient httpclient,
 						    String apiKey, File archive, String buildName) throws ClientProtocolException, IOException{
-	    String newBuildURL = getBuildsURL(credentials) + "?build_name=" + buildName;
+	    String newBuildURL = getBuildsURL() + "?build_name=" + buildName;
 		HttpPost httppost = new HttpPost(newBuildURL);
         httppost.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httppost.addHeader("Authorization", apiKey);
@@ -180,7 +180,7 @@ class BuildServiceRemoteRESTWrapper {
 	
 	private JsonObject getBuild(String buildId, CloseableHttpClient httpclient,
 			String apiKey) throws ClientProtocolException, IOException{
-		String buildURL = getBuildsURL(credentials) + "?build_id=" + buildId;
+		String buildURL = getBuildsURL() + "?build_id=" + buildId;
 		HttpGet httpget = new HttpGet(buildURL);
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpget.addHeader("Authorization", apiKey);
@@ -199,7 +199,7 @@ class BuildServiceRemoteRESTWrapper {
 	
 	private JsonObject getBuildOutput(String buildId, String outputId, CloseableHttpClient httpclient,
 			String apiKey) throws ClientProtocolException, IOException{
-		String buildOutputURL = getBuildsURL(credentials) + "?build_id=" + buildId
+		String buildOutputURL = getBuildsURL() + "?build_id=" + buildId
 				+ "&output_id=" + outputId;
 		System.out.println(buildOutputURL);
 		HttpGet httpget = new HttpGet(buildOutputURL);
@@ -226,7 +226,7 @@ class BuildServiceRemoteRESTWrapper {
 		return name;
 	}
 	
-	private String getBuildsURL(JsonObject credentials){
+	private String getBuildsURL(){
 		String buildURL = jstring(credentials, "jobs_path").replace("jobs", "builds");
 		return jstring(credentials, "rest_url") + buildURL;
 	}

@@ -9,14 +9,23 @@ Python Application API for IBM Streams
 Module that allows the definition and execution of streaming
 applications implemented in Python. Applications use Python code to process tuples and tuples are Python objects.
 
+See :py:mod:`streamsx.topology`
+
 Python functions as SPL operators
 ---------------------------------
 A Python function or class can be simply turned into an SPL primitive operator
 to allow SPL tuple processing using Python.
 
+SPL (Streams Processing Language) is a domain specific language for streaming
+analytics supported by IBM Streams.
+
+See :py:mod:`streamsx.spl`
+
 Streams Python REST API
 -----------------------
 Module that allows interaction with an running Streams instance or service through HTTPS REST APIs.
+
+See :py:mod:`streamsx.rest`
 
 """
 
