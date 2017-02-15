@@ -75,7 +75,6 @@ def dict_in(callable) :
 # and is used directly or is string
 # that is a encoded pickled class instance
 #
-# TODO throw exception
 def _getCallable(f):
     if callable(f):
         return f
@@ -83,7 +82,7 @@ def _getCallable(f):
         ci = dill.loads(base64.b64decode(f))
         if callable(ci):
             return ci
-    return None
+    raise TypeError("Class is not callable" + type(ci))
 
 ##
 ## Set of functions that wrap the application's Python callable

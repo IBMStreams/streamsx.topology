@@ -100,8 +100,8 @@ class SplpySetup {
         // and thus set the local pointer to None (effectively Py_None).
         bool in = SplpyGeneral::isNone(none);
         if (!in) {
-          SPL::SPLRuntimeOperatorException exc("setup", "Internal error - None handling");
-          throw exc;
+          throw SplpyGeneral::generalException("setup",
+                        "Internal error - None handling");
         }
     }
 
@@ -130,6 +130,7 @@ class SplpySetup {
 
           SPLAPPLOG(L_ERROR, errtxt, "python");
 
+          // Can't use generalException as that calls into Python
           SPL::SPLRuntimeOperatorException exc("setup", errtxt);
           throw exc;
         }
@@ -145,6 +146,7 @@ class SplpySetup {
           std::string errtxt(TOPOLOGY_LOAD_LIB_ERROR(pyLib, __SPLPY_VERSION, dles));
           SPLAPPLOG(L_ERROR, errtxt, "python");
 
+          // Can't use generalException as that calls into Python
           SPL::SPLRuntimeOperatorException exc("setup", errtxt);
           throw exc;
         }
@@ -203,10 +205,9 @@ class SplpySetup {
 
         int fd = open(spl_setup_py, O_RDONLY);
         if (fd < 0) {
-          SPLAPPTRC(L_ERROR,
-            "Python script splpy_setup.py not found!:" << spl_setup_py,
-                             "python");
-          throw;
+          std::stringstream msg;
+          msg << "Internal Error: Python script splpy_setup.py not found!:" << splpySetup;
+          throw SplpyGeneral::generalException("splpy_setup.py", msg.str());
         }
 
         typedef int (*__splpy_rsfef)(FILE *, const char *, int, PyCompilerFlags *);
