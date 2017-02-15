@@ -13,6 +13,13 @@
     if (splpy_OperatorCallable() eq 'class') {
 %>
    { 
+#if __SPLPY_EC_MODULE_OK
+     // Set the operator capsule as a Python thread local
+     // use streamsx.ec._set_opc so that it is availble
+     // through the operator's class __init__ function.
+     this->pyop_->setopc();
+#endif
+ 
      // Pass all the arguments by name in a dictionary
      // object, effectively as **kwargs. Python will
      // unpack correctly to the actual __init__ args
@@ -51,6 +58,10 @@
      }
    
      function_ = tmp_instance;
+
+#if __SPLPY_EC_MODULE_OK
+     this->pyop_->clearopc();
+#endif
    }
 <%
     }
