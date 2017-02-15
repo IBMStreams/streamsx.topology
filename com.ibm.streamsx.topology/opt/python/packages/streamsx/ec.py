@@ -1,6 +1,9 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 
+import numbers
+import enum
+
 """
 Overview
 --------
@@ -138,6 +141,36 @@ def local_max_channels(obj):
         int: Parallel region local maximum number of channels or 0 if not located in a parallel region.
     """
     return _streamsx_ec.local_max_channels(_get_opc(obj))
+
+@enum.unique
+class MetricKind(enum.Enum):
+    Gauge = 0,
+    Counter = 1,
+    Time = 2
+
+class CustomMetric(object):
+    """
+    Create a custom metric.
+
+    Args:
+        obj: Instance of a class executing as an SPL Python operator.
+        name(str):
+        kind(MetricKind):
+        description(str):
+    """
+    def __init__(self, obj, name, description=None, kind=MetricKind.Counter):
+        if kind in MetricKind.__members__:
+            kind = MetricKind.__members__[kind]
+        elif kind not in MetricKind.__members__.values():
+            raise TypeError("kind is required to be MetricKind:" + kind)
+        if description is None:
+            description=name + ":" + kind.name
+        self.name = str(name)
+        self.kind = kind
+        self.description = str(description)
+        self._capsule = _streamsx_ec.create_custom_metric(_get_opc(obj), self.name, self.description, self.kind.value)
+
+
 
 ####################
 # internal functions
