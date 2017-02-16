@@ -2,6 +2,7 @@
 # Copyright IBM Corp. 2017
 
 import numbers
+import string
 import enum
 
 """
@@ -144,21 +145,46 @@ def local_max_channels(obj):
 
 @enum.unique
 class MetricKind(enum.Enum):
-    Gauge = 0,
-    Counter = 1,
+    """
+    Enumeration for the kind of a metric.
+
+    The kind of the metric only indicates the behavior of value,
+    it does not impose any semantics on the value.
+    The kind is typically used by tooling applications.
+
+    """
+    Gauge = 0
+    """
+    A gauge metric observes a value that is continuously variable with time.
+    """
+    Counter = 1
+    """
+    A counter metric observes a value that represents a count of an occurrence.
+    """
     Time = 2
+    """
+    A time metric represents a point in time or duration.
+    The recommended unit of time is milliseconds, using the standard
+    epoch of 00:00:00 Coordinated Universal Time (UTC),
+    Thursday, 1 January 1970 to represent a point in time.
+    """
 
 class CustomMetric(object):
     """
     Create a custom metric.
 
+    A custom metric holds a 64 bit signed integer value that represents
+    a `Counter`, `Gauge` or `Time` metric.
+    Custom metrics are exposed through the IBM Streams monitoring APIs.
+
     Args:
         obj: Instance of a class executing as an SPL Python operator.
-        name(str):
-        kind(MetricKind):
-        description(str):
+        name(str): Name of the custom metric.
+        kind(MetricKind): Kind of the metric.
+        description(str): Description of the metric.
+        initialValue: Initial value of the metric.
     """
-    def __init__(self, obj, name, description=None, kind=MetricKind.Counter):
+    def __init__(self, obj, name, description=None, kind=MetricKind.Counter, initialValue=0):
         if kind in MetricKind.__members__:
             kind = MetricKind.__members__[kind]
         elif kind not in MetricKind.__members__.values():
@@ -168,9 +194,37 @@ class CustomMetric(object):
         self.name = str(name)
         self.kind = kind
         self.description = str(description)
-        self._capsule = _streamsx_ec.create_custom_metric(_get_opc(obj), self.name, self.description, self.kind.value)
+        args = (_get_opc(obj), self.name, self.description, self.kind.value, int(initialValue))
+        self.__ptr = _streamsx_ec.create_custom_metric(args)
 
+    @property
+    def value(self):
+        """
+        Current value of the metric.
+        """
+        return _streamsx_ec.metric_get(self.__ptr)
 
+    @value.setter
+    def value(self, value):
+        """
+        Set the current value of the metric.
+        """
+        args = (self.__ptr, int(value))
+        _streamsx_ec.metric_set(args)
+
+    def __str__(self):
+        return "{0}({1}):{2}".format(self.name, self.kind.name,self.value)
+
+    def __iadd__(self, other):
+        """
+        Increment the current value of the metric.
+        """
+        args = (self.__ptr, int(other))
+        _streamsx_ec.metric_inc(args)
+        return self
+
+    def __int__(self):
+        return self.value
 
 ####################
 # internal functions
