@@ -147,6 +147,10 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
             viaPython = SPL.invokeOperator(
                     "com.ibm.streamsx.topology.pytest.pyec::TestOperatorContext", viaPython,
                     viaPython.getSchema(), null);
+
+            viaPython = SPL.invokeOperator(
+                    "com.ibm.streamsx.topology.pytest.pyec::PyTestMetrics", viaPython,
+                    viaPython.getSchema(), null);
         }
 
         Tester tester = topology.getTester();
