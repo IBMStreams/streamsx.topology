@@ -1,5 +1,10 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+"""
+Invocation of SPL operators from a Python Topology.
+
+Arbitrary SPL operators can be be invoked.
+"""
 
 from streamsx.topology.topology import Stream
 from streamsx.topology.schema import _stream_schema
@@ -7,12 +12,27 @@ from streamsx.topology.schema import _stream_schema
 def source(kind, topology, schema, params=None):
     """
     Invoke an SPL source operator with a single output port.
+
+    Args:
+       kind(str): SPL operator kind. For example `spl.utility::Beacon`.
+       topology:  Topology the operator invocation will be declared in.
+       schema: SPL schema of the output port.
+       params(dict): Dictionary of parameters to the operator invocation.
+
+    Returns:
+       Stream: Stream that will be connected to the operator output port.
     """
     return invoke(kind, topology, schemas=_stream_schema(schema), params=params)
 
 def sink(kind, input, params=None):
     """
     Invoke an SPL sink operator with a single input port.
+
+    Args:
+       kind(str): SPL operator kind. For example `spl.utility::FileSink`.
+       input(Stream): Stream to be connected to the operator.
+       params(dict): Dictionary of parameters to the operator invocation.
+      
     """
     return invoke(kind, inputs=input, params=params)
 

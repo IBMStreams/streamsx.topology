@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.test.splpy;
 
+import static com.ibm.streams.operator.version.Product.getVersion;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -105,7 +106,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     public static SPLStream testTupleStream(Topology topology, boolean withSets) {
         TStream<Long> beacon = BeaconStreams.longBeacon(topology, TUPLE_COUNT);
 
-        return SPLStreams.convertStream(beacon, new BiFunction<Long, OutputTuple, OutputTuple>() {
+        SPLStream tuples = SPLStreams.convertStream(beacon, new BiFunction<Long, OutputTuple, OutputTuple>() {
             private static final long serialVersionUID = 1L;
             
             private transient TupleType type;
@@ -122,18 +123,35 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
                 return v2;
             }
         }, getPythonTypesSchema(withSets));
+
+        return tuples;
     }
     
     @Test
     public void testPositionalSampleNoop() throws Exception {
         Topology topology = new Topology("testPositionalSampleNoop");
+        addTestToolkit(topology);
         
         SPLStream tuples = testTupleStream(topology);
         
-        SPLStream viaSPL = SPL.invokeOperator("spl.relational::Functor", tuples, tuples.getSchema(), null);
+
         
-        addTestToolkit(tuples);
+        SPLStream viaSPL = SPL.invokeOperator("spl.relational::Functor", tuples, tuples.getSchema(), null);      
+
         SPLStream viaPython = SPL.invokeOperator("com.ibm.streamsx.topology.pysamples.positional::Noop", tuples, tuples.getSchema(), null);
+        
+        // Test accessing the execution context provides the correct results
+        // Only supported for Python 3.5 and Streams 4.2 and later
+        if ((getVersion().getVersion() > 4) ||
+                (getVersion().getVersion() == 4 && getVersion().getRelease() >= 2)) {
+            viaPython = SPL.invokeOperator(
+                    "com.ibm.streamsx.topology.pytest.pyec::TestOperatorContext", viaPython,
+                    viaPython.getSchema(), null);
+
+            viaPython = SPL.invokeOperator(
+                    "com.ibm.streamsx.topology.pytest.pyec::PyTestMetrics", viaPython,
+                    viaPython.getSchema(), null);
+        }
 
         Tester tester = topology.getTester();
         Condition<Long> expectedCount = tester.tupleCount(viaPython, TUPLE_COUNT);

@@ -10,7 +10,7 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.nestedObject;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.nestedObjectCreate;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
 import java.util.Set;
 
@@ -110,7 +110,7 @@ class ThreadingModel {
                 // Add to SPL operator config if necessary
                 if(!functional && 
                         !(differentColocationThanParent || regionTagExists)){
-                    JsonObject newQueue = nestedObjectCreate(op, OpProperties.CONFIG, "queue");
+                    JsonObject newQueue = objectCreate(op, OpProperties.CONFIG, "queue");
                     newQueue.addProperty("queueSize", new Integer(100));
                     newQueue.addProperty("inputPortName", input.get("name").getAsString());
                     newQueue.addProperty("congestionPolicy", "Sys.Wait");

@@ -1,0 +1,49 @@
+<project name="streamsx.topology.python" default="all" >
+    <description>
+        Build the streamsx.topology Python doc.
+    </description>
+
+  <import file="../common-build.xml"/>
+  <property name="py.doc" location="${tk.doc}/pythondoc"/>
+  <property name="sphinx.dir" location="sphinx"/>
+  <property name="streamsx.py.dir" location="${tk}/opt/python/packages"/>
+
+  <target name="all">
+   <mkdir dir="${py.doc}"/>
+   <exec executable="sphinx-apidoc"
+         dir="${sphinx.dir}" failonerror="true">
+     <arg value="--separate"/>
+     <arg value="-o"/>
+     <arg value="source"/>
+     <arg value="${streamsx.py.dir}"/>
+
+     <!-- excluded packages -->
+     <arg value="${streamsx.py.dir}/streamsx/spl/runtime.py"/>
+     <arg value="${streamsx.py.dir}/streamsx/topology/condapkgs.py"/>
+     <arg value="${streamsx.py.dir}/streamsx/topology/dependency.py"/>
+     <arg value="${streamsx.py.dir}/streamsx/topology/graph.py"/>
+     <arg value="${streamsx.py.dir}/streamsx/topology/logging_utils.py"/>
+     <arg value="${streamsx.py.dir}/streamsx/topology/runtime.py"/>
+     <arg value="${streamsx.py.dir}/streamsx/topology/splpy_setup.py"/>
+   </exec>
+
+   <exec executable="make"
+         dir="${sphinx.dir}" failonerror="true">
+     <arg value="html"/>
+   </exec>
+   <copy todir="${py.doc}">
+     <fileset dir="${sphinx.dir}/build/html"/>
+   </copy>
+
+   </target>
+
+  <target name="clean">
+    <delete dir="${pydoc}"/>
+    <delete dir="${sphinx.dir}/build"/>
+    <delete>
+     <fileset dir="${sphinx.dir}/source"
+       includes="*.rst"
+       excludes="index.rst"/>
+   </delete>
+  </target>
+</project>

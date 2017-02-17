@@ -1,6 +1,20 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2017
 
+"""
+Python API to allow creation of streaming applications for
+IBM Streams & Streaming Analytics service on Bluemix.
+
+Overview
+########
+
+IBM® Streams is an advanced analytic platform that allows user-developed applications to quickly ingest,
+analyze and correlate information as it arrives from thousands of real-time sources.
+Streams can handle very high data throughput rates, millions of events or messages per second.
+With this API Python developers can build streaming applications that can be executed using IBM Streams,
+including the processing being distributed across multiple computing resources (hosts or machines) for scalability.
+"""
+
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
@@ -8,11 +22,10 @@ from __future__ import absolute_import
 from builtins import super
 from builtins import range
 try:
-  from future import standard_library
-  standard_library.install_aliases()
+    from future import standard_library
+    standard_library.install_aliases()
 except (ImportError,NameError):
-  # nothing to do here
-  pass 
+    pass
 
 import random
 from streamsx.topology import graph
@@ -24,10 +37,13 @@ import queue
 import sys
 import time
 import inspect
+import logging
 from enum import Enum
 
+logger = logging.getLogger('streamsx.topology')
+
 class Topology(object):
-    """The Topology class is used to define data sources, and is passed as a parameter when submittion an application.
+    """The Topology class is used to define data sources, and is passed as a parameter when submitting an application.
        Topology keeps track of all sources, sinks, and data operations within your application.
 
        Instance variables:
@@ -69,16 +85,16 @@ class Topology(object):
         
         Args:
             func: An iterable or a zero-argument callable that returns an iterable of tuples.
-            The callable must be either 
-            * an iterable object
-            * a function 
-            * a lambda function
-            * an instance of a callable class that implements the method `__call__(self)` and be picklable.
-            Using a callable class allows state information such as user-defined parameters to be stored during class 
-            initialization and utilized when the instance is called.
-            A tuple is represented as a Python object that must be picklable.
+                The callable must be either be an iterable object, a function, a lambda function
+                or an instance of a callable class that implements the method `__call__(self)` and be picklable.
+
+                Using a callable class allows state information such as user-defined parameters to be stored during class
+                initialization and utilized when the instance is called.
+
+                A tuple is represented as a Python object that must be picklable.
+
         Returns:
-            A Stream whose tuples are the result of the output obtained by invoking the provided callable or iterable.
+            Stream: A stream whose tuples are the result of the output obtained by invoking the provided callable or iterable.
         """
         if inspect.isroutine(func):
              pass
@@ -111,11 +127,11 @@ class Topology(object):
         Any publishing Streams application may have been implemented in any language.
 
         Args:
-            topic: Topic to subscribe to.
-            schema: schema.StreamSchema to subscribe to. Defaults to schema.CommonSchema.Python representing Python
+            topic(str): Topic to subscribe to.
+            schema(schema.StreamSchema): schema to subscribe to. Defaults to schema.CommonSchema.Python representing Python
                     objects.
         Returns:
-            A Stream whose tuples have been published to the topic by other Streams applications.
+            Stream:  A stream whose tuples have been published to the topic by other Streams applications.
         """
         op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe")
         oport = op.addOutputPort(schema=schema)
@@ -211,7 +227,7 @@ class Stream(object):
                 'port': port,
                 'bufferTime': buffer_time,
                 'sampleSize': sample_size})
-        _view = View(name, port, buffer_time, sample_size)
+        _view = View(name)
         self.topology.graph.get_views().append(_view)
         return _view
 
@@ -225,16 +241,15 @@ class Stream(object):
         
         Args:
             func: A callable that takes a single parameter for the tuple, and returns a tuple or None.
-            The callable must be either
-            * a function
-            * a lambda function
-            * an instance of a callable class that implements 
-              the method `__call__(self, tuple)` and be picklable.
-            Using a callable class allows state information such as user-defined parameters to be stored during class 
-            initialization and utilized when the instance is called.
-            The callable is invoked for each incoming tuple.
+                The callable must be either a function, a lambda function,
+                an instance of a callable class that implements the method `__call__(self, tuple)` and be picklable.
+
+                Using a callable class allows state information such as user-defined parameters to be stored during class
+                initialization and utilized when the instance is called.
+
+                The callable is invoked for each incoming tuple.
         Returns:
-            A Stream containing transformed tuples.
+            Stream: A stream containing tuples mapped by func.
         """
         return self._map(func, schema=schema.CommonSchema.Python, name=name)
 
@@ -284,9 +299,7 @@ class Stream(object):
     def isolate(self):
         """
         Guarantees that the upstream operation will run in a separate process from the downstream operation
-        
-        Args:
-            None
+
         Returns:
             Stream
         """
@@ -302,9 +315,7 @@ class Stream(object):
         upstream Stream function. All streams that are created from the returned stream 
         are also guaranteed to run in the same process until end_low_latency() 
         is called.
-        
-        Args:
-            None
+
         Returns:
             Stream
         """
@@ -319,9 +330,7 @@ class Stream(object):
         """
         Returns a Stream that is no longer guaranteed to run in the same process
         as the calling stream.
-        
-        Args:
-            None
+
         Returns:
             Stream
         """
@@ -352,12 +361,13 @@ class Stream(object):
         Every call to end_parallel() must have a call to parallel() preceding it.
         
         Args:
-            width (int): degree of parallelism
-            routing - denotes what type of tuple routing to use. 
-                ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators
+            width (int): Degree of parallelism.
+            routing: denotes what type of tuple routing to use.
+                ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators (the default when
+                no routing is specified).
                 HASH_PARTIONED: delivers to downstream operators based on the hash of the tuples being sent
                 or if a function is provided the function will be called to provide the hash
-            func - Optional function called when HASH_PARTIONED routing is specified.  The function provides an
+            func: Optional function called when HASH_PARTIONED routing is specified.  The function provides an
                 int32 value to be used as the hash that determines the tuple routing to downstream operators
 
         Returns:
@@ -365,27 +375,26 @@ class Stream(object):
 
         """
         if (routing == None or routing == Routing.ROUND_ROBIN) :
-            iop = self.isolate()                  
             op2 = self.topology.graph.addOperator("$Parallel$")
-            op2.addInputPort(outputPort=iop.oport)
+            op2.addInputPort(outputPort=self.oport)
             oport = op2.addOutputPort(width)
             return Stream(self.topology, oport)
         elif(routing == Routing.HASH_PARTITIONED ) :
             if (func is None) :
                 func = hash   
-            op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func)
+            hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func)
             hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int32 __spl_hash>"))
-            parentOp = op.addOutputPort(schema=hash_schema)
-            op.addInputPort(outputPort=self.oport)
-            iop = self.topology.graph.addOperator("$Isolate$")    
-            oport = iop.addOutputPort(schema=hash_schema)
-            iop.addInputPort(outputPort=parentOp)        
-            op2 = self.topology.graph.addOperator("$Parallel$")
-            op2.addInputPort(outputPort=oport)
-            o2port = op2.addOutputPort(oWidth=width, schema=hash_schema, partitioned=True)
+            hash_adder.addInputPort(outputPort=self.oport)
+            hash_adder_oport = hash_adder.addOutputPort(schema=hash_schema)
+
+
+            parallel_op = self.topology.graph.addOperator("$Parallel$")
+            parallel_op.addInputPort(outputPort=hash_adder_oport)
+            parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=hash_schema, partitioned=True)
+
             # use the Functor passthru operator to effectively remove the hash attribute by removing it from output port schema 
             hrop = self.topology.graph.addPassThruOperator()
-            hrop.addInputPort(outputPort=o2port)
+            hrop.addInputPort(outputPort=parallel_op_port)
             hrOport = hrop.addOutputPort(schema=self.oport.schema)
             return Stream(self.topology, hrOport)
         else :
@@ -394,11 +403,9 @@ class Stream(object):
     def end_parallel(self):
         """
         Ends a parallel region by merging the channels into a single stream
-        
-        Args:
-            None
+
         Returns:
-            A Stream for which subsequent transformations are no longer parallelized
+            Stream: Stream for which subsequent transformations are no longer parallelized
         """
         lastOp = self.topology.graph.getLastOperator()
         outport = self.oport
@@ -411,7 +418,7 @@ class Stream(object):
         op.addInputPort(outputPort=outport)
         oport = op.addOutputPort()
         endP = Stream(self.topology, oport)
-        return endP.isolate()
+        return endP
 
     def union(self, streamSet):
         """
@@ -420,7 +427,7 @@ class Stream(object):
         Args:
             streamSet: a set of Stream objects to merge with this stream
         Returns:
-            Stream
+            Stream:
         """
         if(not isinstance(streamSet,set)) :
             raise TypeError("The union operator parameter must be a set object")
@@ -436,7 +443,9 @@ class Stream(object):
     def print(self):
         """
         Prints each tuple to stdout flushing after each tuple.
-        :returns: None
+
+        Returns:
+            None
         """
         self.sink(streamsx.topology.functions.print_flush)
 
@@ -462,17 +471,17 @@ class Stream(object):
         a string using str(tuple).
 
         Args:
-            topic: Topic to publish this stream to.
+            topic(str): Topic to publish this stream to.
             schema: Schema to publish. Defaults to CommonSchema.Python representing Python objects.
         Returns:
-            None.
+            None
         """
         if self.oport.schema.schema() != schema.schema():
-            self._map(streamsx.topology.functions.identity,schema=schema).publish(topic, schema=schema);
+            self._map(streamsx.topology.functions.identity,schema=schema).publish(topic, schema=schema)
             return None
 
-        publishParams = {'topic': topic}
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params=publishParams)
+        publish_arams = {'topic': topic}
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params=publish_arams)
         op.addInputPort(outputPort=self.oport)
 
     def autonomous(self):
@@ -491,10 +500,9 @@ class Stream(object):
 
         Supported since v1.5
 
-        Args:
-            None
+
         Returns:
-            Stream
+            Stream: Stream whose subsequent downstream processing is in an autonomous region.
         """
         op = self.topology.graph.addOperator("$Autonomous$")
         op.addInputPort(outputPort=self.oport)
@@ -507,25 +515,17 @@ class Routing(Enum):
     HASH_PARTITIONED=3    
 
 
-class View(threading.Thread):
+class View(object):
     """
     A View is an object which is associated with a Stream, and provides access to the items on the stream.
     """
-    def __init__(self, name, port, buffer_time, sample_size):
-        super(View, self).__init__()
-        self._stop = threading.Event()
-        self.items = queue.Queue()
-
+    def __init__(self, name):
         self.name = name
-        self.port = port
-        self.buffer_time = buffer_time
-        self.sample_size = sample_size
+
         self.streams_context = None
         self.view_object = None
         self.streams_context_config = {'username': '', 'password': '', 'rest_api_url': ''}
 
-        self._last_collection_time = -1
-        self._last_collection_time_count = 0
         self.is_rest_initialized = False
 
     def initialize_rest(self):
@@ -536,101 +536,26 @@ class View(threading.Thread):
                 raise ValueError(
                     "WARNING: A username, a password, and a rest url must be present in order to access view data")
             from streamsx import rest
-            rc = rest.StreamsContext(self.streams_context_config['username'],
+            rc = rest.StreamsConnection(self.streams_context_config['username'],
                                      self.streams_context_config['password'],
                                      self.streams_context_config['rest_api_url'])
             self.is_rest_initialized = True
             self.set_streams_context(rc)
 
     def stop_data_fetch(self):
-        self._stop.set()
+        self.view_object.stop_data_fetch()
 
     def start_data_fetch(self):
         self.initialize_rest()
-        self._stop.clear()
-        self._get_view_object()
-        t = threading.Thread(target=self)
-        t.start()
-        return self.items
-
-    def __call__(self):
-        while not self._stopped():
-            time.sleep(1)
-            _items = self._get_view_items()
-            if _items is not None:
-                for itm in _items:
-                    self.items.put(itm)
+        try:
+            self.view_object = self.streams_context.retrieve_view(self.name)
+        except:
+            logger.exception("Could not view: " + self.name)
+            raise
+        return self.view_object.start_data_fetch()
 
     def set_streams_context_config(self, conf):
         self.streams_context_config = conf
 
-    def get_streams_context_config(self):
-        return self.streams_context_config
-
     def set_streams_context(self, sc):
         self.streams_context = sc
-
-    def get_streams_context(self):
-        return self.streams_context
-
-
-    # Private
-
-    def _stopped(self):
-        return self._stop.isSet()
-
-    def _get_view_object(self):
-        self.view_object = self._get_view_obj_from_name()
-        if self.view_object is None:
-            raise "Error finding view."
-
-    def _get_view_items(self):
-        # Retrieve the view object
-        view = self.view_object
-        if self.view_object is None:
-            return None
-
-        data_name = view.attributes[0]['name']
-        items = view.get_view_items()
-        data = []
-
-        # The number of already seen tuples to ignore on the last millisecond time boundary
-        ignore_last_collection_time_count = self._last_collection_time_count
-
-        for item in items:
-            # Ignore tuples from milliseconds we've already seen
-            if item.collectionTime < self._last_collection_time:
-                continue
-            elif item.collectionTime == self._last_collection_time:
-                # Ignore tuples within the millisecond which we've already seen.
-                if ignore_last_collection_time_count > 0:
-                    ignore_last_collection_time_count -= 1
-                    continue
-
-                # If we haven't seen it, continue
-                data.append(json.loads(item.data[data_name]))
-            else:
-                data.append(json.loads(item.data[data_name]))
-
-        if len(items) > 0:
-            # Record the current millisecond time boundary.
-            _last_collection_time = items[-1].collectionTime
-            _last_collection_time_count = 0
-            backwards_counter = len(items) - 1
-            while backwards_counter >= 0 and items[backwards_counter].collectionTime == _last_collection_time:
-                _last_collection_time_count += 1
-                backwards_counter -= 1
-
-            self._last_collection_time = _last_collection_time
-            self._last_collection_time_count = _last_collection_time_count
-
-        return data
-
-    # TODO: update to use domain, instance, job *and* view name
-    def _get_view_obj_from_name(self):
-        for domain in self.streams_context.get_domains():
-            for instance in domain.get_instances():
-                for view in instance.get_views():
-                    if view.name == self.name:
-                        return view
-        return None

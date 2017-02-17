@@ -9,8 +9,13 @@ import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARA
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOYMENT_CONFIG;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_COMPILE_VERSION;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.IOException;
@@ -46,9 +51,12 @@ public class SPLGenerator {
     private int targetMod;
 
     public String generateSPL(JsonObject graph) throws IOException {
+        
+        JsonObject graphConfig = getGraphConfig(graph);
+        breakoutVersion(graphConfig);
                 
         stvHelper = new SubmissionTimeValue(graph);
-        new Preprocessor(graph).preprocess();
+        new Preprocessor(this, graph).preprocess();
        
         // Generate parallel composites
         JsonObject mainCompsiteDef = new JsonObject();
@@ -75,17 +83,29 @@ public class SPLGenerator {
      */
     private void setDeployment(JsonObject graph) {
         
-        JsonObject config = GsonUtilities.jobject(graph, "config");
+        JsonObject config = jobject(graph, "config");
                       
         // DeploymentConfig
         JsonObject deploymentConfig = new JsonObject();
-        deploymentConfig.addProperty("fusionScheme", "legacy");
         config.add(DEPLOYMENT_CONFIG, deploymentConfig);
+        
+        boolean hasIsolate = jboolean(config, CFG_HAS_ISOLATE);
+        boolean hasLowLatency = jboolean(config, CFG_HAS_LOW_LATENCY);
+        
+        if (hasIsolate)     
+            deploymentConfig.addProperty("fusionScheme", "legacy");
+        else {
+            
+            // Default to isolating parallel channels.
+            JsonObject parallelRegionConfig = new JsonObject();
+            deploymentConfig.add("parallelRegionConfig", parallelRegionConfig);
+            
+            parallelRegionConfig.addProperty("fusionType", "channelIsolation");
+        }
     }
     
     void generateGraph(JsonObject graph, StringBuilder sb) throws IOException {
         JsonObject graphConfig = getGraphConfig(graph);
-        breakoutVersion(graphConfig);
         graphConfig.addProperty("supportsJobConfigOverlays", versionAtLeast(4,2));
 
         String namespace = jstring(graph, "namespace");
@@ -105,23 +125,25 @@ public class SPLGenerator {
     }
     
     private void breakoutVersion(JsonObject graphConfig) {
-        String version = jstring(graphConfig, "streamsCompileVersion");
+        String version = jstring(graphConfig, CFG_STREAMS_COMPILE_VERSION);
         if (version == null) {
-            version = jstring(graphConfig, "streamsVersion");
+            version = jstring(graphConfig, CFG_STREAMS_VERSION);
             if (version == null)
                 version = "4.0.1";
         }
         String[] vrmf = version.split("\\.");
         targetVersion = Integer.valueOf(vrmf[0]);
         targetRelease = Integer.valueOf(vrmf[1]);
-        targetMod = Integer.valueOf(vrmf[2]);
+        // allow version to be only V.R (e.g. 4.2)
+        if (vrmf.length > 2)
+            targetMod = Integer.valueOf(vrmf[2]);
     }
     
-    boolean versionAtLeast(int version, int mod) {
+    boolean versionAtLeast(int version, int release) {
         if (targetVersion > version)
             return true;
         if (targetVersion == version)
-            return targetRelease >= mod;
+            return targetRelease >= release;
         return false;
     }
 

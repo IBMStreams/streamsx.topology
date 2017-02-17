@@ -4,6 +4,9 @@
  */
 package com.ibm.streamsx.topology.test.api;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID;
+import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIdAppend;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -21,8 +24,6 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIdAppend;
-
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.TSink;
@@ -30,7 +31,6 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOutputPort;
-import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.Placeable;
@@ -290,10 +290,10 @@ public class PlaceableTest extends TestTopology {
     }
     
     private static String getColocate(BOperator bop) {
-        JSONObject placement = JOperatorConfig.getJSONItem(bop.json(), JOperatorConfig.PLACEMENT);
+        JSONObject placement = JOperatorConfig.getJSONItem(bop.json(), PLACEMENT);
         if (placement == null)
             return null;
-        Object ido = placement.get(JOperator.PLACEMENT_EXPLICIT_COLOCATE_ID);
+        Object ido = placement.get(PLACEMENT_EXPLICIT_COLOCATE_ID);
         if (ido == null)
             return null;
         return ido.toString();
@@ -305,10 +305,10 @@ public class PlaceableTest extends TestTopology {
     }
     
     private static Set<String> getResourceTags(BOperator bop) {
-        JSONObject placement = JOperatorConfig.getJSONItem(bop.json(), JOperatorConfig.PLACEMENT);
+        JSONObject placement = JOperatorConfig.getJSONItem(bop.json(), PLACEMENT);
         if (placement == null)
             return null;
-        JSONArray jat = (JSONArray) placement.get(JOperator.PLACEMENT_RESOURCE_TAGS);
+        JSONArray jat = (JSONArray) placement.get(com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_RESOURCE_TAGS);
         if (jat == null)
             return null;
         
@@ -490,7 +490,6 @@ public class PlaceableTest extends TestTopology {
         
         final Topology topology = newTopology("testColocateLowLatancy");
         Tester tester = topology.getTester();
-        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         TStream<String> s1 = 
                 topology.strings("a")

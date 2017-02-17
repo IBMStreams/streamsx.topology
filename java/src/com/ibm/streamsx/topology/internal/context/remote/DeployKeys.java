@@ -61,8 +61,28 @@ public interface DeployKeys {
      * graph config element is set during SPL
      * generation according to the requirements
      * of the graph.
+     * (within JOB_CONFIG_OVERLAYS)
      */
     String DEPLOYMENT_CONFIG = "deploymentConfig";
+    
+    /**
+     * Job configuration values.
+     * (within JOB_CONFIG_OVERLAYS)
+     */
+    String JOB_CONFIG = "jobConfig";
+    
+    /**
+     * Operation config values.
+     * (within JOB_CONFIG_OVERLAYS)
+     */
+    String OPERATION_CONFIG = "operationConfig";
+    
+    /**
+     * resource overload protection
+     * Note: special user authority is required for use of this option.
+     * (within OPERATION_CONFIG)
+     */
+    String OVERRIDE_RESOURCE_LOAD_PROTECTION = "overrideResourceLoadProtection";
     
     /**
      * Create a new JsonObject that contains the JOB_CONFIG_OVERLAYS

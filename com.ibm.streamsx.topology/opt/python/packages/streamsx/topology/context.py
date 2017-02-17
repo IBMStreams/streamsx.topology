@@ -14,6 +14,7 @@ except (ImportError, NameError):
 # Copyright IBM Corp. 2015
 
 from streamsx.topology import logging_utils
+from streamsx.rest import VcapUtils
 import logging
 import tempfile
 import os
@@ -298,42 +299,11 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
 
     def _set_vcap(self):
         "Set self.vcap to the VCAP services, from env var or the config"
-        try:
-            vs = self._config()[ConfigParams.VCAP_SERVICES]
-            del self._config()[ConfigParams.VCAP_SERVICES]
-        except KeyError:
-            try:
-                vs = os.environ['VCAP_SERVICES']
-            except KeyError:
-                raise ValueError("VCAP_SERVICES information must be supplied in config[ConfigParams.VCAP_SERVICES] or as environment variable 'VCAP_SERVICES'")
-
-        if isinstance(vs, dict):
-            self._vcap = vs
-            return None
-        try:
-            self._vcap = json.loads(vs)
-        except json.JSONDecodeError:
-           try:
-               with open(vs) as vcap_json_data:
-                   self._vcap = json.load(vcap_json_data)
-           except:
-               raise ValueError("VCAP_SERVICES information is not JSON or a file containing JSON:", vs)
+        self._vcap = VcapUtils.get_vcap_services(self._config())
 
     def _set_credentials(self):
         "Set self.credentials for the selected service, from self.vcap"
-        try:
-            self.service_name = self._config()[ConfigParams.SERVICE_NAME]
-        except KeyError:
-            raise ValueError("Service name was not supplied in config[ConfigParams.SERVICE_NAME.")
-        services = self._vcap['streaming-analytics']
-        creds = None
-        for service in services:
-            if service['name'] == self.service_name:
-                creds = service['credentials']
-                break
-        if creds is None:
-            raise ValueError("Streaming Analytics service " + self.service_name + " was not found in VCAP_SERVICES")
-        self.credentials = creds
+        self.credentials = VcapUtils.get_credentials(self._config(), self._vcap)
 
     def _get_java_env(self):
         "Pass the VCAP through the environment to the java submission"

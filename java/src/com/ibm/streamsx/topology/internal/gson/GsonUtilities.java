@@ -154,6 +154,18 @@ public class GsonUtilities {
         return item; 
     }
     
+    /**
+     * Create nested set of JSON objects in object.
+     * 
+     *  E.g. if passed obj, "a", "b", "c" then obj contain:
+     *  
+     *  "a": { "b": { "c" : {} } } }
+     *  
+     *  If any of the properties already exist then they must be objects
+     *  then they are not modifed at that level. E.g. if "a" already exists
+     *  and has "b" then it is not modified, but "b" will have "c" added to it
+     *  if it didn't already exist. 
+     */
     public static JsonObject objectCreate(JsonObject object, String ...property) {
         
         assert property.length > 0;
@@ -167,10 +179,5 @@ public class GsonUtilities {
         }
 
         return item; 
-    }
-    
-    
-    public  static JsonObject nestedObjectCreate(JsonObject object, String nested, String property) {
-        return objectCreate(object, nested, property);
     }
 }

@@ -164,6 +164,8 @@ extern "C" {
 
 typedef PyObject* (*__splpy_ogas_fp)(PyObject *, const char *);
 typedef int (*__splpy_rssf_fp)(const char *, PyCompilerFlags *);
+typedef PyObject* (*__splpy_mc2_fp)(PyModuleDef *, int);
+typedef int (*__splpy_sam_fp)(PyObject *, PyModuleDef *);
 
 extern "C" {
   static __splpy_ogas_fp __spl_fp_PyObject_GetAttrString;
@@ -172,6 +174,8 @@ extern "C" {
   static __splpy_p_pp_fp __spl_fp_PyObject_CallObject;
   static __splpy_i_p_fp __spl_fp_PyCallable_Check;
   static __splpy_p_p_fp __spl_fp_PyImport_Import;
+  static __splpy_mc2_fp __spl_fp_PyModule_Create2;
+  static __splpy_sam_fp __spl_fp_PyState_AddModule;
 
   static PyObject * __spl_fi_PyObject_GetAttrString(PyObject *o, const char * attr_name) {
      return __spl_fp_PyObject_GetAttrString(o, attr_name);
@@ -191,6 +195,12 @@ extern "C" {
   static PyObject * __spl_fi_PyImport_Import(PyObject *name) {
      return __spl_fp_PyImport_Import(name);
   }
+  static PyObject * __spl_fi_PyModule_Create2(PyModuleDef *module, int apivers) {
+     return __spl_fp_PyModule_Create2(module, apivers);
+  }
+  static int __spl_fi_PyState_AddModule(PyObject *module, PyModuleDef *def) {
+     return __spl_fp_PyState_AddModule(module, def);
+  }
 }
 #pragma weak PyObject_GetAttrString = __spl_fi_PyObject_GetAttrString
 #pragma weak PyRun_SimpleStringFlags = __spl_fi_PyRun_SimpleStringFlags
@@ -198,6 +208,8 @@ extern "C" {
 #pragma weak PyObject_CallObject = __spl_fi_PyObject_CallObject
 #pragma weak PyCallable_Check = __spl_fi_PyCallable_Check
 #pragma weak PyImport_Import = __spl_fi_PyImport_Import
+#pragma weak PyModule_Create2 = __spl_fi_PyModule_Create2
+#pragma weak PyState_AddModule = __spl_fi_PyState_AddModule
 
 /*
  * Container Objects
@@ -272,6 +284,8 @@ typedef PyObject * (*__splpy_cfd_fp)(double, double);
 typedef unsigned long (*__splpy_laul_fp)(PyObject *);
 typedef PyObject * (*__splpy_lful_fp)(unsigned long);
 typedef PyObject * (*__splpy_bfl_fp)(long);
+typedef PyObject * (*__splpy_lfvp_fp)(void *);
+typedef void * (*__splpy_lavp_fp)(PyObject *);
 
 extern "C" {
   static __splpy_i_p_fp __spl_fp_PyObject_IsTrue;
@@ -285,6 +299,8 @@ extern "C" {
   static __splpy_d_p_fp __spl_fp_PyComplex_RealAsDouble;
   static __splpy_d_p_fp __spl_fp_PyComplex_ImagAsDouble;
   static __splpy_p_l_fp __spl_fp_PyBool_FromLong;
+  static __splpy_lfvp_fp __spl_fp_PyLong_FromVoidPtr;
+  static __splpy_lavp_fp __spl_fp_PyLong_AsVoidPtr;
 
   static int __spl_fi_PyObject_IsTrue(PyObject *o) {
      return __spl_fp_PyObject_IsTrue(o);
@@ -319,6 +335,12 @@ extern "C" {
   static PyObject * __spl_fi_PyBool_FromLong(long l) {
      return __spl_fp_PyBool_FromLong(l);
   }
+  static PyObject * __spl_fi_PyLong_FromVoidPtr(void *p) {
+     return __spl_fp_PyLong_FromVoidPtr(p);
+  }
+  static void * __spl_fi_PyLong_AsVoidPtr(PyObject *p) {
+     return __spl_fp_PyLong_AsVoidPtr(p);
+  }
 }
 #pragma weak PyObject_IsTrue = __spl_fi_PyObject_IsTrue
 #pragma weak PyLong_AsLong = __spl_fi_PyLong_AsLong
@@ -331,20 +353,31 @@ extern "C" {
 #pragma weak PyComplex_RealAsDouble = __spl_fi_PyComplex_RealAsDouble
 #pragma weak PyComplex_ImagAsDouble = __spl_fi_PyComplex_ImagAsDouble
 #pragma weak PyBool_FromLong = __spl_fi_PyBool_FromLong
+#pragma weak PyLong_FromVoidPtr = __spl_fi_PyLong_FromVoidPtr
+#pragma weak PyLong_AsVoidPtr = __spl_fi_PyLong_AsVoidPtr
 
 /*
  * Err Objects
  */
 typedef void (*__splpy_ef_fp)(PyObject **, PyObject **, PyObject **);
+typedef void (*__splpy_er_fp)(PyObject *, PyObject *, PyObject *);
 typedef PyObject * (*__splpy_eo_fp)(void);
 extern "C" {
   static __splpy_ef_fp __spl_fp_PyErr_Fetch;
+  static __splpy_ef_fp __spl_fp_PyErr_NormalizeException;
+  static __splpy_er_fp __spl_fp_PyErr_Restore;
   static __splpy_eo_fp __spl_fp_PyErr_Occurred;
   static __splpy_v_v_fp __spl_fp_PyErr_Print;
   static __splpy_v_v_fp __spl_fp_PyErr_Clear;
 
   static void __spl_fi_PyErr_Fetch(PyObject **t, PyObject **v, PyObject **tb) {
      __spl_fp_PyErr_Fetch(t,v,tb);
+  }
+  static void __spl_fi_PyErr_NormalizeException(PyObject **t, PyObject **v, PyObject **tb) {
+     __spl_fp_PyErr_NormalizeException(t,v,tb);
+  }
+  static void __spl_fi_PyErr_Restore(PyObject *t, PyObject *v, PyObject *tb) {
+     __spl_fp_PyErr_Restore(t,v,tb);
   }
   static PyObject * __spl_fi_PyErr_Occurred() {
      return __spl_fp_PyErr_Occurred();
@@ -357,6 +390,8 @@ extern "C" {
   }
 }
 #pragma weak PyErr_Fetch = __spl_fi_PyErr_Fetch
+#pragma weak PyErr_NormalizeException = __spl_fi_PyErr_NormalizeException
+#pragma weak PyErr_Restore = __spl_fi_PyErr_Restore
 #pragma weak PyErr_Occurred = __spl_fi_PyErr_Occurred
 #pragma weak PyErr_Print = __spl_fi_PyErr_Print
 #pragma weak PyErr_Clear = __spl_fi_PyErr_Clear
@@ -408,6 +443,8 @@ class SplpySym {
      __SPLFIX(PyObject_CallObject, __splpy_p_pp_fp);
      __SPLFIX(PyCallable_Check, __splpy_i_p_fp);
      __SPLFIX(PyImport_Import, __splpy_p_p_fp);
+     __SPLFIX(PyModule_Create2, __splpy_mc2_fp);
+     __SPLFIX(PyState_AddModule, __splpy_sam_fp);
  
      __SPLFIX(PyTuple_New, __splpy_p_s_fp);
      __SPLFIX(PyIter_Next, __splpy_p_p_fp);
@@ -432,8 +469,12 @@ class SplpySym {
      __SPLFIX(PyComplex_RealAsDouble, __splpy_d_p_fp);
      __SPLFIX(PyComplex_ImagAsDouble, __splpy_d_p_fp);
      __SPLFIX(PyBool_FromLong, __splpy_p_l_fp);
+     __SPLFIX(PyLong_FromVoidPtr, __splpy_lfvp_fp);
+     __SPLFIX(PyLong_AsVoidPtr, __splpy_lavp_fp);
 
      __SPLFIX(PyErr_Fetch, __splpy_ef_fp);
+     __SPLFIX(PyErr_NormalizeException, __splpy_ef_fp);
+     __SPLFIX(PyErr_Restore, __splpy_er_fp);
      __SPLFIX(PyErr_Occurred, __splpy_eo_fp);
      __SPLFIX(PyErr_Print, __splpy_v_v_fp);
      __SPLFIX(PyErr_Clear, __splpy_v_v_fp);

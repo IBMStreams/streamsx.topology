@@ -27,14 +27,15 @@
 
   <target name="clean" >
     <ant dir="java" target="clean"/>
+    <ant dir="python" target="clean"/>
     <ant dir="samples/java/functional" target="clean"/>
   	<ant dir="samples/python" target="clean"/>
     <ant dir="toolkit" target="clean"/>
     <ant dir="test/java" target="clean"/>
-    <delete dir="${tk}/doc/javadoc"/>
-    <delete dir="${tk}/doc/spldoc"/>
-    <delete dir="${tk}/doc/scaladoc"/>
-    <delete dir="${tk}/doc/pydoc"/>
+    <delete dir="${tk.doc}/javadoc"/>
+    <delete dir="${tk.doc}/spldoc"/>
+    <delete dir="${tk.doc}/scaladoc"/>
+    <delete dir="${tk.doc}/pythondoc"/>
     <delete dir="${tk}/impl/nl/include"/>
     <delete>
       <fileset dir="${tk}/impl/nl" includes="*.dat"/>
@@ -76,13 +77,13 @@
   <target name="release" depends="clean,all,doc,create_release_bundle"/>
 
   <target name="doc" depends="checkJava8">
-       <mkdir dir="${tk}/doc"/>
+       <mkdir dir="${tk.doc}"/>
        <ant dir="samples/java/functional" target="doc"/>
-       <mkdir dir="${tk}/doc/samples/javadoc"/>
-       <copy todir="${tk}/doc/samples/javadoc">
+       <mkdir dir="${tk.doc}/samples/javadoc"/>
+       <copy todir="${tk.doc}/samples/javadoc">
            <fileset dir="samples/java/functional/javadoc"/>
        </copy>
-       <javadoc destdir="${tk}/doc/javadoc" classpathref="javadoc.classpath"
+       <javadoc destdir="${tk.doc}/javadoc" classpathref="javadoc.classpath"
           Overview="java/src/overview.html"
           Windowtitle="Java Application API for IBM Streams"
           Footer="streamsx.topology ${streamsx.topology.version} @ IBMStreams GitHub"
@@ -142,12 +143,14 @@
       <tar compression="gzip" longfile="gnu" destfile="${releasefilename}">
          <tarfileset dir="${basedir}" filemode="755" >
            <include name="**/pyversion*.sh"/>
+           <exclude name="test/**"/>
          </tarfileset>
          <tarfileset dir="${basedir}" >
            <include name="com.ibm.streamsx.topology/**"/>
            <include name="samples/**"/>
            <exclude name="**/.gitignore"/>
            <exclude name="**/pyversion*.sh"/>
+           <exclude name="test/**"/>
          </tarfileset>
       </tar>
       <checksum file="${releasefilename}"/>

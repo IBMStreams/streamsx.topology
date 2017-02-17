@@ -4,6 +4,10 @@
  */
 package com.ibm.streamsx.topology.spl;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.TOOLKITS;
 
 import java.io.File;
@@ -25,7 +29,6 @@ import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
-import com.ibm.streamsx.topology.builder.JOperator;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.context.remote.TkInfo;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
@@ -378,8 +381,8 @@ public class SPL {
      * @param className the Java primitive operator's class name.
      */
     public static void tagOpAsJavaPrimitive(BOperatorInvocation op, String kind, String className) {
-        op.json().put(JOperator.MODEL, JOperator.MODEL_SPL);
-        op.json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_JAVA);
+        op.json().put(MODEL, MODEL_SPL);
+        op.json().put(LANGUAGE, LANGUAGE_JAVA);
         op.json().put("kind", kind);
         op.json().put("kind.javaclass", className);
     }

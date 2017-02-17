@@ -4,9 +4,13 @@
  */
 package com.ibm.streamsx.topology.internal.streams;
 
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_CONFIG;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_CONFIG_OVERLAYS;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.OPERATION_CONFIG;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.OVERRIDE_RESOURCE_LOAD_PROTECTION;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.gson;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import com.google.gson.JsonArray;
@@ -46,17 +50,17 @@ public class JobConfigOverlay {
 
             JsonObject jco = jcos.get(0).getAsJsonObject();
 
-            if (jco.has("jobConfig"))
-                jobConfig = gson().fromJson(object(jco, "jobConfig"), JobConfig.class);
+            if (jco.has(JOB_CONFIG))
+                jobConfig = gson().fromJson(object(jco, JOB_CONFIG), JobConfig.class);
             else
                 jobConfig = new JobConfig();
             
-            if (jco.has("operationConfig")) {
-                JsonObject operationConfig = object(jco, "operationConfig");
+            if (jco.has(OPERATION_CONFIG)) {
+                JsonObject operationConfig = object(jco, OPERATION_CONFIG);
                 if (operationConfig != null) {
-                    if (operationConfig.has("overrideResourceLoadProtection")) {
+                    if (operationConfig.has(OVERRIDE_RESOURCE_LOAD_PROTECTION)) {
                         jobConfig.setOverrideResourceLoadProtection(
-                                operationConfig.get("overrideResourceLoadProtection").getAsBoolean());
+                                jboolean(operationConfig, OVERRIDE_RESOURCE_LOAD_PROTECTION));
                     }
                 }
             }
@@ -76,21 +80,15 @@ public class JobConfigOverlay {
         // JobConfig
         JsonObject jsonJobConfig = gson().toJsonTree(jobConfig).getAsJsonObject();
         if (!jsonJobConfig.entrySet().isEmpty()) {
-             overlay.add("jobConfig", jsonJobConfig);
+             overlay.add(JOB_CONFIG, jsonJobConfig);
         }
         
         if (jobConfig.getOverrideResourceLoadProtection() != null) {
             JsonObject operationConfig = new JsonObject();
-            operationConfig.addProperty("overrideResourceLoadProtection",
+            operationConfig.addProperty(OVERRIDE_RESOURCE_LOAD_PROTECTION,
                     jobConfig.getOverrideResourceLoadProtection());
-            overlay.add("operationConfig", operationConfig);
+            overlay.add(OPERATION_CONFIG, operationConfig);
         }
-        /*
-        // DeploymentConfig
-        JsonObject deploymentConfig = new JsonObject();
-        deploymentConfig.addProperty("fusionScheme", "legacy");
-        overlay.add("deploymentConfig", deploymentConfig);
-        */
         
         // Create the top-level structure.
         JsonArray jcos = new JsonArray();
