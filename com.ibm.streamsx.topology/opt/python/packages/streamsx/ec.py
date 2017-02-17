@@ -230,40 +230,39 @@ class CustomMetric(object):
 # internal functions
 ####################
 
-# Thread local of capsules during
+# Thread local of operator pointers during
 # operator class initialization
-_capsules = threading.local()
+_opptrs = threading.local()
 
-# Sets the operator capsule as a thread
+# Sets the operator pointer as a thread
 # local to allow access from an operator's
 # class __init__ method.
 def _set_opc(opc):
-    _capsules._opc = opc
+    _opptrs._opc = opc
 
-# Clear the operator capsule from the
+# Clear the operator pointer from the
 # thread local
 def _clear_opc():
-    _capsules._opc = None
+    _opptrs._opc = None
 
 # Save the opc in the operator class
 # (getting it from the thread local)
 def _save_opc(obj):
-    _capsules.obj = obj
-    if hasattr(_capsules, '_opc'):
-       opc = _capsules._opc
+    _opptrs.obj = obj
+    if hasattr(_opptrs, '_opc'):
+       opc = _opptrs._opc
        if opc is not None:
            obj._streamsx_ec_op = opc
 
 def _get_opc(obj):
     _check()
     try:
-        opc = obj._streamsx_ec_op
-        return opc
+        return obj._streamsx_ec_op
     except AttributeError:
         try:
-            opc = _capsules._opc
+            opc = _opptrs._opc
             if opc is not None:
                 return opc
         except AttributeError:
              pass
-        raise NameError("")
+        raise AssertionError("InternalError")

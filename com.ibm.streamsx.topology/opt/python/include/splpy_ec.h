@@ -35,11 +35,11 @@ extern "C" {
 
 /**
 * Utility function to get the operator context
-* reference from the args passed into an extension
-* function containing the capsule at position 0.
+* reference from operator pointer previously
+* saved as a Python Long wrapping a pointer.
 */
 static SPL::OperatorContext &  __splpy_ec_opcontext(PyObject *opc) {
-    void * opptr = PyCapsule_GetPointer(opc, PyCapsule_GetName(opc));
+    void * opptr = PyLong_AsVoidPtr(opc);
     SPL::Operator * op = reinterpret_cast<SPL::Operator *>(opptr);
    
     return op->getContext();
