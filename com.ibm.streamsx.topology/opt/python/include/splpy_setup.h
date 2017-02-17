@@ -175,10 +175,11 @@ class SplpySetup {
           typedef void (*__splpy_eit)(void);
           typedef PyThreadState * (*__splpy_est)(void);
 
-          SPLAPPTRC(L_DEBUG, "Starting Python runtime", "python");
 
 #if __SPLPY_EC_MODULE_OK
 {
+          SPLAPPTRC(L_DEBUG, "Including Python extension: _streamsx_ec", "python");
+
           typedef PyObject *(__splpy_initfunc)(void);
           typedef int (*__splpy_iai)(const char * name, __splpy_initfunc);
           __splpy_iai _SPLPyImport_AppendInittab =
@@ -186,6 +187,8 @@ class SplpySetup {
           _SPLPyImport_AppendInittab(__SPLPY_EC_MODULE_NAME, &init_streamsx_ec);
 }
 #endif
+
+          SPLAPPTRC(L_DEBUG, "Starting Python runtime", "python");
 
           __splpy_ie _SPLPy_InitializeEx =
              (__splpy_ie) dlsym(pydl, "Py_InitializeEx");

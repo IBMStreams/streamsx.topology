@@ -5,6 +5,8 @@ import os
 import pickle
 from past.builtins import basestring
 
+import streamsx.ec as ec
+
 try:
     import dill
     dill.settings['recurse'] = True
@@ -82,6 +84,11 @@ def _getCallable(f):
     if isinstance(f, basestring):
         ci = dill.loads(base64.b64decode(f))
         if callable(ci):
+            # Save the opc - the pointer
+            # to the C++ operator
+            if ec._supported:
+                ci._streamsx_ec_op = ec._get_opc(ci)
+                ec._clear_opc()
             return ci
     raise TypeError("Class is not callable" + type(ci))
 

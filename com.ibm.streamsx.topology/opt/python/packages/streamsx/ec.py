@@ -1,11 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
-
-import numbers
-import string
-import enum
-
 """
 Overview
 --------
@@ -50,12 +45,13 @@ being invoked in a Streams application.
 
 """
 
+import enum
 import threading
 
 try:
-    import _streamsx_ec
+    import _streamsx_ec as _ec
     _supported = True
-except:
+except ImportError:
     _supported = False
 
 def _check():
@@ -67,14 +63,14 @@ def job_id():
     Return the job identifier.
     """
     _check()
-    return _streamsx_ec.job_id()
+    return _ec.job_id()
 
 def pe_id():
     """
     Return the PE identifier.
     """
     _check()
-    return _streamsx_ec.pe_id()
+    return _ec.pe_id()
 
 def channel(obj):
     """
@@ -95,7 +91,7 @@ def channel(obj):
     Returns:
         int: Parallel region global channel number or -1 if not located in a parallel region.
     """
-    return _streamsx_ec.channel(_get_opc(obj))
+    return _ec.channel(_get_opc(obj))
 
 def local_channel(obj):
     """
@@ -109,7 +105,7 @@ def local_channel(obj):
     Returns:
         int: Parallel region local channel number or -1 if not located in a parallel region.
     """
-    return _streamsx_ec.local_channel(_get_opc(obj))
+    return _ec.local_channel(_get_opc(obj))
 
 def max_channels(obj):
     """
@@ -128,7 +124,7 @@ def max_channels(obj):
     Returns:
         int: Parallel region global maximum number of channels or 0 if not located in a parallel region.
     """
-    return _streamsx_ec.max_channels(_get_opc(obj))
+    return _ec.max_channels(_get_opc(obj))
 
 def local_max_channels(obj):
     """
@@ -142,7 +138,7 @@ def local_max_channels(obj):
     Returns:
         int: Parallel region local maximum number of channels or 0 if not located in a parallel region.
     """
-    return _streamsx_ec.local_max_channels(_get_opc(obj))
+    return _ec.local_max_channels(_get_opc(obj))
 
 @enum.unique
 class MetricKind(enum.Enum):
@@ -196,14 +192,14 @@ class CustomMetric(object):
         self.kind = kind
         self.description = str(description)
         args = (_get_opc(obj), self.name, self.description, self.kind.value, int(initialValue))
-        self.__ptr = _streamsx_ec.create_custom_metric(args)
+        self.__ptr = _ec.create_custom_metric(args)
 
     @property
     def value(self):
         """
         Current value of the metric.
         """
-        return _streamsx_ec.metric_get(self.__ptr)
+        return _ec.metric_get(self.__ptr)
 
     @value.setter
     def value(self, value):
@@ -211,7 +207,7 @@ class CustomMetric(object):
         Set the current value of the metric.
         """
         args = (self.__ptr, int(value))
-        _streamsx_ec.metric_set(args)
+        _ec.metric_set(args)
 
     def __str__(self):
         return "{0}({1}):{2}".format(self.name, self.kind.name,self.value)
@@ -221,7 +217,7 @@ class CustomMetric(object):
         Increment the current value of the metric.
         """
         args = (self.__ptr, int(other))
-        _streamsx_ec.metric_inc(args)
+        _ec.metric_inc(args)
         return self
 
     def __int__(self):

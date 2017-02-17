@@ -20,6 +20,7 @@
 #include "splpy_general.h"
 #include "splpy_setup.h"
 #include "splpy_op.h"
+#include "splpy_ec_api.h"
 
 #include <SPL/Runtime/Operator/ParameterValue.h>
 #include <SPL/Runtime/Operator/OperatorContext.h>
@@ -77,6 +78,10 @@ class SplpyFuncOp : public SplpyOp {
              PyObject * appClass = appCallable;
              appCallable = pyUnicode_FromUTF8(param("pyCallable").c_str());
              Py_DECREF(appClass);
+
+#if __SPLPY_EC_MODULE_OK
+             setopc();
+#endif
           }
 
           function_ = SplpyGeneral::callFunction(
