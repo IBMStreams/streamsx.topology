@@ -30,16 +30,15 @@ class SplpyOp {
           pydl_(NULL)
 
 #if __SPLPY_EC_MODULE_OK
-          ,opcn_(NULL), opc_(NULL)
+          , opc_(NULL)
 #endif
 
       {
           pydl_ = SplpySetup::loadCPython(spl_setup_py);
 #if __SPLPY_EC_MODULE_OK
-          opcn_ = streamsx::topology::_opCaptureName(op);
 
           SplpyGIL lock;
-          opc_ = PyCapsule_New((void*)op, opcn_, NULL);
+          opc_ = PyLong_FromVoidPtr((void*)op);
           if (opc_ == NULL)
               throw SplpyGeneral::pythonException("capsule");
 #endif
@@ -51,8 +50,6 @@ class SplpyOp {
               SplpyGIL lock;
               Py_DECREF(opc_);
           }
-          if (opcn_ != NULL)
-              free((void *) opcn_);
 #endif
           if (pydl_ != NULL)
              (void) dlclose(pydl_);
@@ -100,10 +97,7 @@ class SplpyOp {
       void * pydl_;
 
 #if __SPLPY_EC_MODULE_OK
-      // Operator capture name, must outlive
-      // the capture
-      const char *opcn_;
-      // PyCapsule of op_
+      // PyLong of op_
       PyObject *opc_;
 #endif
 };
