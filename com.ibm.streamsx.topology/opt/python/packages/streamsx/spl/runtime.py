@@ -1,3 +1,6 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016,2017
 #
 # Wrap the operator's iterable in a function
 # that when called returns each value from

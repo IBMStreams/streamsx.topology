@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
 from __future__ import print_function
@@ -24,6 +25,7 @@ import subprocess
 import threading
 import sys
 import enum
+import codecs
 
 logging_utils.initialize_logging()
 logger = logging.getLogger('streamsx.topology.py_submit')
@@ -407,13 +409,15 @@ def _print_process_stdout(process):
 # has begun.
 def _print_process_stderr(process, fn):
     try:
+        serr = codecs.getwriter('utf8')(sys.stderr)
         while True:
             line = process.stderr.readline()
             if len(line) == 0:
                 process.stderr.close()
                 break
             line = line.decode("utf-8").strip()
-            print(line)
+            serr.write(line)
+            serr.write("\n")
             if "com.ibm.streamsx.topology.internal.streams.InvokeSc getToolkitPath" in line:
                 _delete_json(fn)
     except:
