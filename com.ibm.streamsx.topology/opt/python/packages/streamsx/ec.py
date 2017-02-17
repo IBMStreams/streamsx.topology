@@ -40,7 +40,7 @@ Access is only supported when running:
 This module may be used by Python functions or classes used
 in a `Topology` or decorated SPL operators.
 
-Certain functionality is only available when a Python class is
+Most functionality is only available when a Python class is
 being invoked in a Streams application.
 
 """
@@ -86,7 +86,7 @@ def channel(obj):
     parallel region has been replicated due to nesting.
     
     Args:
-        obj: Instance of a class executing as an SPL Python operator.
+        obj: Instance of a class executing within Streams.
 
     Returns:
         int: Parallel region global channel number or -1 if not located in a parallel region.
@@ -100,7 +100,7 @@ def local_channel(obj):
     The channel number is in the range of zero to ``local_max_channel(obj)``.
     
     Args:
-        obj: Instance of a class executing as an SPL Python operator.
+        obj: Instance of a class executing within Streams.
 
     Returns:
         int: Parallel region local channel number or -1 if not located in a parallel region.
@@ -120,7 +120,7 @@ def max_channels(obj):
     parallel region has been replicated due to nesting.
     
     Args:
-        obj: Instance of a class executing as an SPL Python operator.
+        obj: Instance of a class executing within Streams.
     Returns:
         int: Parallel region global maximum number of channels or 0 if not located in a parallel region.
     """
@@ -134,7 +134,7 @@ def local_max_channels(obj):
     The maximum number of channels corresponds to the width of the region.
 
     Args:
-        obj: Instance of a class executing as an SPL Python operator.
+        obj: Instance of a class executing within Streams.
     Returns:
         int: Parallel region local maximum number of channels or 0 if not located in a parallel region.
     """
@@ -172,14 +172,42 @@ class CustomMetric(object):
 
     A custom metric holds a 64 bit signed integer value that represents
     a `Counter`, `Gauge` or `Time` metric.
+
     Custom metrics are exposed through the IBM Streams monitoring APIs.
 
     Args:
-        obj: Instance of a class executing as an SPL Python operator.
+        obj: Instance of a class executing within Streams.
         name(str): Name of the custom metric.
         kind(MetricKind): Kind of the metric.
         description(str): Description of the metric.
         initialValue: Initial value of the metric.
+
+    Examples:
+
+    Simple example used as an instance to ``Stream.filter``::
+    
+	class MyF:
+	    def __init__(self, substring):
+                self.substring = substring
+                pass
+
+            def __call__(self, tuple):
+                if self.substring in str(tuple)
+                    self.my_metric += 1
+                return True
+
+            def __getstate__(self):
+                # Remove metric from saved state.
+                state = self.__dict__.copy()
+                if 'my_metric' in state:
+                    del state['my_metric']
+                return state
+
+            def __setstate__(self, state):
+                # Create the metric after the instance is depickled.
+                self.__dict__.update(state)
+                self.my_metric = ec.CustomMetric(self, "count_" + self.substring)
+
     """
     def __init__(self, obj, name, description=None, kind=MetricKind.Counter, initialValue=0):
         if kind in MetricKind.__members__:
