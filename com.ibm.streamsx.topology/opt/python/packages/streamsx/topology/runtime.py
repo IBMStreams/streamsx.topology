@@ -20,8 +20,7 @@ import json
 def __splpy_addDirToPath(dir):
     if os.path.isdir(dir):
         if dir not in sys.path:
-            #print ("Adding dir to sys.path", dir)
-            sys.path.append(dir)
+            sys.path.insert(0, dir)
                 
 def setupOperator(dir):
     pydir = os.path.join(dir, 'opt', 'python')

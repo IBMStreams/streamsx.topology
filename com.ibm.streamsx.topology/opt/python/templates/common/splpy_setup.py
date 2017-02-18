@@ -24,7 +24,7 @@ import time
 def __splpy_addDirToPath(dir):
     if os.path.isdir(dir):
         if dir not in sys.path:
-            sys.path.append(dir)
+            sys.path.insert(0, dir)
         
 commonDir = os.path.dirname(os.path.realpath(__file__))
 splpyDir = os.path.dirname(commonDir)

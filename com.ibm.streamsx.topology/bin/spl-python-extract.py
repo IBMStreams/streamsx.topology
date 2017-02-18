@@ -398,13 +398,14 @@ def process_operators(dynm, module, ops):
 tk_streams = os.path.join(userToolkitDir(), 'opt', 'python', 'streams')
 if not os.path.isdir(tk_streams):
     sys.exit(0)
+sys.path.insert(1, tk_streams)
 
 tk_packages = os.path.join(userToolkitDir(), 'opt', 'python', 'packages')
 if os.path.isdir(tk_packages):
-    sys.path.append(tk_packages)
+    sys.path.insert(1, tk_packages)
 tk_modules = os.path.join(userToolkitDir(), 'opt', 'python', 'modules')
 if os.path.isdir(tk_modules):
-    sys.path.append(tk_modules)
+    sys.path.insert(1, tk_modules)
 
 for mf in glob.glob(os.path.join(tk_streams, '*.py')):
     print('Checking ', mf, 'for operators')
