@@ -3,9 +3,7 @@
 import sys
 import string
 from streamsx.topology.topology import Topology
-from streamsx.topology import spl_ops
-from streamsx.topology.spl_ops import *
-from streamsx.topology.spl_types import *
+import streamsx.spl.op as op
 from streamsx.topology.schema import *
 import streamsx.topology.context
 
@@ -26,15 +24,15 @@ def main():
     # Invoke an SPL DirectoryScan operator as a source.
     # This one scans /tmp/work for files.
     # Note the full kind of the operator is required.
-    files = source("spl.adapter::DirectoryScan", topology=topo,
+    files = op.Source(topo, "spl.adapter::DirectoryScan",
         schema=CommonSchema.String, params = {'directory': '/tmp/work'})
 
     # Follow it with a FileSource operator
     # If no schema is provided then the input schema is used.
-    lines = map("spl.adapter::FileSource", files)
+    lines = op.Map("spl.adapter::FileSource", files.stream)
 
     # Feed the lines into a Python function
-    lines = lines.map(string.capwords)
+    lines = lines.stream.map(string.capwords)
     
     # Sink lines by printing each of its tuples to standard output
     lines.print()

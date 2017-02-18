@@ -59,7 +59,7 @@ class Source(Invoke):
     a Streams application as a stream. A source operator has
     no input ports and a single output port.
 
-    An instance of Source has an attribute ``output`` that is
+    An instance of Source has an attribute ``stream`` that is
     ``Stream`` produced by the operator.
 
     This is a utility class that allows simple invocation
@@ -74,12 +74,21 @@ class Source(Invoke):
     def __init__(self,topology,kind,schema,params=None,name=None):
         super(Source,self).__init__(topology, kind, schemas=schema, params=params,name=name)
 
+    @property
+    def stream(self):
+        """
+        """
+        return self.outputs[0]
+
 class Map(Invoke):
     """
     Declaration of an invocation of an SPL *map* operator.
 
     *Map* operators have a single input port and single
     output port.
+
+    An instance of Map has an attribute ``stream`` that is
+    ``Stream`` produced by the operator.
 
     This is a utility class that allows simple invocation
     of the common case of a operator with a single input stream
@@ -95,6 +104,10 @@ class Map(Invoke):
         if schema is None:
             schema = stream.oport.schema
         super(Map,self).__init__(stream.topology,kind,inputs=stream,schemas=schema,params=params,name=name)
+
+    @property
+    def stream(self):
+        return self.outputs[0]
 
 class Sink(Invoke):
     """
