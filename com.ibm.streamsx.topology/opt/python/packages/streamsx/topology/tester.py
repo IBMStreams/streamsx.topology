@@ -1,7 +1,26 @@
 import streamsx.ec as ec
 import streamsx.topology.context
+import unittest
 
 class Tester(object):
+    """Testing support for a Topology.
+
+    Allows testing of a Topology by creating conditions against the contents
+    of its streams.
+
+    Conditions may be added to a topoogy at any time before submission.
+
+    If a topology is submitted directly to a context then the graph
+    is not modified. This allows testing code to be inserted while
+    the topology is being built, but not acted upon unless the topology
+    is submitted in test mode.
+
+    If a topology is submitted through the test method then the topology
+    may be modified to include operations to ensure the conditions are met.
+
+    Args:
+        topology: Topology to be tested.
+    """
     def __init__(self, topology):
        self.topology = topology
        topology.tester = self
@@ -9,20 +28,52 @@ class Tester(object):
 
     def add_condition(self, stream, condition):
         self._conditions[condition.name] = (stream, condition)
+        return stream
 
     def tuple_count(self, stream, count):
+        """Test that that a stream returns an exact number of tuples.
+
+        Args:
+            stream(Stream): Stream to be tested.
+            count: Number of tuples expected.
+
+        Returns: stream
+
+        """
         name = "ExactCount" + str(len(self._conditions));
         cond = TupleExactCount(count, name)
-        self.add_condition(stream, cond)
+        return self.add_condition(stream, cond)
 
-    def stream_contents(self, stream, expected):
+    def contents(self, stream, expected):
+        """Test that a stream contains the expected tuples.
+
+        Args:
+            stream(Stream): Stream to be tested.
+            expected(list): List of expected tuples.
+
+        Returns:
+
+        """
         name = "StreamContents" + str(len(self._conditions));
         cond = StreamContents(expected, name)
-        self.add_condition(stream, cond)
+        return self.add_condition(stream, cond)
 
-    def submit(self, config=None):
+    def test(self, ctxtype, config=None, assert_on_fail=True):
+        """Test the topology.
 
-        # Add the conditions into the graph
+        Submits the topology for testing and verifies the test conditions are met.
+
+        Args:
+            ctxtype(str): Context type for submission.
+            config: Configuration for submission.
+            assert_on_fail(bool): True to raise an assertion if the test fails, False to return the passed status.
+
+        Returns:
+            bool: True if test passed, False if test failed.
+
+        """
+
+        # Add the conditions into the graph as sink operators
         for ct in self._conditions.values():
             condition = ct[1]
             stream = ct[0]
@@ -31,7 +82,13 @@ class Tester(object):
         if config is None:
             config = {}
 
-        streamsx.topology.context.submit("STANDALONE", self.topology, config)
+        if "STANDALONE" == ctxtype:
+            passed = self._standalone_test(config)
+        else:
+            raise NotImplementedError("Tester context type not implemented:", ctxtype)
+
+        if assert_on_fail:
+            assert passed, "Test failed for topology: " + self.topology.name
 
         #streamsx.topology.context.submit("DISTRIBUTED", self.topology, config)
         #_resource_url = "https://streamsqse.localdomain:8443/streams/rest/resources"
@@ -39,6 +96,10 @@ class Tester(object):
 
         #cc = _ConditionChecker(self, sc)
         #cc._complete()
+
+    def _standalone_test(self, config):
+        rc = streamsx.topology.context.submit("STANDALONE", self.topology, config)
+        return rc == 0
 
 class Condition(object):
     _METRIC_PREFIX = "streamsx.condition:"
