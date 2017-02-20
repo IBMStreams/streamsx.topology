@@ -116,11 +116,6 @@ class _JSONInPickleOut(_FunctionalCallable):
             return None
         return pickle.dumps(rv)
 
-def pickleReturn(function) :
-    def _pickleReturn(v):
-        return pickle.dumps(function(v))
-    return _pickleReturn
-
 # Given a callable 'callable', return a function
 # that depickles the input and then calls 'callable'
 # returning the callable's return
