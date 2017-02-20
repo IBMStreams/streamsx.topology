@@ -31,7 +31,7 @@ void MY_OPERATOR::allPortsReady()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    SplpyOp::prepareToShutdown();
+    funcop_->prepareToShutdown();
 }
 
 // Processing for source and threaded operators   

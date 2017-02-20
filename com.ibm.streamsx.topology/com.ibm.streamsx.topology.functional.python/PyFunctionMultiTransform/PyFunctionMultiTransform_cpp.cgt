@@ -43,7 +43,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    SplpyOp::prepareToShutdown();
+    funcop_->prepareToShutdown();
 }
 
 // Tuple processing for non-mutating ports
