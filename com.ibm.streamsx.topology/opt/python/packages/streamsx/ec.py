@@ -269,7 +269,8 @@ class CustomMetric(object):
 
 # Thread local of operator pointers during
 # operator class initialization
-_opptrs = threading.local()
+if _supported:
+    _opptrs = threading.local()
 
 # Sets the operator pointer as a thread
 # local to allow access from an operator's
@@ -280,7 +281,8 @@ def _set_opc(opc):
 # Clear the operator pointer from the
 # thread local
 def _clear_opc():
-    _opptrs._opc = None
+    if _supported:
+        _opptrs._opc = None
 
 # Save the opc in the operator class
 # (getting it from the thread local)

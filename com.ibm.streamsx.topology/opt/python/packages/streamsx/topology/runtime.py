@@ -57,7 +57,8 @@ class _FunctionalCallable(object):
             is_cls = is_cls and (not inspect.isclass(self._callable))
             
             if is_cls:
-                self._callable._streamsx_ec_op = ec._get_opc(self._callable)
+                if ec._supported:
+                    self._callable._streamsx_ec_op = ec._get_opc(self._callable)
                 self._cls = True
                 ec._callable_enter(self._callable)
 
@@ -297,3 +298,4 @@ def string_in__pickle_iter(callable):
 
 def dict_in__pickle_iter(callable):
     return _ObjectInPickleIter(callable)
+
