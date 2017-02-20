@@ -2,16 +2,14 @@
 # Copyright IBM Corp. 2016
 
 from streamsx.topology.topology import Stream
-from streamsx.topology.schema import StreamSchema
+import streamsx.topology.schema as sch
 
 
 class ExtensionOperator(object):
     def __init__(self,topology,kind,inputs=None,schemas=None,params=None,name=None):
         self.topology = topology
-        self.kind = kind
         if params is None:
             params = dict()
-        self.params = params
         self._op = topology.graph.addOperator(kind=kind,name=name)
         # Add parameters
         if params is not None:
@@ -32,17 +30,15 @@ class ExtensionOperator(object):
         self.outputs = []
         if schemas is not None:
             if isinstance(schemas, str):
-                schemas = (StreamSchema(schemas),)
+                schemas = (schemas,)
 
             try:
                 for schema in schemas:
+                    schema = sch._stream_schema(schema)
                     oport = self._op.addOutputPort(schema=schema)
                     self.outputs.append(Stream(self.topology, oport))
             except TypeError:
                 # not iterable, single schema
-                oport = self._op.addOutputPort(schema=schemas)
+                schema = sch._stream_schema(schemas)
+                oport = self._op.addOutputPort(schema=schema)
                 self.outputs.append(Stream(self.topology, oport))
-
-    def add_param(self, name, value):
-        if value is not None:
-            self.params[name] = value

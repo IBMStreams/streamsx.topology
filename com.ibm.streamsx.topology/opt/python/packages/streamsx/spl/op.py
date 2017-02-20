@@ -50,6 +50,25 @@ class Invoke(exop.ExtensionOperator):
     """
     def __init__(self,topology,kind,inputs=None,schemas=None,params=None,name=None):
         super(Invoke,self).__init__(topology,kind,inputs,schemas,params,name)
+        self._op._ex_op = self
+
+    def attribute(self, input, name):
+        """
+        """
+        return Expression('attribute', name)
+
+    def expression(self, value):
+        """
+        """
+        return Expression.expression(value)
+
+    def output(self, stream, value):
+        e = self.expression(value)
+        e._output = stream
+        return e
+
+    def _generate(self, opjson):
+        pass
 
 class Source(Invoke):
     """
@@ -80,6 +99,11 @@ class Source(Invoke):
         """
         return self.outputs[0]
 
+    def output(self, value):
+        return super(Source, self).output(self.stream, value)
+
+
+
 class Map(Invoke):
     """
     Declaration of an invocation of an SPL *map* operator.
@@ -109,6 +133,11 @@ class Map(Invoke):
     def stream(self):
         return self.outputs[0]
 
+    def attribute(self, name):
+        """
+        """
+        return super(Map, self).attribute(input, name)
+
 class Sink(Invoke):
     """
     Declaration of an invocation of an SPL sink operator.
@@ -127,3 +156,21 @@ class Sink(Invoke):
     """
     def __init__(self,kind,stream,params=None,name=None):
         super(Sink,self).__init__(stream.topology,kind,inputs=stream,params=params,name=name)
+
+class Expression(object):
+    def __init__(self, _type, _value):
+        self._type = _type
+        self._value = _value
+
+    @staticmethod
+    def expression(value):
+        return Expression('splexpr', value)
+
+    def spl_json(self):
+        _splj = {}
+        _splj["type"] = self._type
+        _splj["value"] = self._value
+        return _splj
+
+    def __str__(self):
+        return str(self._value)
