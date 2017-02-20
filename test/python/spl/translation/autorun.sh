@@ -52,7 +52,7 @@ cmd="${pythonversion} ${tkpath}/bin/spl-python-extract.py -i ."
 echo $cmd
 $cmd || errorExit
 echo "***************** Compile spl artifacts ********************************************"
-cmd="${STREAMS_INSTALL}/bin/sc -M testspl::NoopSample -t -j ${nproc} ${tkpath} -C"
+cmd="${STREAMS_INSTALL}/bin/sc -M testspl::NoopSample -j ${nproc} -t ${tkpath} -C"
 echo $cmd
 $cmd || errorExit
 cmd="${STREAMS_INSTALL}/bin/sc -M testspl::NoopSample -j ${nproc} -t ${tkpath}"
