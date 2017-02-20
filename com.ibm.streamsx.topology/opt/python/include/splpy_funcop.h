@@ -51,12 +51,16 @@ class SplpyFuncOp : public SplpyOp {
       void prepareToShutdown() {
           SplpyGIL lock;
           if (function_) {
+             // Call _shutdown_op which will invoke
+             // __exit__ on the users object if
+             // it's a class instance and has
+             // __enter__ and __exit__
              // callVoid steals the reference to function_
              Py_INCREF(function_);
              SplpyGeneral::callVoidFunction(
                "streamsx.ec", "_shutdown_op", function_, NULL);
           }
-          Splpyop::flush_PyErrPyOut();
+          SplpyGeneral::flush_PyErrPyOut();
       }
 
   private:
