@@ -72,6 +72,16 @@ def pe_id():
     _check()
     return _ec.pe_id()
 
+def is_standalone():
+    """Is the execution context standalone.
+
+    Returns:
+        boolean: True if the execution context is standalone, False if it is distributed.
+
+    """
+    _check()
+    return _ec.is_standalone()
+
 def channel(obj):
     """
     Return the parallel region global channel number `obj` is executing in.
@@ -210,7 +220,9 @@ class CustomMetric(object):
 
     """
     def __init__(self, obj, name, description=None, kind=MetricKind.Counter, initialValue=0):
-        if kind in MetricKind.__members__:
+        if kind is None:
+            kind = MetricKind.Counter
+        elif kind in MetricKind.__members__:
             kind = MetricKind.__members__[kind]
         elif kind not in MetricKind.__members__.values():
             raise TypeError("kind is required to be MetricKind:" + kind)
@@ -291,3 +303,16 @@ def _get_opc(obj):
         except AttributeError:
              pass
         raise AssertionError("InternalError")
+
+def _callable_enter(callable):
+    """Called at initialization time.
+    """
+    if hasattr(callable, '__enter__') and hasattr(callable, '__exit__'):
+        callable.__enter__()
+
+def _callable_exit_clean(callable):
+    """Called at shutdown time.
+    """
+    if hasattr(callable, '__enter__') and hasattr(callable, '__exit__'):
+        callable.__exit__(None, None, None)
+

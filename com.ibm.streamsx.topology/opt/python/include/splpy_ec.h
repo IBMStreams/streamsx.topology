@@ -55,6 +55,11 @@ static PyObject * __splpy_ec_pe_id(PyObject *self, PyObject *notused) {
    return PyLong_FromUnsignedLong(id);
 }
 
+static PyObject * __splpy_ec_is_standalone(PyObject *self, PyObject *notused) {
+   bool stand = SPL::ProcessingElement::pe().isStandalone();
+   return streamsx::topology::SplpyGeneral::getBool(stand);
+}
+
 // Operator functions
 static PyObject * __splpy_ec_channel(PyObject *self, PyObject *opc) {
    return PyLong_FromLong(__splpy_ec_opcontext(opc).getChannel());
@@ -131,6 +136,8 @@ static PyMethodDef __splpy_ec_methods[] = {
          "Return the job identifier of the running application."},
     {"pe_id", __splpy_ec_pe_id, METH_NOARGS,
          "Return the PE identifier hosting this code."},
+    {"is_standalone", __splpy_ec_is_standalone, METH_NOARGS,
+         "Return if execution context is standalone."},
     {"channel", __splpy_ec_channel, METH_O,
          "Return the global parallel channel."},
     {"local_channel", __splpy_ec_local_channel, METH_O,
