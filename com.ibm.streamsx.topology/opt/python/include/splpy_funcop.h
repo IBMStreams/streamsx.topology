@@ -31,36 +31,15 @@ namespace streamsx {
 
 class SplpyFuncOp : public SplpyOp {
   public:
-      PyObject *function_;
 
       SplpyFuncOp(SPL::Operator * op, const std::string & wrapfn) :
-         SplpyOp(op, "/opt/python/packages/streamsx/topology"),
-         function_(NULL)
+         SplpyOp(op, "/opt/python/packages/streamsx/topology")
       {
          addAppPythonPackages();
          loadAndWrapCallable(wrapfn);
       }
  
       ~SplpyFuncOp() {
-          if (function_) {
-             SplpyGIL lock;
-             Py_DECREF(function_);
-          }
-      }
-
-      void prepareToShutdown() {
-          SplpyGIL lock;
-          if (function_) {
-             // Call _shutdown_op which will invoke
-             // __exit__ on the users object if
-             // it's a class instance and has
-             // __enter__ and __exit__
-             // callVoid steals the reference to function_
-             Py_INCREF(function_);
-             SplpyGeneral::callVoidFunction(
-               "streamsx.ec", "_shutdown_op", function_, NULL);
-          }
-          SplpyGeneral::flush_PyErrPyOut();
       }
 
   private:
@@ -100,8 +79,8 @@ class SplpyFuncOp : public SplpyOp {
 #endif
           }
 
-          function_ = SplpyGeneral::callFunction(
-               "streamsx.topology.runtime", wrapfn, appCallable, NULL);
+          setCallable(SplpyGeneral::callFunction(
+               "streamsx.topology.runtime", wrapfn, appCallable, NULL));
       }
 
       /*

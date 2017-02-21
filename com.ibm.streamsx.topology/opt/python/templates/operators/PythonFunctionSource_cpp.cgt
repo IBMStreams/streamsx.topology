@@ -34,19 +34,19 @@ using namespace streamsx::topology;
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    pyop_(NULL),
-   function_(NULL),
    pyOutNames_(NULL)
 {
+   PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
    
    {
       SplpyGIL lock;
 
-      // function_ is an instance of the callable class
+      // callable is an instance of the callable class
       // then when called returns an iterable
-     function_ = SplpyGeneral::callFunction(
+     callable = SplpyGeneral::callFunction(
              "streamsx.spl.runtime", "_splpy_iter_source",
-             function_, NULL);   
+             callable, NULL);   
 
      pyOutNames_ = Splpy::pyAttributeNames(getOutputPortAt(0));
 
@@ -56,9 +56,11 @@ MY_OPERATOR::MY_OPERATOR() :
      // decorated operators only handle tuples to
      // simplify the generated code.
      Py_INCREF(pyOutNames_); // callFunction steals the reference
-     function_ = SplpyGeneral::callFunction(
+     callable = SplpyGeneral::callFunction(
              "streamsx.spl.runtime", "_splpy_to_tuples",
-             function_, pyOutNames_);   
+             callable, pyOutNames_);   
+
+     pyop_->setCallable(callable);
    }
 }
 
@@ -67,8 +69,6 @@ MY_OPERATOR::~MY_OPERATOR()
 {
    {
    SplpyGIL lock;
-   if (function_)
-      Py_DECREF(function_);
    if (pyOutNames_)
       Py_DECREF(pyOutNames_);
    }
@@ -84,7 +84,7 @@ void MY_OPERATOR::allPortsReady()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    SplpyOp::prepareToShutdown();
+    pyop_->prepareToShutdown();
 }
 
 <%

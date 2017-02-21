@@ -48,10 +48,10 @@ using namespace streamsx::topology;
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    pyop_(NULL),
-   function_(NULL),
    pyInNames_(NULL),
    pyOutNames_(NULL)
 {
+   PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
    
    {
@@ -64,15 +64,17 @@ MY_OPERATOR::MY_OPERATOR() :
      // decorated operators only handle tuples to
      // simplify the generated code.
      Py_INCREF(pyOutNames_); // callFunction steals the reference
-     function_ = SplpyGeneral::callFunction(
+     callable = SplpyGeneral::callFunction(
              "streamsx.spl.runtime", "_splpy_to_tuples",
-             function_, pyOutNames_);   
+             callable, pyOutNames_);   
 
 <% if ($paramStyle eq 'dictionary') { %>
       pyInNames_ = Splpy::pyAttributeNames(
                getInputPortAt(0));
 <% } %>
    }
+
+   pyop_->setCallable(callable);
 }
 
 // Destructor
@@ -80,8 +82,6 @@ MY_OPERATOR::~MY_OPERATOR()
 {
    {
    SplpyGIL lock;
-   if (function_)
-      Py_DECREF(function_);
    if (pyInNames_)
       Py_DECREF(pyInNames_);
    if (pyOutNames_)
@@ -94,7 +94,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    SplpyOp::prepareToShutdown();
+    pyop_->prepareToShutdown();
 }
 
 <%

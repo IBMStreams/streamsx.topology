@@ -35,7 +35,6 @@ private:
   // Members
     SplpyPyOp *pyop_;
 
-    PyObject *function_;
     PyObject *pyInNames_;
     PyObject *pyOutNames_;
 

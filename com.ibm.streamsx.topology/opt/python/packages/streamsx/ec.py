@@ -305,8 +305,9 @@ def _get_opc(obj):
              pass
         raise AssertionError("InternalError")
 
-def _shutdown_op(function):
-    function._shutdown()
+def _shutdown_op(callable):
+    if hasattr(callable, '_shutdown'):
+        callable._shutdown()
 
 def _callable_enter(callable):
     """Called at initialization time.
