@@ -30,7 +30,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    SplpyOp::prepareToShutdown();
+    funcop_->prepareToShutdown();
 }
 
 // Tuple processing for non-mutating ports
@@ -44,14 +44,14 @@ print splpy_inputtuple2value($pystyle);
 
 <%if ($pystyle eq 'dict') {%>
 @include "../pyspltuple2dict.cgt"
-  SPL::int32 spl_hash = streamsx::topology::Splpy::pyTupleHash(funcop_->function_, value);
+  SPL::int32 spl_hash = streamsx::topology::Splpy::pyTupleHash(funcop_->callable(), value);
   OPort0Type oTemptuple; //  (ip, spl_hash);
   oTemptuple.assignFrom(tuple, false);
   OPort0Type otuple(oTemptuple, spl_hash); //  (ip, spl_hash);
 
 <%}%>
 <%if ($pystyle ne 'dict') {%>
-  SPL::int32 spl_hash = streamsx::topology::Splpy::pyTupleHash(funcop_->function_, value);
+  SPL::int32 spl_hash = streamsx::topology::Splpy::pyTupleHash(funcop_->callable(), value);
 
   OPort0Type otuple(value, spl_hash);
 <%}%>

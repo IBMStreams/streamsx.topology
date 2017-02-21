@@ -11,22 +11,21 @@ A Streams application runs distributed or standalone.
 Distributed
 -----------
 Distributed is used when an application is submitted
-to the Streaming Analytics service on IBM Bluemix
+to the Streaming Analytics service on IBM Bluemix cloud platform
 or a IBM Streams distributed instance.
 
 With distributed a running application is a `job` that
 contains one or more processing elements (PEs). A PE
 corresponds to a Linux operating system process.
 The PEs in a job may be distributed across the
-hosts in the Streams instance.
+resources (hosts) in the Streams instance.
 
 Standalone
 ----------
 Standalone is a mode where the complete application is run
 as a single PE (process) outside of a Streams instance.
 
-Standalone is typically used for ad-hoc testing of an
-application.
+Standalone is typically used for ad-hoc testing of an application.
 
 Execution Context
 -----------------
@@ -317,8 +316,9 @@ def _get_opc(obj):
              pass
         raise AssertionError("InternalError")
 
-def _shutdown_op(function):
-    function._shutdown()
+def _shutdown_op(callable):
+    if hasattr(callable, '_shutdown'):
+        callable._shutdown()
 
 def _callable_enter(callable):
     """Called at initialization time.

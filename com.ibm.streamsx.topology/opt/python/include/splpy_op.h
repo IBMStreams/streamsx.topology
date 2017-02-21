@@ -27,6 +27,7 @@ class SplpyOp {
   public:
       SplpyOp(SPL::Operator *op, const char * spl_setup_py) :
           op_(op),
+          callable_(NULL),
           pydl_(NULL)
 
 #if __SPLPY_EC_MODULE_OK
@@ -44,19 +45,51 @@ class SplpyOp {
 #endif
       }
 
-      ~SplpyOp() {
+      ~SplpyOp()
+      {
+        {
+          SplpyGIL lock;
+
+          if (callable_ != NULL)
+              Py_DECREF(callable_);
+
 #if __SPLPY_EC_MODULE_OK
-          if (opc_ != NULL) {
-              SplpyGIL lock;
+          if (opc_ != NULL)
               Py_DECREF(opc_);
-          }
 #endif
-          if (pydl_ != NULL)
-             (void) dlclose(pydl_);
+        }
+        if (pydl_ != NULL)
+          (void) dlclose(pydl_);
       }
 
       SPL::Operator * op() {
          return op_;
+      }
+
+      void setCallable(PyObject * callable) {
+           callable_ = callable;
+      }
+      PyObject * callable() {
+          return callable_;
+      }
+
+      /**
+       * Actions for a Python operator on prepareToShutdown
+       * Flush any pending output.
+      */
+      void prepareToShutdown() {
+          SplpyGIL lock;
+          if (callable_) {
+             // Call _shutdown_op which will invoke
+             // __exit__ on the users object if
+             // it's a class instance and has
+             // __enter__ and __exit__
+             // callVoid steals the reference to callable_
+             Py_INCREF(callable_);
+             SplpyGeneral::callVoidFunction(
+               "streamsx.ec", "_shutdown_op", callable_, NULL);
+          }
+          SplpyGeneral::flush_PyErrPyOut();
       }
 
 #if __SPLPY_EC_MODULE_OK
@@ -82,17 +115,12 @@ class SplpyOp {
       }
 #endif
 
-      /**
-       * Actions for a Python operator on prepareToShutdown
-       * Flush any pending output.
-      */
-      static void prepareToShutdown() {
-          SplpyGIL lock;
-          SplpyGeneral::flush_PyErrPyOut();
-      }
-
    private:
       SPL::Operator *op_;
+ 
+      // Python object used to process tuples
+      PyObject *callable_;
+
       // Handle to libpythonX.Y.so
       void * pydl_;
 

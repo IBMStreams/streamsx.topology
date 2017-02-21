@@ -63,12 +63,28 @@ class Invoke(exop.ExtensionOperator):
         return Expression.expression(value)
 
     def output(self, stream, value):
+        if stream not in self.outputs:
+            raise ValueError("Stream is not output of this operator.")
         e = self.expression(value)
-        e._output = stream
+        e._stream = stream
         return e
 
     def _generate(self, opjson):
-        pass
+
+        # For any attribute that is an expression
+        # set it as an output clause assignment
+        for attr in self.__dict__:
+            e = self.__dict__[attr]
+            if isinstance(e, Expression) and hasattr(e, '_stream'):
+                opi = e._stream.oport.index
+                port = opjson['outputs'][opi]
+                if 'assigns' in port:
+                    assigns = port['assigns']
+                else:
+                    assigns = {}
+                    port['assigns'] = assigns
+
+                assigns[attr] = e.spl_json()
 
 class Source(Invoke):
     """
@@ -164,6 +180,10 @@ class Expression(object):
 
     @staticmethod
     def expression(value):
+        if isinstance(value, Expression):
+            # Clone the expression to allow it to
+            # be used in multiple contexts
+            return Expression(value._type, value._value)
         return Expression('splexpr', value)
 
     def spl_json(self):

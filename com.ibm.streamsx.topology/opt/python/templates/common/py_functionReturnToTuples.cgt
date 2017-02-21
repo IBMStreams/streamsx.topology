@@ -3,7 +3,7 @@
    // SPL Tuples and submits them.
    // Returns if the Python function returns None.
 
-    PyObject * pyReturnVar = PyObject_Call(function_, pyTuple, pyDict);
+    PyObject * pyReturnVar = PyObject_Call(pyop_->callable(), pyTuple, pyDict);
 
     Py_DECREF(pyTuple);
     if (pyDict != NULL)

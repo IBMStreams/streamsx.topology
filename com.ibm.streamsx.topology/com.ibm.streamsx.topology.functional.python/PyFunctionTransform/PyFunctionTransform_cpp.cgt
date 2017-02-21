@@ -42,7 +42,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    SplpyOp::prepareToShutdown();
+    funcop_->prepareToShutdown();
 }
 
 // Tuple processing for non-mutating ports
@@ -58,7 +58,7 @@ print splpy_inputtuple2value($pystyle, $pyoutstyle);
 @include "../pyspltuple2dict.cgt"
 <%}%>
   OPort0Type otuple;
-  if (streamsx::topology::Splpy::pyTupleTransform(funcop_->function_, value,
+  if (streamsx::topology::Splpy::pyTupleTransform(funcop_->callable(), value,
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>()))
      submit(otuple, 0);
 }

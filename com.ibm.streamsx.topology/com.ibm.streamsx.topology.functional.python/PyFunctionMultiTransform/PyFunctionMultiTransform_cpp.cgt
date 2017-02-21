@@ -43,7 +43,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    SplpyOp::prepareToShutdown();
+    funcop_->prepareToShutdown();
 }
 
 // Tuple processing for non-mutating ports
@@ -66,7 +66,7 @@ print splpy_inputtuple2value($pystyle);
     // convert spl attribute to python object
     PyObject * pyArg = streamsx::topology::pySplValueToPyObject(value);
 
-    PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(funcop_->function_, pyArg);
+    PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(funcop_->callable(), pyArg);
 
     if (pyIterator == 0) {
          throw SplpyGeneral::pythonException(
