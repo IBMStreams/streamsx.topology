@@ -26,6 +26,7 @@ import threading
 import sys
 import enum
 import codecs
+import tempfile
 
 logging_utils.initialize_logging()
 logger = logging.getLogger('streamsx.topology.py_submit')
@@ -173,6 +174,10 @@ class _BaseSubmitter(object):
         fj = dict()
         fj["deploy"] = self.config
         fj["graph"] = self.app_topology.generateSPLGraph()
+        _file = tempfile.NamedTemporaryFile(mode="w+", delete=False);
+        _file.close();
+        fj["submissionResultsFile"] = _file.name;
+        logger.debug("Results file created at " + _file.name)
         return fj
 
     def _create_json_file(self, fj):
