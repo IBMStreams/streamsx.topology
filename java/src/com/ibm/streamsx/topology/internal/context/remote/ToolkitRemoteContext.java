@@ -105,6 +105,11 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         
         generateSPL(toolkitRoot, jsonGraph);
         
+        JsonObject results = new JsonObject();
+        // Passed to Python, so Python naming convention using underscores is used.
+        results.addProperty("toolkit_root", toolkitRoot.getAbsolutePath());
+        submission.add(RemoteContext.SUBMISSION_RESULTS, results);
+        
         setupJobConfigOverlays(deploy, jsonGraph);
 
         return postSubmit(submission, new CompletedFuture<File>(toolkitRoot));

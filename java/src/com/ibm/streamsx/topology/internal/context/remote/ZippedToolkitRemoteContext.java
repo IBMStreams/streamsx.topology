@@ -25,6 +25,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 
 public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
@@ -48,6 +49,11 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         String tkName = toolkitRoot.getName();
         
         Path zipOutPath = pack(toolkitRoot.toPath(), namespace, name, tkName);
+        
+        JsonObject results = new JsonObject();
+        // Passed to Python, so Python naming convention using underscores is used.
+        results.addProperty("archive_path", zipOutPath.toString());
+        submission.add(RemoteContext.SUBMISSION_RESULTS, results);
         
         JsonObject deployInfo = object(submission, SUBMISSION_DEPLOY);
         deleteToolkit(toolkitRoot, deployInfo);

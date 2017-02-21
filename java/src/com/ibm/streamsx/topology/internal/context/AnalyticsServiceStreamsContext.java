@@ -56,13 +56,6 @@ public class AnalyticsServiceStreamsContext extends
         }
     }
     
-    @Override
-    Future<BigInteger> postSubmit(AppEntity entity,
-            Future<BigInteger> future) {
-        RemoteContexts.writeResultsToFile(entity.submission);
-        return future;
-    }
-    
     /**
      * Verify we have a valid Streaming Analytic service
      * information before we attempt anything.
