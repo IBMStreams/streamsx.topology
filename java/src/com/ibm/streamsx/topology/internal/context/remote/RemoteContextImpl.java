@@ -23,6 +23,7 @@ public abstract class RemoteContextImpl<T> implements RemoteContext<T> {
      * Post-submit hook when submitting a Topology.
      */
     Future<File> postSubmit(JsonObject submission, Future<File> future) {
+        RemoteContexts.writeResultsToFile(submission);
         return future;
     }
 }

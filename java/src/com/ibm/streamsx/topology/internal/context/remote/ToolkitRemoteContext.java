@@ -65,7 +65,7 @@ import com.ibm.streamsx.topology.internal.toolkit.info.ObjectFactory;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitDependencyType;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
-public class ToolkitRemoteContext extends FileCreatingContext {
+public class ToolkitRemoteContext extends RemoteContextImpl<File> {
 
     @Override
     public Type getType() {

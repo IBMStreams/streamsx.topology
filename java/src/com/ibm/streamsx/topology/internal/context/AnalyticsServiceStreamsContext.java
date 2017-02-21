@@ -12,6 +12,11 @@ import static com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -19,7 +24,9 @@ import org.apache.http.impl.client.HttpClients;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
+import com.ibm.streamsx.topology.internal.context.remote.RemoteContexts;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
 
@@ -37,16 +44,23 @@ public class AnalyticsServiceStreamsContext extends
     
     @Override
     Future<BigInteger> invoke(AppEntity entity, File bundle) throws Exception {
-        try {
-            JsonObject deploy =  deploy(entity.submission);
-            
-            BigInteger jobId = submitJobToService(bundle, deploy);
+        try {           
+            BigInteger jobId = submitJobToService(bundle, entity.submission);
 
+            JsonObject results = new JsonObject();
+            
             return new CompletedFuture<BigInteger>(jobId);
         } finally {
             if (!keepArtifacts(entity.submission))
                 bundle.delete();
         }
+    }
+    
+    @Override
+    Future<BigInteger> postSubmit(AppEntity entity,
+            Future<BigInteger> future) {
+        RemoteContexts.writeResultsToFile(entity.submission);
+        return future;
     }
     
     /**
@@ -80,7 +94,8 @@ public class AnalyticsServiceStreamsContext extends
     }
     */
     
-    private BigInteger submitJobToService(File bundle, JsonObject deploy) throws IOException {
+    private BigInteger submitJobToService(File bundle, JsonObject submission) throws IOException {
+        JsonObject deploy =  deploy(submission);
         
         final JsonObject service = getVCAPService(deploy);
         final String serviceName = jstring(service, "name");
@@ -99,7 +114,16 @@ public class AnalyticsServiceStreamsContext extends
             
             Topology.STREAMS_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submit job request:" + jcojson.toString());
 
-            return RestUtils.postJob(httpClient, service, bundle, jcojson);
+            JsonObject response = RestUtils.postJob(httpClient, service, bundle, jcojson);
+            
+            submission.add(RemoteContext.SUBMISSION_RESULTS, response);
+            
+            String jobId = jstring(response, "jobId");
+            
+            if (jobId == null)
+                return BigInteger.valueOf(-1);
+            
+            return new BigInteger(jobId);
         } finally {
             httpClient.close();
         }

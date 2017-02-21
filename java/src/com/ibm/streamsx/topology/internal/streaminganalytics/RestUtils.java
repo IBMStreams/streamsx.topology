@@ -126,7 +126,7 @@ public class RestUtils {
 	/**
 	 * Submit an application bundle to execute as a job.
 	 */
-    public static BigInteger postJob(CloseableHttpClient httpClient, JsonObject service, File bundle,
+    public static JsonObject postJob(CloseableHttpClient httpClient, JsonObject service, File bundle,
             JsonObject jobConfigOverlay) throws ClientProtocolException, IOException {
         
         final String serviceName = jstring(service, "name");
@@ -149,9 +149,6 @@ public class RestUtils {
 
         RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submit job response:" + jsonResponse.toString());
 
-        String jobId = jstring(jsonResponse, "jobId");
-        if (jobId == null)
-            return BigInteger.valueOf(-1);
-        return new BigInteger(jobId);
+        return jsonResponse;
     }
 }

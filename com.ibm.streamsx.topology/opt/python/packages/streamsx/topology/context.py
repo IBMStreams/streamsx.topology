@@ -149,7 +149,23 @@ class _BaseSubmitter(object):
             stdout_thread.daemon = True
             stdout_thread.start()
             process.wait()
-            return process.returncode
+
+            results_json = None
+            try:
+                _file = open(self.results_file)
+                results_json = json.loads(_file.read())
+            except IOError:
+                logger.exception("Error opening an reading from results file.")
+                raise
+            except json.JSONDecodeError:
+                logger.exception("Results file doesn't contain valid JSON")
+                raise
+            except:
+                raise
+
+            _delete_json(self)
+            results_json['return_code'] = process.returncode
+            return results_json
 
         except:
             logger.exception("Error starting java subprocess for submission")
@@ -439,8 +455,6 @@ def _print_process_stderr(process, submitter):
                 serr.write("\n")
             else:
                 print(line)
-            if "com.ibm.streamsx.topology.internal.streams.InvokeSc getToolkitPath" in line:
-                _delete_json(submitter)
     except:
         process.stderr.close()
         logger.exception("Error reading from process stderr")
