@@ -36,7 +36,7 @@ def build_simple_app(name):
 
 def submit_to_service(test, topo, cfg):
     rc = submit("ANALYTICS_SERVICE", topo, cfg)
-    test.assertEqual(0, rc)
+    test.assertEqual(0, rc['return_code'])
 
 @unittest.skipIf(sys.version_info.major == 2, "Streaming Analytics service requires 3.5")
 class TestStreamingAnalytics(unittest.TestCase):

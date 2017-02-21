@@ -155,6 +155,7 @@ class _BaseSubmitter(object):
             try:
                 _file = open(self.results_file)
                 results_json = json.loads(_file.read())
+                _file.close()
             except IOError:
                 logger.exception("Error opening an reading from results file.")
                 raise
