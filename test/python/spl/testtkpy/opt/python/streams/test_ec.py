@@ -15,7 +15,8 @@ def splNamespace():
 @spl.filter()
 class PyTestOperatorContext:
     def __init__(self, job_id, pe_id, channel, local_channel, max_channels, local_max_channels):
-        self.last = None
+        self.enter_called = False
+        self.exit_called = False
         self.job_id = job_id
         self.pe_id = pe_id
         self.channel = channel
@@ -42,8 +43,17 @@ class PyTestOperatorContext:
         return ok
             
     def __call__(self, *tuple):
+        if not self.enter_called:
+            raise AssertionError("__enter__() was not called")
+        if self.exit_called:
+            raise AssertionError("__exit__() was called before shutdown")
         return self.check()
 
+    def __enter__(self):
+        self.enter_called = True
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.exit_called = True
 
 @spl.filter()
 class PyTestMetrics:

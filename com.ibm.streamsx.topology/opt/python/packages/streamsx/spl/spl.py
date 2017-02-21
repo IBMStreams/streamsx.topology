@@ -462,7 +462,7 @@ from enum import Enum
 import functools
 import inspect
 import sys
-import streamsx.ec
+import streamsx.ec as ec
 
 ############################################
 # setup for function inspection
@@ -516,10 +516,10 @@ def _wrapforsplop(optype, wrapped, style, docpy):
             __doc__ = wrapped.__doc__
             @functools.wraps(wrapped.__init__)
             def __init__(self,*args,**kwargs):
-                opi = wrapped(*args,**kwargs)
-                self.__splpy_instance = opi
-                if streamsx.ec._supported:
-                    streamsx.ec._save_opc(opi)
+                self.__splpy_instance = wrapped(*args,**kwargs)
+                if ec._supported:
+                    ec._save_opc(self.__splpy_instance)
+                ec._callable_enter(self.__splpy_instance)
 
             if hasattr(wrapped, "__call__"):
                 @functools.wraps(wrapped.__call__)
@@ -530,6 +530,9 @@ def _wrapforsplop(optype, wrapped, style, docpy):
                 @functools.wraps(wrapped.__iter__)
                 def __iter__(self):
                     return self.__splpy_instance.__iter__()
+
+            def _shutdown(self):
+                ec._callable_exit_clean(self.__splpy_instance)
 
         _op_class.__wrapped__ = wrapped
         # _op_class.__doc__ = wrapped.__doc__
