@@ -46,9 +46,7 @@ public class AnalyticsServiceStreamsContext extends
     Future<BigInteger> invoke(AppEntity entity, File bundle) throws Exception {
         try {           
             BigInteger jobId = submitJobToService(bundle, entity.submission);
-
-            JsonObject results = new JsonObject();
-            
+         
             return new CompletedFuture<BigInteger>(jobId);
         } finally {
             if (!keepArtifacts(entity.submission))

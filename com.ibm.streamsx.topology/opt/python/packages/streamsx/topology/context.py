@@ -72,7 +72,8 @@ def submit(ctxtype, graph, config=None, username=None, password=None, log_level=
         log_level: The maximum logging level for log output.
         
     Returns:
-        An output stream of bytes if submitting with JUPYTER, otherwise returns None.
+        An output stream of bytes if submitting with JUPYTER, otherwise returns a dict containing information relevant
+        to the submission.
     """    
     logger.setLevel(log_level)
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)

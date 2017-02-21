@@ -51,8 +51,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         Path zipOutPath = pack(toolkitRoot.toPath(), namespace, name, tkName);
         
         JsonObject results = new JsonObject();
-        // Passed to Python, so Python naming convention using underscores is used.
-        results.addProperty("archive_path", zipOutPath.toString());
+        results.addProperty("archivePath", zipOutPath.toString());
         submission.add(RemoteContext.SUBMISSION_RESULTS, results);
         
         JsonObject deployInfo = object(submission, SUBMISSION_DEPLOY);

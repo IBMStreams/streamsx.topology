@@ -11,6 +11,8 @@ import java.io.File;
 import java.math.BigInteger;
 import java.util.concurrent.Future;
 
+import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
 
@@ -38,7 +40,11 @@ public class DistributedStreamsContext extends
             InvokeSubmit submitjob = new InvokeSubmit(bundle);
 
             BigInteger jobId = submitjob.invoke(deploy(entity.submission));
-        
+            
+            JsonObject results = new JsonObject();
+            results.addProperty("jobId", jobId.toString());
+            entity.submission.add(RemoteContext.SUBMISSION_RESULTS, results);
+            
             return new CompletedFuture<BigInteger>(jobId);
         } finally {
             if (!keepArtifacts(entity.submission))

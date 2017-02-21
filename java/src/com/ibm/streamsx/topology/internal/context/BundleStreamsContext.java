@@ -24,6 +24,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.core.InternalProperties;
 import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
@@ -66,6 +67,10 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
     	// or keepArtifacts is set.
     	if (!standalone && (!byBundleUser || keepArtifacts(submission)))
     	    createJobConfigOverlayFile(submission, deploy, bundle.get().getParentFile());
+    	
+    	JsonObject results = new JsonObject();
+        results.addProperty("bundleRoot", bundle.get().getAbsolutePath());
+        submission.add(RemoteContext.SUBMISSION_RESULTS, results);
     	
     	return bundle;
     }
