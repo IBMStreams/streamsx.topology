@@ -4,6 +4,7 @@
 # Import the SPL decorators
 from streamsx.spl import spl
 import streamsx.ec as ec
+import pickle
 
 #------------------------------------------------------------------
 # Test Execution Context (streamsx.ex) functions
@@ -65,6 +66,14 @@ class PyTestMetrics:
 
         if not ok:
             raise AssertionError("Failed metrics!")
+
+        # Test a metric cannot be pickled
+        try:
+            pm = pickle.dumps(g2)
+            raise AssertionError("Was able to pickle metric:" + pm)
+        except pickle.PicklingError:
+            pass
+     
 
     def __call__(self, *tuple):
         ok= True

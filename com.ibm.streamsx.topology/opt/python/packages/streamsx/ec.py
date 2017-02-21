@@ -46,6 +46,7 @@ being invoked in a Streams application.
 """
 
 import enum
+import pickle
 import threading
 
 try:
@@ -206,6 +207,15 @@ class CustomMetric(object):
                     self.my_metric += 1
                 return True
 
+            # Create the metric when the it is running
+            # in the Streams execution context
+            def __enter__(self):
+                self.my_metric = ec.CustomMetric(self, "count_" + self.substring)
+
+            # must supply __exit__ if using __enter__
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                pass
+
             def __getstate__(self):
                 # Remove metric from saved state.
                 state = self.__dict__.copy()
@@ -214,9 +224,7 @@ class CustomMetric(object):
                 return state
 
             def __setstate__(self, state):
-                # Create the metric after the instance is depickled.
                 self.__dict__.update(state)
-                self.my_metric = ec.CustomMetric(self, "count_" + self.substring)
 
     """
     def __init__(self, obj, name, description=None, kind=MetricKind.Counter, initialValue=0):
@@ -225,7 +233,7 @@ class CustomMetric(object):
         elif kind in MetricKind.__members__:
             kind = MetricKind.__members__[kind]
         elif kind not in MetricKind.__members__.values():
-            raise TypeError("kind is required to be MetricKind:" + kind)
+            raise ValueError("kind is required to be MetricKind:" + kind)
         if description is None:
             description=name + ":" + kind.name
         self.name = str(name)
@@ -262,6 +270,9 @@ class CustomMetric(object):
 
     def __int__(self):
         return self.value
+
+    def __getstate__(self):
+        raise pickle.PicklingError(CustomMetric.__name__)
 
 ####################
 # internal functions
