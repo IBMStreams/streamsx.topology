@@ -32,7 +32,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
-import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 class BuildServiceRemoteRESTWrapper {
 	
