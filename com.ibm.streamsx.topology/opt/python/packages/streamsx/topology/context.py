@@ -94,6 +94,8 @@ class _BaseSubmitter(object):
             # the callers config
             self.config.update(config)
         self.app_topology = app_topology
+        self.fn = None
+        self.results_file = None
 
     def _config(self):
         "Return the submit configuration"
@@ -139,7 +141,7 @@ class _BaseSubmitter(object):
         logger.info("Generating SPL and submitting application.")
         process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0, env=self._get_java_env())
         try:
-            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
+            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
             stderr_thread.daemon = True
             stderr_thread.start()
 
@@ -174,10 +176,13 @@ class _BaseSubmitter(object):
         fj = dict()
         fj["deploy"] = self.config
         fj["graph"] = self.app_topology.generateSPLGraph()
-        _file = tempfile.NamedTemporaryFile(mode="w+", delete=False);
-        _file.close();
-        fj["submissionResultsFile"] = _file.name;
+
+        _file = tempfile.NamedTemporaryFile(prefix="results", suffix=".json", mode="w+t", delete=False)
+        _file.close()
+        fj["submissionResultsFile"] = _file.name
+        self.results_file = _file.name
         logger.debug("Results file created at " + _file.name)
+
         return fj
 
     def _create_json_file(self, fj):
@@ -255,7 +260,7 @@ class _JupyterSubmitter(_BaseSubmitter):
         args = [jvm, '-classpath', cp, submit_class, ContextTypes.STANDALONE, self.fn]
         process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
         try:
-            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
+            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
             stderr_thread.daemon = True
             stderr_thread.start()
 
@@ -389,9 +394,10 @@ class _SubmitContextFactory(object):
 
 
 # Used to delete the JSON file after it is no longer needed.
-def _delete_json(fn):
-    if os.path.isfile(fn):
-        os.remove(fn)
+def _delete_json(submitter):
+    for fn in [submitter.fn, submitter.results_file]:
+        if os.path.isfile(fn):
+            os.remove(fn)
 
 
 # Used by a thread which polls a subprocess's stdout and writes it to stdout
@@ -418,7 +424,7 @@ def _print_process_stdout(process):
 
 # Used by a thread which polls a subprocess's stderr and writes it to stderr, until the sc compilation
 # has begun.
-def _print_process_stderr(process, fn):
+def _print_process_stderr(process, submitter):
     try:
         if sys.version_info.major == 2:
             serr = codecs.getwriter('utf8')(sys.stderr)
@@ -434,7 +440,7 @@ def _print_process_stderr(process, fn):
             else:
                 print(line)
             if "com.ibm.streamsx.topology.internal.streams.InvokeSc getToolkitPath" in line:
-                _delete_json(fn)
+                _delete_json(submitter)
     except:
         process.stderr.close()
         logger.exception("Error reading from process stderr")
