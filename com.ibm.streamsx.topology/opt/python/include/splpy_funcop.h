@@ -43,8 +43,11 @@ class SplpyFuncOp : public SplpyOp {
  
       ~SplpyFuncOp() {
           SplpyGIL lock;
-          if (function_)
-             Py_DECREF(function_);
+          if (function_) {
+             // callVoid steals the reference to function_
+             SplpyGeneral::callVoidFunction(
+               "streamsx.ec", "_shutdown_op", function_, NULL);
+          }
       }
 
   private:
