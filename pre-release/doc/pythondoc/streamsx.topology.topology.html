@@ -1,0 +1,739 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.topology.topology module &mdash; streamsx 1.5.11 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="streamsx 1.5.11 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.5
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="simple">
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">streamsx</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>streamsx.topology.topology module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/streamsx.topology.topology.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.topology.topology">
+<span id="streamsx-topology-topology-module"></span><h1>streamsx.topology.topology module<a class="headerlink" href="#module-streamsx.topology.topology" title="Permalink to this headline">¶</a></h1>
+<p>Python API to allow creation of streaming applications for
+IBM Streams &amp; Streaming Analytics service on Bluemix.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>IBM® Streams is an advanced analytic platform that allows user-developed
+applications to quickly ingest, analyze and correlate information as it
+arrives from thousands of real-time sources.
+Streams can handle very high data throughput rates, millions of events
+or messages per second.</p>
+<p>With this API Python developers can build streaming applications
+that can be executed using IBM Streams, including the processing
+being distributed across multiple computing resources
+(hosts or machines) for scalability.</p>
+</div>
+<div class="section" id="topology">
+<h2>Topology<a class="headerlink" href="#topology" title="Permalink to this headline">¶</a></h2>
+<p>A Topology declare a graph of <em>streams</em> and <em>operations</em> against
+tuples (data items) on those streams.</p>
+<p>After being declared, a Topology is submitted to be compiled into
+a Streams application bundle (sab file) and then executed.
+The sab file is a self contained bundle that can be executed
+in a distributed Streams instance either using the Streaming
+Analytics service on IBM Bluemix cloud platform or an on-premise
+IBM Streams installation.</p>
+<p>The compilation step invokes the Streams compiler to produce a bundle.
+This effectively, from a Python point of view, produces a runnable
+version of the Python topology that includes generated application
+specific Python C extensions to optimize performance.</p>
+<p>The Streams runtime distributes the application&#8217;s operations
+across the resources available in the instance.</p>
+</div>
+<div class="section" id="stream">
+<h2>Stream<a class="headerlink" href="#stream" title="Permalink to this headline">¶</a></h2>
+<p>A stream is a DEFINITION.</p>
+<p>A stream has a schema that defines the type of each tuple on the stream.
+The schema for a Python Topology is either:</p>
+<ul class="simple">
+<li>Untyped - A tuple may be any Python object. This is the default.</li>
+<li>String - Each tuple is a Unicode string.</li>
+<li>Binary - Each tuple is a blob.</li>
+<li>Json - Each tuple is a Python dict that can be expressed as a JSON object.</li>
+<li>Structured - A stream that is an ordered list of attributes, with each attribute having a fixed type (e.g. float64 or int32) and a name.</li>
+</ul>
+</div>
+<div class="section" id="stream-operations">
+<h2>Stream operations<a class="headerlink" href="#stream-operations" title="Permalink to this headline">¶</a></h2>
+<p>A stream is processed to produce zero or more transformed streams,
+such as filtering a stream to drop unwanted tuples, producing a stream
+that only contains the required tuples.</p>
+<p>An operation on a stream can be:</p>
+<ul class="simple">
+<li>A Python lambda function. The lambda is called for each tuple on a stream, passing the tuple.</li>
+<li>A Python function. The function is called for each tuple on a stream, passing the tuple.</li>
+<li>An instance of a Python callable class. The instance is called for each tuple on the stream, passing the tuple.  Use of an instance allows the operation to be stateful by maintaining state in instance attributes across invocations.</li>
+<li>An invocation of an SPL operator.</li>
+</ul>
+<dl class="class">
+<dt id="streamsx.topology.topology.Routing">
+<em class="property">class </em><code class="descclassname">streamsx.topology.topology.</code><code class="descname">Routing</code><a class="headerlink" href="#streamsx.topology.topology.Routing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">enum.Enum</span></code></p>
+<p>An enumeration.</p>
+<dl class="attribute">
+<dt id="streamsx.topology.topology.Routing.HASH_PARTITIONED">
+<code class="descname">HASH_PARTITIONED</code><em class="property"> = &lt;Routing.HASH_PARTITIONED: 3&gt;</em><a class="headerlink" href="#streamsx.topology.topology.Routing.HASH_PARTITIONED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.topology.Routing.KEY_PARTITIONED">
+<code class="descname">KEY_PARTITIONED</code><em class="property"> = &lt;Routing.KEY_PARTITIONED: 2&gt;</em><a class="headerlink" href="#streamsx.topology.topology.Routing.KEY_PARTITIONED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.topology.Routing.ROUND_ROBIN">
+<code class="descname">ROUND_ROBIN</code><em class="property"> = &lt;Routing.ROUND_ROBIN: 1&gt;</em><a class="headerlink" href="#streamsx.topology.topology.Routing.ROUND_ROBIN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.topology.Stream">
+<em class="property">class </em><code class="descclassname">streamsx.topology.topology.</code><code class="descname">Stream</code><span class="sig-paren">(</span><em>topology</em>, <em>oport</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>The Stream class is the primary abstraction within a streaming application. It represents a potentially infinite
+series of tuples which can be operated upon to produce another stream, as in the case of Stream.map(), or
+terminate a stream, as in the case of Stream.sink().</p>
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.autonomous">
+<code class="descname">autonomous</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.autonomous" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts an autonomous region for downstream processing.
+By default IBM Streams processing is executed in an autonomous region
+where any checkpointing of operator state is autonomous (independent)
+of other operators.</p>
+<p>This function may be used to end a consistent region by starting an
+autonomous region. This may be called even if this stream is in
+an autonomous region.</p>
+<p>Autonomous is not applicable when a topology is submitted
+to a STANDALONE contexts and will be ignored.</p>
+<p>Supported since v1.5</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Stream whose subsequent downstream processing is in an autonomous region.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.end_low_latency">
+<code class="descname">end_low_latency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.end_low_latency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Stream that is no longer guaranteed to run in the same process
+as the calling stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Stream</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.end_parallel">
+<code class="descname">end_parallel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.end_parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ends a parallel region by merging the channels into a single stream</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Stream for which subsequent transformations are no longer parallelized</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.filter">
+<code class="descname">filter</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters tuples from a stream using the supplied callable <cite>func</cite>.
+For each tuple on the stream the callable is called passing
+the tuple, if the callable return evalulates to true the
+tuple will be present on the returned stream, otherwise
+the tuple is filtered out.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>func</strong> &#8211; A callable that takes a single parameter for the tuple, and returns True or False.</li>
+<li><strong>True, the tuple is included on the returned stream.  If False, the tuple is filtered out.</strong> (<em>If</em>) &#8211; </li>
+<li><strong>callable must be one of</strong> (<em>The</em>) &#8211; </li>
+<li><strong>a function</strong> (<em>*</em>) &#8211; </li>
+<li><strong>a lambda function</strong> (<em>*</em>) &#8211; </li>
+<li><strong>an instance of a callable class that implements</strong> (<em>*</em>) &#8211; the method <cite>__call__(self, tuple)</cite> and be picklable.</li>
+<li><strong>a callable class allows state information such as user-defined parameters to be stored during class</strong> (<em>Using</em>) &#8211; </li>
+<li><strong>and utilized when the instance is called.</strong> (<em>initialization</em>) &#8211; </li>
+<li><strong>callable is invoked for each incoming tuple.</strong> (<em>The</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A Stream containing tuples that have not been filtered out.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.flat_map">
+<code class="descname">flat_map</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.flat_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms each tuple from this stream into 0 or more tuples using the supplied callable <cite>func</cite>.
+For each tuple on this stream, the returned stream will contain all non-None tuples from
+the iterable.
+Tuples will be added to the returned stream in the order the iterable
+returns them.
+If the return is None or an empty iterable then no tuples are added to
+the returned stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>func</strong> &#8211; A callable that takes a single parameter for the tuple, and returns an iterable of tuples or None.</li>
+<li><strong>callable must return an iterable or None, otherwise a TypeError is raised.</strong> (<em>The</em>) &#8211; </li>
+<li><strong>callable must be either</strong> (<em>The</em>) &#8211; </li>
+<li><strong>a function</strong> (<em>*</em>) &#8211; </li>
+<li><strong>a lambda function</strong> (<em>*</em>) &#8211; </li>
+<li><strong>an instance of a callable class that implements</strong> (<em>*</em>) &#8211; the method <cite>__call__(self, tuple)</cite> and be picklable.</li>
+<li><strong>a callable class allows state information such as user-defined parameters to be stored during class</strong> (<em>Using</em>) &#8211; </li>
+<li><strong>and utilized when the instance is called.</strong> (<em>initialization</em>) &#8211; </li>
+<li><strong>callable is invoked for each incoming tuple.</strong> (<em>The</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A Stream containing transformed tuples.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> &#8211;
+if <cite>func</cite> does not return an iterator nor None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.for_each">
+<code class="descname">for_each</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.for_each" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends information as a stream to an external system.
+Takes a user provided callable that does not return a value.
+For each tuple that is on the stream <cite>func(tuple)</cite> is called.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>func</strong> &#8211; A callable that takes a single parameter for the tuple and returns None.</li>
+<li><strong>callable must be one of</strong> (<em>The</em>) &#8211; </li>
+<li><strong>a function</strong> (<em>*</em>) &#8211; </li>
+<li><strong>a lambda function</strong> (<em>*</em>) &#8211; </li>
+<li><strong>an instance of a callable class that implements</strong> (<em>*</em>) &#8211; the method <cite>__call__(self, tuple)</cite> and be picklable.</li>
+<li><strong>a callable class allows state information such as user-defined parameters to be stored during class</strong> (<em>Using</em>) &#8211; </li>
+<li><strong>and utilized when the instance is called.</strong> (<em>initialization</em>) &#8211; </li>
+<li><strong>callable is invoked for each incoming tuple.</strong> (<em>The</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.isolate">
+<code class="descname">isolate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.isolate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Guarantees that the upstream operation will run in a separate process from the downstream operation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Stream</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.low_latency">
+<code class="descname">low_latency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.low_latency" title="Permalink to this definition">¶</a></dt>
+<dd><p>The function is guaranteed to run in the same process as the
+upstream Stream function. All streams that are created from the returned stream
+are also guaranteed to run in the same process until end_low_latency()
+is called.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Stream</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.map">
+<code class="descname">map</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps each tuple from this stream into 0 or 1 tuples using the supplied callable <cite>func</cite>.
+For each tuple on this stream, the returned stream will contain a tuple
+that is the result of the callable when the return is not None.
+If the callable returns None then no tuple is submitted to the returned
+stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> &#8211; <p>A callable that takes a single parameter for the tuple, and returns a tuple or None.
+The callable must be either a function, a lambda function,
+an instance of a callable class that implements the method <cite>__call__(self, tuple)</cite> and be picklable.</p>
+<p>Using a callable class allows state information such as user-defined parameters to be stored during class
+initialization and utilized when the instance is called.</p>
+<p>The callable is invoked for each incoming tuple.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A stream containing tuples mapped by func.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.multi_transform">
+<code class="descname">multi_transform</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.multi_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to calling the flat_map() function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.parallel">
+<code class="descname">parallel</code><span class="sig-paren">(</span><em>width</em>, <em>routing=None</em>, <em>func=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parallelizes the stream into <cite>width</cite> parallel channels.
+Tuples are routed to parallel channels such that an even distribution is maintained.
+Each parallel channel can be thought of as being assigned its own thread.
+As such, each parallelized stream function are separate instances and operate independently
+from one another.</p>
+<p>parallel() will only parallelize the stream operations performed after the call to parallel() and
+before the call to end_parallel().</p>
+<p>Parallel regions aren&#8217;t required to have an output stream, and thus may be used as sinks.
+In other words, a parallel sink is created by calling parallel() and creating a sink operation.
+It is not necessary to invoke end_parallel() on parallel sinks.</p>
+<p>Nested parallelism is not currently supported.
+A call to parallel() should never be made immediately after another call to parallel() without
+having an end_parallel() in between.</p>
+<p>Every call to end_parallel() must have a call to parallel() preceding it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>width</strong> (<em>int</em>) &#8211; Degree of parallelism.</li>
+<li><strong>routing</strong> &#8211; denotes what type of tuple routing to use.
+ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators (the default when
+no routing is specified).
+HASH_PARTIONED: delivers to downstream operators based on the hash of the tuples being sent
+or if a function is provided the function will be called to provide the hash</li>
+<li><strong>func</strong> &#8211; Optional function called when HASH_PARTIONED routing is specified.  The function provides an
+int32 value to be used as the hash that determines the tuple routing to downstream operators</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Stream</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.print">
+<code class="descname">print</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.print" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints each tuple to stdout flushing after each tuple.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.publish">
+<code class="descname">publish</code><span class="sig-paren">(</span><em>topic</em>, <em>schema=&lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object at 0x7f51a0ad3ac8&gt;&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.publish" title="Permalink to this definition">¶</a></dt>
+<dd><p>Publish this stream on a topic for other Streams applications to subscribe to.
+A Streams application may publish a stream to allow other
+Streams applications to subscribe to it. A subscriber
+matches a publisher if the topic and schema match.</p>
+<p>By default a stream is published as Python objects (CommonSchema.Python)
+which allows other Streams Python applications to subscribe to
+the stream using the same topic.</p>
+<p>If a stream is published with CommonSchema.Json then it is published
+as JSON, other Streams applications may subscribe to it regardless
+of their implementation language. A Python tuple is converted to
+JSON using json.dumps(tuple, ensure_ascii=False).</p>
+<p>If a stream is published with CommonSchema.String then it is published
+as strings, other Streams applications may subscribe to it regardless
+of their implementation language. A Python tuple is converted to
+a string using str(tuple).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>topic</strong> (<em>str</em>) &#8211; Topic to publish this stream to.</li>
+<li><strong>schema</strong> &#8211; Schema to publish. Defaults to CommonSchema.Python representing Python objects.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.sink">
+<code class="descname">sink</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.sink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to calling the for_each() function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to calling the map() function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.union">
+<code class="descname">union</code><span class="sig-paren">(</span><em>streamSet</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a stream that is a union of this stream and other streams</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>streamSet</strong> &#8211; a set of Stream objects to merge with this stream</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.view">
+<code class="descname">view</code><span class="sig-paren">(</span><em>buffer_time=10.0</em>, <em>sample_size=10000</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a view on a stream. Returns a view object which can be used to access the data
+:param buffer_time The window of time over which tuples will be
+:param name Name of the view. Name must be unique within the topology. Defaults to a generated name.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.topology.Topology">
+<em class="property">class </em><code class="descclassname">streamsx.topology.topology.</code><code class="descname">Topology</code><span class="sig-paren">(</span><em>name</em>, <em>files=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>The Topology class is used to define data sources, and is passed as a parameter when submitting an application.
+Topology keeps track of all sources, sinks, and data operations within your application.</p>
+<dl class="docutils">
+<dt>Instance variables:</dt>
+<dd><p class="first">include_packages: Set of Python package names to be included in the built application.</p>
+<p>exclude_packages: Set of Python package names to be excluded from the built application.
+When compiling the application using Anaconda this set is pre-loaded with Python pacakges from the
+Anaconda pre-loaded  set of applications.</p>
+<p class="last">package names in the include_packages set take precedence over package namers in the exclude_pacakges set.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="streamsx.topology.topology.Topology.source">
+<code class="descname">source</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches information from an external system and presents that information as a stream.
+Tuples are obtained from an iterator obtained from the passed iterable
+or callable that returns an iterable.
+Each tuple that is not None from the iterator returned
+from iter(func()) is present on the returned stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> &#8211; <p>An iterable or a zero-argument callable that returns an iterable of tuples.
+The callable must be either be an iterable object, a function, a lambda function
+or an instance of a callable class that implements the method <cite>__call__(self)</cite> and be picklable.</p>
+<p>Using a callable class allows state information such as user-defined parameters to be stored during class
+initialization and utilized when the instance is called.</p>
+<p>A tuple is represented as a Python object that must be picklable.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A stream whose tuples are the result of the output obtained by invoking the provided callable or iterable.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Topology.subscribe">
+<code class="descname">subscribe</code><span class="sig-paren">(</span><em>topic</em>, <em>schema=&lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object at 0x7f51a0ad3ac8&gt;&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.subscribe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subscribe to a topic published by other Streams applications.
+A Streams application may publish a stream to allow other
+Streams applications to subscribe to it. A subscriber matches a
+publisher if the topic and schema match.</p>
+<p>By default a stream is subscribed as Python objects (schema.CommonSchema.Python)
+which connects to streams published to topic by Python Streams applications.</p>
+<p>JSON streams are subscribed to using schema.CommonSchema.Json.
+Each tuple on the returned stream will be a Python dictionary
+object created by json.loads(tuple).
+Any publishing Streams application may have been implemented in any language.</p>
+<p>String streams are subscribed to using schema.CommonSchema.String .
+Each tuple on the returned stream will be a Python string object.
+Any publishing Streams application may have been implemented in any language.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>topic</strong> (<em>str</em>) &#8211; Topic to subscribe to.</li>
+<li><strong>schema</strong> (<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema"><em>schema.StreamSchema</em></a>) &#8211; schema to subscribe to. Defaults to schema.CommonSchema.Python representing Python
+objects.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A stream whose tuples have been published to the topic by other Streams applications.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.topology.View">
+<em class="property">class </em><code class="descclassname">streamsx.topology.topology.</code><code class="descname">View</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.View" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A View is an object which is associated with a Stream, and provides access to the items on the stream.</p>
+<dl class="method">
+<dt id="streamsx.topology.topology.View.initialize_rest">
+<code class="descname">initialize_rest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.View.initialize_rest" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.View.set_streams_context">
+<code class="descname">set_streams_context</code><span class="sig-paren">(</span><em>sc</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.View.set_streams_context" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.View.set_streams_context_config">
+<code class="descname">set_streams_context_config</code><span class="sig-paren">(</span><em>conf</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.View.set_streams_context_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.View.start_data_fetch">
+<code class="descname">start_data_fetch</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.View.start_data_fetch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.View.stop_data_fetch">
+<code class="descname">stop_data_fetch</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.View.stop_data_fetch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, IBMStreams.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.5.11',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

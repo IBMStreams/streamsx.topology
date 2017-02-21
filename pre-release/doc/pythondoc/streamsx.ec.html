@@ -1,0 +1,444 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.ec module &mdash; streamsx 1.5.11 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="streamsx 1.5.11 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.5
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="simple">
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">streamsx</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>streamsx.ec module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/streamsx.ec.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.ec">
+<span id="streamsx-ec-module"></span><h1>streamsx.ec module<a class="headerlink" href="#module-streamsx.ec" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Access to the IBM Streams execution context.</p>
+<p>A Streams application runs distributed or standalone.</p>
+</div>
+<div class="section" id="distributed">
+<h2>Distributed<a class="headerlink" href="#distributed" title="Permalink to this headline">¶</a></h2>
+<p>Distributed is used when an application is submitted
+to the Streaming Analytics service on IBM Bluemix cloud platform
+or a IBM Streams distributed instance.</p>
+<p>With distributed a running application is a <cite>job</cite> that
+contains one or more processing elements (PEs). A PE
+corresponds to a Linux operating system process.
+The PEs in a job may be distributed across the
+resources (hosts) in the Streams instance.</p>
+</div>
+<div class="section" id="standalone">
+<h2>Standalone<a class="headerlink" href="#standalone" title="Permalink to this headline">¶</a></h2>
+<p>Standalone is a mode where the complete application is run
+as a single PE (process) outside of a Streams instance.</p>
+<p>Standalone is typically used for ad-hoc testing of an application.</p>
+</div>
+<div class="section" id="execution-context">
+<h2>Execution Context<a class="headerlink" href="#execution-context" title="Permalink to this headline">¶</a></h2>
+<p>This module (<cite>streamsx.exec</cite>) provides access to the execution
+context when Python code is running in a Streams application.</p>
+<dl class="docutils">
+<dt>Access is only supported when running:</dt>
+<dd><ul class="first last simple">
+<li>Python 3.5</li>
+<li>Streams 4.2 or later</li>
+</ul>
+</dd>
+</dl>
+<p>This module may be used by Python functions or classes used
+in a <cite>Topology</cite> or decorated SPL operators.</p>
+<p>Most functionality is only available when a Python class is
+being invoked in a Streams application.</p>
+<dl class="class">
+<dt id="streamsx.ec.CustomMetric">
+<em class="property">class </em><code class="descclassname">streamsx.ec.</code><code class="descname">CustomMetric</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>description=None</em>, <em>kind=&lt;MetricKind.Counter: 1&gt;</em>, <em>initialValue=0</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.CustomMetric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Create a custom metric.</p>
+<p>A custom metric holds a 64 bit signed integer value that represents
+a <cite>Counter</cite>, <cite>Gauge</cite> or <cite>Time</cite> metric.</p>
+<p>Custom metrics are exposed through the IBM Streams monitoring APIs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> &#8211; Instance of a class executing within Streams.</li>
+<li><strong>name</strong> (<em>str</em>) &#8211; Name of the custom metric.</li>
+<li><strong>kind</strong> (<a class="reference internal" href="#streamsx.ec.MetricKind" title="streamsx.ec.MetricKind"><em>MetricKind</em></a>) &#8211; Kind of the metric.</li>
+<li><strong>description</strong> (<em>str</em>) &#8211; Description of the metric.</li>
+<li><strong>initialValue</strong> &#8211; Initial value of the metric.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Examples:</p>
+<p>Simple example used as an instance to <code class="docutils literal"><span class="pre">Stream.filter</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>class MyF:
+    def __init__(self, substring):
+        self.substring = substring
+        pass
+
+    def __call__(self, tuple):
+        if self.substring in str(tuple)
+            self.my_metric += 1
+        return True
+
+    # Create the metric when the it is running
+    # in the Streams execution context
+    def __enter__(self):
+        self.my_metric = ec.CustomMetric(self, &quot;count_&quot; + self.substring)
+
+    # must supply __exit__ if using __enter__
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    def __getstate__(self):
+        # Remove metric from saved state.
+        state = self.__dict__.copy()
+        if &#39;my_metric&#39; in state:
+            del state[&#39;my_metric&#39;]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.ec.CustomMetric.__iadd__">
+<code class="descname">__iadd__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.CustomMetric.__iadd__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increment the current value of the metric.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.ec.CustomMetric.value">
+<code class="descname">value</code><a class="headerlink" href="#streamsx.ec.CustomMetric.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current value of the metric.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.ec.MetricKind">
+<em class="property">class </em><code class="descclassname">streamsx.ec.</code><code class="descname">MetricKind</code><a class="headerlink" href="#streamsx.ec.MetricKind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">enum.Enum</span></code></p>
+<p>Enumeration for the kind of a metric.</p>
+<p>The kind of the metric only indicates the behavior of value,
+it does not impose any semantics on the value.
+The kind is typically used by tooling applications.</p>
+<dl class="attribute">
+<dt id="streamsx.ec.MetricKind.Counter">
+<code class="descname">Counter</code><em class="property"> = &lt;MetricKind.Counter: 1&gt;</em><a class="headerlink" href="#streamsx.ec.MetricKind.Counter" title="Permalink to this definition">¶</a></dt>
+<dd><p>A counter metric observes a value that represents a count of an occurrence.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.ec.MetricKind.Gauge">
+<code class="descname">Gauge</code><em class="property"> = &lt;MetricKind.Gauge: 0&gt;</em><a class="headerlink" href="#streamsx.ec.MetricKind.Gauge" title="Permalink to this definition">¶</a></dt>
+<dd><p>A gauge metric observes a value that is continuously variable with time.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.ec.MetricKind.Time">
+<code class="descname">Time</code><em class="property"> = &lt;MetricKind.Time: 2&gt;</em><a class="headerlink" href="#streamsx.ec.MetricKind.Time" title="Permalink to this definition">¶</a></dt>
+<dd><p>A time metric represents a point in time or duration.
+The recommended unit of time is milliseconds, using the standard
+epoch of 00:00:00 Coordinated Universal Time (UTC),
+Thursday, 1 January 1970 to represent a point in time.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.channel">
+<code class="descclassname">streamsx.ec.</code><code class="descname">channel</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the parallel region global channel number <cite>obj</cite> is executing in.</p>
+<p>The channel number is in the range of 0 to <code class="docutils literal"><span class="pre">max_channel(obj)</span></code>.</p>
+<p>When the parallel region is not nested this is the same value
+as <code class="docutils literal"><span class="pre">local_channel(obj)</span></code>.</p>
+<p>If the parallel region is nested the value will be between
+zero and <code class="docutils literal"><span class="pre">(width*N</span> <span class="pre">-</span> <span class="pre">1)</span></code> where N is the number of times the
+parallel region has been replicated due to nesting.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> &#8211; Instance of a class executing within Streams.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Parallel region global channel number or -1 if not located in a parallel region.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.is_standalone">
+<code class="descclassname">streamsx.ec.</code><code class="descname">is_standalone</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.is_standalone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is the execution context standalone.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the execution context is standalone, False if it is distributed.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">boolean</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.job_id">
+<code class="descclassname">streamsx.ec.</code><code class="descname">job_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.job_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the job identifier.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.local_channel">
+<code class="descclassname">streamsx.ec.</code><code class="descname">local_channel</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.local_channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the parallel region local channel number <cite>obj</cite> is executing in.</p>
+<p>The channel number is in the range of zero to <code class="docutils literal"><span class="pre">local_max_channel(obj)</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> &#8211; Instance of a class executing within Streams.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Parallel region local channel number or -1 if not located in a parallel region.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.local_max_channels">
+<code class="descclassname">streamsx.ec.</code><code class="descname">local_max_channels</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.local_max_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the local maximum number of channels for the parallel
+region <cite>obj</cite> is executing in.</p>
+<p>The maximum number of channels corresponds to the width of the region.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> &#8211; Instance of a class executing within Streams.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Parallel region local maximum number of channels or 0 if not located in a parallel region.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.max_channels">
+<code class="descclassname">streamsx.ec.</code><code class="descname">max_channels</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.max_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the global maximum number of channels for the parallel
+region <cite>obj</cite> is executing in.</p>
+<p>When the parallel region is not nested this is the same value
+as <code class="docutils literal"><span class="pre">local_max_channels(obj)</span></code>.</p>
+<p>If the parallel region is nested the value will be
+<code class="docutils literal"><span class="pre">(width*N)</span></code> where N is the number of times the
+parallel region has been replicated due to nesting.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> &#8211; Instance of a class executing within Streams.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Parallel region global maximum number of channels or 0 if not located in a parallel region.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.pe_id">
+<code class="descclassname">streamsx.ec.</code><code class="descname">pe_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.pe_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the PE identifier.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, IBMStreams.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.5.11',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

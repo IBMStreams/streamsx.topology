@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.topology.context module &mdash; streamsx 1.5.11 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="streamsx 1.5.11 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.5
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="simple">
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">streamsx</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>streamsx.topology.context module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/streamsx.topology.context.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.topology.context">
+<span id="streamsx-topology-context-module"></span><h1>streamsx.topology.context module<a class="headerlink" href="#module-streamsx.topology.context" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="streamsx.topology.context.ConfigParams">
+<em class="property">class </em><code class="descclassname">streamsx.topology.context.</code><code class="descname">ConfigParams</code><a class="headerlink" href="#streamsx.topology.context.ConfigParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Configuration options which may be used as keys in the submit&#8217;s config parameter.</p>
+<p>VCAP_SERVICES - a json object containing the VCAP information used to submit to Bluemix
+SERVICE_NAME - the name of the streaming analytics service to use from VCAP_SERVICES.</p>
+<dl class="attribute">
+<dt id="streamsx.topology.context.ConfigParams.FORCE_REMOTE_BUILD">
+<code class="descname">FORCE_REMOTE_BUILD</code><em class="property"> = 'topology.forceRemoteBuild'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.FORCE_REMOTE_BUILD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ConfigParams.JOB_CONFIG">
+<code class="descname">JOB_CONFIG</code><em class="property"> = 'topology.jobConfigOverlays'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.JOB_CONFIG" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ConfigParams.SERVICE_NAME">
+<code class="descname">SERVICE_NAME</code><em class="property"> = 'topology.service.name'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.SERVICE_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ConfigParams.VCAP_SERVICES">
+<code class="descname">VCAP_SERVICES</code><em class="property"> = 'topology.service.vcap'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.VCAP_SERVICES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.context.ContextTypes">
+<em class="property">class </em><code class="descclassname">streamsx.topology.context.</code><code class="descname">ContextTypes</code><a class="headerlink" href="#streamsx.topology.context.ContextTypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Types of submission contexts:</p>
+<p>DISTRIBUTED - the topology is submitted to a Streams instance.
+The bundle is submitted using <cite>streamtool</cite> which must be setup to submit without requiring authentication
+input. Additionally, a username and password may optionally be provided to enable retrieving data from remote
+views.
+STANDALONE - the topology is executed directly as an Streams standalone application.
+The standalone execution is spawned as a separate process
+BUNDLE - execution of the topology produces an SPL application bundle
+(.sab file) that can be submitted to an IBM Streams instance as a distributed application.
+STANDALONE_BUNDLE - execution of the topology produces an SPL application bundle that, when executed,
+is spawned as a separate process.
+JUPYTER - the topology is run in standalone mode, and context.submit returns a stdout streams of bytes which
+can be read from to visualize the output of the application.
+BUILD_ARCHIVE - Creates a Bluemix-compatible build archive.
+execution of the topology produces a build archive, which can be submitted to a streaming
+analytics Bluemix remote build service.
+TOOLKIT - Execution of the topology produces a toolkit.
+ANALYTICS_SERVICE - If a local Streams install is present, the application is built locally and then submitted
+to a Bluemix streaming analytics service. If a local Streams install is not present, the application is
+submitted to, built, and executed on a Bluemix streaming analytics service. If the ConfigParams.REMOTE_BUILD
+flag is set to true, the application will be built on Bluemix even if a local Streams install is present.</p>
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.ANALYTICS_SERVICE">
+<code class="descname">ANALYTICS_SERVICE</code><em class="property"> = 'ANALYTICS_SERVICE'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.ANALYTICS_SERVICE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.BUILD_ARCHIVE">
+<code class="descname">BUILD_ARCHIVE</code><em class="property"> = 'BUILD_ARCHIVE'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.BUILD_ARCHIVE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.BUNDLE">
+<code class="descname">BUNDLE</code><em class="property"> = 'BUNDLE'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.BUNDLE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.DISTRIBUTED">
+<code class="descname">DISTRIBUTED</code><em class="property"> = 'DISTRIBUTED'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.DISTRIBUTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.JUPYTER">
+<code class="descname">JUPYTER</code><em class="property"> = 'JUPYTER'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.JUPYTER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.STANDALONE">
+<code class="descname">STANDALONE</code><em class="property"> = 'STANDALONE'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.STANDALONE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.STANDALONE_BUNDLE">
+<code class="descname">STANDALONE_BUNDLE</code><em class="property"> = 'STANDALONE_BUNDLE'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.STANDALONE_BUNDLE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.TOOLKIT">
+<code class="descname">TOOLKIT</code><em class="property"> = 'TOOLKIT'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.TOOLKIT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.context.JobConfig">
+<em class="property">class </em><code class="descclassname">streamsx.topology.context.</code><code class="descname">JobConfig</code><span class="sig-paren">(</span><em>job_name=None</em>, <em>job_group=None</em>, <em>data_directory=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.JobConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Job configuration</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="streamsx.topology.context.UnsupportedContextException">
+<em class="property">exception </em><code class="descclassname">streamsx.topology.context.</code><code class="descname">UnsupportedContextException</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.UnsupportedContextException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<p>An exeption class for when something goes wrong with submitting using a particular context.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.topology.context.submit">
+<code class="descclassname">streamsx.topology.context.</code><code class="descname">submit</code><span class="sig-paren">(</span><em>ctxtype</em>, <em>graph</em>, <em>config=None</em>, <em>username=None</em>, <em>password=None</em>, <em>log_level=20</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.submit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submits a topology with the specified context type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ctxtype</strong> (<em>string</em>) &#8211; context type.  Values include:</li>
+<li><strong>DISTRIBUTED - the topology is submitted to a Streams instance.</strong> (<em>*</em>) &#8211; The bundle is submitted using <cite>streamtool</cite> which must be setup to submit without requiring authentication
+input. Additionally, a username and password may optionally be provided to enable retrieving data from remote
+views.</li>
+<li><strong>STANDALONE - the topology is executed directly as an Streams standalone application.</strong> (<em>*</em>) &#8211; The standalone execution is spawned as a separate process</li>
+<li><strong>BUNDLE - execution of the topology produces an SPL application bundle</strong> (<em>*</em>) &#8211; (.sab file) that can be submitted to an IBM Streams instance as a distributed application.</li>
+<li><strong>JUPYTER - the topology is run in standalone mode, and context.submit returns a stdout streams of bytes which</strong> (<em>*</em>) &#8211; can be read from to visualize the output of the application.</li>
+<li><strong>BUILD_ARCHIVE - Creates a Bluemix-compatible build archive.</strong> (<em>*</em>) &#8211; execution of the topology produces a build archive, which can be submitted to a streaming
+analytics Bluemix remote build service.</li>
+<li><strong>ANALYTICS_SERVICE - If a local IBM Streams install is present, the application is built locally and then submitted</strong> (<em>*</em>) &#8211; to an IBM Bluemix Streaming Analytics service. If a local IBM Streams install is not present, the application is
+submitted to, built, and executed on an IBM Bluemix Streaming Analytics service. If the ConfigParams.FORCE_REMOTE_BUILD
+flag is set to True, the application will be built by the service even if a local Streams install is present.
+The service is described by its VCAP services and a service name pointing to an instance within the VCAP services. The VCAP services is either set in the configuration object or as the environment variable VCAP_SERVICES.</li>
+<li><strong>graph</strong> &#8211; a Topology object.</li>
+<li><strong>config</strong> (<em>dict</em>) &#8211; a configuration object containing job configurations and/or submission information. Keys include:</li>
+<li><strong>ConfigParams.VCAP_SERVICES</strong> (<em>*</em>) &#8211; </li>
+<li><strong>ConfigParams.SERVICE_NAME</strong> (<em>*</em>) &#8211; </li>
+<li><strong>ConfigParams.FORCE_REMOTE_BUILD</strong> (<em>*</em>) &#8211; </li>
+<li><strong>username</strong> (<em>string</em>) &#8211; an optional SWS username. Needed for retrieving remote view data.</li>
+<li><strong>password</strong> (<em>string</em>) &#8211; an optional SWS password. Used in conjunction with the username, and needed for retrieving</li>
+<li><strong>view data.</strong> (<em>remote</em>) &#8211; </li>
+<li><strong>log_level</strong> &#8211; The maximum logging level for log output.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">An output stream of bytes if submitting with JUPYTER, otherwise returns None.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, IBMStreams.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.5.11',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

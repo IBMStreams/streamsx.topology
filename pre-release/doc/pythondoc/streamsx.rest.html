@@ -1,0 +1,370 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.rest module &mdash; streamsx 1.5.11 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="streamsx 1.5.11 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.5
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="simple">
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">streamsx</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>streamsx.rest module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/streamsx.rest.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.rest">
+<span id="streamsx-rest-module"></span><h1>streamsx.rest module<a class="headerlink" href="#module-streamsx.rest" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="streamsx.rest.ConfigParams">
+<em class="property">class </em><code class="descclassname">streamsx.rest.</code><code class="descname">ConfigParams</code><a class="headerlink" href="#streamsx.rest.ConfigParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Configuration options which may be used as keys in the config parameter of the StreamsContext constructor.</p>
+<p>VCAP_SERVICES - a json object containing the VCAP information used to submit to Bluemix
+SERVICE_NAME - the name of the streaming analytics service to use from VCAP_SERVICES.</p>
+<dl class="attribute">
+<dt id="streamsx.rest.ConfigParams.SERVICE_NAME">
+<code class="descname">SERVICE_NAME</code><em class="property"> = 'topology.service.name'</em><a class="headerlink" href="#streamsx.rest.ConfigParams.SERVICE_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest.ConfigParams.VCAP_SERVICES">
+<code class="descname">VCAP_SERVICES</code><em class="property"> = 'topology.service.vcap'</em><a class="headerlink" href="#streamsx.rest.ConfigParams.VCAP_SERVICES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest.StreamsConnection">
+<em class="property">class </em><code class="descclassname">streamsx.rest.</code><code class="descname">StreamsConnection</code><span class="sig-paren">(</span><em>username=None</em>, <em>password=None</em>, <em>resource_url=None</em>, <em>config=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Creates a connection to a  running Streams installation and exposes methods to retrieve the state of that instance.</p>
+<p>Streams maintains information regarding the state of its resources. For example, these resources could include the
+currently running Jobs, Views, PEs, Operators, and Domains. The StreamsConnection provides methods to retrieve that
+information.</p>
+<p class="rubric">Example</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_resource_url</span> <span class="o">=</span> <span class="s2">&quot;https://streamsqse.localdomain:8443/streams/rest/resources&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">StreamsConnection</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">&quot;streamsadmin&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;passw0rd&quot;</span><span class="p">,</span> <span class="n">resource_url</span><span class="o">=</span><span class="n">_resource_url</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jobs_count</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">:</span>
+<span class="gp">... </span>   <span class="n">jobs_count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">get_jobs</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s2">&quot;There are &quot;</span> <span class="o">+</span> <span class="n">jobs_count</span> <span class="o">+</span> <span class="s2">&quot; jobs across all instances.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_domains">
+<code class="descname">get_domains</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_domains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a list of all Domain resources across all known streams installations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns a list of all Domain resources.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_installations">
+<code class="descname">get_installations</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_installations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a list of all known streams Installations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns a list of all Installation resources.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_instances">
+<code class="descname">get_instances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a list of all Instance resources across all known streams installations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns a list of all Instance resources.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_resources">
+<code class="descname">get_resources</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_resources" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_view">
+<code class="descname">get_view</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a view with the specified <cite>name</cite>. If there are multiple views with the same name, it will return
+the first one encountered.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; The name of the View resource.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The view resource with the specified <cite>name</cite>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_views">
+<code class="descname">get_views</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_views" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a list of all View resources across all known streams installations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns a list of all View resources.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest.VcapUtils">
+<em class="property">class </em><code class="descclassname">streamsx.rest.</code><code class="descname">VcapUtils</code><a class="headerlink" href="#streamsx.rest.VcapUtils" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Contains convenience methods for retrieving the VCAP Services, credentials, and REST API URL from a provided
+<cite>config</cite> dictionary.</p>
+<dl class="staticmethod">
+<dt id="streamsx.rest.VcapUtils.get_credentials">
+<em class="property">static </em><code class="descname">get_credentials</code><span class="sig-paren">(</span><em>config</em>, <em>vcap_services</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.VcapUtils.get_credentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the credentials of the VCAP Service specified by the <cite>ConfigParams.SERVICE_NAME</cite> field in <cite>config</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>config</strong> (<em>dict.</em>) &#8211; Connection information for Bluemix.</li>
+<li><strong>vcap_services</strong> (<em>dict.</em>) &#8211; A dict representation of the VCAP Services information.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A dict representation of the credentials.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="streamsx.rest.VcapUtils.get_rest_api_url_from_creds">
+<em class="property">static </em><code class="descname">get_rest_api_url_from_creds</code><span class="sig-paren">(</span><em>credentials</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.VcapUtils.get_rest_api_url_from_creds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the Streams REST API URL from the provided credentials.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>credentials</strong> (<em>dict.</em>) &#8211; A dict representation of the credentials.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The remote Streams REST API URL.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="streamsx.rest.VcapUtils.get_vcap_services">
+<em class="property">static </em><code class="descname">get_vcap_services</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.VcapUtils.get_vcap_services" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the VCAP Services information from the <cite>ConfigParams.VCAP_SERVICES</cite> field in the config object. If
+the field is a string, it attempts to parse it as a dict. If the field is a file, it reads the file and attempts
+to parse the contents as a dict.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>config</strong> (<em>dict.</em>) &#8211; Connection information for Bluemix.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A dict representation of the VCAP Services information.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, IBMStreams.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.5.11',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
