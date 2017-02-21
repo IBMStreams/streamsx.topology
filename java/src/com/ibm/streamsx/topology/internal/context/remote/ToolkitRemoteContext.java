@@ -63,7 +63,7 @@ import com.ibm.streamsx.topology.internal.toolkit.info.ObjectFactory;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitDependencyType;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
-public class ToolkitRemoteContext implements RemoteContext<File> {
+public class ToolkitRemoteContext extends RemoteContextImpl<File> {
 
     @Override
     public Type getType() {
@@ -72,7 +72,7 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
 
     @Override
     public Future<File> submit(JsonObject submission) throws Exception {
-        
+        preSubmit(submission);
         JsonObject deploy = deploy(submission);
         if (deploy == null)
             submission.add(SUBMISSION_DEPLOY, deploy = new JsonObject());
@@ -105,7 +105,7 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
         
         setupJobConfigOverlays(deploy, jsonGraph);
 
-        return new CompletedFuture<File>(toolkitRoot);
+        return postSubmit(submission, new CompletedFuture<File>(toolkitRoot));
     } 
 
     /**
@@ -412,5 +412,17 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
             if (deploy.has(key))
                 graphConfig.add(key, deploy.get(key));
         }
+    }
+
+    @Override
+    void preSubmit(JsonObject entity) {
+        
+    }
+
+    @Override
+    Future<File> postSubmit(JsonObject entity, Future<File> future) {
+        
+        
+        return future;
     }
 }
