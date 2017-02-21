@@ -51,7 +51,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         Path zipOutPath = pack(toolkitRoot.toPath(), namespace, name, tkName);
         
         JsonObject results = new JsonObject();
-        results.addProperty("archivePath", zipOutPath.toString());
+        results.addProperty(SubmissionResultsKeys.ARCHIVE_PATH, zipOutPath.toString());
         submission.add(RemoteContext.SUBMISSION_RESULTS, results);
         
         JsonObject deployInfo = object(submission, SUBMISSION_DEPLOY);

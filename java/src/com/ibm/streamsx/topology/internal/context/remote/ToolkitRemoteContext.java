@@ -104,7 +104,7 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         generateSPL(toolkitRoot, jsonGraph);
         
         JsonObject results = new JsonObject();
-        results.addProperty("toolkitRoot", toolkitRoot.getAbsolutePath());
+        results.addProperty(SubmissionResultsKeys.TOOLKIT_ROOT, toolkitRoot.getAbsolutePath());
         submission.add(RemoteContext.SUBMISSION_RESULTS, results);
         
         setupJobConfigOverlays(deploy, jsonGraph);
