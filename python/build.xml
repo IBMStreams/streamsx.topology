@@ -1,4 +1,4 @@
-<project name="streamsx.topology.python" default="all" >
+<project name="streamsx.topology.python" default="pythondoc" >
     <description>
         Build the streamsx.topology Python doc.
     </description>
@@ -8,7 +8,7 @@
   <property name="sphinx.dir" location="sphinx"/>
   <property name="streamsx.py.dir" location="${tk}/opt/python/packages"/>
 
-  <target name="all">
+  <target name="pythondoc">
    <mkdir dir="${py.doc}"/>
    <exec executable="sphinx-apidoc"
          dir="${sphinx.dir}" failonerror="true">
