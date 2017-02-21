@@ -16,8 +16,9 @@ public class RemoteContexts {
      * Write the results output to the results file.
      * @param submission The JsonObject representation of the application.
      * @return The Future<> result of the submission.
+     * @throws IOException 
      */
-    public static void writeResultsToFile(JsonObject submission) {
+    public static void writeResultsToFile(JsonObject submission) throws IOException {
         // Get the results file location.
         String resultsFile = jstring(submission, RemoteContext.SUBMISSION_RESULTS_FILE);
         if(resultsFile == null)
@@ -29,10 +30,7 @@ public class RemoteContexts {
         if(results_json == null)
             return;
         lines.add(results_json.toString());
-        try{          
-            Files.write(Paths.get(resultsFile), lines);
-        } catch(IOException ioe){
-            ioe.printStackTrace();
-        }
+                  
+        Files.write(Paths.get(resultsFile), lines);
     }
 }
