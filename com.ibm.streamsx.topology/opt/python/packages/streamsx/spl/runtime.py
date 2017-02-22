@@ -1,3 +1,6 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016,2017
 #
 # Wrap the operator's iterable in a function
 # that when called returns each value from
@@ -59,4 +62,8 @@ def _splpy_to_tuples(fn, attributes):
              lt.append(ev)
          return lt
       return value
+   if hasattr(fn, '_shutdown'):
+       def _shutdown():
+           fn._shutdown()
+       _to_tuples._shutdown = _shutdown
    return _to_tuples

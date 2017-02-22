@@ -41,7 +41,6 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
-import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class OperatorGenerator {
@@ -63,13 +62,14 @@ class OperatorGenerator {
         viewAnnotation(_op, sb);
         AutonomousRegions.autonomousAnnotation(_op, sb);
         threadingAnnotation(graphConfig, _op, sb);
-        outputClause(_op, sb);
+        outputPortClause(_op, sb);
         operatorNameAndKind(_op, sb);
         inputClause(_op, sb);
 
         sb.append("  {\n");
         windowClause(_op, sb);
         paramClause(graphConfig, _op, sb);
+        outputAssignmentClause(graphConfig, _op, sb);
         configClause(graphConfig, _op, sb);
         sb.append("  }\n");
 
@@ -177,7 +177,7 @@ class OperatorGenerator {
     /**
      * Create the output port definitions.
      */
-    static void outputClause(JsonObject op, StringBuilder sb) {
+    private static void outputPortClause(JsonObject op, StringBuilder sb) {
 
         sb.append("  ( ");
         
@@ -437,16 +437,56 @@ class OperatorGenerator {
         }
     }
 
-    private void splValueSupportingSubmission(JsonObject param, StringBuilder sb) {
+    private void splValueSupportingSubmission(JsonObject value, StringBuilder sb) {
                
-        JsonElement type = param.get("type");
-        if (param.has("type") && TYPE_SUBMISSION_PARAMETER.equals(type.getAsString())) {
-            param = stvHelper.getSPLExpression(param);
+        JsonElement type = value.get("type");
+        if (value.has("type") && TYPE_SUBMISSION_PARAMETER.equals(type.getAsString())) {
+            value = stvHelper.getSPLExpression(value);
         }
         
-        SPLGenerator.value(sb, param);
+        SPLGenerator.value(sb, value);
     }
      
+    private void outputAssignmentClause(JsonObject graphConfig, JsonObject op,
+            StringBuilder sb) {
+        
+        StringBuilder allAssignmentsSb = new StringBuilder();
+        
+        objectArray(op, "outputs", output -> {
+            
+            if (!output.has("assigns"))
+                return;
+            
+            JsonObject assigns = object(output, "assigns");
+            
+            if (GsonUtilities.jisEmpty(assigns))
+                return;
+                                   
+            StringBuilder assignsSb = new StringBuilder();
+            String name = jstring(output, "name");
+            name = splBasename(name);
+            assignsSb.append(name);
+            assignsSb.append(":\n");
+                      
+            for (Entry<String, JsonElement> a : assigns.entrySet()) {
+                String attr = a.getKey();
+                JsonObject value = a.getValue().getAsJsonObject();
+                
+                assignsSb.append("  ");
+                assignsSb.append(attr);
+                assignsSb.append("=");
+                splValueSupportingSubmission(value, assignsSb);
+                assignsSb.append(";\n");              
+            }
+            
+            allAssignmentsSb.append(assignsSb);
+        });
+        
+        if (allAssignmentsSb.length() != 0) {
+            sb.append(" output\n");
+            sb.append(allAssignmentsSb);
+        }
+    }
 
     static void configClause(JsonObject graphConfig, JsonObject op,
             StringBuilder sb) {

@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
 from __future__ import print_function
@@ -24,6 +25,7 @@ import subprocess
 import threading
 import sys
 import enum
+import codecs
 
 logging_utils.initialize_logging()
 logger = logging.getLogger('streamsx.topology.py_submit')
@@ -391,12 +393,18 @@ def _delete_json(fn):
 def _print_process_stdout(process):
     try:
         while True:
+            if sys.version_info.major == 2:
+                sout = codecs.getwriter('utf8')(sys.stdout)
             line = process.stdout.readline()
             if len(line) == 0:
                 process.stdout.close()
                 break
             line = line.decode("utf-8").strip()
-            print(line)
+            if sys.version_info.major == 2:
+                sout.write(line)
+                sout.write("\n")
+            else:
+                print(line)
     except:
         process.stdout.close()
         logger.exception("Error reading from process stdout")
@@ -407,13 +415,19 @@ def _print_process_stdout(process):
 # has begun.
 def _print_process_stderr(process, fn):
     try:
+        if sys.version_info.major == 2:
+            serr = codecs.getwriter('utf8')(sys.stderr)
         while True:
             line = process.stderr.readline()
             if len(line) == 0:
                 process.stderr.close()
                 break
             line = line.decode("utf-8").strip()
-            print(line)
+            if sys.version_info.major == 2:
+                serr.write(line)
+                serr.write("\n")
+            else:
+                print(line)
             if "com.ibm.streamsx.topology.internal.streams.InvokeSc getToolkitPath" in line:
                 _delete_json(fn)
     except:

@@ -29,7 +29,6 @@ public:
 private:
   // Members
     SplpyPyOp *pyop_;
-    PyObject *function_;
     PyObject *pyInNames_;
 }; 
 

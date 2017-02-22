@@ -22,6 +22,7 @@
 
 #include <stdexcept>
 #include "Python.h"
+#include "splpy_ec_api.h"
 
 /**
  * For a Python C API function symbol PyXXX we create
@@ -164,8 +165,10 @@ extern "C" {
 
 typedef PyObject* (*__splpy_ogas_fp)(PyObject *, const char *);
 typedef int (*__splpy_rssf_fp)(const char *, PyCompilerFlags *);
+#if __SPLPY_EC_MODULE_OK
 typedef PyObject* (*__splpy_mc2_fp)(PyModuleDef *, int);
 typedef int (*__splpy_sam_fp)(PyObject *, PyModuleDef *);
+#endif
 
 extern "C" {
   static __splpy_ogas_fp __spl_fp_PyObject_GetAttrString;
@@ -174,8 +177,11 @@ extern "C" {
   static __splpy_p_pp_fp __spl_fp_PyObject_CallObject;
   static __splpy_i_p_fp __spl_fp_PyCallable_Check;
   static __splpy_p_p_fp __spl_fp_PyImport_Import;
+
+#if __SPLPY_EC_MODULE_OK
   static __splpy_mc2_fp __spl_fp_PyModule_Create2;
   static __splpy_sam_fp __spl_fp_PyState_AddModule;
+#endif
 
   static PyObject * __spl_fi_PyObject_GetAttrString(PyObject *o, const char * attr_name) {
      return __spl_fp_PyObject_GetAttrString(o, attr_name);
@@ -195,12 +201,15 @@ extern "C" {
   static PyObject * __spl_fi_PyImport_Import(PyObject *name) {
      return __spl_fp_PyImport_Import(name);
   }
+
+#if __SPLPY_EC_MODULE_OK
   static PyObject * __spl_fi_PyModule_Create2(PyModuleDef *module, int apivers) {
      return __spl_fp_PyModule_Create2(module, apivers);
   }
   static int __spl_fi_PyState_AddModule(PyObject *module, PyModuleDef *def) {
      return __spl_fp_PyState_AddModule(module, def);
   }
+#endif
 }
 #pragma weak PyObject_GetAttrString = __spl_fi_PyObject_GetAttrString
 #pragma weak PyRun_SimpleStringFlags = __spl_fi_PyRun_SimpleStringFlags
@@ -208,8 +217,11 @@ extern "C" {
 #pragma weak PyObject_CallObject = __spl_fi_PyObject_CallObject
 #pragma weak PyCallable_Check = __spl_fi_PyCallable_Check
 #pragma weak PyImport_Import = __spl_fi_PyImport_Import
+
+#if __SPLPY_EC_MODULE_OK
 #pragma weak PyModule_Create2 = __spl_fi_PyModule_Create2
 #pragma weak PyState_AddModule = __spl_fi_PyState_AddModule
+#endif
 
 /*
  * Container Objects
@@ -443,8 +455,11 @@ class SplpySym {
      __SPLFIX(PyObject_CallObject, __splpy_p_pp_fp);
      __SPLFIX(PyCallable_Check, __splpy_i_p_fp);
      __SPLFIX(PyImport_Import, __splpy_p_p_fp);
+
+#if __SPLPY_EC_MODULE_OK
      __SPLFIX(PyModule_Create2, __splpy_mc2_fp);
      __SPLFIX(PyState_AddModule, __splpy_sam_fp);
+#endif
  
      __SPLFIX(PyTuple_New, __splpy_p_s_fp);
      __SPLFIX(PyIter_Next, __splpy_p_p_fp);

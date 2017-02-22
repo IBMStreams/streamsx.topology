@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2017
 
@@ -8,11 +9,66 @@ IBM Streams & Streaming Analytics service on Bluemix.
 Overview
 ########
 
-IBM® Streams is an advanced analytic platform that allows user-developed applications to quickly ingest,
-analyze and correlate information as it arrives from thousands of real-time sources.
-Streams can handle very high data throughput rates, millions of events or messages per second.
-With this API Python developers can build streaming applications that can be executed using IBM Streams,
-including the processing being distributed across multiple computing resources (hosts or machines) for scalability.
+IBM® Streams is an advanced analytic platform that allows user-developed
+applications to quickly ingest, analyze and correlate information as it
+arrives from thousands of real-time sources.
+Streams can handle very high data throughput rates, millions of events
+or messages per second.
+
+With this API Python developers can build streaming applications
+that can be executed using IBM Streams, including the processing
+being distributed across multiple computing resources
+(hosts or machines) for scalability.
+
+Topology
+########
+
+A Topology declare a graph of *streams* and *operations* against
+tuples (data items) on those streams.
+
+After being declared, a Topology is submitted to be compiled into
+a Streams application bundle (sab file) and then executed.
+The sab file is a self contained bundle that can be executed
+in a distributed Streams instance either using the Streaming
+Analytics service on IBM Bluemix cloud platform or an on-premise
+IBM Streams installation.
+
+The compilation step invokes the Streams compiler to produce a bundle.
+This effectively, from a Python point of view, produces a runnable
+version of the Python topology that includes generated application
+specific Python C extensions to optimize performance.
+
+The Streams runtime distributes the application's operations
+across the resources available in the instance.
+
+Stream
+######
+
+A stream is a DEFINITION.
+
+A stream has a schema that defines the type of each tuple on the stream.
+The schema for a Python Topology is either:
+
+* Untyped - A tuple may be any Python object. This is the default.
+* String - Each tuple is a Unicode string.
+* Binary - Each tuple is a blob.
+* Json - Each tuple is a Python dict that can be expressed as a JSON object.
+* Structured - A stream that is an ordered list of attributes, with each attribute having a fixed type (e.g. float64 or int32) and a name.
+
+Stream operations
+#################
+
+A stream is processed to produce zero or more transformed streams,
+such as filtering a stream to drop unwanted tuples, producing a stream
+that only contains the required tuples.
+
+An operation on a stream can be:
+
+
+* A Python lambda function. The lambda is called for each tuple on a stream, passing the tuple.
+* A Python function. The function is called for each tuple on a stream, passing the tuple.
+* An instance of a Python callable class. The instance is called for each tuple on the stream, passing the tuple.  Use of an instance allows the operation to be stateful by maintaining state in instance attributes across invocations.
+* An invocation of an SPL operator.
 """
 
 from __future__ import unicode_literals
@@ -548,7 +604,7 @@ class View(object):
     def start_data_fetch(self):
         self.initialize_rest()
         try:
-            self.view_object = self.streams_context.retrieve_view(self.name)
+            self.view_object = self.streams_context.get_view(self.name)
         except:
             logger.exception("Could not view: " + self.name)
             raise

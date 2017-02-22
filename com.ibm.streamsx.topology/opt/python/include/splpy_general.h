@@ -128,11 +128,8 @@ class SplpyGeneral {
 
         return o == none;
     }
-    static PyObject * getBool(const SPL::boolean & value) {
-       static PyObject * f = PyBool_FromLong(0);
-       static PyObject * t = PyBool_FromLong(1);
-
-       return value ? t : f;
+    static PyObject * getBool(const bool & value) {
+       return PyBool_FromLong(value ? 1 : 0);
      }
 
     /*

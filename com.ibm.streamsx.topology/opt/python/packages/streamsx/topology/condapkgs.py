@@ -1,3 +1,4 @@
+# coding=utf-8
 # Packages automatically included in Anaconda for Python 3.5
 # These packages are not added into the Streams application
 # bundle when Anaconda is used to build the topology

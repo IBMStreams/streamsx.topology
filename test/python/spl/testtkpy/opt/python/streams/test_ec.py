@@ -4,6 +4,7 @@
 # Import the SPL decorators
 from streamsx.spl import spl
 import streamsx.ec as ec
+import pickle
 
 #------------------------------------------------------------------
 # Test Execution Context (streamsx.ex) functions
@@ -15,7 +16,8 @@ def splNamespace():
 @spl.filter()
 class PyTestOperatorContext:
     def __init__(self, job_id, pe_id, channel, local_channel, max_channels, local_max_channels):
-        self.last = None
+        self.enter_called = False
+        self.exit_called = False
         self.job_id = job_id
         self.pe_id = pe_id
         self.channel = channel
@@ -42,8 +44,17 @@ class PyTestOperatorContext:
         return ok
             
     def __call__(self, *tuple):
+        if not self.enter_called:
+            raise AssertionError("__enter__() was not called")
+        if self.exit_called:
+            raise AssertionError("__exit__() was called before shutdown")
         return self.check()
 
+    def __enter__(self):
+        self.enter_called = True
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.exit_called = True
 
 @spl.filter()
 class PyTestMetrics:
@@ -65,6 +76,14 @@ class PyTestMetrics:
 
         if not ok:
             raise AssertionError("Failed metrics!")
+
+        # Test a metric cannot be pickled
+        try:
+            pm = pickle.dumps(g2)
+            raise AssertionError("Was able to pickle metric:" + pm)
+        except pickle.PicklingError:
+            pass
+     
 
     def __call__(self, *tuple):
         ok= True

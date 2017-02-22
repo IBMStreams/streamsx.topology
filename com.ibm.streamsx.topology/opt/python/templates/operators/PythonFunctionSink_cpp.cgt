@@ -41,9 +41,9 @@ using namespace streamsx::topology;
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
     pyop_(NULL),
-    function_(NULL),
     pyInNames_(NULL)
 {
+   PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
 
 <% if ($paramStyle eq 'dictionary') { %>
@@ -53,6 +53,8 @@ MY_OPERATOR::MY_OPERATOR() :
                getInputPortAt(0));
    }
 <% } %>
+
+   pyop_->setCallable(callable);
 }
 
 // Destructor
@@ -60,8 +62,6 @@ MY_OPERATOR::~MY_OPERATOR()
 {
    {
    SplpyGIL lock;
-   if (function_)
-      Py_DECREF(function_);
    if (pyInNames_)
       Py_DECREF(pyInNames_);
     }
@@ -71,7 +71,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    SplpyOp::prepareToShutdown();
+    pyop_->prepareToShutdown();
 }
 
 // Tuple processing for non-mutating ports
@@ -81,7 +81,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
   
-    PyObject * pyReturnNone = PyObject_CallObject(function_, pyTuple);
+    PyObject * pyReturnNone = PyObject_CallObject(pyop_->callable(), pyTuple);
 
     Py_DECREF(pyTuple);
     if (pyReturnNone == NULL) {

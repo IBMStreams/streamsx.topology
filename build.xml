@@ -99,42 +99,9 @@
        </javadoc>
        <ant dir="toolkit" target="spldoc"/>
        <ant dir="scala" target="scaladoc"/>
-       <antcall target="pydoc"/>
+       <ant dir="python" target="pythondoc"/>
   </target>
   
-  <target name="pydoc">
-       <mkdir dir="${tk}/doc/pydoc"/>
-       
-       <!-- Copy streamsx directory !-->
-       <copy todir="${tk}/doc/pydoc">
-         <fileset dir="${tk}/opt/python/packages">
-           <exclude name="**/spl/**"/>
-           <exclude name="**/runtime.py"/>
-           <exclude name="**/splpy_setup.py"/>
-         </fileset>
-       </copy>
-       
-       <!-- Use "pydoc3 -w ./" to generate html for entire directory !-->
-	   <exec executable="pydoc3" dir="${tk}/doc/pydoc">
-	     <arg value="-w"/>
-	     <arg value="./"/>
-	   </exec>
-	   
-	   <!-- Delete temporary directory !-->
-	   <delete dir="${tk}/doc/pydoc/streamsx"/>
-	   
-	   <!-- pydoc generated html files have absolute path file links; remove them !-->
-	   <replaceregexp match="\&lt;a href=\&quot;file:(.*?)\&lt;/a\&gt;" replace="" flags="g">
-         <fileset dir="${tk}/doc/pydoc" includes="**/*.html"/>
-       </replaceregexp>
-       
-       <!-- pydoc generated html files have broken links to standard libraries; change links to text !-->
-	   <replaceregexp match="\&lt;a href=\&quot;(?!(streamsx(.*?)\.html|#(.*?)|\.)).*?\&quot;\&gt;(.*?)\&lt;/a\&gt;" replace="\4" flags="g">
-         <fileset dir="${tk}/doc/pydoc" includes="**/*.html"/>
-       </replaceregexp>
-
-  </target>
-       
   <target name="create_release_bundle">
       <tstamp/>
       <property name="release.dir" location="${release.base}" />

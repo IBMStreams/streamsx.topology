@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2016
 
@@ -215,6 +216,11 @@ class _SPLInvocation(object):
                 _value["value"] = param
                 _params[name] = _value
         _op["parameters"] = _params
+
+        # Callout to allow a ExtensionOperator
+        # to augment the JSON
+        if hasattr(self, '_ex_op'):
+            self._ex_op._generate(_op)
         return _op
 
     def _addOperatorFunction(self, function):
