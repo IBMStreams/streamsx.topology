@@ -1,5 +1,10 @@
 package com.ibm.streamsx.topology.internal.context.remote;
 
+/**
+ * Keys used in the JSON results file to keep track of artifacts created during submission.
+ * The results file is read by Python, and any other sources who need information returned 
+ * from a Java submit.
+ */
 public interface SubmissionResultsKeys {
     /**
      * The root of the created toolkit.
