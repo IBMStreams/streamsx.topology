@@ -36,9 +36,8 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     
     @Override
     public Future<File> _submit(JsonObject submission) throws Exception {
-        preSubmit(submission);
         File toolkitRoot = super._submit(submission).get();
-        return postSubmit(submission, createCodeArchive(toolkitRoot, submission));        
+        return createCodeArchive(toolkitRoot, submission);        
     }
     
     public static Future<File> createCodeArchive(File toolkitRoot, JsonObject submission) throws IOException, URISyntaxException {
