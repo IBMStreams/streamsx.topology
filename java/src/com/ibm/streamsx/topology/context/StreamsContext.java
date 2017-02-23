@@ -285,5 +285,7 @@ public interface StreamsContext<T> {
     
     String SUBMISSION_DEPLOY = RemoteContext.SUBMISSION_DEPLOY;
     String SUBMISSION_GRAPH = RemoteContext.SUBMISSION_GRAPH;
+    String SUBMISSION_RESULTS = RemoteContext.SUBMISSION_RESULTS;
+    String SUBMISSION_RESULTS_FILE = RemoteContext.SUBMISSION_RESULTS_FILE;
     
 }

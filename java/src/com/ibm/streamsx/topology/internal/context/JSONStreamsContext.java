@@ -16,6 +16,7 @@ import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLO
 import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,6 +31,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity;
+import com.ibm.streamsx.topology.internal.context.remote.RemoteContexts;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
@@ -77,7 +80,8 @@ abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
     /**
      * Post-submit hook when submitting a Topology.
      */
-    Future<T> postSubmit(AppEntity entity, Future<T> future) throws Exception {
+    Future<T> postSubmit(AppEntity entity, Future<T> future) throws Exception{
+        RemoteContexts.writeResultsToFile(entity.submission);
         return future;
     }
     

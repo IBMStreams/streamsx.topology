@@ -26,6 +26,7 @@ import threading
 import sys
 import enum
 import codecs
+import tempfile
 
 logging_utils.initialize_logging()
 logger = logging.getLogger('streamsx.topology.py_submit')
@@ -71,7 +72,8 @@ def submit(ctxtype, graph, config=None, username=None, password=None, log_level=
         log_level: The maximum logging level for log output.
         
     Returns:
-        An output stream of bytes if submitting with JUPYTER, otherwise returns None.
+        An output stream of bytes if submitting with JUPYTER, otherwise returns a dict containing information relevant
+        to the submission.
     """    
     logger.setLevel(log_level)
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
@@ -93,6 +95,8 @@ class _BaseSubmitter(object):
             # the callers config
             self.config.update(config)
         self.app_topology = app_topology
+        self.fn = None
+        self.results_file = None
 
     def _config(self):
         "Return the submit configuration"
@@ -138,7 +142,7 @@ class _BaseSubmitter(object):
         logger.info("Generating SPL and submitting application.")
         process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0, env=self._get_java_env())
         try:
-            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
+            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
             stderr_thread.daemon = True
             stderr_thread.start()
 
@@ -146,7 +150,23 @@ class _BaseSubmitter(object):
             stdout_thread.daemon = True
             stdout_thread.start()
             process.wait()
-            return process.returncode
+
+            results_json = None
+            try:
+                with open(self.results_file) as _file:
+                    results_json = json.loads(_file.read())
+            except IOError:
+                logger.exception("Error opening an reading from results file.")
+                raise
+            except json.JSONDecodeError:
+                logger.exception("Results file doesn't contain valid JSON")
+                raise
+            except:
+                raise
+
+            _delete_json(self)
+            results_json['return_code'] = process.returncode
+            return results_json
 
         except:
             logger.exception("Error starting java subprocess for submission")
@@ -173,6 +193,13 @@ class _BaseSubmitter(object):
         fj = dict()
         fj["deploy"] = self.config
         fj["graph"] = self.app_topology.generateSPLGraph()
+
+        _file = tempfile.NamedTemporaryFile(prefix="results", suffix=".json", mode="w+t", delete=False)
+        _file.close()
+        fj["submissionResultsFile"] = _file.name
+        self.results_file = _file.name
+        logger.debug("Results file created at " + _file.name)
+
         return fj
 
     def _create_json_file(self, fj):
@@ -250,7 +277,7 @@ class _JupyterSubmitter(_BaseSubmitter):
         args = [jvm, '-classpath', cp, submit_class, ContextTypes.STANDALONE, self.fn]
         process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
         try:
-            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self.fn]))
+            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
             stderr_thread.daemon = True
             stderr_thread.start()
 
@@ -384,9 +411,10 @@ class _SubmitContextFactory(object):
 
 
 # Used to delete the JSON file after it is no longer needed.
-def _delete_json(fn):
-    if os.path.isfile(fn):
-        os.remove(fn)
+def _delete_json(submitter):
+    for fn in [submitter.fn, submitter.results_file]:
+        if os.path.isfile(fn):
+            os.remove(fn)
 
 
 # Used by a thread which polls a subprocess's stdout and writes it to stdout
@@ -413,7 +441,7 @@ def _print_process_stdout(process):
 
 # Used by a thread which polls a subprocess's stderr and writes it to stderr, until the sc compilation
 # has begun.
-def _print_process_stderr(process, fn):
+def _print_process_stderr(process, submitter):
     try:
         if sys.version_info.major == 2:
             serr = codecs.getwriter('utf8')(sys.stderr)
@@ -428,8 +456,6 @@ def _print_process_stderr(process, fn):
                 serr.write("\n")
             else:
                 print(line)
-            if "com.ibm.streamsx.topology.internal.streams.InvokeSc getToolkitPath" in line:
-                _delete_json(fn)
     except:
         process.stderr.close()
         logger.exception("Error reading from process stderr")
