@@ -153,9 +153,8 @@ class _BaseSubmitter(object):
 
             results_json = None
             try:
-                _file = open(self.results_file)
-                results_json = json.loads(_file.read())
-                _file.close()
+                with open(self.results_file) as _file:
+                    results_json = json.loads(_file.read())
             except IOError:
                 logger.exception("Error opening an reading from results file.")
                 raise
