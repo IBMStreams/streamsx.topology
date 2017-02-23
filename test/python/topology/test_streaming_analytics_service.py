@@ -92,3 +92,4 @@ class TestStreamingAnalytics(unittest.TestCase):
     cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap_file']
     cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
     submit_to_service(self, topo, cfg)
+

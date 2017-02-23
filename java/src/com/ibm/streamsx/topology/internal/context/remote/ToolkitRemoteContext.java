@@ -71,7 +71,7 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
     }
 
     @Override
-    public Future<File> submit(JsonObject submission) throws Exception {
+    public Future<File> _submit(JsonObject submission) throws Exception {
         preSubmit(submission);
         JsonObject deploy = deploy(submission);
         if (deploy == null)

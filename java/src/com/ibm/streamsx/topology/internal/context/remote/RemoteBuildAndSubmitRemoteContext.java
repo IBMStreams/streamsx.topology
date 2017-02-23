@@ -20,7 +20,7 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
     }
 	
 	@Override
-	public Future<File> submit(JsonObject submission) throws Exception {
+	public Future<File> _submit(JsonObject submission) throws Exception {
 	    preSubmit(submission);
 	    // Get the VCAP service info which also verifies we have the
 	    // right information before we do any work.

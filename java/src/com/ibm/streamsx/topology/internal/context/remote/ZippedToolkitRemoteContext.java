@@ -35,7 +35,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     }
     
     @Override
-    public Future<File> submit(JsonObject submission) throws Exception {
+    public Future<File> _submit(JsonObject submission) throws Exception {
         preSubmit(submission);
         File toolkitRoot = super.submit(submission).get();
         return postSubmit(submission, createCodeArchive(toolkitRoot, submission));        
