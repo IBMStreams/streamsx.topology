@@ -99,7 +99,7 @@ class Tester(object):
 
     def _standalone_test(self, config):
         rc = streamsx.topology.context.submit("STANDALONE", self.topology, config)
-        return rc == 0
+        return rc['return_code'] == 0
 
 class Condition(object):
     _METRIC_PREFIX = "streamsx.condition:"
