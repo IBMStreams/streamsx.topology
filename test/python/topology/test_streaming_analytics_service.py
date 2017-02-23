@@ -37,6 +37,7 @@ def build_simple_app(name):
 def submit_to_service(test, topo, cfg):
     rc = submit("ANALYTICS_SERVICE", topo, cfg)
     test.assertEqual(0, rc['return_code'])
+    return rc
 
 @unittest.skipIf(sys.version_info.major == 2, "Streaming Analytics service requires 3.5")
 class TestStreamingAnalytics(unittest.TestCase):
@@ -92,4 +93,21 @@ class TestStreamingAnalytics(unittest.TestCase):
     cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap_file']
     cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
     submit_to_service(self, topo, cfg)
+
+  def test_submit_job_results(self):
+      vsi = require_vcap(self)
+      topo = build_simple_app("test_submit_job_results")
+      cfg = {}
+      cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
+      cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap_file']
+      cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
+      rc = submit_to_service(self, topo, cfg)
+      self.assertIn("artifact", rc, "\"artifact\" field not in returned json dict")
+      self.assertIn("jobId", rc, "\"jobId\" field not in returned json dict")
+      self.assertIn("application", rc, "\"application\" field not in returned json dict")
+      self.assertIn("name", rc, "\"name\" field not in returned json dict")
+      self.assertIn("state", rc, "\"state\" field not in returned json dict")
+      self.assertIn("plan", rc, "\"plan\" field not in returned json dict")
+      self.assertIn("enabled", rc, "\"enabled\" field not in returned json dict")
+      self.assertIn("status", rc, "\"status\" field not in returned json dict")
 

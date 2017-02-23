@@ -7,6 +7,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 
@@ -28,8 +31,6 @@ public class RemoteContexts {
         if(results_json == null)
             return;
         
-        try(PrintWriter pw = new PrintWriter(new File(resultsFile), StandardCharsets.UTF_8.name())){
-            pw.write(results_json.toString());
-        }
+        Files.write(Paths.get(resultsFile), results_json.toString().getBytes(StandardCharsets.UTF_8));
     }
 }
