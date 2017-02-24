@@ -1,0 +1,9 @@
+# streams-specific excludes
+toolkit.xml
+/opt/.__splpy/
+/doc/
+/impl/
+/com.ibm.streamsx.topology.pysamples.positional/
+/output/
+/logs/
+/.tmp

@@ -140,6 +140,7 @@ _INFO_XML_TEMPLATE="""<?xml version="1.0" encoding="UTF-8"?>
   <resources>
     <messageSet name="TopologySplpyResource">
       <lang default="true">en_US/TopologySplpyResource.xlf</lang>
+      <lang>de_DE/TopologySplpyResource.xlf</lang>
       <lang>fr_FR/TopologySplpyResource.xlf</lang>
       <lang>it_IT/TopologySplpyResource.xlf</lang>
       <lang>ja_JP/TopologySplpyResource.xlf</lang>

@@ -1,0 +1,21 @@
+namespace testspl;
+
+use com.ibm.streamsx.topology.pysamples.positional::Noop ;
+
+public composite NoopSample {
+	graph
+		stream<rstring msg> Stream1 = Beacon() {
+			param
+				iterations: 3;
+				period: 0.5;
+			output Stream1:
+				msg = "Hello " + (rstring) IterationCount();
+		}
+
+		stream<Stream1> Stream2 = Noop(Stream1){}
+
+		() as Printer = Custom(Stream2) {
+			logic onTuple Stream2: println(msg);
+		}
+}
+
