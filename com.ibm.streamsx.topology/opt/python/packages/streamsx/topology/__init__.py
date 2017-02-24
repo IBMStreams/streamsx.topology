@@ -16,3 +16,15 @@ Streams can handle very high data throughput rates, millions of events or messag
 With this API Python developers can build streaming applications that can be executed using IBM Streams,
 including the processing being distributed across multiple computing resources (hosts or machines) for scalability.
 """
+
+import logging
+
+
+
+class _NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+
+_debug = logging.getLogger('streamsx.topology.internal')
+_debug.addHandler(_NullHandler())
+_debug.setLevel(logging.CRITICAL)

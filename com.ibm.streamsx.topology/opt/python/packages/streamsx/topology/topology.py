@@ -109,7 +109,7 @@ class Topology(object):
            When compiling the application using Anaconda this set is pre-loaded with Python pacakges from the 
            Anaconda pre-loaded  set of applications.
 
-           package names in the include_packages set take precedence over package namers in the exclude_pacakges set.
+           Package names in `include_packages` take precedence over package names in `exclude_pacakges`.
     """  
 
     def __init__(self, name, files=None):
