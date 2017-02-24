@@ -1,13 +1,16 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016
+# Copyright IBM Corp. 2016,2017
 import os.path
 import sys
 import site
 import inspect
 import types
 import collections
-    
+import logging
+
+from streamsx.topology import _debug
+
 class _DependencyResolver(object):
     """
     Finds dependencies given a module object
@@ -23,21 +26,56 @@ class _DependencyResolver(object):
         dir = os.path.dirname(dir)
         self._streamsx_topology_dir = dir
         self.topology = topology
-        
+
+    def _find_dependent_modules(self, module):
+        """
+        Return the set of dependent modules for used modules,
+        classes and routines.
+        """
+        dms = set()
+        for um in inspect.getmembers(module, inspect.ismodule):
+            dms.add(um[1])
+
+        for uc in inspect.getmembers(module, inspect.isclass):
+            self._add_obj_module(dms, uc[1])
+        for ur in inspect.getmembers(module, inspect.isroutine):
+            self._add_obj_module(dms, ur[1])
+
+        return dms
+
+    def _add_obj_module(self, dms, obj):
+        if hasattr(obj, '__module__'):
+            if obj.__module__ in sys.modules:
+                dms.add(sys.modules[obj.__module__])
+
     def add_dependencies(self, module):
         """
-        Adds a module and its dependencies to the list of dependencies
+        Adds a module and its dependencies to the list of dependencies.
+
+        Top-level entry point for adding a module and its dependecies.
         """
+
+        if module in self._processed_modules:
+            return None
+
+        if hasattr(module, "__name__"):
+            mn = module.__name__
+        else:
+            mn = '<unknown>'
+
+        _debug.debug("add_dependencies:module=%s", module)
+
         # add the module as a dependency
-        self._add_dependency(module)
+        if not self._add_dependency(module, mn):
+            _debug.debug("add_dependencies:not added:module=%s", mn)
+            return None
+
+        _debug.debug("add_dependencies:ADDED:module=%s", mn)
+
         # recursively get the module's imports and add those as dependencies
-        imported_modules = {}
-        if self._include_module(module):
-          imported_modules = _get_imported_modules(module)
-        for imported_module_name,imported_module in imported_modules.items():
-            if imported_module not in self._processed_modules:
-                #print ("add_dependencies for {0} {1}".format(imported_module.__name__, imported_module))
-                self.add_dependencies(imported_module)
+        for dm in self._find_dependent_modules(module):
+            _debug.debug("add_dependencies:adding dependent module %s for %s", dm, mn)
+            self.add_dependencies(dm)
     
     @property
     def modules(self):
@@ -53,40 +91,61 @@ class _DependencyResolver(object):
         """
         return tuple(self._packages.keys())   
 
-    def _include_module(self, module):
-        # As some packages have the following format:
-        # 
-        # scipy.special.specfun
-        # scipy.linalg
-        #
-        # Where the top-level package name is just a prefix to a longer package name, 
-        # we don't want to do a direct comparison. Instead, we want to excluse packages
-        # which are either exactly "<package_name>", or start with "<package_name>".
-        
-        # print("included_packages:", self.topology.include_packages);
-        for include_package in self.topology.include_packages:
-            if include_package == module.__name__ or module.__name__.startswith(include_package + '.'):
-                return True
-            
-        # print("excluded_packages:", self.topology.exclude_packages);
-        for exclude_package in self.topology.exclude_packages:
-            if exclude_package == module.__name__ or module.__name__.startswith(exclude_package + '.'):
-                return False
-            
+    def _include_module(self, module, mn):
+        """ See if a module should be included or excluded based upon
+        included_packages and excluded_packages.
+
+        As some packages have the following format:
+
+        scipy.special.specfun
+        scipy.linalg
+
+        Where the top-level package name is just a prefix to a longer package name,
+        we don't want to do a direct comparison. Instead, we want to exclude packages
+        which are either exactly "<package_name>", or start with "<package_name>".
+        """
+
+        if mn in self.topology.include_packages:
+            _debug.debug("_include_module:explicit using __include_packages: module=%s", mn)
+            return True
+        if '.' in mn:
+            for include_package in self.topology.include_packages:
+                if mn.startswith(include_package + '.'):
+                    _debug.debug("_include_module:explicit pattern using __include_packages: module=%s pattern=%s", mn, \
+                            include_package + '.')
+                    return True
+
+        if mn in self.topology.exclude_packages:
+            _debug.debug("_include_module:explicit using __exclude_packages: module=%s", mn)
+            return False
+        if '.' in mn:
+            for exclude_package in self.topology.exclude_packages:
+                if mn.startswith(exclude_package + '.'):
+                    _debug.debug("_include_module:explicit pattern using __exclude_packages: module=%s pattern=%s", mn, \
+                                 exclude_package + '.')
+                    return False
+
+        _debug.debug("_include_module:including: module=%s", mn)
         return True
 
-
-    
-    def _add_dependency(self, module):
+    def _add_dependency(self, module, mn):
         """
         Adds a module to the list of dependencies
+        wihtout handling the modules dependences.
         """
-        if _is_streamsx_topology_module(module):
-            return None
+        _debug.debug("_add_dependency:module=%s", mn)
 
-        if not self._include_module(module):
+        if _is_streamsx_topology_module(module):
+            _debug.debug("_add_dependency:streamsx module=%s", mn)
+            return False
+
+        if _is_builtin_module(module):
+            _debug.debug("_add_dependency:builtin module=%s", mn)
+            return False
+
+        if not self._include_module(module, mn):
           #print ("ignoring dependencies for {0} {1}".format(module.__name__, module))
-          return None
+          return False
 
         package_name = _get_package_name(module)
         top_package_name = module.__name__.split('.')[0]
@@ -113,6 +172,7 @@ class _DependencyResolver(object):
             self._add_module(module_path)
             
         self._processed_modules.add(module)
+        return True
 
     def _add_package(self, path):
         if path == self._streamsx_topology_dir:
@@ -168,68 +228,10 @@ def _get_module_name(function):
             module_name = os.path.splitext(os.path.basename(main_module.__file__))[0]
     return module_name
 
-
-def _get_imported_modules(module):
-    """
-    Gets imported modules for a given module
-    The following modules are excluded: 
-    * built-in modules
-    * modules that have "com.ibm.streamsx.topology" in the path
-    * other system modules whose paths start with sys.prefix or sys.exec_prefix 
-      that are not inside a site package
-    Returns:
-        a dictionary of module names => modules
-    """
-    imported_modules = {}
-    #print ("vars({0}): {1}".format(module.__name__, vars(module)))
-    for alias, val in vars(module).items():
-        vars_module = None
-        # module type
-        if isinstance(val, types.ModuleType):
-            vars_module = val
-        # has __module__ attr, find module
-        elif hasattr(val, '__module__') \
-            and val.__module__ in sys.modules:
-            vars_module = sys.modules[val.__module__]
-        # if we found a module, determine if it should be included
-        # in the list of dependencies
-        if vars_module:    
-            if not _is_builtin_module(vars_module) and \
-               not _is_streamsx_topology_module(vars_module) and \
-               not _is_system_module(vars_module):
-                imported_modules[vars_module.__name__] = vars_module
-    return imported_modules
-
 def _is_builtin_module(module):
-    return module.__name__ in sys.builtin_module_names and \
-           not hasattr(module, '__file__') and \
-           not hasattr(module, '__path__')
+    return (not hasattr(module, '__file__')) or  module.__name__ in sys.builtin_module_names
 
 def _is_streamsx_topology_module(module):
     if hasattr(module, '__name__'):
-        mn = module.__name__
-        return mn.startswith('streamsx.topology.') or mn.startswith('streamsx.spl.') or mn == 'streamsx.rest'
-    return False
-
-def _inside_site_package(path):
-    """
-    Returns:
-        True if the given path is for a site package, False otherwise
-    """
-    return 'site-packages' in path
-
-def _is_system_modulex(module_path):
-    return not _inside_site_package(module_path) and \
-           (module_path.startswith((sys.prefix, sys.exec_prefix)) or \
-            (hasattr(sys, 'real_prefix') and module_path.startswith(sys.real_prefix)))
-                     
-def _is_system_module(module):
-    if hasattr(module, '__file__'):
-        # module or regular package
-        return _is_system_modulex(module.__file__)
-    elif hasattr(module, '__path__'):
-        # namespace package.  assume system package if any path evaluates to true
-        for module_path in list(module.__path__):
-            if _is_system_modulex(module_path):
-                return True
+        return module.__name__.startswith('streamsx.')
     return False

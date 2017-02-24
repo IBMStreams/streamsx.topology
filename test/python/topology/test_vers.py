@@ -15,5 +15,4 @@ def get_version():
 
 def tester_supported():
     v = get_version()
-    print(v)
     return not v.startswith('4.0.') and not v.startswith('4.1.')

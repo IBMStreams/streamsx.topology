@@ -1,6 +1,9 @@
 import streamsx.ec as ec
 import streamsx.topology.context
 import unittest
+import logging
+
+_logger = logging.getLogger('streamsx.topology.test')
 
 class Tester(object):
     """Testing support for a Topology.
@@ -40,6 +43,7 @@ class Tester(object):
         Returns: stream
 
         """
+        _logger.debug("Adding tuple count (%d) condition to stream %s.", count, stream)
         name = "ExactCount" + str(len(self._conditions));
         cond = TupleExactCount(count, name)
         return self.add_condition(stream, cond)
@@ -74,6 +78,7 @@ class Tester(object):
         """
 
         # Add the conditions into the graph as sink operators
+        _logger.debug("Adding conditions to topology %s.", self.topology.name)
         for ct in self._conditions.values():
             condition = ct[1]
             stream = ct[0]
@@ -81,6 +86,8 @@ class Tester(object):
 
         if config is None:
             config = {}
+
+        _logger.debug("Starting test topology %s context %s.", self.topology.name, ctxtype)
 
         if "STANDALONE" == ctxtype:
             passed = self._standalone_test(config)

@@ -180,7 +180,7 @@ class TestTopologyMethods(unittest.TestCase):
           hwf.sink(test_package.test_subpackage.test_module.CheckTuples(["Hello"]))
           standalone(self, topo)
       finally:
-          del test_package.test_subpackage.test_module
+          pass
       
   # test using input functions from an implicit namespace package that doesn't have a __init__.py
   # test using input functions that are qualified using a module alias  e.g. 'test_ns_module'

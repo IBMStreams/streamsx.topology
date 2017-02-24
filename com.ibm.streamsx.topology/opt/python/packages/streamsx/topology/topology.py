@@ -103,13 +103,12 @@ class Topology(object):
        Topology keeps track of all sources, sinks, and data operations within your application.
 
        Instance variables:
-           include_packages: Set of Python package names to be included in the built application. 
+           include_packages(set): Python package names to be included in the built application. 
 
-           exclude_packages: Set of Python package names to be excluded from the built application.
-           When compiling the application using Anaconda this set is pre-loaded with Python pacakges from the 
-           Anaconda pre-loaded  set of applications.
+           exclude_packages(set): Python top-level package names to be excluded from the built application. Excluding a top-level packages excludes all sub-modules at any level in the package, e.g. `sound` excludes `sound.effects.echo`. Only the top-level package can be defined, e.g. `sound` rather than `sound.filters`. Behavior when adding a module within a package is undefined.
+           When compiling the application using Anaconda this set is pre-loaded with Python packages from the Anaconda pre-loaded set.
 
-           package names in the include_packages set take precedence over package namers in the exclude_pacakges set.
+           Package names in `include_packages` take precedence over package names in `exclude_packages`.
     """  
 
     def __init__(self, name, files=None):
