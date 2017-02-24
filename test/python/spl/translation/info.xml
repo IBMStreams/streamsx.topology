@@ -13,6 +13,7 @@
     <info:messageSet name="TopologySplpyResource">
       <info:lang default="true">en_US/TopologySplpyResource.xlf</info:lang>
       <info:lang>de_DE/TopologySplpyResource.xlf</info:lang>
+      <info:lang>es_ES/TopologySplpyResource.xlf</info:lang>
       <info:lang>fr_FR/TopologySplpyResource.xlf</info:lang>
       <info:lang>it_IT/TopologySplpyResource.xlf</info:lang>
       <info:lang>ja_JP/TopologySplpyResource.xlf</info:lang>
