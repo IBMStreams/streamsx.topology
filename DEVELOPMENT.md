@@ -23,6 +23,22 @@ The project also requires a local install of IBM InfoSphere Streams 4.x (>= 4.0.
 InfoSphere Streams environment variables have been set.
 ```
 
+For building the documentation for the Python support Sphinx must be installed:
+
+```
+pip install sphinx
+pip install sphinx_rtd_theme
+```
+
+The Python documentation is only invoked through the top-level `release`
+target or the default target in `python/build.xml`.
+Creation of the Python documentation can be skipped by setting the property
+`topology.build.sphinx=no`, e.g.
+
+```
+ant -Dtopology.build.sphinx=no release
+```
+
 ### Building
 
 The top-level Ant file `streamsx.topology/build.xml` has these main targets:
