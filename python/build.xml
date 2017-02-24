@@ -8,7 +8,15 @@
   <property name="sphinx.dir" location="sphinx"/>
   <property name="streamsx.py.dir" location="${tk}/opt/python/packages"/>
 
-  <target name="pythondoc">
+  <property name="topology.build.sphinx" value="yes"/>
+
+  <target name="pythondoc" depends="pythondoc_work,pythondoc_warning"/>
+
+  <target name="pythondoc_warning" unless="${topology.build.sphinx}">
+     <echo message="Python documentation not being built! topology.build.sphinx=${topology.build.sphinx}"/>
+  </target>
+
+  <target name="pythondoc_work" if="${topology.build.sphinx}">
    <mkdir dir="${py.doc}"/>
    <exec executable="sphinx-apidoc"
          dir="${sphinx.dir}" failonerror="true">
