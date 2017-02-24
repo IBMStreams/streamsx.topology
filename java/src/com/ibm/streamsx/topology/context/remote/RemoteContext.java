@@ -15,6 +15,8 @@ public interface RemoteContext<T> {
 	
     String SUBMISSION_DEPLOY = "deploy";
     String SUBMISSION_GRAPH = "graph";
+    String SUBMISSION_RESULTS = "submissionResults";
+    String SUBMISSION_RESULTS_FILE = "submissionResultsFile";
     
     /**
      * Types of the context that a
@@ -24,7 +26,7 @@ public interface RemoteContext<T> {
     public enum Type {
         TOOLKIT,        
         BUILD_ARCHIVE,
-	ANALYTICS_SERVICE,    
+        ANALYTICS_SERVICE,    
     }
     
     

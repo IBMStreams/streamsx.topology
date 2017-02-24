@@ -32,7 +32,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
-import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 class BuildServiceRemoteRESTWrapper {
 	
@@ -101,7 +100,10 @@ class BuildServiceRemoteRESTWrapper {
 			// TODO: support multiple artifacts associated with a single build.
 			String artifactId = jstring(artifacts.get(0).getAsJsonObject(), "id");
 			RemoteContext.REMOTE_LOGGER.info("Streaming Analytics Service (" + serviceName + "): submiting job request.");
-			doSubmitJobFromBuildArtifactPut(httpclient, deploy, apiKey, artifactId);
+			JsonObject response = doSubmitJobFromBuildArtifactPut(httpclient, deploy, apiKey, artifactId);
+			
+			// Pass back to Python
+			submission.add(RemoteContext.SUBMISSION_RESULTS, response);
 		} finally {
 			httpclient.close();
 

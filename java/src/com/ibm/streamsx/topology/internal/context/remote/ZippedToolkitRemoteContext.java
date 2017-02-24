@@ -25,6 +25,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 
 public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
@@ -34,8 +35,8 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     }
     
     @Override
-    public Future<File> submit(JsonObject submission) throws Exception {
-        File toolkitRoot = super.submit(submission).get();
+    public Future<File> _submit(JsonObject submission) throws Exception {
+        File toolkitRoot = super._submit(submission).get();
         return createCodeArchive(toolkitRoot, submission);        
     }
     
@@ -47,6 +48,10 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         String tkName = toolkitRoot.getName();
         
         Path zipOutPath = pack(toolkitRoot.toPath(), namespace, name, tkName);
+        
+        JsonObject results = new JsonObject();
+        results.addProperty(SubmissionResultsKeys.ARCHIVE_PATH, zipOutPath.toString());
+        submission.add(RemoteContext.SUBMISSION_RESULTS, results);
         
         JsonObject deployInfo = object(submission, SUBMISSION_DEPLOY);
         deleteToolkit(toolkitRoot, deployInfo);

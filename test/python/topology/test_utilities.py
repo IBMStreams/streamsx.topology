@@ -5,5 +5,5 @@ import streamsx.topology.context
 
 def standalone(test, topo):
     rc = streamsx.topology.context.submit("STANDALONE", topo)
-    test.assertEqual(0, rc)
+    test.assertEqual(0, rc['return_code'])
 
