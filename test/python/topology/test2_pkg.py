@@ -33,7 +33,6 @@ class TestPackages(unittest.TestCase):
       tester.test(ctxtype)
 
   # indirect import is included
-  @unittest.skip("Need to work on this more")
   def test_TopologyIndirectPackage(self):
       topo = Topology("test_TopologyIndirectPackage")
       hw = topo.source(["Hello", "World!"])
@@ -51,13 +50,3 @@ class TestPackages(unittest.TestCase):
       tester = Tester(topo)
       tester.contents(hwf, ["HelloMP", "World!MP"])
       tester.test(ctxtype)
-
-  @unittest.skip("Need to work on this more")
-  def test_TopologyExcludeSpecificPackage(self):
-      topo = Topology("test_TopologySpecificExcludePackage")
-      topo.exclude_packages.add('test_package.test_subpackage.test_module')
-      hw = topo.source(["Hello", "World!"])
-      hwf = hw.transform(test2_pkg_helpers.missing_package)
-      tester = Tester(topo)
-      tester.contents(hwf, ["HelloMP", "World!MP"])
-      tester.test(ctxtype, {'topology.keepArtifacts': True})
