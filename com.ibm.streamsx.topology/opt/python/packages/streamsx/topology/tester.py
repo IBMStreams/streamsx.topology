@@ -6,6 +6,8 @@ import logging
 
 _logger = logging.getLogger('streamsx.topology.test')
 
+
+
 class Tester(object):
     """Testing support for a Topology.
 
@@ -29,6 +31,63 @@ class Tester(object):
        self.topology = topology
        topology.tester = self
        self._conditions = {}
+
+    @staticmethod
+    def setup_standalone(test):
+        """
+        Setup a test case to run tests using IBM Streams standalone mode.
+
+        Two attributes are set in the test case:
+         * test_ctxtype - Context type the test will be run in.
+         * test_config- Test configuration.
+
+        Args:
+            test(unittest.TestCase): Test case to be set up to run tests using Tester
+
+        Returns: None
+        """
+        test.test_ctxtype = "STANDALONE"
+        test.test_config = {}
+
+    @staticmethod
+    def setup_distributed(test):
+        """
+        Setup a test case to run tests using IBM Streams distributed mode.
+
+        Two attributes are set in the test case:
+         * test_ctxtype - Context type the test will be run in.
+         * test_config- Test configuration.
+
+        Args:
+            test(unittest.TestCase): Test case to be set up to run tests using Tester
+
+        Returns: None
+        """
+        test.test_ctxtype = "DISTRIBUTED"
+        test.test_config = {}
+
+    def setup_streaming_analytics(test, service_name=None, force_remote_build=False):
+        """
+        Setup a test case to run tests using Streaming Analytics service on IBM Bluemix cloud platform.
+
+
+        Two attributes are set in the test case:
+         * test_ctxtype - Context type the test will be run in.
+         * test_config- Test configuration.
+
+        Args:
+            test(unittest.TestCase): Test case to be set up to run tests using Tester
+
+        Returns: None
+        """
+        test.test_ctxtype = "ANALYTICS_SERVICE"
+        if service_name is None:
+            service_name = os.environ.get('STREAMS_SERVICE_NAME', None)
+        if service_name is None:
+            raise ValueError("Service name not set.")
+        test.test_config = {'topology.service.name': service_name}
+        if force_remote_build:
+            test.test_config['topology.forceRemoteBuild'] = True
 
     def add_condition(self, stream, condition):
         self._conditions[condition.name] = (stream, condition)
@@ -94,33 +153,44 @@ class Tester(object):
             passed = self._standalone_test(config)
         elif "DISTRIBUTED" == ctxtype:
             passed = self._distributed_test(config)
+        elif "ANALYTICS_SERVICE" == ctxtype:
+            passed = self._streaming_analytics_test(config)
         else:
             raise NotImplementedError("Tester context type not implemented:", ctxtype)
 
         if assert_on_fail:
             assert passed, "Test failed for topology: " + self.topology.name
+        if passed:
+            _logger.info("Test topology %s passed for context:%s", self.topology.name, ctxtype)
+        else:
+            _logger.error("Test topology %s failed for context:%s", self.topology.name, ctxtype)
 
     def _standalone_test(self, config):
         """ Test using STANDALONE.
         Success is soley indicated by the process completing and returning zero.
         """
-        rc = streamsx.topology.context.submit("STANDALONE", self.topology, config)
-        self.result = {'passed': rc['return_code'], 'submission_result': rc}
-        return rc['return_code'] == 0
+        sr = streamsx.topology.context.submit("STANDALONE", self.topology, config)
+        self.result = {'passed': sr['return_code'], 'submission_result': sr}
+        return sr['return_code'] == 0
 
     def _distributed_test(self, config):
 
-        self.instance = os.environ['STREAMS_INSTANCE_ID']
-
-        sj = streamsx.topology.context.submit("DISTRIBUTED", self.topology, config)
-        if sj['return_code'] != 0:
+        sjr = streamsx.topology.context.submit("DISTRIBUTED", self.topology, config)
+        if sjr['return_code'] != 0:
             print("DO AS LOGGER", "Failed to submit job to distributed instance.")
             return False
-        job_id = sj['jobId']
         sc = StreamsConnection()
+        return self._distributed_wait_for_result(sc, sjr)
 
-        cc = _ConditionChecker(self, sc, self.instance, job_id)
+    def _streaming_analytics_test(self, config):
+        sjr = streamsx.topology.context.submit("ANALYTICS_SERVICE", self.topology, config)
+        sc = StreamsConnection(config=config)
+        return self._distributed_wait_for_result(sc, sjr)
+
+    def _distributed_wait_for_result(self, sc, sjr):
+        cc = _ConditionChecker(self, sc, sjr)
         self.result = cc._complete()
+        self.result['submission_result'] = sjr
         return self.result['passed']
 
 class Condition(object):
@@ -240,11 +310,11 @@ def _result_to_dict(passed, t):
     return result
 
 class _ConditionChecker(object):
-    def __init__(self, tester, sc, instance, job_id):
+    def __init__(self, tester, sc, sjr):
         self.tester = tester
-        self.sc = sc
-        self.instance = instance
-        self.job_id = job_id
+        self._sc = sc
+        self._sjr = sjr
+        self.job_id = job_id = sjr['jobId']
         self._sequences = {}
         for cn in tester._conditions:
             self._sequences[cn] = -1
@@ -324,12 +394,12 @@ class _ConditionChecker(object):
         return (valid, fail, progress, condition_states)
 
     def _find_job(self):
-        for instance in self.sc.get_instances(id=self.instance):
+        for instance in self._sc.get_instances(id=self._sc.instance_id):
             jobs = instance.get_jobs(id=self.job_id)
             if len(jobs) == 1:
                 return jobs[0]
             raise AssertionError("Job not found:job_id:", self.job_id)
-        raise AssertionError("Instance not found:", self.job_id)
+        raise AssertionError("Instance not found:", self._sc.instance_id)
 
     def _get_job_metrics(self):
         """Fetch all the condition metrics for a job.
