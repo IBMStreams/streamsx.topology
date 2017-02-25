@@ -1,5 +1,6 @@
 import streamsx.ec as ec
 import streamsx.topology.context
+import os
 import unittest
 import logging
 
@@ -91,22 +92,36 @@ class Tester(object):
 
         if "STANDALONE" == ctxtype:
             passed = self._standalone_test(config)
+        elif "DISTRIBUTED" == ctxtype:
+            passed = self._distributed_test(config)
         else:
             raise NotImplementedError("Tester context type not implemented:", ctxtype)
 
         if assert_on_fail:
             assert passed, "Test failed for topology: " + self.topology.name
 
-        #streamsx.topology.context.submit("DISTRIBUTED", self.topology, config)
-        #_resource_url = "https://streamsqse.localdomain:8443/streams/rest/resources"
-        #sc = StreamsConnection(username="streamsadmin", password="passw0rd", resource_url=_resource_url)
-
-        #cc = _ConditionChecker(self, sc)
-        #cc._complete()
-
     def _standalone_test(self, config):
+        """ Test using STANDALONE.
+        Success is soley indicated by the process completing and returning zero.
+        """
         rc = streamsx.topology.context.submit("STANDALONE", self.topology, config)
+        self.result = {'passed': rc['return_code'], 'submission_result': rc}
         return rc['return_code'] == 0
+
+    def _distributed_test(self, config):
+
+        self.instance = os.environ['STREAMS_INSTANCE_ID']
+
+        sj = streamsx.topology.context.submit("DISTRIBUTED", self.topology, config)
+        if sj['return_code'] != 0:
+            print("DO AS LOGGER", "Failed to submit job to distributed instance.")
+            return False
+        job_id = sj['jobId']
+        sc = StreamsConnection()
+
+        cc = _ConditionChecker(self, sc, self.instance, job_id)
+        self.result = cc._complete()
+        return self.result['passed']
 
 class Condition(object):
     _METRIC_PREFIX = "streamsx.condition:"
@@ -214,26 +229,40 @@ class StreamContents(Condition):
 from streamsx.rest import StreamsConnection
 import time
 
+
+def _result_to_dict(passed, t):
+    result = {}
+    result['passed'] = passed
+    result['valid'] = t[0]
+    result['fail'] = t[1]
+    result['progress'] = t[2]
+    result['conditions'] = t[3]
+    return result
+
 class _ConditionChecker(object):
-    def __init__(self, tester, sc):
-        self.sc = sc
+    def __init__(self, tester, sc, instance, job_id):
         self.tester = tester
-        self._pms = {}
+        self.sc = sc
+        self.instance = instance
+        self.job_id = job_id
+        self._sequences = {}
         for cn in tester._conditions:
-            self._pms[cn] = -1
+            self._sequences[cn] = -1
         self.delay = 0.5
         self.timeout = 10.0
         self.waits = 0
         self.additional_checks = 2
 
+        self.job = self._find_job()
+
     def _complete(self):
         while (self.waits * self.delay) < self.timeout:
             check = self. __check_once()
             if check[1]:
-                return False
+                return self._end(False, check)
             if check[0]:
                 if self.additional_checks == 0:
-                    return True
+                    return self._end(True, check)
                 self.additional_checks -= 1
                 continue
             if check[2]:
@@ -241,30 +270,44 @@ class _ConditionChecker(object):
             else:
                 self.waits += 1
             time.sleep(self.delay)
+        return self._end(False, check)
+
+    def _end(self, passed, check):
+        result = _result_to_dict(passed, check)
+        if self.job is not None:
+            self.job.cancel(force= not passed)
+        return result
 
     def __check_once(self):
         cms = self._get_job_metrics()
         valid = True
         progress = True
         fail = False
-        for cn in self._pms:
+        condition_states = {}
+        for cn in self._sequences:
+            condition_states[cn] = 'NotValid'
             seq_mn = Condition._mn('seq', cn)
+            # If the metrics are missing then the operator
+            # is probably still starting up, cannot be valid.
             if not seq_mn in cms:
                 valid = False
                 continue
             seq_m = cms[seq_mn]
-            if seq_m.value == self._pms[cn]:
+            if seq_m.value == self._sequences[cn]:
                 progress = False
             else:
-                self._pms[cn] = seq_m.value
+                self._sequences[cn] = seq_m.value
 
             fail_mn = Condition._mn('fail', cn)
             if not fail_mn in cms:
                 valid = False
                 continue
+
             fail_m = cms[fail_mn]
             if fail_m.value != 0:
                 fail = True
+                condition_states[cn] = 'Fail'
+                continue
 
             valid_mn =  Condition._mn('valid', cn)
 
@@ -275,18 +318,27 @@ class _ConditionChecker(object):
 
             if valid_m.value == 0:
                 valid = False
+            else:
+                condition_states[cn] = 'Valid'
 
-        return (valid, fail, progress)
+        return (valid, fail, progress, condition_states)
 
+    def _find_job(self):
+        for instance in self.sc.get_instances(id=self.instance):
+            jobs = instance.get_jobs(id=self.job_id)
+            if len(jobs) == 1:
+                return jobs[0]
+            raise AssertionError("Job not found:job_id:", self.job_id)
+        raise AssertionError("Instance not found:", self.job_id)
 
     def _get_job_metrics(self):
+        """Fetch all the condition metrics for a job.
+        We refetch the metrics each time to ensure that we don't miss
+        any being added, e.g. if an operator is slow to start.
+        """
         cms = {}
-        for instance in self.sc.get_instances():
-            for j in instance.get_jobs():
-                for op in j.get_operators():
-                    metrics = op.get_metrics(name=Condition._METRIC_PREFIX + '*')
-                    if not metrics:
-                        continue
-                    for m in metrics:
-                        cms[m.name] = m
+        for op in self.job.get_operators():
+            metrics = op.get_metrics(name=Condition._METRIC_PREFIX + '*')
+            for m in metrics:
+                cms[m.name] = m
         return cms
