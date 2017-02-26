@@ -21,6 +21,9 @@ class StreamSchema(object) :
     def schema(self):
         return self.__schema
 
+    def str(self):
+        return self.__schema
+
     def spl_json(self):
         _splj = {}
         _splj["type"] = 'spltype'
@@ -44,22 +47,59 @@ class StreamSchema(object) :
 class CommonSchema(enum.Enum):
     """
     Common stream schemas for interoperability within Streams applications.
+
+    Streams application can publish streams that are subscribed to by other applications.
+    Use of common schemas allow streams connections regardless of the implementation
+
+    Python applications publish streams using :py:meth:`~streamsx.topology.topology.Stream.publish`
+    and subscribe using :py:meth:`~streamsx.topology.topology.Topology.subscribe`.
     
-    Python - Stream constains Python objects
-    Json - Stream contains JSON objects. Streams with schema Json can be published and subscribed between Streams applications implemented in different languages.
-    String - Stream contains strings. Streams with schema String can be published and subscribed between Streams applications implemented in different languages.
-    Binary - Stream contains binary tuples. NOT YET SUPPORTED IN Python.
+     * :py:const:`Python` - Stream constains Python objects
+     * :py:const:`Json` - Stream contains JSON objects.
+     * :py:const:`String` - Stream contains strings.
+     * :py:const:`Binary` - Stream contains binary tuples.
     """
     Python = StreamSchema("tuple<blob __spl_po>")
+    """
+    Stream where each tuple is a Python object.
+
+    Python streams can only be used by Python applications.
+    """
     Json = StreamSchema("tuple<rstring jsonString>")
+    """
+    Stream where each tuple is a JSON object.
+
+    `Json` can be used as a natural interchange format between Streams applications
+    implemented in different programming languages. All languages supported by
+    Streams support publishing and subscribing to JSON streams.
+
+    Python objects are converted to JSON objects using `json.dumps(obj)`.
+    """
     String = StreamSchema("tuple<rstring string>")
+    """
+    Stream where each tuple is a string.
+
+    `String` can be used as a natural interchange format between Streams applications
+    implemented in different programming languages. All languages supported by
+    Streams support publishing and subscribing to string streams.
+
+    Python objects are converted to strings using `str(obj)`.
+    """
     Binary = StreamSchema("tuple<blob binary>")
+    """
+    Stream where each tuple is a binary object (sequence of bytes).
+
+    .. warning:: `Binary` is not yet supported for Python applications.
+    """
 
     def schema(self):
-        return self.value.schema();
+        return self.value.schema()
 
     def spl_json(self):
         return self.value.spl_json()
 
     def extend(self, schema):
         return self.value.extend(schema)
+
+    def str(self):
+        return str(self.schema())
