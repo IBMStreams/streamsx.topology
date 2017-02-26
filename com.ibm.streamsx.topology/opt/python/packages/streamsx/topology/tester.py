@@ -35,7 +35,11 @@ class Tester(object):
     @staticmethod
     def setup_standalone(test):
         """
-        Setup a test case to run tests using IBM Streams standalone mode.
+        Setup a unittest.TestCase to run tests using IBM Streams standalone mode.
+
+        Requires a local IBM Streams install define by the STREAMS_INSTALL
+        environment variable. If STREAMS_INSTALL is not set then the
+        test is skipped.
 
         Two attributes are set in the test case:
          * test_ctxtype - Context type the test will be run in.
@@ -46,13 +50,24 @@ class Tester(object):
 
         Returns: None
         """
+        if not 'STREAMS_INSTALL' in os.environ:
+            raise unittest.SkipTest("Skipped due to no local IBM Streams install")
         test.test_ctxtype = "STANDALONE"
         test.test_config = {}
 
     @staticmethod
     def setup_distributed(test):
         """
-        Setup a test case to run tests using IBM Streams distributed mode.
+        Setup a unittest.TestCase to run tests using IBM Streams distributed mode.
+
+        Requires a local IBM Streams install define by the STREAMS_INSTALL
+        environment variable. If STREAMS_INSTALL is not set then the
+        test is skipped.
+
+        The Steams instance to use is defined by the environment variables:
+         * STREAMS_ZKCONNECT - Zookeeper connection string
+         * STREAMS_DOMAIN_ID - Domain identifier
+         * STREAMS_INSTANCE_ID - Instance identifier
 
         Two attributes are set in the test case:
          * test_ctxtype - Context type the test will be run in.
@@ -63,13 +78,21 @@ class Tester(object):
 
         Returns: None
         """
+        if not 'STREAMS_INSTALL' in os.environ:
+            raise unittest.SkipTest("Skipped due to no local IBM Streams install")
+
         test.test_ctxtype = "DISTRIBUTED"
         test.test_config = {}
 
     def setup_streaming_analytics(test, service_name=None, force_remote_build=False):
         """
-        Setup a test case to run tests using Streaming Analytics service on IBM Bluemix cloud platform.
+        Setup a unittest.TestCase to run tests using Streaming Analytics service on IBM Bluemix cloud platform.
 
+        The service to use is defined by:
+         * VCAP_SERVICES environment variable containing `streaming_analytics` entries.
+         * service_name which defaults to the value of STREAMS_SERVICE_NAME environment variable.
+
+        If VCAP_SERVICES is not set or a service name is not defined then the test is skipped.
 
         Two attributes are set in the test case:
          * test_ctxtype - Context type the test will be run in.
@@ -77,14 +100,19 @@ class Tester(object):
 
         Args:
             test(unittest.TestCase): Test case to be set up to run tests using Tester
+            service_name(str): Name of Streaming Analytics service to use. Must exist as an
+                entry in the VCAP services. Defaults to value of STREAMS_SERVICE_NAME environment variable.
 
         Returns: None
         """
+        if not 'VCAP_SERVICES' in os.environ:
+            raise unittest.SkipTest("Skipped due to VCAP_SERVICES environment variable not set")
+
         test.test_ctxtype = "ANALYTICS_SERVICE"
         if service_name is None:
             service_name = os.environ.get('STREAMS_SERVICE_NAME', None)
         if service_name is None:
-            raise ValueError("Service name not set.")
+            raise unittest.SkipTest("Skipped due to no service name supplied")
         test.test_config = {'topology.service.name': service_name}
         if force_remote_build:
             test.test_config['topology.forceRemoteBuild'] = True
