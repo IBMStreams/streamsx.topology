@@ -81,6 +81,13 @@ class Tester(object):
         if not 'STREAMS_INSTALL' in os.environ:
             raise unittest.SkipTest("Skipped due to no local IBM Streams install")
 
+        if not 'STREAMS_INSTANCE_ID' in os.environ:
+            raise unittest.SkipTest("Skipped due to STREAMS_INSTANCE_ID environment variable not set")
+        if not 'STREAMS_DOMAIN_ID' in os.environ:
+            raise unittest.SkipTest("Skipped due to STREAMS_DOMAIN_ID environment variable not set")
+        if not 'STREAMS_ZKCONNECT' in os.environ:
+            raise unittest.SkipTest("Skipped due to STREAMS_ZKCONNECT environment variable not set")
+
         test.test_ctxtype = "DISTRIBUTED"
         test.test_config = {}
 
