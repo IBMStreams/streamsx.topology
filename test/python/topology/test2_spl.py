@@ -37,7 +37,7 @@ class TestSPL(unittest.TestCase):
 
         tester = Tester(topo)
         tester.tuple_count(f.stream, 50)
-        tester.test(ctxtype)
+        tester.test(self.test_ctxtype, self.test_config)
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestDistributedSPL(TestSPL):
