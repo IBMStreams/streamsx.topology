@@ -15,10 +15,12 @@ import streamsx.spl.op as op
 
 ctxtype = "STANDALONE"
 
-@unittest.skipIf(sys.version_info.major == 2 or not test_vers.tester_supported() , "tester requires Python 3.5 and Streams >= 4.2")
+@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSPL(unittest.TestCase):
     """ Test invocations of SPL operators from Python topology.
     """
+    def setUp(self):
+        Tester.setup_standalone(self)
 
     def test_SPLBeaconFilter(self):
         """Test a Source and a Map operator.
@@ -35,4 +37,14 @@ class TestSPL(unittest.TestCase):
 
         tester = Tester(topo)
         tester.tuple_count(f.stream, 50)
-        tester.test(ctxtype)
+        tester.test(self.test_ctxtype, self.test_config)
+
+@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
+class TestDistributedSPL(TestSPL):
+    def setUp(self):
+        Tester.setup_distributed(self)
+
+@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
+class TestBluemixSPL(TestSPL):
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)

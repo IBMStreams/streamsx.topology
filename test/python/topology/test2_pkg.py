@@ -19,8 +19,10 @@ import test2_pkg_helpers
 
 ctxtype = "STANDALONE"
 
-@unittest.skipIf(sys.version_info.major == 2 or not test_vers.tester_supported() , "tester requires Python 3.5 and Streams >= 4.2")
+@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestPackages(unittest.TestCase):
+  def setUp(self):
+      Tester.setup_standalone(self)
 
   # test using input functions from a regular package that has __init__.py
   # test using input functions that are fully qualified
@@ -50,3 +52,13 @@ class TestPackages(unittest.TestCase):
       tester = Tester(topo)
       tester.contents(hwf, ["HelloMP", "World!MP"])
       tester.test(ctxtype)
+
+@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
+class TestDistributedPackages(TestPackages):
+  def setUp(self):
+      Tester.setup_standalone(self)
+
+@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
+class TestBluemixPackages(TestPackages):
+  def setUp(self):
+      Tester.setup_streaming_analytics(self, force_remote_build=True)

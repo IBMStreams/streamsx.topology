@@ -52,7 +52,8 @@
 		     <arg value="test_lambdas"/>
 		     <arg value="test2"/>
 		     <arg value="test2_spl"/>
-		     <!-- <arg value="test2_pkg"/> -->
+		     <arg value="test2_spl2python"/>
+		     <arg value="test2_pkg"/>
 		     <arg value="test_streaming_analytics_service"/>
 		   </exec>
 	   </target>
