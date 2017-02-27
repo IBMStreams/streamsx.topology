@@ -4,7 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,12 +24,20 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	public Future<File> _submit(JsonObject submission) throws Exception {
 	    // Get the VCAP service info which also verifies we have the
 	    // right information before we do any work.
-	    JsonObject deploy = object(submission, "deploy");
+	    JsonObject deploy = deploy(submission);
 	    JsonObject service = VcapServices.getVCAPService(deploy);
 	    
 	    Future<File> archive = super._submit(submission);
+	    
+	    File buildArchive =  archive.get();
 		
-		doSubmit(submission, service, archive.get());
+	    try {
+		    doSubmit(submission, service, buildArchive);
+	    } finally {		
+		    if (!keepArtifacts(submission))
+		        buildArchive.delete();
+	    }
+		
 		return archive;
 	}
 	
