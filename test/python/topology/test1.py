@@ -14,8 +14,24 @@ import streamsx.topology.context
 class TestTopologyMethods(unittest.TestCase):
 
   def test_TopologyName(self):
-     topo = Topology("test_TopologyName")
-     self.assertEqual("test_TopologyName", topo.name)
+     topo = Topology("test_TopologyNameExplicit")
+     self.assertEqual("test_TopologyNameExplicit", topo.name)
+     self.assertEqual("test1", topo.namespace)
+
+  def test_TopologyNoName(self):
+     topo = Topology()
+     self.assertEqual("test_TopologyNoName", topo.name)
+     self.assertEqual("test1", topo.namespace)
+
+  def test_TopologyNamespace(self):
+     topo = Topology(namespace="myns")
+     self.assertEqual("test_TopologyNamespace", topo.name)
+     self.assertEqual("myns", topo.namespace)
+
+  def test_TopologyNameNamespace(self):
+     topo = Topology(name="myapp", namespace="myns")
+     self.assertEqual("myapp", topo.name)
+     self.assertEqual("myns", topo.namespace)
 
   def test_TopologySourceAndSink(self):
      topo = Topology("test_TopologySourceAndSink")
