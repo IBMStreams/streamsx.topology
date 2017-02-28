@@ -97,7 +97,7 @@ class Tester(object):
 
         The service to use is defined by:
          * VCAP_SERVICES environment variable containing `streaming_analytics` entries.
-         * service_name which defaults to the value of STREAMS_SERVICE_NAME environment variable.
+         * service_name which defaults to the value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.
 
         If VCAP_SERVICES is not set or a service name is not defined then the test is skipped.
 
@@ -108,7 +108,7 @@ class Tester(object):
         Args:
             test(unittest.TestCase): Test case to be set up to run tests using Tester
             service_name(str): Name of Streaming Analytics service to use. Must exist as an
-                entry in the VCAP services. Defaults to value of STREAMS_SERVICE_NAME environment variable.
+                entry in the VCAP services. Defaults to value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.
 
         Returns: None
         """
@@ -117,7 +117,7 @@ class Tester(object):
 
         test.test_ctxtype = "ANALYTICS_SERVICE"
         if service_name is None:
-            service_name = os.environ.get('STREAMS_SERVICE_NAME', None)
+            service_name = os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME', None)
         if service_name is None:
             raise unittest.SkipTest("Skipped due to no service name supplied")
         test.test_config = {'topology.service.name': service_name}
