@@ -7,7 +7,11 @@ import dill
 import test_functions
 from test_utilities import standalone
 
-import numpy as np
+try:
+    import numpy as np
+    skip_numpy = False
+except ImportError:
+    skip_numpy = True
 
 from streamsx.topology.topology import *
 from streamsx.topology import schema
@@ -22,6 +26,7 @@ class TestLambdas(unittest.TestCase):
      hwf.sink(test_functions.check_hello_world_filter)
      standalone(self, topo)
 
+  @unittest.skipIf(skip_numpy, "Numpy not available")
   def test_TopologyLambdaModule(self):
      "Lambda using an imported module"
      topo = Topology("test_TopologyLambdaModule")
