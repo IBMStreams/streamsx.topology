@@ -12,13 +12,13 @@ from streamsx.topology.context import submit
 from streamsx.topology.context import ConfigParams
 
 vcap_services = os.environ.pop('VCAP_SERVICES', None)
-service_name = os.environ.pop('STREAMS_SERVICE_NAME', None)
+service_name = os.environ.pop('STREAMING_ANALYTICS_SERVICE_NAME', None)
 
 def require_vcap(test):
     if vcap_services is None:
         raise unittest.SkipTest("No VCAP SERVICES env var")
     if service_name is None:
-        raise unittest.SkipTest("No service name provided: env var STREAMS_SERVICE_NAME")
+        raise unittest.SkipTest("No service name provided: env var STREAMING_ANALYTICS_SERVICE_NAME")
 
     fn = vcap_services
     with open(fn) as vcap_json_data:
