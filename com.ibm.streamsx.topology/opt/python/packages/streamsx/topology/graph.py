@@ -24,12 +24,17 @@ from streamsx.topology.schema import _stream_schema
 
 class SPLGraph(object):
 
-    def __init__(self, topology, name=None):
+    def __init__(self, topology, name=None, namespace=None):
         if name is None:
             name = str(uuid.uuid1()).replace("-", "")
+
+        if namespace is None:
+            namespace = name
+        
         # Allows Topology or SPLGraph to be passed to submit
         self.graph = self
-        self.name = name
+        self.name = str(name)
+        self.namespace = str(namespace)
         self.topology = topology
         self.operators = []
         self.resolver = streamsx.topology.dependency._DependencyResolver(self.topology)
@@ -41,7 +46,7 @@ class SPLGraph(object):
     def add_views(self, view):
         self._views.append(view)
 
-    def addOperator(self, kind, function=None, name=None, params=None):
+    def addOperator(self, kind, function=None, name=None, params=None, sl=None):
         if(params is None):
             params = {}
         if name is None:
@@ -64,7 +69,7 @@ class SPLGraph(object):
         else:
             if function is not None:
                 params['toolkitDir'] = streamsx.topology.param.toolkit_dir()
-            op = _SPLInvocation(len(self.operators), kind, function, name, params, self)
+            op = _SPLInvocation(len(self.operators), kind, function, name, params, self, sl=sl)
         self.operators.append(op)
         if not function is None:
             dep_instance = function
@@ -84,7 +89,7 @@ class SPLGraph(object):
     def generateSPLGraph(self):
         _graph = {}
         _graph["name"] = self.name
-        _graph["namespace"] = self.name
+        _graph["namespace"] = self.namespace
         _graph["public"] = True
         _graph["config"] = {}
         _graph["config"]["includes"] = []
@@ -119,7 +124,7 @@ class SPLGraph(object):
 
 class _SPLInvocation(object):
 
-    def __init__(self, index, kind, function, name, params, graph, view_configs = None):
+    def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None):
         self.index = index
         self.kind = kind
         self.function = function
@@ -129,6 +134,7 @@ class _SPLInvocation(object):
         self._addOperatorFunction(self.function)
         self.graph = graph
         self.viewable = True
+        self.sl = sl
 
         if view_configs is None:
             self.view_configs = []
@@ -216,6 +222,9 @@ class _SPLInvocation(object):
                 _value["value"] = param
                 _params[name] = _value
         _op["parameters"] = _params
+
+        if self.sl is not None:
+           _op['sourcelocation'] = self.sl.spl_json()
 
         # Callout to allow a ExtensionOperator
         # to augment the JSON

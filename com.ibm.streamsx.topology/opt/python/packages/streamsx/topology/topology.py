@@ -98,9 +98,56 @@ from enum import Enum
 
 logger = logging.getLogger('streamsx.topology')
 
+
+def _source_info():
+    """
+    Get information from the user's code (two frames up)
+    to leave breadcrumbs for file, line, class and function.
+    """
+    ofi = inspect.getouterframes(inspect.currentframe())[2]
+    try:
+        calling_class = ofi[0].f_locals['self'].__class__
+    except KeyError:
+        calling_class = None
+    # Tuple of file,line,calling_class,function_name
+    return ofi[1], ofi[2], calling_class, ofi[3]
+ 
+class _SourceLocation(object):
+    """
+    Saved source info to eventually create an SPL
+    annotation with the info in JSON form.
+    This object's JSON is put into the JSON as "sourcelocation"
+    """
+    def __init__(self, source_info, method=None):
+        self.source_info = source_info
+        self.method = method
+
+    def spl_json(self):
+        sl = {}
+        sl['file'] = self.source_info[0]
+        sl['line'] = self.source_info[1]
+        if self.source_info[2] is not None:
+            sl['class'] = self.source_info[2].__name__
+        sl['method'] = self.source_info[3]
+        if self.method is not None:
+            sl['topology.method'] = self.method
+        return sl
+
+
 class Topology(object):
     """The Topology class is used to define data sources, and is passed as a parameter when submitting an application.
        Topology keeps track of all sources, sinks, and data operations within your application.
+
+       Submission of a Topology results in a Streams application that has
+       the name `namespace::name`.
+
+       Arguments:
+           name(str): Name of the topology. Defaults to a name dervied
+              from the calling evironment if it can be determined, otherwise
+              a random name.
+           namespace(str): Namespace of the topology. Defaults to a name dervied
+              from the calling evironment if it can be determined, otherwise
+              a random name.
 
        Instance variables:
            include_packages(set): Python package names to be included in the built application. 
@@ -111,8 +158,25 @@ class Topology(object):
            Package names in `include_packages` take precedence over package names in `exclude_packages`.
     """  
 
-    def __init__(self, name, files=None):
-        self.name = name
+    def __init__(self, name=None, namespace=None, files=None):
+        if name is None or namespace is None:
+            # Take the name of the calling function
+            # If it starts with __ and is in a class then use the class name
+            # Take the namespace from the class's module if executing from
+            # a class otherwise use the name
+            si = _source_info()
+            if name is None:
+                name = si[3]
+                if name.startswith('__'):
+                    if si[2] is not None:
+                        name = si[2].__name__
+                    
+            if namespace is None:
+                if si[2] is not None:
+                    namespace = si[2].__module__
+                elif si[0] is not None:
+                    namespace = si[0]
+        
         if sys.version_info.major == 3:
           self.opnamespace = "com.ibm.streamsx.topology.functional.python"
         elif sys.version_info.major == 2 and sys.version_info.minor == 7:
@@ -124,11 +188,26 @@ class Topology(object):
         if "Anaconda" in sys.version:
             import streamsx.topology.condapkgs
             self.exclude_packages.update(streamsx.topology.condapkgs._CONDA_PACKAGES)
-        self.graph = graph.SPLGraph(self, name)
+        self.graph = graph.SPLGraph(self, name, namespace)
         if files is not None:
             self.files = files
         else:
             self.files = []
+
+    @property
+    def name(self):
+        """
+        Return the name of the topology.
+        Returns:str:Name of the topology.
+        """
+        return self.graph.name
+    @property
+    def namespace(self):
+        """
+        Return the namespace of the topology.
+        Returns:str:Namespace of the topology.
+        """
+        return self.graph.namespace
 
     def source(self, func, name=None):
         """
@@ -158,7 +237,8 @@ class Topology(object):
         else:
              func = streamsx.topology.functions._IterableInstance(func)
         
-        op = self.graph.addOperator(self.opnamespace+"::PyFunctionSource", func, name=name)
+        sl = _SourceLocation(_source_info(), "source")
+        op = self.graph.addOperator(self.opnamespace+"::PyFunctionSource", func, name=name, sl=sl)
         oport = op.addOutputPort()
         return Stream(self, oport)
 
@@ -188,7 +268,8 @@ class Topology(object):
         Returns:
             Stream:  A stream whose tuples have been published to the topic by other Streams applications.
         """
-        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe")
+        sl = _SourceLocation(_source_info(), "subscribe")
+        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl)
         oport = op.addOutputPort(schema=schema)
         subscribeParams = {'topic': topic, 'streamType': schema}
         op.setParameters(subscribeParams)
@@ -224,7 +305,8 @@ class Stream(object):
         Returns:
             None
         """
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionSink", func, name=name)
+        sl = _SourceLocation(_source_info(), "for_each")
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionSink", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport)
 
     def sink(self, func, name=None):
@@ -255,7 +337,8 @@ class Stream(object):
         Returns:
             A Stream containing tuples that have not been filtered out.
         """
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionFilter", func, name=name)
+        sl = _SourceLocation(_source_info(), "filter")
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionFilter", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
@@ -340,7 +423,8 @@ class Stream(object):
         Raises:
             TypeError: if `func` does not return an iterator nor None
         """     
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionMultiTransform", func, name=name)
+        sl = _SourceLocation(_source_info(), "flat_map")
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionMultiTransform", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
@@ -535,8 +619,9 @@ class Stream(object):
             self._map(streamsx.topology.functions.identity,schema=schema).publish(topic, schema=schema)
             return None
 
+        sl = _SourceLocation(_source_info(), "publish")
         publish_arams = {'topic': topic}
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params=publish_arams)
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params=publish_arams, sl=sl)
         op.addInputPort(outputPort=self.oport)
 
     def autonomous(self):
