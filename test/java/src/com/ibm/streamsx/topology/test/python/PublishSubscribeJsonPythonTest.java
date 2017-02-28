@@ -50,7 +50,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
 
         
   	
-    	includePythonApp(t, "json_map_json.py", "json_map_json.py::json_map_json");
+    	includePythonApp(t, "json_map_json.py", "json_map_json::json_map_json");
    	    	
         TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
         
@@ -76,7 +76,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
     	
         final Topology t = new Topology();
   	
-    	includePythonApp(t, "json_filter_json.py", "json_filter_json.py::json_filter_json");
+    	includePythonApp(t, "json_filter_json.py", "json_filter_json::json_filter_json");
     	
         JSONObject j1 = new JSONObject();
         j1.put("a", 23523L);
@@ -136,7 +136,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
         String s3a = j3.get("a").toString();
         String s3b = j3.get("b").toString();
   	
-    	includePythonApp(t, "json_flatmap_string.py", "json_flatmap_string.py::json_flatmap_str");
+    	includePythonApp(t, "json_flatmap_string.py", "json_flatmap_string::json_flatmap_str");
    	    	
         TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
         
