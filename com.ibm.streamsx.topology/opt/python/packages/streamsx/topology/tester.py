@@ -1,12 +1,15 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+
 import streamsx.ec as ec
 import streamsx.topology.context
 import os
 import unittest
 import logging
+import collections
 
 _logger = logging.getLogger('streamsx.topology.test')
-
-
 
 class Tester(object):
     """Testing support for a Topology.
@@ -14,7 +17,7 @@ class Tester(object):
     Allows testing of a Topology by creating conditions against the contents
     of its streams.
 
-    Conditions may be added to a topoogy at any time before submission.
+    Conditions may be added to a topology at any time before submission.
 
     If a topology is submitted directly to a context then the graph
     is not modified. This allows testing code to be inserted while
@@ -140,21 +143,25 @@ class Tester(object):
         """
         _logger.debug("Adding tuple count (%d) condition to stream %s.", count, stream)
         name = "ExactCount" + str(len(self._conditions));
-        cond = TupleExactCount(count, name)
+        cond = _TupleExactCount(count, name)
         return self.add_condition(stream, cond)
 
-    def contents(self, stream, expected):
+    def contents(self, stream, expected, ordered=True):
         """Test that a stream contains the expected tuples.
 
         Args:
             stream(Stream): Stream to be tested.
-            expected(list): List of expected tuples.
+            expected(list): Sequence of expected tuples.
+            ordered(bool): True if the ordering of received tuples must match expected.
 
         Returns:
 
         """
         name = "StreamContents" + str(len(self._conditions));
-        cond = StreamContents(expected, name)
+        if ordered:
+            cond = _StreamContents(expected, name)
+        else:
+            cond = _UnorderedStreamContents(expected, name)
         return self.add_condition(stream, cond)
 
     def test(self, ctxtype, config=None, assert_on_fail=True):
@@ -287,9 +294,9 @@ class Condition(object):
         return ec.CustomMetric(self, name=Condition._mn(mt, self.name), kind=kind)
 
 
-class TupleExactCount(Condition):
+class _TupleExactCount(Condition):
     def __init__(self, target, name=None):
-        super(TupleExactCount, self).__init__(name)
+        super(_TupleExactCount, self).__init__(name)
         self.target = target
         self.count = 0
         if target == 0:
@@ -305,9 +312,9 @@ class TupleExactCount(Condition):
         return "Exact tuple count: expected:" + str(self.target) + " received:" + str(self.count)
 
 
-class StreamContents(Condition):
+class _StreamContents(Condition):
     def __init__(self, expected, name=None):
-        super(StreamContents, self).__init__(name)
+        super(_StreamContents, self).__init__(name)
         self.expected = expected
         self.received = []
 
@@ -315,17 +322,35 @@ class StreamContents(Condition):
         self.received.append(tuple)
         if len(self.received) > len(self.expected):
             self.fail()
-            return None
+            return
 
-        if self.expected[len(self.received) - 1] != self.received[-1]:
-            self.fail()
-            return None
+        if self._check_for_failure():
+            return
 
         self.valid = len(self.received) == len(self.expected)
+
+    def _check_for_failure(self):
+        """Check for failure.
+        """
+        if self.expected[len(self.received) - 1] != self.received[-1]:
+            self.fail()
+            return True
+        return False
 
     def __str__(self):
         return "Stream contents: expected:" + str(self.expected) + " received:" + str(self.received)
 
+class _UnorderedStreamContents(_StreamContents):
+    def _check_for_failure(self):
+        """Unordered check for failure.
+
+        Can only check when the expected number of tuples have been received.
+        """
+        if len(self.expected) == len(self.received):
+            if collections.Counter(self.expected) != collections.Counter(self.received):
+                self.fail()
+                return True
+        return False
 
 #######################################
 # Internal functions
