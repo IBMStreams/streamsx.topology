@@ -116,7 +116,7 @@ class BuildServiceRemoteRESTWrapper {
 	private JsonObject doSubmitJobFromBuildArtifactPut(CloseableHttpClient httpclient,
 	        JsonObject deploy,
 			String apiKey, String artifactId) throws ClientProtocolException, IOException{
-		String putURL = getBuildsURL() + "?artifact_id=" + artifactId;
+		String putURL = getBuildsURL() + "?artifact_id=" + URLEncoder.encode(artifactId, StandardCharsets.UTF_8.name());
 		HttpPut httpput = new HttpPut(putURL);
         httpput.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpput.addHeader("Authorization", apiKey);
@@ -146,7 +146,7 @@ class BuildServiceRemoteRESTWrapper {
 
 	private JsonObject doUploadBuildArchivePost(CloseableHttpClient httpclient,
 						    String apiKey, File archive, String buildName) throws ClientProtocolException, IOException{
-	    String newBuildURL = getBuildsURL() + "?build_name=" + buildName;
+	    String newBuildURL = getBuildsURL() + "?build_name=" + URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
 		HttpPost httppost = new HttpPost(newBuildURL);
         httppost.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httppost.addHeader("Authorization", apiKey);
@@ -182,7 +182,7 @@ class BuildServiceRemoteRESTWrapper {
 	
 	private JsonObject getBuild(String buildId, CloseableHttpClient httpclient,
 			String apiKey) throws ClientProtocolException, IOException{
-		String buildURL = getBuildsURL() + "?build_id=" + buildId;
+		String buildURL = getBuildsURL() + "?build_id=" + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name());
 		HttpGet httpget = new HttpGet(buildURL);
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpget.addHeader("Authorization", apiKey);
@@ -201,8 +201,8 @@ class BuildServiceRemoteRESTWrapper {
 	
 	private JsonObject getBuildOutput(String buildId, String outputId, CloseableHttpClient httpclient,
 			String apiKey) throws ClientProtocolException, IOException{
-		String buildOutputURL = getBuildsURL() + "?build_id=" + buildId
-				+ "&output_id=" + outputId;
+		String buildOutputURL = getBuildsURL() + "?build_id=" + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name())
+				+ "&output_id=" + URLEncoder.encode(outputId, StandardCharsets.UTF_8.name());
 		System.out.println(buildOutputURL);
 		HttpGet httpget = new HttpGet(buildOutputURL);
 		httpget.addHeader("Authorization", apiKey);
