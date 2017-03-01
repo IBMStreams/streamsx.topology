@@ -91,6 +91,7 @@ import json
 import threading
 import queue
 import sys
+import os
 import time
 import inspect
 import logging
@@ -175,7 +176,7 @@ class Topology(object):
                 if si[2] is not None:
                     namespace = si[2].__module__
                 elif si[0] is not None:
-                    namespace = si[0]
+                    namespace = os.path.splitext(os.path.basename(si[0]))[0]
         
         if sys.version_info.major == 3:
           self.opnamespace = "com.ibm.streamsx.topology.functional.python"

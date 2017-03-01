@@ -42,7 +42,7 @@ public class SubscribeSPLDictTest extends PublishSubscribePython {
         SPLStream viaSPL = SPL.invokeOperator("spl.relational::Functor", tuples, tuples.getSchema(), null);
         
         // Python that subscribes to the SPL tuple stream and then republishes as Json.
-        includePythonApp(topology, "spl_map_json.py", "spl_map_json.py::spl_map_json");
+        includePythonApp(topology, "spl_map_json.py", "spl_map_json::spl_map_json");
            
        
         TStream<JSONObject> viaPythonJson = topology.subscribe("pytest/spl/map/result", JSONObject.class);
