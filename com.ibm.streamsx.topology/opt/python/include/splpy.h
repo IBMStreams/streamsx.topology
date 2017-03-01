@@ -172,7 +172,7 @@ namespace streamsx {
             throw SplpyGeneral::pythonException("iter(set)");
         }
         PyObject *item;
-        while (item = PyIter_Next(iterator)) {
+        while ((item = PyIter_Next(iterator))) {
             T se;
             pySplValueFromPyObject(se, item);
             Py_DECREF(item);
