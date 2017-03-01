@@ -114,11 +114,7 @@ class _BaseSubmitter(object):
         self._add_python_info()
 
         # Create the json file containing the representation of the application
-        try:
-            self.fn = self._create_json_file(self._create_full_json())
-        except Exception:
-            logger.exception("Error generating SPL and creating JSON file.")
-            raise
+        self._create_json_file(self._create_full_json())
 
         tk_root = self._get_toolkit_root()
 
@@ -207,14 +203,18 @@ class _BaseSubmitter(object):
         return fj
 
     def _create_json_file(self, fj):
-        if sys.hexversion < 0x03000000:
-            tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", prefix="splpytmp", delete=False)
-        else:
-            tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", encoding="UTF-8", prefix="splpytmp",
+        try:
+            if sys.hexversion < 0x03000000:
+                tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", prefix="splpytmp", delete=False)
+            else:
+                tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", encoding="UTF-8", prefix="splpytmp",
                                              delete=False)
-        tf.write(json.dumps(fj, sort_keys=True, indent=2, separators=(',', ': ')))
-        tf.close()
-        return tf.name
+            tf.write(json.dumps(fj, sort_keys=True, indent=2, separators=(',', ': ')))
+            tf.close()
+        except Exception:
+            logger.exception("Error generating SPL and creating JSON file.")
+            raise
+        self.fn = tf.name
 
 
     # There are two modes for execution.
@@ -262,6 +262,9 @@ class _JupyterSubmitter(_BaseSubmitter):
         tk_root = self._get_toolkit_root()
 
         cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
+
+        # Create the json file containing the representation of the application
+        self._create_json_file(self._create_full_json())
 
         streams_install = os.environ.get('STREAMS_INSTALL')
         # If there is no streams install, get java from JAVA_HOME and use the remote contexts.

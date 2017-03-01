@@ -65,8 +65,12 @@ class _DependencyResolver(object):
 
         _debug.debug("add_dependencies:module=%s", module)
 
+        # If the module in which the class/function is defined is __main__, don't add it. Just add its dependencies.
+        if mn == "__main__":
+            self._processed_modules.add(module)
+
         # add the module as a dependency
-        if not self._add_dependency(module, mn):
+        elif not self._add_dependency(module, mn):
             _debug.debug("add_dependencies:not added:module=%s", mn)
             return None
 
