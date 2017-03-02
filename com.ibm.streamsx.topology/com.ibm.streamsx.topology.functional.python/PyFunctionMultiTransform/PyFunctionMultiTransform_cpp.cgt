@@ -31,11 +31,12 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-  {
-  SplpyGIL lock;
-  if (pyInNames_)
-    Py_DECREF(pyInNames_);
-  }
+<% if ($pystyle eq 'dict') { %>
+    if (pyInNames_) {
+      SplpyGIL lock;
+      Py_DECREF(pyInNames_);
+    }
+<% } %>
 
   delete funcop_;
 }
