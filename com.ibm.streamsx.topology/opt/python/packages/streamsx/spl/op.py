@@ -154,6 +154,9 @@ class Map(Invoke):
         """
         return super(Map, self).attribute(input, name)
 
+    def output(self, value):
+        return super(Map, self).output(self.stream, value)
+
 class Sink(Invoke):
     """
     Declaration of an invocation of an SPL sink operator.
