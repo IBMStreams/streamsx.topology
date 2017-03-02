@@ -9,6 +9,7 @@ function usage () {
 	cat <<EOM
 
 This script makes some tests and demonstrated the output in all available languages
+The script runs in Streams versions >= 4.2
 The test script is made to support the translation verification test. It generates 3 log-messages in all available languages.
 These messages may be used to verify the translation.
 So it is currently nor suited for automated test
@@ -19,10 +20,22 @@ So it is currently nor suited for automated test
 		-h | --help 	displayt this help text
 
 	exit status
-		0:		test executed
-		1:		test fails
+		0:		all tests successfully executed
+		1:		fatal error
+		20:		Streams version is not supported
+		30:		at least one test fails
 EOM
 }
+vers=$(${STREAMS_INSTALL}/bin/streamtool version | grep Version)
+if [[ ${vers} =~ Version=([0-9])\.([0-9])\.([0-9]) ]]; then
+	if [[ ${BASH_REMATCH[1]} -lt 4 || ${BASH_REMATCH[2]} -lt 2 ]]; then
+		echo "The Streams version ${vers} is not supported from this tool. Use at least Streams V4.2. Abort execution!"
+		exit 20
+	fi
+else
+	echo "Invalid version string ${vers} . Abort execution!"
+	exit 1
+fi
 
 while getopts ":h" opt; do
 	case $opt in
@@ -62,6 +75,8 @@ cmd="${STREAMS_INSTALL}/bin/sc -M testspl::NoopSample -j ${nproc} -t ${tkpath}"
 echo $cmd
 $cmd || errorExit
 
+declare -i failures=0
+
 #Test 1 Can not execute
 
 #save environment
@@ -75,7 +90,11 @@ for i in "${languages[@]}"; do
 	export LC_ALL=$i.UTF-8
 	logfile=${logdir}/Test1_$i.log
 	echo "output/bin/standalone &> $logfile"
-	output/bin/standalone &> $logfile
+	#we expect that the standalone execution fails
+	if output/bin/standalone &> $logfile; then
+		(( failures++ ))
+		echo "FAILURE: Test 1 lang $i failed" 1>&2
+	fi
 	echo $logfile
 	cat $logfile
 done
@@ -92,10 +111,21 @@ for i in "${languages[@]}"; do
 	export LC_ALL=$i.UTF-8
 	logfile=${logdir}/Test2_$i.log
 	echo "output/bin/standalone -l 2 &> $logfile"
-	output/bin/standalone -l 2 &> $logfile || errorExit
+	#we expect that the standalone execution succeeds
+	if ! output/bin/standalone -l 2 &> $logfile; then
+		(( failures++ ))
+		echo "FAILURE: Test 2 lang $i failed" 1>&2
+	fi
 	echo $logfile
 	cat $logfile
 done
 
 echo "********************** Test 2 done ********************"
-exit 0
+
+if (( failures == 0 )); then
+	echo "Successfully completed"
+	exit 0
+else
+	echo "FAILURE: Completed with ${failures} failures" 1>&2
+	exit 30
+fi;
