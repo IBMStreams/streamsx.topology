@@ -51,9 +51,9 @@ print splpy_inputtuple2value($pystyle);
 
 <%}%>
 <%if ($pystyle ne 'dict') {%>
-  SPL::int32 spl_hash = streamsx::topology::Splpy::pyTupleHash(funcop_->callable(), value);
 
-  OPort0Type otuple(value, spl_hash);
+  OPort0Type otuple(value,
+       streamsx::topology::Splpy::pyTupleHash(funcop_->callable(), value));
 <%}%>
   // submit tuple
   submit(otuple, 0);

@@ -523,7 +523,7 @@ class Stream(object):
             if (func is None) :
                 func = hash   
             hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func)
-            hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int32 __spl_hash>"))
+            hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int64 __spl_hash>"))
             hash_adder.addInputPort(outputPort=self.oport)
             hash_adder_oport = hash_adder.addOutputPort(schema=hash_schema)
 
@@ -639,7 +639,7 @@ class Stream(object):
         Autonomous is not applicable when a topology is submitted
         to a STANDALONE contexts and will be ignored.
 
-        Supported since v1.5
+        Supported since v1.6
 
 
         Returns:
@@ -649,6 +649,21 @@ class Stream(object):
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
+
+    def as_string(self):
+        """
+        Declares a stream converting each tuple on this stream
+        into a string using `str(tuple)`.
+
+        The stream is typed as a stream of strings.
+
+        Supported since v1.6
+
+        Returns:
+            Stream: Stream containing the string representations of tuples on this stream.
+
+        """
+        return self._map(streamsx.topology.functions.identity, schema.CommonSchema.String)
 
 class Routing(Enum):
     ROUND_ROBIN=1

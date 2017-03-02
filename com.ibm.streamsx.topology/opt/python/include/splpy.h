@@ -37,7 +37,6 @@
 #include <SPL/Runtime/Operator/OperatorContext.h>
 #include <SPL/Runtime/Operator/Operator.h>
 
-
 /**
  * Functionality for executing Python within IBM Streams.
  */
@@ -398,38 +397,25 @@ namespace streamsx {
       return 1;
     }
 
-    // Python hash of an SPL attribute
+    // Python hash of an SPL value
+    // Python hashes are signed integer values
     template <class T>
-    static SPL::int32 pyTupleHash(PyObject * function, T & splVal) {
+    static SPL::int64 pyTupleHash(PyObject * function, T & splVal) {
 
       SplpyGIL lock;
 
       PyObject * arg = pySplValueToPyObject(splVal);
 
-      // invoke python nested function that generates the int32 hash
-      // clear any indication of an error and then check later for an 
-      // error
-      PyErr_Clear();
+      // invoke python function that generates the hash
       PyObject * pyReturnVar = pyTupleFunc(function, arg); 
-     
-       // construct integer from  return value
-      SPL::int32 retval=0;
-      try {
-      	retval = PyLong_AsLong(pyReturnVar);
-      } catch(...) {
-        Py_DECREF(pyReturnVar);
-        SplpyGeneral::flush_PyErr_Print();
-        throw;
+      if (pyReturnVar == 0){
+        throw SplpyGeneral::pythonException("hash");
       }
-      // PyLong_AsLong will return an error without 
-      // throwing an error, so check if an error happened
-      if (PyErr_Occurred()) {
-        SplpyGeneral::flush_PyErr_Print();
-      }
-      else {
-        Py_DECREF(pyReturnVar);
-      }
-      return retval;
+
+      // construct integer from return value
+      SPL::int64 hash = (SPL::int64) PyLong_AsLong(pyReturnVar);
+      Py_DECREF(pyReturnVar);
+      return hash;
    }
 
     /**
