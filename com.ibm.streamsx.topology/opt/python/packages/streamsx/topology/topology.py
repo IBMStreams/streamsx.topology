@@ -134,6 +134,39 @@ class _SourceLocation(object):
             sl['topology.method'] = self.method
         return sl
 
+class Routing(Enum):
+    """
+    Defines how tuples are routed to channels in a
+    parallel region.
+
+    A parallel region is started by :py:meth:`~Stream.parallel`
+    and ended with :py:meth:`~Stream.end_parallel` or :py:meth:`~Stream.for_each`.
+    """
+    ROUND_ROBIN=1
+    """
+    Tuples are routed to maintain an even distribution of tuples to the channels.
+
+    Each tuple is only sent to a single channel.
+    """
+    KEY_PARTITIONED=2
+    HASH_PARTITIONED=3
+    """
+    Tuples are routed based upon a hash value so that tuples with the same hash
+    and thus same value are always routed to the same channel. When a hash function is
+    specified it is passed the tuple and the return value is the hash. When no hash
+    function is specified then `hash(tuple)` is used.
+
+    Each tuple is only sent to a single channel.
+
+    .. warning:: A consistent hash function is required to guarantee that a tuple
+        with the same value is always routed to the same channel. `hash()` is not
+        consistent in that for types str, bytes and datetime objects are “salted”
+        with an unpredictable random value (Python 3.5). Thus if the processing element is
+        restarted channel routing for a hash based upon a str, bytes or datetime will change.
+        In addition code executing in the channels can see a different
+        hash value to other channels and the execution that routed the tuple due to
+        being in different processing elements.
+    """
 
 class Topology(object):
     """The Topology class is used to define data sources, and is passed as a parameter when submitting an application.
@@ -479,7 +512,7 @@ class Stream(object):
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
     
-    def parallel(self, width, routing=None, func=None):
+    def parallel(self, width, routing=Routing.ROUND_ROBIN, func=None):
         """
         Parallelizes the stream into `width` parallel channels.
         Tuples are routed to parallel channels such that an even distribution is maintained.
@@ -488,7 +521,7 @@ class Stream(object):
         from one another.
         
         parallel() will only parallelize the stream operations performed after the call to parallel() and 
-        before the call to end_parallel().
+        before the call to :py:meth:`~Stream.end_parallel`.
         
         Parallel regions aren't required to have an output stream, and thus may be used as sinks.
         In other words, a parallel sink is created by calling parallel() and creating a sink operation.
@@ -502,16 +535,13 @@ class Stream(object):
         
         Args:
             width (int): Degree of parallelism.
-            routing: denotes what type of tuple routing to use.
-                ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators (the default when
-                no routing is specified).
-                HASH_PARTIONED: delivers to downstream operators based on the hash of the tuples being sent
-                or if a function is provided the function will be called to provide the hash
-            func: Optional function called when HASH_PARTIONED routing is specified.  The function provides an
-                int32 value to be used as the hash that determines the tuple routing to downstream operators
+            routing(Routing): denotes what type of tuple routing to use.
+            func: Optional function called when :py:const:`Routing.HASH_PARTITIONED` routing is specified.
+                The function provides an integer value to be used as the hash that determines
+                the tuple channel routing.
 
         Returns:
-            Stream
+            Stream: A stream for which subsequent transformations will be executed in parallel.
 
         """
         if (routing == None or routing == Routing.ROUND_ROBIN) :
@@ -542,10 +572,10 @@ class Stream(object):
 
     def end_parallel(self):
         """
-        Ends a parallel region by merging the channels into a single stream
+        Ends a parallel region by merging the channels into a single stream.
 
         Returns:
-            Stream: Stream for which subsequent transformations are no longer parallelized
+            Stream: Stream for which subsequent transformations are no longer parallelized.
         """
         lastOp = self.topology.graph.getLastOperator()
         outport = self.oport
@@ -664,12 +694,6 @@ class Stream(object):
 
         """
         return self._map(streamsx.topology.functions.identity, schema.CommonSchema.String)
-
-class Routing(Enum):
-    ROUND_ROBIN=1
-    KEY_PARTITIONED=2
-    HASH_PARTITIONED=3    
-
 
 class View(object):
     """
