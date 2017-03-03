@@ -10,6 +10,8 @@ import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.creat
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.deleteToolkit;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -83,8 +85,8 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
     	JsonObject deploy = deploy(submission);
     	JsonObject graph = GraphKeys.graph(submission);
     	
-        String namespace = jstring(graph, "namespace");
-        String name = jstring(graph, "name");
+        String namespace = splAppNamespace(graph);
+        String name = splAppName(graph);
 
         InvokeSc sc = new InvokeSc(deploy, standalone, namespace, name, appDir);
         

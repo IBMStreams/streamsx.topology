@@ -23,7 +23,7 @@ being distributed across multiple computing resources
 Topology
 ########
 
-A Topology declare a graph of *streams* and *operations* against
+A :py:class:`Topology` declares a graph of *streams* and *operations* against
 tuples (data items) on those streams.
 
 After being declared, a Topology is submitted to be compiled into
@@ -35,40 +35,74 @@ IBM Streams installation.
 
 The compilation step invokes the Streams compiler to produce a bundle.
 This effectively, from a Python point of view, produces a runnable
-version of the Python topology that includes generated application
+version of the Python topology that includes application
 specific Python C extensions to optimize performance.
 
 The Streams runtime distributes the application's operations
 across the resources available in the instance.
 
+.. note::
+    `Topology` represents a declaration of a streaming application that
+    will be executed by a Streams instance as a `job`, either using the Streaming Analytics
+    service on IBM Bluemix cloud platform or an on-premises distributed instance.
+    `Topology` does not represent a running application, so an instance of `Stream` class does not contain
+    the tuples, it is only a declaration of a stream.
+
 Stream
 ######
 
-A stream is a DEFINITION.
+A :py:class:`Stream` can be an infinite sequence of tuples, such as a stream for a traffic flow sensor.
+Alternatively, a stream can be finite, such as a stream that is created from the contents of a file.
+When a streams processing application contains infinite streams, the application runs continuously without ending.
 
 A stream has a schema that defines the type of each tuple on the stream.
 The schema for a Python Topology is either:
 
-* Untyped - A tuple may be any Python object. This is the default.
-* String - Each tuple is a Unicode string.
-* Binary - Each tuple is a blob.
-* Json - Each tuple is a Python dict that can be expressed as a JSON object.
+* :py:const:`~streamsx.topology.schema.CommonSchema.Python` - A tuple may be any Python object. This is the default.
+* :py:const:`~streamsx.topology.schema.CommonSchema.String` - Each tuple is a Unicode string.
+* :py:const:`~streamsx.topology.schema.CommonSchema.Binary` - Each tuple is a blob.
+* :py:const:`~streamsx.topology.schema.CommonSchema.Json` - Each tuple is a Python dict that can be expressed as a JSON object.
 * Structured - A stream that is an ordered list of attributes, with each attribute having a fixed type (e.g. float64 or int32) and a name.
 
-Stream operations
+Stream processing
 #################
 
 A stream is processed to produce zero or more transformed streams,
 such as filtering a stream to drop unwanted tuples, producing a stream
 that only contains the required tuples.
 
-An operation on a stream can be:
+Streaming processing is per tuple based, as each tuple is submitted to a stream consuming operators
+have their processing logic invoked for that tuple.
 
+A functional operator is declared by methods on :py:class:`Stream` such as :py:meth:`~Stream.map` which
+maps the tuples on its input stream to tuples on its output stream. `Stream` uses a functional model
+where each stream processing operator is defined in terms a Python callable that is invoked passing
+input tuples and whose return defines what output tuples are submitted for downstream processing.
 
-* A Python lambda function. The lambda is called for each tuple on a stream, passing the tuple.
-* A Python function. The function is called for each tuple on a stream, passing the tuple.
-* An instance of a Python callable class. The instance is called for each tuple on the stream, passing the tuple.  Use of an instance allows the operation to be stateful by maintaining state in instance attributes across invocations.
-* An invocation of an SPL operator.
+The Python callable used for functional processing in this API may be:
+
+* A Python lambda function.
+* A Python function.
+* An instance of a Python callable class.
+
+For example a stream ``words`` containing only string objects can be
+processed by a :py:meth:`~Stream.filter` using a lambda function::
+
+    # Filter the stream so it only contains words starting with py
+    pywords = words.filter(lambda word : tuple.startswith('py'))
+
+Use of a class instance allows the operation to be stateful by maintaining state in instance
+attributes across invocations. For future compatibility instances should ensure that the object's
+state can be pickled.
+
+Execution of a class instance effectively run in a context manager so that an instance's ``__enter__``
+method is called when the processing element containing the instance  is initialized
+and its ``__exit__`` method called when the processing element is stopped. To take advantage of this
+the class must define both ``__enter__`` and ``__exit__`` methods.
+
+In addition an application declared by `Topology` can include stream processing defined by SPL operators. This allows
+reuse of adapters and analytics provided by IBM Streams, open source and third-party SPL toolkits.
+
 """
 
 from __future__ import unicode_literals
@@ -245,24 +279,25 @@ class Topology(object):
 
     def source(self, func, name=None):
         """
-        Fetches information from an external system and presents that information as a stream.
+        Declare a source stream that introduces tuples into the application.
+
+        Typically used to create a stream of tuple from an external source,
+        such as a sensor or reading from an external system.
+
         Tuples are obtained from an iterator obtained from the passed iterable
         or callable that returns an iterable.
-        Each tuple that is not None from the iterator returned
-        from iter(func()) is present on the returned stream.
+
+        Each tuple that is not None from the iterator is present on the returned stream.
+
+        Each tuple is a Python object and must be picklable to allow execution of the application
+        to be distributed across available resources in the Streams instance.
         
         Args:
-            func: An iterable or a zero-argument callable that returns an iterable of tuples.
-                The callable must be either be an iterable object, a function, a lambda function
-                or an instance of a callable class that implements the method `__call__(self)` and be picklable.
-
-                Using a callable class allows state information such as user-defined parameters to be stored during class
-                initialization and utilized when the instance is called.
-
-                A tuple is represented as a Python object that must be picklable.
+            func(callable): An iterable or a zero-argument callable that returns an iterable of tuples.
+            name(str): Name of the stream, defaults to a generated name.
 
         Returns:
-            Stream: A stream whose tuples are the result of the output obtained by invoking the provided callable or iterable.
+            Stream: A stream whose tuples are the result of the iterable obtained from `func`.
         """
         if inspect.isroutine(func):
              pass
@@ -283,22 +318,24 @@ class Topology(object):
         Streams applications to subscribe to it. A subscriber matches a
         publisher if the topic and schema match.
 
-        By default a stream is subscribed as Python objects (schema.CommonSchema.Python)
+        By default a stream is subscribed as :py:const:`~streamsx.topology.schema.CommonSchema.Python` objects
         which connects to streams published to topic by Python Streams applications.
 
-        JSON streams are subscribed to using schema.CommonSchema.Json. 
+        JSON streams are subscribed to using schema :py:const:`~streamsx.topology.schema.CommonSchema.Json`.
         Each tuple on the returned stream will be a Python dictionary
-        object created by json.loads(tuple).
-        Any publishing Streams application may have been implemented in any language.
+        object created by ``json.loads(tuple)``.
+        A Streams application publishing JSON streams may have been implemented in any programming language
+        supported by Streams.
        
-        String streams are subscribed to using schema.CommonSchema.String .
+        String streams are subscribed to using schema :py:const:`~streamsx.topology.schema.CommonSchema.String`.
         Each tuple on the returned stream will be a Python string object.
-        Any publishing Streams application may have been implemented in any language.
+        A Streams application publishing JSON streams may have been implemented in any programming language
+        supported by Streams.
 
         Args:
             topic(str): Topic to subscribe to.
-            schema(schema.StreamSchema): schema to subscribe to. Defaults to schema.CommonSchema.Python representing Python
-                    objects.
+            schema(~streamsx.topology.schema.StreamSchema): schema to subscribe to.
+
         Returns:
             Stream:  A stream whose tuples have been published to the topic by other Streams applications.
         """
@@ -313,8 +350,8 @@ class Topology(object):
 class Stream(object):
     """
     The Stream class is the primary abstraction within a streaming application. It represents a potentially infinite 
-    series of tuples which can be operated upon to produce another stream, as in the case of Stream.map(), or 
-    terminate a stream, as in the case of Stream.sink().
+    series of tuples which can be operated upon to produce another stream, as in the case of :py:meth:`map`, or
+    terminate a stream, as in the case of :py:meth:`for_each`.
     """
     def __init__(self, topology, oport):
         self.topology = topology
@@ -323,19 +360,11 @@ class Stream(object):
     def for_each(self, func, name=None):
         """
         Sends information as a stream to an external system.
-        Takes a user provided callable that does not return a value.
-        For each tuple that is on the stream `func(tuple)` is called.
+
+        For each tuple on the stream ``func(tuple)`` is called.
         
         Args:
             func: A callable that takes a single parameter for the tuple and returns None.
-            The callable must be one of: 
-            * a function 
-            * a lambda function
-            * an instance of a callable class that implements 
-              the method `__call__(self, tuple)` and be picklable.
-            Using a callable class allows state information such as user-defined parameters to be stored during class 
-            initialization and utilized when the instance is called.
-            The callable is invoked for each incoming tuple.
         Returns:
             None
         """
@@ -345,31 +374,21 @@ class Stream(object):
 
     def sink(self, func, name=None):
         """
-        Equivalent to calling the for_each() function
+        Equivalent to calling :py:meth:`for_each`.
         """
         return self.for_each(func, name)
 
     def filter(self, func, name=None):
         """
-        Filters tuples from a stream using the supplied callable `func`.
-        For each tuple on the stream the callable is called passing
-        the tuple, if the callable return evalulates to true the
-        tuple will be present on the returned stream, otherwise
-        the tuple is filtered out.
+        Filters tuples from this stream using the supplied callable `func`.
+
+        For each tuple on the stream ``func(tuple)`` is called, if the return evaluates to ``True`` the
+        tuple will be present on the returned stream, otherwise the tuple is filtered out.
         
         Args:
-            func: A callable that takes a single parameter for the tuple, and returns True or False.
-            If True, the tuple is included on the returned stream.  If False, the tuple is filtered out.
-            The callable must be one of:
-            * a function
-            * a lambda function
-            * an instance of a callable class that implements 
-              the method `__call__(self, tuple)` and be picklable.
-            Using a callable class allows state information such as user-defined parameters to be stored during class 
-            initialization and utilized when the instance is called.
-            The callable is invoked for each incoming tuple.
+            func: Filter callable that takes a single parameter for the tuple.
         Returns:
-            A Stream containing tuples that have not been filtered out.
+            Stream: A Stream containing tuples that have not been filtered out.
         """
         sl = _SourceLocation(_source_info(), "filter")
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionFilter", func, name=name, sl=sl)
@@ -405,55 +424,44 @@ class Stream(object):
 
     def map(self, func, name=None):
         """
-        Maps each tuple from this stream into 0 or 1 tuples using the supplied callable `func`.
-        For each tuple on this stream, the returned stream will contain a tuple
-        that is the result of the callable when the return is not None.
-        If the callable returns None then no tuple is submitted to the returned 
-        stream.
+        Maps each tuple from this stream into 0 or 1 tuples.
+
+        For each tuple on this stream ``func(tuple)`` is called.
+        If the result is not `None` then the result will be submitted
+        as a tuple on the returned stream. If the result is `None` then
+        no tuple submission will occur.
         
         Args:
-            func: A callable that takes a single parameter for the tuple, and returns a tuple or None.
-                The callable must be either a function, a lambda function,
-                an instance of a callable class that implements the method `__call__(self, tuple)` and be picklable.
+            func: A callable that takes a single parameter for the tuple.
 
-                Using a callable class allows state information such as user-defined parameters to be stored during class
-                initialization and utilized when the instance is called.
-
-                The callable is invoked for each incoming tuple.
         Returns:
-            Stream: A stream containing tuples mapped by func.
+            Stream: A stream containing tuples mapped by `func`.
         """
         return self._map(func, schema=schema.CommonSchema.Python, name=name)
 
     def transform(self, func, name=None):
         """
-        Equivalent to calling the map() function
+        Equivalent to calling :py:meth:`map`.
         """
         return self.map(func, name)
              
     def flat_map(self, func, name=None):
         """
-        Transforms each tuple from this stream into 0 or more tuples using the supplied callable `func`. 
-        For each tuple on this stream, the returned stream will contain all non-None tuples from
-        the iterable.
-        Tuples will be added to the returned stream in the order the iterable
-        returns them.
-        If the return is None or an empty iterable then no tuples are added to
+        Maps and flatterns each tuple from this stream into 0 or more tuples.
+
+
+        For each tuple on this stream ``func(tuple)`` is called.
+        If the result is not `None` then the the result is iterated over
+        with each value from the iterator that is not None will be submitted
+         to the return stream.
+
+        If the result is `None` or an empty iterable then no tuples are submitted to
         the returned stream.
         
         Args:
-            func: A callable that takes a single parameter for the tuple, and returns an iterable of tuples or None.
-            The callable must return an iterable or None, otherwise a TypeError is raised.
-            The callable must be either
-            * a function
-            * a lambda function
-            * an instance of a callable class that implements 
-              the method `__call__(self, tuple)` and be picklable.
-            Using a callable class allows state information such as user-defined parameters to be stored during class 
-            initialization and utilized when the instance is called.
-            The callable is invoked for each incoming tuple.
+            func: A callable that takes a single parameter for the tuple.
         Returns:
-            A Stream containing transformed tuples.
+            Stream: A Stream containing transformed tuples.
         Raises:
             TypeError: if `func` does not return an iterator nor None
         """     
@@ -471,10 +479,10 @@ class Stream(object):
 
     def isolate(self):
         """
-        Guarantees that the upstream operation will run in a separate process from the downstream operation
+        Guarantees that the upstream operation will run in a separate processing element from the downstream operation
 
         Returns:
-            Stream
+            Stream: Stream whose subsequent immediate processing will occur in a separate processing element.
         """
         op = self.topology.graph.addOperator("$Isolate$")
         # does the addOperator above need the packages
@@ -662,15 +670,14 @@ class Stream(object):
         where any checkpointing of operator state is autonomous (independent)
         of other operators.
         
-        This function may be used to end a consistent region by starting an
+        This method may be used to end a consistent region by starting an
         autonomous region. This may be called even if this stream is in
         an autonomous region.
 
         Autonomous is not applicable when a topology is submitted
         to a STANDALONE contexts and will be ignored.
 
-        Supported since v1.6
-
+        .. versionadded:: 1.6
 
         Returns:
             Stream: Stream whose subsequent downstream processing is in an autonomous region.
@@ -687,7 +694,7 @@ class Stream(object):
 
         The stream is typed as a stream of strings.
 
-        Supported since v1.6
+        .. versionadded:: 1.6
 
         Returns:
             Stream: Stream containing the string representations of tuples on this stream.

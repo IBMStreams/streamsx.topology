@@ -51,6 +51,7 @@
 		     <arg value="test1"/>
 		     <arg value="test_lambdas"/>
 		     <arg value="test2"/>
+		     <arg value="test2_names"/>
 		     <arg value="test2_spl"/>
 		     <arg value="test2_spl2python"/>
 		     <arg value="test2_pkg"/>
