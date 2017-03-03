@@ -33,6 +33,11 @@ class TestTopologyMethods(unittest.TestCase):
      self.assertEqual("myapp", topo.name)
      self.assertEqual("myns", topo.namespace)
 
+  def test_TopologyNameDottedNamespace(self):
+     topo = Topology(name="myapp", namespace="org.example.myns")
+     self.assertEqual("myapp", topo.name)
+     self.assertEqual("org.example.myns", topo.namespace)
+
   def test_TopologySourceAndSink(self):
      topo = Topology("test_TopologySourceAndSink")
      hw = topo.source(test_functions.hello_world)

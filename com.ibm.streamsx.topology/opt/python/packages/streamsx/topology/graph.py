@@ -23,6 +23,21 @@ import streamsx.topology.param
 from streamsx.topology.schema import CommonSchema
 from streamsx.topology.schema import _stream_schema
 
+def _fix_namespace(ns):
+    ns = str(ns)
+    sns = ns.split('.')
+    if len(sns) == 1:
+        return re.sub(r'\W+', '', ns)
+    for i in range(0,len(sns)):
+        sns[i] = re.sub(r'\W+', '', sns[i])
+
+    for i in range(len(sns), 0):
+        if len(sns[i]) == 0:
+            sns.pop(i)
+
+    return '.'.join(sns)
+
+
 class SPLGraph(object):
 
     def __init__(self, topology, name=None, namespace=None):
@@ -36,7 +51,7 @@ class SPLGraph(object):
         self.graph = self
         # Remove 'awkward characters' from names
         self.name = re.sub(r'\W+', '', str(name))
-        self.namespace = re.sub(r'\W+', '', str(namespace))
+        self.namespace = _fix_namespace(namespace)
         self.topology = topology
         self.operators = []
         self.resolver = streamsx.topology.dependency._DependencyResolver(self.topology)
