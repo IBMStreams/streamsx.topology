@@ -461,6 +461,7 @@ The list may be empty resulting in no tuples being submitted.
 from enum import Enum
 import functools
 import inspect
+import re
 import sys
 import streamsx.ec as ec
 
@@ -480,6 +481,19 @@ _OperatorType.Source.spl_template = 'PythonFunctionSource'
 _OperatorType.Pipe.spl_template = 'PythonFunctionPipe'
 _OperatorType.Sink.spl_template = 'PythonFunctionSink'
 _OperatorType.Filter.spl_template = 'PythonFunctionFilter'
+
+_SPL_KEYWORDS = {'graph', 'stream', 'public', 'composite', 'input', 'output', 'type', 'config', 'logic',
+                 'window', 'param', 'onTuple', 'onPunct', 'onProcess', 'state', 'stateful', 'mutable',
+                 'if', 'for', 'while', 'break', 'continue', 'return', 'attribute', 'function', 'operator'}
+
+def _valid_identifier(id):
+    if re.fullmatch('[a-zA-Z_][a-zA-Z_0-9]*', id) is None or id in _SPL_KEYWORDS:
+        raise ValueError("%s is not a valid SPL identifier".format(id))
+
+def _valid_op_parameter(name):
+    _valid_identifier(name)
+    if name in ['suppress', 'include']:
+        raise ValueError("Parameter name %s is reserved".format(name))
 
 def pipe(wrapped):
     """

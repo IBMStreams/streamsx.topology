@@ -31,8 +31,6 @@ cmd_args = cmd_parser.parse_args()
 # setup for function inspection
 if sys.version_info.major == 3:
   _inspect = inspect
-elif sys.version_info.major == 2:
-  _inspect = funcsigs
 else:
   raise ValueError("Python version not supported.")
 ############################################
@@ -59,6 +57,7 @@ def setup():
 setup()
 
 from streamsx.spl.spl import _OperatorType
+from streamsx.spl.spl import _valid_op_parameter
 
 def makeNamespaceDir(ns):
      nsdir = os.path.join(userToolkitDir(), ns)
@@ -249,6 +248,7 @@ def create_op_parameters(opmodel_xml, name, opObj):
         
         for pn in itpmds:
             pmd = pmds[pn]
+            _valid_op_parameter(pn)
             px = _OP_PARAM_TEMPLATE
             px = px.replace('__SPLPY__PARAM_NAME__SPLPY__', pn)
             px = px.replace('__SPLPY__PARAM_OPT__SPLPY__', 'false' if pmd.default== _inspect.Parameter.empty else 'true' )
