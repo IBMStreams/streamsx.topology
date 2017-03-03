@@ -525,6 +525,8 @@ def _wrapforsplop(optype, wrapped, style, docpy):
         if not callable(wrapped):
             raise TypeError('Class must be callable')
 
+        _valid_identifier(wrapped.__name__)
+
         class _op_class(object):
 
             __doc__ = wrapped.__doc__
@@ -558,7 +560,9 @@ def _wrapforsplop(optype, wrapped, style, docpy):
         return _op_class
     if not inspect.isfunction(wrapped):
         raise TypeError('A function or callable class is required')
-      
+
+    _valid_identifier(wrapped.__name__)
+
     @functools.wraps(wrapped)
     def _op_fn(*args, **kwargs):
         return wrapped(*args, **kwargs)
