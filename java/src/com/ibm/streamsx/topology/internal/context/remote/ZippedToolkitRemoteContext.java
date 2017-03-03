@@ -4,7 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
@@ -43,8 +44,8 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     public static Future<File> createCodeArchive(File toolkitRoot, JsonObject submission) throws IOException, URISyntaxException {
         
         JsonObject jsonGraph = object(submission, SUBMISSION_GRAPH);
-        String namespace = jstring(jsonGraph, "namespace");
-        String name = jstring(jsonGraph, "name");
+        String namespace = splAppNamespace(jsonGraph);
+        String name = splAppName(jsonGraph);
         String tkName = toolkitRoot.getName();
         
         Path zipOutPath = pack(toolkitRoot.toPath(), namespace, name, tkName);

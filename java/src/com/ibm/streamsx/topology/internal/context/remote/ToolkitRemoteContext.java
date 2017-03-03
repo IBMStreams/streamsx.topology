@@ -11,6 +11,10 @@ import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_C
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.TOOLKITS_JSON;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAME;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
@@ -94,7 +98,7 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
 
         JsonObject jsonGraph = object(submission, SUBMISSION_GRAPH);
 
-        makeDirectoryStructure(toolkitRoot, jstring(jsonGraph, "namespace"));
+        makeDirectoryStructure(toolkitRoot, splAppNamespace(jsonGraph));
         
         addToolkitInfo(toolkitRoot, jsonGraph);
         
@@ -139,8 +143,8 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
     private void createNamespaceFile(File toolkitRoot, JsonObject json, String suffix, String content)
             throws IOException {
 
-        String namespace = jstring(json, "namespace");
-        String name = jstring(json, "name");
+        String namespace = splAppNamespace(json);
+        String name = splAppName(json);
         
         Path f = Paths.get(toolkitRoot.getAbsolutePath(), namespace, name + "." + suffix);
 

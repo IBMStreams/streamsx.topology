@@ -7,6 +7,8 @@ package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.graph;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.gson;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
@@ -19,6 +21,7 @@ import java.nio.file.Files;
 import java.util.Date;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 
 /**
  * Keys in the JSON deploy object for job submission.
@@ -110,8 +113,8 @@ public interface DeployKeys {
             if (!jcos_ok)
                 return null;
 
-            String namespace = jstring(graph, "namespace");
-            String name = jstring(graph, "name");
+            String namespace = splAppNamespace(graph);
+            String name = splAppName(graph);
 
             File jcf = new File(dir, namespace + "." + name + "_JobConfig.json");
 

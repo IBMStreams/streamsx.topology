@@ -12,6 +12,8 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAME;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,7 +38,6 @@ import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
-import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.tuple.JSONAble;
@@ -69,8 +70,8 @@ public class GraphBuilder extends BJSONObject {
     public GraphBuilder(String namespace, String name) {
         super();
 
-        json().put("namespace", namespace);
-        json().put("name", name);
+        json().put(NAMESPACE, namespace);
+        json().put(NAME, name);
         json().put("public", true);
         json().put("config", config);
         json().put("parameters", params);
@@ -267,8 +268,8 @@ public class GraphBuilder extends BJSONObject {
             String language = (String) op.json().get(OpProperties.LANGUAGE);
             
             if (!MODEL_SPL.equals(runtime) || !LANGUAGE_JAVA.equals(language)) {
-                    String namespace = (String) json().get("namespace");
-                    String name = (String) json().get("name");
+                    String namespace = (String) json().get(NAMESPACE);
+                    String name = (String) json().get(NAME);
                     throw new IllegalStateException(
                             "Topology '"+namespace+"."+name+"'"
                             + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"

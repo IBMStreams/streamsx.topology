@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.graph;
 
+import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
@@ -39,6 +41,67 @@ public interface GraphKeys {
      */
     static JsonObject graphConfig(JsonObject submission) {
         return objectCreate(submission, GRAPH, CONFIG);
+    }
+    
+    /**
+     * user supplied application name.
+     */
+    String NAME = "name";
+    
+    /**
+     * user supplied application namespace.
+     */
+    String NAMESPACE = "namespace";
+    
+    /**
+     * SPL application namespace.
+     */
+    String SPL_NAMESPACE = "splNamespace";
+    
+    /**
+     * SPL application name.
+     */
+    String SPL_NAME = "splName";
+    
+    /**
+     * User supplied application name.
+     */
+    static String appName(JsonObject graph) {
+        return jstring(graph, NAME);
+    }
+    /**
+     * User supplied application namespace.
+     */
+    static String appNamespace(JsonObject graph) {
+        return jstring(graph, NAMESPACE);
+    }
+    
+    /**
+     * SPL application name derived from appName().
+     */
+    static String splAppName(JsonObject graph) {
+        String name = jstring(graph, SPL_NAME);
+        if (name == null) {
+            name = appName(graph);
+            name = getSPLCompatibleName(name);
+            graph.addProperty(SPL_NAME, name);
+        }
+        return name;
+    }
+    
+    /**
+     * SPL application name derived from appName().
+     */
+    static String splAppNamespace(JsonObject graph) {
+        String ns = jstring(graph, SPL_NAMESPACE);
+        if (ns == null) {
+            ns = appNamespace(graph);
+            if (ns != null) {
+                ns = getSPLCompatibleName(ns);
+                graph.addProperty(SPL_NAMESPACE, ns);
+            }
+        }
+        return ns;
     }
     
     /**

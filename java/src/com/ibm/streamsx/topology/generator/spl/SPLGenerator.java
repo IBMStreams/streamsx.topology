@@ -13,6 +13,8 @@ import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_COMPILE_VERSION;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
@@ -108,7 +110,7 @@ public class SPLGenerator {
         JsonObject graphConfig = getGraphConfig(graph);
         graphConfig.addProperty("supportsJobConfigOverlays", versionAtLeast(4,2));
 
-        String namespace = jstring(graph, "namespace");
+        String namespace = splAppNamespace(graph);
         if (namespace != null && !namespace.isEmpty()) {
             sb.append("namespace ");
             sb.append(namespace);
@@ -523,7 +525,7 @@ public class SPLGenerator {
      * @param name
      * @return A string which can be a valid SPL stream name.
      */
-    static String getSPLCompatibleName(String name) {
+    public static String getSPLCompatibleName(String name) {
 
         if (name.matches("^[a-zA-Z0-9_]+$"))
             return name;
