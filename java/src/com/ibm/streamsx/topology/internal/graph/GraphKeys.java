@@ -9,6 +9,8 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
+import java.util.StringTokenizer;
+
 import com.google.gson.JsonObject;
 
 /**
@@ -97,7 +99,14 @@ public interface GraphKeys {
         if (ns == null) {
             ns = appNamespace(graph);
             if (ns != null) {
-                ns = getSPLCompatibleName(ns);
+                StringBuilder nsb = new StringBuilder();
+                StringTokenizer st = new StringTokenizer(ns, ".");
+                while (st.hasMoreTokens()) {
+                    if (nsb.length() != 0)
+                        nsb.append(".");
+                    nsb.append(getSPLCompatibleName(st.nextToken()));
+                }
+                ns = nsb.toString();
                 graph.addProperty(SPL_NAMESPACE, ns);
             }
         }
