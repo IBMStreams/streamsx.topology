@@ -7,6 +7,15 @@ Overview
 SPL primitive operators that call a Python function or
 callable class are created by decorators provided by this module.
 
+The name of the function or callable class becomes the name of the
+operator.
+
+.. warning::
+    Operator names must be valid SPL identifers,
+    SPL identifiers start with an ASCII letter or underscore,
+    followed by ASCII letters, digits, or underscores.
+    The name also must not be a SPL keyword.
+
 Once created the operators become part of a toolkit and may be used
 like any other SPL operator.
 
@@ -30,6 +39,14 @@ If the `__init__` method has parameters beyond the first
 Any parameter that has a default value becomes an optional parameter
 to the SPL operator. Parameters of the form `\*args` and `\*\*kwargs`
 are not supported.
+
+.. warning::
+    Parameter names must be valid SPL identifers,
+    SPL identifiers start with an ASCII letter or underscore,
+    followed by ASCII letters, digits, or underscores.
+    The name also must not be a SPL keyword.
+
+    Parameter names ``suppress`` and ``include`` are reserved.
 
 The value of the operator parameters at SPL operator invocation are passed
 to the `__init__` method. This is equivalent to creating an instance
