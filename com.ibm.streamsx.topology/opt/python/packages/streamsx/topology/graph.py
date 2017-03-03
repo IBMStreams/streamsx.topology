@@ -16,6 +16,7 @@ except ImportError:
 
 import types
 import base64
+import re
 import streamsx.topology.dependency
 import streamsx.topology.functions
 import streamsx.topology.param
@@ -33,8 +34,9 @@ class SPLGraph(object):
         
         # Allows Topology or SPLGraph to be passed to submit
         self.graph = self
-        self.name = str(name)
-        self.namespace = str(namespace)
+        # Remove 'awkward characters' from names
+        self.name = re.sub(r'\W+', '', str(name))
+        self.namespace = re.sub(r'\W+', '', str(namespace))
         self.topology = topology
         self.operators = []
         self.resolver = streamsx.topology.dependency._DependencyResolver(self.topology)
