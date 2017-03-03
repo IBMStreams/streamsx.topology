@@ -488,12 +488,12 @@ _SPL_KEYWORDS = {'graph', 'stream', 'public', 'composite', 'input', 'output', 't
 
 def _valid_identifier(id):
     if re.fullmatch('[a-zA-Z_][a-zA-Z_0-9]*', id) is None or id in _SPL_KEYWORDS:
-        raise ValueError("%s is not a valid SPL identifier".format(id))
+        raise ValueError("{0} is not a valid SPL identifier".format(id))
 
 def _valid_op_parameter(name):
     _valid_identifier(name)
     if name in ['suppress', 'include']:
-        raise ValueError("Parameter name %s is reserved".format(name))
+        raise ValueError("Parameter name {0} is reserved".format(name))
 
 def pipe(wrapped):
     """

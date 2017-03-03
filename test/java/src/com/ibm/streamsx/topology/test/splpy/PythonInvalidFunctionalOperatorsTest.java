@@ -59,6 +59,8 @@ public class PythonInvalidFunctionalOperatorsTest extends TestTopology {
                 "@spl.map()\n",
                 "class op1(object):\n",
                 "  def __init__(self, naïve):\n",
+                "     pass\n",
+                "  def __call__(self, *tuple):\n",
                 "     pass\n"
         };
         _testInvalidToolkit(Arrays.asList(code));
@@ -70,6 +72,8 @@ public class PythonInvalidFunctionalOperatorsTest extends TestTopology {
                 "@spl.map()\n",
                 "class op2(object):\n",
                 "  def __init__(self, stream):\n",
+                "     pass\n",
+                "  def __call__(self, *tuple):\n",
                 "     pass\n"
         };
         _testInvalidToolkit(Arrays.asList(code));
@@ -81,6 +85,8 @@ public class PythonInvalidFunctionalOperatorsTest extends TestTopology {
                 "@spl.map()\n",
                 "class op3(object):\n",
                 "  def __init__(self, suppress):\n",
+                "     pass\n",
+                "  def __call__(self, *tuple):\n",
                 "     pass\n"
         };
         _testInvalidToolkit(Arrays.asList(code));
@@ -92,7 +98,31 @@ public class PythonInvalidFunctionalOperatorsTest extends TestTopology {
                 "@spl.map()\n",
                 "class op4(object):\n",
                 "  def __init__(self, include):\n",
+                "     pass\n",
+                "  def __call__(self, *tuple):\n",
                 "     pass\n"
+        };
+        _testInvalidToolkit(Arrays.asList(code));
+    }
+    
+    @Test
+    public void testInvalidClassName() throws Exception {
+        String[] code = {
+                "@spl.map()\n",
+                "class NaïveC(object):\n",
+                "  def __init__(self):\n",
+                "     pass\n",
+                "  def __call__(self, *tuple):\n",
+                "     pass\n"     
+        };
+        _testInvalidToolkit(Arrays.asList(code));
+    }
+    @Test
+    public void testInvalidFunctionName() throws Exception {
+        String[] code = {
+                "@spl.map()\n",
+                "def NaïveF(*tuple):\n",
+                "  pass\n"
         };
         _testInvalidToolkit(Arrays.asList(code));
     }
