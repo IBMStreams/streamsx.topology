@@ -74,7 +74,11 @@ def submit(ctxtype, graph, config=None, username=None, password=None, log_level=
     Returns:
         An output stream of bytes if submitting with JUPYTER, otherwise returns a dict containing information relevant
         to the submission.
-    """    
+    """
+
+    if not graph.graph.operators:
+        raise ValueError("Topology {0} does not contain any streams.".format(graph.graph.topology.name))
+
     logger.setLevel(log_level)
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
     try:

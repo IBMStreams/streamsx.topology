@@ -33,10 +33,9 @@ class TestTopologyMethods(unittest.TestCase):
      self.assertEqual("myapp", topo.name)
      self.assertEqual("myns", topo.namespace)
 
-  def test_TopologyNameDottedNamespace(self):
-     topo = Topology(name="myapp", namespace="org.example.myns")
-     self.assertEqual("myapp", topo.name)
-     self.assertEqual("org.example.myns", topo.namespace)
+  def test_empty(self):
+     topo = Topology(name="what_no_streams")
+     self.assertRaises(ValueError, streamsx.topology.context.submit, "TOOLKIT", topo)
 
   def test_TopologySourceAndSink(self):
      topo = Topology("test_TopologySourceAndSink")
