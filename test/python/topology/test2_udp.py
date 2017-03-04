@@ -174,7 +174,7 @@ class TestUDP(unittest.TestCase):
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestDistributedUDP(TestUDP):
   def setUp(self):
-      Tester.setup_standalone(self)
+      Tester.setup_distributed(self)
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestBluemixUDP(TestUDP):

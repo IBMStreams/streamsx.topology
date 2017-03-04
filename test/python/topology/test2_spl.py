@@ -13,8 +13,6 @@ import streamsx.topology.context
 import streamsx.spl.op as op
 
 
-ctxtype = "STANDALONE"
-
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSPL(unittest.TestCase):
     """ Test invocations of SPL operators from Python topology.

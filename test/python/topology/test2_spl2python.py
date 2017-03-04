@@ -89,12 +89,12 @@ class TestSPL2Python(unittest.TestCase):
                 tester.tuple_count(b, 100)
                 tester.test(self.test_ctxtype, self.test_config)
 
-#@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
-#class TestDistributedSPL(TestSPL):
-#    def setUp(self):
-#        Tester.setup_distributed(self)
+@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
+class TestDistributedSPL(TestSPL2Python):
+    def setUp(self):
+        Tester.setup_distributed(self)
 
-#@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
-#class TestBluemixSPL(TestSPL):
-#    def setUp(self):
-#        Tester.setup_streaming_analytics(self, force_remote_build=True)
+@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
+class TestBluemixSPL(TestSPL2Python):
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)
