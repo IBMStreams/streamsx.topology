@@ -7,6 +7,15 @@ Overview
 SPL primitive operators that call a Python function or
 callable class are created by decorators provided by this module.
 
+The name of the function or callable class becomes the name of the
+operator.
+
+.. warning::
+    Operator names must be valid SPL identifers,
+    SPL identifiers start with an ASCII letter or underscore,
+    followed by ASCII letters, digits, or underscores.
+    The name also must not be a SPL keyword.
+
 Once created the operators become part of a toolkit and may be used
 like any other SPL operator.
 
@@ -30,6 +39,14 @@ If the `__init__` method has parameters beyond the first
 Any parameter that has a default value becomes an optional parameter
 to the SPL operator. Parameters of the form `\*args` and `\*\*kwargs`
 are not supported.
+
+.. warning::
+    Parameter names must be valid SPL identifers,
+    SPL identifiers start with an ASCII letter or underscore,
+    followed by ASCII letters, digits, or underscores.
+    The name also must not be a SPL keyword.
+
+    Parameter names ``suppress`` and ``include`` are reserved.
 
 The value of the operator parameters at SPL operator invocation are passed
 to the `__init__` method. This is equivalent to creating an instance
@@ -461,6 +478,7 @@ The list may be empty resulting in no tuples being submitted.
 from enum import Enum
 import functools
 import inspect
+import re
 import sys
 import streamsx.ec as ec
 
@@ -480,6 +498,19 @@ _OperatorType.Source.spl_template = 'PythonFunctionSource'
 _OperatorType.Pipe.spl_template = 'PythonFunctionPipe'
 _OperatorType.Sink.spl_template = 'PythonFunctionSink'
 _OperatorType.Filter.spl_template = 'PythonFunctionFilter'
+
+_SPL_KEYWORDS = {'graph', 'stream', 'public', 'composite', 'input', 'output', 'type', 'config', 'logic',
+                 'window', 'param', 'onTuple', 'onPunct', 'onProcess', 'state', 'stateful', 'mutable',
+                 'if', 'for', 'while', 'break', 'continue', 'return', 'attribute', 'function', 'operator'}
+
+def _valid_identifier(id):
+    if re.fullmatch('[a-zA-Z_][a-zA-Z_0-9]*', id) is None or id in _SPL_KEYWORDS:
+        raise ValueError("{0} is not a valid SPL identifier".format(id))
+
+def _valid_op_parameter(name):
+    _valid_identifier(name)
+    if name in ['suppress', 'include']:
+        raise ValueError("Parameter name {0} is reserved".format(name))
 
 def pipe(wrapped):
     """
@@ -510,6 +541,8 @@ def _wrapforsplop(optype, wrapped, style, docpy):
     if inspect.isclass(wrapped):
         if not callable(wrapped):
             raise TypeError('Class must be callable')
+
+        _valid_identifier(wrapped.__name__)
 
         class _op_class(object):
 
@@ -544,7 +577,9 @@ def _wrapforsplop(optype, wrapped, style, docpy):
         return _op_class
     if not inspect.isfunction(wrapped):
         raise TypeError('A function or callable class is required')
-      
+
+    _valid_identifier(wrapped.__name__)
+
     @functools.wraps(wrapped)
     def _op_fn(*args, **kwargs):
         return wrapped(*args, **kwargs)
