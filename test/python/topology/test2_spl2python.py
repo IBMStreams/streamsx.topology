@@ -90,11 +90,11 @@ class TestSPL2Python(unittest.TestCase):
                 tester.test(self.test_ctxtype, self.test_config)
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
-class TestDistributedSPL(TestSPL):
+class TestDistributedSPL(TestSPL2Python):
     def setUp(self):
         Tester.setup_distributed(self)
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
-class TestBluemixSPL(TestSPL):
+class TestBluemixSPL(TestSPL2Python):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
