@@ -40,3 +40,13 @@ class _Callable(object):
     def __call__(self, *args, **kwargs):
         return self._callable.__call__(*args, **kwargs)
 
+    def _hasee(self):
+        return hasattr(self._callable, '__enter__') and hasattr(self._callable, '__exit__')
+
+    def __enter__(self):
+        if self._hasee():
+            self._callable.__enter__()
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._hasee():
+            self._callable.__exit__(exc_type, exc_value, traceback)
