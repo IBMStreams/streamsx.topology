@@ -59,66 +59,6 @@ sub splToPythonConversionCheck{
     SPL::CodeGen::errorln("SPL type: " . $type . " is not supported for conversion to or from Python."); 
 }
 
-# Convert a Python type back to a
-# c++ type based on the $type argument which is a string literal.
-#
-# $convert_from_string - C++ expression representing PyObject * 
-# $type - SPL type of target attribute
-#
-#
-sub pythonToCppPrimitiveConversion{
- 
-  my ($convert_from_string, $type) = @_;
-  if ($type eq 'rstring') {
-    return "streamsx::topology::pyRstringFromPyObject($convert_from_string)";
-  }
-  elsif ($type eq 'ustring') {
-    return "streamsx::topology::pyUstringFromPyObject($convert_from_string)";
-  }
-  elsif ($type eq 'int8') {
-    return "(int8_t) PyLong_AsLong($convert_from_string)";
-  }
-  elsif ($type eq 'int16') {
-    return "(int16_t) PyLong_AsLong($convert_from_string)";
-  }
-  elsif ($type eq 'int32') {
-    return "(int32_t) PyLong_AsLong($convert_from_string)";
-  }
-  elsif ($type eq 'int64') {
-    return "PyLong_AsLong($convert_from_string)";
-  }
-  elsif ($type eq 'uint8') {
-    return "(uint8_t) PyLong_AsUnsignedLong($convert_from_string)";
-  }
-  elsif ($type eq 'uint16') {
-    return "(uint16_t) PyLong_AsUnsignedLong($convert_from_string)";
-  }
-  elsif ($type eq 'uint32') {
-    return "(uint32_t) PyLong_AsUnsignedLong($convert_from_string)";
-  }
-  elsif ($type eq 'uint64') {
-    return "PyLong_AsUnsignedLong($convert_from_string)";
-  }
-  elsif ($type eq 'float32') {
-    return "(float) PyFloat_AsDouble($convert_from_string)";
-  }
-  elsif ($type eq 'float64') {
-    return "PyFloat_AsDouble($convert_from_string)";
-  }
-  elsif ($type eq 'boolean') {
-    return "PyObject_IsTrue($convert_from_string)";
-  }
-  elsif ($type eq 'complex32') {
-    return "SPL::complex32((SPL::float32) PyComplex_RealAsDouble($convert_from_string), (SPL::float32) PyComplex_ImagAsDouble($convert_from_string))";
-  }
-  elsif ($type eq 'complex64') {
-    return "SPL::complex64(PyComplex_RealAsDouble($convert_from_string), PyComplex_ImagAsDouble($convert_from_string))";
-  }
-  else {
-    SPL::CodeGen::exitln("An unknown type $type was encountered when converting to back to cpp types.");
-  }
-}
-
 #
 # Return a C++ expression converting a input attribute
 # from an SPL input tuple to a Python object
