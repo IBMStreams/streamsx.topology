@@ -30,6 +30,7 @@
 #include <SPL/Runtime/Operator/OperatorContext.h>
 #include <SPL/Runtime/Operator/OperatorMetrics.h>
 #include <SPL/Runtime/Common/Metric.h>
+#include <SPL/Runtime/Function/UtilFunctions.h>
 
 extern "C" {
 
@@ -60,6 +61,18 @@ static PyObject * __splpy_ec_is_standalone(PyObject *self, PyObject *notused) {
    return streamsx::topology::SplpyGeneral::getBool(stand);
 }
 
+static PyObject * __splpy_ec_get_app_config(PyObject *self, PyObject *pyname) {
+
+   SPL::rstring name;
+   streamsx::topology::pySplValueFromPyObject(name, pyname);
+
+   SPL::map<SPL::rstring, SPL::rstring> properties;
+   if (SPL::Functions::Utility::getApplicationConfiguration(properties, name) ==  0)
+       return streamsx::topology::pySplValueToPyObject(properties);
+
+   return streamsx::topology::SplpyGeneral::getBool(false);
+}
+
 // Operator functions
 static PyObject * __splpy_ec_channel(PyObject *self, PyObject *opc) {
    return PyLong_FromLong(__splpy_ec_opcontext(opc).getChannel());
@@ -83,11 +96,9 @@ static PyObject * __splpy_ec_create_custom_metric(PyObject *self, PyObject *args
    PyObject *pyvalue = PyTuple_GET_ITEM(args, 4);
 
    SPL::rstring name;
-   if (streamsx::topology::pyRStringFromPyObject(name, pyname) != 0)
-       return NULL;
+   streamsx::topology::pySplValueFromPyObject(name, pyname);
    SPL::rstring desc;
-   if (streamsx::topology::pyRStringFromPyObject(desc, pyname) != 0)
-       return NULL;
+   streamsx::topology::pySplValueFromPyObject(desc, pydescription);
 
    SPL::OperatorMetrics & metrics = __splpy_ec_opcontext(opc).getMetrics();
    
@@ -138,6 +149,8 @@ static PyMethodDef __splpy_ec_methods[] = {
          "Return the PE identifier hosting this code."},
     {"is_standalone", __splpy_ec_is_standalone, METH_NOARGS,
          "Return if execution context is standalone."},
+    {"get_application_configuration", __splpy_ec_get_app_config, METH_O,
+         "Get application configuration."},
     {"channel", __splpy_ec_channel, METH_O,
          "Return the global parallel channel."},
     {"local_channel", __splpy_ec_local_channel, METH_O,
