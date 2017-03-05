@@ -18,8 +18,6 @@
 #ifndef __SPL__SPLPY_EC_API_H
 #define __SPL__SPLPY_EC_API_H
 
-#include <sstream>
-
 #if (PY_MAJOR_VERSION == 3) && \
      ((_IBM_STREAMS_VER_ > 4) || \
       ((_IBM_STREAMS_VER_ == 4) && (_IBM_STREAMS_REL_ >= 2)))

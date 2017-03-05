@@ -82,6 +82,34 @@ def is_standalone():
     _check()
     return _ec.is_standalone()
 
+def get_application_configuration(name):
+    """Get a named application configuration.
+
+    An application configuration is a named set of securely stored properties
+    where each key and its value in the property set is a string.
+
+    An application configuration object is used to store information that
+    IBM Streams applications require, such as:
+
+    * Database connection data
+    * Credentials that your applications need to use to access external systems
+    * Other data, such as the port numbers or URLs of external systems
+
+    Arguments:
+        name(str): Name of the application configuration.
+
+    Returns:
+        dict: Dictionary containing the property names and values for the application configuration.
+
+    Raises:
+        ValueError: Application configuration does not exist.
+    """
+    _check()
+    rc = _ec.get_application_configuration(name)
+    if rc is False:
+         raise ValueError("Application configuration {0} not found.".format(name))
+    return rc
+
 def channel(obj):
     """
     Return the parallel region global channel number `obj` is executing in.
