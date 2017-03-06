@@ -561,12 +561,13 @@ class Stream(object):
 
             if (func is None):
                 if self.oport.schema == schema.CommonSchema.String:
-                    #TODO - use SPL partitioning on string
-                    func = hash
+                    keys = ['string']
+                    parallel_input = self.oport
                 else:
                     func = hash
 
             if func is not None:
+                keys = ['__spl_hash']
                 hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func)
                 hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int64 __spl_hash>"))
                 hash_adder.addInputPort(outputPort=self.oport)
@@ -574,7 +575,7 @@ class Stream(object):
 
             parallel_op = self.topology.graph.addOperator("$Parallel$")
             parallel_op.addInputPort(outputPort=parallel_input)
-            parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=parallel_input.schema, partitioned=True)
+            parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=parallel_input.schema, partitioned_keys=keys)
 
             if func is not None:
                 # use the Functor passthru operator to remove the hash attribute by removing it from output port schema
