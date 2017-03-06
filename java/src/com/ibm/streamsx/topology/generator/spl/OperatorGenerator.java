@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_COUNT;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_DELTA;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_NONE;
@@ -14,10 +15,13 @@ import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_SLIDING;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_TUMBLING;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
+import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.stringLiteral;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_TAG_MAPPING;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectArray;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.stringArray;
 
@@ -42,8 +46,10 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 class OperatorGenerator {
     
     private final SubmissionTimeValue stvHelper;
+    private final SPLGenerator splGenerator;
     
     OperatorGenerator(SPLGenerator splGenerator) {
+        this.splGenerator = splGenerator;
         this.stvHelper = splGenerator.stvHelper();
     }
 
@@ -55,13 +61,15 @@ class OperatorGenerator {
         parallelAnnotation(_op, sb);
         viewAnnotation(_op, sb);
         AutonomousRegions.autonomousAnnotation(_op, sb);
-        outputClause(_op, sb);
+        threadingAnnotation(graphConfig, _op, sb);
+        outputPortClause(_op, sb);
         operatorNameAndKind(_op, sb);
         inputClause(_op, sb);
 
         sb.append("  {\n");
         windowClause(_op, sb);
         paramClause(graphConfig, _op, sb);
+        outputAssignmentClause(graphConfig, _op, sb);
         configClause(graphConfig, _op, sb);
         sb.append("  }\n");
 
@@ -137,12 +145,7 @@ class OperatorGenerator {
                 sb.append(width.getAsString());
             }
             else {
-                JsonObject jo = width.getAsJsonObject();
-                String jsonType = jo.get("type").getAsString();
-                if (TYPE_SUBMISSION_PARAMETER.equals(jsonType))
-                    sb.append(SubmissionTimeValue.generateCompParamName(jo.get("value").getAsJsonObject()));
-                else
-                    throw new IllegalArgumentException("Unsupported parallel width specification: " + jo);
+                splValueSupportingSubmission(width.getAsJsonObject(), sb);
             }
             boolean partitioned = jboolean(op, "partitioned");
             if (partitioned) {
@@ -154,11 +157,27 @@ class OperatorGenerator {
             sb.append(")\n");
         }
     }
+    
+    /**
+     * Add threading annotation but only for 4.2 onwards.
+     */
+    private void threadingAnnotation(JsonObject graphConfig, JsonObject op, StringBuilder sb) {
+        if (!splGenerator.versionAtLeast(4, 2))
+            return;
+        
+        JsonObject threading = object(op, "threading");
+        if (threading != null) {
+            sb.append("@threading(");
+            sb.append("model=");
+            sb.append(jstring(threading, "model"));
+            sb.append(")\n");
+        }
+    }
 
     /**
      * Create the output port definitions.
      */
-    static void outputClause(JsonObject op, StringBuilder sb) {
+    private static void outputPortClause(JsonObject op, StringBuilder sb) {
 
         sb.append("  ( ");
         
@@ -388,7 +407,7 @@ class OperatorGenerator {
             sb.append("      ");
             sb.append(name);
             sb.append(": ");
-            parameterValue(param, sb);
+            splValueSupportingSubmission(param, sb);
             sb.append(";\n");
         }
 
@@ -399,7 +418,7 @@ class OperatorGenerator {
             sb.append("vmArg");
             sb.append(": ");
 
-            parameterValue(tmpVMArgParam, sb);
+            splValueSupportingSubmission(tmpVMArgParam, sb);
             sb.append(";\n");
         }
         
@@ -418,15 +437,55 @@ class OperatorGenerator {
         }
     }
 
-    private void parameterValue(JsonObject param, StringBuilder sb) {
-        JsonElement value = param.get("value");
-        JsonElement type = param.get("type");
-        if (param.has("type") && TYPE_SUBMISSION_PARAMETER.equals(type.getAsString())) {
-            sb.append(stvHelper.generateCompParamName(value.getAsJsonObject()));
-            return;
+    private void splValueSupportingSubmission(JsonObject value, StringBuilder sb) {
+               
+        JsonElement type = value.get("type");
+        if (value.has("type") && TYPE_SUBMISSION_PARAMETER.equals(type.getAsString())) {
+            value = stvHelper.getSPLExpression(value);
         }
         
-        SPLGenerator.value(sb, param);
+        SPLGenerator.value(sb, value);
+    }
+     
+    private void outputAssignmentClause(JsonObject graphConfig, JsonObject op,
+            StringBuilder sb) {
+        
+        StringBuilder allAssignmentsSb = new StringBuilder();
+        
+        objectArray(op, "outputs", output -> {
+            
+            if (!output.has("assigns"))
+                return;
+            
+            JsonObject assigns = object(output, "assigns");
+            
+            if (GsonUtilities.jisEmpty(assigns))
+                return;
+                                   
+            StringBuilder assignsSb = new StringBuilder();
+            String name = jstring(output, "name");
+            name = splBasename(name);
+            assignsSb.append(name);
+            assignsSb.append(":\n");
+                      
+            for (Entry<String, JsonElement> a : assigns.entrySet()) {
+                String attr = a.getKey();
+                JsonObject value = a.getValue().getAsJsonObject();
+                
+                assignsSb.append("  ");
+                assignsSb.append(attr);
+                assignsSb.append("=");
+                splValueSupportingSubmission(value, assignsSb);
+                assignsSb.append(";\n");              
+            }
+            
+            allAssignmentsSb.append(assignsSb);
+        });
+        
+        if (allAssignmentsSb.length() != 0) {
+            sb.append(" output\n");
+            sb.append(allAssignmentsSb);
+        }
     }
 
     static void configClause(JsonObject graphConfig, JsonObject op,
@@ -456,18 +515,18 @@ class OperatorGenerator {
             }
         }
                
-        if (config.has(OpProperties.PLACEMENT)) {
-            JsonObject placement = jobject(config, OpProperties.PLACEMENT);
+        if (config.has(PLACEMENT)) {
+            JsonObject placement = jobject(config, PLACEMENT);
             StringBuilder sbPlacement = new StringBuilder();
             
             // Explicit placement takes precedence.
-            String colocationTag = jstring(placement, OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID);
-            if (colocationTag == null)
-                colocationTag = jstring(placement, OpProperties.PLACEMENT_ISOLATE_REGION_ID);
+            String colocationKey = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
+            if (colocationKey != null) {
+                JsonObject mapping = object(graphConfig, CFG_COLOCATE_TAG_MAPPING);
+                String colocationTag = jstring(mapping, colocationKey);
             
-            if (colocationTag != null && !colocationTag.isEmpty()) {
                 sbPlacement.append("      partitionColocation(");
-                SPLGenerator.stringLiteral(sbPlacement, colocationTag);
+                stringLiteral(sbPlacement, colocationTag);
                 sbPlacement.append(")\n");
             }
             

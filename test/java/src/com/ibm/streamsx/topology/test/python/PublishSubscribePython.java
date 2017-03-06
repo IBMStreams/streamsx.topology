@@ -37,17 +37,13 @@ abstract class PublishSubscribePython extends TestTopology {
     Path genPythonToolkit(String module) throws IOException, InterruptedException {
     	
     	Path pubsub = Paths.get(getTestRoot().getAbsolutePath(), "python", "pubsub");
-    	System.err.println("Pubsub:" + pubsub);
-    	
     	
     	Path pyTk = Files.createTempDirectory("pytk").toAbsolutePath();
-    	
-    	System.err.println("PKTK:" + pyTk);
     	
     	Path pyPackages = Paths.get(System.getProperty("topology.toolkit.release"),
     			"opt", "python", "packages").toAbsolutePath();
 
-      String pythonversion = System.getProperty("topology.test.python"); 
+        String pythonversion = System.getProperty("topology.test.python"); 
     	    	
 		ProcessBuilder pb = new ProcessBuilder(pythonversion, module, pyTk.toAbsolutePath().toString());		
 		pb.redirectOutput(Redirect.INHERIT);

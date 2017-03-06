@@ -19,11 +19,7 @@ class Counter(object):
 class negative_one(object):
     def __call__(self, tup):
         return tup * -1
-           
-        
-        
-        
-        
+              
 
 #
 # ByBrain Operators
@@ -36,16 +32,6 @@ class linspace_yielder(object):
         for num in self.nums:
             yield num
             time.sleep(.2)
-            
-class array_yielder(object):
-    def __init__(self, arr):
-        self.arr = arr
-
-    def __call__(self):
-        for num in self.arr:
-            yield num
-            time.sleep(.2) 
-        
 
 class neural_net_model(object):
     def __init__(self, model):

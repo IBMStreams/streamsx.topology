@@ -4,6 +4,7 @@ import unittest
 import sys
 
 import test_functions
+from test_utilities import standalone
 
 from streamsx.topology.topology import *
 from streamsx.topology import schema
@@ -13,35 +14,55 @@ import streamsx.topology.context
 class TestTopologyMethods(unittest.TestCase):
 
   def test_TopologyName(self):
-     topo = Topology("test_TopologyName")
-     self.assertEqual("test_TopologyName", topo.name)
+     topo = Topology("test_TopologyNameExplicit")
+     self.assertEqual("test_TopologyNameExplicit", topo.name)
+     self.assertEqual("test1", topo.namespace)
+
+  def test_TopologyNoName(self):
+     topo = Topology()
+     self.assertEqual("test_TopologyNoName", topo.name)
+     self.assertEqual("test1", topo.namespace)
+
+  def test_TopologyNamespace(self):
+     topo = Topology(namespace="myns")
+     self.assertEqual("test_TopologyNamespace", topo.name)
+     self.assertEqual("myns", topo.namespace)
+
+  def test_TopologyNameNamespace(self):
+     topo = Topology(name="myapp", namespace="myns")
+     self.assertEqual("myapp", topo.name)
+     self.assertEqual("myns", topo.namespace)
+
+  def test_empty(self):
+     topo = Topology(name="what_no_streams")
+     self.assertRaises(ValueError, streamsx.topology.context.submit, "TOOLKIT", topo)
 
   def test_TopologySourceAndSink(self):
      topo = Topology("test_TopologySourceAndSink")
      hw = topo.source(test_functions.hello_world)
      hw.sink(test_functions.check_hello_world)
-     streamsx.topology.context.submit("STANDALONE", topo.graph)
+     standalone(self, topo)
 
   def test_TopologyFilter(self):
      topo = Topology("test_TopologyFilter")
      hw = topo.source(test_functions.hello_world)
      hwf = hw.filter(test_functions.filter)
      hwf.sink(test_functions.check_hello_world_filter)
-     streamsx.topology.context.submit("STANDALONE", topo.graph)
-        
+     standalone(self, topo)
+
   def test_TopologyLengthFilter(self):
      topo = Topology("test_TopologyLengthFilter")
      hw = topo.source(test_functions.strings_length_filter) 
      hwf = hw.filter(test_functions.LengthFilter(5))
      hwf.sink(test_functions.check_strings_length_filter)
-     streamsx.topology.context.submit("STANDALONE", topo.graph)
+     standalone(self, topo)
 
   def test_TopologyIsolate(self):
      topo = Topology("test_TopologyIsolate")
      hw = topo.source(test_functions.hello_world)
      iso = hw.isolate()
      iso.sink(test_functions.check_hello_world)
-     streamsx.topology.context.submit("STANDALONE", topo.graph)
+     standalone(self, topo)
 
   def test_TopologyIsolatedFilter(self):
      topo = Topology("test_TopologyIsolatedFilter")
@@ -50,7 +71,7 @@ class TestTopologyMethods(unittest.TestCase):
      hwf = iso1.filter(test_functions.filter)
      iso2 = hwf.isolate()
      iso2.sink(test_functions.check_hello_world_filter)
-     streamsx.topology.context.submit("STANDALONE", topo.graph)
+     standalone(self, topo)
      # switch this to BUNDLE to create a sab file that can 
      # be sumitted to a streams instance and run as 3 PEs
      # streamsx.topology.context.submit("BUNDLE", topo.graph)
@@ -64,6 +85,7 @@ class TestTopologyMethods(unittest.TestCase):
      elow1 = hwf2.end_low_latency()
      hwf3 = elow1.filter(test_functions.filter)
      hwf3.sink(test_functions.check_hello_world_filter)
+     standalone(self, topo)
      streamsx.topology.context.submit("BUNDLE", topo.graph)
 
   def test_TopologyStringSubscribe(self):
@@ -78,7 +100,7 @@ class TestTopologyMethods(unittest.TestCase):
      i1 = source.transform(int)
      i2 = i1.transform(test_functions.add17)
      i2.sink(test_functions.check_int_strings_transform)
-     streamsx.topology.context.submit("STANDALONE", topo.graph)
+     standalone(self, topo)
    
   def test_TopologyTransformWithDrop(self):
      topo = Topology("test_TopologyTransformWithDrop")
@@ -86,14 +108,14 @@ class TestTopologyMethods(unittest.TestCase):
      i1 = source.map(test_functions.string_to_int_except68)
      i2 = i1.map(test_functions.add17)
      i2.sink(test_functions.check_int_strings_transform_with_drop)
-     streamsx.topology.context.submit("STANDALONE", topo.graph)
+     standalone(self, topo)
      
   def test_TopologyMultiTransform(self):
       topo = Topology("test_TopologyMultiTransform")
       source = topo.source(test_functions.strings_multi_transform)
       i1 = source.multi_transform(test_functions.split_words)
       i1.sink(test_functions.check_strings_multi_transform)
-      streamsx.topology.context.submit("STANDALONE", topo.graph)
+      standalone(self, topo)
       
   def test_TopologyTransformCallableAddWithDrop(self):
       topo = Topology("test_TopologyTransformCallableAddWithDrop")
@@ -101,20 +123,20 @@ class TestTopologyMethods(unittest.TestCase):
       i1 = source.transform(test_functions.string_to_int_except68)
       i2 = i1.transform(test_functions.AddNum(17))
       i2.sink(test_functions.check_int_strings_transform_with_drop)
-      streamsx.topology.context.submit("STANDALONE", topo.graph)
+      standalone(self, topo)
   
   def test_TopologyMultiTransformCallableIncMaxSplit(self):
       topo = Topology("test_TopologyMultiTransformCallableIncMaxSplit")
       source = topo.source(test_functions.strings_multi_transform)
       i1 = source.flat_map(test_functions.IncMaxSplitWords(1))
       i1.sink(test_functions.check_strings_multi_transform_inc_max_split)
-      streamsx.topology.context.submit("STANDALONE", topo.graph)
+      standalone(self, topo)
   
   def test_TopologySourceAndSinkCallable(self):
       topo = Topology("test_TopologySourceAndSinkCallable")
       hw = topo.source(test_functions.SourceTuplesAppendIndex(["a", "b", "c", "d"]))
       hw.sink(test_functions.CheckTuples(["a0", "b1", "c2", "d3"]))
-      streamsx.topology.context.submit("STANDALONE", topo.graph)
+      standalone(self, topo)
     
   def test_TopologyParallel(self):
       topo = Topology("test_TopologyParallel")
@@ -123,7 +145,7 @@ class TestTopologyMethods(unittest.TestCase):
       hwf = hwp.transform(test_functions.ProgramedSeed())
       hwef = hwf.end_parallel()
       hwef.sink(test_functions.SeedSinkRR())
-      streamsx.topology.context.submit("STANDALONE", topo.graph)
+      standalone(self, topo)
       
   def test_TopologyHashedFuncParallel(self):
       topo = Topology("test_TopologyHashedFuncParallel")
@@ -132,7 +154,7 @@ class TestTopologyMethods(unittest.TestCase):
       hwf = hwp.transform(test_functions.ProgramedSeed())
       hwef = hwf.end_parallel()
       hwef.sink(test_functions.SeedSinkHashOrKey())
-      streamsx.topology.context.submit("STANDALONE", topo.graph) 
+      standalone(self, topo)
 
       
   def test_TopologyHashedParallel(self):
@@ -142,7 +164,7 @@ class TestTopologyMethods(unittest.TestCase):
       hwf = hwp.transform(test_functions.ProgramedSeed())
       hwef = hwf.end_parallel()
       hwef.sink(test_functions.SeedSinkHashOrKey())
-      streamsx.topology.context.submit("STANDALONE", topo.graph)      
+      standalone(self, topo)
 
   def test_TopologyUnion(self):
       topo = Topology("test_TopologyUnion")
@@ -153,7 +175,7 @@ class TestTopologyMethods(unittest.TestCase):
       streamSet = {h, w, b, c}
       hwu = h.union(streamSet)
       hwu.sink(test_functions.check_union_hello_world)
-      streamsx.topology.context.submit("STANDALONE", topo.graph) 
+      standalone(self, topo)
       
   def test_TopologyParallelUnion(self):
       topo = Topology("test_TopologyParallelUnion")
@@ -165,7 +187,7 @@ class TestTopologyMethods(unittest.TestCase):
       hwu = hwf.union(streamSet)
       hwup = hwu.end_parallel()
       hwup.sink(test_functions.SeedSinkRRPU())
-      streamsx.topology.context.submit("STANDALONE", topo.graph)
+      standalone(self, topo)
 
   # test using input functions from a regular package that has __init__.py
   # test using input functions that are fully qualified
@@ -176,9 +198,9 @@ class TestTopologyMethods(unittest.TestCase):
           hw = topo.source(test_package.test_subpackage.test_module.SourceTuples(["Hello", "World!"]))
           hwf = hw.filter(test_package.test_subpackage.test_module.filter)
           hwf.sink(test_package.test_subpackage.test_module.CheckTuples(["Hello"]))
-          streamsx.topology.context.submit("STANDALONE", topo.graph)
+          standalone(self, topo)
       finally:
-          del test_package.test_subpackage.test_module
+          pass
       
   # test using input functions from an implicit namespace package that doesn't have a __init__.py
   # test using input functions that are qualified using a module alias  e.g. 'test_ns_module'
@@ -190,7 +212,7 @@ class TestTopologyMethods(unittest.TestCase):
           hw = topo.source(test_ns_module.SourceTuples(["Hello", "World!"]))
           hwf = hw.filter(test_functions.filter)
           hwf.sink(test_ns_module.CheckTuples(["World!"]))
-          streamsx.topology.context.submit("STANDALONE", topo.graph)
+          standalone(self, topo)
       finally:
           del test_ns_module
 
@@ -205,7 +227,7 @@ class TestTopologyMethods(unittest.TestCase):
           hw = topo.source(common_namespace.module1.SourceTuples(["Hello", "World!"]))
           hwf = hw.filter(common_namespace.module2.filter)
           hwf.sink(common_namespace.module2.CheckTuples(["World!"]))
-          streamsx.topology.context.submit("STANDALONE", topo.graph)
+          standalone(self, topo)
       finally:
           sys.path.remove('test_common_namespace/package1')
           sys.path.remove('test_common_namespace/package2')
@@ -219,15 +241,6 @@ class TestTopologyMethods(unittest.TestCase):
           hw = topo.source(test_functions2.hello_world)
           hwf = hw.filter(test_functions2.filter)
           hwf.sink(test_functions2.check_hello_world_filter)
-          streamsx.topology.context.submit("STANDALONE", topo.graph)
+          standalone(self, topo)
       finally:
           del test_functions2
-
-if __name__ == '__main__':
-    unittest.main()
-
-
-# stateful functions
-# import every known module implicitly
-# classes for stateful functions
-# take the complete packages directory.

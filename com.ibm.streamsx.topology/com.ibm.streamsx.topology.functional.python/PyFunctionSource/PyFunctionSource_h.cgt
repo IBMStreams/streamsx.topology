@@ -1,5 +1,7 @@
 /* Additional includes go here */
-#include <Python.h>
+#include "splpy_funcop.h"
+
+using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
@@ -23,9 +25,8 @@ public:
     
 private:
   // Members
-  
-  // Python iterator of pickled tuples
-  PyObject *function_;
+  // Control for interaction with Python
+  SplpyFuncOp *funcop_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

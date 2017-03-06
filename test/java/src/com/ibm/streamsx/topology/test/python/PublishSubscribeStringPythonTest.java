@@ -24,7 +24,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
     	
         final Topology t = new Topology();
   	
-    	includePythonApp(t, "string_map_string.py", "str_map_str::str_map_str");
+    	includePythonApp(t, "string_map_string.py", "string_map_string::str_map_str");
    	    	
         TStream<String> source = t.strings("wasJava", "457", "CrystalPalace");
         
@@ -45,7 +45,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
     	
         final Topology t = new Topology();
   	
-    	includePythonApp(t, "string_filter_string.py", "str_filter_str::str_filter_str");
+    	includePythonApp(t, "string_filter_string.py", "string_filter_string::str_filter_str");
    	    	
         TStream<String> source = t.strings("ABC", "DEF", "4372", "34", "24234XXX");
         
@@ -63,7 +63,7 @@ public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
     	
         final Topology t = new Topology();
   	
-    	includePythonApp(t, "string_flatmap_string.py", "str_flatmap_str::str_flatmap_str");
+    	includePythonApp(t, "string_flatmap_string.py", "string_flatmap_string::str_flatmap_str");
    	    	
         TStream<String> source = t.strings("mary had a little lamb", "If you can keep your head when all about you");
         

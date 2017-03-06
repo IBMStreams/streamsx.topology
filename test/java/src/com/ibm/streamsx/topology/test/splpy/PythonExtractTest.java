@@ -94,7 +94,10 @@ public class PythonExtractTest extends TestTopology {
         
         File tkdir = Files.createTempDirectory("testpyex").toFile();
         try {
-             assertEquals(0, extract(tkdir, make)); 
+             assertEquals(0, extract(tkdir, make));
+             // Ensure running the extract doesn't cause issues
+             // for subsequent executions.
+             assertEquals(0, extract(tkdir, make));
         } finally {
             tkdir.delete();
         }
@@ -115,6 +118,9 @@ public class PythonExtractTest extends TestTopology {
         File tkdir = createPyTk(null, null);
         try {
              assertEquals(0, extract(tkdir, make)); 
+             // Ensure running the extract doesn't cause issues
+             // for subsequent executions.
+             assertEquals(0, extract(tkdir, make));
         } finally {
             tkdir.delete();
         }
@@ -205,8 +211,12 @@ public class PythonExtractTest extends TestTopology {
     public static void _testToolkit(List<String> lines, boolean make, Consumer<File> tester) throws Exception {        
         File tkdir = createPyTk(NS, lines);
         try {
-             assertEquals(0, extract(tkdir, make)); 
+             assertEquals(0, extract(tkdir, make));           
              tester.accept(tkdir);
+             
+             // Ensure running the extract doesn't cause issues
+             // for subsequent executions.
+             assertEquals(0, extract(tkdir, make));
         } finally {
             tkdir.delete();
         }

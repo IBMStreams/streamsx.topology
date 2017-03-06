@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 import sys
@@ -9,5 +10,5 @@ dir = os.path.dirname(__file__)
 optpkgs = os.path.dirname(os.path.dirname(dir))
 
 if optpkgs not in sys.path:
-    sys.path.append(optpkgs)
+    sys.path.insert(0, optpkgs)
 

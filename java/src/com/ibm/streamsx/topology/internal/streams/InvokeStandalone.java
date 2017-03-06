@@ -8,8 +8,10 @@ import static com.ibm.streamsx.topology.internal.streams.InvokeSc.trace;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -17,25 +19,34 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 
+import com.google.gson.JsonObject;
 import com.ibm.streams.operator.logging.TraceLevel;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
 
 public class InvokeStandalone {
 
-    private File bundle;
+    private final File bundle;
+    // Keep bundle when finished.
+    private final boolean keepBundle;
+    private final Map<String,String> envVars = new HashMap<>();
 
-    public InvokeStandalone(File bundle) {
+    public InvokeStandalone(File bundle, boolean keepBundle) {
         super();
         this.bundle = bundle;
+        this.keepBundle = keepBundle;
+    }
+    
+    public void addEnvironmentVariable(String key, String value) {
+        envVars.put(key, value);
     }
 
-    public Future<Integer> invoke(Map<String, ? extends Object> config)
+    public Future<Integer> invoke(JsonObject deploy)
             throws Exception, InterruptedException {
         String si = System.getProperty("java.home");
         File jvm = new File(si, "bin/java");
         
-        JobConfig jc = JobConfig.fromProperties(config);
+        JobConfig jc = JobConfigOverlay.fromFullOverlay(deploy);
 
         List<String> commands = new ArrayList<>();
         commands.add(jvm.getAbsolutePath());
@@ -81,20 +92,38 @@ public class InvokeStandalone {
 
         ProcessBuilder pb = new ProcessBuilder(commands);
         pb.inheritIO();
+
+        for (Entry<String,String> ev : envVars.entrySet()) {
+            trace.fine("Setting environment variable for standalone: " + ev.getKey() + "=" + ev.getValue());
+            pb.environment().put(ev.getKey(), ev.getValue());
+        }
+
         Process standaloneProcess = pb.start();
 
-        return new ProcessFuture(standaloneProcess);
+        return new ProcessFuture(standaloneProcess, keepBundle ? null : bundle);
     }
 
     private static class ProcessFuture implements Future<Integer> {
 
         private final Process process;
+        // Set if bundle to be deleted.
+        private File bundle;
         private int rc;
         private boolean isDone;
         private boolean isCancelled;
 
-        ProcessFuture(Process process) {
+        ProcessFuture(Process process, File bundle) {
             this.process = process;
+            this.bundle = bundle;
+            if (bundle != null)
+                bundle.deleteOnExit();
+        }
+        
+        private void deleteBundle() {
+            if (bundle != null) {
+                bundle.delete();
+                bundle = null;
+            }
         }
 
         @Override
@@ -104,7 +133,11 @@ public class InvokeStandalone {
             if (!mayInterruptIfRunning)
                 return false;
 
-            process.destroy();
+            try {
+                process.destroy();
+            } finally {
+                deleteBundle();
+            }
             isCancelled = true;
             notifyAll();
             return true;
@@ -117,15 +150,22 @@ public class InvokeStandalone {
 
         @Override
         public synchronized boolean isDone() {
-            return isDone || isCancelled;
+            boolean done =  isDone || isCancelled;
+            if (done)
+                deleteBundle();
+            return done;
         }
 
         @Override
         public synchronized Integer get() throws InterruptedException,
                 ExecutionException {
-            if (isDone)
+            if (isDone())
                 return rc;
-            rc = process.waitFor();
+            try {
+                rc = process.waitFor();
+            } finally {
+                deleteBundle();
+            }
             trace.info("Standalone application completed: return code=" + rc);
             notifyAll();
             return rc;
@@ -140,7 +180,7 @@ public class InvokeStandalone {
             }
             if (isCancelled())
                 throw new CancellationException();
-            if (!isDone)
+            if (!isDone())
                 throw new TimeoutException();
             return rc;
         }

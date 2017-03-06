@@ -1,5 +1,6 @@
 __pycache__
 *.sab
+*.pyc
 toolkit.xml
 
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.file/DirectoryWatcher/*
@@ -19,15 +20,23 @@ com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.java/HashRemover/
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.java/PassThrough/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.testing/TesterSink/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python/Py*/*.pm
+com.ibm.streamsx.topology/impl/nl/*.dat
+com.ibm.streamsx.topology/impl/nl/include/
 test/python/topology/tk*
 samples/python/com.ibm.streamsx.topology.pysamples/com.ibm.streamsx.topology.pysamples.mail/
 samples/python/com.ibm.streamsx.topology.pysamples/com.ibm.streamsx.topology.pysamples.positional/
+samples/python/com.ibm.streamsx.topology.pysamples/com.ibm.streamsx.topology.pysamples.kwargs/
+samples/python/com.ibm.streamsx.topology.pysamples/com.ibm.streamsx.topology.pysamples.sources/
+samples/python/com.ibm.streamsx.topology.pysamples/impl/
 samples/python/com.ibm.streamsx.topology.pysamples/opt/.__splpy/
+samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/__pycache__/
+samples/python/com.ibm.streamsx.topology.pysamples/output/
+samples/python/com.ibm.streamsx.topology.pysamples/doc/
 com.ibm.streamsx.topology/lib/
 com.ibm.streamsx.topology/license/
 com.ibm.streamsx.topology/opt/icons/
 java/classes/
 samples/java/functional/classes/
 samples/java/functional/functionalsamples.jar
-samples/python/com.ibm.streamsx.topology.pysamples/doc/
-samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/__pycache__/
+/.project
+/.pydevproject

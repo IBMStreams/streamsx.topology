@@ -4,21 +4,23 @@
  */
 package com.ibm.streamsx.topology.internal.streams;
 
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.copyJobConfigOverlays;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
+import com.google.gson.JsonObject;
 import com.ibm.streams.operator.version.Product;
 import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
@@ -38,12 +40,7 @@ public class InvokeSubmit {
         Util.checkInvokeStreamtoolPreconditions();
     }
 
-    public BigInteger invoke() throws Exception, InterruptedException {
-        Map<String,Object> config = Collections.emptyMap(); 
-        return invoke(config);
-    }
-
-    public BigInteger invoke(Map<String, ? extends Object> config) throws Exception, InterruptedException {
+    public BigInteger invoke(JsonObject deploy) throws Exception, InterruptedException {
         String si = Util.getStreamsInstall();
         File sj = new File(si, "bin/streamtool");
         
@@ -52,26 +49,26 @@ public class InvokeSubmit {
         File jobidFile = Files.createTempFile("streamsjobid", "txt").toFile();
 
         List<String> commands = new ArrayList<>();
-        
-        final JobConfig jobConfig = JobConfig.fromProperties(config);
 
         commands.add(sj.getAbsolutePath());
         commands.add("submitjob");
         commands.add("--outfile");
         commands.add(jobidFile.getAbsolutePath());
+                
+        final JobConfig jobConfig = JobConfigOverlay.fromFullOverlay(deploy);
         
-        // Fot IBM Streams 4.2 or later use the job config overlay
+        // For IBM Streams 4.2 or later use the job config overlay
         // V.R.M.F
         File jcoFile = null;
         Version ver = Product.getVersion();
         if (ver.getVersion() > 4 ||
-                (ver.getVersion() ==4 && ver.getRelease() >= 2))
-            jcoFile = fileJobConfig(commands, jobConfig);
-        else
+                (ver.getVersion() ==4 && ver.getRelease() >= 2)) {
+            jcoFile = fileJobConfig(commands, deploy);
+        } else {         
             explicitJobConfig(commands, jobConfig);
+        }
         
-        if (jobConfig.getOverrideResourceLoadProtection() != null) {
-            
+        if (jobConfig.getOverrideResourceLoadProtection() != null) {            
             if (jobConfig.getOverrideResourceLoadProtection()) {
                 commands.add("--override");
                 commands.add("HostLoadProtection");
@@ -153,21 +150,19 @@ public class InvokeSubmit {
     }
     
     /**
-     * Set the job configuration as explicit streamtool submitjob arguments.
-     * Used for 4.1 and older.
+     * Set the job configuration as a job config overlay
+     * Used for 4.2 and later.
      */
-    private File fileJobConfig(List<String> commands, final JobConfig jobConfig) throws IOException {
+    private File fileJobConfig(List<String> commands, final JsonObject deploy) throws IOException {
         
-        JobConfigOverlay jco = new JobConfigOverlay(jobConfig);
+        JsonObject jobConfigInfo = copyJobConfigOverlays(deploy);
 
-        String jcoJson = jco.fullOverlay();
-        if (jcoJson == null)
-            return null;
+        String jcoJson = GsonUtilities.toJson(jobConfigInfo);
                      
         File jcoFile = File.createTempFile("streamsjco", ".json");
         Files.write(jcoFile.toPath(), jcoJson.getBytes(StandardCharsets.UTF_8));
         
-        trace.info("JobConfig: " + jcoJson);
+        trace.info("Job Config Overlays: " + jcoJson);
         
         commands.add("--jobConfig");
         commands.add(jcoFile.getAbsolutePath());

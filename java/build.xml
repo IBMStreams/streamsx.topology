@@ -36,23 +36,27 @@
   <property name="cisxt" value="com/ibm/streamsx/topology"/>
   <target name="compile.pure" depends="init">
     <javac debug="true" includeantruntime="no"
-	   srcdir="${src}" 
-	   destdir="${classes}"
-	   classpathref="compile.pure.classpath"
-	   includes="${cisxt}/function/*.java
-	             ${cisxt}/internal/gson/*.java
-	             ${cisxt}/generator/**
-	             ${cisxt}/context/remote/*.java
-	             ${cisxt}/internal/context/remote/*.java
-	             "
-    />   
+       srcdir="${src}" 
+       destdir="${classes}"
+       classpathref="compile.pure.classpath"
+       includes="${cisxt}/function/*.java
+                 ${cisxt}/internal/gson/*.java
+                 ${cisxt}/generator/**
+                 ${cisxt}/context/remote/*.java
+                 ${cisxt}/internal/context/remote/*.java
+                 ${cisxt}/internal/streaminganalytics/*.java
+                 "
+    />
+    <copy toDir="${classes}">
+      <fileset dir="${src}" includes="**/*.properties"/>
+    </copy>
   </target>
 
   <target name="compile" depends="init,compile.pure">
     <javac debug="true" includeantruntime="no"
-	   srcdir="${src}" 
-	   destdir="${classes}"
-	   classpathref="compile.classpath"/>
+       srcdir="${src}" 
+       destdir="${classes}"
+       classpathref="compile.classpath"/>
     <ant dir="../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
 
@@ -71,9 +75,8 @@
           <attribute name="Class-Path" value="${jar.classpath}"/>
        </manifest>
     <fileset dir="${classes}"/>
-    <fileset dir="${src}"
-       excludes="com/ibm/streamsx/topology/internal/**"
-       />
+    <fileset dir="${src}" excludes="com/ibm/streamsx/topology/internal/**"/>
+    <fileset dir="${src}" includes="com/ibm/streamsx/topology/internal/messages/*.properties"/>
     </jar>
   </target>
 

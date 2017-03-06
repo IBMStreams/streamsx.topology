@@ -11,7 +11,6 @@ import com.ibm.streamsx.topology.internal.context.DistributedStreamsContext;
 import com.ibm.streamsx.topology.internal.context.DistributedTester;
 import com.ibm.streamsx.topology.internal.context.EmbeddedStreamsContext;
 import com.ibm.streamsx.topology.internal.context.EmbeddedTester;
-import com.ibm.streamsx.topology.internal.context.RemoteBuildAndSubmitStreamsContext;
 import com.ibm.streamsx.topology.internal.context.StandaloneStreamsContext;
 import com.ibm.streamsx.topology.internal.context.StandaloneTester;
 import com.ibm.streamsx.topology.internal.context.ToolkitStreamsContext;
@@ -35,12 +34,10 @@ public class StreamsContextFactory {
             return new ToolkitStreamsContext();
         case BUILD_ARCHIVE:
             return new ZippedToolkitStreamsContext();
-        case REMOTE_BUILD_AND_SUBMIT:
-        	return new RemoteBuildAndSubmitStreamsContext();
         case STANDALONE_BUNDLE:
-            return new BundleStreamsContext(true);
+            return new BundleStreamsContext(true, false);
         case BUNDLE:
-            return new BundleStreamsContext(false);
+            return new BundleStreamsContext(false, false);
         case STANDALONE:
             return new StandaloneStreamsContext();
         case DISTRIBUTED:

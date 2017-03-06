@@ -19,20 +19,27 @@
       <arg value="clone"/>
       <arg value="https://github.com/IBMStreams/streamsx.utility.git"/>
    </exec>
-    <copy file="streamsx.utility/python/packages/streamsx/rest.py"
-      todir="${streamsx.py}"/>
+    <copy todir="${streamsx.py}">
+      <fileset dir="streamsx.utility/python/packages/streamsx" excludes="**/__init__.py"/>
+    </copy>
    <delete dir="streamsx.utility"/>
   </target>
 
   <target name="clean" >
     <ant dir="java" target="clean"/>
+    <ant dir="python" target="clean"/>
     <ant dir="samples/java/functional" target="clean"/>
+  	<ant dir="samples/python" target="clean"/>
     <ant dir="toolkit" target="clean"/>
     <ant dir="test/java" target="clean"/>
-    <delete dir="${tk}/doc/javadoc"/>
-    <delete dir="${tk}/doc/spldoc"/>
-    <delete dir="${tk}/doc/scaladoc"/>
-    <delete dir="${tk}/doc/pydoc"/>
+    <delete dir="${tk.doc}/javadoc"/>
+    <delete dir="${tk.doc}/spldoc"/>
+    <delete dir="${tk.doc}/scaladoc"/>
+    <delete dir="${tk.doc}/pythondoc"/>
+    <delete dir="${tk}/impl/nl/include"/>
+    <delete>
+      <fileset dir="${tk}/impl/nl" includes="*.dat"/>
+    </delete>
     <delete dir="${release.base}"/>
     <delete dir="streamsx.utility"/>
     <delete file="${streamsx.py}/rest.py"/>
@@ -70,13 +77,13 @@
   <target name="release" depends="clean,all,doc,create_release_bundle"/>
 
   <target name="doc" depends="checkJava8">
-       <mkdir dir="${tk}/doc"/>
+       <mkdir dir="${tk.doc}"/>
        <ant dir="samples/java/functional" target="doc"/>
-       <mkdir dir="${tk}/doc/samples/javadoc"/>
-       <copy todir="${tk}/doc/samples/javadoc">
+       <mkdir dir="${tk.doc}/samples/javadoc"/>
+       <copy todir="${tk.doc}/samples/javadoc">
            <fileset dir="samples/java/functional/javadoc"/>
        </copy>
-       <javadoc destdir="${tk}/doc/javadoc" classpathref="javadoc.classpath"
+       <javadoc destdir="${tk.doc}/javadoc" classpathref="javadoc.classpath"
           Overview="java/src/overview.html"
           Windowtitle="Java Application API for IBM Streams"
           Footer="streamsx.topology ${streamsx.topology.version} @ IBMStreams GitHub"
@@ -92,42 +99,9 @@
        </javadoc>
        <ant dir="toolkit" target="spldoc"/>
        <ant dir="scala" target="scaladoc"/>
-       <antcall target="pydoc"/>
+       <ant dir="python" target="pythondoc"/>
   </target>
   
-  <target name="pydoc">
-       <mkdir dir="${tk}/doc/pydoc"/>
-       
-       <!-- Copy streamsx directory !-->
-       <copy todir="${tk}/doc/pydoc">
-         <fileset dir="${tk}/opt/python/packages">
-           <exclude name="**/spl/**"/>
-           <exclude name="**/runtime.py"/>
-           <exclude name="**/splpy_setup.py"/>
-         </fileset>
-       </copy>
-       
-       <!-- Use "pydoc3 -w ./" to generate html for entire directory !-->
-	   <exec executable="pydoc3" dir="${tk}/doc/pydoc">
-	     <arg value="-w"/>
-	     <arg value="./"/>
-	   </exec>
-	   
-	   <!-- Delete temporary directory !-->
-	   <delete dir="${tk}/doc/pydoc/streamsx"/>
-	   
-	   <!-- pydoc generated html files have absolute path file links; remove them !-->
-	   <replaceregexp match="\&lt;a href=\&quot;file:(.*?)\&lt;/a\&gt;" replace="" flags="g">
-         <fileset dir="${tk}/doc/pydoc" includes="**/*.html"/>
-       </replaceregexp>
-       
-       <!-- pydoc generated html files have broken links to standard libraries; change links to text !-->
-	   <replaceregexp match="\&lt;a href=\&quot;(?!(streamsx(.*?)\.html|#(.*?)|\.)).*?\&quot;\&gt;(.*?)\&lt;/a\&gt;" replace="\4" flags="g">
-         <fileset dir="${tk}/doc/pydoc" includes="**/*.html"/>
-       </replaceregexp>
-
-  </target>
-       
   <target name="create_release_bundle">
       <tstamp/>
       <property name="release.dir" location="${release.base}" />
@@ -136,12 +110,14 @@
       <tar compression="gzip" longfile="gnu" destfile="${releasefilename}">
          <tarfileset dir="${basedir}" filemode="755" >
            <include name="**/pyversion*.sh"/>
+           <exclude name="test/**"/>
          </tarfileset>
          <tarfileset dir="${basedir}" >
            <include name="com.ibm.streamsx.topology/**"/>
            <include name="samples/**"/>
            <exclude name="**/.gitignore"/>
            <exclude name="**/pyversion*.sh"/>
+           <exclude name="test/**"/>
          </tarfileset>
       </tar>
       <checksum file="${releasefilename}"/>

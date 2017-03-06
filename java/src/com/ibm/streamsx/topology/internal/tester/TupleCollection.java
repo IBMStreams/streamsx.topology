@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IoSession;
@@ -63,6 +64,9 @@ public class TupleCollection implements Tester {
 
     private final Topology topology;
     private OperatorGraph collectorGraph;
+    private JavaTestableGraph localCollector;
+    private Future<JavaTestableGraph> localRunningCollector;
+    private AtomicBoolean used = new AtomicBoolean();
 
     private final Map<TStream<?>, StreamTester> testers = new HashMap<>();
 
@@ -317,19 +321,18 @@ public class TupleCollection implements Tester {
      * Graph finalization time.
      */
 
-    public void finalizeGraph(StreamsContext.Type contextType,
-            Map<String, Object> graphItems) throws Exception {
-
+    public void finalizeGraph(StreamsContext.Type contextType) throws Exception {
+        
         if (handlers.isEmpty())
             return;
 
         switch (contextType) {
         case EMBEDDED_TESTER:
-            finalizeEmbeddedTester(graphItems);
+            finalizeEmbeddedTester();
             break;
-        case BUNDLE:
-        case STANDALONE_BUNDLE:
-            finalizeStandaloneTester(graphItems);
+        case DISTRIBUTED_TESTER:
+        case STANDALONE_TESTER:
+            finalizeStandaloneTester();
             break;
         default: // nothing to do
             break;
@@ -346,7 +349,7 @@ public class TupleCollection implements Tester {
      * @param graphItems
      * @throws Exception
      */
-    public void finalizeStandaloneTester(Map<String, Object> graphItems)
+    private void finalizeStandaloneTester()
             throws Exception {
 
         addTCPServerAndSink();
@@ -357,12 +360,12 @@ public class TupleCollection implements Tester {
                     stream));
         }
 
-        JavaTestableGraph tg = new JavaOperatorTester()
+        localCollector = new JavaOperatorTester()
                 .executable(collectorGraph);
-        setupTestHandlers(tg, graphItems);
+        setupTestHandlers();
     }
 
-    public void finalizeEmbeddedTester(Map<String, Object> graphItems)
+    private void finalizeEmbeddedTester()
             throws Exception {
 
     }
@@ -400,6 +403,7 @@ public class TupleCollection implements Tester {
 
     public void shutdown() throws Exception {
         tcpServer.shutdown();
+        localRunningCollector.cancel(true);       
     }
 
     private void addTesterSink(InetSocketAddress testAddr) {
@@ -424,24 +428,20 @@ public class TupleCollection implements Tester {
          */
     }
 
-    private void setupTestHandlers(JavaTestableGraph tg,
-            Map<String, Object> graphItems) throws Exception {
+    private void setupTestHandlers() throws Exception {
 
         for (TStream<?> stream : handlers.keySet()) {
             Set<StreamHandler<Tuple>> streamHandlers = handlers.get(stream);
             StreamTester tester = testers.get(stream);
 
-            StreamingOutput<OutputTuple> injectPort = tg
+            StreamingOutput<OutputTuple> injectPort = localCollector
                     .getInputTester(tester.input);
             injectors.put(tester.testerId, new TestTupleInjector(injectPort));
 
             for (StreamHandler<Tuple> streamHandler : streamHandlers) {
-                tg.registerStreamHandler(tester.output, streamHandler);
+                localCollector.registerStreamHandler(tester.output, streamHandler);
             }
         }
-
-        graphItems.put("testerGraph", tg);
-        graphItems.put("testerCollector", this);
     }
 
     public void setupEmbeddedTestHandlers(JavaTestableGraph tg)
@@ -462,18 +462,26 @@ public class TupleCollection implements Tester {
         }
     }
     
+    private void checkOneUse() {
+        if (!used.compareAndSet(false, true))
+            throw new IllegalStateException("One use only");
+    }
+    
     @Override
     public void complete(StreamsContext<?> context) throws Exception {
         if (context.getType() == Type.DISTRIBUTED_TESTER)
             throw new IllegalStateException();
+        checkOneUse();
         context.submit(topology).get();
     }
     public boolean complete(StreamsContext<?> context, Condition<?> endCondition, long timeout, TimeUnit unit) throws Exception {
+        checkOneUse();
         Map<String,Object> noConfig = new HashMap<>(); // Collections.emptyMap();
         return complete(context, noConfig, endCondition,timeout, unit);
     }
     
     public boolean complete(StreamsContext<?> context, Map<String,Object> config, Condition<?> endCondition, long timeout, TimeUnit unit) throws Exception {
+        checkOneUse();
         
         long totalWait = unit.toMillis(timeout);
         
@@ -536,6 +544,9 @@ public class TupleCollection implements Tester {
         complete(context, config, expectedCount, timeout, unit);
         return expectedContents;
     }
-    
-    
+
+    public void startLocalCollector() {
+        assert this.localCollector != null;
+        localRunningCollector = localCollector.execute();       
+    }   
 }

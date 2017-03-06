@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonObject;
 import com.ibm.streams.operator.version.Product;
 import com.ibm.streams.operator.version.Version;
 import com.ibm.streamsx.topology.Topology;
@@ -34,7 +34,7 @@ public class InvokeSc {
     private final File applicationDir;
     private final String installDir;
 
-    public InvokeSc(JSONObject deployConfig, boolean standalone, String namespace, String mainComposite,
+    public InvokeSc(JsonObject deploy, boolean standalone, String namespace, String mainComposite,
             File applicationDir) throws URISyntaxException, IOException {
         super();
        
@@ -42,7 +42,7 @@ public class InvokeSc {
         this.mainComposite = mainComposite;
         this.applicationDir = applicationDir;
         
-        installDir = Util.getStreamsInstall(deployConfig, ContextProperties.COMPILE_INSTALL_DIR);
+        installDir = Util.getStreamsInstall(deploy, ContextProperties.COMPILE_INSTALL_DIR);
         
         // Version 4.2 onwards deprecates standalone compiler option
         // so don't use it to avoid warnings.

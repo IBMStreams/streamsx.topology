@@ -3,7 +3,9 @@
  * # Copyright IBM Corp. 2015,2016
  */
 
-#include <Python.h>
+#include "splpy_pyop.h"
+
+using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
@@ -26,7 +28,7 @@ public:
   void process(Punctuation const & punct, uint32_t port);
 private:
   // Members
-    PyObject *function_;
+    SplpyPyOp *pyop_;
     PyObject *pyInNames_;
 }; 
 

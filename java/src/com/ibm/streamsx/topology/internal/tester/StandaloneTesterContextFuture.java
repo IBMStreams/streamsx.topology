@@ -12,9 +12,9 @@ import java.util.concurrent.TimeoutException;
 public class StandaloneTesterContextFuture<T> implements Future<T> {
 
         private final Future<T> topologyFuture;
-        private final AutoCloseable tester;
+        private final TupleCollection tester;
 
-        public StandaloneTesterContextFuture(Future<T> topologyFuture, AutoCloseable tester) {
+        public StandaloneTesterContextFuture(Future<T> topologyFuture, TupleCollection tester) {
             this.topologyFuture = topologyFuture;
             this.tester = tester;
         }
@@ -29,7 +29,7 @@ public class StandaloneTesterContextFuture<T> implements Future<T> {
         
         void shutdownTester() {
             try {
-                tester.close();
+                tester.shutdown();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

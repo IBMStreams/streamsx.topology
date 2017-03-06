@@ -3,14 +3,10 @@
  * # Copyright IBM Corp. 2015,2016
  */
 
-#include <Python.h>
-#include <string>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdio.h>
-
 #include "splpy.h"
+#include "splpy_pyop.h"
+
+using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
@@ -61,35 +57,38 @@
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
-   function_(NULL),
+   pyop_(NULL),
    pyInNames_(NULL)
 {
+   PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
 
 <% if ($paramStyle eq 'dictionary') { %>
    {
-      streamsx::topology::PyGILLock lock;
+      SplpyGIL lock;
       pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
                getInputPortAt(0));
    }
 <% } %>
+
+   pyop_->setCallable(callable);
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-   streamsx::topology::PyGILLock lock;
-   if (function_)
-      Py_DECREF(function_);
+   {
+   SplpyGIL lock;
    if (pyInNames_)
       Py_DECREF(pyInNames_);
+   }
+   delete pyop_;
 }
 
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    streamsx::topology::PyGILLock lock;
-    streamsx::topology::flush_PyErrPyOut();
+    pyop_->prepareToShutdown();
 }
 
 // Tuple processing for non-mutating ports
@@ -98,17 +97,16 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
    int ret = 0;
    {
     // Don't hold the lock across submission
-    streamsx::topology::PyGILLock lock;
+    SplpyGIL lock;
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
 
-    PyObject * pyReturnVar = PyObject_Call(function_, pyTuple, pyDict);
+    PyObject * pyReturnVar = PyObject_Call(pyop_->callable(), pyTuple, pyDict);
     Py_DECREF(pyTuple);
 
     if (pyReturnVar == NULL) {
         SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
-        streamsx::topology::flush_PyErr_Print();
-        throw;
+        throw SplpyGeneral::pythonException("<%=$functionName%>");
     }
     ret = PyObject_IsTrue(pyReturnVar);
 

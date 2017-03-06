@@ -4,15 +4,23 @@
  */
 package com.ibm.streamsx.topology.builder;
 
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_SPL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAME;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
-import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
 
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
@@ -21,13 +29,14 @@ import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.operator.Operator;
+import com.ibm.streams.operator.version.Product;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
-import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
@@ -57,16 +66,19 @@ public class GraphBuilder extends BJSONObject {
     private final JSONObject config = new OrderedJSONObject();
 
     private final JSONObject params = new OrderedJSONObject();
-    private final JSONObject spParams = new JSONObject();
     
     public GraphBuilder(String namespace, String name) {
         super();
 
-        json().put("namespace", namespace);
-        json().put("name", name);
+        json().put(NAMESPACE, namespace);
+        json().put(NAME, name);
         json().put("public", true);
         json().put("config", config);
         json().put("parameters", params);
+        
+        // The version of IBM Streams being used to build
+        // the topology
+        config.put(CFG_STREAMS_VERSION, Product.getVersion().toString());
     }
 
    public BOperatorInvocation addOperator(Class<? extends Operator> opClass,
@@ -223,8 +235,8 @@ public class GraphBuilder extends BJSONObject {
         final BOperatorInvocation op = new BOperatorInvocation(this, params);
         op.json().put("kind", kind);
 
-        json().put(JOperator.MODEL, JOperator.MODEL_SPL);
-        json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_SPL);
+        json().put(MODEL, MODEL_SPL);
+        json().put(LANGUAGE, LANGUAGE_SPL);
 
         ops.add(op);
         return op;
@@ -235,8 +247,8 @@ public class GraphBuilder extends BJSONObject {
         final BOperatorInvocation op = new BOperatorInvocation(this, name, params);
         op.json().put("kind", kind);
         
-        json().put(JOperator.MODEL, JOperator.MODEL_SPL);
-        json().put(JOperator.LANGUAGE, JOperator.LANGUAGE_SPL);
+        json().put(MODEL, MODEL_SPL);
+        json().put(LANGUAGE, LANGUAGE_SPL);
         
         ops.add(op);
         return op;
@@ -252,12 +264,12 @@ public class GraphBuilder extends BJSONObject {
                 continue;
             
             // note: runtime==null for markers
-            String runtime = (String) op.json().get(JOperator.MODEL);
-            String language = (String) op.json().get(JOperator.LANGUAGE);
+            String runtime = (String) op.json().get(OpProperties.MODEL);
+            String language = (String) op.json().get(OpProperties.LANGUAGE);
             
-            if (!JOperator.MODEL_SPL.equals(runtime) || !JOperator.LANGUAGE_JAVA.equals(language)) {
-                    String namespace = (String) json().get("namespace");
-                    String name = (String) json().get("name");
+            if (!MODEL_SPL.equals(runtime) || !LANGUAGE_JAVA.equals(language)) {
+                    String namespace = (String) json().get(NAMESPACE);
+                    String name = (String) json().get(NAME);
                     throw new IllegalStateException(
                             "Topology '"+namespace+"."+name+"'"
                             + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
@@ -318,10 +330,8 @@ public class GraphBuilder extends BJSONObject {
      * @param jo the SubmissionParameter parameter value object
      */
     public void createSubmissionParameter(String name, JSONObject jo) {
-        if (spParams.containsKey(name))
+        if (params.containsKey(name))
             throw new IllegalArgumentException("name is already defined");
-        spParams.put(name, jo);
-        params.put(SubmissionTimeValue.mkOpParamName(name), jo);
+        params.put(name, jo);
     }
-
 }

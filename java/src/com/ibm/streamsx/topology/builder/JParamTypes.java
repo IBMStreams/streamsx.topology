@@ -2,7 +2,7 @@ package com.ibm.streamsx.topology.builder;
 
 /**
  * A parameter to an operator is represented by
- * a type and a value. HereThis contains constants
+ * a type and a value. This defines constants
  * representing the special types.
  *
  */
@@ -22,8 +22,32 @@ public interface JParamTypes {
 	 */
 	String TYPE_ATTRIBUTE = "attribute";
 	
-	 /** operator parameter type for submission parameter value */
+	 /**
+	  * Submission parameter value.
+	  * 
+	  * Used to declare a submission parameter at the
+	  * topology level in the "parameters" object
+	  * and as an operator parameter (referencing the value).
+	  * 
+	  * value: { name: name, metaType: type, defaultValue: value)
+	  * 
+	  * defaultValue is optional.
+	  * 
+	  */
     String TYPE_SUBMISSION_PARAMETER = "submissionParameter";
+    
+    /**
+     * Composite parameter value.
+     * 
+     * Used to declare a composite parameter at the
+     * composite level in the "parameters" object.
+     * 
+     * value: { name: name, metaType: type, defaultValue: value)
+     * 
+     * defaultValue is optional.
+     * 
+     */
+    String TYPE_COMPOSITE_PARAMETER = "compositeParameter";
     
     /**
      * An SPL expression.

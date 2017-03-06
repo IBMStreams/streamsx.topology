@@ -136,7 +136,7 @@ public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
         String s3a = j3.get("a").toString();
         String s3b = j3.get("b").toString();
   	
-    	includePythonApp(t, "json_flatmap_string.py", "json_flatmap_str::json_flatmap_str");
+    	includePythonApp(t, "json_flatmap_string.py", "json_flatmap_string::json_flatmap_str");
    	    	
         TStream<JSONObject> source = t.constants(Arrays.asList(j1, j2, j3));
         

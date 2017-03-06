@@ -5,28 +5,47 @@
 package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+import static com.ibm.streamsx.topology.context.ContextProperties.VMARGS;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOYMENT_CONFIG;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_CONFIG_OVERLAYS;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.TOOLKITS_JSON;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAME;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -38,6 +57,7 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.internal.file.FileUtilities;
+import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.toolkit.info.DependenciesType;
@@ -47,7 +67,7 @@ import com.ibm.streamsx.topology.internal.toolkit.info.ObjectFactory;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitDependencyType;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
-public class ToolkitRemoteContext implements RemoteContext<File> {
+public class ToolkitRemoteContext extends RemoteContextImpl<File> {
 
     @Override
     public Type getType() {
@@ -55,31 +75,61 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
     }
 
     @Override
-    public Future<File> submit(JsonObject submission) throws Exception {
+    public Future<File> _submit(JsonObject submission) throws Exception {
+        JsonObject deploy = deploy(submission);
+        if (deploy == null)
+            submission.add(SUBMISSION_DEPLOY, deploy = new JsonObject());
         
-        JsonObject deployInfo = object(submission, SUBMISSION_DEPLOY);
-        if (deployInfo == null)
-            submission.add(SUBMISSION_DEPLOY, deployInfo = new JsonObject());
-                
-        if (!deployInfo.has(ContextProperties.TOOLKIT_DIR)) {
-            deployInfo.addProperty(ContextProperties.TOOLKIT_DIR, Files
+        addSelectDeployToGraphConfig(submission);
+        
+        // If no version has been supplied use 4.2 as the
+        // Streaming Analytics service is at a minimum 4.2 
+        JsonObject graphConfig = GraphKeys.graphConfig(submission);
+        if (!graphConfig.has(CFG_STREAMS_VERSION)) {
+            graphConfig.addProperty(CFG_STREAMS_VERSION, "4.2");
+        }
+                      
+        if (!deploy.has(ContextProperties.TOOLKIT_DIR)) {
+            deploy.addProperty(ContextProperties.TOOLKIT_DIR, Files
                     .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
         }
 
-        final File toolkitRoot = new File(jstring(deployInfo, ContextProperties.TOOLKIT_DIR));
+        final File toolkitRoot = new File(jstring(deploy, ContextProperties.TOOLKIT_DIR));
 
         JsonObject jsonGraph = object(submission, SUBMISSION_GRAPH);
 
-        makeDirectoryStructure(toolkitRoot, jstring(jsonGraph, "namespace"));
+        makeDirectoryStructure(toolkitRoot, splAppNamespace(jsonGraph));
         
         addToolkitInfo(toolkitRoot, jsonGraph);
         
         copyIncludes(toolkitRoot, jsonGraph);
         
         generateSPL(toolkitRoot, jsonGraph);
+        
+        JsonObject results = new JsonObject();
+        results.addProperty(SubmissionResultsKeys.TOOLKIT_ROOT, toolkitRoot.getAbsolutePath());
+        submission.add(RemoteContext.SUBMISSION_RESULTS, results);
+        
+        setupJobConfigOverlays(deploy, jsonGraph);
 
         return new CompletedFuture<File>(toolkitRoot);
     } 
+
+    /**
+     * Create a Job Config Overlays structure if it does not exist.
+     * Set the deployment from the graph config.
+     */
+    private void setupJobConfigOverlays(JsonObject deploy, JsonObject graph) {
+        JsonArray jcos = array(deploy, JOB_CONFIG_OVERLAYS);
+        if (jcos == null) {
+            deploy.add(JOB_CONFIG_OVERLAYS, jcos = new JsonArray());
+            jcos.add(new JsonObject());
+        }
+        JsonObject jco = jcos.get(0).getAsJsonObject();
+        
+        jco.add(DEPLOYMENT_CONFIG,
+                jobject(graph, "config").get(DEPLOYMENT_CONFIG));     
+    }
 
     private void generateSPL(File toolkitRoot, JsonObject jsonGraph)
             throws IOException {
@@ -93,8 +143,8 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
     private void createNamespaceFile(File toolkitRoot, JsonObject json, String suffix, String content)
             throws IOException {
 
-        String namespace = jstring(json, "namespace");
-        String name = jstring(json, "name");
+        String namespace = splAppNamespace(json);
+        String name = splAppName(json);
         
         Path f = Paths.get(toolkitRoot.getAbsolutePath(), namespace, name + "." + suffix);
 
@@ -184,9 +234,9 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
      * 
      * TODO add support for directories
      */
-    private void copyIncludes(File toolkitRoot, JsonObject json) throws IOException {
+    private void copyIncludes(File toolkitRoot, JsonObject graph) throws IOException {
         
-        JsonObject config = object(json, "config");
+        JsonObject config = object(graph, "config");
                 
         if (!config.has("includes"))
             return;
@@ -196,18 +246,27 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
         for (int i = 0; i < includes.size(); i++) {
             JsonObject inc = includes.get(i).getAsJsonObject();
             
-            String source = jstring(inc, "source");
             String target = jstring(inc, "target");
-            
-            File srcFile = new File(source);
             File targetDir = new File(toolkitRoot, target);
             if (!targetDir.exists())
                 targetDir.mkdirs();
-            if (srcFile.isFile())
-                copyFile(srcFile, targetDir);
-            else if (srcFile.isDirectory())
-                copyDirectoryToDirectory(srcFile, targetDir);
-        };
+            
+            // Simple copy of a file or directory
+            if (inc.has("source")) {
+                String source = jstring(inc, "source");
+                File srcFile = new File(source);
+                if (srcFile.isFile())
+                    copyFile(srcFile, targetDir);
+                else if (srcFile.isDirectory())
+                    copyDirectoryToDirectory(srcFile, targetDir);
+            }
+            // Create a jar from a classes directory.
+            if (inc.has("classes")) {
+                String classes = jstring(inc, "classes");
+                String name = jstring(inc, "name");
+                createJarFile(classes, name, targetDir);
+            }
+        }
     }
 
     private static void copyFile(File srcFile, File targetDir) throws IOException {
@@ -259,6 +318,75 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
         });
     }
     
+    /**
+     * Create a jar file from a classes directory,
+     * creating it directly in the toolkit.
+     */
+    private static String createJarFile(String classes, String name, File toolkitLib) throws IOException {
+        assert name.endsWith(".jar");
+        
+        final Path classesPath = Paths.get(classes);
+        final Path jarPath = new File(toolkitLib, name).toPath();
+        try (final JarOutputStream jarOut =
+                new JarOutputStream(
+                new BufferedOutputStream(
+                        new FileOutputStream(jarPath.toFile()), 128*1024))) {
+        
+        Files.walkFileTree(classesPath, new FileVisitor<Path>() {
+
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir,
+                    BasicFileAttributes attrs) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file,
+                    BasicFileAttributes attrs) throws IOException {
+                File classFile = file.toFile();
+                if (classFile.isFile()) {
+                    //  Write the entry followed by the data.
+                    Path relativePath = classesPath.relativize(file);
+                    JarEntry je = new JarEntry(relativePath.toString());
+                    je.setTime(classFile.lastModified());
+                    jarOut.putNextEntry(je);
+                    
+                    final byte[] data = new byte[32*1024];
+                    try (final BufferedInputStream classIn =
+                            new BufferedInputStream(
+                                    new FileInputStream(classFile), data.length)) {
+                        
+                        for (;;) {
+                            int count = classIn.read(data);
+                            if (count == -1)
+                                break;
+                            jarOut.write(data, 0, count);
+                        }
+                    }
+                    jarOut.closeEntry();
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc)
+                    throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                    throws IOException {
+                dir.toFile().delete();
+                return FileVisitResult.CONTINUE;
+            }
+        });
+        
+        }
+        
+        return jarPath.getFileName().toString();
+    }
+    
     public static boolean deleteToolkit(File appDir, JsonObject deployConfig) throws IOException {       
         if (jboolean(deployConfig, KEEP_ARTIFACTS)) {
             return false;
@@ -267,4 +395,31 @@ public class ToolkitRemoteContext implements RemoteContext<File> {
         FileUtilities.deleteDirectory(appDir);
         return true;
     }
+    
+    /**
+     * Deploy keys that also needed in the graph configuration
+     * for code generation.
+     */
+    private static final Set<String> GRAPH_CONFIG_KEYS = new HashSet<>();
+    static {
+        
+        // ContextProperties
+        Collections.addAll(GRAPH_CONFIG_KEYS, VMARGS);
+    }
+    
+    private void addSelectDeployToGraphConfig(JsonObject submission) {
+        
+        JsonObject deploy = DeployKeys.deploy(submission);
+        JsonObject graph = object(submission, SUBMISSION_GRAPH);
+        JsonObject graphConfig = object(graph, "config");
+        if (graphConfig == null)
+            graph.add("config", graphConfig = new JsonObject());
+        
+        for (String key : GRAPH_CONFIG_KEYS) {
+            if (deploy.has(key))
+                graphConfig.add(key, deploy.get(key));
+        }
+    }
+
+
 }

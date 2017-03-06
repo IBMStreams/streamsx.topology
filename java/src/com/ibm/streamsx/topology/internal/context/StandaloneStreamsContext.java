@@ -4,13 +4,16 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+
 import java.io.File;
-import java.util.Collections;
-import java.util.Map;
 import java.util.concurrent.Future;
 
-import com.ibm.json.java.JSONObject;
-import com.ibm.streamsx.topology.Topology;
+import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.streams.InvokeStandalone;
 
 public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> {
@@ -28,33 +31,17 @@ public class StandaloneStreamsContext extends BundleUserStreamsContext<Integer> 
      * bundle. Note, when this returns the application likely will still be
      * running.
      */
+   
     @Override
-    public Future<Integer> submit(Topology app, Map<String, Object> config)
-            throws Exception {
+    Future<Integer> invoke(AppEntity entity, File bundle) throws Exception {
+    	
+        InvokeStandalone invokeStandalone = new InvokeStandalone(bundle, keepArtifacts(entity.submission));
+        JsonObject deploy = deploy(entity.submission);
+        JsonObject python = object(deploy, DeployKeys.PYTHON);
+        if (python != null)
+            invokeStandalone.addEnvironmentVariable("PYTHONHOME", jstring(python, "prefix"));
 
-        File bundle = bundler.submit(app, config).get();
-
-        InvokeStandalone invokeStandalone = new InvokeStandalone(bundle);
-
-        preInvoke();
-        Future<Integer> future = invokeStandalone.invoke(config);
-
-        // bundle.delete();
-        return future;
-    }
-
-    void preInvoke() {
-    }
-    
-    @Override
-    public Future<Integer> submit(JSONObject json) throws Exception {
-
-    	File bundle = bundler.submit(json).get();
-        InvokeStandalone invokeStandalone = new InvokeStandalone(bundle);
-
-        preInvoke();
-        Map<String, Object> config = Collections.emptyMap();
-        Future<Integer> future = invokeStandalone.invoke(config);
+        Future<Integer> future = invokeStandalone.invoke(deploy);
 
         return future;
     }

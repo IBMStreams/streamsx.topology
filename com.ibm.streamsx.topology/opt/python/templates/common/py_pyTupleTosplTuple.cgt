@@ -14,7 +14,7 @@
  
 void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple <%=$itypeparam%>) {
 
-  Py_ssize_t frs = PyTuple_Size(pyTuple); 
+  Py_ssize_t frs = PyTuple_GET_SIZE(pyTuple); 
     
 <%
   if (defined $iport) {
@@ -26,30 +26,8 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=
     my $attribute = $oport->getAttributeAt($ai);
     my $name = $attribute->getName();
     my $atype = $attribute->getSPLType();
+    splToPythonConversionCheck($atype);
     
-    my $key_type = "";
-    my $value_type = "";
-    my $element_type = "";
-
-
-# For some reason, in the code generation API, getSPLType() does not
-# return a type, but string. As such, we need to use regex to extract
-# the list or map types.
-  
-    if($atype =~ m/^map.*/){
-      $atype =~ /.*<(.*),.*/;
-      $key_type = $1;
-      $atype =~ /.*,(.*)>/;
-      $value_type = $1;
-      $atype = "map";
-    }
-
-    if($atype =~ m/^list.*/){
-      $atype =~ /.*<(.*)>.*/;
-      $element_type = $1;
-      $atype = "list";
-    }
-
     if (defined $iport) {
              print 'setAttr = false;';
     }
@@ -57,44 +35,14 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=
     if (<%=$ai%> < frs) {
          // Value from the Python function
          PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, <%=$ai%>);
-         if (pyAttrValue != Py_None) {
+         if (!SplpyGeneral::isNone(pyAttrValue)) {
+                  streamsx::topology::pySplValueFromPyObject(
+                               otuple.get_<%=$name%>(), pyAttrValue);
 <%
     if (defined $iport) {
              print 'setAttr = true;';
     }
-
-    my $ce = "__ERROR__";
-	     if ($atype eq 'list') {
-		 my $assign_string = pythonToCppPrimitiveConversion("PyList_GET_ITEM(pyAttrValue, i)", $element_type);
-		 %>
-		     SPL::list< <%=$element_type%> > li = SPL::list< <%=$element_type%> >(PyList_Size(pyAttrValue));
-		 for(int i = 0; i < li.size(); i++){
-		     li[i] = <%=$assign_string%>;
-		 }
-		 <%
-		     $ce = "li";
-	     }
-	     
-       elsif ($atype eq 'map') {
-		 my $key_assign_string = pythonToCppPrimitiveConversion("k", $key_type);
-		 my $value_assign_string = pythonToCppPrimitiveConversion("v", $value_type);
-		 %>
-		 SPL::map< <%=$key_type%>, <%=$value_type%> > ma = SPL::map< <%=$key_type%>, <%=$value_type%> >();
-		 PyObject *k,*v;
-		 Py_ssize_t pos = 0;
-		 while(PyDict_Next(pyAttrValue, &pos, &k, &v)){
-		     ma[ <%=$key_assign_string%> ] = <%=$value_assign_string%>;
-		 }
-		 <%
-		     $ce = "ma";
-	     }
-	     else {
-		  $ce = pythonToCppPrimitiveConversion("pyAttrValue", $atype);		     
-	     }
-	     
-	     
 %>
-      otuple.set_<%=$name%>(<%=$ce%>);
       }
    }
 <%

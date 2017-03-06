@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.context;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -25,13 +26,16 @@ public class EmbeddedStreamsContext extends
     @Override
     public Future<JavaTestableGraph> submit(Topology app,
             Map<String, Object> config) throws Exception {
+        
+        app.finalizeGraph(getType());
+        
+        config = new HashMap<>(config);
 
         app.builder().checkSupportsEmbeddedMode();
         
         SubmissionParameterManager.initializeEmbedded(app.builder(), config);
         
         return jot.executable(app.graph()).execute();
-        // jot.executable(app.graph()).executeToCompletion();
     }
 
     @Override

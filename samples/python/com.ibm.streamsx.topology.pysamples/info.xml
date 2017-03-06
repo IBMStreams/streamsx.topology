@@ -1,12 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <info:toolkitInfoModel xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common"
  xmlns:info="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo">
- <info:identity>
-   <info:name>com.ibm.streams.topology.pysamples</info:name>
-   <info:description>Sample toolkit for Python support</info:description>
-   <info:version>1.0.0</info:version>
-   <info:requiredProductVersion>4.0.1.0</info:requiredProductVersion>
- </info:identity>
- <info:dependencies>
- </info:dependencies>
+<info:identity>
+  <info:name>com.ibm.streamsx.topology.pysamples</info:name>
+  <info:description>Sample toolkit for Python support</info:description>
+  <info:version>1.0.0</info:version>
+  <info:requiredProductVersion>4.0.1.0</info:requiredProductVersion>
+</info:identity>
+<info:dependencies>
+</info:dependencies>
+  <info:resources>
+    <info:messageSet name="TopologySplpyResource">
+      <info:lang default="true">en_US/TopologySplpyResource.xlf</info:lang>
+      <info:lang>de_DE/TopologySplpyResource.xlf</info:lang>
+      <info:lang>es_ES/TopologySplpyResource.xlf</info:lang>
+      <info:lang>fr_FR/TopologySplpyResource.xlf</info:lang>
+      <info:lang>it_IT/TopologySplpyResource.xlf</info:lang>
+      <info:lang>ja_JP/TopologySplpyResource.xlf</info:lang>
+      <info:lang>ko_KR/TopologySplpyResource.xlf</info:lang>
+      <info:lang>pt_BR/TopologySplpyResource.xlf</info:lang>
+      <info:lang>ru_RU/TopologySplpyResource.xlf</info:lang>
+      <info:lang>zh_CN/TopologySplpyResource.xlf</info:lang>
+      <info:lang>zh_TW/TopologySplpyResource.xlf</info:lang>
+    </info:messageSet>
+  </info:resources>
 </info:toolkitInfoModel>
