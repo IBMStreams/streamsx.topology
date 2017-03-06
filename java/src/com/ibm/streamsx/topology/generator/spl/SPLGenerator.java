@@ -413,23 +413,19 @@ public class SPLGenerator {
         
         numParallelComposites++;
         
-        boolean partitioned = jboolean(
-                startOp.get("outputs").getAsJsonArray().get(0).getAsJsonObject(), "partitioned");
+        JsonObject output = startOp.get("outputs").getAsJsonArray().get(0).getAsJsonObject();
+        
+        boolean partitioned = jboolean(output, "partitioned");
         if (partitioned) {
             JsonArray inputs = startOp.get("inputs").getAsJsonArray();
-            String parallelInputPortName = null;
+            assert inputs.size() == 1;
+            
+            String parallelInputPortName = jstring(inputs.get(0).getAsJsonObject(), "name");
 
-            // Get the first port that has the __spl_hash attribute
-            for (int i = 0; i < inputs.size(); i++) {
-                JsonObject input = inputs.get(i).getAsJsonObject();
-                String type = jstring(input, "type");
-                if (type.contains("__spl_hash")) {
-                    parallelInputPortName = jstring(input, "name");
-                }
-            }
             compositeInvocation.addProperty("partitioned", true);
             compositeInvocation.addProperty("parallelInputPortName",
                     parallelInputPortName);
+            compositeInvocation.add("partitionedKeys", output.get("partitionedKeys"));
         }
 
         // Necessary to later indicate whether the composite the
@@ -437,8 +433,6 @@ public class SPLGenerator {
         // refers to is parallelized.
         compositeInvocation.addProperty("parallelOperator", true);
 
-        JsonArray outputs = startOp.get("outputs").getAsJsonArray();
-        JsonObject output = outputs.get(0).getAsJsonObject();
         compositeInvocation.add("width", output.get("width"));
 
         // Get the start operators in the parallel region -- the ones

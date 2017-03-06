@@ -149,10 +149,19 @@ class OperatorGenerator {
             }
             boolean partitioned = jboolean(op, "partitioned");
             if (partitioned) {
-                String parallelInputPortName = op.get("parallelInputPortName").getAsString();
+                String parallelInputPortName = jstring(op, "parallelInputPortName");
+                JsonArray partitionKeys = op.get("partitionedKeys").getAsJsonArray();
+                
                 parallelInputPortName = splBasename(parallelInputPortName);
-                sb.append(", partitionBy=[{port=" + parallelInputPortName
-                        + ", attributes=[__spl_hash]}]");
+                sb.append(", partitionBy=[{port=");
+                sb.append(parallelInputPortName);
+                sb.append(", attributes=[");
+                for (int i = 0; i < partitionKeys.size(); i++) {
+                    if (i != 0)
+                        sb.append(", ");
+                    sb.append(partitionKeys.get(i).getAsString());
+                }
+                sb.append("]}]");
             }
             sb.append(")\n");
         }
