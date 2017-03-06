@@ -41,6 +41,17 @@ class StreamSchema(object) :
         new_schema = base[:-1] + ',' + extends[6:]
         return StreamSchema(new_schema)
 
+    def __hash__(self):
+        return hash(self.schema())
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.schema() == other.schema()
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 # XML = StreamSchema("tuple<xml document>")
 
 @enum.unique
