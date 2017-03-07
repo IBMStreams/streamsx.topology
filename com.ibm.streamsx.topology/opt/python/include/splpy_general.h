@@ -132,6 +132,29 @@ class SplpyGeneral {
        return PyBool_FromLong(value ? 1 : 0);
      }
 
+    /**
+     * Utility method to create an object by calling the
+     * class object and passing in a tuple of arguments.
+     */
+    static PyObject *pyCreateObject(PyObject pyclass, PyObject *args) {
+      PyObject * pyReturnVar = PyObject_CallObject(pyclass, args);
+      Py_DECREF(args);
+      return pyReturnVar;
+    }
+
+    /**
+     * Class object for streamsx.spl.types.Timestamp.
+     * First call is through setup to set the
+     * static variable.
+     * Subsequent calls pass null and receive
+     * the timestamp class.
+     */
+    static PyObject * timestampClass(PyObject *tsc) {
+        static PyObject * tsClass = tsc;
+        return tsClass;
+    }
+
+
     /*
      * Flush Python stderr and stdout.
     */
@@ -495,6 +518,22 @@ class SplpyGeneral {
     inline PyObject * pySplValueToPyObject(const SPL::float64 & value) {
        return PyFloat_FromDouble(value);
     }
+
+    inline PyObject * pySplValueToPyObject(const SPL::timestamp & value) {
+        int32_t mid = value.getMachineId();
+        PyObject * pyTuple = PyTuple_New(mid == 0 ? 2 : 3);
+
+        PyTuple_SET_ITEM(pyTuple, 0, pySplValueToPyObject(value.getSeconds()));
+        PyTuple_SET_ITEM(pyTuple, 1, pySplValueToPyObject(value.getNanoseconds()));
+        if (mid != 0) {
+            PyTuple_SET_ITEM(pyTuple, 2, pySplValueToPyObject(mid));
+        }
+        return SplpyGeneral::pyCreateObject(
+                 SplpyGeneral::timestampClass(),
+                 pyTuple
+               );
+    }
+
 
     /**
      * Convert a PyObject to a PyObject by simply returning the value
