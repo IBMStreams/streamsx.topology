@@ -5,6 +5,7 @@ import itertools
 
 # Import the SPL decorators
 from streamsx.spl import spl
+from streamsx.spl.types import Timestamp
 
 #------------------------------------------------------------------
 # Test Source functions
@@ -28,6 +29,7 @@ class SpecificValues:
            4367.34, -87657525334.22,
            "⡍⠔⠙⠖ ⡊ ⠙⠕⠝⠰⠞ ⠍⠑⠁⠝ ⠞⠕ ⠎⠁⠹ ⠹⠁⠞ ⡊ ⠅⠝⠪⠂ ⠕⠋ ⠍⠹",
            complex(-23.0, 325.38), complex(-35346.234, 952524.93),
+           Timestamp(781959759, 9320, 76),
            ["a", "Streams!", "2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm"],
            [345,-4578],
            [9983, -4647787587, 0],
