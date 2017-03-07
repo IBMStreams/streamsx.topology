@@ -113,6 +113,8 @@ class SplpySetup {
        SplpyGIL lock;
        SplpyGeneral::timestampClass(
           SplpyGeneral::loadFunction("streamsx.spl.types", "Timestamp"));
+       SplpyGeneral::timestampGetter(
+          SplpyGeneral::loadFunction("streamsx.spl.types", "_get_timestamp_tuple"));
    }
 
   private:

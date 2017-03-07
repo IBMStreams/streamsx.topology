@@ -159,6 +159,14 @@ class SplpyGeneral {
         static PyObject * tsClass = tsc;
         return tsClass;
     }
+    /**
+     * streamsx.spl.types._get_timestamp_tuple
+     * Used to convert Python objects to SPL timestamps.
+     */
+    static PyObject * timestampGetter(PyObject *tsg) {
+        static PyObject * tsGetter = tsg;
+        return tsGetter;
+    }
 
 
     /*
@@ -384,6 +392,31 @@ class SplpyGeneral {
     }
     inline void pySplValueFromPyObject(SPL::float64 & splv, PyObject * value) {
        splv = PyFloat_AsDouble(value);
+    }
+
+    /**
+     * Convert Python object to SPL timestamp:
+     *
+     * 1) Call streamsx.spl.types._get_timestamp_tuple to covert
+     *    Python object to tuple containing:
+     *      (seconds, nanoseconds, machine_id)
+     * 2) Extract values from each tuple element.
+     */
+    inline void pySplValueFromPyObject(SPL::timestamp & splv, PyObject *value) {
+        PyObject * args = PyTuple_New(1);
+        Py_INCREF(value);
+        PyTuple_SET_ITEM(args, 0, value);
+
+        PyObject *tst = SplpyGeneral::pyCallObject(
+                 SplpyGeneral::timestampGetter(NULL), args);
+        Py_DECREF(args);
+
+        splv.setSeconds(
+            (int64_t) PyLong_AsLong(PyTuple_GET_ITEM(tst, 0)));
+        splv.setNanoSeconds(
+            (uint32_t) PyLong_AsUnsignedLong(PyTuple_GET_ITEM(tst, 1)));
+        splv.setMachineId(
+            (int32_t) PyLong_AsLong(PyTuple_GET_ITEM(tst, 2)));
     }
 
     // complex

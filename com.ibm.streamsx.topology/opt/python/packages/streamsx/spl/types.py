@@ -106,6 +106,15 @@ class Timestamp(object):
         """
         return str(self.tuple())
 
+def _get_timestamp_tuple(ts):
+    """
+    Internal method to get a timestamp tuple from a value.
+    Handles input being a datetime or a Timestamp.
+    """
+    if isinstance(ts, datetime.datetime):    
+        return Timestamp.from_datetime().tuple()
+    return ts.tuple()
+    
 from streamsx.spl.op import Expression
 
 def int8(value):
