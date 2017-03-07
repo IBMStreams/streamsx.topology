@@ -133,13 +133,19 @@ class SplpyGeneral {
      }
 
     /**
-     * Utility method to create an object by calling the
-     * class object and passing in a tuple of arguments.
+     * Utility method to call an object
+     * passing in a tuple of arguments.
+     * 
+     * Steals the reference the the tuple.
      */
-    static PyObject *pyCreateObject(PyObject pyclass, PyObject *args) {
-      PyObject * pyReturnVar = PyObject_CallObject(pyclass, args);
+    static PyObject *pyCallObject(PyObject *pyclass, PyObject *args) {
+      PyObject *ret  = PyObject_CallObject(pyclass, args);
       Py_DECREF(args);
-      return pyReturnVar;
+      if (ret == NULL) {
+         throw SplpyGeneral::pythonException("pyCallObject");
+      }
+
+      return ret;
     }
 
     /**
@@ -221,7 +227,9 @@ class SplpyGeneral {
     }
 
     /*
-     * Load a function, returning the reference to the function.
+     * Load a function or any callable in a module,
+     * returning the reference to the callable.
+     *
      * Caller must hold the GILState
      */
     static PyObject * loadFunction(const std::string & mn, const std::string & fn)
@@ -528,8 +536,8 @@ class SplpyGeneral {
         if (mid != 0) {
             PyTuple_SET_ITEM(pyTuple, 2, pySplValueToPyObject(mid));
         }
-        return SplpyGeneral::pyCreateObject(
-                 SplpyGeneral::timestampClass(),
+        return SplpyGeneral::pyCallObject(
+                 SplpyGeneral::timestampClass(NULL),
                  pyTuple
                );
     }

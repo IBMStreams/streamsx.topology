@@ -9,6 +9,8 @@ must use the SPL type required by the operator.
 
 """
 
+import datetime
+
 class Timestamp(object):
     """
     SPL naive timestamp type with nanosecond resolution.
@@ -98,6 +100,11 @@ class Timestamp(object):
 
         """
         return self._seconds, self._nanoseconds, self._machine_id
+
+    def __str__(self):
+        """ String representation matching SPL's representation.
+        """
+        return str(self.tuple())
 
 from streamsx.spl.op import Expression
 
