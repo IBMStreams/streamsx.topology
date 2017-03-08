@@ -25,6 +25,10 @@ operator parameters.
 
 Python classes as SPL operators
 ===============================
+
+Overview
+--------
+
 Decorating a Python class creates a stateful SPL operator
 where the instance fields of the class are the operator's state. An instance
 of the class is created when the SPL operator invocation is initialized
@@ -88,6 +92,46 @@ or both operator parameters can be set::
         start: 50;
         stop: 75;
     }
+
+Operator state
+--------------
+
+Use of a class allows the operator to be stateful by maintaining state in instance
+attributes across invocations (tuple processing).
+
+.. note::
+    For future compatibility instances of a class should ensure that the object's
+    state can be pickled. See https://docs.python.org/3.5/library/pickle.html#handling-stateful-objects
+
+Operator initialization & shutdown
+----------------------------------
+
+Execution of an instance for an operator effectively run in a context manager so that an instance's ``__enter__``
+method is called when the processing element containing the operator is initialized
+and its ``__exit__`` method called when the processing element is stopped. To take advantage of this
+the class must define both ``__enter__`` and ``__exit__`` methods.
+
+.. note::
+    For future compatibility operator initialization such as opening files should be in ``__enter__``
+    in order to support stateful operator restart & checkpointing in the future.
+
+Example of using ``__enter__`` and ``__exit__`` to open and close a file::
+
+    import streamsx.ec as ec
+
+    @spp.map()
+    class Sentiment(object):
+        def __init__(self, name):
+            self.name = name
+            self.file = None
+
+        def __enter__(self):
+            self.file = open(self.name, 'r')
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            if self.file is not None:
+                self.file.close()
+
 
 Python functions as SPL operators
 =================================
