@@ -552,19 +552,21 @@ class Stream(object):
             Stream: A stream for which subsequent transformations will be executed in parallel.
 
         """
-        if (routing == None or routing == Routing.ROUND_ROBIN) :
+        if routing == None or routing == Routing.ROUND_ROBIN:
             op2 = self.topology.graph.addOperator("$Parallel$")
             op2.addInputPort(outputPort=self.oport)
             oport = op2.addOutputPort(width)
             return Stream(self.topology, oport)
-        elif(routing == Routing.HASH_PARTITIONED ) :
+        elif routing == Routing.HASH_PARTITIONED:
 
             if (func is None):
                 if self.oport.schema == schema.CommonSchema.String:
                     keys = ['string']
                     parallel_input = self.oport
-                else:
+                elif self.oport.schema == schema.CommonSchema.Python:
                     func = hash
+                else:
+                    raise NotImplementedError("HASH_PARTITIONED for schema {0} requires a hash function.".format(self.oport.schema))
 
             if func is not None:
                 keys = ['__spl_hash']

@@ -179,3 +179,12 @@ class TestDistributedUDP(TestUDP):
 class TestBluemixUDP(TestUDP):
   def setUp(self):
       Tester.setup_streaming_analytics(self, force_remote_build=True)
+
+class TestUDPNoExec(unittest.TestCase):
+    def test_no_default_hash(self):
+        topo = Topology('test_SPLBeaconFilter')
+        s = op.Source(topo, "spl.utility::Beacon",
+            'tuple<uint64 seq>',
+            params = {'period': 0.2, 'iterations':100})
+        s.seq = s.output('IterationCount()')
+        self.assertRaises(NotImplementedError, s.stream.parallel, 3, Routing.HASH_PARTITIONED)
