@@ -67,6 +67,9 @@ The schema for a Python Topology is either:
 Stream processing
 #################
 
+Callables
+=========
+
 A stream is processed to produce zero or more transformed streams,
 such as filtering a stream to drop unwanted tuples, producing a stream
 that only contains the required tuples.
@@ -91,17 +94,50 @@ processed by a :py:meth:`~Stream.filter` using a lambda function::
     # Filter the stream so it only contains words starting with py
     pywords = words.filter(lambda word : tuple.startswith('py'))
 
+Stateful operations
+===================
+
 Use of a class instance allows the operation to be stateful by maintaining state in instance
-attributes across invocations. For future compatibility instances should ensure that the object's
-state can be pickled.
+attributes across invocations.
+
+.. note::
+    For future compatibility instances should ensure that the object's
+    state can be pickled. See https://docs.python.org/3.5/library/pickle.html#handling-stateful-objects
+
+Initialization and shutdown
+===========================
 
 Execution of a class instance effectively run in a context manager so that an instance's ``__enter__``
 method is called when the processing element containing the instance  is initialized
 and its ``__exit__`` method called when the processing element is stopped. To take advantage of this
 the class must define both ``__enter__`` and ``__exit__`` methods.
 
-In addition an application declared by `Topology` can include stream processing defined by SPL operators. This allows
-reuse of adapters and analytics provided by IBM Streams, open source and third-party SPL toolkits.
+.. note::
+    Since an instance of a class is passed to methods such as
+    :py:meth:`~Stream.map` ``__init__`` is only called when the topology is `declared`, not at runtime.
+    Initialization at runtime, such as opening connections, occurs through the ``__enter__`` method.
+
+Example of using ``__enter__`` to create custom metrics::
+
+    import streamsx.ec as ec
+
+    class Sentiment(object):
+        def __init__(self):
+            pass
+
+        def __enter__(self):
+            self.positive_metric = ec.CustomMetric(self, "positiveSentiment")
+            self.negative_metric = ec.CustomMetric(self, "negativeSentiment")
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            pass
+
+SPL operators
+=============
+
+In addition an application declared by `Topology` can include stream processing defined by SPL primitive or
+composite operators. This allows reuse of adapters and analytics provided by IBM Streams,
+open source and third-party SPL toolkits.
 
 """
 
