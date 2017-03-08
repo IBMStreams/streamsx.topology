@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class RemoteContexts {
     /**
@@ -25,10 +26,7 @@ public class RemoteContexts {
             return;
     
         // Write to the file and close the file.
-        JsonObject results_json = object(submission, RemoteContext.SUBMISSION_RESULTS);
-        if(results_json == null)
-            return;
-        
+        JsonObject results_json = GsonUtilities.getProperty(submission, RemoteContext.SUBMISSION_RESULTS);        
         Files.write(Paths.get(resultsFile), results_json.toString().getBytes(StandardCharsets.UTF_8));
     }
 }

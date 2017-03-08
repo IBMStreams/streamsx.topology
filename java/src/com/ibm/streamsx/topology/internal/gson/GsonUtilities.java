@@ -180,4 +180,24 @@ public class GsonUtilities {
 
         return item; 
     }
+    
+
+    /**
+     * Get a property from a JSON object.  If the property doesn't exist, create it, and assign it an empty JSON object
+     *  
+     * @param obj source JSON object
+     * @param property property to retrieve
+     * @return The associated value of the property
+     */
+    public static JsonObject getProperty (final JsonObject obj, final String property) { 
+    	final JsonObject result;
+    	if (obj.has(property)) {
+    		result = object(obj, property);
+    	} else {
+    		result = new JsonObject();
+    		obj.add(property,  result);
+    	}
+    	return result;
+    }
+    	
 }

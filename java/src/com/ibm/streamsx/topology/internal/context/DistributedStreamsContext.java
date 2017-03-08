@@ -14,6 +14,7 @@ import java.util.concurrent.Future;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
 
@@ -42,9 +43,8 @@ public class DistributedStreamsContext extends
 
             BigInteger jobId = submitjob.invoke(deploy(entity.submission));
             
-            JsonObject results = new JsonObject();
-            results.addProperty(SubmissionResultsKeys.JOB_ID, jobId.toString());
-            entity.submission.add(RemoteContext.SUBMISSION_RESULTS, results);
+            final JsonObject submissionResult = GsonUtilities.getProperty(entity.submission, RemoteContext.SUBMISSION_RESULTS);
+            submissionResult.addProperty(SubmissionResultsKeys.JOB_ID, jobId.toString());
             
             return new CompletedFuture<BigInteger>(jobId);
         } finally {

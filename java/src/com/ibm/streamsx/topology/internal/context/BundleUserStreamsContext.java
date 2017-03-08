@@ -18,7 +18,7 @@ abstract class BundleUserStreamsContext<T> extends JSONStreamsContext<T> {
     private final BundleStreamsContext bundler;
 
     BundleUserStreamsContext(boolean standalone) {
-        bundler = new BundleStreamsContext(standalone, true);
+        bundler = new BundleStreamsContext(standalone, false);
     }
     
     @Override

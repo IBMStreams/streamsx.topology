@@ -9,10 +9,9 @@ import static com.ibm.streamsx.topology.context.ContextProperties.VMARGS;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOYMENT_CONFIG;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_CONFIG_OVERLAYS;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.TOOLKITS_JSON;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
-import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAME;
-import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
@@ -69,6 +68,16 @@ import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
 public class ToolkitRemoteContext extends RemoteContextImpl<File> {
 
+	private final boolean keepToolkit;
+
+	public ToolkitRemoteContext() {
+        this.keepToolkit = false;
+    }
+	
+    public ToolkitRemoteContext(boolean keepToolkit) {
+        this.keepToolkit = keepToolkit;
+    }
+	
     @Override
     public Type getType() {
         return Type.TOOLKIT;
@@ -106,9 +115,10 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         
         generateSPL(toolkitRoot, jsonGraph);
         
-        JsonObject results = new JsonObject();
-        results.addProperty(SubmissionResultsKeys.TOOLKIT_ROOT, toolkitRoot.getAbsolutePath());
-        submission.add(RemoteContext.SUBMISSION_RESULTS, results);
+        if (keepToolkit || keepArtifacts(submission)) {
+        	final JsonObject submissionResult = GsonUtilities.getProperty(submission, RemoteContext.SUBMISSION_RESULTS);
+        	submissionResult.addProperty(SubmissionResultsKeys.TOOLKIT_ROOT, toolkitRoot.getAbsolutePath());
+        }
         
         setupJobConfigOverlays(deploy, jsonGraph);
 
