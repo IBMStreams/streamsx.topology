@@ -52,6 +52,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     		  "rstring r," +
     		  "complex32 c32," +
     		  "complex64 c64," +
+    		  "timestamp ts," +
     		  "list<rstring> lr," +
     		  "list<int32> li32," +
     		  "list<int64> li64," +
@@ -393,6 +394,11 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         
         assertEquals(((Complex) r1.getObject("c64")).getReal(), -35346.234, 0.1);
         assertEquals(((Complex) r1.getObject("c64")).getImaginary(), 952524.93, 0.1);
+
+        // Timestamp Timestamp(781959759, 9320, 76)
+        assertEquals(781959759L, r1.getTimestamp("ts").getSeconds());
+        assertEquals(9320, r1.getTimestamp("ts").getNanoseconds());
+        assertEquals(76, r1.getTimestamp("ts").getMachineId());
         
         // ["a", "Streams!", "2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm"]
         {

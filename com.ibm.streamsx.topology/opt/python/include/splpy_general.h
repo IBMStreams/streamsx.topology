@@ -132,6 +132,43 @@ class SplpyGeneral {
        return PyBool_FromLong(value ? 1 : 0);
      }
 
+    /**
+     * Utility method to call an object
+     * passing in a tuple of arguments.
+     * 
+     * Steals the reference the the tuple.
+     */
+    static PyObject *pyCallObject(PyObject *pyclass, PyObject *args) {
+      PyObject *ret  = PyObject_CallObject(pyclass, args);
+      Py_DECREF(args);
+      if (ret == NULL) {
+         throw SplpyGeneral::pythonException("pyCallObject");
+      }
+
+      return ret;
+    }
+
+    /**
+     * Class object for streamsx.spl.types.Timestamp.
+     * First call is through setup to set the
+     * static variable.
+     * Subsequent calls pass null and receive
+     * the timestamp class.
+     */
+    static PyObject * timestampClass(PyObject *tsc) {
+        static PyObject * tsClass = tsc;
+        return tsClass;
+    }
+    /**
+     * streamsx.spl.types._get_timestamp_tuple
+     * Used to convert Python objects to SPL timestamps.
+     */
+    static PyObject * timestampGetter(PyObject *tsg) {
+        static PyObject * tsGetter = tsg;
+        return tsGetter;
+    }
+
+
     /*
      * Flush Python stderr and stdout.
     */
@@ -198,7 +235,9 @@ class SplpyGeneral {
     }
 
     /*
-     * Load a function, returning the reference to the function.
+     * Load a function or any callable in a module,
+     * returning the reference to the callable.
+     *
      * Caller must hold the GILState
      */
     static PyObject * loadFunction(const std::string & mn, const std::string & fn)
@@ -355,6 +394,31 @@ class SplpyGeneral {
        splv = PyFloat_AsDouble(value);
     }
 
+    /**
+     * Convert Python object to SPL timestamp:
+     *
+     * 1) Call streamsx.spl.types._get_timestamp_tuple to covert
+     *    Python object to tuple containing:
+     *      (seconds, nanoseconds, machine_id)
+     * 2) Extract values from each tuple element.
+     */
+    inline void pySplValueFromPyObject(SPL::timestamp & splv, PyObject *value) {
+        PyObject * args = PyTuple_New(1);
+        Py_INCREF(value);
+        PyTuple_SET_ITEM(args, 0, value);
+
+        PyObject *tst = SplpyGeneral::pyCallObject(
+                 SplpyGeneral::timestampGetter(NULL), args);
+        Py_DECREF(args);
+
+        splv.setSeconds(
+            (int64_t) PyLong_AsLong(PyTuple_GET_ITEM(tst, 0)));
+        splv.setNanoSeconds(
+            (uint32_t) PyLong_AsUnsignedLong(PyTuple_GET_ITEM(tst, 1)));
+        splv.setMachineId(
+            (int32_t) PyLong_AsLong(PyTuple_GET_ITEM(tst, 2)));
+    }
+
     // complex
     inline void pySplValueFromPyObject(SPL::complex32 & splv, PyObject * value) {
         splv = SPL::complex32(
@@ -495,6 +559,22 @@ class SplpyGeneral {
     inline PyObject * pySplValueToPyObject(const SPL::float64 & value) {
        return PyFloat_FromDouble(value);
     }
+
+    inline PyObject * pySplValueToPyObject(const SPL::timestamp & value) {
+        int32_t mid = value.getMachineId();
+        PyObject * pyTuple = PyTuple_New(mid == 0 ? 2 : 3);
+
+        PyTuple_SET_ITEM(pyTuple, 0, pySplValueToPyObject(value.getSeconds()));
+        PyTuple_SET_ITEM(pyTuple, 1, pySplValueToPyObject(value.getNanoseconds()));
+        if (mid != 0) {
+            PyTuple_SET_ITEM(pyTuple, 2, pySplValueToPyObject(mid));
+        }
+        return SplpyGeneral::pyCallObject(
+                 SplpyGeneral::timestampClass(NULL),
+                 pyTuple
+               );
+    }
+
 
     /**
      * Convert a PyObject to a PyObject by simply returning the value

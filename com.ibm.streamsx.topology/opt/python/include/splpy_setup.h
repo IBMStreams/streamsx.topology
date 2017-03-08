@@ -82,6 +82,7 @@ class SplpySetup {
         startPython(pydl);
         setupNone(pydl);
         runSplSetup(pydl, spl_setup_py_path);
+        setupClasses();
         return pydl;
     }
 
@@ -91,6 +92,8 @@ class SplpySetup {
      */
     static void setupNone(void * pydl) {
         typedef PyObject * (*__splpy_bv)(const char *, ...);
+
+        SplpyGIL lock;
 
         // empty format returns None
         PyObject * none =
@@ -105,6 +108,14 @@ class SplpySetup {
                         "Internal error - None handling");
         }
     }
+
+   static void setupClasses() {
+       SplpyGIL lock;
+       SplpyGeneral::timestampClass(
+          SplpyGeneral::loadFunction("streamsx.spl.types", "Timestamp"));
+       SplpyGeneral::timestampGetter(
+          SplpyGeneral::loadFunction("streamsx.spl.types", "_get_timestamp_tuple"));
+   }
 
   private:
     static void * loadPythonLib() {
