@@ -525,30 +525,75 @@ class ConfigParams(object):
     SERVICE_NAME = 'topology.service.name'
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
     JOB_CONFIG = 'topology.jobConfigOverlays'
+    """
+    Key for a :py:class:`JobConfig` object representing a job configuration for a submission.
+    """
 
 class JobConfig(object):
     """
-    Job configuration
+    Job configuration.
+
+    `JobConfig` allows configuration of job that will result from
+    submission of a py:class:`Topology` (application).
+
+    A `JobConfig` is set in the `config` dictionary passed to :py:func:`~streamsx.topology.context.submit`
+    using the key :py:const:`~ConfigParams.JOB_CONFIG`. :py:meth:`~JobConfig.add` exists as a convenience
+    method to add it to a submission configuration.
+
+    Args:
+        job_name(str): The name that is assigned to the job. A job name must be unique within a Streasm instance
+            When set to `None` a system generated name is used.
+        job_group(str): The job group to use to control permissions for the submitted job.
+        preload(bool): Specifies whether to preload the job onto all resources in the instance, even if the job is
+            not currently needed on each. Preloading the job can improve PE restart performance if the PEs are
+            relocated to a new resource.
+        data_directory(str): Specifies the location of the optional data directory. The data directory is a path
+            within the cluster that is running the Streams instance.
+
+    Example::
+
+        # Submit a job with the name NewsIngester
+        cfg = {}
+        job_config = JobConfig(job_name='NewsIngester')
+        job_config.add(cfg)
+        context.submit('ANALYTICS_SERVICE', topo, cfg)
     """
-    def __init__(self, job_name=None, job_group=None, data_directory=None):
+    def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None):
         self.job_name = job_name
         self.job_group = job_group
+        self.preload = preload
         self.data_directory = data_directory
 
+    def add(self, config):
+        """
+        Add this `JobConfig` into a submission configuration object.
+
+        Args:
+            config(dict): Submission configuration.
+
+        Returns:
+            dict: config.
+
+        """
+        config[ConfigParams.JOB_CONFIG] = self
+        return config
+
     def _add_overlays(self, config):
-       """
-       {"jobConfigOverlays":[{"jobConfig":{"jobName":"BluemixSubmitSample"},"deploymentConfig":{"fusionScheme":"legacy"}}]}
-       """
-       jco = {}
-       config["jobConfigOverlays"] = [jco]
-       jc = {}
+        """
+        Add this as a jobConfigOverlays JSON to config.
+        """
+        jco = {}
+        config["jobConfigOverlays"] = [jco]
+        jc = {}
 
-       if self.job_name is not None:
+        if self.job_name is not None:
             jc["jobName"] = self.job_name
-       if self.job_group is not None:
-           jc["jobGroup"] = self.job_group
-       if self.data_directory is not None:
-           jc["dataDirectory"] = self.data_directory
+        if self.job_group is not None:
+            jc["jobGroup"] = self.job_group
+        if self.data_directory is not None:
+            jc["dataDirectory"] = self.data_directory
+        if self.preload:
+            jc['preloadApplicationBundles'] = True
 
-       if jc:
-           jco["jobConfig"] = jc
+        if jc:
+            jco["jobConfig"] = jc
