@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streamsx.topology.TSink;
@@ -472,7 +473,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                     "The parallel width must be greater than or equal to 1.");
 
         BOutput toBeParallelized = output();
-        boolean needHashRemover = false;
+        boolean isPartitioned = false;
         if (keyer != null) {
 
             final ToIntFunction<T> hasher = new KeyFunctionHasher<>(keyer);
@@ -486,12 +487,15 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             StreamSchema hashSchema = ip.port().getStreamSchema()
                     .extend("int32", "__spl_hash");
             toBeParallelized = hashAdder.addOutput(hashSchema);
-            needHashRemover = true;
+            isPartitioned = true;
         }
                 
         BOutput parallelOutput = builder().parallel(toBeParallelized, width);
-        if (needHashRemover) {
+        if (isPartitioned) {
             parallelOutput.json().put("partitioned", true);
+            JSONArray partitionKeys = new JSONArray();
+            partitionKeys.add("__spl_hash");
+            parallelOutput.json().put("partitionedKeys", partitionKeys);
             // Add hash remover
             StreamImpl<T> parallelStream = new StreamImpl<T>(this,
                     parallelOutput, getTupleType());

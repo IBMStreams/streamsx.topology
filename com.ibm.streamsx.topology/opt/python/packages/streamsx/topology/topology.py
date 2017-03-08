@@ -558,23 +558,32 @@ class Stream(object):
             oport = op2.addOutputPort(width)
             return Stream(self.topology, oport)
         elif(routing == Routing.HASH_PARTITIONED ) :
-            if (func is None) :
-                func = hash   
-            hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func)
-            hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int64 __spl_hash>"))
-            hash_adder.addInputPort(outputPort=self.oport)
-            hash_adder_oport = hash_adder.addOutputPort(schema=hash_schema)
 
+            if (func is None):
+                if self.oport.schema == schema.CommonSchema.String:
+                    keys = ['string']
+                    parallel_input = self.oport
+                else:
+                    func = hash
+
+            if func is not None:
+                keys = ['__spl_hash']
+                hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func)
+                hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int64 __spl_hash>"))
+                hash_adder.addInputPort(outputPort=self.oport)
+                parallel_input = hash_adder.addOutputPort(schema=hash_schema)
 
             parallel_op = self.topology.graph.addOperator("$Parallel$")
-            parallel_op.addInputPort(outputPort=hash_adder_oport)
-            parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=hash_schema, partitioned=True)
+            parallel_op.addInputPort(outputPort=parallel_input)
+            parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=parallel_input.schema, partitioned_keys=keys)
 
-            # use the Functor passthru operator to effectively remove the hash attribute by removing it from output port schema 
-            hrop = self.topology.graph.addPassThruOperator()
-            hrop.addInputPort(outputPort=parallel_op_port)
-            hrOport = hrop.addOutputPort(schema=self.oport.schema)
-            return Stream(self.topology, hrOport)
+            if func is not None:
+                # use the Functor passthru operator to remove the hash attribute by removing it from output port schema
+                hrop = self.topology.graph.addPassThruOperator()
+                hrop.addInputPort(outputPort=parallel_op_port)
+                parallel_op_port = hrop.addOutputPort(schema=self.oport.schema)
+
+            return Stream(self.topology, parallel_op_port)
         else :
             raise TypeError("Invalid routing type supplied to the parallel operator")    
 

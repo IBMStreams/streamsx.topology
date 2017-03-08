@@ -161,10 +161,10 @@ class _SPLInvocation(object):
         self.inputPorts = []
         self.outputPorts = []
 
-    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned=None):
+    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned_keys=None):
         if name is None:
             name = self.name + "_OUT"+str(len(self.outputPorts))
-        oport = OPort(name, self, len(self.outputPorts), schema, oWidth, partitioned)
+        oport = OPort(name, self, len(self.outputPorts), schema, oWidth, partitioned_keys)
         self.outputPorts.append(oport)
         if schema == CommonSchema.Python:
             self.viewable = False
@@ -308,13 +308,14 @@ class IPort(object):
         return _iport
 
 class OPort(object):
-    def __init__(self, name, operator, index, schema, width=None, partitioned=None):
+    def __init__(self, name, operator, index, schema, width=None, partitioned_keys=None):
         self.name = name
         self.operator = operator
         self.schema = _stream_schema(schema)
         self.index = index
         self.width = width
-        self.partitioned =  partitioned
+        self.partitioned = partitioned_keys is not None
+        self.partitioned_keys = partitioned_keys
 
         self.inputPorts = []
 
@@ -334,6 +335,8 @@ class OPort(object):
             _oport["width"] = int(self.width)
         if not self.partitioned is None:
             _oport["partitioned"] = self.partitioned
+        if self.partitioned_keys is not None:
+            _oport["partitionedKeys"] = self.partitioned_keys
         return _oport
 
 class Marker(_SPLInvocation):

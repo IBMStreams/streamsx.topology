@@ -167,7 +167,6 @@ class TestUDP(unittest.TestCase):
 
               tester = Tester(topo)
               tester.contents(s, expected, ordered=width==1)
-              self.test_config['topology.keepArtifacts'] = True
               tester.test(self.test_ctxtype, self.test_config)
               print(tester.result)
 
