@@ -20,7 +20,6 @@ including the processing being distributed across multiple computing resources (
 import logging
 
 
-
 class _NullHandler(logging.Handler):
     def emit(self, record):
         pass

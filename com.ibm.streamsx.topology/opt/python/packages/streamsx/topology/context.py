@@ -14,7 +14,6 @@ except (ImportError, NameError):
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015
 
-from streamsx.topology import logging_utils
 from streamsx.rest import VcapUtils
 import logging
 import tempfile
@@ -28,8 +27,7 @@ import enum
 import codecs
 import tempfile
 
-logging_utils.initialize_logging()
-logger = logging.getLogger('streamsx.topology.py_submit')
+logger = logging.getLogger('streamsx.topology.context')
 
 #
 # Submission of a python graph using the Java Application API
@@ -37,7 +35,7 @@ logger = logging.getLogger('streamsx.topology.py_submit')
 # SPL, the toolkit, the bundle and submits it to the relevant
 # environment
 #
-def submit(ctxtype, graph, config=None, username=None, password=None, log_level=logging.INFO):
+def submit(ctxtype, graph, config=None, username=None, password=None):
     """
     Submits a topology with the specified context type.
     
@@ -79,7 +77,6 @@ def submit(ctxtype, graph, config=None, username=None, password=None, log_level=
     if not graph.graph.operators:
         raise ValueError("Topology {0} does not contain any streams.".format(graph.graph.topology.name))
 
-    logger.setLevel(log_level)
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
     try:
         return context_submitter.submit()

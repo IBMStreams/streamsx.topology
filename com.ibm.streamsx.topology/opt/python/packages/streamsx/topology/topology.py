@@ -737,7 +737,6 @@ class View(object):
         try:
             self.view_object = self.streams_context.get_view(self.name)
         except:
-            logger.exception("Could not view: " + self.name)
             raise
         return self.view_object.start_data_fetch()
 
