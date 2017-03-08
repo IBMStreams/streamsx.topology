@@ -206,6 +206,7 @@ class Tester(object):
             _logger.info("Test topology %s passed for context:%s", self.topology.name, ctxtype)
         else:
             _logger.error("Test topology %s failed for context:%s", self.topology.name, ctxtype)
+        return passed
 
     def _standalone_test(self, config):
         """ Test using STANDALONE.
