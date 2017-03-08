@@ -89,6 +89,9 @@ class Tester(object):
         if not 'STREAMS_DOMAIN_ID' in os.environ:
             raise unittest.SkipTest("Skipped due to STREAMS_DOMAIN_ID environment variable not set")
 
+        test.username = os.getenv("STREAMS_USERNAME", "streamsadmin")
+        test.password = os.getenv("STREAMS_PASSWORD", "passw0rd")
+
         test.test_ctxtype = "DISTRIBUTED"
         test.test_config = {}
 
@@ -162,7 +165,7 @@ class Tester(object):
             cond = _UnorderedStreamContents(expected, name)
         return self.add_condition(stream, cond)
 
-    def test(self, ctxtype, config=None, assert_on_fail=True):
+    def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None):
         """Test the topology.
 
         Submits the topology for testing and verifies the test conditions are met.
@@ -171,6 +174,8 @@ class Tester(object):
             ctxtype(str): Context type for submission.
             config: Configuration for submission.
             assert_on_fail(bool): True to raise an assertion if the test fails, False to return the passed status.
+            username(str): username for distributed tests
+            password(str): password for distributed tests
 
         Returns:
             bool: True if test passed, False if test failed.
@@ -192,7 +197,7 @@ class Tester(object):
         if "STANDALONE" == ctxtype:
             passed = self._standalone_test(config)
         elif "DISTRIBUTED" == ctxtype:
-            passed = self._distributed_test(config)
+            passed = self._distributed_test(config, username, password)
         elif "ANALYTICS_SERVICE" == ctxtype:
             passed = self._streaming_analytics_test(config)
         else:
@@ -214,9 +219,9 @@ class Tester(object):
         self.result = {'passed': sr['return_code'], 'submission_result': sr}
         return sr['return_code'] == 0
 
-    def _distributed_test(self, config):
+    def _distributed_test(self, config, username, password):
 
-        sjr = streamsx.topology.context.submit("DISTRIBUTED", self.topology, config)
+        sjr = streamsx.topology.context.submit("DISTRIBUTED", self.topology, config, username=username, password=password)
         if sjr['return_code'] != 0:
             print("DO AS LOGGER", "Failed to submit job to distributed instance.")
             return False

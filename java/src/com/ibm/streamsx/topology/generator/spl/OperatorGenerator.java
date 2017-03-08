@@ -127,7 +127,7 @@ class OperatorGenerator {
             Double bufferTime = viewConfig.get("bufferTime").getAsDouble();
             Long sampleSize = viewConfig.get("sampleSize").getAsLong();
             sb.append("@view(name = \"");
-            sb.append(splBasename(name));
+            sb.append(name);
             sb.append("\", port = " + port);
             sb.append(", bufferTime = " + bufferTime + ", ");
             sb.append("sampleSize = " + sampleSize + ", ");
