@@ -709,25 +709,25 @@ class View(object):
     def __init__(self, name):
         self.name = name
 
-        self.streams_context = None
+        self.streams_connection = None
         self.view_object = None
-        self.streams_context_config = {'username': '', 'password': '', 'rest_api_url': ''}
+        self.streams_connection_config = {'username': '', 'password': '', 'rest_api_url': ''}
 
         self.is_rest_initialized = False
 
     def initialize_rest(self):
         if not self.is_rest_initialized:
-            if self.streams_context_config['username'] is None or \
-               self.streams_context_config['password'] is None or \
-               self.streams_context_config['rest_api_url'] is None:
+            if self.streams_connection_config['username'] is None or \
+               self.streams_connection_config['password'] is None or \
+               self.streams_connection_config['rest_api_url'] is None:
                 raise ValueError(
                     "WARNING: A username, a password, and a rest url must be present in order to access view data")
             from streamsx import rest
-            rc = rest.StreamsConnection(self.streams_context_config['username'],
-                                     self.streams_context_config['password'],
-                                     self.streams_context_config['rest_api_url'])
+            rc = rest.StreamsConnection(self.streams_connection_config['username'],
+                                        self.streams_connection_config['password'],
+                                        self.streams_connection_config['rest_api_url'])
             self.is_rest_initialized = True
-            self.set_streams_context(rc)
+            self.set_streams_connection(rc)
 
     def stop_data_fetch(self):
         self.view_object.stop_data_fetch()
@@ -735,13 +735,13 @@ class View(object):
     def start_data_fetch(self):
         self.initialize_rest()
         try:
-            self.view_object = self.streams_context.get_view(self.name)
+            self.view_object = self.streams_connection.get_view(self.name)
         except:
             raise
         return self.view_object.start_data_fetch()
 
-    def set_streams_context_config(self, conf):
-        self.streams_context_config = conf
+    def set_streams_connection_config(self, conf):
+        self.streams_connection_config = conf
 
-    def set_streams_context(self, sc):
-        self.streams_context = sc
+    def set_streams_connection(self, sc):
+        self.streams_connection = sc
