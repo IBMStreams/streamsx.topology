@@ -43,7 +43,7 @@ public class DistributedStreamsContext extends
 
             BigInteger jobId = submitjob.invoke(deploy(entity.submission));
             
-            final JsonObject submissionResult = GsonUtilities.getProperty(entity.submission, RemoteContext.SUBMISSION_RESULTS);
+            final JsonObject submissionResult = GsonUtilities.objectCreate(entity.submission, RemoteContext.SUBMISSION_RESULTS);
             submissionResult.addProperty(SubmissionResultsKeys.JOB_ID, jobId.toString());
             
             return new CompletedFuture<BigInteger>(jobId);

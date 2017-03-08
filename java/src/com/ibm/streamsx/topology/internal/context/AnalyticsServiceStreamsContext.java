@@ -12,13 +12,11 @@ import static com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Map.Entry;
 import java.util.concurrent.Future;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
@@ -104,10 +102,8 @@ public class AnalyticsServiceStreamsContext extends
 
             JsonObject response = RestUtils.postJob(httpClient, service, bundle, jcojson);
             
-            final JsonObject submissionResult = GsonUtilities.getProperty(submission, RemoteContext.SUBMISSION_RESULTS);
-            for (Entry<String, JsonElement> entry : response.entrySet()) {
-            	submissionResult.add(entry.getKey(), entry.getValue());
-            }
+            final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
+            GsonUtilities.addAll(submissionResult, response);
             
             String jobId = jstring(response, "jobId");
             
