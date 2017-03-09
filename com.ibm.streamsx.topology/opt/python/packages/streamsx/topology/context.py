@@ -14,7 +14,7 @@ except (ImportError, NameError):
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015
 
-from streamsx import rest
+from streamsx.rest import VcapUtils
 import logging
 import tempfile
 import os
@@ -38,7 +38,7 @@ logger = logging.getLogger('streamsx.topology.context')
 def submit(ctxtype, graph, config=None, username=None, password=None):
     """
     Submits a topology with the specified context type.
-
+    
     Args:
         ctxtype (string): context type.  Values include:
         * DISTRIBUTED - the topology is submitted to a Streams instance.
@@ -49,16 +49,16 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
           The standalone execution is spawned as a separate process
         * BUNDLE - execution of the topology produces an SPL application bundle
           (.sab file) that can be submitted to an IBM Streams instance as a distributed application.
-        * JUPYTER - the topology is run in standalone mode, and context.submit returns a stdout streams of bytes which
+        * JUPYTER - the topology is run in standalone mode, and context.submit returns a stdout streams of bytes which 
           can be read from to visualize the output of the application.
         * BUILD_ARCHIVE - Creates a Bluemix-compatible build archive.
           execution of the topology produces a build archive, which can be submitted to a streaming
           analytics Bluemix remote build service.
         * ANALYTICS_SERVICE - If a local IBM Streams install is present, the application is built locally and then submitted
-          to an IBM Bluemix Streaming Analytics service. If a local IBM Streams install is not present, the application is
+          to an IBM Bluemix Streaming Analytics service. If a local IBM Streams install is not present, the application is 
           submitted to, built, and executed on an IBM Bluemix Streaming Analytics service. If the ConfigParams.FORCE_REMOTE_BUILD
           flag is set to True, the application will be built by the service even if a local Streams install is present.
-          The service is described by its VCAP services and a service name pointing to an instance within the VCAP services. The VCAP services is either set in the configuration object or as the environment variable VCAP_SERVICES.
+          The service is described by its VCAP services and a service name pointing to an instance within the VCAP services. The VCAP services is either set in the configuration object or as the environment variable VCAP_SERVICES. 
         graph: a Topology object.
         config (dict): a configuration object containing job configurations and/or submission information. Keys include:
         * ConfigParams.VCAP_SERVICES ('topology.service.vcap') - VCAP services information for the ANALYTICS_SERVICE context. Supported formats are a dict obtained from the JSON VCAP services, a string containing the serialized JSON form or a file name pointing to a file containing the JSON form.
@@ -68,7 +68,7 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         password (string): an optional SWS password. Used in conjunction with the username, and needed for retrieving
         remote view data.
         log_level: The maximum logging level for log output.
-
+        
     Returns:
         An output stream of bytes if submitting with JUPYTER, otherwise returns a dict containing information relevant
         to the submission.
@@ -185,7 +185,7 @@ class _BaseSubmitter(object):
             jco = self.config[ConfigParams.JOB_CONFIG]
             del self.config[ConfigParams.JOB_CONFIG]
             jco._add_overlays(self.config)
-
+ 
     def _create_full_json(self):
         fj = dict()
         fj["deploy"] = self.config
@@ -335,18 +335,18 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
 
     def _set_vcap(self):
         "Set self.vcap to the VCAP services, from env var or the config"
-        self._vcap = rest._get_vcap_services(self._config().get(ConfigParams.VCAP_SERVICES))
+        self._vcap = VcapUtils.get_vcap_services(self._config())
 
     def _set_credentials(self):
         "Set self.credentials for the selected service, from self.vcap"
-        self.credentials = rest._get_credentials(self._config().get(ConfigParams.SERVICE_NAME), self._vcap)
+        self.credentials = VcapUtils.get_credentials(self._config(), self._vcap)
 
     def _get_java_env(self):
         "Pass the VCAP through the environment to the java submission"
         env = super(_RemoteBuildSubmitter, self)._get_java_env()
         env['VCAP_SERVICES'] = json.dumps(self._vcap)
         return env
-
+           
 class _DistributedSubmitter(_BaseSubmitter):
     """
     A submitter which retrieves the SWS REST API URL and then submits the application to be built and submitted
@@ -497,7 +497,7 @@ class ContextTypes(object):
         analytics Bluemix remote build service.
         TOOLKIT - Execution of the topology produces a toolkit.
         ANALYTICS_SERVICE - If a local Streams install is present, the application is built locally and then submitted
-        to a Bluemix streaming analytics service. If a local Streams install is not present, the application is
+        to a Bluemix streaming analytics service. If a local Streams install is not present, the application is 
         submitted to, built, and executed on a Bluemix streaming analytics service. If the ConfigParams.REMOTE_BUILD
         flag is set to true, the application will be built on Bluemix even if a local Streams install is present.
     """
