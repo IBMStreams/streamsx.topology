@@ -72,7 +72,11 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
     	    createJobConfigOverlayFile(submission, deploy, bundle.get().getParentFile());
     	
     	JsonObject results = new JsonObject();
-        results.addProperty(SubmissionResultsKeys.BUNDLE_PATH, bundle.get().getAbsolutePath());
+    	
+    	// If user asked for the SAB or asked to keep the SAB explicitly
+    	if (!byBundleUser || keepArtifacts(submission))
+    		results.addProperty(SubmissionResultsKeys.BUNDLE_PATH, bundle.get().getAbsolutePath());
+    	
         submission.add(RemoteContext.SUBMISSION_RESULTS, results);
     	
     	return bundle;
