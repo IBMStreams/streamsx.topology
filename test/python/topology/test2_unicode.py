@@ -7,6 +7,7 @@ from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology import context
 from streamsx import rest
+import streamsx.ec as ec
 
 import test_vers
 
@@ -17,8 +18,10 @@ class view_name_source(object):
         self.sc = sc
 
     def __call__(self):
-        for view in self.sc.get_views():
-            yield view.name
+        for instance in self.sc.get_instances():
+            for job in instance.get_jobs(id=ec.job_id()):
+                for view in job.get_views():
+                    yield view.name
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestUnicode(unittest.TestCase):
@@ -87,3 +90,4 @@ class TestBluemixUnicode(TestUnicode):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
         self.sc = rest.StreamsConnection(config = self.test_config)
+
