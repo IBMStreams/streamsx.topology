@@ -9,9 +9,6 @@ import streamsx.st as st
 from .rest_primitives import Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService,  _exact_resource
 from .rest_errors import ViewNotFoundError
 from pprint import pformat
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -31,8 +28,10 @@ class StreamsConnection:
         resource_url: Root URL for IBM Streams REST API.
 
     Example:
+        >>> # If the resource url does not have a valid SSL certificate, you can disable the SSL verification
         >>> _resource_url = "https://streamsqse.localdomain:8443/streams/rest/resources"
         >>> sc = StreamsConnection(username="streamsadmin", password="passw0rd", resource_url=_resource_url)
+        >>> sc.session.verify=False
         >>> instances = sc.get_instances()
         >>> jobs_count = 0
         >>> for instance in instances:
@@ -61,6 +60,7 @@ class StreamsConnection:
         self.resource_url = resource_url
         self.rest_client = _StreamsRestClient(username, password, self.resource_url)
         self.rest_client._sc = self
+        self.session = self.rest_client.session
         self._analytics_service = False
 
     def _get_elements(self, resource_name, eclass, id=None):

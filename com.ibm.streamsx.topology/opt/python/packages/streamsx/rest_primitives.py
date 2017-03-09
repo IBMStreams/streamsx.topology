@@ -101,11 +101,8 @@ class _StreamsRestClient(object):
         self._username = username
         self._password = password
 
-        session = requests.Session()
-        session.auth = (username, password)
-        session.verify = False
-
-        self.session = session
+        self.session = requests.Session()
+        self.session.auth = (username, password)
 
     def make_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)

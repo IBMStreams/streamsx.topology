@@ -11,6 +11,7 @@ import collections
 import threading
 from streamsx.rest import StreamsConnection
 from streamsx.rest import StreamingAnalyticsConnection
+from streamsx.topology.context import ConfigParams
 import time
 
 _logger = logging.getLogger('streamsx.topology.test')
@@ -79,7 +80,7 @@ class Tester(object):
 
         Two attributes are set in the test case:
          * test_ctxtype - Context type the test will be run in.
-         * test_config- Test configuration.
+         * test_config - Test configuration.
 
         Args:
             test(unittest.TestCase): Test case to be set up to run tests using Tester
@@ -100,6 +101,7 @@ class Tester(object):
         test.test_ctxtype = stc.ContextTypes.DISTRIBUTED
         test.test_config = {}
 
+    @staticmethod
     def setup_streaming_analytics(test, service_name=None, force_remote_build=False):
         """
         Setup a unittest.TestCase to run tests using Streaming Analytics service on IBM Bluemix cloud platform.
@@ -112,7 +114,7 @@ class Tester(object):
 
         Two attributes are set in the test case:
          * test_ctxtype - Context type the test will be run in.
-         * test_config- Test configuration.
+         * test_config - Test configuration.
 
         Args:
             test(unittest.TestCase): Test case to be set up to run tests using Tester
@@ -267,19 +269,24 @@ class Tester(object):
         return sr['return_code'] == 0
 
     def _distributed_test(self, config, username, password):
-
         sjr = stc.submit(stc.ContextTypes.DISTRIBUTED, self.topology, config, username=username, password=password)
         self.submission_result = sjr
         if sjr['return_code'] != 0:
             print("DO AS LOGGER", "Failed to submit job to distributed instance.")
             return False
-        self.sc = StreamsConnection()
+        self.sc = config.get(ConfigParams.STREAMS_CONNECTION)
+        if self.sc is None:
+            # Disable SSL verification
+            self.sc = StreamsConnection(username, password)
+            self.sc.session.verify = False
         return self._distributed_wait_for_result()
 
     def _streaming_analytics_test(self, ctxtype, config):
         sjr = stc.submit(ctxtype, self.topology, config)
         self.submission_result = sjr
-        self.sc = StreamingAnalyticsConnection(service_name = config['topology.service.name'])
+        self.sc = config.get(ConfigParams.STREAMS_CONNECTION)
+        if self.sc is None:
+            self.sc = StreamingAnalyticsConnection(service_name=config[ConfigParams.SERVICE_NAME])
         return self._distributed_wait_for_result()
 
     def _distributed_wait_for_result(self):
@@ -289,14 +296,15 @@ class Tester(object):
         self.result['submission_result'] = self.submission_result
         if self.local_check is not None:
             self._local_thread.join()
-            if self.local_check_exception is not None:
-                raise self.local_check_exception
+        cc._canceljob(self.result)
+        if self.local_check_exception is not None:
+            raise self.local_check_exception
         return self.result['passed']
 
     def _start_local_check(self):
+        self.local_check_exception = None
         if self.local_check is None:
             return
-        self.local_check_exception = None
         self._local_thread = threading.Thread(target=self._call_local_check)
         self._local_thread.start()
 
@@ -457,7 +465,6 @@ class _TupleCheck(Condition):
 # Internal functions
 #######################################
 
-
 def _result_to_dict(passed, t):
     result = {}
     result['passed'] = passed
@@ -503,9 +510,11 @@ class _ConditionChecker(object):
 
     def _end(self, passed, check):
         result = _result_to_dict(passed, check)
-        if self.job is not None:
-            self.job.cancel(force= not passed)
         return result
+
+    def _canceljob(self, result):
+        if self.job is not None:
+            self.job.cancel(force=not result['passed'])
 
     def __check_once(self):
         cms = self._get_job_metrics()
