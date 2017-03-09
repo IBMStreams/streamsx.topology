@@ -18,6 +18,7 @@ Submodules
    streamsx.rest
    streamsx.rest_errors
    streamsx.rest_primitives
+   streamsx.st
 
 Module contents
 ---------------

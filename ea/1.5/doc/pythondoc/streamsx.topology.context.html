@@ -141,7 +141,8 @@ SERVICE_NAME - the name of the streaming analytics service to use from VCAP_SERV
 <dl class="attribute">
 <dt id="streamsx.topology.context.ConfigParams.JOB_CONFIG">
 <code class="descname">JOB_CONFIG</code><em class="property"> = 'topology.jobConfigOverlays'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.JOB_CONFIG" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Key for a <a class="reference internal" href="#streamsx.topology.context.JobConfig" title="streamsx.topology.context.JobConfig"><code class="xref py py-class docutils literal"><span class="pre">JobConfig</span></code></a> object representing a job configuration for a submission.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="streamsx.topology.context.ConfigParams.SERVICE_NAME">
@@ -224,9 +225,58 @@ flag is set to true, the application will be built on Bluemix even if a local St
 
 <dl class="class">
 <dt id="streamsx.topology.context.JobConfig">
-<em class="property">class </em><code class="descclassname">streamsx.topology.context.</code><code class="descname">JobConfig</code><span class="sig-paren">(</span><em>job_name=None</em>, <em>job_group=None</em>, <em>data_directory=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.JobConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">streamsx.topology.context.</code><code class="descname">JobConfig</code><span class="sig-paren">(</span><em>job_name=None</em>, <em>job_group=None</em>, <em>preload=False</em>, <em>data_directory=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.JobConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>Job configuration</p>
+<p>Job configuration.</p>
+<p><cite>JobConfig</cite> allows configuration of job that will result from
+submission of a py:class:<cite>Topology</cite> (application).</p>
+<p>A <cite>JobConfig</cite> is set in the <cite>config</cite> dictionary passed to <a class="reference internal" href="#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal"><span class="pre">submit()</span></code></a>
+using the key <a class="reference internal" href="#streamsx.topology.context.ConfigParams.JOB_CONFIG" title="streamsx.topology.context.ConfigParams.JOB_CONFIG"><code class="xref py py-const docutils literal"><span class="pre">JOB_CONFIG</span></code></a>. <a class="reference internal" href="#streamsx.topology.context.JobConfig.add" title="streamsx.topology.context.JobConfig.add"><code class="xref py py-meth docutils literal"><span class="pre">add()</span></code></a> exists as a convenience
+method to add it to a submission configuration.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>job_name</strong> (<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema.str" title="streamsx.topology.schema.StreamSchema.str"><em>str</em></a>) &#8211; The name that is assigned to the job. A job name must be unique within a Streasm instance
+When set to <cite>None</cite> a system generated name is used.</li>
+<li><strong>job_group</strong> (<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema.str" title="streamsx.topology.schema.StreamSchema.str"><em>str</em></a>) &#8211; The job group to use to control permissions for the submitted job.</li>
+<li><strong>preload</strong> (<em>bool</em>) &#8211; Specifies whether to preload the job onto all resources in the instance, even if the job is
+not currently needed on each. Preloading the job can improve PE restart performance if the PEs are
+relocated to a new resource.</li>
+<li><strong>data_directory</strong> (<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema.str" title="streamsx.topology.schema.StreamSchema.str"><em>str</em></a>) &#8211; Specifies the location of the optional data directory. The data directory is a path
+within the cluster that is running the Streams instance.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Submit a job with the name NewsIngester</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">job_config</span> <span class="o">=</span> <span class="n">JobConfig</span><span class="p">(</span><span class="n">job_name</span><span class="o">=</span><span class="s1">&#39;NewsIngester&#39;</span><span class="p">)</span>
+<span class="n">job_config</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<span class="n">context</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="s1">&#39;ANALYTICS_SERVICE&#39;</span><span class="p">,</span> <span class="n">topo</span><span class="p">,</span> <span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.topology.context.JobConfig.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.JobConfig.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add this <cite>JobConfig</cite> into a submission configuration object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>config</strong> (<em>dict</em>) &#8211; Submission configuration.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">config.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="exception">
@@ -238,7 +288,7 @@ flag is set to true, the application will be built on Bluemix even if a local St
 
 <dl class="function">
 <dt id="streamsx.topology.context.submit">
-<code class="descclassname">streamsx.topology.context.</code><code class="descname">submit</code><span class="sig-paren">(</span><em>ctxtype</em>, <em>graph</em>, <em>config=None</em>, <em>username=None</em>, <em>password=None</em>, <em>log_level=20</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.submit" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">streamsx.topology.context.</code><code class="descname">submit</code><span class="sig-paren">(</span><em>ctxtype</em>, <em>graph</em>, <em>config=None</em>, <em>username=None</em>, <em>password=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.submit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submits a topology with the specified context type.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -270,7 +320,8 @@ The service is described by its VCAP services and a service name pointing to an 
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">An output stream of bytes if submitting with JUPYTER, otherwise returns None.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">An output stream of bytes if submitting with JUPYTER, otherwise returns a dict containing information relevant
+to the submission.</p>
 </td>
 </tr>
 </tbody>

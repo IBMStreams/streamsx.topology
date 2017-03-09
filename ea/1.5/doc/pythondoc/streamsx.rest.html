@@ -147,9 +147,9 @@ SERVICE_NAME - the name of the streaming analytics service to use from VCAP_SERV
 
 <dl class="class">
 <dt id="streamsx.rest.StreamsConnection">
-<em class="property">class </em><code class="descclassname">streamsx.rest.</code><code class="descname">StreamsConnection</code><span class="sig-paren">(</span><em>username=None</em>, <em>password=None</em>, <em>resource_url=None</em>, <em>config=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">streamsx.rest.</code><code class="descname">StreamsConnection</code><span class="sig-paren">(</span><em>username=None</em>, <em>password=None</em>, <em>resource_url=None</em>, <em>config=None</em>, <em>instance_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>Creates a connection to a  running Streams installation and exposes methods to retrieve the state of that instance.</p>
+<p>Creates a connection to a running Streams instance and exposes methods to retrieve the state of that instance.</p>
 <p>Streams maintains information regarding the state of its resources. For example, these resources could include the
 currently running Jobs, Views, PEs, Operators, and Domains. The StreamsConnection provides methods to retrieve that
 information.</p>
@@ -165,7 +165,7 @@ information.</p>
 </div>
 <dl class="method">
 <dt id="streamsx.rest.StreamsConnection.get_domains">
-<code class="descname">get_domains</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_domains" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_domains</code><span class="sig-paren">(</span><em>id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_domains" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieves a list of all Domain resources across all known streams installations.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -193,7 +193,7 @@ information.</p>
 
 <dl class="method">
 <dt id="streamsx.rest.StreamsConnection.get_instances">
-<code class="descname">get_instances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_instances" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_instances</code><span class="sig-paren">(</span><em>id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_instances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieves a list of all Instance resources across all known streams installations.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -209,6 +209,23 @@ information.</p>
 <dt id="streamsx.rest.StreamsConnection.get_resources">
 <code class="descname">get_resources</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_resources" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_streaming_analytics">
+<code class="descname">get_streaming_analytics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_streaming_analytics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a ref:StreamingAnalyticsService to allow interaction with
+the Streaming Analytics service this object is connected to.</p>
+<p>This connection must be configured for a Streaming Analytics service.
+:returns: Object to interact with service.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.StreamingAnalyticsService" title="streamsx.rest_primitives.StreamingAnalyticsService">StreamingAnalyticsService</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="streamsx.rest.StreamsConnection.get_view">

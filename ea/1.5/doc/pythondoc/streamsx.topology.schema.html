@@ -131,29 +131,54 @@
 <em class="property">class </em><code class="descclassname">streamsx.topology.schema.</code><code class="descname">CommonSchema</code><a class="headerlink" href="#streamsx.topology.schema.CommonSchema" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">enum.Enum</span></code></p>
 <p>Common stream schemas for interoperability within Streams applications.</p>
-<p>Python - Stream constains Python objects
-Json - Stream contains JSON objects. Streams with schema Json can be published and subscribed between Streams applications implemented in different languages.
-String - Stream contains strings. Streams with schema String can be published and subscribed between Streams applications implemented in different languages.
-Binary - Stream contains binary tuples. NOT YET SUPPORTED IN Python.</p>
+<p>Streams application can publish streams that are subscribed to by other applications.
+Use of common schemas allow streams connections regardless of the implementation</p>
+<p>Python applications publish streams using <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.publish" title="streamsx.topology.topology.Stream.publish"><code class="xref py py-meth docutils literal"><span class="pre">publish()</span></code></a>
+and subscribe using <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology.subscribe" title="streamsx.topology.topology.Topology.subscribe"><code class="xref py py-meth docutils literal"><span class="pre">subscribe()</span></code></a>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.Python" title="streamsx.topology.schema.CommonSchema.Python"><code class="xref py py-const docutils literal"><span class="pre">Python</span></code></a> - Stream constains Python objects</li>
+<li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.Json" title="streamsx.topology.schema.CommonSchema.Json"><code class="xref py py-const docutils literal"><span class="pre">Json</span></code></a> - Stream contains JSON objects.</li>
+<li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.String" title="streamsx.topology.schema.CommonSchema.String"><code class="xref py py-const docutils literal"><span class="pre">String</span></code></a> - Stream contains strings.</li>
+<li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.Binary" title="streamsx.topology.schema.CommonSchema.Binary"><code class="xref py py-const docutils literal"><span class="pre">Binary</span></code></a> - Stream contains binary tuples.</li>
+</ul>
+</div></blockquote>
 <dl class="attribute">
 <dt id="streamsx.topology.schema.CommonSchema.Binary">
-<code class="descname">Binary</code><em class="property"> = &lt;CommonSchema.Binary: &lt;streamsx.topology.schema.StreamSchema object at 0x7f51a0ad3b70&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.Binary" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">Binary</code><em class="property"> = &lt;CommonSchema.Binary: &lt;streamsx.topology.schema.StreamSchema object at 0x7f5bc3b13898&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.Binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stream where each tuple is a binary object (sequence of bytes).</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last"><cite>Binary</cite> is not yet supported for Python applications.</p>
+</div>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="streamsx.topology.schema.CommonSchema.Json">
-<code class="descname">Json</code><em class="property"> = &lt;CommonSchema.Json: &lt;streamsx.topology.schema.StreamSchema object at 0x7f51a0ad3b00&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.Json" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">Json</code><em class="property"> = &lt;CommonSchema.Json: &lt;streamsx.topology.schema.StreamSchema object at 0x7f5bc3b13828&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.Json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stream where each tuple is a JSON object.</p>
+<p><cite>Json</cite> can be used as a natural interchange format between Streams applications
+implemented in different programming languages. All languages supported by
+Streams support publishing and subscribing to JSON streams.</p>
+<p>Python objects are converted to JSON objects using <cite>json.dumps(obj)</cite>.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="streamsx.topology.schema.CommonSchema.Python">
-<code class="descname">Python</code><em class="property"> = &lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object at 0x7f51a0ad3ac8&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.Python" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">Python</code><em class="property"> = &lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object at 0x7f5bc3b137f0&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.Python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stream where each tuple is a Python object.</p>
+<p>Python streams can only be used by Python applications.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="streamsx.topology.schema.CommonSchema.String">
-<code class="descname">String</code><em class="property"> = &lt;CommonSchema.String: &lt;streamsx.topology.schema.StreamSchema object at 0x7f51a0ad3b38&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.String" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">String</code><em class="property"> = &lt;CommonSchema.String: &lt;streamsx.topology.schema.StreamSchema object at 0x7f5bc3b13860&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.String" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stream where each tuple is a string.</p>
+<p><cite>String</cite> can be used as a natural interchange format between Streams applications
+implemented in different programming languages. All languages supported by
+Streams support publishing and subscribing to string streams.</p>
+<p>Python objects are converted to strings using <cite>str(obj)</cite>.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="streamsx.topology.schema.CommonSchema.extend">
@@ -168,6 +193,11 @@ Binary - Stream contains binary tuples. NOT YET SUPPORTED IN Python.</p>
 <dl class="method">
 <dt id="streamsx.topology.schema.CommonSchema.spl_json">
 <code class="descname">spl_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.spl_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.schema.CommonSchema.str">
+<code class="descname">str</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.str" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -191,6 +221,11 @@ Binary - Stream contains binary tuples. NOT YET SUPPORTED IN Python.</p>
 <dl class="method">
 <dt id="streamsx.topology.schema.StreamSchema.spl_json">
 <code class="descname">spl_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.StreamSchema.spl_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.schema.StreamSchema.str">
+<code class="descname">str</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.StreamSchema.str" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

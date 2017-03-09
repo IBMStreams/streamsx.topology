@@ -252,7 +252,7 @@ resource for running Streams services and applications.</p>
 
 <dl class="method">
 <dt id="streamsx.rest_primitives.Instance.get_jobs">
-<code class="descname">get_jobs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_jobs" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_jobs</code><span class="sig-paren">(</span><em>id=None</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_jobs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -292,6 +292,22 @@ resource for running Streams services and applications.</p>
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Job</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
 <p>The job element resource provides access to information about a submitted job within a specified instance.</p>
+<dl class="method">
+<dt id="streamsx.rest_primitives.Job.cancel">
+<code class="descname">cancel</code><span class="sig-paren">(</span><em>force=False</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.cancel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cancel this job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>force</strong> (<em>bool</em>) &#8211; Forcefully cancel this job.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if the job was cancelled, otherwise False if an error occurred.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="streamsx.rest_primitives.Job.get_active_views">
 <code class="descname">get_active_views</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.get_active_views" title="Permalink to this definition">¶</a></dt>
@@ -364,7 +380,7 @@ resource for running Streams services and applications.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) &#8211; Only return metrics matching <code class="docutils literal"><span class="pre">name</span></code> as a regular
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema.str" title="streamsx.topology.schema.StreamSchema.str"><em>str</em></a>) &#8211; Only return metrics matching <code class="docutils literal"><span class="pre">name</span></code> as a regular
 expression using <code class="docutils literal"><span class="pre">re.match(name,</span> <span class="pre">metric_name</span></code>.
 If name is not supplied then all metrics for this operator are returned.</td>
 </tr>
@@ -423,6 +439,32 @@ processing element (PE) ports.</p>
 <dt id="streamsx.rest_primitives.ResourceTag">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ResourceTag</code><span class="sig-paren">(</span><em>json_resource_tag</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ResourceTag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.StreamingAnalyticsService">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">StreamingAnalyticsService</code><span class="sig-paren">(</span><em>rest_client</em>, <em>credentials</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.StreamingAnalyticsService" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Streaming Analytics service running on IBM Bluemix cloud platform.</p>
+<dl class="method">
+<dt id="streamsx.rest_primitives.StreamingAnalyticsService.cancel_job">
+<code class="descname">cancel_job</code><span class="sig-paren">(</span><em>job_id=None</em>, <em>job_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.StreamingAnalyticsService.cancel_job" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cancel a running job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>job_id</strong> (<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema.str" title="streamsx.topology.schema.StreamSchema.str"><em>str</em></a>) &#8211; Identifier of job to be canceled.</li>
+<li><strong>job_name</strong> (<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema.str" title="streamsx.topology.schema.StreamSchema.str"><em>str</em></a>) &#8211; Name of job to be canceled.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">

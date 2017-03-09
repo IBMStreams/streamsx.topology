@@ -130,6 +130,15 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>SPL primitive operators that call a Python function or
 callable class are created by decorators provided by this module.</p>
+<p>The name of the function or callable class becomes the name of the
+operator.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Operator names must be valid SPL identifers,
+SPL identifiers start with an ASCII letter or underscore,
+followed by ASCII letters, digits, or underscores.
+The name also must not be a SPL keyword.</p>
+</div>
 <p>Once created the operators become part of a toolkit and may be used
 like any other SPL operator.</p>
 <p>Decorating a Python class creates a stateful SPL operator. The instance fields of the class are the state for the operator. Any parameters to the
@@ -138,6 +147,8 @@ operator parameters.</p>
 </div>
 <div class="section" id="python-classes-as-spl-operators">
 <h2>Python classes as SPL operators<a class="headerlink" href="#python-classes-as-spl-operators" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Overview<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>Decorating a Python class creates a stateful SPL operator
 where the instance fields of the class are the operator&#8217;s state. An instance
 of the class is created when the SPL operator invocation is initialized
@@ -150,6 +161,14 @@ operator and are private to each invocation of the operator.</p>
 Any parameter that has a default value becomes an optional parameter
 to the SPL operator. Parameters of the form <cite>*args</cite> and <cite>**kwargs</cite>
 are not supported.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>Parameter names must be valid SPL identifers,
+SPL identifiers start with an ASCII letter or underscore,
+followed by ASCII letters, digits, or underscores.
+The name also must not be a SPL keyword.</p>
+<p class="last">Parameter names <code class="docutils literal"><span class="pre">suppress</span></code> and <code class="docutils literal"><span class="pre">include</span></code> are reserved.</p>
+</div>
 <p>The value of the operator parameters at SPL operator invocation are passed
 to the <cite>__init__</cite> method. This is equivalent to creating an instance
 of the class passing the operator parameters into the constructor.</p>
@@ -191,6 +210,46 @@ stream&lt;int32 seq&gt; R = Range() {
 </pre></div>
 </div>
 </div>
+<div class="section" id="operator-state">
+<h3>Operator state<a class="headerlink" href="#operator-state" title="Permalink to this headline">¶</a></h3>
+<p>Use of a class allows the operator to be stateful by maintaining state in instance
+attributes across invocations (tuple processing).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For future compatibility instances of a class should ensure that the object&#8217;s
+state can be pickled. See <a class="reference external" href="https://docs.python.org/3.5/library/pickle.html#handling-stateful-objects">https://docs.python.org/3.5/library/pickle.html#handling-stateful-objects</a></p>
+</div>
+</div>
+<div class="section" id="operator-initialization-shutdown">
+<h3>Operator initialization &amp; shutdown<a class="headerlink" href="#operator-initialization-shutdown" title="Permalink to this headline">¶</a></h3>
+<p>Execution of an instance for an operator effectively run in a context manager so that an instance&#8217;s <code class="docutils literal"><span class="pre">__enter__</span></code>
+method is called when the processing element containing the operator is initialized
+and its <code class="docutils literal"><span class="pre">__exit__</span></code> method called when the processing element is stopped. To take advantage of this
+the class must define both <code class="docutils literal"><span class="pre">__enter__</span></code> and <code class="docutils literal"><span class="pre">__exit__</span></code> methods.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For future compatibility operator initialization such as opening files should be in <code class="docutils literal"><span class="pre">__enter__</span></code>
+in order to support stateful operator restart &amp; checkpointing in the future.</p>
+</div>
+<p>Example of using <code class="docutils literal"><span class="pre">__enter__</span></code> and <code class="docutils literal"><span class="pre">__exit__</span></code> to open and close a file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">streamsx.ec</span> <span class="kn">as</span> <span class="nn">ec</span>
+
+<span class="nd">@spp.map</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Sentiment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="python-functions-as-spl-operators">
 <h2>Python functions as SPL operators<a class="headerlink" href="#python-functions-as-spl-operators" title="Permalink to this headline">¶</a></h2>
 <p>Decorating a Python function creates a stateless SPL operator.
@@ -213,8 +272,8 @@ def PrintTuple(*tuple):
 <div class="section" id="processing-spl-tuples-in-python">
 <span id="spl-tuple-to-python"></span><h2>Processing SPL tuples in Python<a class="headerlink" href="#processing-spl-tuples-in-python" title="Permalink to this headline">¶</a></h2>
 <p>SPL tuples are converted to Python objects and passed to a decorated callable.</p>
-<div class="section" id="id1">
-<h3>Overview<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id2">
+<h3>Overview<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <p>For each SPL tuple arriving at an input port a Python function is called with
 the SPL tuple converted to Python values suitable for the function call.
 How the tuple is passed is defined by the tuple passing style.</p>

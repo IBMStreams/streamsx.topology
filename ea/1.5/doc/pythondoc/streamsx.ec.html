@@ -178,9 +178,9 @@ a <cite>Counter</cite>, <cite>Gauge</cite> or <cite>Time</cite> metric.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>obj</strong> &#8211; Instance of a class executing within Streams.</li>
-<li><strong>name</strong> (<em>str</em>) &#8211; Name of the custom metric.</li>
+<li><strong>name</strong> (<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema.str" title="streamsx.topology.schema.StreamSchema.str"><em>str</em></a>) &#8211; Name of the custom metric.</li>
 <li><strong>kind</strong> (<a class="reference internal" href="#streamsx.ec.MetricKind" title="streamsx.ec.MetricKind"><em>MetricKind</em></a>) &#8211; Kind of the metric.</li>
-<li><strong>description</strong> (<em>str</em>) &#8211; Description of the metric.</li>
+<li><strong>description</strong> (<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema.str" title="streamsx.topology.schema.StreamSchema.str"><em>str</em></a>) &#8211; Description of the metric.</li>
 <li><strong>initialValue</strong> &#8211; Initial value of the metric.</li>
 </ul>
 </td>
@@ -283,6 +283,36 @@ parallel region has been replicated due to nesting.</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Parallel region global channel number or -1 if not located in a parallel region.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.get_application_configuration">
+<code class="descclassname">streamsx.ec.</code><code class="descname">get_application_configuration</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.get_application_configuration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a named application configuration.</p>
+<p>An application configuration is a named set of securely stored properties
+where each key and its value in the property set is a string.</p>
+<p>An application configuration object is used to store information that
+IBM Streams applications require, such as:</p>
+<ul class="simple">
+<li>Database connection data</li>
+<li>Credentials that your applications need to use to access external systems</li>
+<li>Other data, such as the port numbers or URLs of external systems</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema.str" title="streamsx.topology.schema.StreamSchema.str"><em>str</em></a>) &#8211; Name of the application configuration.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dictionary containing the property names and values for the application configuration.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> &#8211;
+Application configuration does not exist.</td>
 </tr>
 </tbody>
 </table>

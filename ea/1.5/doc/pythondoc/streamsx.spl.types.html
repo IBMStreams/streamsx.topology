@@ -130,6 +130,141 @@
 <p>SPL is strictly typed, thus when invoking SPL operators
 using classes from <code class="docutils literal"><span class="pre">streamsx.spl.op</span></code> then any parameters
 must use the SPL type required by the operator.</p>
+<dl class="class">
+<dt id="streamsx.spl.types.Timestamp">
+<em class="property">class </em><code class="descclassname">streamsx.spl.types.</code><code class="descname">Timestamp</code><span class="sig-paren">(</span><em>seconds</em>, <em>nanoseconds</em>, <em>machine_id=0</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.Timestamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>SPL naive timestamp type with nanosecond resolution.</p>
+<p>Common usage is to store the seconds and nanoseconds since the Unix Epoch (Jan 1, 1970),
+but this is not enforced by the <cite>Timestamp</cite> class.</p>
+<p>Machine identifier is an application defined identifier for the machine the timestamp
+was created on. It is the responsibility of the application to set the machine identifier
+if required. The machine identifier may be used to detect if two timestamps were created on the same machine,
+as there may be variations in the clocks on different machines.</p>
+<dl class="attribute">
+<dt id="streamsx.spl.types.Timestamp.seconds">
+<code class="descname">seconds</code><a class="headerlink" href="#streamsx.spl.types.Timestamp.seconds" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em></p>
+<p>Seconds since epoch.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.spl.types.Timestamp.nanoseconds">
+<code class="descname">nanoseconds</code><a class="headerlink" href="#streamsx.spl.types.Timestamp.nanoseconds" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em></p>
+<p>Nanosecond component.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.spl.types.Timestamp.machine_id">
+<code class="descname">machine_id</code><a class="headerlink" href="#streamsx.spl.types.Timestamp.machine_id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em></p>
+<p>Machine identifier.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.types.Timestamp.__str__">
+<code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.Timestamp.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>String representation matching SPL&#8217;s representation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.types.Timestamp.datetime">
+<code class="descname">datetime</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.Timestamp.datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the UTC datetime corresponding to the POSIX timestamp.</p>
+<p>This is identical to <code class="docutils literal"><span class="pre">`datetime.datetime.utcfromtimestamp(self.time())`</span></code>.
+Nanosecond resolution may be lost.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(datetime.datetime)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="streamsx.spl.types.Timestamp.from_datetime">
+<em class="property">static </em><code class="descname">from_datetime</code><span class="sig-paren">(</span><em>dt</em>, <em>machine_id=0</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.Timestamp.from_datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a datetime to an SPL <cite>Timestamp</cite>.
+:param dt: Datetime to be converted.
+:type dt: datetime.datetime
+:param machine_id: Machine identifier.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">SPL timestamp value.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.spl.types.Timestamp" title="streamsx.spl.types.Timestamp">Timestamp</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">machine_id</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">nanoseconds</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">seconds</code></dt>
+<dd><p>Seconds value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Seconds value.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.types.Timestamp.time">
+<code class="descname">time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.Timestamp.time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the time in seconds since the epoch.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">time in seconds since the epoch.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.types.Timestamp.tuple">
+<code class="descname">tuple</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.Timestamp.tuple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return this timestamp as a tuple.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns a tuple of <code class="docutils literal"><span class="pre">(seconds,</span> <span class="pre">nanoseconds,</span> <span class="pre">machine_id)</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.spl.types.Timestamp.tuple" title="streamsx.spl.types.Timestamp.tuple">tuple</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="streamsx.spl.types.float32">
 <code class="descclassname">streamsx.spl.types.</code><code class="descname">float32</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.float32" title="Permalink to this definition">¶</a></dt>
