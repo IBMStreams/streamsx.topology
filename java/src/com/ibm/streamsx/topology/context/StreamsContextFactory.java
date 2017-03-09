@@ -33,7 +33,7 @@ public class StreamsContextFactory {
         case TOOLKIT:
             return new ToolkitStreamsContext(true);
         case BUILD_ARCHIVE:
-            return new ZippedToolkitStreamsContext();
+            return new ZippedToolkitStreamsContext(true);
         case STANDALONE_BUNDLE:
             return new BundleStreamsContext(true, true);
         case BUNDLE:

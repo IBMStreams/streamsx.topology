@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -31,18 +32,29 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 
 public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
-    @Override
+    
+	private final boolean keepBuildArchive;
+
+	public ZippedToolkitRemoteContext() {
+        this.keepBuildArchive = false;
+    }
+	
+    public ZippedToolkitRemoteContext(boolean keepBuildArchive) {
+        this.keepBuildArchive = keepBuildArchive;
+    }
+	
+	@Override
     public Type getType() {
         return Type.BUILD_ARCHIVE;
     }
     
     @Override
     public Future<File> _submit(JsonObject submission) throws Exception {
-        File toolkitRoot = super._submit(submission).get();
-        return createCodeArchive(toolkitRoot, submission);        
+        final File toolkitRoot = super._submit(submission).get();
+        return createCodeArchive(toolkitRoot, submission);
     }
     
-    public static Future<File> createCodeArchive(File toolkitRoot, JsonObject submission) throws IOException, URISyntaxException {
+    public Future<File> createCodeArchive(File toolkitRoot, JsonObject submission) throws IOException, URISyntaxException {
         
         JsonObject jsonGraph = object(submission, SUBMISSION_GRAPH);
         String namespace = splAppNamespace(jsonGraph);
@@ -51,8 +63,10 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         
         Path zipOutPath = pack(toolkitRoot.toPath(), namespace, name, tkName);
         
-        final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);        
-        submissionResult.addProperty(SubmissionResultsKeys.ARCHIVE_PATH, zipOutPath.toString());
+        if (keepBuildArchive || keepArtifacts(submission)) {
+        	final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
+        	submissionResult.addProperty(SubmissionResultsKeys.ARCHIVE_PATH, zipOutPath.toString());
+        }
         
         JsonObject deployInfo = object(submission, SUBMISSION_DEPLOY);
         deleteToolkit(toolkitRoot, deployInfo);
