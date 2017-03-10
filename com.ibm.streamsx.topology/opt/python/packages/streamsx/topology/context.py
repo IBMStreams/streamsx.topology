@@ -321,6 +321,9 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
         self._vcap_services = self._config().get(ConfigParams.VCAP_SERVICES)
         self._service_name = self._config().get(ConfigParams.SERVICE_NAME)
 
+        # TODO: compare status_path (or any REST endpoint in the credential) in the config
+        # and in the StreamsConnection object, and verify if both are same
+
         # Clear the VCAP_SERVICES key in config, since env var will contain the content
         self._config().pop(ConfigParams.VCAP_SERVICES, None)
 
@@ -354,10 +357,14 @@ class _DistributedSubmitter(_BaseSubmitter):
         self.username = username
         self.password = password
 
-        # TODO: handle credential conflicts
+        # Verify if credential (if supplied) is consistent with those in StreamsConnection
         if self._streams_connection is not None:
             self.username = self._streams_connection.rest_client._username
             self.password = self._streams_connection.rest_client._password
+            if ((username is not None and username != self.username or
+                 password is not None and password != self.password)):
+                raise RuntimeError('Credentials supplied in the arguments differ than '
+                                   'those specified in the StreamsConnection object')
 
         # Give each view in the app the necessary information to connect to SWS.
         self._setup_views()
