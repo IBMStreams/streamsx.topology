@@ -546,6 +546,7 @@ class JobConfig(object):
             relocated to a new resource.
         data_directory(str): Specifies the location of the optional data directory. The data directory is a path
             within the cluster that is running the Streams instance.
+        tracing: Specify the application trace level. See :py:attr:`tracing`
 
     Example::
 
@@ -564,6 +565,22 @@ class JobConfig(object):
 
     @property
     def tracing(self):
+        """
+        Runtime application trace level.
+
+        The runtime application trace level can be a string with value ``error``, ``warn``, ``info``,
+        ``debug`` or ``trace``.
+
+        In addition a level from Python ``logging`` module can be used in with ``CRITICAL`` and ``ERROR`` mapping
+        to ``error``, ``WARNING`` to ``warn``, ``INFO`` to ``info`` and ``DEBUG`` to ``debug``.
+
+        Setting tracing to `None` or ``logging.NOTSET`` will result in the job submission using the Streams instance
+        application trace level.
+
+        The value of ``tracing`` is the level as a string (``error``, ``warn``, ``info``, ``debug`` or ``trace``)
+        or None.
+
+        """
         return self._tracing
 
     @tracing.setter
