@@ -46,6 +46,13 @@ static SPL::OperatorContext &  __splpy_ec_opcontext(PyObject *opc) {
     return op->getContext();
 }
 
+static PyObject * __splpy_ec_domain_id(PyObject *self, PyObject *notused) {
+   return streamsx::topology::pyUnicode_FromUTF8(SPL::ProcessingElement::pe().getDomainID());
+}
+static PyObject * __splpy_ec_instance_id(PyObject *self, PyObject *notused) {
+   return streamsx::topology::pyUnicode_FromUTF8(SPL::ProcessingElement::pe().getInstanceID());
+}
+
 static PyObject * __splpy_ec_job_id(PyObject *self, PyObject *notused) {
    uint64_t id = SPL::ProcessingElement::pe().getJobId();
    return PyLong_FromUnsignedLong(id);
@@ -143,6 +150,10 @@ static PyObject * __splpy_ec_metric_set(PyObject *self, PyObject *args){
 }
 
 static PyMethodDef __splpy_ec_methods[] = {
+    {"domain_id", __splpy_ec_domain_id, METH_NOARGS,
+         "Return the domain identifier."},
+    {"instance_id", __splpy_ec_instance_id, METH_NOARGS,
+         "Return the instance identifier."},
     {"job_id", __splpy_ec_job_id, METH_NOARGS,
          "Return the job identifier of the running application."},
     {"pe_id", __splpy_ec_pe_id, METH_NOARGS,
