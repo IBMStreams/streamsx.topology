@@ -68,3 +68,6 @@ class TestTracingLevels(unittest.TestCase):
         self.assertIs(None, jc.tracing)
 
         self.assertRaises(ValueError, set_trace, jc, 'WARN')
+
+        jc2 = JobConfig(tracing='info')
+        self.assertEqual('info', jc2.tracing)
