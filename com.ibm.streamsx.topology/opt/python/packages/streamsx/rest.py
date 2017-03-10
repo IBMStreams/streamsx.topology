@@ -49,8 +49,8 @@ class StreamsConnection:
             username = 'streamsadmin'
             password = 'passw0rd'
         else:
-            raise ValueError("Must supply either a BlueMix VCAP Services or a username, password"
-                             " to the StreamsContext constructor.")
+            raise ValueError("Must supply either a Bluemix VCAP Services or a username, password"
+                             " to the StreamsConnection constructor.")
 
         self._resource_url = resource_url
         self.rest_client = _StreamsRestClient(username, password)
