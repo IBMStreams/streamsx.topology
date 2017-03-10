@@ -4,6 +4,7 @@
 import unittest
 import sys
 import itertools
+import logging
 
 from streamsx.topology.topology import *
 from streamsx.topology.context import JobConfig
@@ -33,3 +34,37 @@ class TestJobConfig(unittest.TestCase):
 
      sr = tester.test(self.test_ctxtype, self.test_config)
      self.assertEqual(job_name, tester.result['submission_result']['name'])
+
+def set_trace(jc, level):
+    jc.tracing = level
+
+class TestTracingLevels(unittest.TestCase):
+    def test_levels(self):
+        jc = JobConfig() 
+        self.assertIs(None, jc.tracing)
+
+        for tl in {'error', 'warn', 'info', 'debug', 'trace'}:
+            jc.tracing = tl
+            self.assertEqual(tl, jc.tracing)
+
+        jc.tracing = None
+        self.assertIs(None, jc.tracing)
+
+        jc.tracing = logging.CRITICAL
+        self.assertEqual('error', jc.tracing)
+        jc.tracing = logging.ERROR
+        self.assertEqual('error', jc.tracing)
+
+        jc.tracing = logging.WARNING
+        self.assertEqual('warn', jc.tracing)
+
+        jc.tracing = logging.INFO
+        self.assertEqual('info', jc.tracing)
+
+        jc.tracing = logging.DEBUG
+        self.assertEqual('debug', jc.tracing)
+
+        jc.tracing = logging.NOTSET
+        self.assertIs(None, jc.tracing)
+
+        self.assertRaises(ValueError, set_trace, jc, 'WARN')

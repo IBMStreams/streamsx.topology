@@ -555,11 +555,37 @@ class JobConfig(object):
         job_config.add(cfg)
         context.submit('ANALYTICS_SERVICE', topo, cfg)
     """
-    def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None):
+    def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None, tracing=None):
         self.job_name = job_name
         self.job_group = job_group
         self.preload = preload
         self.data_directory = data_directory
+        self.tracing = tracing
+
+    @property
+    def tracing(self):
+        return self._tracing
+
+    @tracing.setter
+    def tracing(self, level):
+        if level is None:
+            pass
+        elif level in {'error', 'warn', 'info', 'debug', 'trace'}:
+            pass
+        elif level == logging.CRITICAL or level == logging.ERROR:
+            level = 'error'
+        elif level == logging.WARNING:
+            level = 'warn'
+        elif level == logging.INFO:
+            level = 'info'
+        elif level == logging.DEBUG:
+            level = 'debug'
+        elif level == logging.NOTSET:
+            level = None
+        else:
+            raise ValueError("Tracing value {0} not supported.".format(level))
+
+        self._tracing = level
 
     def add(self, config):
         """
@@ -591,6 +617,8 @@ class JobConfig(object):
             jc["dataDirectory"] = self.data_directory
         if self.preload:
             jc['preloadApplicationBundles'] = True
+        if self.tracing is not None:
+            jc['tracing'] = self.tracing
 
         if jc:
             jco["jobConfig"] = jc
