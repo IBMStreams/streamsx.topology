@@ -38,6 +38,9 @@ Creation of the Python documentation can be skipped by setting the property
 ```
 ant -Dtopology.build.sphinx=no release
 ```
+Python docstrings use the Google style: http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
+
+How to cross reference Python classes, modules, methods, functions etc: http://www.sphinx-doc.org/en/stable/domains.html#cross-referencing-python-objects
 
 ### Building
 
