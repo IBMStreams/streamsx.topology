@@ -30,6 +30,10 @@ class TestUnicode(unittest.TestCase):
 
     def test_strings(self):
         """ Test strings that are unicode.
+            Includes a stream name to verify it
+            does not cause an error, but under the covers
+            the actual name will be a mangled version of it
+            since SPL identifiers are only ASCII.
         """
         topo = Topology()
         ud = []
@@ -37,7 +41,7 @@ class TestUnicode(unittest.TestCase):
         ud.append('2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm')
         ud.append('многоязычных')
         ud.append("Arsenal hammered 5-1 by Bayern again")
-        s = topo.source(ud)
+        s = topo.source(ud, name='façade')
         sas = s.as_string()
         sd = s.map(lambda s : {'val': s + "_test_it!"})
         tester = Tester(topo)
