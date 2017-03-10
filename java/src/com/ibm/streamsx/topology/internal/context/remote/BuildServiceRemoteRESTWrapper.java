@@ -80,6 +80,7 @@ class BuildServiceRemoteRESTWrapper {
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 					}
+					status = buildStatusGet(buildId, httpclient, apiKey);
 					continue;
 				} 
 				// The remaining possible states are 'failed', 'timeout', 'canceled', 'canceling', and 'unknown', none of which can lead to a state of 'built', so we throw an error.
