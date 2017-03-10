@@ -269,16 +269,17 @@ class Tester(object):
         return sr['return_code'] == 0
 
     def _distributed_test(self, config, username, password):
-        sjr = stc.submit(stc.ContextTypes.DISTRIBUTED, self.topology, config, username=username, password=password)
-        self.submission_result = sjr
-        if sjr['return_code'] != 0:
-            print("DO AS LOGGER", "Failed to submit job to distributed instance.")
-            return False
         self.sc = config.get(ConfigParams.STREAMS_CONNECTION)
         if self.sc is None:
             # Disable SSL verification
             self.sc = StreamsConnection(username, password)
             self.sc.session.verify = False
+            config[ConfigParams.STREAMS_CONNECTION] = self.sc
+        sjr = stc.submit(stc.ContextTypes.DISTRIBUTED, self.topology, config, username=username, password=password)
+        self.submission_result = sjr
+        if sjr['return_code'] != 0:
+            print("DO AS LOGGER", "Failed to submit job to distributed instance.")
+            return False
         return self._distributed_wait_for_result()
 
     def _streaming_analytics_test(self, ctxtype, config):

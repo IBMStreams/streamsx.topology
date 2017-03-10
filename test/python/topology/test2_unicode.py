@@ -6,8 +6,10 @@ import unittest
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology import context
+from streamsx.topology.context import ConfigParams
 from streamsx import rest
 import streamsx.ec as ec
+
 
 import test_vers
 
@@ -86,6 +88,10 @@ class TestDistributedUnicode(TestUnicode):
         password = self.password
 
         self.sc = rest.StreamsConnection(username=username, password=password)
+
+        # Disable SSL verification
+        self.sc.session.verify = False
+        self.test_config[ConfigParams.STREAMS_CONNECTION] = self.sc
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestBluemixUnicode(TestUnicode):
