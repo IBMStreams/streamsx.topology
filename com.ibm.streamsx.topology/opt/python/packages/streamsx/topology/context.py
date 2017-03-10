@@ -172,6 +172,13 @@ class _BaseSubmitter(object):
         results_json['return_code'] = process.returncode
         self._augment_submission_result(results_json)
         self.submission_results = results_json
+
+        # Return StreamsConnection object, if applicable (i.e. distributed, or streaming analytics)
+        try:
+            results_json['streams_connection'] = self.streams_connection()
+        except:
+            pass
+
         return results_json
 
 
