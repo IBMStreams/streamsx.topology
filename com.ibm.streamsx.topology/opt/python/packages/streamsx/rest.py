@@ -41,25 +41,28 @@ class StreamsConnection:
     """
     def __init__(self, username=None, password=None, resource_url=None):
         # manually specify username, password, and resource_url
-        if username and password and resource_url:
+        if username and password:
+            # resource URL can be obtained via streamtool geturl or REST call
             pass
-        elif username and password and st._has_local_install:
-            resource_url = st.get_rest_api()
         elif st._has_local_install:
             # Assume quickstart
             username = 'streamsadmin'
             password = 'passw0rd'
-            resource_url = st.get_rest_api()
         else:
-            raise ValueError("Must supply either a BlueMix VCAP Services or a username, password, and resource url"
+            raise ValueError("Must supply either a BlueMix VCAP Services or a username, password"
                              " to the StreamsContext constructor.")
 
-
-        self.resource_url = resource_url
-        self.rest_client = _StreamsRestClient(username, password, self.resource_url)
+        self._resource_url = resource_url
+        self.rest_client = _StreamsRestClient(username, password)
         self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = False
+
+    @property
+    def resource_url(self):
+        if self._resource_url is None:
+            self._resource_url = st.get_rest_api()
+        return self._resource_url
 
     def _get_elements(self, resource_name, eclass, id=None):
         elements = []
@@ -154,10 +157,14 @@ class StreamingAnalyticsConnection(StreamsConnection):
     def __init__(self, vcap_services=None, service_name=None):
         vcap = _get_vcap_services(vcap_services)
         self.credentials = _get_credentials(vcap, service_name)
-        # Obtain the streams SWS REST URL
-        rest_api_url = _get_rest_api_url_from_creds(self.credentials)
-        super(StreamingAnalyticsConnection, self).__init__(self.credentials['userid'], self.credentials['password'], rest_api_url)
+        super(StreamingAnalyticsConnection, self).__init__(self.credentials['userid'], self.credentials['password'])
         self._analytics_service = True
+
+    @property
+    def resource_url(self):
+        if self._resource_url is None:
+            self._resource_url = _get_rest_api_url_from_creds(self.session, self.credentials)
+        return self._resource_url
 
     def get_streaming_analytics(self):
         """
@@ -229,18 +236,17 @@ def _get_credentials(vcap_services, service_name=None):
     return creds
 
 
-def _get_rest_api_url_from_creds(credentials):
+def _get_rest_api_url_from_creds(session, credentials):
     """Retrieves the Streams REST API URL from the provided credentials.
-
-    :param credentials: A dict representation of the credentials.
-    :type credentials: dict.
-    :return: The remote Streams REST API URL.
-    :type return: str.
+    Args:
+        session (Session): A Requests session object for making REST calls
+        credentials (dict): A dict representation of the credentials.
+    Returns:
+        The remote Streams REST API URL.
     """
     resources_url = credentials['rest_url'] + credentials['resources_path']
     try:
-
-        response_raw = requests.get(resources_url, auth=(credentials['userid'], credentials['password']))
+        response_raw = session.get(resources_url, auth=(credentials['userid'], credentials['password']))
         response = response_raw.json()
     except:
         logger.error("Error while retrieving rest REST url from: " + resources_url)

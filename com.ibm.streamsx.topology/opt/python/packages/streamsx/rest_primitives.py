@@ -30,9 +30,6 @@ def _matching_resource(json_rep, name=None):
         return re.match(name, json_rep['name'])
     return True
 
-  
-
-
 class _ResourceElement(object):
     """A class whose fields are populated by the JSON returned from a REST call.
     """
@@ -107,18 +104,14 @@ class _ResourceElement(object):
         raise ValueError("Multiple resources matching: {0}".format(id))
 
 class _StreamsRestClient(object):
-    """Handles the session connection with the Streams REST API.
-
-    :param username: The username of an authorized Streams user.
-    :type username: str.
-    :param password: The password associated with the username.
-    :type password: str.
-    :param resource_url: The resource endpoint of the instance. Can be found with `st geturl --api` for local Streams
-    installs.
-    :type resource_url: str.
+    """Handles the session connection with the Streams REST API
     """
-    def __init__(self, username, password, resource_url):
-        self.resource_url = resource_url
+    def __init__(self, username, password):
+        """
+        Args:
+            username(str): The username of an authorized Streams user.
+            password(str): The password associated with the username.
+        """
         # Create session to reuse TCP connection
         # https authentication
         self._username = username
