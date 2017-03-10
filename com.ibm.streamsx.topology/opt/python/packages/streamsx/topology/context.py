@@ -546,6 +546,7 @@ class JobConfig(object):
             relocated to a new resource.
         data_directory(str): Specifies the location of the optional data directory. The data directory is a path
             within the cluster that is running the Streams instance.
+        tracing: Specify the application trace level. See :py:attr:`tracing`
 
     Example::
 
@@ -555,11 +556,53 @@ class JobConfig(object):
         job_config.add(cfg)
         context.submit('ANALYTICS_SERVICE', topo, cfg)
     """
-    def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None):
+    def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None, tracing=None):
         self.job_name = job_name
         self.job_group = job_group
         self.preload = preload
         self.data_directory = data_directory
+        self.tracing = tracing
+
+    @property
+    def tracing(self):
+        """
+        Runtime application trace level.
+
+        The runtime application trace level can be a string with value ``error``, ``warn``, ``info``,
+        ``debug`` or ``trace``.
+
+        In addition a level from Python ``logging`` module can be used in with ``CRITICAL`` and ``ERROR`` mapping
+        to ``error``, ``WARNING`` to ``warn``, ``INFO`` to ``info`` and ``DEBUG`` to ``debug``.
+
+        Setting tracing to `None` or ``logging.NOTSET`` will result in the job submission using the Streams instance
+        application trace level.
+
+        The value of ``tracing`` is the level as a string (``error``, ``warn``, ``info``, ``debug`` or ``trace``)
+        or None.
+
+        """
+        return self._tracing
+
+    @tracing.setter
+    def tracing(self, level):
+        if level is None:
+            pass
+        elif level in {'error', 'warn', 'info', 'debug', 'trace'}:
+            pass
+        elif level == logging.CRITICAL or level == logging.ERROR:
+            level = 'error'
+        elif level == logging.WARNING:
+            level = 'warn'
+        elif level == logging.INFO:
+            level = 'info'
+        elif level == logging.DEBUG:
+            level = 'debug'
+        elif level == logging.NOTSET:
+            level = None
+        else:
+            raise ValueError("Tracing value {0} not supported.".format(level))
+
+        self._tracing = level
 
     def add(self, config):
         """
@@ -591,6 +634,8 @@ class JobConfig(object):
             jc["dataDirectory"] = self.data_directory
         if self.preload:
             jc['preloadApplicationBundles'] = True
+        if self.tracing is not None:
+            jc['tracing'] = self.tracing
 
         if jc:
             jco["jobConfig"] = jc
