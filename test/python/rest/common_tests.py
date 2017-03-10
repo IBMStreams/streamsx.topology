@@ -52,3 +52,26 @@ class CommonTests(unittest.TestCase):
         tester = Tester(top)
         tester.local_check = self._verify_basic_view
         tester.test(self.test_ctxtype, self.test_config)
+
+    def _verify_job_refresh(self):
+        result = self.tester.submission_result
+        job = self.sc.get_instance(result['instanceId']).get_job(result['jobId'])
+
+        self.assertEqual('healthy', job.health)
+
+        # cancel the job and wait for health to deteriorate
+        timeout = 10
+        job.cancel()
+        while hasattr(job, 'health') and 'healthy' == job.health:
+            time.sleep(1)
+            timeout -= 1
+            job.refresh()
+            self.assertGreaterEqual(timeout, 0, msg='Timeout exceeded while waiting for job to cancel')
+
+    def test_job_refresh(self):
+        top = topology.Topology('jobRefreshTest')
+        top.source(['Hello'])
+
+        self.tester = Tester(top)
+        self.tester.local_check = self._verify_job_refresh
+        self.tester.test(self.test_ctxtype, self.test_config)
