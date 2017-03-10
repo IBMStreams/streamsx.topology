@@ -18,7 +18,7 @@ class view_name_source(object):
         self.sc = sc
 
     def __call__(self):
-        for instance in self.sc.get_instances():
+        for instance in self.sc.get_instances(id=ec.instance_id()):
             for job in instance.get_jobs(id=ec.job_id()):
                 for view in job.get_views():
                     yield view.name
@@ -69,7 +69,7 @@ class TestUnicode(unittest.TestCase):
         view1 = topo.source(["hello"]).view(name=view_names[1])
 
         tester = Tester(topo)
-        tester.contents(view_name_stream, view_names)
+        tester.contents(view_name_stream, view_names, ordered=False)
 
         # For running Bluemix tests, the username & password need a default value of None
         username = getattr(self, "username", None)

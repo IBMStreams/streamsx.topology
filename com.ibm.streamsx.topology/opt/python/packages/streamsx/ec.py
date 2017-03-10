@@ -58,6 +58,20 @@ def _check():
     if not _supported:
         raise NotImplementedError("Access to the execution context requires Python 3.5 and Streams 4.2 or later")
 
+def domain_id():
+    """
+    Return the instance identifier.
+    """
+    _check()
+    return _ec.domain_id()
+
+def instance_id():
+    """
+    Return the instance identifier.
+    """
+    _check()
+    return _ec.instance_id()
+
 def job_id():
     """
     Return the job identifier.

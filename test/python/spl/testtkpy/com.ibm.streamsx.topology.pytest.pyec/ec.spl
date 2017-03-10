@@ -4,6 +4,8 @@ public composite TestOperatorContext(input I; output O) {
    graph
    stream<I> O = PyTestOperatorContext(I) {
    param
+      domain_id: domainID();
+      instance_id: instanceID();
       job_id: jobID();
       pe_id: PEID();
       channel: getChannel();

@@ -15,9 +15,11 @@ def splNamespace():
 
 @spl.filter()
 class PyTestOperatorContext:
-    def __init__(self, job_id, pe_id, channel, local_channel, max_channels, local_max_channels):
+    def __init__(self, domain_id, instance_id, job_id, pe_id, channel, local_channel, max_channels, local_max_channels):
         self.enter_called = False
         self.exit_called = False
+        self.domain_id = domain_id
+        self.instance_id = instance_id
         self.job_id = job_id
         self.pe_id = pe_id
         self.channel = channel
@@ -35,6 +37,8 @@ class PyTestOperatorContext:
 
     def check(self):
         ok = ec._supported
+        ok = ok and self.same(self.domain_id, ec.domain_id())
+        ok = ok and self.same(self.instance_id, ec.instance_id())
         ok = ok and self.same(self.job_id, ec.job_id())
         ok = ok and self.same(self.pe_id, ec.pe_id())
         ok = ok and self.same(self.channel, ec.channel(self))
