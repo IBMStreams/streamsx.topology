@@ -82,7 +82,7 @@
           <exclude name="**/namespace-info.spl"/>
        </fileset>
        <dirset dir="${tk}">
-          <include name="com.ibm.streamsx.topology.functional.python2/PyFunction*"/>
+          <include name="com.ibm.streamsx.topology.functional.python2/*"/>
        </dirset>
     </delete>
   </target>

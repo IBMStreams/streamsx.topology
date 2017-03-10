@@ -267,7 +267,7 @@ class _PickleIterator:
 # None, otherwise it returns
 # an instance of _PickleIterator
 # wrapping an iterator from the iterable
-# Used by PyFunctionMultiTransform
+# Used by FlatMap
 
 class _ObjectInPickleIter(_FunctionalCallable):
     def __call__(self, tuple):
