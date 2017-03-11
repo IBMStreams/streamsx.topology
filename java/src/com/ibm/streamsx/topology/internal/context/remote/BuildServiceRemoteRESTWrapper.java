@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
+import java.util.Map.Entry;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
@@ -31,6 +32,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
 
 class BuildServiceRemoteRESTWrapper {
@@ -106,7 +108,10 @@ class BuildServiceRemoteRESTWrapper {
 			JsonObject response = doSubmitJobFromBuildArtifactPut(httpclient, deploy, apiKey, artifactId);
 			
 			// Pass back to Python
-			submission.add(RemoteContext.SUBMISSION_RESULTS, response);
+			final JsonObject submissionResult = GsonUtilities.getProperty(submission, RemoteContext.SUBMISSION_RESULTS);
+            for (Entry<String, JsonElement> entry : response.entrySet()) {
+            	submissionResult.add(entry.getKey(), entry.getValue());
+            }
 		} finally {
 			httpclient.close();
 

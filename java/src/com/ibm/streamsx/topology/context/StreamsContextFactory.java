@@ -31,13 +31,13 @@ public class StreamsContextFactory {
         case EMBEDDED:
             return getEmbedded();
         case TOOLKIT:
-            return new ToolkitStreamsContext();
+            return new ToolkitStreamsContext(true);
         case BUILD_ARCHIVE:
             return new ZippedToolkitStreamsContext();
         case STANDALONE_BUNDLE:
-            return new BundleStreamsContext(true, false);
+            return new BundleStreamsContext(true, true);
         case BUNDLE:
-            return new BundleStreamsContext(false, false);
+            return new BundleStreamsContext(false, true);
         case STANDALONE:
             return new StandaloneStreamsContext();
         case DISTRIBUTED:

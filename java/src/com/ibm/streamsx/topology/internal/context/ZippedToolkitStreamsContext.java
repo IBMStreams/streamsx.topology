@@ -18,7 +18,7 @@ public class ZippedToolkitStreamsContext extends ToolkitStreamsContext {
 	Future<File> action(AppEntity entity) throws Exception {
 	    // Let the remote archive do all the work.
 	    @SuppressWarnings("unchecked")
-        RemoteContext<File> ztrc = (RemoteContext<File>) RemoteContextFactory.getRemoteContext(RemoteContext.Type.BUILD_ARCHIVE);
+        RemoteContext<File> ztrc = (RemoteContext<File>) RemoteContextFactory.getRemoteContext(RemoteContext.Type.BUILD_ARCHIVE, false);
 	    
 	    return ztrc.submit(entity.submission);
 	}

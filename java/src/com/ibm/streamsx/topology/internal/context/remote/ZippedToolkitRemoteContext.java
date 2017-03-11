@@ -27,6 +27,7 @@ import java.util.zip.ZipOutputStream;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 
 public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
@@ -50,9 +51,8 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         
         Path zipOutPath = pack(toolkitRoot.toPath(), namespace, name, tkName);
         
-        JsonObject results = new JsonObject();
-        results.addProperty(SubmissionResultsKeys.ARCHIVE_PATH, zipOutPath.toString());
-        submission.add(RemoteContext.SUBMISSION_RESULTS, results);
+        final JsonObject submissionResult = GsonUtilities.getProperty(submission, RemoteContext.SUBMISSION_RESULTS);        
+        submissionResult.addProperty(SubmissionResultsKeys.ARCHIVE_PATH, zipOutPath.toString());
         
         JsonObject deployInfo = object(submission, SUBMISSION_DEPLOY);
         deleteToolkit(toolkitRoot, deployInfo);

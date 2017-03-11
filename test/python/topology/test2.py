@@ -11,19 +11,73 @@ from streamsx.topology.tester import Tester
 import test_vers
 
 def s4():
-    return ['one', 'two', 'three', 'four']
+   return ['one', 'two', 'three', 'four']
 
+def assertBundlePath(test, submissionResult):
+   test.assertIn('bundlePath', submissionResult)
+   test.assertTrue(os.path.isfile(submissionResult['bundlePath']))
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
+def assertToolkitRoot(test, submissionResult):
+   test.assertIn('toolkitRoot', submissionResult)
+   test.assertTrue(os.path.isdir(submissionResult['toolkitRoot']))
+
+def assertArchivePath(test, submissionResult):
+   test.assertIn('archivePath', submissionResult)
+   test.assertTrue(os.path.isfile(submissionResult['archivePath']))
+
+# Verify if correct artifacts are left behind when keepArtifacts is True (assume context is submit type)
+def verifyKeepArtifacts(test, submissionResult):
+   if 'STREAMS_INSTALL' in os.environ:
+      assertToolkitRoot(test, submissionResult)
+      assertBundlePath(test, submissionResult)
+      test.assertNotIn('archivePath', submissionResult)
+   else:
+      assertToolkitRoot(test, submissionResult)
+      assertArchivePath(test, submissionResult)
+      test.assertNotIn('bundlePath', submissionResult)
+
+# Verify that no artifacts are left behind when keepArtifacts is False
+def verifyNoKeepArtifacts(test, submissionResult):
+   test.assertNotIn('toolkitRoot', submissionResult)
+   test.assertNotIn('archivePath', submissionResult)
+   test.assertNotIn('bundlePath', submissionResult)
+
+@unittest.skipIf(not test_vers.tester_supported(), "Tester not supported")
+@unittest.skipUnless('STREAMS_INSTALL' in os.environ, "requires STREAMS_INSTALL")
 class TestBundleMethodsNew(unittest.TestCase):
 
-  def test_BundlePath(self):
-     topo = Topology("test_TopologySource")
-     hw = topo.source(["Hello", "Bundle"])
-     result = streamsx.topology.context.submit("BUNDLE", topo)
-     self.assertIn('bundlePath', result)
-     self.assertTrue(os.path.isfile(result['bundlePath']))
+   def test_Bundle(self):
+      topo = Topology('test_TopologySource')
+      hw = topo.source(['Hello', 'Bundle'])
+      result = streamsx.topology.context.submit('BUNDLE', topo)
+      self.assertNotIn('toolkitRoot', result)
+      self.assertNotIn('archivePath', result)
+      assertBundlePath(self, result)
 
+   def test_BundleKeepArtifacts(self):
+      topo = Topology('test_TopologySource')
+      hw = topo.source(['Hello', 'Bundle'])
+      result = streamsx.topology.context.submit('BUNDLE', topo, config={'topology.keepArtifacts': True})
+      verifyKeepArtifacts(self, result)
+
+@unittest.skipIf(not test_vers.tester_supported(), "Tester not supported")
+class TestBuildArchiveMethodsNew(unittest.TestCase):
+
+   def test_BuildArchive(self):
+      topo = Topology('test_TopologySource')
+      hw = topo.source(['Hello', 'Bundle'])
+      result = streamsx.topology.context.submit('BUILD_ARCHIVE', topo)
+      self.assertNotIn('toolkitRoot', result)
+      self.assertNotIn('bundlePath', result)
+      assertArchivePath(self, result)
+
+   def test_BuildArchiveKeepArtifacts(self):
+      topo = Topology('test_TopologySource')
+      hw = topo.source(['Hello', 'Bundle'])
+      result = streamsx.topology.context.submit('BUILD_ARCHIVE', topo, config={'topology.keepArtifacts': True})
+      assertToolkitRoot(self, result)
+      assertArchivePath(self, result)
+      self.assertNotIn('bundlePath', result)
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestTopologyMethodsNew(unittest.TestCase):
@@ -33,17 +87,15 @@ class TestTopologyMethodsNew(unittest.TestCase):
 
   def test_TopologySourceList(self):
      topo = Topology('test_TopologySourceList')
-     hw = topo.source(["Hello", "Tester"])
+     hw = topo.source(['Hello', 'Tester'])
      tester = Tester(topo)
-     tester.contents(hw, ["Hello", "Tester"])
+     tester.contents(hw, ['Hello', 'Tester'])
      tester.test(self.test_ctxtype, self.test_config)
-     # bundlePath must exist if keepArtifacts is True
      result = tester.result['submission_result']
      if self.test_config.get('topology.keepArtifacts', False):
-         self.assertIn('bundlePath', result)
-         self.assertTrue(os.path.isfile(result['bundlePath']))
+        verifyKeepArtifacts(self, result)
      else:
-         self.assertNotIn('bundlePath', result)
+        verifyNoKeepArtifacts(self, result)
 
   def test_TopologySourceFn(self):
      topo = Topology('test_TopologySourceFn')
@@ -53,10 +105,7 @@ class TestTopologyMethodsNew(unittest.TestCase):
      tester.tuple_count(hw, len(s4()))
      self.test_config['topology.keepArtifacts'] = True
      tester.test(self.test_ctxtype, self.test_config)
-     # bundlePath must exist if keepArtifacts is True
-     result = tester.result['submission_result']
-     self.assertIn('bundlePath', result)
-     self.assertTrue(os.path.isfile(result['bundlePath']))
+     verifyKeepArtifacts(self, tester.result['submission_result'])
 
   def test_TopologySourceItertools(self):
      topo = Topology('test_TopologySourceItertools')

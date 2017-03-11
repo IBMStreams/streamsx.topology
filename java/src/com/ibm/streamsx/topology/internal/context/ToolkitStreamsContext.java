@@ -28,6 +28,16 @@ public class ToolkitStreamsContext extends JSONStreamsContext<File> {
 
 	static final Logger trace = Topology.TOPOLOGY_LOGGER;
     
+	private final boolean keepToolkit;
+
+	public ToolkitStreamsContext() {
+        this.keepToolkit = false;
+    }
+	
+    public ToolkitStreamsContext(boolean keepToolkit) {
+        this.keepToolkit = keepToolkit;
+    }
+	
     @Override
     public Type getType() {
         return Type.TOOLKIT;
@@ -46,7 +56,7 @@ public class ToolkitStreamsContext extends JSONStreamsContext<File> {
         
         // use the remote context to build the toolkit.
         @SuppressWarnings("unchecked")
-        RemoteContext<File> tkrc = (RemoteContext<File>) getRemoteContext(RemoteContext.Type.TOOLKIT);
+        RemoteContext<File> tkrc = (RemoteContext<File>) getRemoteContext(RemoteContext.Type.TOOLKIT, keepToolkit);
         
         final Future<File> future = tkrc.submit(submission);
         final File toolkitRoot = future.get();
