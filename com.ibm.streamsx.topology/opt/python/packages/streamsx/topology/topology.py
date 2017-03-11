@@ -343,7 +343,7 @@ class Topology(object):
              func = streamsx.topology.functions._IterableInstance(func)
         
         sl = _SourceLocation(_source_info(), "source")
-        op = self.graph.addOperator(self.opnamespace+"::PyFunctionSource", func, name=name, sl=sl)
+        op = self.graph.addOperator(self.opnamespace+"::Source", func, name=name, sl=sl)
         oport = op.addOutputPort()
         return Stream(self, oport)
 
@@ -405,7 +405,7 @@ class Stream(object):
             None
         """
         sl = _SourceLocation(_source_info(), "for_each")
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionSink", func, name=name, sl=sl)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport)
 
     def sink(self, func, name=None):
@@ -427,13 +427,13 @@ class Stream(object):
             Stream: A Stream containing tuples that have not been filtered out.
         """
         sl = _SourceLocation(_source_info(), "filter")
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionFilter", func, name=name, sl=sl)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
     def _map(self, func, schema, name=None):
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionTransform", func, name=name)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=name)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=schema)
         return Stream(self.topology, oport)
@@ -502,7 +502,7 @@ class Stream(object):
             TypeError: if `func` does not return an iterator nor None
         """     
         sl = _SourceLocation(_source_info(), "flat_map")
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionMultiTransform", func, name=name, sl=sl)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
@@ -606,7 +606,7 @@ class Stream(object):
 
             if func is not None:
                 keys = ['__spl_hash']
-                hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::PyFunctionHashAdder", func)
+                hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func)
                 hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int64 __spl_hash>"))
                 hash_adder.addInputPort(outputPort=self.oport)
                 parallel_input = hash_adder.addOutputPort(schema=hash_schema)
