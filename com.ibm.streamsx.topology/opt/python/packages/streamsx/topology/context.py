@@ -213,6 +213,12 @@ class _BaseSubmitter(object):
             raise
         self.fn = tf.name
 
+    def _setup_views(self, app_topology, submission_result, username, password, rest_api_url):
+        # Give each view in the app the necessary information to connect to SWS.
+        if app_topology.get_views():
+            connection_info = {'username': username, 'password': password, 'rest_api_url': rest_api_url}
+            for view in app_topology.get_views():
+                view.set_streams_connection_config(connection_info)
 
     # There are two modes for execution.
     #
@@ -292,7 +298,6 @@ class _JupyterSubmitter(_BaseSubmitter):
             logger.exception("Error starting java subprocess for submission")
             raise
 
-
 class _RemoteBuildSubmitter(_BaseSubmitter):
     """
     A submitter which retrieves the SWS REST API URL and then submits the application to be built and submitted
@@ -329,9 +334,7 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
         rest_api_url = response['streams_rest_url'] + '/resources'
 
         # Give each view in the app the necessary information to connect to SWS.
-        for view in app_topology.get_views():
-            connection_info = {'username': username, 'password': password, 'rest_api_url': rest_api_url}
-            view.set_streams_connection_config(connection_info)
+        self._setup_views(app_topology, None, username, password, rest_api_url)
 
     def _set_vcap(self):
         "Set self.vcap to the VCAP services, from env var or the config"
@@ -371,9 +374,7 @@ class _DistributedSubmitter(_BaseSubmitter):
             raise
 
         # Give each view in the app the necessary information to connect to SWS.
-        for view in app_topology.get_views():
-            view.set_streams_connection_config(
-                {'username': username, 'password': password, 'rest_api_url': rest_api_url})
+        self._setup_views(app_topology, None, username, password, rest_api_url)
 
 
 class _SubmitContextFactory(object):
