@@ -169,7 +169,7 @@ def _get_json_tuple(item):
     Get a tuple from a view with a schema
     tuple<rstring jsonString>
     """
-    return json.loads(item.data['jsonString']))
+    return json.loads(item.data['jsonString'])
 
 class View(_ResourceElement):
     """The view element resource provides access to information about a view that is associated with an active job, and
