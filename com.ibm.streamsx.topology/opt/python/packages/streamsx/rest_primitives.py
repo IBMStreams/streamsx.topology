@@ -220,8 +220,8 @@ class Host(_ResourceElement):
 class Job(_ResourceElement):
     """The job element resource provides access to information about a submitted job within a specified instance.
     """
-    def get_views(self):
-        return self._get_elements(self.views, 'views', View)
+    def get_views(self, name=None):
+        return self._get_elements(self.views, 'views', View, name=name)
 
     def get_domain(self):
         return Domain(self.rest_client.make_request(self.domain), self.rest_client)
@@ -346,8 +346,8 @@ class Instance(_ResourceElement):
     def get_pe_connections(self):
         return self._get_elements(self.peConnections, 'peConnections', PEConnection)
 
-    def get_views(self):
-        return self._get_elements(self.views, 'views', View)
+    def get_views(self, name=None):
+        return self._get_elements(self.views, 'views', View, name=name)
 
     def get_hosts(self):
         return self._get_elements(self.hosts, 'hosts', Host)

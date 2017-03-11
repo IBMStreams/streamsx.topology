@@ -24,11 +24,6 @@ class CommonTests(unittest.TestCase):
         if cls is CommonTests:
             raise unittest.SkipTest("Skipping base tests.")
 
-    def test_ensure_correct_rest_module(self):
-        self.logger.debug("Beginning test: test_ensure_correct_rest_module.")
-        # Ensure that the rest module being tested is from streamsx.utility
-        self.assertTrue('streamsx.utility' in rest.__file__)
-
     def test_username_and_password(self):
         self.logger.debug("Beginning test: test_username_and_password.")
         # Ensure, at minimum, that the StreamsContext can connect and retrieve valid data from the SWS resources path
