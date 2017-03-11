@@ -15,14 +15,6 @@
     <ant dir="samples/python" inheritAll="true"/>
     <ant dir="test/java" inheritAll="true"/>
     <ant dir="test/python" inheritAll="true"/>
-   <exec executable="git">
-      <arg value="clone"/>
-      <arg value="https://github.com/IBMStreams/streamsx.utility.git"/>
-   </exec>
-    <copy todir="${streamsx.py}">
-      <fileset dir="streamsx.utility/python/packages/streamsx" excludes="**/__init__.py"/>
-    </copy>
-   <delete dir="streamsx.utility"/>
   </target>
 
   <target name="clean" >
@@ -41,8 +33,6 @@
       <fileset dir="${tk}/impl/nl" includes="*.dat"/>
     </delete>
     <delete dir="${release.base}"/>
-    <delete dir="streamsx.utility"/>
-    <delete file="${streamsx.py}/rest.py"/>
   </target>
 
   <target name="test" >
