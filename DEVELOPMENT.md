@@ -38,9 +38,9 @@ Creation of the Python documentation can be skipped by setting the property
 ```
 ant -Dtopology.build.sphinx=no release
 ```
-Python docstrings use the Google style: http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 
-How to cross reference Python classes, modules, methods, functions etc: http://www.sphinx-doc.org/en/stable/domains.html#cross-referencing-python-objects
+For further information on writing Python docstrings, see [Python Docstring conventions](#python-docstring-conventions).
+
 
 ### Building
 
@@ -93,4 +93,37 @@ python3 -m unittest test_streaming_analytics_service
 Running the test targets produces two reports:
 * `test/java/report/junit/index.html` - JUnit test report
 * `test/java/report/coverage/index.html` - Code soverage report. Full coverage numbers are obtained by running the top-level `test` and `unittest.distributed` targets.
+
+### Python Docstring conventions
+
+Python docstrings use the Google style: http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
+
+How to cross reference Python classes, modules, methods, functions etc: http://www.sphinx-doc.org/en/stable/domains.html#cross-referencing-python-objects
+
+When creating cross reference to entity in another module, display the name in short form(~):
+```python
+    def function(arg1):
+        """Calls :py:func:`~.othermodule.tool`"""
+        from othermodule import tool
+        tool()
+```
+
+When referencing function arguments, use a single backquote(`):
+```python
+    def function(arg1):
+        """function summary
+        Args:
+            arg1 (str): argument 1
+        Returns:
+            str: return `arg1`
+        """
+        return arg1
+```
+
+When referencing environment variable, use bold(**):
+```python
+    """
+    **VCAP_SERVICE** is an environment variable
+    """
+```
 

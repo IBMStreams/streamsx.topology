@@ -1,43 +1,43 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
-import requests
 import os
 import json
 import logging
-import streamsx.st as st
-
-from .rest_primitives import Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService,  _exact_resource
-from .rest_errors import ViewNotFoundError
 from pprint import pformat
+
+from streamsx import st
+from .rest_primitives import Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService, \
+    _exact_resource
 
 logger = logging.getLogger('streamsx.rest')
 
 
 class StreamsConnection:
-    """Creates a connection to a running Streams instance and exposes methods to retrieve the state of that instance.
+    """Creates a connection to a running distributed IBM Streams instance and exposes methods to retrieve the state of
+    that instance.
 
     Streams maintains information regarding the state of its resources. For example, these resources could include the
-    currently running Jobs, Views, PEs, Operators, and Domains. The StreamsConnection provides methods to retrieve that
-    information.
-
-    ``StreamsConnection`` connects to  distributed IBM Streams instance.
+    currently running Jobs, Views, PEs, Operators, and Domains. The :py:class:`StreamsConnection` provides methods to
+    retrieve that information.
 
     Args:
-        username: Username of an authorized Streams user.
-        password: Password for user
-        resource_url: Root URL for IBM Streams REST API.
+        username (str): Username of an authorized Streams user.
+        password (str): Password for `username`
+        resource_url (str, optional): Root URL for IBM Streams REST API.
 
     Example:
-        >>> # If the resource url does not have a valid SSL certificate, you can disable the SSL verification
-        >>> _resource_url = "https://streamsqse.localdomain:8443/streams/rest/resources"
-        >>> sc = StreamsConnection(username="streamsadmin", password="passw0rd", resource_url=_resource_url)
-        >>> sc.session.verify=False
+        >>> resource_url = "https://streamsqse.localdomain:8443/streams/rest/resources"
+        >>> sc = StreamsConnection("streamsadmin", "passw0rd", resource_url)
+        >>> sc.session.verify=False  # manually disable SSL verification, if needed
         >>> instances = sc.get_instances()
         >>> jobs_count = 0
         >>> for instance in instances:
-        ...    jobs_count += len(instance.get_jobs())
-        >>> print("There are " + jobs_count + " jobs across all instances.")
+        >>>     jobs_count += len(instance.get_jobs())
+        >>> print("There are {} jobs across all instances.".format(jobs_count))
+        There are 10 jobs across all instances.
 
+    Attributes:
+        session (:py:class:`requests.Session`): Requests session object for making REST calls.
     """
     def __init__(self, username=None, password=None, resource_url=None):
         # manually specify username, password, and resource_url
@@ -60,6 +60,7 @@ class StreamsConnection:
 
     @property
     def resource_url(self):
+        """str: Root URL for IBM Streams REST API"""
         if self._resource_url is None:
             self._resource_url = st.get_rest_api()
         return self._resource_url
@@ -87,56 +88,61 @@ class StreamsConnection:
     def get_domains(self):
         """Retrieve available domains.
 
-
         Returns:
-            list of :py:class:`Domain` instances.
-
+            :py:obj:`list` of :py:class:`~.rest_primitives.Domain`: list of available domains
         """
         return self._get_elements('domains')
 
-    def get_domain(self, id):
-        """Retrieve available domains.
+    def get_domain(self, domain_id):
+        """Retrieve available domain matching a specific domain ID
 
-                Args:
-                    id: Domain identifier to retrieve.
+        Args:
+            domain_id (str): domain ID
 
-                Returns:
-                    :py:class:`Domain`: Domain matching ``id``.
+        Returns:
+            :py:class:`~.rest_primitives.Domain`: Domain matching `domain_id`
 
-                Raises:
-                    No matching domain exists or multiple matching domains exist.
+        Raises:
+            ValueError: No matching domain exists or multiple matching domains exist.
         """
-        return self._get_element_by_id('domains', Domain, id)
+        return self._get_element_by_id('domains', Domain, domain_id)
 
     def get_instances(self):
         """Retrieve available instances.
 
+        Returns:
+            :py:obj:`list` of :py:class:`~.rest_primitives.Instance`: list of available instances
         """
         return self._get_elements('instances', Instance, id=id)
 
-    def get_instance(self, id):
-        """Retrieve available domains.
+    def get_instance(self, instance_id):
+        """Retrieve available instance matching a specific instance ID.
 
-            Args:
-                id: Instance identifier to retrieve.
+        Args:
+            instance_id (str): Instance identifier to retrieve.
 
-            Returns:
-                :py:class:`Instance`: Instance matching ``id``.
+        Returns:
+            :py:class:`~.rest_primitives.Instance`: Instance matching `instance_id`.
 
-            Raises:
-                No matching instance exists or multiple matching instances exist.
+        Raises:
+            ValueError: No matching instance exists or multiple matching instances exist.
         """
-        return self._get_element_by_id('instances', Instance, id)
+        return self._get_element_by_id('instances', Instance, instance_id)
 
     def get_installations(self):
         """Retrieves a list of all known Streams installations.
 
-        :return: Returns a list of all Installation resources.
-        :type return: list.
+        Returns:
+            :py:obj:`list` of :py:class:`~.rest_primitives.Installation`: list of all Installation resources.
         """
         return self._get_elements('installations', Installation)
 
     def get_resources(self):
+        """Retrieves a list of all known Streams resources.
+
+        Returns:
+            :py:obj:`list` of :py:class:`~.rest_primitives.Resource`: list of all Streams resources.
+        """
         resources = []
         json_resources = self.rest_client.make_request(self.resource_url)['resources']
         for json_resource in json_resources:
@@ -146,13 +152,22 @@ class StreamsConnection:
     def __str__(self):
         return pformat(self.__dict__)
 
+
 class StreamingAnalyticsConnection(StreamsConnection):
     """Creates a connection to a running Streaming Analytics service and exposes methods
     to retrieve the state of the service and its instance.
 
     Args:
-        vcap_services: Vcap services.
-        service_name: Name of the Streaming Analytics service.
+        vcap_services (str, optional): VCAP services (JSON string or a filename whose content contains a JSON string).
+            If not specified, it uses the value of **VCAP_SERVICES** environment variable.
+        service_name (str, optional): Name of the Streaming Analytics service.
+            If not specified, it uses the value of **STREAMING_ANALYTICS_SERVICE_NAME** environment variable.
+
+    Example:
+        >>> # Assume environment variable VCAP_SERVICES has correct information
+        >>> sc = StreamingAnalyticsConnection(service_name='Streaming-Analytics')
+        >>> print(sc.get_streaming_analytics().get_instance_status())
+        {'plan': 'Standard', 'state': 'STARTED', 'enabled': True, 'status': 'running'}
     """
     def __init__(self, vcap_services=None, service_name=None):
         vcap = _get_vcap_services(vcap_services)
@@ -162,30 +177,37 @@ class StreamingAnalyticsConnection(StreamsConnection):
 
     @property
     def resource_url(self):
+        """str: Root URL for IBM Streams REST API"""
         if self._resource_url is None:
             self._resource_url = _get_rest_api_url_from_creds(self.session, self.credentials)
         return self._resource_url
 
     def get_streaming_analytics(self):
-        """
-        Get a :py:class:`StreamingAnalyticsService` to allow interaction with
-        the Streaming Analytics service this object is connected to.
+        """Returns a :py:class:`~.rest_primitives.StreamingAnalyticsService` to allow further interaction with
+        the Streaming Analytics service.
 
         Returns:
-            StreamingAnalyticsService: Object to interact with service.
+            :py:class:`~.rest_primitives.StreamingAnalyticsService`:
+                object for interacting with the Streaming Analytics service.
         """
         return StreamingAnalyticsService(self.rest_client, self.credentials)
 
 
-def _get_vcap_services(vcap_services = None):
+def _get_vcap_services(vcap_services=None):
     """Retrieves the VCAP Services information from the `ConfigParams.VCAP_SERVICES` field in the config object. If
-    the field is a string, it attempts to parse it as a dict. If the field is a file, it reads the file and attempts
-    to parse the contents as a dict.
+    `vcap_services` is not specified, it takes the information from VCAP_SERVICES environment variable.
 
-    :param config: Connection information for Bluemix.
-    :type config: dict.
-    :return: A dict representation of the VCAP Services information.
-    :type return: dict.
+    Args:
+        vcap_services (str): Try to parse as a JSON string, otherwise, try open it as a file.
+        vcap_services (dict): Return the dict as is.
+
+    Returns:
+        dict: A dict representation of the VCAP Services information.
+
+    Raises:
+        ValueError:
+            * if `vcap_services` nor VCAP_SERVICES environment variable are specified.
+            * cannot parse `vcap_services` as a JSON string nor as a filename.
     """
     if vcap_services is None:
         vcap_services = os.environ.get('VCAP_SERVICES')
@@ -210,16 +232,20 @@ def _get_vcap_services(vcap_services = None):
 
 
 def _get_credentials(vcap_services, service_name=None):
-    """Retrieves the credentials of the VCAP Service specified by the `ConfigParams.SERVICE_NAME` field in `config`.
+    """Retrieves the credentials of the VCAP Service of the specified `service_name`.  If
+    `service_name` is not specified, it takes the information from STREAMING_ANALYTICS_SERVICE_NAME environment
+    variable.
 
-    :param config: Connection information for Bluemix.
-    :type config: dict.
-    :param vcap_services: A dict representation of the VCAP Services information.
-    :type vcap_services: dict.
-    :return: A dict representation of the credentials.
-    :type return: dict.
+    Args:
+        vcap_services (dict): A dict representation of the VCAP Services information.
+        service_name (str): One of the service name stored in `vcap_services`
+
+    Returns:
+        dict: A dict representation of the credentials.
+
+    Raises:
+        ValueError:  Cannot find `service_name` in `vcap_services`
     """
-
     if service_name is None:
         service_name = os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME', None)
     # Get the service corresponding to the SERVICE_NAME
@@ -239,10 +265,10 @@ def _get_credentials(vcap_services, service_name=None):
 def _get_rest_api_url_from_creds(session, credentials):
     """Retrieves the Streams REST API URL from the provided credentials.
     Args:
-        session (Session): A Requests session object for making REST calls
+        session (:py:class:`requests.Session`): A Requests session object for making REST calls
         credentials (dict): A dict representation of the credentials.
     Returns:
-        The remote Streams REST API URL.
+        str: The remote Streams REST API URL.
     """
     resources_url = credentials['rest_url'] + credentials['resources_path']
     try:
@@ -252,9 +278,7 @@ def _get_rest_api_url_from_creds(session, credentials):
         logger.error("Error while retrieving rest REST url from: " + resources_url)
         raise
 
-
     response_raw.raise_for_status()
 
     rest_api_url = response['streams_rest_url'] + '/resources'
     return rest_api_url
-
