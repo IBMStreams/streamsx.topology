@@ -71,21 +71,18 @@ class BuildServiceRemoteRESTWrapper {
 			String outputId = jstring(build, "output_id");
 
 			// Loop until built
-			String status = buildStatusGet(buildId, httpclient, apiKey);
+			String status = "";
 			while (!status.equals("built")) {
-				// 'building', 'notBuilt', and 'waiting' are all states which can eventualy result in 'built'
-				// sleep and continue to monitor
-				if (status.equals("building") || status.equals("notBuilt") || status.equals("waiting")) {
+				status = buildStatusGet(buildId, httpclient, apiKey);
+				if (status.equals("building")) {
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 					}
 					continue;
-				} 
-				// The remaining possible states are 'failed', 'timeout', 'canceled', 'canceling', and 'unknown', none of which can lead to a state of 'built', so we throw an error.
-				else {
-					RemoteContext.REMOTE_LOGGER.severe("Streaming Analytics service (" + serviceName + "): The submitted archive " + archive.getName() + " failed to build with status " + status + ".");
+				} else if (status.equals("failed")) {
+					RemoteContext.REMOTE_LOGGER.severe("Streaming Analytics service (" + serviceName + "): The submitted archive " + archive.getName() + " failed to build.");
 					JsonObject output = getBuildOutput(buildId, outputId, httpclient, apiKey);
 					String strOutput = "";
 					if (output != null)
