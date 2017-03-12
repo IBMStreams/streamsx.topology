@@ -122,12 +122,17 @@ class OperatorGenerator {
         
         objectArray(config, "viewConfigs", viewConfig -> {
 
-            String name = viewConfig.get("name").getAsString();
-            String port = viewConfig.get("port").getAsString();
+            String name = jstring(viewConfig, "name");
+            String port = jstring(viewConfig, "port");
+            String description = jstring(viewConfig, "description");
             Double bufferTime = viewConfig.get("bufferTime").getAsDouble();
             Long sampleSize = viewConfig.get("sampleSize").getAsLong();
             sb.append("@view(name = \"");
             sb.append(name);
+            if (description != null) {
+                sb.append("\", description = \"");
+                sb.append(description);
+            }
             sb.append("\", port = " + port);
             sb.append(", bufferTime = " + bufferTime + ", ");
             sb.append("sampleSize = " + sampleSize + ", ");
@@ -476,17 +481,20 @@ class OperatorGenerator {
             name = splBasename(name);
             assignsSb.append(name);
             assignsSb.append(":\n");
-                      
+            
+            AtomicBoolean seenOne = new AtomicBoolean();
             for (Entry<String, JsonElement> a : assigns.entrySet()) {
                 String attr = a.getKey();
                 JsonObject value = a.getValue().getAsJsonObject();
-                
+                if (seenOne.getAndSet(true))
+                    assignsSb.append(",\n");   
                 assignsSb.append("  ");
                 assignsSb.append(attr);
                 assignsSb.append("=");
                 splValueSupportingSubmission(value, assignsSb);
-                assignsSb.append(";\n");              
+           
             }
+            assignsSb.append(";\n");
             
             allAssignmentsSb.append(assignsSb);
         });

@@ -438,20 +438,44 @@ class Stream(object):
         oport = op.addOutputPort(schema=schema)
         return Stream(self.topology, oport)
 
-    def view(self, buffer_time = 10.0, sample_size = 10000, name=None):
+    def view(self, buffer_time = 10.0, sample_size = 10000, name=None, description=None):
         """
-        Defines a view on a stream. Returns a view object which can be used to access the data
-        :param buffer_time The window of time over which tuples will be
-        :param name Name of the view. Name must be unique within the topology. Defaults to a generated name.
+        Defines a view on a stream.
+
+        A view is a continually updated sampled buffer of a streams's tuples.
+        Views allow visibility into a stream from external clients such
+        as the Streams console,
+        `Microsoft Excel <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.0/com.ibm.streams.excel.doc/doc/excel_overview.html>`_ or REST clients.
+
+        The view created by this method can be used by external clients
+        and through the returned object after the topology is submitted. 
+
+        When the stream contains Python objects then they are converted
+        to JSON.
+
+        Args:
+            buffer_time: Specifies the buffer size to use measured in seconds.
+            sample_size: Specifies the number of tuples to sample per second.
+            name: Name of the view. Name must be unique within the topology. Defaults to a generated name.
+            description: Description of the view.
+        Returns:
+            View object which can be used to access the data when the
+            topology is submitted.
         """
-        new_op = self._map(streamsx.topology.functions.identity,schema=schema.CommonSchema.Json)
         if name is None:
             name = ''.join(random.choice('0123456789abcdef') for x in range(16))
 
-        port = new_op.oport.name
-        new_op.oport.operator.addViewConfig({
+        if self.oport.schema == schema.CommonSchema.Python:
+        
+            view_stream = self._map(streamsx.topology.functions.identity,schema=schema.CommonSchema.Json, name=name)
+        else:
+            view_stream = self
+
+        port = view_stream.oport.name
+        view_stream.oport.operator.addViewConfig({
                 'name': name,
                 'port': port,
+                'description': description,
                 'bufferTime': buffer_time,
                 'sampleSize': sample_size})
         _view = View(name)
