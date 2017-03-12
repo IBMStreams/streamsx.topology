@@ -1,0 +1,43 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+import unittest
+
+from streamsx.topology.topology import *
+from streamsx.topology.tester import Tester
+from streamsx.topology import context
+from streamsx import rest
+import streamsx.ec as ec
+
+import test_vers
+
+def rands():
+    r = random.Random()
+    while True:
+       yield r.random()
+
+@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
+class TestTester(unittest.TestCase):
+    def setUp(self):
+        Tester.setup_distributed(self)
+
+    def test_atleast(self):
+        """ 
+        """
+        topo = Topology()
+        s = topo.source(rands)
+        tester = Tester(topo)
+        tester.tuple_count(s, 100, exact=False)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_checker(self):
+        """ 
+        """
+        topo = Topology()
+        s = topo.source(rands)
+        s = s.filter(lambda r : r > 0.8)
+        s = s.map(lambda r : r + 7.0 )
+        tester = Tester(topo)
+        tester.tuple_count(s, 200, exact=False)
+        tester.tuple_check(s, lambda r : r > 7.8)
+        tester.test(self.test_ctxtype, self.test_config)

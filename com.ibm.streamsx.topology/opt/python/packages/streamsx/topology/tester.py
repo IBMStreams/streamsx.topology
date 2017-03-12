@@ -132,19 +132,34 @@ class Tester(object):
         self._conditions[condition.name] = (stream, condition)
         return stream
 
-    def tuple_count(self, stream, count):
-        """Test that that a stream returns an exact number of tuples.
+    def tuple_count(self, stream, count, exact=True):
+        """Test that that a stream contains an number of tuples.
+
+        If exact is True then condition becomes valid when count
+        tuples are seen on stream during the test. Subsequently if additional
+        tuples are seen on stream then the condition fails and can never
+        become valid.
+
+        If exact is False then the condition becomes valid once count
+        tuples are seen on stream and remains valid regardless of
+        any additional tuples.
 
         Args:
             stream(Stream): Stream to be tested.
             count: Number of tuples expected.
+            exact: True if the stream must contain the exactly count of tuples
+            to be value, False if the stream must contain at least count tuples.
 
         Returns: stream
 
         """
         _logger.debug("Adding tuple count (%d) condition to stream %s.", count, stream)
-        name = "ExactCount" + str(len(self._conditions));
-        cond = _TupleExactCount(count, name)
+        if exact:
+            name = "ExactCount" + str(len(self._conditions))
+            cond = _TupleExactCount(count, name)
+        else:
+            name = "AtLeastCount" + str(len(self._conditions))
+            cond = _TupleAtLeastCount(count, name)
         return self.add_condition(stream, cond)
 
     def contents(self, stream, expected, ordered=True):
@@ -158,11 +173,34 @@ class Tester(object):
         Returns:
 
         """
-        name = "StreamContents" + str(len(self._conditions));
+        name = "StreamContents" + str(len(self._conditions))
         if ordered:
             cond = _StreamContents(expected, name)
         else:
             cond = _UnorderedStreamContents(expected, name)
+        return self.add_condition(stream, cond)
+
+    def tuple_check(self, stream, checker):
+        """Check each tuple on a stream.
+
+        For each tuple ``t`` on ``stream`` ``checker(t)`` is called.
+
+        If the return evaluates to ``False`` then the condition fails.
+        Once the condition fails it can never become valid.
+        Otherwise the condition becomes or remains valid. The first
+        tuple on the stream makes the condition valid if the checker
+        callable evaluates to true.
+
+        The condition can be combined with :py:meth:`tuple_count` with
+        ``exact=False`` to test a stream map or filter with random input data.
+
+        Args:
+            stream(Stream): Stream to be tested.
+            checker(callable): Callable that must evaluate to True for each tuple.
+
+        """
+        name = "TupleCheck" + str(len(self._conditions))
+        cond = _TupleCheck(checker, name)
         return self.add_condition(stream, cond)
 
     def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None):
@@ -256,7 +294,7 @@ class Condition(object):
     @valid.setter
     def valid(self, v):
         if self._fail:
-           return None
+           return
         if self._valid != v:
             if v:
                 self._metric_valid.value = 1
@@ -315,6 +353,20 @@ class _TupleExactCount(Condition):
     def __str__(self):
         return "Exact tuple count: expected:" + str(self.target) + " received:" + str(self.count)
 
+class _TupleAtLeastCount(Condition):
+    def __init__(self, target, name=None):
+        super(_TupleAtLeastCount, self).__init__(name)
+        self.target = target
+        self.count = 0
+        if target == 0:
+            self.valid = True
+
+    def __call__(self, tuple):
+        self.count += 1
+        self.valid = self.count >= self.target
+
+    def __str__(self):
+        return "At least tuple count: expected:" + str(self.target) + " received:" + str(self.count)
 
 class _StreamContents(Condition):
     def __init__(self, expected, name=None):
@@ -355,6 +407,21 @@ class _UnorderedStreamContents(_StreamContents):
                 self.fail()
                 return True
         return False
+
+class _TupleCheck(Condition):
+    def __init__(self, checker, name=None):
+        super(_TupleCheck, self).__init__(name)
+        self.checker = checker
+
+    def __call__(self, tuple):
+        if not self.checker(tuple):
+            self.fail()
+        else:
+            # Will not override if already failed
+            self.valid = True
+
+    def __str__(self):
+        return "Tuple checker:" + str(self.checker)
 
 #######################################
 # Internal functions
