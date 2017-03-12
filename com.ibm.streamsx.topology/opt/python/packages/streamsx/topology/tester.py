@@ -284,7 +284,8 @@ class Tester(object):
         cc = _ConditionChecker(self, self.sc, self.submission_result)
         self.result = cc._complete()
         self.result['submission_result'] = self.submission_result
-        self._local_thread.join()
+        if self.local_check is not None:
+            self._local_thread.join()
         if self.local_check_exception is not None:
             raise self.local_check_exception
         return self.result['passed']
