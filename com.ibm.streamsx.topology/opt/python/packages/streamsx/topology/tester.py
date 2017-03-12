@@ -8,6 +8,7 @@ import os
 import unittest
 import logging
 import collections
+import threading
 
 _logger = logging.getLogger('streamsx.topology.test')
 
@@ -31,9 +32,10 @@ class Tester(object):
         topology: Topology to be tested.
     """
     def __init__(self, topology):
-       self.topology = topology
-       topology.tester = self
-       self._conditions = {}
+        self.topology = topology
+        topology.tester = self
+        self._conditions = {}
+        self.local_check = None
 
     @staticmethod
     def setup_standalone(test):
@@ -203,6 +205,9 @@ class Tester(object):
         cond = _TupleCheck(checker, name)
         return self.add_condition(stream, cond)
 
+    def local_check(self, callable):
+        self.local_check = callable
+
     def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None):
         """Test the topology.
 
@@ -251,31 +256,52 @@ class Tester(object):
 
     def _standalone_test(self, config):
         """ Test using STANDALONE.
-        Success is soley indicated by the process completing and returning zero.
+        Success is solely indicated by the process completing and returning zero.
         """
         sr = streamsx.topology.context.submit("STANDALONE", self.topology, config)
+        self.submission_result = sr
         self.result = {'passed': sr['return_code'], 'submission_result': sr}
         return sr['return_code'] == 0
 
     def _distributed_test(self, config, username, password):
 
         sjr = streamsx.topology.context.submit("DISTRIBUTED", self.topology, config, username=username, password=password)
+        self.submission_result = sjr
         if sjr['return_code'] != 0:
             print("DO AS LOGGER", "Failed to submit job to distributed instance.")
             return False
-        sc = StreamsConnection()
-        return self._distributed_wait_for_result(sc, sjr)
+        self.sc = StreamsConnection()
+        return self._distributed_wait_for_result()
 
     def _streaming_analytics_test(self, config):
         sjr = streamsx.topology.context.submit("ANALYTICS_SERVICE", self.topology, config)
-        sc = StreamsConnection(config=config)
-        return self._distributed_wait_for_result(sc, sjr)
+        self.submission_result = sjr
+        self.sc = StreamsConnection(config=config)
+        return self._distributed_wait_for_result()
 
-    def _distributed_wait_for_result(self, sc, sjr):
-        cc = _ConditionChecker(self, sc, sjr)
+    def _distributed_wait_for_result(self):
+        self._start_local_check()
+        cc = _ConditionChecker(self, self.sc, self.submission_result)
         self.result = cc._complete()
-        self.result['submission_result'] = sjr
+        self.result['submission_result'] = self.submission_result
+        self._local_thread.join()
+        if self.local_check_exception is not None:
+            raise self.local_check_exception
         return self.result['passed']
+
+    def _start_local_check(self):
+        if self.local_check is None:
+            return
+        self._local_thread = threading.Thread(target=self._call_local_check)
+        self._local_thread.start()
+
+    def _call_local_check(self):
+        try:
+            self.local_check_value = self.local_check()
+            self.local_check_exception = None
+        except Exception as e:
+            self.local_check_value = None
+            self.local_check_exception = e
 
 class Condition(object):
     _METRIC_PREFIX = "streamsx.condition:"

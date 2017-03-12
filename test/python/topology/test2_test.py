@@ -21,8 +21,8 @@ class TestTester(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
 
-    def test_atleast(self):
-        """ 
+    def test_at_least(self):
+        """ Test the at least tuple count.
         """
         topo = Topology()
         s = topo.source(rands)
@@ -31,7 +31,7 @@ class TestTester(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_checker(self):
-        """ 
+        """ Test the per-tuple checker.
         """
         topo = Topology()
         s = topo.source(rands)
@@ -41,3 +41,23 @@ class TestTester(unittest.TestCase):
         tester.tuple_count(s, 200, exact=False)
         tester.tuple_check(s, lambda r : r > 7.8)
         tester.test(self.test_ctxtype, self.test_config)
+
+    def test_local_check(self):
+        """ Test the at least tuple count.
+        """
+        topo = Topology()
+        s = topo.source(rands)
+        self.my_local_called = False
+        self.tester = Tester(topo)
+        self.tester.tuple_count(s, 100, exact=False)
+        self.tester.local_check = self.my_local
+        self.tester.test(self.test_ctxtype, self.test_config)
+        self.assertTrue(self.my_local_called)
+
+    def my_local(self):
+        self.assertTrue(hasattr(self.tester, 'submission_result'))
+        self.assertTrue(hasattr(self.tester, 'sc'))
+        self.my_local_called = True
+   
+
+   
