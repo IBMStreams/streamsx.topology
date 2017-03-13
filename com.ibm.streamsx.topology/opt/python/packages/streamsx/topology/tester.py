@@ -286,20 +286,20 @@ class Tester(object):
         self.result['submission_result'] = self.submission_result
         if self.local_check is not None:
             self._local_thread.join()
-        if self.local_check_exception is not None:
-            raise self.local_check_exception
+            if self.local_check_exception is not None:
+                raise self.local_check_exception
         return self.result['passed']
 
     def _start_local_check(self):
         if self.local_check is None:
             return
+        self.local_check_exception = None
         self._local_thread = threading.Thread(target=self._call_local_check)
         self._local_thread.start()
 
     def _call_local_check(self):
         try:
             self.local_check_value = self.local_check()
-            self.local_check_exception = None
         except Exception as e:
             self.local_check_value = None
             self.local_check_exception = e
