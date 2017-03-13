@@ -26,7 +26,7 @@ public class RemoteContexts {
             return;
     
         // Write to the file and close the file.
-        JsonObject results_json = GsonUtilities.getProperty(submission, RemoteContext.SUBMISSION_RESULTS);        
+        JsonObject results_json = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);        
         Files.write(Paths.get(resultsFile), results_json.toString().getBytes(StandardCharsets.UTF_8));
     }
 }

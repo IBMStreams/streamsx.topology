@@ -116,7 +116,7 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         generateSPL(toolkitRoot, jsonGraph);
         
         if (keepToolkit || keepArtifacts(submission)) {
-        	final JsonObject submissionResult = GsonUtilities.getProperty(submission, RemoteContext.SUBMISSION_RESULTS);
+        	final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
         	submissionResult.addProperty(SubmissionResultsKeys.TOOLKIT_ROOT, toolkitRoot.getAbsolutePath());
         }
         

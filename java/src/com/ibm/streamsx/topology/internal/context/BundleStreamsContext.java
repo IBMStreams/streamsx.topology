@@ -74,7 +74,7 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
     	
     	// If user asked for the SAB or asked to keep the SAB explicitly
     	if (keepBundle || keepArtifacts(submission)) {
-    		final JsonObject submissionResult = GsonUtilities.getProperty(submission, RemoteContext.SUBMISSION_RESULTS);
+    		final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
     		submissionResult.addProperty(SubmissionResultsKeys.BUNDLE_PATH, bundle.get().getAbsolutePath());
     	}
     	

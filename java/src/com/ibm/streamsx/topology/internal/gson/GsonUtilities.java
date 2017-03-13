@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.gson;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map.Entry;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -181,23 +182,30 @@ public class GsonUtilities {
         return item; 
     }
     
-
     /**
-     * Get a property from a JSON object.  If the property doesn't exist, create it, and assign it an empty JSON object
-     *  
-     * @param obj source JSON object
-     * @param property property to retrieve
-     * @return The associated value of the property
+     * Add all the properties in the {@code source} JSON object into {@code target} JSON object. Existing properties will be overridden.
+     * <p>
+     * E.g. if {@code target} contains:
+     * <pre><code>
+     * 		{ "t1": {}, "t2": {} }
+     * </code></pre>
+     * and {@code source} contains:
+     * <pre><code>
+     * 		{ "s1": {}, "s2": {}, "s3": {} }
+     * </code></pre>
+     * then {@code target} after the call, contains:
+     * <pre><code>
+     * 		{ "t1": {}, "t2": {}, "s1": {}, "s2": {}, "s3": {} }
+     * </code></pre>
+     * 
+     * @param target JSON object to copy properties to
+     * @param source JSON object to receive properties from
+     * @return modified target JSON object
      */
-    public static JsonObject getProperty (final JsonObject obj, final String property) { 
-    	final JsonObject result;
-    	if (obj.has(property)) {
-    		result = object(obj, property);
-    	} else {
-    		result = new JsonObject();
-    		obj.add(property,  result);
-    	}
-    	return result;
+    public static JsonObject addAll(JsonObject target, JsonObject source) {
+    	for (Entry<String, JsonElement> entry : source.entrySet()) {
+    		target.add(entry.getKey(), entry.getValue());
+        }
+    	return target;
     }
-    	
 }
