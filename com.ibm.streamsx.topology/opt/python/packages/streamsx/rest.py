@@ -6,7 +6,7 @@ import json
 import logging
 import streamsx.st as st
 
-from .rest_primitives import Domain, Instance, Installation, Resource, StreamsRestClient, StreamingAnalyticsService,  _exact_resource
+from .rest_primitives import Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService,  _exact_resource
 from .rest_errors import ViewNotFoundError
 from pprint import pformat
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -59,7 +59,7 @@ class StreamsConnection:
             rest_api_url = _get_rest_api_url_from_creds(self.credentials)
 
             # Create rest connection to remote Bluemix SWS
-            self.rest_client = StreamsRestClient(self.credentials['userid'], self.credentials['password'], rest_api_url)
+            self.rest_client = _StreamsRestClient(self.credentials['userid'], self.credentials['password'], rest_api_url)
             self.resource_url = rest_api_url
             # Get the instance id from one of the URL paths
             self.instance_id = self.credentials['jobs_path'].split('/service_instances/',1)[1].split('/',1)[0]
@@ -80,7 +80,7 @@ class StreamsConnection:
 
     def _setup_distributed(self, instance_id, username, password, resource_url):
         self.resource_url = resource_url
-        self.rest_client = StreamsRestClient(username, password, self.resource_url)
+        self.rest_client = _StreamsRestClient(username, password, self.resource_url)
         self._analytics_service = False
         if instance_id is None:
             instance_id = os.environ['STREAMS_INSTANCE_ID']
