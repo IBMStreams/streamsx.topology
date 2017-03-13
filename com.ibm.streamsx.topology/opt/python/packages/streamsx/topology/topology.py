@@ -467,7 +467,7 @@ class Stream(object):
 
         if self.oport.schema == schema.CommonSchema.Python:
         
-            view_stream = self._map(streamsx.topology.functions.identity,schema=schema.CommonSchema.Json, name=name)
+            view_stream = self._map(streamsx.topology.functions.identity,schema=schema.CommonSchema.Json)
         else:
             view_stream = self
 
