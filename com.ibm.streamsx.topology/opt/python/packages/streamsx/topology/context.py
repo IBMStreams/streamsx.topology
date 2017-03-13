@@ -79,7 +79,7 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
     if not graph.operators:
         raise ValueError("Topology {0} does not contain any streams.".format(graph.topology.name))
 
-    context_submitter = _SubmitContext(graph, config, username, password).get_submit_context(ctxtype)
+    context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
     try:
         return context_submitter.submit()
     except:
@@ -377,7 +377,7 @@ class _DistributedSubmitter(_BaseSubmitter):
         self._setup_views(graph, None, username, password, rest_api_url)
 
 
-class _SubmitContext(object):
+class _SubmitContextFactory(object):
     """
     ContextSubmitter:
         Responsible for performing the correct submission depending on a number of factors, including: the
