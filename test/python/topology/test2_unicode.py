@@ -93,4 +93,4 @@ class TestBluemixUnicode(TestUnicode):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
         vcap = self.test_config.get('topology.service.vcap')
         sn = self.test_config.get('topology.service.name')
-        self.sc = rest.StreamsConnection(vcap, sn)
+        self.sc = rest.StreamingAnalyticsConnection(vcap, sn)
