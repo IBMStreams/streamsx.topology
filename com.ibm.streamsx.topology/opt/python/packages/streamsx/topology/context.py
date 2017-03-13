@@ -74,10 +74,12 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         to the submission.
     """
 
-    if not graph.graph.operators:
-        raise ValueError("Topology {0} does not contain any streams.".format(graph.graph.topology.name))
+    graph = graph.graph
 
-    context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
+    if not graph.operators:
+        raise ValueError("Topology {0} does not contain any streams.".format(graph.topology.name))
+
+    context_submitter = _SubmitContext(graph, config, username, password).get_submit_context(ctxtype)
     try:
         return context_submitter.submit()
     except:
@@ -88,14 +90,14 @@ class _BaseSubmitter(object):
     """
     A submitter which handles submit operations common across all submitter types..
     """
-    def __init__(self, ctxtype, config, app_topology):
+    def __init__(self, ctxtype, config, graph):
         self.ctxtype = ctxtype
         self.config = dict()
         if config is not None:
             # Make copy of config to avoid modifying
             # the callers config
             self.config.update(config)
-        self.app_topology = app_topology
+        self.graph = graph
         self.fn = None
         self.results_file = None
 
@@ -189,7 +191,7 @@ class _BaseSubmitter(object):
     def _create_full_json(self):
         fj = dict()
         fj["deploy"] = self.config
-        fj["graph"] = self.app_topology.generateSPLGraph()
+        fj["graph"] = self.graph.generateSPLGraph()
 
         _file = tempfile.NamedTemporaryFile(prefix="results", suffix=".json", mode="w+t", delete=False)
         _file.close()
@@ -213,11 +215,11 @@ class _BaseSubmitter(object):
             raise
         self.fn = tf.name
 
-    def _setup_views(self, app_topology, submission_result, username, password, rest_api_url):
+    def _setup_views(self, graph, submission_result, username, password, rest_api_url):
         # Give each view in the app the necessary information to connect to SWS.
-        if app_topology.get_views():
+        if graph.get_views():
             connection_info = {'username': username, 'password': password, 'rest_api_url': rest_api_url}
-            for view in app_topology.get_views():
+            for view in graph.get_views():
                 view.set_streams_connection_config(connection_info)
 
     # There are two modes for execution.
@@ -298,13 +300,12 @@ class _JupyterSubmitter(_BaseSubmitter):
             logger.exception("Error starting java subprocess for submission")
             raise
 
-class _RemoteBuildSubmitter(_BaseSubmitter):
+class _StreamingAnalyticsSubmitter(_BaseSubmitter):
     """
-    A submitter which retrieves the SWS REST API URL and then submits the application to be built and submitted
-    on Bluemix within a Streaming Analytics service.
+    A submitter supports the ANALYTICS_SERVICE (Streaming Analytics service) context.
     """
-    def __init__(self, ctxtype, config, app_topology):
-        super(_RemoteBuildSubmitter, self).__init__(ctxtype, config, app_topology)
+    def __init__(self, ctxtype, config, graph):
+        super(_StreamingAnalyticsSubmitter, self).__init__(ctxtype, config, graph)
 
         self._set_vcap()
         self._set_credentials()
@@ -334,7 +335,7 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
         rest_api_url = response['streams_rest_url'] + '/resources'
 
         # Give each view in the app the necessary information to connect to SWS.
-        self._setup_views(app_topology, None, username, password, rest_api_url)
+        self._setup_views(graph, None, username, password, rest_api_url)
 
     def _set_vcap(self):
         "Set self.vcap to the VCAP services, from env var or the config"
@@ -346,21 +347,20 @@ class _RemoteBuildSubmitter(_BaseSubmitter):
 
     def _get_java_env(self):
         "Pass the VCAP through the environment to the java submission"
-        env = super(_RemoteBuildSubmitter, self)._get_java_env()
+        env = super(_StreamingAnalyticsSubmitter, self)._get_java_env()
         env['VCAP_SERVICES'] = json.dumps(self._vcap)
         return env
 
 class _DistributedSubmitter(_BaseSubmitter):
     """
-    A submitter which retrieves the SWS REST API URL and then submits the application to be built and submitted
-    on Bluemix within a Streaming Analytics service.
+    A submitter which supports the DISTRIBUTED (on-prem cluster) context.
     """
-    def __init__(self, ctxtype, config, app_topology, username, password):
-        _BaseSubmitter.__init__(self, ctxtype, config, app_topology)
+    def __init__(self, ctxtype, config, graph, username, password):
+        _BaseSubmitter.__init__(self, ctxtype, config, graph)
 
         # If a username or password isn't supplied, don't attempt to retrieve view data, but throw an error if views
         # were created
-        if (username is None or password is None) and len(app_topology.get_views()) > 0:
+        if (username is None or password is None) and len(graph.get_views()) > 0:
             raise ValueError("To access views data, both a username and a password must be supplied when submitting.")
         elif username is None or password is None:
             return
@@ -374,17 +374,17 @@ class _DistributedSubmitter(_BaseSubmitter):
             raise
 
         # Give each view in the app the necessary information to connect to SWS.
-        self._setup_views(app_topology, None, username, password, rest_api_url)
+        self._setup_views(graph, None, username, password, rest_api_url)
 
 
-class _SubmitContextFactory(object):
+class _SubmitContext(object):
     """
     ContextSubmitter:
         Responsible for performing the correct submission depending on a number of factors, including: the
         presence/absence of a streams install, the type of context, and whether the user seeks to retrieve data via rest
     """
-    def __init__(self, app_topology, config=None, username=None, password=None):
-        self.app_topology = app_topology.graph
+    def __init__(self, graph, config=None, username=None, password=None):
+        self.graph = graph
         self.config = config
         self.username = username
         self.password = password
@@ -400,22 +400,22 @@ class _SubmitContextFactory(object):
         if streams_install is None:
             if not (ctxtype == ContextTypes.TOOLKIT or ctxtype == ContextTypes.BUILD_ARCHIVE
                     or ctxtype == ContextTypes.ANALYTICS_SERVICE):
-                raise UnsupportedContextException(ctxtype + " must be submitted when a streams install is present.")
+                raise UnsupportedContextException(ctxtype + " must be submitted when a Streams install is present.")
 
         if ctxtype == ContextTypes.JUPYTER:
             logger.debug("Selecting the JUPYTER context for submission")
-            return _JupyterSubmitter(ctxtype, self.config, self.app_topology)
+            return _JupyterSubmitter(ctxtype, self.config, self.graph)
         elif ctxtype == ContextTypes.DISTRIBUTED:
             logger.debug("Selecting the DISTRIBUTED context for submission")
-            return _DistributedSubmitter(ctxtype, self.config, self.app_topology, self.username, self.password)
+            return _DistributedSubmitter(ctxtype, self.config, self.graph, self.username, self.password)
         elif ctxtype == ContextTypes.ANALYTICS_SERVICE:
             logger.debug("Selecting the ANALYTICS_SERVICE context for submission")
             if not (sys.version_info.major == 3 and sys.version_info.minor == 5):
                 raise RuntimeError("The ANALYTICS_SERVICE context only supports Python version 3.5")
-            return _RemoteBuildSubmitter(ctxtype, self.config, self.app_topology)
+            return _StreamingAnalyticsSubmitter(ctxtype, self.config, self.graph)
         else:
             logger.debug("Using the BaseSubmitter, and passing the context type through to java.")
-            return _BaseSubmitter(ctxtype, self.config, self.app_topology)
+            return _BaseSubmitter(ctxtype, self.config, self.graph)
 
 
 # Used to delete the JSON file after it is no longer needed.
