@@ -70,7 +70,8 @@ class _ResourceElement(object):
             elements.append(eclass(json_element, self.rest_client))
         return elements
 
-class StreamsRestClient(object):
+
+class _StreamsRestClient(object):
     """Handles the session connection with the Streams REST API.
 
     :param username: The username of an authorized Streams user.
