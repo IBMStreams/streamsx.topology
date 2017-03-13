@@ -87,11 +87,10 @@ class TestDistributedUnicode(TestUnicode):
 
         self.sc = rest.StreamsConnection(username=username, password=password)
 
-
-
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestBluemixUnicode(TestUnicode):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
-        self.sc = rest.StreamsConnection(config = self.test_config)
-
+        vcap = self.test_config.get('topology.service.vcap')
+        sn = self.test_config.get('topology.service.name')
+        self.sc = rest.StreamsConnection(vcap, sn)

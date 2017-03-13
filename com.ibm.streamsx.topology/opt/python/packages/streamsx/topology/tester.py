@@ -9,6 +9,9 @@ import unittest
 import logging
 import collections
 import threading
+from streamsx.rest import StreamsConnection
+from streamsx.rest import StreamingAnalyticsConnection
+import time
 
 _logger = logging.getLogger('streamsx.topology.test')
 
@@ -276,7 +279,7 @@ class Tester(object):
     def _streaming_analytics_test(self, config):
         sjr = streamsx.topology.context.submit("ANALYTICS_SERVICE", self.topology, config)
         self.submission_result = sjr
-        self.sc = StreamsConnection(config=config)
+        self.sc = StreamingAnalyticsConnection(service_name = config['topology.service.name'])
         return self._distributed_wait_for_result()
 
     def _distributed_wait_for_result(self):
@@ -454,9 +457,6 @@ class _TupleCheck(Condition):
 # Internal functions
 #######################################
 
-from streamsx.rest import StreamsConnection
-import time
-
 
 def _result_to_dict(passed, t):
     result = {}
@@ -472,7 +472,8 @@ class _ConditionChecker(object):
         self.tester = tester
         self._sc = sc
         self._sjr = sjr
-        self.job_id = job_id = sjr['jobId']
+        self._instance_id = sjr['instanceId']
+        self._job_id = sjr['jobId']
         self._sequences = {}
         for cn in tester._conditions:
             self._sequences[cn] = -1
@@ -552,12 +553,12 @@ class _ConditionChecker(object):
         return (valid, fail, progress, condition_states)
 
     def _find_job(self):
-        for instance in self._sc.get_instances(id=self._sc.instance_id):
-            jobs = instance.get_jobs(id=self.job_id)
+        for instance in self._sc.get_instances(id=self._instance_id):
+            jobs = instance.get_jobs(id=self._job_id)
             if len(jobs) == 1:
                 return jobs[0]
-            raise AssertionError("Job not found:job_id:", self.job_id)
-        raise AssertionError("Instance not found:", self._sc.instance_id)
+            raise AssertionError("Job not found:job_id:", self._job_id)
+        raise AssertionError("Instance not found:", self._instance_id)
 
     def _get_job_metrics(self):
         """Fetch all the condition metrics for a job.

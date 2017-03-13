@@ -165,11 +165,16 @@ class _BaseSubmitter(object):
 
             _delete_json(self)
             results_json['return_code'] = process.returncode
+            self._augment_submission_result(results_json)
             return results_json
 
         except:
             logger.exception("Error starting java subprocess for submission")
             raise
+
+    def _augment_submission_result(self, submission_result):
+        """Allow a subclass to augment a submission result"""
+        pass
 
     def _get_java_env(self):
         "Get the environment to be passed to the Java execution"
@@ -215,12 +220,14 @@ class _BaseSubmitter(object):
             raise
         self.fn = tf.name
 
-    def _setup_views(self, graph, submission_result, username, password, rest_api_url):
-        # Give each view in the app the necessary information to connect to SWS.
-        if graph.get_views():
-            connection_info = {'username': username, 'password': password, 'rest_api_url': rest_api_url}
-            for view in graph.get_views():
-                view.set_streams_connection_config(connection_info)
+    def _setup_views(self):
+        # Link each view back to this context.
+        if self.graph.get_views():
+            for view in self.graph.get_views():
+                view._submit_context = self
+
+    def streams_connection(self):
+        raise NotImplementedError("Views require submission to DISTRIBUTED or ANALYTICS_SERVICE context")
 
     # There are two modes for execution.
     #
@@ -306,49 +313,31 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
     """
     def __init__(self, ctxtype, config, graph):
         super(_StreamingAnalyticsSubmitter, self).__init__(ctxtype, config, graph)
-
-        self._set_vcap()
-        self._set_credentials()
+        self._streams_connection = None
+        self._vcap_services = self._config().get(ConfigParams.VCAP_SERVICES)
+        self._service_name = self._config().get(ConfigParams.SERVICE_NAME)
 
         # Clear the VCAP_SERVICES key in config, since env var will contain the content
         self._config().pop(ConfigParams.VCAP_SERVICES, None)
 
-        username = self.credentials['userid']
-        password = self.credentials['password']
+        self._setup_views()
 
-        # Obtain REST only when needed. Otherwise, submitting "Hello World" without requests fails.
-        try:
-            import requests
-        except (ImportError, NameError):
-            logger.exception('Unable to import the optional "Requests" module. This is needed when performing'
-                             ' a remote build or retrieving view data.')
-            raise
+    def streams_connection(self):
+        if self._streams_connection is None:
+            self._streams_connection = rest.StreamingAnalyticsConnection(self._vcap_services, self._service_name)
+        return self._streams_connection
 
-        # Obtain the streams SWS REST URL
-        resources_url = self.credentials['rest_url'] + self.credentials['resources_path']
-        try:
-            response = requests.get(resources_url, auth=(username, password)).json()
-        except:
-            logger.exception("Error while querying url: " + resources_url)
-            raise
-
-        rest_api_url = response['streams_rest_url'] + '/resources'
-
-        # Give each view in the app the necessary information to connect to SWS.
-        self._setup_views(graph, None, username, password, rest_api_url)
-
-    def _set_vcap(self):
-        "Set self.vcap to the VCAP services, from env var or the config"
-        self._vcap = rest._get_vcap_services(self._config().get(ConfigParams.VCAP_SERVICES))
-
-    def _set_credentials(self):
-        "Set self.credentials for the selected service, from self.vcap"
-        self.credentials = rest._get_credentials(self._config().get(ConfigParams.SERVICE_NAME), self._vcap)
+    def _augment_submission_result(self, submission_result):
+        vcap = rest._get_vcap_services(self._vcap_services)
+        credentials = rest._get_credentials(vcap, self._service_name)
+        instance_id = credentials['jobs_path'].split('/service_instances/', 1)[1].split('/', 1)[0]
+        submission_result['instanceId'] = instance_id
 
     def _get_java_env(self):
         "Pass the VCAP through the environment to the java submission"
         env = super(_StreamingAnalyticsSubmitter, self)._get_java_env()
-        env['VCAP_SERVICES'] = json.dumps(self._vcap)
+        vcap = rest._get_vcap_services(self._vcap_services)
+        env['VCAP_SERVICES'] = json.dumps(vcap)
         return env
 
 class _DistributedSubmitter(_BaseSubmitter):
@@ -357,24 +346,20 @@ class _DistributedSubmitter(_BaseSubmitter):
     """
     def __init__(self, ctxtype, config, graph, username, password):
         _BaseSubmitter.__init__(self, ctxtype, config, graph)
-
-        # If a username or password isn't supplied, don't attempt to retrieve view data, but throw an error if views
-        # were created
-        if (username is None or password is None) and len(graph.get_views()) > 0:
-            raise ValueError("To access views data, both a username and a password must be supplied when submitting.")
-        elif username is None or password is None:
-            return
-        try:
-            process = subprocess.Popen(['streamtool', 'geturl', '--api'],
-                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            rest_api_url = process.stdout.readline().strip().decode('utf-8')
-            logger.debug("The rest API URL obtained from streamtool is " + rest_api_url)
-        except:
-            logger.exception("Error getting SWS rest api url via streamtool")
-            raise
+        self._streams_connection = None
+        self.username = username
+        self.password = password
 
         # Give each view in the app the necessary information to connect to SWS.
-        self._setup_views(graph, None, username, password, rest_api_url)
+        self._setup_views()
+
+    def streams_connection(self):
+        if self._streams_connection is None:
+            self._streams_connection = rest.StreamsConnection(self.username, self.password)
+        return self._streams_connection
+
+    def _augment_submission_result(self, submission_result):
+        submission_result['instanceId'] = os.environ.get('STREAMS_INSTANCE_ID', 'StreamsInstance')
 
 
 class _SubmitContextFactory(object):

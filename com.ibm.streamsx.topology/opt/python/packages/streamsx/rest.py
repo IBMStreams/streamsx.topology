@@ -23,6 +23,11 @@ class StreamsConnection:
     currently running Jobs, Views, PEs, Operators, and Domains. The StreamsConnection provides methods to retrieve that
     information.
 
+    ``StreamsConnection`` can connect to Streaming Analytics service running on IBM Bluemix cloud
+    platform or distributed IBM Streams instance.
+
+
+
     Example:
         >>> _resource_url = "https://streamsqse.localdomain:8443/streams/rest/resources"
         >>> sc = StreamsConnection(username="streamsadmin", password="passw0rd", resource_url=_resource_url)
@@ -33,7 +38,7 @@ class StreamsConnection:
         >>> print("There are " + jobs_count + " jobs across all instances.")
 
     """
-    def __init__(self, username=None, password=None, resource_url=None, config=None, instance_id=None):
+    def __init__(self, username=None, password=None, resource_url=None):
         """
         :param username: The username of an authorized Streams user.
         :type username: str.
@@ -47,44 +52,25 @@ class StreamsConnection:
         """
         # manually specify username, password, and resource_url
         if username and password and resource_url:
-            self._setup_distributed(instance_id, username, password, resource_url)
-
-        # Connect to Bluemix service using VCAP
-        elif config:
-            vcap_services = _get_vcap_services(vcap_services=config.get(ConfigParams.VCAP_SERVICES))
-            self.credentials = _get_credentials(config[ConfigParams.SERVICE_NAME], vcap_services)
-            self._analytics_service = True
-
-            # Obtain the streams SWS REST URL
-            rest_api_url = _get_rest_api_url_from_creds(self.credentials)
-
-            # Create rest connection to remote Bluemix SWS
-            self.rest_client = _StreamsRestClient(self.credentials['userid'], self.credentials['password'], rest_api_url)
-            self.resource_url = rest_api_url
-            # Get the instance id from one of the URL paths
-            self.instance_id = self.credentials['jobs_path'].split('/service_instances/',1)[1].split('/',1)[0]
-
+            pass
         elif username and password and st._has_local_install:
-            self._setup_distributed(instance_id, username, password, st.get_rest_api())
-
+            resource_url = st.get_rest_api()
         elif st._has_local_install:
             # Assume quickstart
-            self._setup_distributed(instance_id, 'streamsadmin', 'passw0rd', st.get_rest_api())
-
+            username = 'streamsadmin'
+            password = 'passw0rd'
+            resource_url = st.get_rest_api()
         else:
             logger.error("Invalid arguments for StreamsContext.__init__: must supply either a BlueMix VCAP Services or "
                          "a username, password, and resource url.")
             raise ValueError("Must supply either a BlueMix VCAP Services or a username, password, and resource url"
                              " to the StreamsContext constructor.")
-        self.rest_client._sc = self
 
-    def _setup_distributed(self, instance_id, username, password, resource_url):
+
         self.resource_url = resource_url
         self.rest_client = _StreamsRestClient(username, password, self.resource_url)
+        self.rest_client._sc = self
         self._analytics_service = False
-        if instance_id is None:
-            instance_id = os.environ['STREAMS_INSTANCE_ID']
-        self.instance_id = instance_id
 
     def _get_elements(self, resource_name, eclass, id=None):
         elements = []
@@ -95,19 +81,6 @@ class StreamsConnection:
                         continue
                     elements.append(eclass(json_element, self.rest_client))
         return elements
-
-    def get_streaming_analytics(self):
-        """
-        Get a ref:StreamingAnalyticsService to allow interaction with
-        the Streaming Analytics service this object is connected to.
-
-        This connection must be configured for a Streaming Analytics service.
-        Returns:
-            StreamingAnalyticsService: Object to interact with service.
-        """
-        assert self._analytics_service
-
-        return StreamingAnalyticsService(self.rest_client, self.credentials)
 
     def get_domains(self, id=None):
         """Retrieves a list of all Domain resources across all known streams installations.
@@ -170,6 +143,26 @@ class StreamsConnection:
     def __str__(self):
         return pformat(self.__dict__)
 
+class StreamingAnalyticsConnection(StreamsConnection):
+    def __init__(self, vcap_services=None, service_name=None):
+        vcap = _get_vcap_services(vcap_services)
+        self.credentials = _get_credentials(vcap, service_name)
+        # Obtain the streams SWS REST URL
+        rest_api_url = _get_rest_api_url_from_creds(self.credentials)
+        super(StreamingAnalyticsConnection, self).__init__(self.credentials['userid'], self.credentials['password'], rest_api_url)
+        self._analytics_service = True
+
+    def get_streaming_analytics(self):
+        """
+        Get a ref:StreamingAnalyticsService to allow interaction with
+        the Streaming Analytics service this object is connected to.
+
+        This connection must be configured for a Streaming Analytics service.
+        Returns:
+            StreamingAnalyticsService: Object to interact with service.
+        """
+        return StreamingAnalyticsService(self.rest_client, self.credentials)
+
 
 def _get_vcap_services(vcap_services = None):
     """Retrieves the VCAP Services information from the `ConfigParams.VCAP_SERVICES` field in the config object. If
@@ -204,7 +197,7 @@ def _get_vcap_services(vcap_services = None):
     return vcap_services
 
 
-def _get_credentials(service_name, vcap_services):
+def _get_credentials(vcap_services, service_name=None):
     """Retrieves the credentials of the VCAP Service specified by the `ConfigParams.SERVICE_NAME` field in `config`.
 
     :param config: Connection information for Bluemix.
@@ -214,6 +207,9 @@ def _get_credentials(service_name, vcap_services):
     :return: A dict representation of the credentials.
     :type return: dict.
     """
+
+    if service_name is None:
+        service_name = os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME', None)
     # Get the service corresponding to the SERVICE_NAME
     services = vcap_services['streaming-analytics']
     creds = None
@@ -245,15 +241,4 @@ def _get_rest_api_url_from_creds(credentials):
 
     rest_api_url = response['streams_rest_url'] + '/resources'
     return rest_api_url
-
-
-class ConfigParams(object):
-    """
-    Configuration options which may be used as keys in the config parameter of the StreamsContext constructor.
-
-    VCAP_SERVICES - a json object containing the VCAP information used to submit to Bluemix
-    SERVICE_NAME - the name of the streaming analytics service to use from VCAP_SERVICES.
-    """
-    VCAP_SERVICES = 'topology.service.vcap'
-    SERVICE_NAME = 'topology.service.name'
 
