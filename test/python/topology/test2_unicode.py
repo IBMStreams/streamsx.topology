@@ -18,10 +18,10 @@ class view_name_source(object):
         self.sc = sc
 
     def __call__(self):
-        for instance in self.sc.get_instances(id=ec.instance_id()):
-            for job in instance.get_jobs(id=ec.job_id()):
-                for view in job.get_views():
-                    yield view.name
+        instance = self.sc.get_instance(id=ec.instance_id())
+        job = instance.get_job(id=ec.job_id())
+        for view in job.get_views():
+            yield view.name
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestUnicode(unittest.TestCase):
@@ -87,11 +87,10 @@ class TestDistributedUnicode(TestUnicode):
 
         self.sc = rest.StreamsConnection(username=username, password=password)
 
-
-
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestBluemixUnicode(TestUnicode):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
-        self.sc = rest.StreamsConnection(config = self.test_config)
-
+        vcap = self.test_config.get('topology.service.vcap')
+        sn = self.test_config.get('topology.service.name')
+        self.sc = rest.StreamingAnalyticsConnection(vcap, sn)
