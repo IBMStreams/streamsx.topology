@@ -60,6 +60,9 @@ class _ResourceElement(object):
 
         Returns: List of eclass instances
         """
+        if id is not None and name is not None:
+            raise ValueError("id and name cannot specified together")
+
         elements = []
         json_elements = self.rest_client.make_request(url)[key]
         for json_element in json_elements:
@@ -68,8 +71,17 @@ class _ResourceElement(object):
             if not _matching_resource(json_element, name):
                 continue
             elements.append(eclass(json_element, self.rest_client))
+
         return elements
 
+    def _get_element_by_id(self, url, key, eclass, id):
+        """Get a single element matching an id"""
+        elements = self._get_elements(url, key, eclass, id=id)
+        if not elements:
+            raise ValueError("No resource matching: {0}".format(id))
+        if len(elements) == 1:
+            return elements[0]
+        raise ValueError("Multiple resources matching: {0}".format(id))
 
 class _StreamsRestClient(object):
     """Handles the session connection with the Streams REST API.
@@ -356,10 +368,23 @@ class Instance(_ResourceElement):
     def get_domain(self):
         return Domain(self.rest_client.make_request(self.domain), self.rest_client)
 
-    def get_jobs(self, id=None, name=None):
-        if id is not None:
-            id = str(id)
+    def get_jobs(self, name=None):
+        """Retrieve jobs running in this instance.
+
+        Args:
+            name: Job name pattern to match.
+
+        Returns:
+            :py:class:`Job` objects. When ``id`` is not ``None`` a single matching `Job`
+            is returned otherwise a list of `Job` objects.
+
+        Raises:
+            ValueError: ``id`` was specified and no matching job exists or multiple matching jobs exist.
+        """
         return self._get_elements(self.jobs, 'jobs', Job, id, name)
+
+    def get_job(self, id):
+        return self._get_element_by_id(self.jobs, 'jobs', Job, str(id))
 
     def get_imported_streams(self):
         return self._get_elements(self.importedStreams, 'importedStreams', ImportedStream)

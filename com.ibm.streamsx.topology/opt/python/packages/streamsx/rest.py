@@ -71,26 +71,64 @@ class StreamsConnection:
                     if not _exact_resource(json_element, id):
                         continue
                     elements.append(eclass(json_element, self.rest_client))
+
         return elements
 
-    def get_domains(self, id=None):
-        """Retrieves a list of all Domain resources across all known streams installations.
+    def _get_element_by_id(self, resource_name, eclass, id):
+        """Get a single element matching an id"""
+        elements = self._get_elements(resource_name, eclass, id=id)
+        if not elements:
+            raise ValueError("No resource matching: {0}".format(id))
+        if len(elements) == 1:
+            return elements[0]
+        raise ValueError("Multiple resources matching: {0}".format(id))
 
-        :return: Returns a list of all Domain resources.
-        :type return: list.
+    def get_domains(self):
+        """Retrieve available domains.
+
+
+        Returns:
+            list of :py:class:`Domain` instances.
+
         """
-        return self._get_elements('domains', Domain, id=id)
+        return self._get_elements('domains')
 
-    def get_instances(self, id=None):
-        """Retrieves a list of all Instance resources across all known streams installations.
+    def get_domain(self, id):
+        """Retrieve available domains.
 
-        :return: Returns a list of all Instance resources.
-        :type return: list.
+                Args:
+                    id: Domain identifier to retrieve.
+
+                Returns:
+                    :py:class:`Domain`: Domain matching ``id``.
+
+                Raises:
+                    No matching domain exists or multiple matching domains exist.
+        """
+        return self._get_element_by_id('domains', Domain, id)
+
+    def get_instances(self):
+        """Retrieve available instances.
+
         """
         return self._get_elements('instances', Instance, id=id)
 
+    def get_instance(self, id):
+        """Retrieve available domains.
+
+            Args:
+                id: Instance identifier to retrieve.
+
+            Returns:
+                :py:class:`Instance`: Instance matching ``id``.
+
+            Raises:
+                No matching instance exists or multiple matching instances exist.
+        """
+        return self._get_element_by_id('instances', Instance, id)
+
     def get_installations(self):
-        """Retrieves a list of all known streams Installations.
+        """Retrieves a list of all known Streams installations.
 
         :return: Returns a list of all Installation resources.
         :type return: list.
@@ -172,9 +210,8 @@ def _get_vcap_services(vcap_services = None):
     :type return: dict.
     """
     if vcap_services is None:
-        try:
-            vcap_services = os.environ['VCAP_SERVICES']
-        except KeyError:
+        vcap_services = os.environ.get('VCAP_SERVICES')
+        if vcap_services is None:
             raise ValueError(
                 "VCAP_SERVICES information must be supplied as a parameter or as environment variable 'VCAP_SERVICES'")
 

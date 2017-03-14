@@ -796,8 +796,9 @@ class View(object):
 
     def start_data_fetch(self):
         self.initialize_rest()
-        try:
-            self._view_object = self._streams_connection.get_view(self.name)
-        except:
-            raise
+        sc = self._streams_connection
+        instance = sc.get_instance(id=self._submit_context.submission_results['instanceId'])
+        job = instance.get_job(id=self._submit_context.submission_results['jobId'])
+        self._view_object = job.get_views(name=self.name)[0]
+
         return self._view_object.start_data_fetch()

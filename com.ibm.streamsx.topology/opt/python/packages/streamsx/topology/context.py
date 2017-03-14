@@ -82,8 +82,9 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
     try:
         return context_submitter.submit()
-    except:
+    except Exception as e:
         logger.exception("Error while submitting application.")
+        raise e
 
 
 class _BaseSubmitter(object):
@@ -139,7 +140,8 @@ class _BaseSubmitter(object):
 
         args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
         logger.info("Generating SPL and submitting application.")
-        process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0, env=self._get_java_env())
+        proc_env = env=self._get_java_env()
+        process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0, env=proc_env)
         try:
             stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
             stderr_thread.daemon = True
@@ -166,6 +168,7 @@ class _BaseSubmitter(object):
             _delete_json(self)
             results_json['return_code'] = process.returncode
             self._augment_submission_result(results_json)
+            self.submission_results = results_json
             return results_json
 
         except:

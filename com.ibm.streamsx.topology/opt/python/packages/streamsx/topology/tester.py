@@ -553,12 +553,8 @@ class _ConditionChecker(object):
         return (valid, fail, progress, condition_states)
 
     def _find_job(self):
-        for instance in self._sc.get_instances(id=self._instance_id):
-            jobs = instance.get_jobs(id=self._job_id)
-            if len(jobs) == 1:
-                return jobs[0]
-            raise AssertionError("Job not found:job_id:", self._job_id)
-        raise AssertionError("Instance not found:", self._instance_id)
+        instance = self._sc.get_instance(id=self._instance_id)
+        return instance.get_job(id=self._job_id)
 
     def _get_job_metrics(self):
         """Fetch all the condition metrics for a job.
