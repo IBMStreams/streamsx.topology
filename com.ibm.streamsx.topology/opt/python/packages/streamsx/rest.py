@@ -23,10 +23,12 @@ class StreamsConnection:
     currently running Jobs, Views, PEs, Operators, and Domains. The StreamsConnection provides methods to retrieve that
     information.
 
-    ``StreamsConnection`` can connect to Streaming Analytics service running on IBM Bluemix cloud
-    platform or distributed IBM Streams instance.
+    ``StreamsConnection`` connects to  distributed IBM Streams instance.
 
-
+    Args:
+        username: Username of an authorized Streams user.
+        password: Password for user
+        resource_url: Root URL for IBM Streams REST API.
 
     Example:
         >>> _resource_url = "https://streamsqse.localdomain:8443/streams/rest/resources"
@@ -39,17 +41,6 @@ class StreamsConnection:
 
     """
     def __init__(self, username=None, password=None, resource_url=None):
-        """
-        :param username: The username of an authorized Streams user.
-        :type username: str.
-        :param password: The password associated with the username.
-        :type password: str.
-        :param resource_url: The resource endpoint of the instance. Can be found with `st geturl --api`.
-        :type resource_url: str.
-        :param config: Connection information for Bluemix. Should not be used in conjunction with username, password,
-        and resource_url.
-        :type config: dict.
-        """
         # manually specify username, password, and resource_url
         if username and password and resource_url:
             pass
@@ -144,6 +135,13 @@ class StreamsConnection:
         return pformat(self.__dict__)
 
 class StreamingAnalyticsConnection(StreamsConnection):
+    """Creates a connection to a running Streaming Analytics service and exposes methods
+    to retrieve the state of the service and its instance.
+
+    Args:
+        vcap_services: Vcap services.
+        service_name: Name of the Streaming Analytics service.
+    """
     def __init__(self, vcap_services=None, service_name=None):
         vcap = _get_vcap_services(vcap_services)
         self.credentials = _get_credentials(vcap, service_name)
@@ -154,10 +152,9 @@ class StreamingAnalyticsConnection(StreamsConnection):
 
     def get_streaming_analytics(self):
         """
-        Get a ref:StreamingAnalyticsService to allow interaction with
+        Get a :py:class:`StreamingAnalyticsService` to allow interaction with
         the Streaming Analytics service this object is connected to.
 
-        This connection must be configured for a Streaming Analytics service.
         Returns:
             StreamingAnalyticsService: Object to interact with service.
         """
