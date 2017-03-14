@@ -177,12 +177,25 @@ class ViewThread(threading.Thread):
     def _stopped(self):
         return self.stop.isSet()
 
-def _get_json_tuple(item):
+def _get_view_json_tuple(item):
     """
     Get a tuple from a view with a schema
     tuple<rstring jsonString>
     """
     return json.loads(item.data['jsonString'])
+
+def _get_view_string_tuple(item):
+    """
+    Get a tuple from a view with a schema
+    tuple<rstring string>
+    """
+    return str(item.data['string'])
+
+def _get_view_dict_tuple(item):
+    """Tuple from REST was in JSON which has already been
+    converted to a dic.
+    """
+    return item.data
 
 class View(_ResourceElement):
     """The view element resource provides access to information about a view that is associated with an active job, and
@@ -190,7 +203,17 @@ class View(_ResourceElement):
     """
     def __init__(self, json_view, rest_client):
         super(View, self).__init__(json_view, rest_client)
-        self.view_thread = ViewThread(self, _get_json_tuple)
+
+        tuple_fn = _get_view_dict_tuple
+        if len(self.attributes) == 1:
+            attr_type = self.attributes[0]['type']
+            attr_name = self.attributes[0]['name']
+            if 'rstring' == attr_type:
+                if 'jsonString' == attr_name:
+                    tuple_fn = _get_view_json_tuple
+                elif 'string' == attr_name:
+                    tuple_fn = _get_view_string_tuple
+        self.view_thread = ViewThread(self, tuple_fn)
 
     def get_domain(self):
         return Domain(self.rest_client.make_request(self.domain), self.rest_client)
