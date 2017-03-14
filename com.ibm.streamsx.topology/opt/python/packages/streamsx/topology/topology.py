@@ -438,7 +438,7 @@ class Stream(object):
         oport = op.addOutputPort(schema=schema)
         return Stream(self.topology, oport)
 
-    def view(self, buffer_time = 10.0, sample_size = 10000, name=None, description=None):
+    def view(self, buffer_time = 10.0, sample_size = 10000, name=None, description=None, start=False):
         """
         Defines a view on a stream.
 
@@ -458,6 +458,10 @@ class Stream(object):
             sample_size: Specifies the number of tuples to sample per second.
             name: Name of the view. Name must be unique within the topology. Defaults to a generated name.
             description: Description of the view.
+            start(bool): Start buffering data when the job is submitted.
+                If `False` then the view is starts buffering data when the first
+                remote client accesses it to retrieve data.
+ 
         Returns:
             View object which can be used to access the data when the
             topology is submitted.
@@ -472,12 +476,15 @@ class Stream(object):
             view_stream = self
 
         port = view_stream.oport.name
-        view_stream.oport.operator.addViewConfig({
+        view_config = {
                 'name': name,
                 'port': port,
                 'description': description,
                 'bufferTime': buffer_time,
-                'sampleSize': sample_size})
+                'sampleSize': sample_size}
+        if start:
+            view_config['activateOption'] = 'automatic'
+        view_stream.oport.operator.addViewConfig(view_config)
         _view = View(name)
         self.topology.graph.get_views().append(_view)
         return _view

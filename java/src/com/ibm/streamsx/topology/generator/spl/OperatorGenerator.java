@@ -127,16 +127,17 @@ class OperatorGenerator {
             String description = jstring(viewConfig, "description");
             Double bufferTime = viewConfig.get("bufferTime").getAsDouble();
             Long sampleSize = viewConfig.get("sampleSize").getAsLong();
-            sb.append("@view(name = \"");
-            sb.append(name);
+            String activate = jstring(viewConfig, "activateOption");
+            sb.append("@view(name = \"" + name + "\"");
             if (description != null) {
-                sb.append("\", description = \"");
-                sb.append(description);
+                sb.append(", description = \"" + description +  "\"");
             }
-            sb.append("\", port = " + port);
-            sb.append(", bufferTime = " + bufferTime + ", ");
-            sb.append("sampleSize = " + sampleSize + ", ");
-            sb.append("activateOption = firstAccess)\n");
+            sb.append(", port = " + port);
+            sb.append(", bufferTime = " + bufferTime);
+            sb.append(", sampleSize = " + sampleSize);
+            if (activate != null)
+                sb.append(", activateOption = " + activate);
+            sb.append(")\n");
         });
     }
 
