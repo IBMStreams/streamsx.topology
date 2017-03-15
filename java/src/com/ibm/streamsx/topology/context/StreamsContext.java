@@ -201,8 +201,9 @@ public interface StreamsContext<T> {
         
         /**
          * The topology is submitted to a Streams instance running
-         * in Streaming Analytics Service on
-         * <a href="http://www.ibm.com/Bluemix‎" target="_blank">IBM Bluemix</a>.
+         * in Streaming Analytics service on
+         * <a href="http://www.ibm.com/Bluemix‎" target="_blank">IBM Bluemix</a>
+         * cloud platform.
          * <P>
          * The returned type for the {@code submit} calls is
          * a {@code Future&lt;BigInteger>} where the value is
@@ -224,6 +225,18 @@ public interface StreamsContext<T> {
          * </P>
          */
         ANALYTICS_SERVICE,
+        
+        /**
+         * The topology is submitted to a Streams instance running
+         * in Streaming Analytics service on
+         * <a href="http://www.ibm.com/Bluemix‎" target="_blank">IBM Bluemix</a>
+         * cloud platform.
+         * 
+         * <P>
+         * This is a synonym for {@link #ANALYTICS_SERVICE}.
+         * </P>
+         */
+        STREAMING_ANALYTICS_SERVICE,
         ;
     }
 

@@ -49,7 +49,8 @@ public class StreamsContextFactory {
         case DISTRIBUTED_TESTER:
             return new DistributedTester();
         case ANALYTICS_SERVICE:
-            return new AnalyticsServiceStreamsContext();
+        case STREAMING_ANALYTICS_SERVICE:
+            return new AnalyticsServiceStreamsContext(type);
         default:
             throw new IllegalArgumentException("Unknown type:" + type);
         }

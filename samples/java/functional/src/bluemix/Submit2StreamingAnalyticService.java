@@ -60,7 +60,7 @@ public class Submit2StreamingAnalyticService {
         // Submit to the ANALYICS_SERVICE context
         @SuppressWarnings("unchecked")
         StreamsContext<BigInteger> context =
-             (StreamsContext<BigInteger>) StreamsContextFactory.getStreamsContext(Type.ANALYTICS_SERVICE);
+             (StreamsContext<BigInteger>) StreamsContextFactory.getStreamsContext(Type.STREAMING_ANALYTICS_SERVICE);
         
         BigInteger jobId = context.submit(topology, config).get();
 

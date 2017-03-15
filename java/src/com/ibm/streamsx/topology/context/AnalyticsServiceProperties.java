@@ -9,7 +9,7 @@ public interface AnalyticsServiceProperties {
      * Name of the service to use as a {@code String}.
      * The information for the service will be extracted
      * from the VCAP using this name. This property must be
-     * set when submitting to {@link StreamsContext.Type#ANALYTICS_SERVICE}.
+     * set when submitting to {@link StreamsContext.Type#STREAMING_ANALYTICS_SERVICE}.
      */
     String SERVICE_NAME = "topology.service.name";
     

@@ -28,13 +28,16 @@ import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
 public class AnalyticsServiceStreamsContext extends
         BundleUserStreamsContext<BigInteger> {
 
-    public AnalyticsServiceStreamsContext() {
+    private final Type type;
+    
+    public AnalyticsServiceStreamsContext(Type type) {
         super(false);
+        this.type = type;
     }
 
     @Override
     public Type getType() {
-        return Type.ANALYTICS_SERVICE;
+        return type;
     }
     
     @Override
