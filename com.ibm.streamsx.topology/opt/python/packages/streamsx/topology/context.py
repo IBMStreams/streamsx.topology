@@ -153,16 +153,22 @@ class _BaseSubmitter(object):
         stdout_thread.start()
         process.wait()
 
-        results_json = None
-        with open(self.results_file) as _file:
-            try:
-                results_json = json.loads(_file.read())
-            except IOError:
-                logger.error("Could not read file:", _file.name)
-                raise
-            except json.JSONDecodeError:
-                logger.error("Could not parse results file:", _file.name)
-                raise
+        results_json = {}
+
+        # Only try to read the results file if the submit was successful.
+        if process.returncode == 0:
+            with open(self.results_file) as _file:
+                try:
+                    results_json = json.loads(_file.read())
+                except IOError:
+                    logger.error("Could not read file:" + str(_file.name))
+                    raise
+                except json.JSONDecodeError:
+                    logger.error("Could not parse results file:" + str(_file.name))
+                    raise
+                except:
+                    logger.error("Unknown error while processing results file.")
+                    raise
 
         _delete_json(self)
         results_json['return_code'] = process.returncode
