@@ -46,3 +46,5 @@ class TestDistributedSPL(TestSPL):
 class TestBluemixSPL(TestSPL):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
+        # Ensure the old name still works.
+        self.test_ctxtype = "ANALYTICS_SERVICE"
