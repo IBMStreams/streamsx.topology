@@ -387,8 +387,8 @@ class _SubmitContextFactory(object):
         streams_install = os.environ.get('STREAMS_INSTALL')
         if streams_install is None:
             if not (ctxtype == ContextTypes.TOOLKIT or ctxtype == ContextTypes.BUILD_ARCHIVE
-                    or ctxtype == ContextTypes.ANALYTICS_SERVICE):
-                raise UnsupportedContextException(ctxtype + " must be submitted when a Streams install is present.")
+                    or ctxtype == ContextTypes.ANALYTICS_SERVICE or ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE):
+                raise UnsupportedContextException(ctxtype + " must be submitted when an IBM Streams install is present.")
 
         if ctxtype == ContextTypes.JUPYTER:
             logger.debug("Selecting the JUPYTER context for submission")
@@ -396,10 +396,11 @@ class _SubmitContextFactory(object):
         elif ctxtype == ContextTypes.DISTRIBUTED:
             logger.debug("Selecting the DISTRIBUTED context for submission")
             return _DistributedSubmitter(ctxtype, self.config, self.graph, self.username, self.password)
-        elif ctxtype == ContextTypes.ANALYTICS_SERVICE:
-            logger.debug("Selecting the ANALYTICS_SERVICE context for submission")
+        elif ctxtype == ContextTypes.ANALYTICS_SERVICE or ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE:
+            logger.debug("Selecting the STREAMING_ANALYTICS_SERVICE context for submission")
             if not (sys.version_info.major == 3 and sys.version_info.minor == 5):
                 raise RuntimeError("The ANALYTICS_SERVICE context only supports Python version 3.5")
+            ctxtype = ContextTypes.STREAMING_ANALYTICS_SERVICE
             return _StreamingAnalyticsSubmitter(ctxtype, self.config, self.graph)
         else:
             logger.debug("Using the BaseSubmitter, and passing the context type through to java.")
@@ -490,6 +491,13 @@ class ContextTypes(object):
         submitted to, built, and executed on a Bluemix streaming analytics service. If the ConfigParams.REMOTE_BUILD
         flag is set to true, the application will be built on Bluemix even if a local Streams install is present.
     """
+    STREAMING_ANALYTICS_SERVICE = 'STREAMING_ANALYTICS_SERVICE'
+    """Submission to Streaming Analytics service running on IBM Bluemix cloud platform.
+    """
+    ANALYTICS_SERVICE = 'ANALYTICS_SERVICE'
+    """Synonym for :py:const:`STREAMING_ANALYTICS_SERVICE`.
+    """
+
     TOOLKIT = 'TOOLKIT'
     BUILD_ARCHIVE = 'BUILD_ARCHIVE'
     BUNDLE = 'BUNDLE'
@@ -497,8 +505,6 @@ class ContextTypes(object):
     STANDALONE = 'STANDALONE'
     DISTRIBUTED = 'DISTRIBUTED'
     JUPYTER = 'JUPYTER'
-    ANALYTICS_SERVICE = 'ANALYTICS_SERVICE'
-
 
 class ConfigParams(object):
     """

@@ -3,7 +3,7 @@
 # Copyright IBM Corp. 2017
 
 import streamsx.ec as ec
-import streamsx.topology.context
+import streamsx.topology.context as stc
 import os
 import unittest
 import logging
@@ -60,7 +60,7 @@ class Tester(object):
         """
         if not 'STREAMS_INSTALL' in os.environ:
             raise unittest.SkipTest("Skipped due to no local IBM Streams install")
-        test.test_ctxtype = "STANDALONE"
+        test.test_ctxtype = stc.ContextTypes.STANDALONE
         test.test_config = {}
 
     @staticmethod
@@ -97,7 +97,7 @@ class Tester(object):
         test.username = os.getenv("STREAMS_USERNAME", "streamsadmin")
         test.password = os.getenv("STREAMS_PASSWORD", "passw0rd")
 
-        test.test_ctxtype = "DISTRIBUTED"
+        test.test_ctxtype = stc.ContextTypes.DISTRIBUTED
         test.test_config = {}
 
     def setup_streaming_analytics(test, service_name=None, force_remote_build=False):
@@ -124,7 +124,7 @@ class Tester(object):
         if not 'VCAP_SERVICES' in os.environ:
             raise unittest.SkipTest("Skipped due to VCAP_SERVICES environment variable not set")
 
-        test.test_ctxtype = "ANALYTICS_SERVICE"
+        test.test_ctxtype = stc.ContextTypes.STREAMING_ANALYTICS_SERVICE
         if service_name is None:
             service_name = os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME', None)
         if service_name is None:
@@ -240,12 +240,12 @@ class Tester(object):
 
         _logger.debug("Starting test topology %s context %s.", self.topology.name, ctxtype)
 
-        if "STANDALONE" == ctxtype:
+        if stc.ContextTypes.STANDALONE == ctxtype:
             passed = self._standalone_test(config)
-        elif "DISTRIBUTED" == ctxtype:
+        elif stc.ContextTypes.DISTRIBUTED == ctxtype:
             passed = self._distributed_test(config, username, password)
-        elif "ANALYTICS_SERVICE" == ctxtype:
-            passed = self._streaming_analytics_test(config)
+        elif stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype:
+            passed = self._streaming_analytics_test(ctxtype, config)
         else:
             raise NotImplementedError("Tester context type not implemented:", ctxtype)
 
@@ -261,14 +261,14 @@ class Tester(object):
         """ Test using STANDALONE.
         Success is solely indicated by the process completing and returning zero.
         """
-        sr = streamsx.topology.context.submit("STANDALONE", self.topology, config)
+        sr = stc.submit(stc.ContextTypes.STANDALONE, self.topology, config)
         self.submission_result = sr
         self.result = {'passed': sr['return_code'], 'submission_result': sr}
         return sr['return_code'] == 0
 
     def _distributed_test(self, config, username, password):
 
-        sjr = streamsx.topology.context.submit("DISTRIBUTED", self.topology, config, username=username, password=password)
+        sjr = stc.submit(stc.ContextTypes.DISTRIBUTED, self.topology, config, username=username, password=password)
         self.submission_result = sjr
         if sjr['return_code'] != 0:
             print("DO AS LOGGER", "Failed to submit job to distributed instance.")
@@ -276,8 +276,8 @@ class Tester(object):
         self.sc = StreamsConnection()
         return self._distributed_wait_for_result()
 
-    def _streaming_analytics_test(self, config):
-        sjr = streamsx.topology.context.submit("ANALYTICS_SERVICE", self.topology, config)
+    def _streaming_analytics_test(self, ctxtype, config):
+        sjr = stc.submit(ctxtype, self.topology, config)
         self.submission_result = sjr
         self.sc = StreamingAnalyticsConnection(service_name = config['topology.service.name'])
         return self._distributed_wait_for_result()
