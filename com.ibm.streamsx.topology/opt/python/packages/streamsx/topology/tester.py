@@ -239,7 +239,6 @@ class Tester(object):
 
         if config is None:
             config = {}
-
         _logger.debug("Starting test topology %s context %s.", self.topology.name, ctxtype)
 
         if stc.ContextTypes.STANDALONE == ctxtype:

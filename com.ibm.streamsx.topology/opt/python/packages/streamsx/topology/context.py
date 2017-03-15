@@ -71,7 +71,6 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         An output stream of bytes if submitting with JUPYTER, otherwise returns a dict containing information relevant
         to the submission.
     """
-
     graph = graph.graph
 
     if not graph.operators:
@@ -200,8 +199,9 @@ class _BaseSubmitter(object):
         fj = dict()
 
         # Removing Streams Connection object because it is not JSON serializable, and not applicable for submission
-        self.config.pop(ConfigParams.STREAMS_CONNECTION, None)
-        fj["deploy"] = self.config
+        # Need to re-add it, since the StreamsConnection needs to be returned from the submit.
+        sc = self.config.pop(ConfigParams.STREAMS_CONNECTION, None)
+        fj["deploy"] = self.config.copy()
         fj["graph"] = self.graph.generateSPLGraph()
 
         _file = tempfile.NamedTemporaryFile(prefix="results", suffix=".json", mode="w+t", delete=False)
@@ -210,6 +210,7 @@ class _BaseSubmitter(object):
         self.results_file = _file.name
         logger.debug("Results file created at " + _file.name)
 
+        self.config[ConfigParams.STREAMS_CONNECTION] = sc
         return fj
 
     def _create_json_file(self, fj):
@@ -372,10 +373,9 @@ class _DistributedSubmitter(_BaseSubmitter):
 
     def _augment_submission_result(self, submission_result):
         submission_result['instanceId'] = os.environ.get('STREAMS_INSTANCE_ID', 'StreamsInstance')
-
         # If we have the information to create a StreamsConnection, do it
         if not ((self.username is None or self.password is None) and
-                        self.config().get(ConfigParams.STREAMS_CONNECTION) is None):
+                        self.config.get(ConfigParams.STREAMS_CONNECTION) is None):
             submission_result['streamsConnection'] = self.streams_connection()
 
 
@@ -670,7 +670,6 @@ class _SubmissionResult(object):
         return None
 
     def __getattr__(self, key):
-        # go and get
         if key in self.__getattribute__("results"):
             return self.results[key]
         return self.__getattribute__(key)
@@ -681,3 +680,16 @@ class _SubmissionResult(object):
             results[key] = value
         else:
             super(_SubmissionResult, self).__setattr__(key, value)
+
+    def __getitem__(self, item):
+        return self.__getattr__(item)
+
+    def __setitem__(self, key, value):
+        return self.__setattr__(key, value)
+
+    def __delitem__(self, key):
+        if key in self.__getattribute__("results"):
+            del self.results[key]
+            return
+        self.__delattr__(key)
+
