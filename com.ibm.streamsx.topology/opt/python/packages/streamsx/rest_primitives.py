@@ -213,6 +213,7 @@ class View(_ResourceElement):
                 elif 'string' == attr_name:
                     tuple_fn = _get_view_string_tuple
         self._data_fetcher = None
+        self._tuple_fn = tuple_fn
 
     def get_domain(self):
         return Domain(self.rest_client.make_request(self.domain), self.rest_client)
@@ -230,7 +231,7 @@ class View(_ResourceElement):
 
     def start_data_fetch(self):
         self.stop_data_fetch()
-        self._data_fetcher = _ViewDataFetcher(self, _get_json_tuple)
+        self._data_fetcher = _ViewDataFetcher(self, self._tuple_fn)
         t = threading.Thread(target=self._data_fetcher)
         t.start()
         return self._data_fetcher.items
