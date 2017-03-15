@@ -266,13 +266,15 @@ def _get_rest_api_url_from_creds(credentials):
     """
     resources_url = credentials['rest_url'] + credentials['resources_path']
     try:
-        response = requests.get(resources_url, auth=(credentials['userid'], credentials['password'])).json()
+
+        response_raw = requests.get(resources_url, auth=(credentials['userid'], credentials['password']))
+        response = response_raw.json()
     except:
         logger.error("Error while retrieving rest REST url from: " + resources_url)
         raise
 
-    # Raise exception if 404, 500, etc.
-    response.raise_for_status()
+
+    response_raw.raise_for_status()
 
     rest_api_url = response['streams_rest_url'] + '/resources'
     return rest_api_url
