@@ -15,7 +15,7 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
  * <BR>
  * Placement directives only apply when the topology
  * is submitted to a {@link StreamsContext.Type#DISTRIBUTED DISTRIBUTED},
- * {@link StreamsContext.Type#ANALYTICS_SERVICE ANALYTICS_SERVICE}
+ * {@link StreamsContext.Type#STREAMING_ANALYTICS_SERVICE STREAMING_ANALYTICS_SERVICE}
  * or {@link StreamsContext.Type#DISTRIBUTED_TESTER DISTRIBUTED_TESTER} context.
  * <BR>
  * For all other context types directives are ignored.

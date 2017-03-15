@@ -15,6 +15,7 @@ import com.ibm.streamsx.topology.jobconfig.JobConfig;
  * @see StreamsContext#submit(com.ibm.streamsx.topology.Topology, java.util.Map)
  * @see ContextProperties
  * @see StreamsContext.Type#DISTRIBUTED
+ * @see StreamsContext.Type#STREAMING_ANALYTICS_SERVICE
  * @see StreamsContext.Type#ANALYTICS_SERVICE
  */
 public interface JobProperties {

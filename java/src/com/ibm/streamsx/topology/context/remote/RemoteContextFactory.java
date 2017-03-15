@@ -17,6 +17,7 @@ public class RemoteContextFactory {
         case BUILD_ARCHIVE:
             return new ZippedToolkitRemoteContext(keepArtifact);
         case ANALYTICS_SERVICE:
+        case STREAMING_ANALYTICS_SERVICE:
         	return new RemoteBuildAndSubmitRemoteContext();
         default:
             throw new IllegalArgumentException("Unknown type:" + type);

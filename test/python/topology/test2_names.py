@@ -7,6 +7,7 @@ import itertools
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+import streamsx.topology.context as stc
 
 import test_vers
 
@@ -38,3 +39,9 @@ class TestNames(unittest.TestCase):
      tester = Tester(topo)
      tester.contents(hw, ["Hello", "Tester"])
      tester.test(self.test_ctxtype, self.test_config)
+
+class TestContextNames(unittest.TestCase):
+    def test_expected_values(self):
+        self.assertEqual('DISTRIBUTED', stc.ContextTypes.DISTRIBUTED)
+        self.assertEqual('ANALYTICS_SERVICE', stc.ContextTypes.ANALYTICS_SERVICE)
+        self.assertEqual('STREAMING_ANALYTICS_SERVICE', stc.ContextTypes.STREAMING_ANALYTICS_SERVICE)

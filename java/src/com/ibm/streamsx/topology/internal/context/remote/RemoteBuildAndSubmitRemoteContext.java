@@ -17,7 +17,7 @@ import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContext {
 	@Override
     public Type getType() {
-        return Type.ANALYTICS_SERVICE;
+        return Type.STREAMING_ANALYTICS_SERVICE;
     }
 	
 	@Override
