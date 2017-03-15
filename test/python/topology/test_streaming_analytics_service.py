@@ -107,4 +107,5 @@ class TestStreamingAnalytics(unittest.TestCase):
         self.assertIn("plan", rc, "\"plan\" field not in returned json dict")
         self.assertIn("enabled", rc, "\"enabled\" field not in returned json dict")
         self.assertIn("status", rc, "\"status\" field not in returned json dict")
+        self.assertIn("instanceId", rc, '"instanceId" field not in returned json dict')
 
