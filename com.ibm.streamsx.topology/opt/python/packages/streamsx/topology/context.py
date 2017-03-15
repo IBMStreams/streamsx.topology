@@ -388,7 +388,7 @@ class _SubmitContextFactory(object):
         if streams_install is None:
             if not (ctxtype == ContextTypes.TOOLKIT or ctxtype == ContextTypes.BUILD_ARCHIVE
                     or ctxtype == ContextTypes.ANALYTICS_SERVICE or ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE):
-                raise UnsupportedContextException(ctxtype + " must be submitted when an IBM Streams install is present.")
+                raise ValueError(ctxtype + " must be submitted when an IBM Streams install is present.")
 
         if ctxtype == ContextTypes.JUPYTER:
             logger.debug("Selecting the JUPYTER context for submission")
@@ -457,14 +457,6 @@ def _print_process_stderr(process, submitter):
         process.stderr.close()
         logger.exception("Error reading from process stderr")
         raise
-
-
-class UnsupportedContextException(Exception):
-    """
-    An exeption class for when something goes wrong with submitting using a particular context.
-    """
-    def __init__(self, msg):
-        Exception.__init__(self, msg)
 
 class ContextTypes(object):
     """
