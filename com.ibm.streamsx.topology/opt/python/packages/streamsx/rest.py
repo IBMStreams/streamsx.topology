@@ -135,33 +135,6 @@ class StreamsConnection:
         """
         return self._get_elements('installations', Installation)
 
-    def get_views(self):
-        """Gets a list of all View resources across all known streams installations.
-
-        :return: Returns a list of all View resources.
-        :type return: list.
-        """
-        views = []
-        for domain in self.get_domains():
-            for instance in domain.get_instances():
-                for view in instance.get_views():
-                    views.append(view)
-        return views
-
-    def get_view(self, name):
-        """Gets a view with the specified `name`. If there are multiple views with the same name, it will return
-        the first one encountered.
-
-        :param name: The name of the View resource.
-        :return: The view resource with the specified `name`.
-        """
-        for domain in self.get_domains():
-            for instance in domain.get_instances():
-                for view in instance.get_views():
-                    if view.name == name:
-                        return view
-        raise ViewNotFoundError("Could not locate view: " + name)
-
     def get_resources(self):
         resources = []
         json_resources = self.rest_client.make_request(self.resource_url)['resources']
