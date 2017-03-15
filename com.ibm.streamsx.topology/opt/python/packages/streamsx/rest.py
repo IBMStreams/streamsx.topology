@@ -52,8 +52,6 @@ class StreamsConnection:
             password = 'passw0rd'
             resource_url = st.get_rest_api()
         else:
-            logger.error("Invalid arguments for StreamsContext.__init__: must supply either a BlueMix VCAP Services or "
-                         "a username, password, and resource url.")
             raise ValueError("Must supply either a BlueMix VCAP Services or a username, password, and resource url"
                              " to the StreamsContext constructor.")
 
@@ -270,8 +268,11 @@ def _get_rest_api_url_from_creds(credentials):
     try:
         response = requests.get(resources_url, auth=(credentials['userid'], credentials['password'])).json()
     except:
-        logger.exception("Error while retrieving SWS REST url from: " + resources_url)
+        logger.error("Error while retrieving SWS REST url from: " + resources_url)
         raise
+
+    # Raise exception if 404, 500, etc.
+    response.raise_for_status()
 
     rest_api_url = response['streams_rest_url'] + '/resources'
     return rest_api_url
