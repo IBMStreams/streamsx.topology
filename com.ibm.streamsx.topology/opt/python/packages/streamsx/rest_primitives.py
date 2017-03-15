@@ -329,6 +329,13 @@ class OperatorConnection(_ResourceElement):
     """
     pass
 
+class OperatorOutputPort(_ResourceElement):
+    """Operator output port resource provides access to information about an output port
+    for a specific operator.
+
+    """
+    pass
+
 class Metric(_ResourceElement):
     """
     Metric resource provides access to information about a Streams metric.
@@ -365,8 +372,40 @@ class ImportedStream(_ResourceElement):
 
 
 class ExportedStream(_ResourceElement):
-    pass
+    """ Exported stream resource represents a stream that has been exported by a job.
+    """
+    def get_operator_output_port(self):
+        return OperatorOutputPort(self.rest_client.make_request(self.operatorOutputPort), self.rest_client)
 
+    def _as_published_stream(self):
+        """This stream as a PublishedStream if it is published otherwise None
+        """
+
+        oop = self.get_operator_output_port()
+        if not hasattr(oop, 'export'):
+            return
+
+        export = oop.export
+        if export['type'] != 'properties':
+            return
+
+        seen_export_type = False
+        topic = None
+
+        for p in export['properties']:
+            if p['type'] != 'rstring':
+                continue
+            if p['name'] == '__spl_exportType':
+                if p['values'] == ['"topic"']:
+                    seen_export_type = True
+                else:
+                    return
+            if p['name'] == '__spl_topic':
+                topic = p['values'][0]
+
+        if seen_export_type and topic is not None:
+            return PublishedStream(topic[1:-1], None)
+        return
 
 class Instance(_ResourceElement):
     """The instance element resource provides access to information about a Streams instance."""
@@ -421,6 +460,31 @@ class Instance(_ResourceElement):
     def get_resource_allocations(self):
         return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
 
+    def get_published_streams(self):
+        """Get a list of published streams for this instance.
+
+        Streams applications publish streams that can be subscribed to by other
+        applications. This allows a microservice approach where publishers
+        and subscribers are independent of each other.
+
+        A published stream has a topic and a schema. It is recommended that a
+        topic has only a single schema.
+
+        Streams may be published and subscribed by applications regardless of the
+        implementation language. For example a Python application can publish
+        a stream of JSON tuples that are subscribed to by SPL and Java applications.
+
+        Returns:
+             list(PublishedStream): List of currently published streams.
+        """
+        published_streams = []
+        for es in self.get_exported_streams():
+            ps = es._as_published_stream()
+            if ps is not None:
+                published_streams.append(ps)
+        return published_streams
+
+
 class ResourceTag(object):
     def __init__(self, json_resource_tag):
         self.definition_format_properties = json_resource_tag['definitionFormatProperties']
@@ -446,6 +510,20 @@ class ActiveVersion(object):
         self.product_version = json_active_version['productVersion']
 
     def __str__(self):
+        return pformat(self.__dict__)
+
+
+class PublishedStream(object):
+    """Metadata for a published stream.
+    Args:
+        topic: Topic stream is published to.
+        schema: Schema of the stream.
+    """
+    def __init__(self, topic, schema):
+        self.topic = topic
+        self.schema = schema
+
+    def __repr__(self):
         return pformat(self.__dict__)
 
 
