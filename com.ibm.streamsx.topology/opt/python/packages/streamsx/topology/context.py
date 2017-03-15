@@ -693,3 +693,5 @@ class SubmissionResult(object):
             return
         self.__delattr__(key)
 
+    def __contains__(self, item):
+        return item in self.results
