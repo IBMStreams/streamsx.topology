@@ -212,7 +212,7 @@ class View(_ResourceElement):
                     tuple_fn = _get_view_json_tuple
                 elif 'string' == attr_name:
                     tuple_fn = _get_view_string_tuple
-         self._data_fetcher = None
+        self._data_fetcher = None
 
     def get_domain(self):
         return Domain(self.rest_client.make_request(self.domain), self.rest_client)
