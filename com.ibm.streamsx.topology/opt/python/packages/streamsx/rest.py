@@ -268,7 +268,7 @@ def _get_rest_api_url_from_creds(credentials):
     try:
         response = requests.get(resources_url, auth=(credentials['userid'], credentials['password'])).json()
     except:
-        logger.error("Error while retrieving SWS REST url from: " + resources_url)
+        logger.error("Error while retrieving rest REST url from: " + resources_url)
         raise
 
     # Raise exception if 404, 500, etc.

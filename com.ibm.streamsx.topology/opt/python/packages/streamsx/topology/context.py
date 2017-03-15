@@ -430,7 +430,7 @@ def _print_process_stdout(process):
             else:
                 print(line)
     except:
-        logger.exception("Error reading from Java subprocess stdout stream.")
+        logger.error("Error reading from Java subprocess stdout stream.")
         raise
     finally:
         process.stdout.close()
@@ -454,7 +454,7 @@ def _print_process_stderr(process, submitter):
             else:
                 print(line)
     except:
-        logger.exception("Error reading from Java subprocess stderr stream.")
+        logger.error("Error reading from Java subprocess stderr stream.")
         raise
     finally:
         process.stderr.close()
