@@ -115,11 +115,11 @@ class _StreamsRestClient(object):
         return pformat(self.__dict__)
 
 
-class ViewThread(threading.Thread):
-    """A thread which, when invoked, begins fetching data from the supplied view and populates the `View.items` queue.
+class _ViewDataFetcher(object):
+    """A callable which, when invoked with a thread, begins fetching data from the
+    supplied view and populates the `View.items` queue.
     """
     def __init__(self, view, tuple_getter):
-        super(ViewThread, self).__init__()
         self.view = view
         self.tuple_getter = tuple_getter
         self.stop = threading.Event()
@@ -130,11 +130,11 @@ class ViewThread(threading.Thread):
 
     def __call__(self):
         while not self._stopped():
-            time.sleep(1)
             _items = self._get_deduplicated_view_items()
             if _items is not None:
                 for itm in _items:
                     self.items.put(itm)
+            time.sleep(1)
 
     def _get_deduplicated_view_items(self):
         # Retrieve the view object
@@ -190,7 +190,7 @@ class View(_ResourceElement):
     """
     def __init__(self, json_view, rest_client):
         super(View, self).__init__(json_view, rest_client)
-        self.view_thread = ViewThread(self, _get_json_tuple)
+        self._data_fetcher = None
 
     def get_domain(self):
         return Domain(self.rest_client.make_request(self.domain), self.rest_client)
@@ -202,13 +202,16 @@ class View(_ResourceElement):
         return Job(self.rest_client.make_request(self.job), self.rest_client)
 
     def stop_data_fetch(self):
-        self.view_thread.stop.set()
+        if self._data_fetcher is not None:
+            self._data_fetcher.stop.set()
+            self._data_fetcher = None
 
     def start_data_fetch(self):
-        self.view_thread.stop.clear()
-        t = threading.Thread(target=self.view_thread)
+        self.stop_data_fetch()
+        self._data_fetcher = _ViewDataFetcher(self, _get_json_tuple)
+        t = threading.Thread(target=self._data_fetcher)
         t.start()
-        return self.view_thread.items
+        return self._data_fetcher.items
 
     def get_view_items(self):
         view_items = []
