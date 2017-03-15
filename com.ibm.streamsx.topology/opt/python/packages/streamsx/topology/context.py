@@ -77,7 +77,7 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         raise ValueError("Topology {0} does not contain any streams.".format(graph.topology.name))
 
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
-    return _SubmissionResult(context_submitter.submit())
+    return SubmissionResult(context_submitter.submit())
 
 
 
@@ -647,7 +647,7 @@ class JobConfig(object):
         if jc:
             jco["jobConfig"] = jc
 
-class _SubmissionResult(object):
+class SubmissionResult(object):
     """Passed back to the user after a call to submit.
     Allows the user to use dot notation to access dictionary elements."""
     def __init__(self, results):
@@ -679,7 +679,7 @@ class _SubmissionResult(object):
             results = self.results
             results[key] = value
         else:
-            super(_SubmissionResult, self).__setattr__(key, value)
+            super(SubmissionResult, self).__setattr__(key, value)
 
     def __getitem__(self, item):
         return self.__getattr__(item)
