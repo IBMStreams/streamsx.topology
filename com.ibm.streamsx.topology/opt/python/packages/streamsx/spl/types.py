@@ -176,3 +176,9 @@ def float64(value):
     Create an SPL ``float64`` value.
     """
     return Expression('FLOAT64', int(value))
+
+def rstring(value):
+    """
+    Create an SPL ``rstring`` value.
+    """
+    return Expression('RSTRING', str(value))
