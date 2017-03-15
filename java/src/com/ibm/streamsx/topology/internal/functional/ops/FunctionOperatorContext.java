@@ -12,12 +12,12 @@ import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streamsx.topology.function.FunctionContainer;
 import com.ibm.streamsx.topology.function.FunctionContext;
 
-class FunctionOperatorContext implements FunctionContext {
+public class FunctionOperatorContext implements FunctionContext {
     
     private final OperatorContext context;
     private final FunctionContainer container;
     
-    FunctionOperatorContext( OperatorContext context) {
+    public FunctionOperatorContext( OperatorContext context) {
         this.context = context;
         container = new FunctionPEContainer(context.getPE());
     }
