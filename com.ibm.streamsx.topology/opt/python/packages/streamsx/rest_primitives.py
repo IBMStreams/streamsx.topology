@@ -377,8 +377,8 @@ class ExportedStream(_ResourceElement):
     def get_operator_output_port(self):
         return OperatorOutputPort(self.rest_client.make_request(self.operatorOutputPort), self.rest_client)
 
-    def _as_published_stream(self):
-        """This stream as a PublishedStream if it is published otherwise None
+    def _as_published_topic(self):
+        """This stream as a PublishedTopic if it is published otherwise None
         """
 
         oop = self.get_operator_output_port()
@@ -404,7 +404,7 @@ class ExportedStream(_ResourceElement):
                 topic = p['values'][0]
 
         if seen_export_type and topic is not None:
-            return PublishedStream(topic[1:-1], None)
+            return PublishedTopic(topic[1:-1], None)
         return
 
 class Instance(_ResourceElement):
@@ -460,10 +460,10 @@ class Instance(_ResourceElement):
     def get_resource_allocations(self):
         return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
 
-    def get_published_streams(self):
-        """Get a list of published streams for this instance.
+    def get_published_topics(self):
+        """Get a list of published topics for this instance.
 
-        Streams applications publish streams that can be subscribed to by other
+        Streams applications publish streams to a a topic that can be subscribed to by other
         applications. This allows a microservice approach where publishers
         and subscribers are independent of each other.
 
@@ -475,14 +475,27 @@ class Instance(_ResourceElement):
         a stream of JSON tuples that are subscribed to by SPL and Java applications.
 
         Returns:
-             list(PublishedStream): List of currently published streams.
+             list(PublishedTopic): List of currently published topics.
         """
-        published_streams = []
+        published_topics = []
+        # A topic can be published multiple times
+        # (typically with the same schema) but the
+        # returned list only wants to contain a topic,schema
+        # pair once. I.e. the list of topics being published is
+        # being returned, not the list of streams.
+        seen_topics = {}
         for es in self.get_exported_streams():
-            ps = es._as_published_stream()
-            if ps is not None:
-                published_streams.append(ps)
-        return published_streams
+            pt = es._as_published_topic()
+            if pt is not None:
+                if pt.topic in seen_topics:
+                    if pt.schema is None:
+                        continue
+                    # TODO schema support
+                else:
+                    seen_topics[pt.topic] = [pt.schema]
+                published_topics.append(pt)
+
+        return published_topics
 
 
 class ResourceTag(object):
@@ -513,11 +526,11 @@ class ActiveVersion(object):
         return pformat(self.__dict__)
 
 
-class PublishedStream(object):
-    """Metadata for a published stream.
+class PublishedTopic(object):
+    """Metadata for a published topic.
     Args:
-        topic: Topic stream is published to.
-        schema: Schema of the stream.
+        topic: Published topic.
+        schema: Schema of topic.
     """
     def __init__(self, topic, schema):
         self.topic = topic
