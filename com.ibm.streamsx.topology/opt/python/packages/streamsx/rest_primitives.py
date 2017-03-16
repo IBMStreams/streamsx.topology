@@ -468,7 +468,7 @@ class Instance(_ResourceElement):
         and subscribers are independent of each other.
 
         A published stream has a topic and a schema. It is recommended that a
-        topic has only a single schema.
+        topic is only associated with a single schema.
 
         Streams may be published and subscribed by applications regardless of the
         implementation language. For example a Python application can publish
