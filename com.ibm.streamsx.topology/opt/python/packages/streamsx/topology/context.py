@@ -16,14 +16,12 @@ except (ImportError, NameError):
 
 from streamsx import rest
 import logging
-import tempfile
 import os
 import os.path
 import json
 import subprocess
 import threading
 import sys
-import enum
 import codecs
 import tempfile
 
@@ -200,6 +198,9 @@ class _BaseSubmitter(object):
 
     def _create_full_json(self):
         fj = dict()
+
+        # Removing Streams Connection object because it is not JSON serializable, and not applicable for submission
+        self.config.pop(ConfigParams.STREAMS_CONNECTION, None)
         fj["deploy"] = self.config
         fj["graph"] = self.graph.generateSPLGraph()
 
@@ -316,7 +317,7 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
     """
     def __init__(self, ctxtype, config, graph):
         super(_StreamingAnalyticsSubmitter, self).__init__(ctxtype, config, graph)
-        self._streams_connection = None
+        self._streams_connection = self._config().get(ConfigParams.STREAMS_CONNECTION)
         self._vcap_services = self._config().get(ConfigParams.VCAP_SERVICES)
         self._service_name = self._config().get(ConfigParams.SERVICE_NAME)
 
@@ -349,7 +350,7 @@ class _DistributedSubmitter(_BaseSubmitter):
     """
     def __init__(self, ctxtype, config, graph, username, password):
         _BaseSubmitter.__init__(self, ctxtype, config, graph)
-        self._streams_connection = None
+        self._streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
         self.username = username
         self.password = password
 
@@ -513,6 +514,10 @@ class ConfigParams(object):
     JOB_CONFIG = 'topology.jobConfigOverlays'
     """
     Key for a :py:class:`JobConfig` object representing a job configuration for a submission.
+    """
+    STREAMS_CONNECTION = 'topology.streamsConnection'
+    """
+    Key for a :py:class:`StreamsConnection` object for connecting to a running IBM Streams instance.
     """
 
 class JobConfig(object):

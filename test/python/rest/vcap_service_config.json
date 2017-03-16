@@ -1,5 +1,0 @@
-{
-  "topology.service.vcap" : "/tmp/vcap_services.json",
-  "topology.service.name" : "Streaming Analytics-be",
-  "topology.forceRemoteBuild" : "True"
-}
