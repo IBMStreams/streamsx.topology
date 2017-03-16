@@ -80,11 +80,8 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         raise ValueError("Topology {0} does not contain any streams.".format(graph.topology.name))
 
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
-    try:
-        return context_submitter.submit()
-    except Exception as e:
-        logger.exception("Error while submitting application.")
-        raise e
+    return context_submitter.submit()
+
 
 
 class _BaseSubmitter(object):
@@ -114,7 +111,11 @@ class _BaseSubmitter(object):
         self._add_python_info()
 
         # Create the json file containing the representation of the application
-        self._create_json_file(self._create_full_json())
+        try:
+            self._create_json_file(self._create_full_json())
+        except IOError:
+            logger.error("Error writing json graph to file.")
+            raise
 
         tk_root = self._get_toolkit_root()
 
@@ -142,38 +143,39 @@ class _BaseSubmitter(object):
         logger.info("Generating SPL and submitting application.")
         proc_env = env=self._get_java_env()
         process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0, env=proc_env)
-        try:
-            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
-            stderr_thread.daemon = True
-            stderr_thread.start()
 
-            stdout_thread = threading.Thread(target=_print_process_stdout, args=([process]))
-            stdout_thread.daemon = True
-            stdout_thread.start()
-            process.wait()
+        stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
+        stderr_thread.daemon = True
+        stderr_thread.start()
 
-            results_json = None
-            try:
-                with open(self.results_file) as _file:
+        stdout_thread = threading.Thread(target=_print_process_stdout, args=([process]))
+        stdout_thread.daemon = True
+        stdout_thread.start()
+        process.wait()
+
+        results_json = {}
+
+        # Only try to read the results file if the submit was successful.
+        if process.returncode == 0:
+            with open(self.results_file) as _file:
+                try:
                     results_json = json.loads(_file.read())
-            except IOError:
-                logger.exception("Error opening an reading from results file.")
-                raise
-            except json.JSONDecodeError:
-                logger.exception("Results file doesn't contain valid JSON")
-                raise
-            except:
-                raise
+                except IOError:
+                    logger.error("Could not read file:" + str(_file.name))
+                    raise
+                except json.JSONDecodeError:
+                    logger.error("Could not parse results file:" + str(_file.name))
+                    raise
+                except:
+                    logger.error("Unknown error while processing results file.")
+                    raise
 
-            _delete_json(self)
-            results_json['return_code'] = process.returncode
-            self._augment_submission_result(results_json)
-            self.submission_results = results_json
-            return results_json
+        _delete_json(self)
+        results_json['return_code'] = process.returncode
+        self._augment_submission_result(results_json)
+        self.submission_results = results_json
+        return results_json
 
-        except:
-            logger.exception("Error starting java subprocess for submission")
-            raise
 
     def _augment_submission_result(self, submission_result):
         """Allow a subclass to augment a submission result"""
@@ -210,17 +212,14 @@ class _BaseSubmitter(object):
         return fj
 
     def _create_json_file(self, fj):
-        try:
-            if sys.hexversion < 0x03000000:
-                tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", prefix="splpytmp", delete=False)
-            else:
-                tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", encoding="UTF-8", prefix="splpytmp",
-                                             delete=False)
-            tf.write(json.dumps(fj, sort_keys=True, indent=2, separators=(',', ': ')))
-            tf.close()
-        except Exception:
-            logger.exception("Error generating SPL and creating JSON file.")
-            raise
+        if sys.hexversion < 0x03000000:
+            tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", prefix="splpytmp", delete=False)
+        else:
+            tf = tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", encoding="UTF-8", prefix="splpytmp",
+                                         delete=False)
+        tf.write(json.dumps(fj, sort_keys=True, indent=2, separators=(',', ': ')))
+        tf.close()
+
         self.fn = tf.name
 
     def _setup_views(self):
@@ -279,7 +278,11 @@ class _JupyterSubmitter(_BaseSubmitter):
         cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
 
         # Create the json file containing the representation of the application
-        self._create_json_file(self._create_full_json())
+        try:
+            self._create_json_file(self._create_full_json())
+        except IOError:
+            logger.error("Error writing json graph to file.")
+            raise
 
         streams_install = os.environ.get('STREAMS_INSTALL')
         # If there is no streams install, get java from JAVA_HOME and use the remote contexts.
@@ -298,17 +301,14 @@ class _JupyterSubmitter(_BaseSubmitter):
 
         args = [jvm, '-classpath', cp, submit_class, ContextTypes.STANDALONE, self.fn]
         process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
-        try:
-            stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
-            stderr_thread.daemon = True
-            stderr_thread.start()
+        stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
+        stderr_thread.daemon = True
+        stderr_thread.start()
 
-            if process.stdout is None:
-                raise ValueError("The returned stdout from the spawned process is None.")
-            return process.stdout
-        except:
-            logger.exception("Error starting java subprocess for submission")
-            raise
+        if process.stdout is None:
+            raise ValueError("The returned stdout from the spawned process is None.")
+        return process.stdout
+
 
 class _StreamingAnalyticsSubmitter(_BaseSubmitter):
     """
@@ -431,9 +431,10 @@ def _print_process_stdout(process):
             else:
                 print(line)
     except:
-        process.stdout.close()
-        logger.exception("Error reading from process stdout")
+        logger.error("Error reading from Java subprocess stdout stream.")
         raise
+    finally:
+        process.stdout.close()
 
 
 # Used by a thread which polls a subprocess's stderr and writes it to stderr, until the sc compilation
@@ -454,9 +455,10 @@ def _print_process_stderr(process, submitter):
             else:
                 print(line)
     except:
-        process.stderr.close()
-        logger.exception("Error reading from process stderr")
+        logger.error("Error reading from Java subprocess stderr stream.")
         raise
+    finally:
+        process.stderr.close()
 
 class ContextTypes(object):
     """
