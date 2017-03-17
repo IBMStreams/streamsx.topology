@@ -23,13 +23,29 @@ class TestPubSub(unittest.TestCase):
         Tester.setup_distributed(self)
 
     def _check_topics(self):
-        pass
+        ins = self.tester.sc.get_instance(self.tester.submission_result['instanceId'])
+        topics = ins.get_published_topics()
+        # Don't assume this is the only app running so
+        # other topics may exist
+        sts = 0
+        stp = 0
+        for pt in topics:
+            if self.topic_spl == pt.topic:
+                sts += 1
+            elif self.topic_python == pt.topic:
+                stp += 1
+
+        self.assertEqual(1, sts)
+        self.assertEqual(1, stp)
 
     def test_published_topics(self):
         """Test a published stream is available through get_published_topics.
         """
-        self.topic_spl = 'topology/test/python/' + str(uuid.uuid4())
-        self.topic_python = 'topology/test/python/' + str(uuid.uuid4())
+        tspl = ''.join(random.choice('0123456789abcdef') for x in range(20))
+        tpy = ''.join(random.choice('0123456789abcdef') for x in range(20))
+
+        self.topic_spl = 'topology/test/python/' + tspl
+        self.topic_python = 'topology/test/python/' + tpy
         self.assertNotEqual(self.topic_spl, self.topic_python)
 
         topo = Topology()
@@ -43,9 +59,13 @@ class TestPubSub(unittest.TestCase):
         s = s.stream.map(lambda x : x)
         s.publish(topic=self.topic_python)
 
+        # Publish twice to ensure its only listed once
+        s = s.filter(lambda x : True)
+        s.publish(topic=self.topic_python)
+
         self.tester = Tester(topo)
-        #self.tester.local_check = self._check_topics
-        self.tester.tuple_count(s, 300)
+        self.tester.local_check = self._check_topics
+        self.tester.tuple_count(s, 100, exact=False)
         self.tester.test(self.test_ctxtype, self.test_config)
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
