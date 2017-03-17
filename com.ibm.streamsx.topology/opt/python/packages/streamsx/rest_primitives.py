@@ -37,18 +37,40 @@ class _ResourceElement(object):
     """
     def __init__(self, json_rep, rest_client):
         """
-        :param json_rep: The JSON response from a REST call.
-        :param rest_client: The client used to make the REST call.
+        Args:
+            json_rep(dict): The JSON response from a REST call.
+            rest_client(_StreamsRestClient): The client used to make the REST call.
         """
-        self.rest_client=rest_client
-        for key in json_rep:
-            if key == 'self':
-                self.__dict__["rest_self"] = json_rep['self']
-            else:
-                self.__dict__[key] = json_rep[key]
+        self.rest_client = rest_client
+        self.rest_self = json_rep.get('self', None)
+        self.json_rep = json_rep
 
     def __str__(self):
         return pformat(self.__dict__)
+
+    # Override getattr to retrieve attribute from response JSON
+    def __getattr__(self, key):
+        if 'json_rep' in self.__dict__:
+            json = self.__getattribute__('json_rep')
+            if key in json:
+                return json[key]
+        # Fallback to default behaviour
+        return self.__getattribute__(key)
+
+    # Prevent setting one of the JSON attribute into the object
+    def __setattr__(self, key, value):
+        if 'json_rep' in self.__dict__:
+            json = self.__getattribute__('json_rep')
+            if key in json:
+                raise AttributeError('"{0}" is an immutable attribute.'.format(key))
+        super(_ResourceElement, self).__setattr__(key, value)
+
+    def refresh(self):
+        """Make a REST call to refresh the JSON object stored within the object
+        Returns:
+            _ResourceElement: The provided object instance is returned with updated value
+        """
+        self.json_rep = self.rest_client.make_request(self.rest_self)
 
     def _get_elements(self, url, key, eclass, id=None, name=None):
         """Generically get elements from an object.
