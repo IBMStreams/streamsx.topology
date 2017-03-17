@@ -102,6 +102,12 @@ class CommonSchema(enum.Enum):
 
     .. warning:: `Binary` is not yet supported for Python applications.
     """
+    XML = StreamSchema("tuple<xml document>")
+    """
+    Stream where each tuple is an XML document.
+
+    .. warning:: `XML` is not yet supported for Python applications.
+    """
 
     def schema(self):
         return self.value.schema()
