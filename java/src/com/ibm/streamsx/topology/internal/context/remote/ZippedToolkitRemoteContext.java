@@ -5,9 +5,13 @@
 package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CONFIG;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.graph;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectArray;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -56,12 +60,9 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     
     public Future<File> createCodeArchive(File toolkitRoot, JsonObject submission) throws IOException, URISyntaxException {
         
-        JsonObject jsonGraph = object(submission, SUBMISSION_GRAPH);
-        String namespace = splAppNamespace(jsonGraph);
-        String name = splAppName(jsonGraph);
         String tkName = toolkitRoot.getName();
         
-        Path zipOutPath = pack(toolkitRoot.toPath(), namespace, name, tkName);
+        Path zipOutPath = pack(toolkitRoot.toPath(), graph(submission), tkName);
         
         if (keepBuildArchive || keepArtifacts(submission)) {
         	final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
@@ -74,16 +75,34 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         return new CompletedFuture<File>(zipOutPath.toFile());
     }
         
-    private static Path pack(final Path folder, String namespace, String name, String tkName) throws IOException, URISyntaxException {
+    private static Path pack(final Path folder, JsonObject graph, String tkName) throws IOException, URISyntaxException {
+        String namespace = splAppNamespace(graph);
+        String name = splAppName(graph);
+
         Path zipFilePath = Paths.get(folder.toAbsolutePath().toString() + ".zip");
         String workingDir = zipFilePath.getParent().toString();
         
         Path topologyToolkit = TkInfo.getTopologyToolkitRoot().getAbsoluteFile().toPath();  
         
+        // Paths to copy into the toolkit
+        Map<Path, String> paths = new HashMap<>();
+        
         // tkManifest is the list of toolkits contained in the archive
         try (PrintWriter tkManifest = new PrintWriter("manifest_tk.txt", "UTF-8")) {
             tkManifest.println(tkName);
             tkManifest.println("com.ibm.streamsx.topology");
+            
+            JsonObject configSpl = object(graph, CONFIG, "spl");
+            if (configSpl != null) {
+                objectArray(configSpl, "toolkits",
+                        tk -> {
+                            File tkRoot = new File(jstring(tk, "root"));
+                            String tkRootName = tkRoot.getName();
+                            tkManifest.println(tkRootName);
+                            paths.put(tkRoot.toPath(), tkRootName);
+                            }
+                        );
+            }
         }
         
         // mainComposite is a string of the namespace and the main composite.
@@ -96,7 +115,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         Path mainComp = Paths.get(workingDir, "main_composite.txt");
         Path makefile = topologyToolkit.resolve(Paths.get("opt", "python", "templates", "common", "Makefile.template"));
         
-        Map<Path, String> paths = new HashMap<>();
+        
         paths.put(topologyToolkit, topologyToolkit.getFileName().toString());
         paths.put(manifest, "manifest_tk.txt");
         paths.put(mainComp, "main_composite.txt");
