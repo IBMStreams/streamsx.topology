@@ -57,7 +57,6 @@
 		     <arg value="test2_spl2python"/>
 		     <arg value="test2_pkg"/>
 		     <arg value="test2_udp"/>
-		     <arg value="test2_test"/>
 		     <arg value="test_streaming_analytics_service"/>
 		   </exec>
 	   </target>
@@ -101,4 +100,9 @@
          </ant>
      </target>
 
+    <target name="test.translation" description="Run the translation tests">
+        <exec executable="/bin/bash" dir="spl/translation">
+            <arg value="autorun.sh"/>
+        </exec>
+    </target>
 </project>

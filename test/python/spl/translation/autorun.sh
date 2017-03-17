@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o errexit
+
 pythonversion=python3
 tkpath=../../../../com.ibm.streamsx.topology
 languages=( de_DE fr_FR it_IT es_ES pt_BR ja_JP zh_CN ru_RU zh_TW ko_KR en_US )
@@ -29,8 +31,8 @@ EOM
 vers=$(${STREAMS_INSTALL}/bin/streamtool version | grep Version)
 if [[ ${vers} =~ Version=([0-9])\.([0-9])\.([0-9]) ]]; then
 	if [[ ${BASH_REMATCH[1]} -lt 4 || ${BASH_REMATCH[2]} -lt 2 ]]; then
-		echo "The Streams version ${vers} is not supported from this tool. Use at least Streams V4.2. Abort execution!"
-		exit 20
+		echo "The Streams version ${vers} is not supported from this test tool. Use at least Streams V4.2. Abort execution!"
+		exit 0
 	fi
 else
 	echo "Invalid version string ${vers} . Abort execution!"
@@ -53,7 +55,13 @@ done
 
 set -o nounset;
 
+declare -i failures=0
+declare -i executed=0
+
+
 function errorExit () {
+	echo "########################## error exiting ##################" 1>&2
+	echo "Executed=$executed Errors=1 Failures=$failures" 1>&2
 	echo "########################## error exiting ##################" 1>&2
 	exit 1
 }
@@ -75,24 +83,23 @@ cmd="${STREAMS_INSTALL}/bin/sc -M testspl::NoopSample -j ${nproc} -t ${tkpath}"
 echo $cmd
 $cmd || errorExit
 
-declare -i failures=0
-
 #Test 1 Can not execute
 
-#save environment
+#save original environment and manipulate the environment so that the standalon will fail
 set +o nounset;
 pythonHome=$PYTHONHOME
 unset PYTHONHOME
 set -o nounset;
 
 for i in "${languages[@]}"; do
+	executed=$((executed+1))
 	echo "** Test1 $i ********************************************"
 	export LC_ALL=$i.UTF-8
 	logfile=${logdir}/Test1_$i.log
 	echo "output/bin/standalone &> $logfile"
 	#we expect that the standalone execution fails
 	if output/bin/standalone &> $logfile; then
-		(( failures++ ))
+		failures=$((failures+1))
 		echo "FAILURE: Test 1 lang $i failed" 1>&2
 	fi
 	echo $logfile
@@ -107,13 +114,14 @@ fi
 echo "********************** Test 1 done ********************"
 
 for i in "${languages[@]}"; do
+	executed=$((executed+1))
 	echo "** Test2 $i ********************************************"
 	export LC_ALL=$i.UTF-8
 	logfile=${logdir}/Test2_$i.log
 	echo "output/bin/standalone -l 2 &> $logfile"
 	#we expect that the standalone execution succeeds
 	if ! output/bin/standalone -l 2 &> $logfile; then
-		(( failures++ ))
+		failures=$((failures+1))
 		echo "FAILURE: Test 2 lang $i failed" 1>&2
 	fi
 	echo $logfile
@@ -123,9 +131,15 @@ done
 echo "********************** Test 2 done ********************"
 
 if (( failures == 0 )); then
+	echo "*********************************************************"
+	echo "Executed=$executed Errors=0 Failures=$failures"
 	echo "Successfully completed"
+	echo "*********************************************************"
 	exit 0
 else
+	echo "*********************************************************"
+	echo "Executed=$executed Errors=0 Failure=$failures"
 	echo "FAILURE: Completed with ${failures} failures" 1>&2
+	echo "*********************************************************"
 	exit 30
 fi;
