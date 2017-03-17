@@ -705,7 +705,7 @@ class Stream(object):
         """
         self.sink(streamsx.topology.functions.print_flush)
 
-    def publish(self, topic, schema=schema.CommonSchema.Python):
+    def publish(self, topic, schema=None):
         """
         Publish this stream on a topic for other Streams applications to subscribe to.
         A Streams application may publish a stream to allow other
@@ -732,7 +732,7 @@ class Stream(object):
         Returns:
             None
         """
-        if self.oport.schema.schema() != schema.schema():
+        if schema is not None and self.oport.schema.schema() != schema.schema():
             self._map(streamsx.topology.functions.identity,schema=schema).publish(topic, schema=schema)
             return None
 

@@ -7,13 +7,14 @@
 	
 	<property name="testtk" location="spl/testtkpy"/>
 	<property name="topology" location="topology"/>
+        <property name="test.dir" location="unittests"/>
 
   <import file="../../common-build.xml"/>
 
     <property name="topology.toolkit.release" location="${tk}" />
     <echo message="Topology toolkit release: ${topology.toolkit.release}"/>
 
-  <target name="test" depends="all,test.application.api"/> 
+  <target name="test" depends="all,test.application.api,test.translation"/> 
 
   <target name="all" depends="test.toolkit"/> 
 	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/spl_samples.py"
@@ -38,26 +39,17 @@
 	   </target>
 
 	  <target name="test.application.api">
+             <mkdir dir="${test.dir}"/>
+             <tempfile property="pytests.test.dir" prefix="testrun" destDir="${test.dir}"/>
+             <mkdir dir="${pytests.test.dir}"/>
 	     <echo message="Topology python: ${topology.test.python}"/>
-		   <exec executable="${topology.test.python}" dir="${topology}" failonerror="true">
+		   <exec executable="${topology.test.python}" dir="${pytests.test.dir}" failonerror="true">
 		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages"/>
-		     <arg value="test_build_archive.py"/>
-		   </exec>
-
-		   <exec executable="${topology.test.python}" dir="${topology}" failonerror="true">
-		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages"/>
+		     <arg value="-u"/>
 		     <arg value="-m"/>
 		     <arg value="unittest"/>
-		     <arg value="test1"/>
-		     <arg value="test_lambdas"/>
-		     <arg value="test2"/>
-		     <arg value="test2_ec"/>
-		     <arg value="test2_names"/>
-		     <arg value="test2_spl"/>
-		     <arg value="test2_spl2python"/>
-		     <arg value="test2_pkg"/>
-		     <arg value="test2_udp"/>
-		     <arg value="test_streaming_analytics_service"/>
+		     <arg value="discover"/>
+		     <arg value="${topology}"/>
 		   </exec>
 	   </target>
 	   

@@ -219,7 +219,10 @@ class TestTopologyMethods(unittest.TestCase):
   # test using input functions from a namespace package that merges separate packages into a
   # common namespace    
   def test_TopologyImportCommonNamespacePackage(self):
-      sys.path.extend(['test_common_namespace/package1', 'test_common_namespace/package2'])
+      this_dir = os.path.dirname(os.path.realpath(__file__))
+      tcn = os.path.join(this_dir, 'test_common_namespace')
+      tcn_paths = [os.path.join(tcn, 'package1'), os.path.join(tcn,'package2')]
+      sys.path.extend(tcn_paths)
       import common_namespace.module1
       import common_namespace.module2
       try:
@@ -229,8 +232,8 @@ class TestTopologyMethods(unittest.TestCase):
           hwf.sink(common_namespace.module2.CheckTuples(["World!"]))
           standalone(self, topo)
       finally:
-          sys.path.remove('test_common_namespace/package1')
-          sys.path.remove('test_common_namespace/package2')
+          for p in tcn_paths:
+              sys.path.remove(p)
           del common_namespace.module1, common_namespace.module2
 
   # test using input functions from a module that imports another module

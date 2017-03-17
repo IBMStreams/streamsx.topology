@@ -10,6 +10,7 @@ import collections
 import logging
 
 from streamsx.topology import _debug
+import streamsx.topology._stdlib as _stdlib
 
 class _DependencyResolver(object):
     """
@@ -139,7 +140,7 @@ class _DependencyResolver(object):
         """
         _debug.debug("_add_dependency:module=%s", mn)
 
-        if _is_streamsx_topology_module(module):
+        if _is_streamsx_module(module):
             _debug.debug("_add_dependency:streamsx module=%s", mn)
             return False
 
@@ -233,9 +234,25 @@ def _get_module_name(function):
     return module_name
 
 def _is_builtin_module(module):
-    return (not hasattr(module, '__file__')) or  module.__name__ in sys.builtin_module_names
+    """Is builtin or part of standard library
+    """
+    if (not hasattr(module, '__file__')) or  module.__name__ in sys.builtin_module_names:
+        return True
+    return module.__name__ in _stdlib._STD_LIB_MODULES
 
-def _is_streamsx_topology_module(module):
+def _is_streamsx_module(module):
     if hasattr(module, '__name__'):
-        return module.__name__.startswith('streamsx.')
+        mn = module.__name__
+        if not mn.startswith('streamsx.'):
+            return False
+        if mn.startswith('streamsx.topology'):
+            return True
+        if mn.startswith('streamsx.spl'):
+            return True
+        if mn.startswith('streamsx.rest'):
+            return True
+        if mn == 'streamsx.ec':
+            return True
+        if mn == 'streamsx.st':
+            return True
     return False

@@ -9,9 +9,6 @@ import streamsx.st as st
 from .rest_primitives import Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService,  _exact_resource
 from .rest_errors import ViewNotFoundError
 from pprint import pformat
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -31,8 +28,10 @@ class StreamsConnection:
         resource_url: Root URL for IBM Streams REST API.
 
     Example:
+        >>> # If the resource url does not have a valid SSL certificate, you can disable the SSL verification
         >>> _resource_url = "https://streamsqse.localdomain:8443/streams/rest/resources"
         >>> sc = StreamsConnection(username="streamsadmin", password="passw0rd", resource_url=_resource_url)
+        >>> sc.session.verify=False
         >>> instances = sc.get_instances()
         >>> jobs_count = 0
         >>> for instance in instances:
@@ -52,8 +51,6 @@ class StreamsConnection:
             password = 'passw0rd'
             resource_url = st.get_rest_api()
         else:
-            logger.error("Invalid arguments for StreamsContext.__init__: must supply either a BlueMix VCAP Services or "
-                         "a username, password, and resource url.")
             raise ValueError("Must supply either a BlueMix VCAP Services or a username, password, and resource url"
                              " to the StreamsContext constructor.")
 
@@ -61,6 +58,7 @@ class StreamsConnection:
         self.resource_url = resource_url
         self.rest_client = _StreamsRestClient(username, password, self.resource_url)
         self.rest_client._sc = self
+        self.session = self.rest_client.session
         self._analytics_service = False
 
     def _get_elements(self, resource_name, eclass, id=None):
@@ -241,10 +239,15 @@ def _get_rest_api_url_from_creds(credentials):
     """
     resources_url = credentials['rest_url'] + credentials['resources_path']
     try:
-        response = requests.get(resources_url, auth=(credentials['userid'], credentials['password'])).json()
+
+        response_raw = requests.get(resources_url, auth=(credentials['userid'], credentials['password']))
+        response = response_raw.json()
     except:
-        logger.exception("Error while retrieving SWS REST url from: " + resources_url)
+        logger.error("Error while retrieving rest REST url from: " + resources_url)
         raise
+
+
+    response_raw.raise_for_status()
 
     rest_api_url = response['streams_rest_url'] + '/resources'
     return rest_api_url
