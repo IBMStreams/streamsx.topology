@@ -56,6 +56,7 @@ class SPLGraph(object):
         self.operators = []
         self.resolver = streamsx.topology.dependency._DependencyResolver(self.topology)
         self._views = []
+        self._spl_toolkits = []
 
     def get_views(self):
         return self._views
@@ -110,6 +111,8 @@ class SPLGraph(object):
         _graph["public"] = True
         _graph["config"] = {}
         _graph["config"]["includes"] = []
+        _graph['config']['spl'] = {}
+        _graph['config']['spl']['toolkits'] = self._spl_toolkits
         _ops = []
         self.addModules(_graph["config"]["includes"])
         self.addPackages(_graph["config"]["includes"])
