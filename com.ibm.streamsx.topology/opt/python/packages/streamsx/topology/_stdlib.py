@@ -105,5 +105,54 @@ _STD_LIB_MODULES = {
     'curses.panel',
     'platform',
     'errno',
-    'ctypes'
+    'ctypes',
+
+    # 17. Concurrent Execution
+    'threading',
+    'multiprocessing',
+    'concurrent',
+    'concurrent.futures',
+    'subprocess',
+    'sched',
+    'queue',
+    'dummy_threading',
+    '_thread',
+    ' _dummy_thread',
+
+    # 18. Interprocess Communication and Networking
+    'socket',
+    'ssl',
+    'select',
+    'selectors',
+    'asyncio',
+    'asyncore',
+    'asynchat',
+    'signal',
+    'mmap',
+
+    # 19. Internet Data Handling
+    'email', 
+    'json', 
+    'mailcap', 
+    'mailbox', 
+    'mimetypes', 
+    'base64', 
+    'binhex', 
+    'binascii', 
+    'quopri', 
+    'uu', 
+
+    # 20. Structured Markup Processing Tools
+    'html',
+    'html.parser',
+    'html.entities',
+    'xml.etree.ElementTree',
+    'xml.dom',
+    'xml.dom.minidom',
+    'xml.dom.pulldom',
+    'xml.sax',
+    'xml.sax.handler',
+    'xml.sax.saxutils',
+    'xml.sax.xmlreader',
+    'xml.parsers.expat'
 }
