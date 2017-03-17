@@ -10,6 +10,8 @@ from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology import schema
 import streamsx.topology.context
+from streamsx.topology.schema import StreamSchema as StSc
+from streamsx.topology.schema import CommonSchema as CmnSc
 import streamsx.spl.op as op
 
 import uuid
@@ -32,7 +34,11 @@ class TestPubSub(unittest.TestCase):
         for pt in topics:
             if self.topic_spl == pt.topic:
                 sts += 1
+                if pt.schema is not None:
+                    self.assertEqual(StSc('tuple<uint64 seq>'), pt.schema)
             elif self.topic_python == pt.topic:
+                if pt.schema is not None:
+                    self.assertEqual(CmnSc.Python.value, pt.schema)
                 stp += 1
 
         self.assertEqual(1, sts)

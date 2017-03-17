@@ -10,6 +10,7 @@ import re
 
 from pprint import pprint, pformat
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+import streamsx.topology.schema
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -404,7 +405,12 @@ class ExportedStream(_ResourceElement):
                 topic = p['values'][0]
 
         if seen_export_type and topic is not None:
-            return PublishedTopic(topic[1:-1], None)
+            schema = None
+            if hasattr(oop, 'tupleAttributes'):
+                ta_url = oop.tupleAttributes
+                ta_resp = self.rest_client.make_request(ta_url)
+                schema = streamsx.topology.schema.StreamSchema(ta_resp['splType'])
+            return PublishedTopic(topic[1:-1], schema)
         return
 
 class Instance(_ResourceElement):
@@ -490,7 +496,9 @@ class Instance(_ResourceElement):
                 if pt.topic in seen_topics:
                     if pt.schema is None:
                         continue
-                    # TODO schema support
+                    if pt.schema in seen_topics[pt.topic]:
+                        continue
+                    seen_topics[pt.topic].append(pt.schema)
                 else:
                     seen_topics[pt.topic] = [pt.schema]
                 published_topics.append(pt)
