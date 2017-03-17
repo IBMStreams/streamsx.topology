@@ -269,30 +269,36 @@ class Tester(object):
         return sr['return_code'] == 0
 
     def _distributed_test(self, config, username, password):
-        self.sc = config.get(ConfigParams.STREAMS_CONNECTION)
-        if self.sc is None:
-            # Disable SSL verification
-            self.sc = StreamsConnection(username, password)
-            self.sc.session.verify = False
-            config[ConfigParams.STREAMS_CONNECTION] = self.sc
-        sjr = stc.submit(stc.ContextTypes.DISTRIBUTED, self.topology, config, username=username, password=password)
+        self.streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
+        if self.streams_connection is None:
+            # Supply a default StreamsConnection object with SSL verification disabled, because the default
+            # streams server is not shipped with a valid SSL certificate
+            self.streams_connection = StreamsConnection(username, password)
+            self.streams_connection.session.verify = False
+            config[ConfigParams.STREAMS_CONNECTION] = self.streams_connection
+        sjr = stc.submit(stc.ContextTypes.DISTRIBUTED, self.topology, config)
         self.submission_result = sjr
         if sjr['return_code'] != 0:
-            print("DO AS LOGGER", "Failed to submit job to distributed instance.")
+            _logger.error("Failed to submit job to distributed instance.")
             return False
         return self._distributed_wait_for_result()
 
     def _streaming_analytics_test(self, ctxtype, config):
         sjr = stc.submit(ctxtype, self.topology, config)
         self.submission_result = sjr
-        self.sc = config.get(ConfigParams.STREAMS_CONNECTION)
-        if self.sc is None:
-            self.sc = StreamingAnalyticsConnection(service_name=config[ConfigParams.SERVICE_NAME])
+        self.streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
+        if self.streams_connection is None:
+            vcap_services = config.get(ConfigParams.VCAP_SERVICES)
+            service_name = config.get(ConfigParams.SERVICE_NAME)
+            self.streams_connection = StreamingAnalyticsConnection(vcap_services, service_name)
+        if sjr['return_code'] != 0:
+            _logger.error("Failed to submit job to Streaming Analytics instance")
+            return False
         return self._distributed_wait_for_result()
 
     def _distributed_wait_for_result(self):
         self._start_local_check()
-        cc = _ConditionChecker(self, self.sc, self.submission_result)
+        cc = _ConditionChecker(self, self.streams_connection, self.submission_result)
         self.result = cc._complete()
         self.result['submission_result'] = self.submission_result
         if self.local_check is not None:

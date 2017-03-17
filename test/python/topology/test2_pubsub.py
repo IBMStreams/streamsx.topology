@@ -25,7 +25,7 @@ class TestPubSub(unittest.TestCase):
         Tester.setup_distributed(self)
 
     def _check_topics(self):
-        ins = self.tester.sc.get_instance(self.tester.submission_result['instanceId'])
+        ins = self.tester.streams_connection.get_instance(self.tester.submission_result['instanceId'])
         topics = ins.get_published_topics()
         # Don't assume this is the only app running so
         # other topics may exist

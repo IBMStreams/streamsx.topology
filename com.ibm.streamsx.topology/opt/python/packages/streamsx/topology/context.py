@@ -354,6 +354,11 @@ class _DistributedSubmitter(_BaseSubmitter):
         self.username = username
         self.password = password
 
+        # TODO: handle credential conflicts
+        if self._streams_connection is not None:
+            self.username = self._streams_connection.rest_client._username
+            self.password = self._streams_connection.rest_client._password
+
         # Give each view in the app the necessary information to connect to SWS.
         self._setup_views()
 
