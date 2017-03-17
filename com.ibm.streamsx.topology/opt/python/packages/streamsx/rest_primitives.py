@@ -10,6 +10,7 @@ import re
 
 from pprint import pprint, pformat
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+import streamsx.topology.schema
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -351,6 +352,13 @@ class OperatorConnection(_ResourceElement):
     """
     pass
 
+class OperatorOutputPort(_ResourceElement):
+    """Operator output port resource provides access to information about an output port
+    for a specific operator.
+
+    """
+    pass
+
 class Metric(_ResourceElement):
     """
     Metric resource provides access to information about a Streams metric.
@@ -387,8 +395,45 @@ class ImportedStream(_ResourceElement):
 
 
 class ExportedStream(_ResourceElement):
-    pass
+    """ Exported stream resource represents a stream that has been exported by a job.
+    """
+    def get_operator_output_port(self):
+        return OperatorOutputPort(self.rest_client.make_request(self.operatorOutputPort), self.rest_client)
 
+    def _as_published_topic(self):
+        """This stream as a PublishedTopic if it is published otherwise None
+        """
+
+        oop = self.get_operator_output_port()
+        if not hasattr(oop, 'export'):
+            return
+
+        export = oop.export
+        if export['type'] != 'properties':
+            return
+
+        seen_export_type = False
+        topic = None
+
+        for p in export['properties']:
+            if p['type'] != 'rstring':
+                continue
+            if p['name'] == '__spl_exportType':
+                if p['values'] == ['"topic"']:
+                    seen_export_type = True
+                else:
+                    return
+            if p['name'] == '__spl_topic':
+                topic = p['values'][0]
+
+        if seen_export_type and topic is not None:
+            schema = None
+            if hasattr(oop, 'tupleAttributes'):
+                ta_url = oop.tupleAttributes
+                ta_resp = self.rest_client.make_request(ta_url)
+                schema = streamsx.topology.schema.StreamSchema(ta_resp['splType'])
+            return PublishedTopic(topic[1:-1], schema)
+        return
 
 class Instance(_ResourceElement):
     """The instance element resource provides access to information about a Streams instance."""
@@ -443,6 +488,46 @@ class Instance(_ResourceElement):
     def get_resource_allocations(self):
         return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
 
+    def get_published_topics(self):
+        """Get a list of published topics for this instance.
+
+        Streams applications publish streams to a a topic that can be subscribed to by other
+        applications. This allows a microservice approach where publishers
+        and subscribers are independent of each other.
+
+        A published stream has a topic and a schema. It is recommended that a
+        topic is only associated with a single schema.
+
+        Streams may be published and subscribed by applications regardless of the
+        implementation language. For example a Python application can publish
+        a stream of JSON tuples that are subscribed to by SPL and Java applications.
+
+        Returns:
+             list(PublishedTopic): List of currently published topics.
+        """
+        published_topics = []
+        # A topic can be published multiple times
+        # (typically with the same schema) but the
+        # returned list only wants to contain a topic,schema
+        # pair once. I.e. the list of topics being published is
+        # being returned, not the list of streams.
+        seen_topics = {}
+        for es in self.get_exported_streams():
+            pt = es._as_published_topic()
+            if pt is not None:
+                if pt.topic in seen_topics:
+                    if pt.schema is None:
+                        continue
+                    if pt.schema in seen_topics[pt.topic]:
+                        continue
+                    seen_topics[pt.topic].append(pt.schema)
+                else:
+                    seen_topics[pt.topic] = [pt.schema]
+                published_topics.append(pt)
+
+        return published_topics
+
+
 class ResourceTag(object):
     def __init__(self, json_resource_tag):
         self.definition_format_properties = json_resource_tag['definitionFormatProperties']
@@ -468,6 +553,20 @@ class ActiveVersion(object):
         self.product_version = json_active_version['productVersion']
 
     def __str__(self):
+        return pformat(self.__dict__)
+
+
+class PublishedTopic(object):
+    """Metadata for a published topic.
+    Args:
+        topic: Published topic.
+        schema: Schema of topic.
+    """
+    def __init__(self, topic, schema):
+        self.topic = topic
+        self.schema = schema
+
+    def __repr__(self):
         return pformat(self.__dict__)
 
 

@@ -21,7 +21,7 @@ class StreamSchema(object) :
     def schema(self):
         return self.__schema
 
-    def str(self):
+    def __str__(self):
         return self.__schema
 
     def spl_json(self):
@@ -112,5 +112,5 @@ class CommonSchema(enum.Enum):
     def extend(self, schema):
         return self.value.extend(schema)
 
-    def str(self):
+    def __str__(self):
         return str(self.schema())
