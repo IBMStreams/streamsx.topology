@@ -18,6 +18,16 @@ def world() :
 global _hwcountU
 _hwcountU = 0
 
+#
+# By default asserts are disabled
+# because sc defaults to optimized
+# compilation
+def check_asserts_disabled(tester):
+    tester.assertFalse(__debug__)
+    assert False
+    return True
+    
+
 def check_union_hello_world(t) :
 
    global _hwcountU

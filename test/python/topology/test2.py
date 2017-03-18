@@ -10,6 +10,7 @@ from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology.context import ConfigParams
 from streamsx import rest
+import test_functions
 
 import test_vers
 
@@ -172,6 +173,7 @@ class TestTopologyMethodsNew(unittest.TestCase):
     def test_TopologySourceItertools(self):
         topo = Topology('test_TopologySourceItertools')
         hw = topo.source(itertools.repeat(9, 3))
+        hw = hw.filter(test_functions.check_asserts_disabled)
         tester = Tester(topo)
         tester.contents(hw, [9, 9, 9])
         tester.test(self.test_ctxtype, self.test_config)
