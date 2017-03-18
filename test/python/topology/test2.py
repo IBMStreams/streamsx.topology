@@ -8,6 +8,8 @@ import shutil
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx.topology.context import ConfigParams
+from streamsx import rest
 
 import test_vers
 
@@ -83,7 +85,7 @@ class TestToolkitMethodsNew(unittest.TestCase):
         verifyArtifacts(self)
 
     def test_KeepArtifacts(self):
-        self.test_config = {'topology.keepArtifacts': True}
+        self.test_config['topology.keepArtifacts'] = True
         self.result = streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config)
         verifyArtifacts(self)
 
@@ -107,6 +109,35 @@ class TestBundleMethodsNew(TestToolkitMethodsNew):
         self.test_ctxtype = 'BUNDLE'
         self.test_config = {}
         self.result = {}
+
+@unittest.skipIf(not test_vers.tester_supported(), "Tester not supported")
+@unittest.skipUnless('STREAMS_INSTALL' in os.environ, "requires STREAMS_INSTALL")
+class TestSubmitArgumentsMethodsNew(unittest.TestCase):
+
+    def setUp(self):
+        self.topo = Topology('test_SubmitArg')
+        self.topo.source(['Hello', 'SubmitArg'])
+        self.test_ctxtype = 'DISTRIBUTED'
+        self.test_config = {}
+        self.result = {}
+
+    def test_SameCredential(self):
+        sc = rest.StreamsConnection('user1', 'pass1')
+        self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
+        self.result = streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config, username='user1', password='pass1')
+        self.assertEqual(self.result['return_code'], 0)
+
+    def test_DifferentUsername(self):
+        sc = rest.StreamsConnection('user1', 'pass1')
+        self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
+        with self.assertRaises(RuntimeError):
+            streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config, username='user2', password='pass1')
+
+    def test_DifferentPassword(self):
+        sc = rest.StreamsConnection('user1', 'pass1')
+        self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
+        with self.assertRaises(RuntimeError):
+            streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config, username='user1', password='pass2')
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestTopologyMethodsNew(unittest.TestCase):
