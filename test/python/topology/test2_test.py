@@ -56,7 +56,7 @@ class TestTester(unittest.TestCase):
 
     def my_local(self):
         self.assertTrue(hasattr(self.tester, 'submission_result'))
-        self.assertTrue(hasattr(self.tester, 'sc'))
+        self.assertTrue(hasattr(self.tester, 'streams_connection'))
         self.my_local_called = True
    
 
