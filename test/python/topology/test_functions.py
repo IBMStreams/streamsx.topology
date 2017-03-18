@@ -22,8 +22,7 @@ _hwcountU = 0
 # By default asserts are disabled
 # because sc defaults to optimized
 # compilation
-def check_asserts_disabled(tester):
-    tester.assertFalse(__debug__)
+def check_asserts_disabled(tuple):
     assert False
     return True
     
