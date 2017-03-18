@@ -21,6 +21,7 @@
 #define __SPL__SPLPY_SETUP_H
 
 #include "Python.h"
+#include <stdlib.h>
 #include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -201,6 +202,15 @@ class SplpySetup {
 
           SPLAPPTRC(L_DEBUG, "Starting Python runtime", "python");
 
+          // When SPL compile is optimized disable Python
+          // assertions, equivalent to -OO
+          if (SPL::ProcessingElement::pe().isOptimized()) {
+            if (getenv("PYTHONOPTIMIZE") == NULL) {
+                SPLAPPTRC(L_DEBUG, "Setting optimized Python runtime (-OO)", "python");
+                putenv("PYTHONOPTIMIZE=2");
+            }
+          }
+           
           __splpy_ie _SPLPy_InitializeEx =
              (__splpy_ie) dlsym(pydl, "Py_InitializeEx");
 
