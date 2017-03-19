@@ -155,6 +155,7 @@ class _SPLInvocation(object):
         self.graph = graph
         self.viewable = True
         self.sl = sl
+        self._placement = {}
 
         if view_configs is None:
             self.view_configs = []
@@ -228,6 +229,8 @@ class _SPLInvocation(object):
         _op["config"] = {}
         _op["config"]["streamViewability"] = self.viewable
         _op["config"]["viewConfigs"] = self.view_configs
+        if self._placement:
+            _op["config"]["placement"] = self._placement
         _params = {}
         # Add parameters as their string representation
         # unless they value has a spl_json() function,
@@ -277,7 +280,21 @@ class _SPLInvocation(object):
 
         # note: functions in the __main__ module cannot be used as input to operations 
         # function.__module__ will be '__main__', so C++ operators cannot import the module
-        self.params["pyModule"] = function.__module__          
+        self.params["pyModule"] = function.__module__
+
+    def colocate(self, other, why):
+        """
+        Colocate this operator with another.
+        Only supports the case where topology inserts
+        an operator to fufill the required method.
+        """
+        if isinstance(self, Marker):
+            return
+        colocate_id = self._placement.get('explicitColocate')
+        if colocate_id is None:
+            colocate_id = '__spl_' + why + '_' + str(self.index)
+            self._placement['explicitColocate'] = colocate_id
+        other._placement['explicitColocate'] = colocate_id
 
     def _printOperator(self):
         print(self.name+":")
