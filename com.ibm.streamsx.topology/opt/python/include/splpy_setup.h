@@ -21,6 +21,7 @@
 #define __SPL__SPLPY_SETUP_H
 
 #include "Python.h"
+#include <stdlib.h>
 #include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -147,6 +148,15 @@ class SplpySetup {
           throw exc;
         }
         SPLAPPLOG(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
+ 
+        // When SPL compile is optimized disable Python
+        // assertions, equivalent to -OO
+        if (SPL::ProcessingElement::pe().isOptimized()) {
+           if (getenv("PYTHONOPTIMIZE") == NULL) {
+               SPLAPPTRC(L_DEBUG, "Setting optimized Python runtime (-OO)", "python");
+               setenv("PYTHONOPTIMIZE", "2", 1);
+          }
+        }
 
         void * pydl = dlopen(pyLib.c_str(),
                          RTLD_LAZY | RTLD_GLOBAL | RTLD_DEEPBIND);
@@ -180,7 +190,6 @@ class SplpySetup {
         __splpy_ii _SPLPy_IsInitialized =
              (__splpy_ii) dlsym(pydl, "Py_IsInitialized");
 
-
         if (_SPLPy_IsInitialized() == 0) {
           typedef void (*__splpy_ie)(int);
           typedef void (*__splpy_eit)(void);
@@ -201,6 +210,7 @@ class SplpySetup {
 
           SPLAPPTRC(L_DEBUG, "Starting Python runtime", "python");
 
+           
           __splpy_ie _SPLPy_InitializeEx =
              (__splpy_ie) dlsym(pydl, "Py_InitializeEx");
 
