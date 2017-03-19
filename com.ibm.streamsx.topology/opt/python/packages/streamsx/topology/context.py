@@ -71,14 +71,13 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         An output stream of bytes if submitting with JUPYTER, otherwise returns a dict containing information relevant
         to the submission.
     """
-
     graph = graph.graph
 
     if not graph.operators:
         raise ValueError("Topology {0} does not contain any streams.".format(graph.topology.name))
 
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
-    return context_submitter.submit()
+    return SubmissionResult(context_submitter.submit())
 
 
 
@@ -200,8 +199,9 @@ class _BaseSubmitter(object):
         fj = dict()
 
         # Removing Streams Connection object because it is not JSON serializable, and not applicable for submission
-        self.config.pop(ConfigParams.STREAMS_CONNECTION, None)
-        fj["deploy"] = self.config
+        # Need to re-add it, since the StreamsConnection needs to be returned from the submit.
+        sc = self.config.pop(ConfigParams.STREAMS_CONNECTION, None)
+        fj["deploy"] = self.config.copy()
         fj["graph"] = self.graph.generateSPLGraph()
 
         _file = tempfile.NamedTemporaryFile(prefix="results", suffix=".json", mode="w+t", delete=False)
@@ -210,6 +210,7 @@ class _BaseSubmitter(object):
         self.results_file = _file.name
         logger.debug("Results file created at " + _file.name)
 
+        self.config[ConfigParams.STREAMS_CONNECTION] = sc
         return fj
 
     def _create_json_file(self, fj):
@@ -339,6 +340,7 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
         credentials = rest._get_credentials(vcap, self._service_name)
         instance_id = credentials['jobs_path'].split('/service_instances/', 1)[1].split('/', 1)[0]
         submission_result['instanceId'] = instance_id
+        submission_result['streamsConnection'] = self.streams_connection()
 
     def _get_java_env(self):
         "Pass the VCAP through the environment to the java submission"
@@ -347,12 +349,14 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
         env['VCAP_SERVICES'] = json.dumps(vcap)
         return env
 
+
 class _DistributedSubmitter(_BaseSubmitter):
     """
     A submitter which supports the DISTRIBUTED (on-prem cluster) context.
     """
     def __init__(self, ctxtype, config, graph, username, password):
         _BaseSubmitter.__init__(self, ctxtype, config, graph)
+
         self._streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
         self.username = username
         self.password = password
@@ -376,6 +380,10 @@ class _DistributedSubmitter(_BaseSubmitter):
 
     def _augment_submission_result(self, submission_result):
         submission_result['instanceId'] = os.environ.get('STREAMS_INSTANCE_ID', 'StreamsInstance')
+        # If we have the information to create a StreamsConnection, do it
+        if not ((self.username is None or self.password is None) and
+                        self.config.get(ConfigParams.STREAMS_CONNECTION) is None):
+            submission_result['streamsConnection'] = self.streams_connection()
 
 
 class _SubmitContextFactory(object):
@@ -645,3 +653,52 @@ class JobConfig(object):
 
         if jc:
             jco["jobConfig"] = jc
+
+class SubmissionResult(object):
+    """Passed back to the user after a call to submit.
+    Allows the user to use dot notation to access dictionary elements."""
+    def __init__(self, results):
+        self.results = results
+
+
+    @property
+    def job(self):
+        """If able, returns the job associated with the submitted build.
+        If a username/password, StreamsConnection, or vcap file was not supplied,
+        returns None.
+
+        *NOTE*: The @property tag supersedes __getattr__. In other words, this job method is
+        called before __getattr__(self, 'job') is called.
+        """
+        if 'streamsConnection' in self.results:
+            sc = self.streamsConnection
+            inst = sc.get_instance(self.instanceId)
+            return inst.get_job(self.jobId)
+        return None
+
+    def __getattr__(self, key):
+        if key in self.__getattribute__("results"):
+            return self.results[key]
+        return self.__getattribute__(key)
+
+    def __setattr__(self, key, value):
+        if "results" in self.__dict__:
+            results = self.results
+            results[key] = value
+        else:
+            super(SubmissionResult, self).__setattr__(key, value)
+
+    def __getitem__(self, item):
+        return self.__getattr__(item)
+
+    def __setitem__(self, key, value):
+        return self.__setattr__(key, value)
+
+    def __delitem__(self, key):
+        if key in self.__getattribute__("results"):
+            del self.results[key]
+            return
+        self.__delattr__(key)
+
+    def __contains__(self, item):
+        return item in self.results
