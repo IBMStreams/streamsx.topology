@@ -470,8 +470,9 @@ class Stream(object):
             name = ''.join(random.choice('0123456789abcdef') for x in range(16))
 
         if self.oport.schema == schema.CommonSchema.Python:
-        
             view_stream = self._map(streamsx.topology.functions.identity,schema=schema.CommonSchema.Json)
+            # colocate map operator with stream that is being viewed.
+            self.oport.operator.colocate(view_stream.oport.operator, 'view')
         else:
             view_stream = self
 
@@ -733,13 +734,15 @@ class Stream(object):
             None
         """
         if schema is not None and self.oport.schema.schema() != schema.schema():
-            self._map(streamsx.topology.functions.identity,schema=schema).publish(topic, schema=schema)
+            schema_change = self._map(streamsx.topology.functions.identity,schema=schema)
+            self.oport.operator.colocate(schema_change.oport.operator, 'publish')
+            schema_change.publish(topic, schema=schema)
             return None
 
         sl = _SourceLocation(_source_info(), "publish")
-        publish_arams = {'topic': topic}
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params=publish_arams, sl=sl)
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl)
         op.addInputPort(outputPort=self.oport)
+        self.oport.operator.colocate(op, 'publish')
 
     def autonomous(self):
         """
