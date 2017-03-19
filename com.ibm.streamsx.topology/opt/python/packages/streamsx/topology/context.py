@@ -576,6 +576,7 @@ class JobConfig(object):
         self.preload = preload
         self.data_directory = data_directory
         self.tracing = tracing
+        self._pe_count = None
 
     @property
     def tracing(self):
