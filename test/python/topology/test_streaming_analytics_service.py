@@ -11,21 +11,6 @@ from streamsx.topology import schema
 from streamsx.topology.context import submit
 from streamsx.topology.context import ConfigParams
 
-vcap_services = os.environ.pop('VCAP_SERVICES', None)
-service_name = os.environ.pop('STREAMING_ANALYTICS_SERVICE_NAME', None)
-
-def require_vcap(test):
-    if vcap_services is None:
-        raise unittest.SkipTest("No VCAP SERVICES env var")
-    if service_name is None:
-        raise unittest.SkipTest("No service name provided: env var STREAMING_ANALYTICS_SERVICE_NAME")
-
-    fn = vcap_services
-    with open(fn) as vcap_json_data:
-        vs = json.load(vcap_json_data)
-    sn = service_name
-    return {'vcap': vs, 'service_name': sn, 'vcap_file': fn}
-
 def build_simple_app(name):
     topo = Topology(name)
     hw = topo.source(["Bluemix", "Streaming", "Analytics"])
@@ -35,10 +20,34 @@ def build_simple_app(name):
 
 @unittest.skipIf(sys.version_info.major == 2, "Streaming Analytics service requires 3.5")
 class TestStreamingAnalytics(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.vcap_services = os.environ.pop('VCAP_SERVICES', None)
+        cls.service_name = os.environ.pop('STREAMING_ANALYTICS_SERVICE_NAME', None)
+    @classmethod
+    def tearDownClass(cls):
+        if cls.vcap_services is not None:
+            os.environ['VCAP_SERVICES'] = cls.vcap_services
+        if cls.service_name is not None:
+            os.environ['STREAMING_ANALYTICS_SERVICE_NAME'] = cls.service_name
+
+    @classmethod
+    def require_vcap(cls):
+        if cls.vcap_services is None:
+            raise unittest.SkipTest("No VCAP SERVICES env var")
+        if cls.service_name is None:
+            raise unittest.SkipTest("No service name provided: env var STREAMING_ANALYTICS_SERVICE_NAME")
+
+        fn = cls.vcap_services
+        with open(fn) as vcap_json_data:
+            vs = json.load(vcap_json_data)
+        sn = cls.service_name
+        return {'vcap': vs, 'service_name': sn, 'vcap_file': fn}
 
     def submit_to_service(self, topo, cfg):
         rc = submit("ANALYTICS_SERVICE", topo, cfg)
         self.assertEqual(0, rc['return_code'])
+        rc.job.cancel()
         return rc
 
     def test_no_vcap(self):
@@ -50,14 +59,14 @@ class TestStreamingAnalytics(unittest.TestCase):
         self.assertRaises(ValueError, submit, "ANALYTICS_SERVICE", topo, {})
 
     def test_no_service(self):
-        vsi = require_vcap(self)
+        vsi = self.require_vcap()
         topo = build_simple_app("test_no_service")
         cfg = {}
         cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap']
         self.assertRaises(ValueError, submit, "ANALYTICS_SERVICE", topo, cfg)
 
     def test_vcap_json(self):
-        vsi = require_vcap(self)
+        vsi = self.require_vcap()
         topo = build_simple_app("test_vcap_json")
         cfg = {}
         cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap']
@@ -65,7 +74,7 @@ class TestStreamingAnalytics(unittest.TestCase):
         self.submit_to_service(topo, cfg)
 
     def test_vcap_json_remote(self):
-        vsi = require_vcap(self)
+        vsi = self.require_vcap()
         topo = build_simple_app("test_vcap_json_remote")
         cfg = {}
         cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
@@ -74,7 +83,7 @@ class TestStreamingAnalytics(unittest.TestCase):
         self.submit_to_service(topo, cfg)
 
     def test_vcap_string_remote(self):
-        vsi = require_vcap(self)
+        vsi = self.require_vcap()
         topo = build_simple_app("test_vcap_string_remote")
         cfg = {}
         cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
@@ -83,7 +92,7 @@ class TestStreamingAnalytics(unittest.TestCase):
         self.submit_to_service(topo, cfg)
 
     def test_vcap_file_remote(self):
-        vsi = require_vcap(self)
+        vsi = self.require_vcap()
         topo = build_simple_app("test_vcap_file_remote")
         cfg = {}
         cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
@@ -92,7 +101,7 @@ class TestStreamingAnalytics(unittest.TestCase):
         self.submit_to_service(topo, cfg)
 
     def test_submit_job_results(self):
-        vsi = require_vcap(self)
+        vsi = self.require_vcap()
         topo = build_simple_app("test_submit_job_results")
         cfg = {}
         cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
