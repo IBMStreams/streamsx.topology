@@ -50,6 +50,7 @@
 		     <arg value="unittest"/>
 		     <arg value="discover"/>
 		     <arg value="${topology}"/>
+		     <arg value="-v"/>
 		   </exec>
 	   </target>
 	   

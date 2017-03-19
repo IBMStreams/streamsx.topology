@@ -576,6 +576,7 @@ class JobConfig(object):
         self.preload = preload
         self.data_directory = data_directory
         self.tracing = tracing
+        self._pe_count = None
 
     @property
     def tracing(self):
@@ -618,6 +619,37 @@ class JobConfig(object):
 
         self._tracing = level
 
+    @property
+    def target_pe_count(self):
+        """Target processing element count.
+
+         When submitted against a Streams instance `target_pe_count` provides
+         a hint to the scheduler as to how to partition the topology
+         across processing elements (processes) for the job execution. When a job
+         contains multiple processing elements (PEs) then the Streams scheduler can
+         distributed the PEs across the resources (hosts) running in the instance.
+
+         When set to ``None`` (the default) no hint is supplied to the scheduler.
+         The number of PEs in the submitted job will be determined by the scheduler.
+
+         The value is only a target and may be ignored when the topology contains
+         :py:meth:`~Stream.isolate` calls.
+
+         .. note::
+             Only supported in Streaming Analytics service and IBM Streams 4.2 or later.
+        """
+        if self._pe_count is None:
+            return None
+        return int(self._pe_count)
+
+    @target_pe_count.setter
+    def target_pe_count(self, count):
+        if count is not None:
+            count = int(count)
+            if count < 1:
+                raise ValueError("target_pe_count must be greater than 0.")
+        self._pe_count = count
+
     def add(self, config):
         """
         Add this `JobConfig` into a submission configuration object.
@@ -653,6 +685,11 @@ class JobConfig(object):
 
         if jc:
             jco["jobConfig"] = jc
+
+        if self.target_pe_count is not None and self.target_pe_count >= 1:
+            deployment = {'fusionScheme' : 'manual', 'fusionTargetPeCount' : self.target_pe_count}
+            jco["deploymentConfig"] = deployment
+
 
 class SubmissionResult(object):
     """Passed back to the user after a call to submit.

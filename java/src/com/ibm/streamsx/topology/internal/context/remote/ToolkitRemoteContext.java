@@ -14,9 +14,9 @@ import static com.ibm.streamsx.topology.internal.core.InternalProperties.TOOLKIT
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.addAll;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -137,8 +137,22 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         }
         JsonObject jco = jcos.get(0).getAsJsonObject();
         
-        jco.add(DEPLOYMENT_CONFIG,
-                jobject(graph, "config").get(DEPLOYMENT_CONFIG));     
+        JsonObject graphDeployment = GsonUtilities.object(graph, "config", DEPLOYMENT_CONFIG);
+        
+        if (!jco.has(DEPLOYMENT_CONFIG)) {
+             jco.add(DEPLOYMENT_CONFIG, graphDeployment);
+             return;
+        }
+        
+        JsonObject deployment = object(jco, DEPLOYMENT_CONFIG);
+        
+        // Need to merge with the graph taking precedence.
+        addAll(deployment, graphDeployment);
+        
+        if ("legacy".equals(GsonUtilities.jstring(deployment, "fusionScheme "))) {
+            if (deployment.has("fusionTargetPeCount"))
+                deployment.remove("fusionTargetPeCount");
+        }
     }
 
     private void generateSPL(File toolkitRoot, JsonObject jsonGraph)
