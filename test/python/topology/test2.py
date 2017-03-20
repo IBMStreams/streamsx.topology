@@ -116,6 +116,11 @@ class TestBundleMethodsNew(TestToolkitMethodsNew):
 class TestSubmitArgumentsMethodsNew(unittest.TestCase):
 
     def setUp(self):
+        if not 'STREAMS_DOMAIN_ID' in os.environ:
+            self.skipTest('STREAMS_DOMAIN_ID not set')
+        if not 'STREAMS_INSTANCE_ID' in os.environ:
+            self.skipTest('STREAMS_INSTANCE_ID not set')
+
         self.topo = Topology('test_SubmitArg')
         self.topo.source(['Hello', 'SubmitArg'])
         self.test_ctxtype = 'DISTRIBUTED'
