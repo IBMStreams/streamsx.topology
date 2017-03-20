@@ -93,7 +93,7 @@
      </target>
 
     <target name="test.translation" description="Run the translation tests">
-        <exec executable="/bin/bash" dir="spl/translation">
+        <exec executable="/bin/bash" dir="spl/translation" failonerror="true">
             <arg value="autorun.sh"/>
         </exec>
     </target>
