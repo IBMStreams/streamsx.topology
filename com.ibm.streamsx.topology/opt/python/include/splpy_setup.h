@@ -149,14 +149,18 @@ class SplpySetup {
         }
         SPLAPPLOG(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
  
+#if PY_MAJOR_VERSION == 3
         // When SPL compile is optimized disable Python
         // assertions, equivalent to -OO
+        // Seems to cause module loading issues from pyc files
+        // on Python 2.7 so only optmize on Python 3
         if (SPL::ProcessingElement::pe().isOptimized()) {
            if (getenv("PYTHONOPTIMIZE") == NULL) {
                SPLAPPTRC(L_DEBUG, "Setting optimized Python runtime (-OO)", "python");
                setenv("PYTHONOPTIMIZE", "2", 1);
           }
         }
+#endif
 
         void * pydl = dlopen(pyLib.c_str(),
                          RTLD_LAZY | RTLD_GLOBAL | RTLD_DEEPBIND);
