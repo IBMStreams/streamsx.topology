@@ -25,7 +25,8 @@ def __splpy_addDirToPath(dir):
             sys.path.insert(0, dir)
             # In case a streamsx module (e.g. streamsx.bm) 
             # is included in the additional code
-            streamsx.__path__ = extend_path(streamsx.__path__, streamsx.__name__)
+            if os.path.isdir(os.path.join(dir, 'streamsx')):
+                streamsx.__path__ = extend_path(streamsx.__path__, streamsx.__name__)
                 
 def setupOperator(dir):
     pydir = os.path.join(dir, 'opt', 'python')
