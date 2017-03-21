@@ -44,7 +44,7 @@
              <mkdir dir="${pytests.test.dir}"/>
 	     <echo message="Topology python: ${topology.test.python}"/>
 		   <exec executable="${topology.test.python}" dir="${pytests.test.dir}" failonerror="true">
-		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages"/>
+		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages:${topology}"/>
 		     <arg value="-u"/>
 		     <arg value="-m"/>
 		     <arg value="unittest"/>

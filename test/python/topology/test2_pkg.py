@@ -49,7 +49,20 @@ class TestPackages(unittest.TestCase):
       hwf = hw.transform(test2_pkg_helpers.missing_package)
       tester = Tester(topo)
       tester.contents(hwf, ["HelloMP", "World!MP"])
-      tester.test(self.test_ctxtype, self.test_config)
+      pypath = None
+
+      # if PYTHONPATH includes the tests in standalone
+      # then the test will find the excluded module.
+      # Others are fine since PYTHONPATH in the instance
+      # will not be set.
+      if 'STANDALONE' == self.test_ctxtype:
+          pypath = os.environ.pop('PYTHONPATH', None)
+
+      try:
+          tester.test(self.test_ctxtype, self.test_config)
+      finally:
+          if pypath is not None:
+              os.environ['PYTHONPATH'] = pypath
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestDistributedPackages(TestPackages):
