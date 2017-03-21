@@ -41,14 +41,14 @@ def verifyArtifacts(test):
     if test.test_config.get('topology.keepArtifacts', False):
         # KeepArtifacts is True
         assertToolkitRoot(test, test.result)
-        if (test.test_config.get('topology.forceRemoteBuild', False) or
-                    'STREAMS_INSTALL' not in os.environ or
-                    'BUILD_ARCHIVE' == test.test_ctxtype):
-            assertArchivePath(test, test.result)
-            test.assertNotIn('bundlePath', test.result)
-        elif 'TOOLKIT' == test.test_ctxtype:
+        if 'TOOLKIT' == test.test_ctxtype:
             test.assertNotIn('bundlePath', test.result)
             test.assertNotIn('archivePath', test.result)
+        elif (test.test_config.get('topology.forceRemoteBuild', False) or
+              'STREAMS_INSTALL' not in os.environ or
+              'BUILD_ARCHIVE' == test.test_ctxtype):
+            assertArchivePath(test, test.result)
+            test.assertNotIn('bundlePath', test.result)
         else:
             assertBundlePath(test, test.result)
             test.assertNotIn('archivePath', test.result)
