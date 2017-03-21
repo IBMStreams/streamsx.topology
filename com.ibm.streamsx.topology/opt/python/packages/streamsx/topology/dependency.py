@@ -174,7 +174,7 @@ class _DependencyResolver(object):
         elif hasattr(module, '__file__'):
             # individual Python module
             module_path = os.path.abspath(module.__file__)
-            self._add_module(module_path)
+            self._modules.add(module_path)
             
         self._processed_modules.add(module)
         return True
@@ -184,10 +184,6 @@ class _DependencyResolver(object):
             return None
         self._packages[path] = None
     
-    def _add_module(self, path):
-        #print ("Adding external module", path)
-        self._modules.add(path)
-
 #####################
 # Utility functions #
 #####################
