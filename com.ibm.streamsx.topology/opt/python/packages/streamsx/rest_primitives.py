@@ -8,11 +8,8 @@ import time
 import json
 import re
 
-from pprint import pprint, pformat
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from pprint import pformat
 import streamsx.topology.schema
-
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -29,8 +26,6 @@ def _matching_resource(json_rep, name=None):
             return False
         return re.match(name, json_rep['name'])
     return True
-
-  
 
 
 class _ResourceElement(object):
@@ -106,19 +101,16 @@ class _ResourceElement(object):
             return elements[0]
         raise ValueError("Multiple resources matching: {0}".format(id))
 
-class _StreamsRestClient(object):
-    """Handles the session connection with the Streams REST API.
 
-    :param username: The username of an authorized Streams user.
-    :type username: str.
-    :param password: The password associated with the username.
-    :type password: str.
-    :param resource_url: The resource endpoint of the instance. Can be found with `st geturl --api` for local Streams
-    installs.
-    :type resource_url: str.
+class _StreamsRestClient(object):
+    """Handles the session connection with the Streams REST API
     """
-    def __init__(self, username, password, resource_url):
-        self.resource_url = resource_url
+    def __init__(self, username, password):
+        """
+        Args:
+            username(str): The username of an authorized Streams user.
+            password(str): The password associated with the username.
+        """
         # Create session to reuse TCP connection
         # https authentication
         self._username = username
@@ -217,6 +209,7 @@ def _get_view_dict_tuple(item):
     """
     return item.data
 
+
 class View(_ResourceElement):
     """The view element resource provides access to information about a view that is associated with an active job, and
     exposes methods to retrieve data from the View's Stream.
@@ -263,11 +256,13 @@ class View(_ResourceElement):
         logger.debug("Retrieved " + str(len(view_items)) + " items from view " + self.name)
         return view_items
 
+
 class ViewItem(_ResourceElement):
     """
     Represents the data of a tuple, it's type, and the time when it was collected from the stream.
     """
     pass
+
 
 class Host(_ResourceElement):
     """The host element resource provides access to information about a host that is allocated to a domain as a
@@ -329,6 +324,7 @@ class Job(_ResourceElement):
             return True
         raise NotImplementedError('Job.cancel()')
 
+
 class Operator(_ResourceElement):
     """The operator element resource provides access to information about a specific operator in a job.
     """
@@ -346,11 +342,13 @@ class Operator(_ResourceElement):
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
+
 class OperatorConnection(_ResourceElement):
     """The operator connection element resource provides access to information about a connection between two operator
     ports.
     """
     pass
+
 
 class OperatorOutputPort(_ResourceElement):
     """Operator output port resource provides access to information about an output port
@@ -359,11 +357,13 @@ class OperatorOutputPort(_ResourceElement):
     """
     pass
 
+
 class Metric(_ResourceElement):
     """
     Metric resource provides access to information about a Streams metric.
     """
     pass
+
 
 class PE(_ResourceElement):
     """The processing element (PE) resource provides access to information about a PE.
@@ -434,6 +434,7 @@ class ExportedStream(_ResourceElement):
                 schema = streamsx.topology.schema.StreamSchema(ta_resp['splType'])
             return PublishedTopic(topic[1:-1], schema)
         return
+
 
 class Instance(_ResourceElement):
     """The instance element resource provides access to information about a Streams instance."""

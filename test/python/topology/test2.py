@@ -116,22 +116,11 @@ class TestBundleMethodsNew(TestToolkitMethodsNew):
 class TestSubmitArgumentsMethodsNew(unittest.TestCase):
 
     def setUp(self):
-        if not 'STREAMS_DOMAIN_ID' in os.environ:
-            self.skipTest('STREAMS_DOMAIN_ID not set')
-        if not 'STREAMS_INSTANCE_ID' in os.environ:
-            self.skipTest('STREAMS_INSTANCE_ID not set')
-
         self.topo = Topology('test_SubmitArg')
         self.topo.source(['Hello', 'SubmitArg'])
         self.test_ctxtype = 'DISTRIBUTED'
         self.test_config = {}
         self.result = {}
-
-    def test_SameCredential(self):
-        sc = rest.StreamsConnection('user1', 'pass1')
-        self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
-        self.result = streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config, username='user1', password='pass1')
-        self.assertEqual(self.result['return_code'], 0)
 
     def test_DifferentUsername(self):
         sc = rest.StreamsConnection('user1', 'pass1')
