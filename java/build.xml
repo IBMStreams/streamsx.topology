@@ -19,6 +19,7 @@
   <path id="compile.pure.classpath">
     <path refid="gson.classpath" />
     <path refid="httpclient.classpath"/>
+    <path refid="compress.classpath"/>
   </path>
 
   <target name="all" depends="jar"/>
