@@ -10,6 +10,8 @@ import streamsx.ec as ec
 
 try:
     import dill
+    # Importing cloudpickle break dill's deserialization.
+    # Workaround is to make dill aware of the ClassType type.
     if sys.version_info.major == 3:
         dill.dill._reverse_typemap['ClassType'] = type
     dill.settings['recurse'] = True
