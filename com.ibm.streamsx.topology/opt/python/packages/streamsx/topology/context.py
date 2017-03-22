@@ -322,8 +322,19 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
         self._vcap_services = self._config().get(ConfigParams.VCAP_SERVICES)
         self._service_name = self._config().get(ConfigParams.SERVICE_NAME)
 
-        # TODO: compare status_path (or any REST endpoint in the credential) in the config
-        # and in the StreamsConnection object, and verify if both are same
+        if self._streams_connection is not None:
+            if not isinstance(self._streams_connection, rest.StreamingAnalyticsConnection):
+                raise ValueError("config must contain a StreamingAnalyticsConnection object when submitting to "
+                                 "{} context".format(ctxtype))
+
+            # Use credentials stored within StreamingAnalyticsConnection
+            self._service_name = self._streams_connection.service_name
+            self._vcap_services = {'streaming-analytics': [
+                {'name': self._service_name, 'credentials': self._streams_connection.credentials}
+            ]}
+            self._config()[ConfigParams.SERVICE_NAME] = self._service_name
+
+            # TODO: Compare credentials between the config and StreamsConnection, verify they are the same
 
         # Clear the VCAP_SERVICES key in config, since env var will contain the content
         self._config().pop(ConfigParams.VCAP_SERVICES, None)

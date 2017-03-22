@@ -93,19 +93,19 @@ class StreamsConnection:
         """
         return self._get_elements('domains')
 
-    def get_domain(self, domain_id):
+    def get_domain(self, id):
         """Retrieve available domain matching a specific domain ID
 
         Args:
-            domain_id (str): domain ID
+            id (str): domain ID
 
         Returns:
-            :py:class:`~.rest_primitives.Domain`: Domain matching `domain_id`
+            :py:class:`~.rest_primitives.Domain`: Domain matching `id`
 
         Raises:
             ValueError: No matching domain exists or multiple matching domains exist.
         """
-        return self._get_element_by_id('domains', Domain, domain_id)
+        return self._get_element_by_id('domains', Domain, id)
 
     def get_instances(self):
         """Retrieve available instances.
@@ -115,19 +115,19 @@ class StreamsConnection:
         """
         return self._get_elements('instances', Instance, id=id)
 
-    def get_instance(self, instance_id):
+    def get_instance(self, id):
         """Retrieve available instance matching a specific instance ID.
 
         Args:
-            instance_id (str): Instance identifier to retrieve.
+            id (str): Instance identifier to retrieve.
 
         Returns:
-            :py:class:`~.rest_primitives.Instance`: Instance matching `instance_id`.
+            :py:class:`~.rest_primitives.Instance`: Instance matching `id`.
 
         Raises:
             ValueError: No matching instance exists or multiple matching instances exist.
         """
-        return self._get_element_by_id('instances', Instance, instance_id)
+        return self._get_element_by_id('instances', Instance, id)
 
     def get_installations(self):
         """Retrieves a list of all known Streams installations.
@@ -171,7 +171,10 @@ class StreamingAnalyticsConnection(StreamsConnection):
     """
     def __init__(self, vcap_services=None, service_name=None):
         vcap = _get_vcap_services(vcap_services)
-        self.credentials = _get_credentials(vcap, service_name)
+        self.service_name = service_name
+        if service_name is None:
+            self.service_name = os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME')
+        self.credentials = _get_credentials(vcap, self.service_name)
         super(StreamingAnalyticsConnection, self).__init__(self.credentials['userid'], self.credentials['password'])
         self._analytics_service = True
 
