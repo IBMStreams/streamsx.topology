@@ -26,11 +26,14 @@
      <arg value="${streamsx.py.dir}"/>
 
      <!-- excluded packages -->
+     <arg value="${streamsx.py.dir}/streamsx/st.py"/>
      <arg value="${streamsx.py.dir}/streamsx/spl/runtime.py"/>
      <arg value="${streamsx.py.dir}/streamsx/topology/condapkgs.py"/>
      <arg value="${streamsx.py.dir}/streamsx/topology/dependency.py"/>
+     <arg value="${streamsx.py.dir}/streamsx/topology/exop.py"/>
+     <arg value="${streamsx.py.dir}/streamsx/topology/functions.py"/>
      <arg value="${streamsx.py.dir}/streamsx/topology/graph.py"/>
-     <arg value="${streamsx.py.dir}/streamsx/topology/logging_utils.py"/>
+     <arg value="${streamsx.py.dir}/streamsx/topology/param.py"/>
      <arg value="${streamsx.py.dir}/streamsx/topology/runtime.py"/>
      <arg value="${streamsx.py.dir}/streamsx/topology/splpy_setup.py"/>
    </exec>
