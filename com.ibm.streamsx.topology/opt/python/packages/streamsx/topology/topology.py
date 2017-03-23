@@ -4,12 +4,12 @@
 
 """
 Python API to allow creation of streaming applications for
-IBM Streams & Streaming Analytics service on Bluemix.
+IBM® Streams & Streaming Analytics service on Bluemix.
 
 Overview
 ########
 
-IBM® Streams is an advanced analytic platform that allows user-developed
+IBM Streams is an advanced analytic platform that allows user-developed
 applications to quickly ingest, analyze and correlate information as it
 arrives from thousands of real-time sources.
 Streams can handle very high data throughput rates, millions of events
