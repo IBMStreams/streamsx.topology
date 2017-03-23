@@ -91,7 +91,7 @@ class StreamsConnection:
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.Domain`: list of available domains
         """
-        return self._get_elements('domains')
+        return self._get_elements('domains', Domain)
 
     def get_domain(self, id):
         """Retrieve available domain matching a specific domain ID
@@ -113,7 +113,7 @@ class StreamsConnection:
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.Instance`: list of available instances
         """
-        return self._get_elements('instances', Instance, id=id)
+        return self._get_elements('instances', Instance)
 
     def get_instance(self, id):
         """Retrieve available instance matching a specific instance ID.
