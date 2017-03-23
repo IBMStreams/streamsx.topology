@@ -1,0 +1,294 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.topology.schema module &mdash; streamsx 1.6.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="streamsx 1.6.0 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="simple">
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">streamsx</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>streamsx.topology.schema module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/streamsx.topology.schema.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.topology.schema">
+<span id="streamsx-topology-schema-module"></span><h1>streamsx.topology.schema module<a class="headerlink" href="#module-streamsx.topology.schema" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="streamsx.topology.schema.CommonSchema">
+<em class="property">class </em><code class="descclassname">streamsx.topology.schema.</code><code class="descname">CommonSchema</code><a class="headerlink" href="#streamsx.topology.schema.CommonSchema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">enum.Enum</span></code></p>
+<p>Common stream schemas for interoperability within Streams applications.</p>
+<p>Streams application can publish streams that are subscribed to by other applications.
+Use of common schemas allow streams connections regardless of the implementation</p>
+<p>Python applications publish streams using <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.publish" title="streamsx.topology.topology.Stream.publish"><code class="xref py py-meth docutils literal"><span class="pre">publish()</span></code></a>
+and subscribe using <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology.subscribe" title="streamsx.topology.topology.Topology.subscribe"><code class="xref py py-meth docutils literal"><span class="pre">subscribe()</span></code></a>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.Python" title="streamsx.topology.schema.CommonSchema.Python"><code class="xref py py-const docutils literal"><span class="pre">Python</span></code></a> - Stream constains Python objects</li>
+<li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.Json" title="streamsx.topology.schema.CommonSchema.Json"><code class="xref py py-const docutils literal"><span class="pre">Json</span></code></a> - Stream contains JSON objects.</li>
+<li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.String" title="streamsx.topology.schema.CommonSchema.String"><code class="xref py py-const docutils literal"><span class="pre">String</span></code></a> - Stream contains strings.</li>
+<li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.Binary" title="streamsx.topology.schema.CommonSchema.Binary"><code class="xref py py-const docutils literal"><span class="pre">Binary</span></code></a> - Stream contains binary tuples.</li>
+</ul>
+</div></blockquote>
+<dl class="attribute">
+<dt id="streamsx.topology.schema.CommonSchema.Binary">
+<code class="descname">Binary</code><em class="property"> = &lt;CommonSchema.Binary: &lt;streamsx.topology.schema.StreamSchema object at 0x7f1b4781e160&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.Binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stream where each tuple is a binary object (sequence of bytes).</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last"><cite>Binary</cite> is not yet supported for Python applications.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.schema.CommonSchema.Json">
+<code class="descname">Json</code><em class="property"> = &lt;CommonSchema.Json: &lt;streamsx.topology.schema.StreamSchema object at 0x7f1b4781e0f0&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.Json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stream where each tuple is a JSON object.</p>
+<p><cite>Json</cite> can be used as a natural interchange format between Streams applications
+implemented in different programming languages. All languages supported by
+Streams support publishing and subscribing to JSON streams.</p>
+<p>Python objects are converted to JSON objects using <cite>json.dumps(obj)</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.schema.CommonSchema.Python">
+<code class="descname">Python</code><em class="property"> = &lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object at 0x7f1b4781e0b8&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.Python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stream where each tuple is a Python object.</p>
+<p>Python streams can only be used by Python applications.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.schema.CommonSchema.String">
+<code class="descname">String</code><em class="property"> = &lt;CommonSchema.String: &lt;streamsx.topology.schema.StreamSchema object at 0x7f1b4781e128&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.String" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stream where each tuple is a string.</p>
+<p><cite>String</cite> can be used as a natural interchange format between Streams applications
+implemented in different programming languages. All languages supported by
+Streams support publishing and subscribing to string streams.</p>
+<p>Python objects are converted to strings using <cite>str(obj)</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.schema.CommonSchema.XML">
+<code class="descname">XML</code><em class="property"> = &lt;CommonSchema.XML: &lt;streamsx.topology.schema.StreamSchema object at 0x7f1b4781e198&gt;&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.XML" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stream where each tuple is an XML document.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last"><cite>XML</cite> is not yet supported for Python applications.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.schema.CommonSchema.extend">
+<code class="descname">extend</code><span class="sig-paren">(</span><em>schema</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.extend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.schema.CommonSchema.schema">
+<code class="descname">schema</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.schema" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.schema.CommonSchema.spl_json">
+<code class="descname">spl_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.spl_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.schema.StreamSchema">
+<em class="property">class </em><code class="descclassname">streamsx.topology.schema.</code><code class="descname">StreamSchema</code><span class="sig-paren">(</span><em>schema</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.StreamSchema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>SPL stream schema.</p>
+<dl class="method">
+<dt id="streamsx.topology.schema.StreamSchema.extend">
+<code class="descname">extend</code><span class="sig-paren">(</span><em>schema</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.StreamSchema.extend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extend a schema by another</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.schema.StreamSchema.schema">
+<code class="descname">schema</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.StreamSchema.schema" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.schema.StreamSchema.spl_json">
+<code class="descname">spl_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.StreamSchema.spl_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2017 IBM Corp..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.6.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,438 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.topology.tester module &mdash; streamsx 1.6.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="streamsx 1.6.0 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="simple">
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">streamsx</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>streamsx.topology.tester module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/streamsx.topology.tester.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.topology.tester">
+<span id="streamsx-topology-tester-module"></span><h1>streamsx.topology.tester module<a class="headerlink" href="#module-streamsx.topology.tester" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="streamsx.topology.tester.Condition">
+<em class="property">class </em><code class="descclassname">streamsx.topology.tester.</code><code class="descname">Condition</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="streamsx.topology.tester.Condition.fail">
+<code class="descname">fail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Condition.fail" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.tester.Condition.valid">
+<code class="descname">valid</code><a class="headerlink" href="#streamsx.topology.tester.Condition.valid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.tester.Tester">
+<em class="property">class </em><code class="descclassname">streamsx.topology.tester.</code><code class="descname">Tester</code><span class="sig-paren">(</span><em>topology</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Testing support for a Topology.</p>
+<p>Allows testing of a Topology by creating conditions against the contents
+of its streams.</p>
+<p>Conditions may be added to a topology at any time before submission.</p>
+<p>If a topology is submitted directly to a context then the graph
+is not modified. This allows testing code to be inserted while
+the topology is being built, but not acted upon unless the topology
+is submitted in test mode.</p>
+<p>If a topology is submitted through the test method then the topology
+may be modified to include operations to ensure the conditions are met.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>topology</strong> &#8211; Topology to be tested.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="streamsx.topology.tester.Tester.add_condition">
+<code class="descname">add_condition</code><span class="sig-paren">(</span><em>stream</em>, <em>condition</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.add_condition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.tester.Tester.contents">
+<code class="descname">contents</code><span class="sig-paren">(</span><em>stream</em>, <em>expected</em>, <em>ordered=True</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.contents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test that a stream contains the expected tuples.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><em>Stream</em></a>) &#8211; Stream to be tested.</li>
+<li><strong>expected</strong> (<em>list</em>) &#8211; Sequence of expected tuples.</li>
+<li><strong>ordered</strong> (<em>bool</em>) &#8211; True if the ordering of received tuples must match expected.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.tester.Tester.local_check">
+<code class="descname">local_check</code><span class="sig-paren">(</span><em>callable</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.local_check" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="streamsx.topology.tester.Tester.setup_distributed">
+<em class="property">static </em><code class="descname">setup_distributed</code><span class="sig-paren">(</span><em>test</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.setup_distributed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup a unittest.TestCase to run tests using IBM Streams distributed mode.</p>
+<p>Requires a local IBM Streams install define by the STREAMS_INSTALL
+environment variable. If STREAMS_INSTALL is not set then the
+test is skipped.</p>
+<dl class="docutils">
+<dt>The Steams instance to use is defined by the environment variables:</dt>
+<dd><ul class="first last simple">
+<li>STREAMS_ZKCONNECT - Zookeeper connection string</li>
+<li>STREAMS_DOMAIN_ID - Domain identifier</li>
+<li>STREAMS_INSTANCE_ID - Instance identifier</li>
+</ul>
+</dd>
+<dt>Two attributes are set in the test case:</dt>
+<dd><ul class="first last simple">
+<li>test_ctxtype - Context type the test will be run in.</li>
+<li>test_config - Test configuration.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>test</strong> (<em>unittest.TestCase</em>) &#8211; Test case to be set up to run tests using Tester</td>
+</tr>
+</tbody>
+</table>
+<p>Returns: None</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="streamsx.topology.tester.Tester.setup_standalone">
+<em class="property">static </em><code class="descname">setup_standalone</code><span class="sig-paren">(</span><em>test</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.setup_standalone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup a unittest.TestCase to run tests using IBM Streams standalone mode.</p>
+<p>Requires a local IBM Streams install define by the STREAMS_INSTALL
+environment variable. If STREAMS_INSTALL is not set then the
+test is skipped.</p>
+<dl class="docutils">
+<dt>Two attributes are set in the test case:</dt>
+<dd><ul class="first last simple">
+<li>test_ctxtype - Context type the test will be run in.</li>
+<li>test_config- Test configuration.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>test</strong> (<em>unittest.TestCase</em>) &#8211; Test case to be set up to run tests using Tester</td>
+</tr>
+</tbody>
+</table>
+<p>Returns: None</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="streamsx.topology.tester.Tester.setup_streaming_analytics">
+<em class="property">static </em><code class="descname">setup_streaming_analytics</code><span class="sig-paren">(</span><em>test</em>, <em>service_name=None</em>, <em>force_remote_build=False</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.setup_streaming_analytics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup a unittest.TestCase to run tests using Streaming Analytics service on IBM Bluemix cloud platform.</p>
+<dl class="docutils">
+<dt>The service to use is defined by:</dt>
+<dd><ul class="first last simple">
+<li>VCAP_SERVICES environment variable containing <cite>streaming_analytics</cite> entries.</li>
+<li>service_name which defaults to the value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.</li>
+</ul>
+</dd>
+</dl>
+<p>If VCAP_SERVICES is not set or a service name is not defined then the test is skipped.</p>
+<dl class="docutils">
+<dt>Two attributes are set in the test case:</dt>
+<dd><ul class="first last simple">
+<li>test_ctxtype - Context type the test will be run in.</li>
+<li>test_config - Test configuration.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>test</strong> (<em>unittest.TestCase</em>) &#8211; Test case to be set up to run tests using Tester</li>
+<li><strong>service_name</strong> (<em>str</em>) &#8211; Name of Streaming Analytics service to use. Must exist as an
+entry in the VCAP services. Defaults to value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.tester.Tester.test">
+<code class="descname">test</code><span class="sig-paren">(</span><em>ctxtype</em>, <em>config=None</em>, <em>assert_on_fail=True</em>, <em>username=None</em>, <em>password=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the topology.</p>
+<p>Submits the topology for testing and verifies the test conditions are met.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ctxtype</strong> (<em>str</em>) &#8211; Context type for submission.</li>
+<li><strong>config</strong> &#8211; Configuration for submission.</li>
+<li><strong>assert_on_fail</strong> (<em>bool</em>) &#8211; True to raise an assertion if the test fails, False to return the passed status.</li>
+<li><strong>username</strong> (<em>str</em>) &#8211; username for distributed tests</li>
+<li><strong>password</strong> (<em>str</em>) &#8211; password for distributed tests</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if test passed, False if test failed.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.tester.Tester.tuple_check">
+<code class="descname">tuple_check</code><span class="sig-paren">(</span><em>stream</em>, <em>checker</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.tuple_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check each tuple on a stream.</p>
+<p>For each tuple <code class="docutils literal"><span class="pre">t</span></code> on <code class="docutils literal"><span class="pre">stream</span></code> <code class="docutils literal"><span class="pre">checker(t)</span></code> is called.</p>
+<p>If the return evaluates to <code class="docutils literal"><span class="pre">False</span></code> then the condition fails.
+Once the condition fails it can never become valid.
+Otherwise the condition becomes or remains valid. The first
+tuple on the stream makes the condition valid if the checker
+callable evaluates to true.</p>
+<p>The condition can be combined with <a class="reference internal" href="#streamsx.topology.tester.Tester.tuple_count" title="streamsx.topology.tester.Tester.tuple_count"><code class="xref py py-meth docutils literal"><span class="pre">tuple_count()</span></code></a> with
+<code class="docutils literal"><span class="pre">exact=False</span></code> to test a stream map or filter with random input data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><em>Stream</em></a>) &#8211; Stream to be tested.</li>
+<li><strong>checker</strong> (<em>callable</em>) &#8211; Callable that must evaluate to True for each tuple.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.tester.Tester.tuple_count">
+<code class="descname">tuple_count</code><span class="sig-paren">(</span><em>stream</em>, <em>count</em>, <em>exact=True</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.tuple_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test that that a stream contains an number of tuples.</p>
+<p>If exact is True then condition becomes valid when count
+tuples are seen on stream during the test. Subsequently if additional
+tuples are seen on stream then the condition fails and can never
+become valid.</p>
+<p>If exact is False then the condition becomes valid once count
+tuples are seen on stream and remains valid regardless of
+any additional tuples.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><em>Stream</em></a>) &#8211; Stream to be tested.</li>
+<li><strong>count</strong> &#8211; Number of tuples expected.</li>
+<li><strong>exact</strong> &#8211; True if the stream must contain the exactly count of tuples</li>
+<li><strong>be value, False if the stream must contain at least count tuples.</strong> (<em>to</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns: stream</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2017 IBM Corp..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.6.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

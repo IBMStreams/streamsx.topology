@@ -1,0 +1,7 @@
+streamsx.rest_primitives module
+===============================
+
+.. automodule:: streamsx.rest_primitives
+    :members:
+    :undoc-members:
+    :show-inheritance:

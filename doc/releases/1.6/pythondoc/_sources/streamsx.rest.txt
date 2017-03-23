@@ -1,0 +1,7 @@
+streamsx.rest module
+====================
+
+.. automodule:: streamsx.rest
+    :members:
+    :undoc-members:
+    :show-inheritance:
