@@ -25,4 +25,9 @@ public interface SubmissionResultsKeys {
      * The job id of the submitted job.
      */
     String JOB_ID = "jobId";
+    
+    /**
+     * The file path of the Job config file.
+     */
+    String JOB_CONFIG_PATH = "jobConfigPath";
 }
