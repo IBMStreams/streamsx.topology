@@ -1,6 +1,13 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016,2017
+# Copyright IBM Corp. 2015,2017
+"""Context for submission of applications.
+
+The main function is :py:func:`submit` to submit
+a :py:class:`~streamsx.topology.topology.Topology`
+to a Streaming Analytics service or IBM® Streams instance for execution.
+
+"""
 from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import division
@@ -11,8 +18,6 @@ try:
 except (ImportError, NameError):
     # nothing to do here
     pass
-# Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015
 
 from streamsx import rest
 import logging
@@ -35,37 +40,24 @@ logger = logging.getLogger('streamsx.topology.context')
 #
 def submit(ctxtype, graph, config=None, username=None, password=None):
     """
-    Submits a topology with the specified context type.
+    Submits a `Topology` (application) using the specified context type.
+
+    Used to submit an application for compilation into a Streams application and
+    execution within an Streaming Analytics service or IBM Streams instance.
+
+    `ctxtype` defines how the application will be submitted, see :py:class:`ContextTypes`.
+
+    The parameters `username` and `password` are only required when submitting to an
+    IBM Streams instance and it is required to access the Streams REST API from the
+    code performing the submit. Accessing data from views created by
+    :py:meth:`~streamsx.topology.topology.Stream.view` requires access to the Streams REST API.
 
     Args:
-        ctxtype (string): context type.  Values include:
-        * DISTRIBUTED - the topology is submitted to a Streams instance.
-          The bundle is submitted using `streamtool` which must be setup to submit without requiring authentication
-          input. Additionally, a username and password may optionally be provided to enable retrieving data from remote
-          views.
-        * STANDALONE - the topology is executed directly as an Streams standalone application.
-          The standalone execution is spawned as a separate process
-        * BUNDLE - execution of the topology produces an SPL application bundle
-          (.sab file) that can be submitted to an IBM Streams instance as a distributed application.
-        * JUPYTER - the topology is run in standalone mode, and context.submit returns a stdout streams of bytes which
-          can be read from to visualize the output of the application.
-        * BUILD_ARCHIVE - Creates a Bluemix-compatible build archive.
-          execution of the topology produces a build archive, which can be submitted to a streaming
-          analytics Bluemix remote build service.
-        * ANALYTICS_SERVICE - If a local IBM Streams install is present, the application is built locally and then submitted
-          to an IBM Bluemix Streaming Analytics service. If a local IBM Streams install is not present, the application is
-          submitted to, built, and executed on an IBM Bluemix Streaming Analytics service. If the ConfigParams.FORCE_REMOTE_BUILD
-          flag is set to True, the application will be built by the service even if a local Streams install is present.
-          The service is described by its VCAP services and a service name pointing to an instance within the VCAP services. The VCAP services is either set in the configuration object or as the environment variable VCAP_SERVICES.
-        graph: a Topology object.
-        config (dict): a configuration object containing job configurations and/or submission information. Keys include:
-        * ConfigParams.VCAP_SERVICES ('topology.service.vcap') - VCAP services information for the ANALYTICS_SERVICE context. Supported formats are a dict obtained from the JSON VCAP services, a string containing the serialized JSON form or a file name pointing to a file containing the JSON form.
-        * ConfigParams.SERVICE_NAME ('topology.service.name') - the name of the Streaming Analytics service for submission.
-        * ConfigParams.FORCE_REMOTE_BUILD ('topology.forceRemoteBuild') - A flag which will force the application to be compiled and submitted remotely, if possible.
-        username (string): an optional SWS username. Needed for retrieving remote view data.
-        password (string): an optional SWS password. Used in conjunction with the username, and needed for retrieving
-        remote view data.
-        log_level: The maximum logging level for log output.
+        ctxtype(str): Type of context the application will be submitted to. A value from :py:class:`ContextTypes`.
+        graph(Topology): The application topology to be submitted.
+        config(dict): Configuration for the submission.
+        username(str): Username for the Streams REST api.
+        password(str): Password for `username`.
 
     Returns:
         An output stream of bytes if submitting with JUPYTER, otherwise returns a dict containing information relevant
@@ -483,24 +475,30 @@ def _print_process_stderr(process, submitter):
 
 class ContextTypes(object):
     """
-        Types of submission contexts:
+        Submission context types.
 
-        DISTRIBUTED - the topology is submitted to a Streams instance.
-        The bundle is submitted using `streamtool` which must be setup to submit without requiring authentication
-        input. Additionally, a username and password may optionally be provided to enable retrieving data from remote
-        views.
-        STANDALONE - the topology is executed directly as an Streams standalone application.
-        The standalone execution is spawned as a separate process
-        BUNDLE - execution of the topology produces an SPL application bundle
-        (.sab file) that can be submitted to an IBM Streams instance as a distributed application.
-        STANDALONE_BUNDLE - execution of the topology produces an SPL application bundle that, when executed,
-        is spawned as a separate process.
-        JUPYTER - the topology is run in standalone mode, and context.submit returns a stdout streams of bytes which
-        can be read from to visualize the output of the application.
-        BUILD_ARCHIVE - Creates a Bluemix-compatible build archive.
-        execution of the topology produces a build archive, which can be submitted to a streaming
-        analytics Bluemix remote build service.
-        TOOLKIT - Execution of the topology produces a toolkit.
+        A :py:class:`~streamsx.topology.topology.Topology` is submitted using :py:func:`submit` and a context type.
+        Submision of a `Topology` generally builds the application into a Streams application
+        bundle (sab) file and then submits it for execution in the required context.
+
+        The Streams application bundle contains all the artifacts required by an application such
+        that it can be executed remotely (e.g. on a Streaming Analytics service), including
+        distributing the execution of the application across multiple resources (hosts).
+
+        The context type defines which context is used for submission.
+
+        The main context types result in a running application and are:
+
+            * :py:const:`STREAMING_ANALYTICS_SERVICE` - Application is submitted to a Streaming Analytics service running on IBM Bluemix cloud platform.
+            * :py:const:`DISTRIBUTED` - Application is submitted to an IBM Streams instance.
+            * :py:const:`STANDALONE` - Application is executed as a local process, IBM Streams `standalone` application. Typically this is used during development or testing.
+            * :py:const:`JUPYTER` - Application is executed as a local process (see :py:const:`STANDALONE`), with standard output made available to the caller of :py:func:`submit`. This is suitable for use in a local Jupyer notebook environment.
+
+        The :py:const:`BUNDLE` context type compiles the application (`Topology`) to produce a
+        Streams application bundle (sab file). The bundle is not executed but may subsequently be submitted
+        to a Streaming Analytics service or an IBM Streams instance. A bundle may be submitted multiple
+        times to services or instances, each resulting in a unique job (running application).
+
         ANALYTICS_SERVICE - If a local Streams install is present, the application is built locally and then submitted
         to a Bluemix streaming analytics service. If a local Streams install is not present, the application is
         submitted to, built, and executed on a Bluemix streaming analytics service. If the ConfigParams.REMOTE_BUILD
@@ -508,18 +506,139 @@ class ContextTypes(object):
     """
     STREAMING_ANALYTICS_SERVICE = 'STREAMING_ANALYTICS_SERVICE'
     """Submission to Streaming Analytics service running on IBM Bluemix cloud platform.
+
+    The `Topology` is compiled and the resultant Streams application bundle
+    (sab file) is submitted for execution on the Streaming Analytics service.
+
+    When **STREAMS_INSTALL** is not set or the :py:func:`submit` `config` parameter has
+    :py:const:`~ConfigParams.FORCE_REMOTE_BUILD` set to `True` the compilation of the application
+    occurs remotely by the service. This allows creation and submission of Streams applications
+    without a local install of IBM Streams.
+
+    .. warning::
+        Remote build functionality is not yet generally available for the Streaming Analytics service.
+
+    When **STREAMS_INSTALL** is set and the :py:func:`submit` `config` parameter has
+    :py:const:`~ConfigParams.FORCE_REMOTE_BUILD` set to `False` or not set then the creation of the
+    Streams application bundle occurs locally and the bundle is submitted for execution on the service.
+
+    Environment variables:
+        These environment variables define how the application is built and submitted.
+
+        * **STREAMS_INSTALL** - (optional) Location of a IBM Streams installation (4.0.1 or later). The install
+        must be running on RedHat/CentOS 6 and `x86_64` architecture.
     """
     ANALYTICS_SERVICE = 'ANALYTICS_SERVICE'
     """Synonym for :py:const:`STREAMING_ANALYTICS_SERVICE`.
     """
-
-    TOOLKIT = 'TOOLKIT'
-    BUILD_ARCHIVE = 'BUILD_ARCHIVE'
-    BUNDLE = 'BUNDLE'
-    STANDALONE_BUNDLE = 'STANDALONE_BUNDLE'
-    STANDALONE = 'STANDALONE'
     DISTRIBUTED = 'DISTRIBUTED'
+    """Submission to an IBM Streams instance.
+
+    The `Topology` is compiled locally and the resultant Streams application bundle
+    (sab file) is submitted to an IBM Streams instance.
+
+    Environment variables:
+        These environment variables define how the application is built and submitted.
+
+        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or later).
+        * **STREAMS_DOMAIN_ID** - Domain identifier for the Streams instance.
+        * **STREAMS_INSTANCE_ID** - Instance identifier.
+        * **STREAMS_ZKCONNECT** - (optional) ZooKeeper connection string for domain (when not using an embedded ZooKeeper)
+    """
+
+    STANDALONE = 'STANDALONE'
+    """Build and execute locally.
+
+    Compiles and executes the `Topology` locally in IBM Streams standalone mode as a separate sub-process.
+    Typically used for devlopment and testing.
+
+    The call to :py:func:`submit` return when (if) the application completes. An application
+    completes when it has finite source streams and all tuples from those streams have been
+    processed by the complete topology. If the source streams are infinite (e.g. reading tweets)
+    then the standalone application will not complete.
+
+    Environment variables:
+        This environment variables define how the application is built.
+
+        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or later).
+    """
+
+    BUNDLE = 'BUNDLE'
+    """Create a Streams application bundle.
+
+    The `Topology` is compiled locally to produce Streams application bundle (sab file).
+
+    The resultant application can be submitted to:
+        * Streaming Analytics service using the Streams console or the Streaming Analytics REST api.
+        * IBM Streams instance using the Streams console, JMX api or command line ``streamtool submitjob``.
+        * Executed standalone for development or testing (when built with IBM Streams 4.2 or later).
+
+    The bundle must be built on the same operating system version and architecture as the intended running
+    environment. For Streaming Analytics service this is currently RedHat/CentOS 6 and `x86_64` architecture.
+
+    Environment variables:
+        This environment variables define how the application is built.
+
+        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or later).
+
+    """
+    TOOLKIT = 'TOOLKIT'
+    """Creates an SPL toolkit.
+
+    `Topology` applications are translated to SPL applications before compilation into an Streams application
+    bundle. This context type produces the intermediate SPL toolkit that is input to the SPL compiler for
+    bundle creation.
+
+    .. note::
+
+        `TOOLKIT` is typically only used when diagnosing issues with bundle generation.
+    """
+
+    BUILD_ARCHIVE = 'BUILD_ARCHIVE'
+    """Creates a build archive.
+
+    This context type produces the intermediate code archive used for bundle creation.
+
+    .. note::
+
+        `BUILD_ARCHIVE` is typically only used when diagnosing issues with bundle generation.
+    """
+
+    STANDALONE_BUNDLE = 'STANDALONE_BUNDLE'
+    """Create a Streams application bundle for standalone execution.
+
+    The `Topology` is compiled locally to produce Streams standalone application bundle (sab file).
+
+    The resultant application can be submitted to:
+        * Executed standalone for development or testing.
+
+    The bundle must be built on the same operating system version and architecture as the intended running
+    environment. For Streaming Analytics service this is currently RedHat/CentOS 6 and `x86_64` architecture.
+
+    Environment variables:
+        This environment variables define how the application is built.
+
+        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or 4.1.x).
+
+    .. deprecated:: IBM Streams 4.2
+        Use :py:const:`BUNDLE` when compiling with IBM Streams 4.2 or later.
+    """
+
     JUPYTER = 'JUPYTER'
+    """Build an execute locally from a Jupyter notebook.
+
+    Used for ad-hoc execution in a local notebook environment.
+
+    The execution mode is like :py:const:`STANDALONE` but the standard output of the application is
+    availble from the :py:func:`submit` call. Thus any output printed to standard output through
+    :py:meth:`~streamsx.topology.topology.Stream.print` is availble in the notebook for processing
+    or visualization.
+
+    Environment variables:
+        This environment variables define how the application is built.
+
+        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or later).
+    """
 
 class ConfigParams(object):
     """
