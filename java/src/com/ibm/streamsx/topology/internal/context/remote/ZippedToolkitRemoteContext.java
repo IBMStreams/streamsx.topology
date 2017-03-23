@@ -30,6 +30,10 @@ import java.util.concurrent.Future;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
@@ -131,8 +135,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     
     
     private static void addAllToZippedArchive(Map<Path, String> starts, Path zipFilePath) throws IOException {
-        try (FileOutputStream fos = new FileOutputStream(zipFilePath.toFile());
-                ZipOutputStream zos = new ZipOutputStream(fos)) {
+        try (ZipArchiveOutputStream zos = new ZipArchiveOutputStream(zipFilePath.toFile())) {
             for (Path start : starts.keySet()) {
                 final String rootEntryName = starts.get(start);
                 Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
@@ -149,9 +152,16 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                         }
                         // Zip uses forward slashes
                         entryName = entryName.replace(File.separatorChar, '/');
-                        zos.putNextEntry(new ZipEntry(entryName));
+                        
+                        ZipArchiveEntry entry = new ZipArchiveEntry(file.toFile(), entryName);
+                        if (Files.isExecutable(file))
+                            entry.setUnixMode(0100770);
+                        else
+                            entry.setUnixMode(0100660);
+
+                        zos.putArchiveEntry(entry);
                         Files.copy(file, zos);
-                        zos.closeEntry();
+                        zos.closeArchiveEntry();
                         return FileVisitResult.CONTINUE;
                     }
 
@@ -161,8 +171,9 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                         if (dirName.equals("__pycache__"))
                             return FileVisitResult.SKIP_SUBTREE;
                                                 
-                        zos.putNextEntry(new ZipEntry(rootEntryName + "/" + start.relativize(dir).toString().replace(File.separatorChar, '/') + "/"));
-                        zos.closeEntry();
+                        ZipArchiveEntry dirEntry = new ZipArchiveEntry(dir.toFile(), rootEntryName + "/" + start.relativize(dir).toString().replace(File.separatorChar, '/') + "/");
+                        zos.putArchiveEntry(dirEntry);
+                        zos.closeArchiveEntry();
                         return FileVisitResult.CONTINUE;
                     }
                 });
