@@ -113,14 +113,13 @@ class TestBundleMethodsNew(TestToolkitMethodsNew):
 
 @unittest.skipIf(not test_vers.tester_supported(), "Tester not supported")
 @unittest.skipUnless('STREAMS_INSTALL' in os.environ, "requires STREAMS_INSTALL")
-class TestSubmitArgumentsMethodsNew(unittest.TestCase):
+class TestDistributedSubmitMethodsNew(unittest.TestCase):
 
     def setUp(self):
-        self.topo = Topology('test_SubmitArg')
-        self.topo.source(['Hello', 'SubmitArg'])
+        self.topo = Topology('test_DistributedSubmit')
+        self.topo.source(['Hello', 'DistributedSubmit'])
         self.test_ctxtype = 'DISTRIBUTED'
         self.test_config = {}
-        self.result = {}
 
     def test_DifferentUsername(self):
         sc = rest.StreamsConnection('user1', 'pass1')
@@ -133,6 +132,31 @@ class TestSubmitArgumentsMethodsNew(unittest.TestCase):
         self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
         with self.assertRaises(RuntimeError):
             streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config, username='user1', password='pass2')
+
+@unittest.skipIf(not test_vers.tester_supported(), "Tester not supported")
+@unittest.skipUnless('VCAP_SERVICES' in os.environ, "requires VCAP_SERVICES")
+@unittest.skipUnless('STREAMING_ANALYTICS_SERVICE_NAME' in os.environ, "requires STREAMING_ANALYTICS_SERVICE_NAME")
+class TestBluemixSubmitMethodsNew(unittest.TestCase):
+
+    def setUp(self):
+        self.topo = Topology('test_BluemixSubmit')
+        self.topo.source(['Hello', 'BluemixSubmit'])
+        self.test_ctxtype = 'STREAMING_ANALYTICS_SERVICE'
+        self.test_config = {}
+
+    def test_StreamsConnection(self):
+        sc = rest.StreamsConnection('user1', 'pass1')
+        self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
+        with self.assertRaises(ValueError):
+            streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config)
+
+    def test_StreamingAnalyticsConnection(self):
+        sc = rest.StreamingAnalyticsConnection()
+        self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
+        result = streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config)
+        self.assertEqual(result.return_code, 0)
+        result.job.cancel()
+
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestTopologyMethodsNew(unittest.TestCase):
