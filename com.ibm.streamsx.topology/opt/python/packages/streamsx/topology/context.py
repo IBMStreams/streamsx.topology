@@ -525,8 +525,8 @@ class ContextTypes(object):
     Environment variables:
         These environment variables define how the application is built and submitted.
 
-        * **STREAMS_INSTALL** - (optional) Location of a IBM Streams installation (4.0.1 or later). The install
-        must be running on RedHat/CentOS 6 and `x86_64` architecture.
+        * **STREAMS_INSTALL** - (optional) Location of a IBM Streams installation (4.0.1 or later). The install must be running on RedHat/CentOS 6 and `x86_64` architecture.
+
     """
     ANALYTICS_SERVICE = 'ANALYTICS_SERVICE'
     """Synonym for :py:const:`STREAMING_ANALYTICS_SERVICE`.
@@ -544,6 +544,7 @@ class ContextTypes(object):
         * **STREAMS_DOMAIN_ID** - Domain identifier for the Streams instance.
         * **STREAMS_INSTANCE_ID** - Instance identifier.
         * **STREAMS_ZKCONNECT** - (optional) ZooKeeper connection string for domain (when not using an embedded ZooKeeper)
+
     """
 
     STANDALONE = 'STANDALONE'
@@ -561,6 +562,7 @@ class ContextTypes(object):
         This environment variables define how the application is built.
 
         * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or later).
+
     """
 
     BUNDLE = 'BUNDLE'
