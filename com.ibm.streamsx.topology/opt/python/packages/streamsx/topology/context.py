@@ -60,8 +60,8 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         password(str): Password for `username`.
 
     Returns:
-        An output stream of bytes if submitting with JUPYTER, otherwise returns a dict containing information relevant
-        to the submission.
+        SubmissionResult: Result of the submission. For details of what is contained see the :py:class:`ContextTypes`
+        constant passed as `ctxtype`.
     """
     graph = graph.graph
 
@@ -264,46 +264,6 @@ class _BaseSubmitter(object):
         return tk_root
 
 
-
-class _JupyterSubmitter(_BaseSubmitter):
-    def submit(self):
-        tk_root = self._get_toolkit_root()
-
-        cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
-
-        # Create the json file containing the representation of the application
-        try:
-            self._create_json_file(self._create_full_json())
-        except IOError:
-            logger.error("Error writing json graph to file.")
-            raise
-
-        streams_install = os.environ.get('STREAMS_INSTALL')
-        # If there is no streams install, get java from JAVA_HOME and use the remote contexts.
-        if streams_install is None:
-            java_home = os.environ.get('JAVA_HOME')
-            if java_home is None:
-                raise ValueError("JAVA_HOME not found. Please set the JAVA_HOME system variable")
-
-            jvm = os.path.join(java_home, "bin", "java")
-            submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
-        # Otherwise, use the Java version from the streams install
-        else:
-            jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
-            submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
-            cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
-
-        args = [jvm, '-classpath', cp, submit_class, ContextTypes.STANDALONE, self.fn]
-        process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
-        stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
-        stderr_thread.daemon = True
-        stderr_thread.start()
-
-        if process.stdout is None:
-            raise ValueError("The returned stdout from the spawned process is None.")
-        return process.stdout
-
-
 class _StreamingAnalyticsSubmitter(_BaseSubmitter):
     """
     A submitter supports the ANALYTICS_SERVICE (Streaming Analytics service) context.
@@ -414,10 +374,7 @@ class _SubmitContextFactory(object):
                     or ctxtype == ContextTypes.ANALYTICS_SERVICE or ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE):
                 raise ValueError(ctxtype + " must be submitted when an IBM Streams install is present.")
 
-        if ctxtype == ContextTypes.JUPYTER:
-            logger.debug("Selecting the JUPYTER context for submission")
-            return _JupyterSubmitter(ctxtype, self.config, self.graph)
-        elif ctxtype == ContextTypes.DISTRIBUTED:
+        if ctxtype == ContextTypes.DISTRIBUTED:
             logger.debug("Selecting the DISTRIBUTED context for submission")
             return _DistributedSubmitter(ctxtype, self.config, self.graph, self.username, self.password)
         elif ctxtype == ContextTypes.ANALYTICS_SERVICE or ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE:
@@ -503,7 +460,6 @@ class ContextTypes(object):
             * :py:const:`STREAMING_ANALYTICS_SERVICE` - Application is submitted to a Streaming Analytics service running on IBM Bluemix cloud platform.
             * :py:const:`DISTRIBUTED` - Application is submitted to an IBM Streams instance.
             * :py:const:`STANDALONE` - Application is executed as a local process, IBM Streams `standalone` application. Typically this is used during development or testing.
-            * :py:const:`JUPYTER` - Application is executed as a local process (see :py:const:`STANDALONE`), with standard output made available to the caller of :py:func:`submit`. This is suitable for use in a local Jupyer notebook environment.
 
         The :py:const:`BUNDLE` context type compiles the application (`Topology`) to produce a
         Streams application bundle (sab file). The bundle is not executed but may subsequently be submitted
@@ -632,21 +588,6 @@ class ContextTypes(object):
         Use :py:const:`BUNDLE` when compiling with IBM Streams 4.2 or later.
     """
 
-    JUPYTER = 'JUPYTER'
-    """Build and execute locally from a Jupyter notebook.
-
-    Used for ad-hoc execution in a local notebook environment.
-
-    The execution mode is like :py:const:`STANDALONE` but the standard output of the application is
-    availble from the :py:func:`submit` call. Thus any output printed to standard output through
-    :py:meth:`~streamsx.topology.topology.Stream.print` is available in the notebook for processing
-    or visualization.
-
-    Environment variables:
-        This environment variables define how the application is built.
-
-        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or later).
-    """
 
 class ConfigParams(object):
     """
