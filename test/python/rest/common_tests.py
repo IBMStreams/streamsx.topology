@@ -25,6 +25,16 @@ class CommonTests(unittest.TestCase):
         self.logger.debug("Number of retrieved resources is: " + str(len(resources)))
         self.assertGreater(len(resources), 0, msg="Returned zero resources from the \"resources\" endpoint.")
 
+    def test_streamsconnection_samplecode(self):
+        self.logger.debug("Beginning test: test_streamsconnection_samplecode.")
+        domains = self.sc.get_domains()
+        self.assertGreater(len(domains), 0, msg="Should have more than 0 domains.")
+        instances = self.sc.get_instances()
+        self.assertGreater(len(instances), 0, msg="Should have more than 0 instances.")
+        jobs_count = 0
+        for instance in instances:
+            jobs_count += len(instance.get_jobs())
+
     def _verify_basic_view(self):
         q = self._view.start_data_fetch()
 
