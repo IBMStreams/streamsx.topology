@@ -1,7 +1,0 @@
-streamsx.topology.functions module
-==================================
-
-.. automodule:: streamsx.topology.functions
-    :members:
-    :undoc-members:
-    :show-inheritance:

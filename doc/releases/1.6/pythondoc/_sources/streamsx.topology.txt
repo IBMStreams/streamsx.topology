@@ -7,10 +7,7 @@ Submodules
 .. toctree::
 
    streamsx.topology.context
-   streamsx.topology.exop
-   streamsx.topology.functions
    streamsx.topology.mqtt
-   streamsx.topology.param
    streamsx.topology.schema
    streamsx.topology.tester
    streamsx.topology.topology

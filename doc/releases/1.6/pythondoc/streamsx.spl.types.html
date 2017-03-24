@@ -79,9 +79,11 @@
           
             
             
-                <ul class="simple">
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">streamsx.spl.types module</a></li>
 </ul>
-
+</div>
             
           
         </div>
@@ -102,7 +104,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -144,28 +146,19 @@ as there may be variations in the clocks on different machines.</p>
 <dl class="attribute">
 <dt id="streamsx.spl.types.Timestamp.seconds">
 <code class="descname">seconds</code><a class="headerlink" href="#streamsx.spl.types.Timestamp.seconds" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em></p>
-<p>Seconds since epoch.</p>
+<dd><p><em>int</em> &#8211; Seconds since epoch.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="streamsx.spl.types.Timestamp.nanoseconds">
 <code class="descname">nanoseconds</code><a class="headerlink" href="#streamsx.spl.types.Timestamp.nanoseconds" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em></p>
-<p>Nanosecond component.</p>
+<dd><p><em>int</em> &#8211; Nanosecond component.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="streamsx.spl.types.Timestamp.machine_id">
 <code class="descname">machine_id</code><a class="headerlink" href="#streamsx.spl.types.Timestamp.machine_id" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em></p>
-<p>Machine identifier.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="streamsx.spl.types.Timestamp.__str__">
-<code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.Timestamp.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>String representation matching SPL&#8217;s representation.</p>
+<dd><p><em>int</em> &#8211; Machine identifier.</p>
 </dd></dl>
 
 <dl class="method">
@@ -192,7 +185,8 @@ Nanosecond resolution may be lost.</p>
 <dd><p>Convert a datetime to an SPL <cite>Timestamp</cite>.
 :param dt: Datetime to be converted.
 :type dt: datetime.datetime
-:param machine_id: Machine identifier.</p>
+:param machine_id: Machine identifier.
+:type machine_id: int</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

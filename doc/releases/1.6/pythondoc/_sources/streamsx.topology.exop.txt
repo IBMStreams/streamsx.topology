@@ -1,7 +1,0 @@
-streamsx.topology.exop module
-=============================
-
-.. automodule:: streamsx.topology.exop
-    :members:
-    :undoc-members:
-    :show-inheritance:

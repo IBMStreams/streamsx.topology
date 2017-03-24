@@ -79,9 +79,23 @@
           
             
             
-                <ul class="simple">
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">streamsx.topology.topology module</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#topology">Topology</a></li>
+<li><a class="reference internal" href="#stream">Stream</a></li>
+<li><a class="reference internal" href="#stream-processing">Stream processing</a><ul>
+<li><a class="reference internal" href="#callables">Callables</a></li>
+<li><a class="reference internal" href="#stateful-operations">Stateful operations</a></li>
+<li><a class="reference internal" href="#initialization-and-shutdown">Initialization and shutdown</a></li>
+<li><a class="reference internal" href="#spl-operators">SPL operators</a></li>
 </ul>
-
+</li>
+</ul>
+</li>
+</ul>
+</div>
             
           
         </div>
@@ -102,7 +116,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -127,10 +141,10 @@
   <div class="section" id="module-streamsx.topology.topology">
 <span id="streamsx-topology-topology-module"></span><h1>streamsx.topology.topology module<a class="headerlink" href="#module-streamsx.topology.topology" title="Permalink to this headline">¶</a></h1>
 <p>Python API to allow creation of streaming applications for
-IBM Streams &amp; Streaming Analytics service on Bluemix.</p>
+IBM® Streams &amp; Streaming Analytics service on Bluemix.</p>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>IBM® Streams is an advanced analytic platform that allows user-developed
+<p>IBM Streams is an advanced analytic platform that allows user-developed
 applications to quickly ingest, analyze and correlate information as it
 arrives from thousands of real-time sources.
 Streams can handle very high data throughput rates, millions of events
@@ -201,7 +215,7 @@ input tuples and whose return defines what output tuples are submitted for downs
 </ul>
 <p>For example a stream <code class="docutils literal"><span class="pre">words</span></code> containing only string objects can be
 processed by a <a class="reference internal" href="#streamsx.topology.topology.Stream.filter" title="streamsx.topology.topology.Stream.filter"><code class="xref py py-meth docutils literal"><span class="pre">filter()</span></code></a> using a lambda function:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Filter the stream so it only contains words starting with py</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Filter the stream so it only contains words starting with py</span>
 <span class="n">pywords</span> <span class="o">=</span> <span class="n">words</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">word</span> <span class="p">:</span> <span class="nb">tuple</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;py&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -229,7 +243,7 @@ the class must define both <code class="docutils literal"><span class="pre">__en
 Initialization at runtime, such as opening connections, occurs through the <code class="docutils literal"><span class="pre">__enter__</span></code> method.</p>
 </div>
 <p>Example of using <code class="docutils literal"><span class="pre">__enter__</span></code> to create custom metrics:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">streamsx.ec</span> <span class="kn">as</span> <span class="nn">ec</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">streamsx.ec</span> <span class="k">as</span> <span class="nn">ec</span>
 
 <span class="k">class</span> <span class="nc">Sentiment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -419,8 +433,7 @@ the returned stream.</p>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> &#8211;
-if <cite>func</cite> does not return an iterator nor None</td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> &#8211; if <cite>func</cite> does not return an iterator nor None</td>
 </tr>
 </tbody>
 </table>
@@ -739,7 +752,7 @@ to be distributed across available resources in the Streams instance.</p>
 
 <dl class="method">
 <dt id="streamsx.topology.topology.Topology.subscribe">
-<code class="descname">subscribe</code><span class="sig-paren">(</span><em>topic</em>, <em>schema=&lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object at 0x7f1b4781e0b8&gt;&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.subscribe" title="Permalink to this definition">¶</a></dt>
+<code class="descname">subscribe</code><span class="sig-paren">(</span><em>topic</em>, <em>schema=&lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object&gt;&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.subscribe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subscribe to a topic published by other Streams applications.
 A Streams application may publish a stream to allow other
 Streams applications to subscribe to it. A subscriber matches a
