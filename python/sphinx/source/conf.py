@@ -108,6 +108,13 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+# -- Options for sphinx.ext.autodoc ---------------------------------------
+
+# List of autodoc directive flags that should be automatically applied to
+# all autodoc directives.
+autodoc_default_flags = [
+    'inherited-members',  # Include docs for members inherited from base class 
+]
 
 # -- Options for HTML output ----------------------------------------------
 

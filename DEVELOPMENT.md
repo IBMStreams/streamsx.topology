@@ -127,3 +127,27 @@ When referencing environment variable, use bold(**):
     """
 ```
 
+When referencing types in Args or Returns, use the type name directly.  Sphinx would convert the reference into hyperlinks, and this ensures the builtin help() will display the arguments and return nicely. 
+```python
+    def function(arg1):
+        """function summary
+        Args:
+            arg1 (UserType1): argument 1
+        Returns:
+            UserType2: return something
+        """
+```
+
+Container types such as lists and dictionaries can use the following syntax:
+```python
+    def function(arg1, arg2):
+        """function summary
+        Args:
+            arg1 (list(int)): list of integers
+            arg2 (dict(str, int)): mapping of str to int
+        Returns:
+            tuple(float, float): returns two float tuples
+        """
+```
+
+The `__init__` method should be documented on the `__init__` method itself (not in the class level docstring).  This results in better rendering for the builtin help() function. 
