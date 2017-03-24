@@ -336,15 +336,18 @@ class Topology(object):
             Stream: A stream whose tuples are the result of the iterable obtained from `func`.
         """
         if inspect.isroutine(func):
-             pass
+            pass
         elif callable(func):
-             pass
+            pass
         else:
-             func = streamsx.topology.functions._IterableInstance(func)
+            if name is None:
+                name = type(func).__name__
+            func = streamsx.topology.functions._IterableInstance(func)
         
         sl = _SourceLocation(_source_info(), "source")
+        name = self.graph._requested_name(name, action='source', func=func)
         op = self.graph.addOperator(self.opnamespace+"::Source", func, name=name, sl=sl)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(name=name)
         return Stream(self, oport)
 
     def subscribe(self, topic, schema=schema.CommonSchema.Python):
@@ -393,11 +396,20 @@ class Stream(object):
         self.topology = topology
         self.oport = oport
 
+    @property
+    def name(self):
+        """Name of the stream.
+
+        Returns:
+            str: Name of the stream.
+        """
+        return self.oport.name
+
     def for_each(self, func, name=None):
         """
         Sends information as a stream to an external system.
 
-        For each tuple on the stream ``func(tuple)`` is called.
+        For each tuple `t` on the stream ``func(t)`` is called.
         
         Args:
             func: A callable that takes a single parameter for the tuple and returns None.
@@ -405,6 +417,7 @@ class Stream(object):
             None
         """
         sl = _SourceLocation(_source_info(), "for_each")
+        name = self.topology.graph._requested_name(name, action="for_each", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport)
 
@@ -427,15 +440,17 @@ class Stream(object):
             Stream: A Stream containing tuples that have not been filtered out.
         """
         sl = _SourceLocation(_source_info(), "filter")
+        name = self.topology.graph._requested_name(name, action="filter", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort(schema=self.oport.schema)
+        oport = op.addOutputPort(schema=self.oport.schema, name=name)
         return Stream(self.topology, oport)
 
     def _map(self, func, schema, name=None):
+        name = self.topology.graph._requested_name(name, action="map", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=name)
         op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort(schema=schema)
+        oport = op.addOutputPort(schema=schema, name=name)
         return Stream(self.topology, oport)
 
     def view(self, buffer_time = 10.0, sample_size = 10000, name=None, description=None, start=False):
@@ -534,9 +549,10 @@ class Stream(object):
             TypeError: if `func` does not return an iterator nor None
         """     
         sl = _SourceLocation(_source_info(), "flat_map")
+        name = self.topology.graph._requested_name(name, action='flat_map', func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(name=name)
         return Stream(self.topology, oport)
     
     def multi_transform(self, func, name=None):
