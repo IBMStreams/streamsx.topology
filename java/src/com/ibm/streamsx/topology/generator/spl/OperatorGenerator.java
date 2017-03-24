@@ -262,16 +262,14 @@ class OperatorGenerator {
             if (!firstPort.getAndSet(false))
                 sb.append("; ");
 
-            // 
-            
-            String portName = jstring(input, "name");
+            final String portName = jstring(input, "name");
 
             // If a single input stream and its name 
             // is the same as the port name
             // then don't use an 'as'. Allows better logical names
             // where the user provided stream name is used consistently.
             boolean singleName = false;
-            JsonArray connections = array(op, "connections");
+            JsonArray connections = array(input, "connections");
             if (connections.size() == 1) {
                 String connName = connections.get(0).getAsString();
 
