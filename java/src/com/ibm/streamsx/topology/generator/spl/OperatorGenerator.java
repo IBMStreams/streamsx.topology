@@ -62,8 +62,8 @@ class OperatorGenerator {
         viewAnnotation(_op, sb);
         AutonomousRegions.autonomousAnnotation(_op, sb);
         threadingAnnotation(graphConfig, _op, sb);
-        outputPortClause(_op, sb);
-        operatorNameAndKind(_op, sb);
+        boolean singlePortSingleName = outputPortClause(_op, sb);
+        operatorNameAndKind(_op, sb, singlePortSingleName);
         inputClause(_op, sb);
 
         sb.append("  {\n");
@@ -192,9 +192,22 @@ class OperatorGenerator {
     /**
      * Create the output port definitions.
      */
-    private static void outputPortClause(JsonObject op, StringBuilder sb) {
+    private static boolean outputPortClause(JsonObject op, StringBuilder sb) {
+        
+        boolean singlePortSingleName = false;
+        if (op.has("outputs")) {
+            JsonArray outputs = array(op, "outputs");
+            if (outputs.size() == 1) {
+                JsonObject output = outputs.get(0).getAsJsonObject();
+                String name = jstring(output, "name");
+                
+                if (name.equals(jstring(op, "name")))
+                    singlePortSingleName = true;
+            }
+        }
 
-        sb.append("  ( ");
+        if (!singlePortSingleName)
+            sb.append("  ( ");
         
         // effectively a mutable boolean
         AtomicBoolean first = new AtomicBoolean(true);
@@ -221,20 +234,21 @@ class OperatorGenerator {
             sb.append(name);
         });
 
-        sb.append(") ");
+        if (!singlePortSingleName)
+            sb.append(") ");
+        
+        return singlePortSingleName;
     }
 
-    static void operatorNameAndKind(JsonObject op, StringBuilder sb) {
-        String name = jstring(op, "name");
-        name = splBasename(name);
+    static void operatorNameAndKind(JsonObject op, StringBuilder sb, boolean singlePortSingleName) {
+        
+        if (!singlePortSingleName) {
+            String name = jstring(op, "name");
+            name = splBasename(name);
 
-        sb.append("as ");
-        sb.append(name);
-        // sb.append("_op");
-        /*
-         * JSONArray outputs = (JSONArray) op.get("outputs"); if (outputs ==
-         * null || outputs.isEmpty()) { sb.append("_sink"); }
-         */
+            sb.append("as ");
+            sb.append(name);
+        }
 
         String kind = jstring(op, "kind");
         sb.append(" = ");
