@@ -509,11 +509,6 @@ class ContextTypes(object):
         Streams application bundle (sab file). The bundle is not executed but may subsequently be submitted
         to a Streaming Analytics service or an IBM Streams instance. A bundle may be submitted multiple
         times to services or instances, each resulting in a unique job (running application).
-
-        ANALYTICS_SERVICE - If a local Streams install is present, the application is built locally and then submitted
-        to a Bluemix streaming analytics service. If a local Streams install is not present, the application is
-        submitted to, built, and executed on a Bluemix streaming analytics service. If the ConfigParams.REMOTE_BUILD
-        flag is set to true, the application will be built on Bluemix even if a local Streams install is present.
     """
     STREAMING_ANALYTICS_SERVICE = 'STREAMING_ANALYTICS_SERVICE'
     """Submission to Streaming Analytics service running on IBM Bluemix cloud platform.
@@ -536,8 +531,8 @@ class ContextTypes(object):
     Environment variables:
         These environment variables define how the application is built and submitted.
 
-        * **STREAMS_INSTALL** - (optional) Location of a IBM Streams installation (4.0.1 or later). The install
-        must be running on RedHat/CentOS 6 and `x86_64` architecture.
+        * **STREAMS_INSTALL** - (optional) Location of a IBM Streams installation (4.0.1 or later). The install must be running on RedHat/CentOS 6 and `x86_64` architecture.
+
     """
     ANALYTICS_SERVICE = 'ANALYTICS_SERVICE'
     """Synonym for :py:const:`STREAMING_ANALYTICS_SERVICE`.
@@ -555,6 +550,7 @@ class ContextTypes(object):
         * **STREAMS_DOMAIN_ID** - Domain identifier for the Streams instance.
         * **STREAMS_INSTANCE_ID** - Instance identifier.
         * **STREAMS_ZKCONNECT** - (optional) ZooKeeper connection string for domain (when not using an embedded ZooKeeper)
+
     """
 
     STANDALONE = 'STANDALONE'
@@ -572,6 +568,7 @@ class ContextTypes(object):
         This environment variables define how the application is built.
 
         * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or later).
+
     """
 
     BUNDLE = 'BUNDLE'
@@ -636,13 +633,13 @@ class ContextTypes(object):
     """
 
     JUPYTER = 'JUPYTER'
-    """Build an execute locally from a Jupyter notebook.
+    """Build and execute locally from a Jupyter notebook.
 
     Used for ad-hoc execution in a local notebook environment.
 
     The execution mode is like :py:const:`STANDALONE` but the standard output of the application is
     availble from the :py:func:`submit` call. Thus any output printed to standard output through
-    :py:meth:`~streamsx.topology.topology.Stream.print` is availble in the notebook for processing
+    :py:meth:`~streamsx.topology.topology.Stream.print` is available in the notebook for processing
     or visualization.
 
     Environment variables:
@@ -653,14 +650,38 @@ class ContextTypes(object):
 
 class ConfigParams(object):
     """
-    Configuration options which may be used as keys in the submit's config parameter.
-
-    VCAP_SERVICES - a json object containing the VCAP information used to submit to Bluemix
-    SERVICE_NAME - the name of the streaming analytics service to use from VCAP_SERVICES.
+    Configuration options which may be used as keys in :py:func:`submit` `config` parameter.
     """
     VCAP_SERVICES = 'topology.service.vcap'
+    """Streaming Analytics service credentials in **VCAP_SERVICES** format.
+
+    Provides the connection credentials when connecting to a Streaming Analytics service
+    using context type :py:const:`~ContextTypes.STREAMING_ANALYTICS_SERVICE`.
+
+    The key overrides the environment variable **VCAP_SERVICES**.
+
+    The value can be:
+        * Path to a local file containing a JSON representation of the VCAP services information.
+        * Dictionary containing the VCAP services information.
+
+    """
     SERVICE_NAME = 'topology.service.name'
+    """Streaming Analytics service name.
+
+    Selects the specific Streaming Analytics service from VCAP services information
+    defined by the the environment variable **VCAP_SERVICES** or the key :py:const:`VCAP_SERVICES` in the `submit` config.
+    """
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
+    """Force a remote build of the application.
+
+    When submitting to :py:const:`STREAMING_ANALYTICS_SERVICE` a local build of the Streams application bundle
+    will occur if the environment variable **STREAMS_INSTALL** is set. Setting this flag to `True` ignores the
+    local Streams install and forces the build to occur remotely using the service.
+
+    .. warning::
+        Remote build functionality is not yet generally available for the Streaming Analytics service.
+
+    """
     JOB_CONFIG = 'topology.jobConfigOverlays'
     """
     Key for a :py:class:`JobConfig` object representing a job configuration for a submission.
