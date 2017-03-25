@@ -67,7 +67,7 @@ class _FunctionalCallable(object):
             is_cls = is_cls and (not inspect.isclass(self._callable))
             
             if is_cls:
-                if ec._supported:
+                if ec._is_supported:
                     self._callable._streamsx_ec_op = ec._get_opc(self._callable)
                 self._cls = True
                 ec._callable_enter(self._callable)
