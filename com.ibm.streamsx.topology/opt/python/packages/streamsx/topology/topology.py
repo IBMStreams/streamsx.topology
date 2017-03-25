@@ -155,7 +155,7 @@ except (ImportError,NameError):
 
 import random
 from streamsx.topology import graph
-from streamsx.topology import schema
+from streamsx.topology.schema import StreamSchema, CommonSchema
 import streamsx.topology.functions
 import json
 import threading
@@ -350,7 +350,7 @@ class Topology(object):
         oport = op.addOutputPort(name=name)
         return Stream(self, oport)
 
-    def subscribe(self, topic, schema=schema.CommonSchema.Python):
+    def subscribe(self, topic, schema=CommonSchema.Python):
         """
         Subscribe to a topic published by other Streams applications.
         A Streams application may publish a stream to allow other
@@ -484,8 +484,8 @@ class Stream(object):
         if name is None:
             name = ''.join(random.choice('0123456789abcdef') for x in range(16))
 
-        if self.oport.schema == schema.CommonSchema.Python:
-            view_stream = self._map(streamsx.topology.functions.identity,schema=schema.CommonSchema.Json)
+        if self.oport.schema == CommonSchema.Python:
+            view_stream = self._map(streamsx.topology.functions.identity,schema=CommonSchema.Json)
             # colocate map operator with stream that is being viewed.
             self.oport.operator.colocate(view_stream.oport.operator, 'view')
         else:
@@ -520,7 +520,7 @@ class Stream(object):
         Returns:
             Stream: A stream containing tuples mapped by `func`.
         """
-        return self._map(func, schema=schema.CommonSchema.Python, name=name)
+        return self._map(func, schema=CommonSchema.Python, name=name)
 
     def transform(self, func, name=None):
         """
@@ -644,10 +644,10 @@ class Stream(object):
         elif routing == Routing.HASH_PARTITIONED:
 
             if (func is None):
-                if self.oport.schema == schema.CommonSchema.String:
+                if self.oport.schema == CommonSchema.String:
                     keys = ['string']
                     parallel_input = self.oport
-                elif self.oport.schema == schema.CommonSchema.Python:
+                elif self.oport.schema == CommonSchema.Python:
                     func = hash
                 else:
                     raise NotImplementedError("HASH_PARTITIONED for schema {0} requires a hash function.".format(self.oport.schema))
@@ -655,7 +655,7 @@ class Stream(object):
             if func is not None:
                 keys = ['__spl_hash']
                 hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func)
-                hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int64 __spl_hash>"))
+                hash_schema = self.oport.schema.extend(StreamSchema("tuple<int64 __spl_hash>"))
                 hash_adder.addInputPort(outputPort=self.oport, name=self.name)
                 parallel_input = hash_adder.addOutputPort(schema=hash_schema)
 
@@ -750,7 +750,13 @@ class Stream(object):
             None
         """
         if schema is not None and self.oport.schema.schema() != schema.schema():
-            schema_change = self._map(streamsx.topology.functions.identity,schema=schema)
+            nc = None
+            if schema == CommonSchema.Json:
+                nc = self.name + "_JSON"
+            elif schema == CommonSchema.String:
+                nc = self.name + "_String"
+               
+            schema_change = self._map(streamsx.topology.functions.identity,schema=schema, name=nc)
             self.oport.operator.colocate(schema_change.oport.operator, 'publish')
             schema_change.publish(topic, schema=schema)
             return None
@@ -784,7 +790,7 @@ class Stream(object):
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
-    def as_string(self):
+    def as_string(self, name=None):
         """
         Declares a stream converting each tuple on this stream
         into a string using `str(tuple)`.
@@ -797,7 +803,11 @@ class Stream(object):
             Stream: Stream containing the string representations of tuples on this stream.
 
         """
-        return self._map(streamsx.topology.functions.identity, schema.CommonSchema.String)
+        if name is None:
+            name = self.name + '_String'
+        string_stream = self._map(streamsx.topology.functions.identity, CommonSchema.String, name=name)
+        self.oport.operator.colocate(string_stream.oport.operator, 'as_string')
+        return string_stream
 
 class View(object):
     """
