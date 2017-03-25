@@ -44,9 +44,9 @@ class TestNames(unittest.TestCase):
      self.assertEqual(s4a.name, "cool_class_2")
 
      s5 = topo.source([])
-     self.assertEqual(s5.name, "list")
+     self.assertEqual(s5.name, "list_2")
      s5a = topo.source([])
-     self.assertEqual(s5a.name, "list_2")
+     self.assertEqual(s5a.name, "list_3")
 
      s6 = topo.source(itertools.repeat('Fred'))
      self.assertEqual(s6.name, "repeat")
