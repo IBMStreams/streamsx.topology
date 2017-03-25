@@ -419,7 +419,7 @@ class Stream(object):
         sl = _SourceLocation(_source_info(), "for_each")
         name = self.topology.graph._requested_name(name, action="for_each", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=name, sl=sl)
-        op.addInputPort(outputPort=self.oport)
+        op.addInputPort(outputPort=self.oport, name=self.name)
 
     def sink(self, func, name=None):
         """
@@ -442,14 +442,14 @@ class Stream(object):
         sl = _SourceLocation(_source_info(), "filter")
         name = self.topology.graph._requested_name(name, action="filter", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=name, sl=sl)
-        op.addInputPort(outputPort=self.oport)
+        op.addInputPort(outputPort=self.oport, name=self.name)
         oport = op.addOutputPort(schema=self.oport.schema, name=name)
         return Stream(self.topology, oport)
 
     def _map(self, func, schema, name=None):
         name = self.topology.graph._requested_name(name, action="map", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=name)
-        op.addInputPort(outputPort=self.oport)
+        op.addInputPort(outputPort=self.oport, name=self.name)
         oport = op.addOutputPort(schema=schema, name=name)
         return Stream(self.topology, oport)
 
@@ -551,7 +551,7 @@ class Stream(object):
         sl = _SourceLocation(_source_info(), "flat_map")
         name = self.topology.graph._requested_name(name, action='flat_map', func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=name, sl=sl)
-        op.addInputPort(outputPort=self.oport)
+        op.addInputPort(outputPort=self.oport, name=self.name)
         oport = op.addOutputPort(name=name)
         return Stream(self.topology, oport)
     
@@ -656,7 +656,7 @@ class Stream(object):
                 keys = ['__spl_hash']
                 hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func)
                 hash_schema = self.oport.schema.extend(schema.StreamSchema("tuple<int64 __spl_hash>"))
-                hash_adder.addInputPort(outputPort=self.oport)
+                hash_adder.addInputPort(outputPort=self.oport, name=self.name)
                 parallel_input = hash_adder.addOutputPort(schema=hash_schema)
 
             parallel_op = self.topology.graph.addOperator("$Parallel$")
@@ -757,7 +757,7 @@ class Stream(object):
 
         sl = _SourceLocation(_source_info(), "publish")
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl)
-        op.addInputPort(outputPort=self.oport)
+        op.addInputPort(outputPort=self.oport, name=self.name)
         self.oport.operator.colocate(op, 'publish')
 
     def autonomous(self):

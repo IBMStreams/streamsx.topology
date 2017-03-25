@@ -57,7 +57,7 @@ class SPLGraph(object):
         self.resolver = streamsx.topology.dependency._DependencyResolver(self.topology)
         self._views = []
         self._spl_toolkits = []
-        self._used_names = set()
+        self._used_names = {'list', 'tuple'}
 
     def get_views(self):
         return self._views
@@ -99,7 +99,7 @@ class SPLGraph(object):
             else:
                 name = self.name
 
-        # Recurse once to et unique version of name
+        # Recurse once to get unique version of name
         return self._requested_name(name)
 
 
