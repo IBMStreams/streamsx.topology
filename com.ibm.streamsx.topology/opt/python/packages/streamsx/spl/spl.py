@@ -594,7 +594,7 @@ def _wrapforsplop(optype, wrapped, style, docpy):
             @functools.wraps(wrapped.__init__)
             def __init__(self,*args,**kwargs):
                 self.__splpy_instance = wrapped(*args,**kwargs)
-                if ec._supported:
+                if ec._is_supported():
                     ec._save_opc(self.__splpy_instance)
                 ec._callable_enter(self.__splpy_instance)
 
