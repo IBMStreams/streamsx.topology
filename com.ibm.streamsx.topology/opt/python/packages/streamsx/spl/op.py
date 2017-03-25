@@ -52,10 +52,15 @@ class Invoke(exop.ExtensionOperator):
         super(Invoke,self).__init__(topology,kind,inputs,schemas,params,name)
         self._op._ex_op = self
 
-    def attribute(self, input, name):
+    def attribute(self, stream, name):
         """
         """
-        return Expression('attribute', name)
+        if stream not in self.inputs:
+            raise ValueError("Stream is not an input of this operator.")
+        if len(self.inputs) == 1:
+            return Expression('attribute', name)
+        else:
+            return Expression('attribute', stream.oport.name + '.' + name)
 
     def expression(self, value):
         """
@@ -64,7 +69,7 @@ class Invoke(exop.ExtensionOperator):
 
     def output(self, stream, value):
         if stream not in self.outputs:
-            raise ValueError("Stream is not output of this operator.")
+            raise ValueError("Stream is not an output of this operator.")
         e = self.expression(value)
         e._stream = stream
         return e
