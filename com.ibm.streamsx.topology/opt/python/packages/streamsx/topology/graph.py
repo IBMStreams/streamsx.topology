@@ -57,7 +57,7 @@ class SPLGraph(object):
         self.resolver = streamsx.topology.dependency._DependencyResolver(self.topology)
         self._views = []
         self._spl_toolkits = []
-        self._used_names = {'list', 'tuple'}
+        self._used_names = {'list', 'tuple', 'int'}
 
     def get_views(self):
         return self._views
