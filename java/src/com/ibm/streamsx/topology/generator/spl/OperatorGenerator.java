@@ -44,17 +44,16 @@ import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class OperatorGenerator {
-    
+
     private final SubmissionTimeValue stvHelper;
     private final SPLGenerator splGenerator;
-    
+
     OperatorGenerator(SPLGenerator splGenerator) {
         this.splGenerator = splGenerator;
         this.stvHelper = splGenerator.stvHelper();
     }
 
-    String generate(JsonObject graphConfig, JsonObject op)
-            throws IOException {
+    String generate(JsonObject graphConfig, JsonObject op) throws IOException {
         JsonObject _op = op;
         StringBuilder sb = new StringBuilder();
         noteAnnotations(_op, sb);
@@ -62,8 +61,8 @@ class OperatorGenerator {
         viewAnnotation(_op, sb);
         AutonomousRegions.autonomousAnnotation(_op, sb);
         threadingAnnotation(graphConfig, _op, sb);
-        outputPortClause(_op, sb);
-        operatorNameAndKind(_op, sb);
+        boolean singlePortSingleName = outputPortClause(_op, sb);
+        operatorNameAndKind(_op, sb, singlePortSingleName);
         inputClause(_op, sb);
 
         sb.append("  {\n");
@@ -76,15 +75,14 @@ class OperatorGenerator {
         return sb.toString();
     }
 
-    private static void noteAnnotations(JsonObject op, StringBuilder sb)
-            throws IOException {
-        
+    private static void noteAnnotations(JsonObject op, StringBuilder sb) throws IOException {
+
         sourceLocationNote(op, sb);
         portTypesNote(op, sb);
     }
-    
+
     private static void sourceLocationNote(JsonObject op, StringBuilder sb) throws IOException {
-        
+
         JsonArray ja = GsonUtilities.array(op, "sourcelocation");
         if (ja == null)
             return;
@@ -97,13 +95,12 @@ class OperatorGenerator {
         SPLGenerator.stringLiteral(sb, sourceInfo);
         sb.append(")\n");
     }
-    
+
     private static void portTypesNote(JsonObject op, StringBuilder sb) {
-        
+
         int[] id = new int[1];
-        GsonUtilities.objectArray(op, "outputs",
-                output -> {
-                    
+        GsonUtilities.objectArray(op, "outputs", output -> {
+
             String type = GsonUtilities.jstring(output, "type.native");
             if (type == null || type.isEmpty())
                 return;
@@ -115,11 +112,11 @@ class OperatorGenerator {
     }
 
     private void viewAnnotation(JsonObject op, StringBuilder sb) {
-        
+
         JsonObject config = jobject(op, "config");
         if (config == null)
             return;
-        
+
         objectArray(config, "viewConfigs", viewConfig -> {
 
             String name = jstring(viewConfig, "name");
@@ -130,7 +127,7 @@ class OperatorGenerator {
             String activate = jstring(viewConfig, "activateOption");
             sb.append("@view(name = \"" + name + "\"");
             if (description != null) {
-                sb.append(", description = \"" + description +  "\"");
+                sb.append(", description = \"" + description + "\"");
             }
             sb.append(", port = " + port);
             sb.append(", bufferTime = " + bufferTime);
@@ -143,21 +140,20 @@ class OperatorGenerator {
 
     private void parallelAnnotation(JsonObject op, StringBuilder sb) {
         boolean parallel = jboolean(op, "parallelOperator");
-        
+
         if (parallel) {
             sb.append("@parallel(width=");
             JsonElement width = op.get("width");
             if (width.isJsonPrimitive()) {
                 sb.append(width.getAsString());
-            }
-            else {
+            } else {
                 splValueSupportingSubmission(width.getAsJsonObject(), sb);
             }
             boolean partitioned = jboolean(op, "partitioned");
             if (partitioned) {
                 String parallelInputPortName = jstring(op, "parallelInputPortName");
                 JsonArray partitionKeys = op.get("partitionedKeys").getAsJsonArray();
-                
+
                 parallelInputPortName = splBasename(parallelInputPortName);
                 sb.append(", partitionBy=[{port=");
                 sb.append(parallelInputPortName);
@@ -172,14 +168,14 @@ class OperatorGenerator {
             sb.append(")\n");
         }
     }
-    
+
     /**
      * Add threading annotation but only for 4.2 onwards.
      */
     private void threadingAnnotation(JsonObject graphConfig, JsonObject op, StringBuilder sb) {
         if (!splGenerator.versionAtLeast(4, 2))
             return;
-        
+
         JsonObject threading = object(op, "threading");
         if (threading != null) {
             sb.append("@threading(");
@@ -192,26 +188,39 @@ class OperatorGenerator {
     /**
      * Create the output port definitions.
      */
-    private static void outputPortClause(JsonObject op, StringBuilder sb) {
+    private static boolean outputPortClause(JsonObject op, StringBuilder sb) {
 
-        sb.append("  ( ");
-        
+        boolean singlePortSingleName = false;
+        if (op.has("outputs")) {
+            JsonArray outputs = array(op, "outputs");
+            if (outputs.size() == 1) {
+                JsonObject output = outputs.get(0).getAsJsonObject();
+                String name = jstring(output, "name");
+
+                if (name.equals(jstring(op, "name")))
+                    singlePortSingleName = true;
+            }
+        }
+
+        if (!singlePortSingleName)
+            sb.append("  ( ");
+
         // effectively a mutable boolean
         AtomicBoolean first = new AtomicBoolean(true);
-        
+
         objectArray(op, "outputs", output -> {
 
             String type = jstring(output, "type");
             if (type.startsWith("tuple<")) {
                 // removes the 'tuple<..>' part of the type
-                type = type.substring(6, type.length()-1);
+                type = type.substring(6, type.length() - 1);
             }
 
             String name = jstring(output, "name");
             name = splBasename(name);
 
             if (!first.get()) {
-                sb.append("; ");              
+                sb.append("; ");
             }
             first.set(false);
 
@@ -221,47 +230,53 @@ class OperatorGenerator {
             sb.append(name);
         });
 
-        sb.append(") ");
+        if (!singlePortSingleName)
+            sb.append(") ");
+
+        return singlePortSingleName;
     }
 
-    static void operatorNameAndKind(JsonObject op, StringBuilder sb) {
-        String name = jstring(op, "name");
-        name = splBasename(name);
+    static void operatorNameAndKind(JsonObject op, StringBuilder sb, boolean singlePortSingleName) {
 
-        sb.append("as ");
-        sb.append(name);
-        // sb.append("_op");
-        /*
-         * JSONArray outputs = (JSONArray) op.get("outputs"); if (outputs ==
-         * null || outputs.isEmpty()) { sb.append("_sink"); }
-         */
+        if (!singlePortSingleName) {
+            String name = jstring(op, "name");
+            name = splBasename(name);
+
+            sb.append("as ");
+            sb.append(name);
+        }
 
         String kind = jstring(op, "kind");
         sb.append(" = ");
         sb.append(kind);
     }
 
-    /*
-    static JSONArray getInputs(JSONObject op) {
-        JSONArray inputs = (JSONArray) op.get("inputs");
-        if (inputs == null || inputs.isEmpty())
-            return null;
-        return inputs;
-
-    }
-    */
-
     static void inputClause(JsonObject op, StringBuilder sb) {
 
         sb.append("  ( ");
-        
+
         AtomicBoolean firstPort = new AtomicBoolean(true);
-        
-        objectArray(op, "inputs", input ->  {
-            
+
+        objectArray(op, "inputs", input -> {
+
             if (!firstPort.getAndSet(false))
                 sb.append("; ");
-            
+
+            final String portName = jstring(input, "name");
+
+            // If a single input stream and its name 
+            // is the same as the port name
+            // then don't use an 'as'. Allows better logical names
+            // where the user provided stream name is used consistently.
+            boolean singleName = false;
+            JsonArray connections = array(input, "connections");
+            if (connections.size() == 1) {
+                String connName = connections.get(0).getAsString();
+
+                if (portName.equals(connName))
+                    singleName = true;
+            }
+
             AtomicBoolean firstStream = new AtomicBoolean(true);
             stringArray(input, "connections", name -> {
                 if (!firstStream.getAndSet(false))
@@ -269,9 +284,10 @@ class OperatorGenerator {
                 sb.append(splBasename(name));
             });
 
-            String name = jstring(input, "name");
-            sb.append(" as ");
-            sb.append(splBasename(name));
+            if (!singleName) {
+                sb.append(" as ");
+                sb.append(splBasename(portName));
+            }
         });
 
         sb.append(")\n");
@@ -280,13 +296,13 @@ class OperatorGenerator {
     static void windowClause(JsonObject op, StringBuilder sb) {
 
         AtomicBoolean firstWindow = new AtomicBoolean(true);
-        
-        objectArray(op, "inputs", input ->  {
-            
+
+        objectArray(op, "inputs", input -> {
+
             JsonObject window = jobject(input, "window");
             if (window == null)
                 return;
-            
+
             String type = jstring(window, "type");
             if (TYPE_NOT_WINDOWED.equals(type))
                 return;
@@ -308,14 +324,13 @@ class OperatorGenerator {
                 throw new IllegalStateException("Internal error");
             }
 
-            appendWindowPolicy(jstring(window, "evictPolicy"),
-                    window.get("evictConfig"), jstring(window, "evictTimeUnit"), sb);
+            appendWindowPolicy(jstring(window, "evictPolicy"), window.get("evictConfig"),
+                    jstring(window, "evictTimeUnit"), sb);
 
             String triggerPolicy = jstring(window, "triggerPolicy");
             if (triggerPolicy != null) {
                 sb.append(", ");
-                appendWindowPolicy(triggerPolicy, window.get("triggerConfig"), jstring(window, "triggerTimeUnit"),
-                        sb);
+                appendWindowPolicy(triggerPolicy, window.get("triggerConfig"), jstring(window, "triggerTimeUnit"), sb);
             }
 
             if (jboolean(window, "partitioned"))
@@ -326,8 +341,7 @@ class OperatorGenerator {
 
     }
 
-    static void appendWindowPolicy(String policyName, JsonElement config, String timeUnit,
-            StringBuilder sb) {
+    static void appendWindowPolicy(String policyName, JsonElement config, String timeUnit, StringBuilder sb) {
         switch (policyName) {
         case POLICY_COUNT:
             sb.append("count(");
@@ -340,8 +354,7 @@ class OperatorGenerator {
             break;
         case POLICY_PUNCTUATION:
             break;
-        case POLICY_TIME:
-        {
+        case POLICY_TIME: {
             TimeUnit unit = TimeUnit.valueOf(timeUnit.toString());
             long time = config.getAsLong();
             double secs;
@@ -355,7 +368,7 @@ class OperatorGenerator {
             case MILLISECONDS:
                 secs = ((double) time) / 1000.0;
                 break;
-                
+
             case MICROSECONDS:
                 secs = ((double) time) / 1000_000.0;
                 break;
@@ -378,9 +391,7 @@ class OperatorGenerator {
         }
     }
 
-    private void paramClause(JsonObject graphConfig, JsonObject op,
-            StringBuilder sb) {
-        
+    private void paramClause(JsonObject graphConfig, JsonObject op, StringBuilder sb) {
 
         // VMArgs only apply to Java SPL operators.
         boolean isJavaOp = OpProperties.LANGUAGE_JAVA.equals(jstring(op, OpProperties.LANGUAGE));
@@ -389,23 +400,23 @@ class OperatorGenerator {
         if (isJavaOp && graphConfig.has(ContextProperties.VMARGS))
             vmArgs = GsonUtilities.array(graphConfig, ContextProperties.VMARGS);
 
-        // determine if we need to inject submission param names and values info. 
+        // determine if we need to inject submission param names and values
+        // info.
         boolean addSPInfo = false;
         ParamsInfo stvOpParamInfo = stvHelper.getSplInfo();
         if (stvOpParamInfo != null) {
-            Map<String,JsonObject> functionalOps = stvHelper.getFunctionalOps();
+            Map<String, JsonObject> functionalOps = stvHelper.getFunctionalOps();
             if (functionalOps.containsKey(op.get("name").getAsString()))
                 addSPInfo = true;
         }
-        
+
         JsonObject params = jobject(op, "parameters");
-        if (vmArgs == null && GsonUtilities.jisEmpty(params)
-            && !addSPInfo) {
+        if (vmArgs == null && GsonUtilities.jisEmpty(params) && !addSPInfo) {
             return;
         }
 
-        sb.append("    param\n");       
-        
+        sb.append("    param\n");
+
         for (Entry<String, JsonElement> on : params.entrySet()) {
             String name = on.getKey();
             JsonObject param = on.getValue().getAsJsonObject();
@@ -414,8 +425,9 @@ class OperatorGenerator {
                 fullVmArgs.addAll(GsonUtilities.array(param, "value"));
                 if (vmArgs != null)
                     fullVmArgs.addAll(vmArgs);
-                //stringArray(param, "value", v -> fullVmArgs.);
-                // objectArray(graphConfig, ContextProperties.VMARGS, v -> fullVmArgs.add(v));  
+                // stringArray(param, "value", v -> fullVmArgs.);
+                // objectArray(graphConfig, ContextProperties.VMARGS, v ->
+                // fullVmArgs.add(v));
                 vmArgs = fullVmArgs;
                 continue;
             }
@@ -436,7 +448,7 @@ class OperatorGenerator {
             splValueSupportingSubmission(tmpVMArgParam, sb);
             sb.append(";\n");
         }
-        
+
         if (addSPInfo) {
             sb.append("      ");
             sb.append(FunctionalOpProperties.NAME_SUBMISSION_PARAM_NAMES);
@@ -453,75 +465,73 @@ class OperatorGenerator {
     }
 
     private void splValueSupportingSubmission(JsonObject value, StringBuilder sb) {
-               
+
         JsonElement type = value.get("type");
         if (value.has("type") && TYPE_SUBMISSION_PARAMETER.equals(type.getAsString())) {
             value = stvHelper.getSPLExpression(value);
         }
-        
+
         SPLGenerator.value(sb, value);
     }
-     
-    private void outputAssignmentClause(JsonObject graphConfig, JsonObject op,
-            StringBuilder sb) {
-        
+
+    private void outputAssignmentClause(JsonObject graphConfig, JsonObject op, StringBuilder sb) {
+
         StringBuilder allAssignmentsSb = new StringBuilder();
-        
+
         objectArray(op, "outputs", output -> {
-            
+
             if (!output.has("assigns"))
                 return;
-            
+
             JsonObject assigns = object(output, "assigns");
-            
+
             if (GsonUtilities.jisEmpty(assigns))
                 return;
-                                   
+
             StringBuilder assignsSb = new StringBuilder();
             String name = jstring(output, "name");
             name = splBasename(name);
             assignsSb.append(name);
             assignsSb.append(":\n");
-            
+
             AtomicBoolean seenOne = new AtomicBoolean();
             for (Entry<String, JsonElement> a : assigns.entrySet()) {
                 String attr = a.getKey();
                 JsonObject value = a.getValue().getAsJsonObject();
                 if (seenOne.getAndSet(true))
-                    assignsSb.append(",\n");   
+                    assignsSb.append(",\n");
                 assignsSb.append("  ");
                 assignsSb.append(attr);
                 assignsSb.append("=");
                 splValueSupportingSubmission(value, assignsSb);
-           
+
             }
             assignsSb.append(";\n");
-            
+
             allAssignmentsSb.append(assignsSb);
         });
-        
+
         if (allAssignmentsSb.length() != 0) {
             sb.append(" output\n");
             sb.append(allAssignmentsSb);
         }
     }
 
-    static void configClause(JsonObject graphConfig, JsonObject op,
-            StringBuilder sb) {
-        
+    static void configClause(JsonObject graphConfig, JsonObject op, StringBuilder sb) {
+
         if (!op.has(OpProperties.CONFIG))
             return;
-        
+
         JsonObject config = jobject(op, OpProperties.CONFIG);
-        
+
         StringBuilder sbConfig = new StringBuilder();
-        
+
         if (config.has("streamViewability")) {
             sbConfig.append("    streamViewability: ");
             sbConfig.append(jboolean(config, "streamViewability"));
             sbConfig.append(";\n");
         }
-        
+
         if (config.has("queue")) {
             JsonObject queue = jobject(config, "queue");
             if (!queue.entrySet().isEmpty()) {
@@ -532,24 +542,27 @@ class OperatorGenerator {
                 sbConfig.append(");\n");
             }
         }
-               
+
         if (config.has(PLACEMENT)) {
             JsonObject placement = jobject(config, PLACEMENT);
             StringBuilder sbPlacement = new StringBuilder();
-            
+
             // Explicit placement takes precedence.
             String colocationKey = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
             if (colocationKey != null) {
                 JsonObject mapping = object(graphConfig, CFG_COLOCATE_TAG_MAPPING);
                 String colocationTag = jstring(mapping, colocationKey);
-            
+
                 sbPlacement.append("      partitionColocation(");
                 stringLiteral(sbPlacement, colocationTag);
                 sbPlacement.append(")\n");
             }
-            
-            Set<String> uniqueResourceTags = new HashSet<>();           
-            GsonUtilities.stringArray(placement, OpProperties.PLACEMENT_RESOURCE_TAGS, tag -> {if (!tag.isEmpty()) uniqueResourceTags.add(tag);} );
+
+            Set<String> uniqueResourceTags = new HashSet<>();
+            GsonUtilities.stringArray(placement, OpProperties.PLACEMENT_RESOURCE_TAGS, tag -> {
+                if (!tag.isEmpty())
+                    uniqueResourceTags.add(tag);
+            });
             if (!uniqueResourceTags.isEmpty()) {
                 String hostPool = getHostPoolName(graphConfig, uniqueResourceTags);
                 if (sbPlacement.length() != 0)
@@ -558,30 +571,30 @@ class OperatorGenerator {
                 sbPlacement.append(hostPool);
                 sbPlacement.append(")\n");
             }
-            
+
             if (sbPlacement.length() != 0) {
                 sbConfig.append("   placement: ");
                 sbConfig.append(sbPlacement);
                 sbConfig.append("    ;\n");
             }
         }
-                
+
         if (sbConfig.length() != 0) {
             sb.append("  config\n");
             sb.append(sbConfig);
         }
     }
-    
+
     /**
-     * Gets or creates a host pool at the graphConfig level
-     * corresponding to the unique set of tags.
+     * Gets or creates a host pool at the graphConfig level corresponding to the
+     * unique set of tags.
      */
     private static String getHostPoolName(JsonObject graphConfig, Set<String> uniqueResourceTags) {
         JsonArray hostPools = array(graphConfig, "__spl_hostPools");
         if (hostPools == null) {
             graphConfig.add("__spl_hostPools", hostPools = new JsonArray());
         }
-        
+
         // Look for a host pool matching this one
         for (JsonElement hpe : hostPools) {
             JsonObject hostPoolDef = hpe.getAsJsonObject();
@@ -593,7 +606,7 @@ class OperatorGenerator {
                 return jstring(hostPoolDef, "name");
             }
         }
-                        
+
         JsonObject hostPoolDef = new JsonObject();
         String hostPool;
         hostPoolDef.addProperty("name", hostPool = "__jaaHostPool" + hostPools.size());
@@ -601,7 +614,7 @@ class OperatorGenerator {
         for (String tag : uniqueResourceTags)
             rta.add(new JsonPrimitive(tag));
         hostPoolDef.add("resourceTags", rta);
-        hostPools.add(hostPoolDef);  
+        hostPools.add(hostPoolDef);
         return hostPool;
     }
 }

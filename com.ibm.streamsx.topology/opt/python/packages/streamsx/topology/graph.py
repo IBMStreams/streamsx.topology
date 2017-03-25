@@ -57,6 +57,7 @@ class SPLGraph(object):
         self.resolver = streamsx.topology.dependency._DependencyResolver(self.topology)
         self._views = []
         self._spl_toolkits = []
+        self._used_names = {'list', 'tuple', 'int'}
 
     def get_views(self):
         return self._views
@@ -64,24 +65,51 @@ class SPLGraph(object):
     def add_views(self, view):
         self._views.append(view)
 
+    def _requested_name(self, name, action=None, func=None):
+        """Create a unique name for an operator or a stream.
+        """
+        if name is not None:
+            if name in self._used_names:
+                # start at 2 for the "second" one of this name
+                n = 2
+                while True:
+                    pn = name + '_' + str(n)
+                    if pn not in self._used_names:
+                        self._used_names.add(pn)
+                        return pn
+                    n += 1
+            else:
+                self._used_names.add(name)
+                return name
+
+        if func is not None:
+            if hasattr(func, '__name__'):
+                name = func.__name__
+                if name == '<lambda>':
+                    # Avoid use of <> characters in name
+                    # as they are converted to unicode
+                    # escapes in SPL identifier
+                    name = action + '_lambda'
+            elif hasattr(func, '__class__'):
+                name = func.__class__.__name__
+
+        if name is None:
+            if action is not None:
+                name = action
+            else:
+                name = self.name
+
+        # Recurse once to get unique version of name
+        return self._requested_name(name)
+
+
     def addOperator(self, kind, function=None, name=None, params=None, sl=None):
         if(params is None):
             params = {}
+
         if name is None:
-            if function is not None:
-               if hasattr(function, '__name__'):
-                   n = function.__name__
-                   if n == '<lambda>':
-                       # Avoid use of <> characters in name
-                       # as they are converted to unicode
-                       # escapes in SPL identifier
-                       n = 'lambda'
-                   name = n + "_"
-               elif hasattr(function, '__class__'):
-                   name = function.__class__.__name__ + "_"
-            else:
-               name = self.name + "_OP"
-        name = name + str(len(self.operators))
+            name = self._requested_name(None,action="Op", func = function)
+
         if(kind.startswith("$")):    
             op = Marker(len(self.operators), kind, name, {}, self)                           
         else:
