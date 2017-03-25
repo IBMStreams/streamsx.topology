@@ -13,6 +13,7 @@ public enum BVirtualMarker {
     END_LOW_LATENCY("$EndLowLatency$"),
     ISOLATE("$Isolate$"),
     AUTONOMOUS("$Autonomous$"),
+    PENDING("$Pending$"),
     ;
     
     private final String kind;

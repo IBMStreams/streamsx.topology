@@ -17,14 +17,20 @@ class ExtensionOperator(object):
         self.__inputs(inputs)
         self.__outputs(schemas)
 
+    @property
+    def params(self):
+        return self._op.params
+
     def __inputs(self, inputs):
         if inputs is not None:
             try:
                 for input in inputs:
-                    self._op.addInputPort(outputPort=input.oport)
+                    self._op.addInputPort(outputPort=input.oport, name=input.name)
+                self.inputs = list(inputs)
             except TypeError:
                 # not iterable, single input
                 self._op.addInputPort(outputPort=inputs.oport)
+                self.inputs = [inputs]
 
     def __outputs(self, schemas):
         self.outputs = []

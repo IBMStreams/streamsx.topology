@@ -828,3 +828,60 @@ class View(object):
         self._view_object = job.get_views(name=self.name)[0]
 
         return self._view_object.start_data_fetch()
+
+
+class PendingStream(object):
+        """Pending stream connection.
+
+        A pending stream is an initially `disconnected` stream. The `stream` attribute
+        can be used as an input stream when the required stream is not yet available. Once the required
+        stream is available the connection is made using :py:meth:`complete`.
+
+        The schema of the pending stream is defined by the stream passed into `complete`.
+
+        A simple example is creating a source stream after the filter that will use it::
+
+            # Create the pending or placeholder stream
+            pending_source = PendingStream(topology)
+
+            # Create a filter against the placeholder stream
+            f = pending_source.stream.filter(lambda : t : t.startswith("H"))
+
+            source = topology.source(['Hello', 'World'])
+
+            # Now complete the connection
+            pending_source.complete(source)
+
+        Streams allows feedback loops in its flow graphs, where downstream processing can produce a stream that is
+        fed back into the input port of an upstream operator. Typically, feedback loops are
+        used to modify the state of upstream transformations, rather than repeat processing of tuples.
+
+        A feedback loop can be created by using a `PendingStream`. The upstream transformation or operator
+        that will end the feedback loop uses :py:attr:`~PendingStream.stream` as one of its inputs. A processing
+        pipeline is then created and once the downstream starting point of the feedback loop is available,
+        it is passed to :py:meth:`complete` to create the loop.
+
+        """
+        def __init__(self, topology):
+            self.topology = topology
+            self._marker = topology.graph.addOperator(kind="$Pending$")
+
+            self.stream = Stream(topology, self._marker.addOutputPort(schema=None))
+
+        def complete(self, stream):
+            """Complete the pending stream.
+
+            Any connections made to :py:attr:`stream` are connected to `stream` once
+            this method returns.
+
+            Args:
+                stream(Stream): Stream that completes the connection.
+            """
+            assert not self.is_complete()
+            self._marker.addInputPort(outputPort=stream.oport)
+            self.stream.oport.schema = stream.oport.schema
+
+        def is_complete(self):
+            """Has this connection been completed.
+            """
+            return self._marker.inputPorts

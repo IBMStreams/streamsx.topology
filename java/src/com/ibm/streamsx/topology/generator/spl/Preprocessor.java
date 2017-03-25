@@ -12,6 +12,7 @@ import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.findOperato
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -58,8 +59,7 @@ class Preprocessor {
         
         ThreadingModel.preProcessThreadedPorts(graph);
         
-        // At this point, the $Union$ operators in the graph are just place holders.
-        removeUnionOperators();
+        removeRemainingVirtualMarkers();
         
         AutonomousRegions.preprocessAutonomousRegions(graph);
         
@@ -132,9 +132,11 @@ class Preprocessor {
         return op;
     }
     
-    private void removeUnionOperators(){
-        Set<JsonObject> unionOps = GraphUtilities.findOperatorByKind(BVirtualMarker.UNION, graph);
-        GraphUtilities.removeOperators(unionOps, graph);
+    private void removeRemainingVirtualMarkers(){
+        for (BVirtualMarker marker : Arrays.asList(BVirtualMarker.UNION, BVirtualMarker.PENDING)) {
+            Set<JsonObject> unionOps = GraphUtilities.findOperatorByKind(marker, graph);
+            GraphUtilities.removeOperators(unionOps, graph);
+        }
     }
     
     @SuppressWarnings("serial")
