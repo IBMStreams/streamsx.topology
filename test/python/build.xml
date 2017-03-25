@@ -14,7 +14,7 @@
     <property name="topology.toolkit.release" location="${tk}" />
     <echo message="Topology toolkit release: ${topology.toolkit.release}"/>
 
-  <target name="test" depends="all,test.application.api"/> 
+  <target name="test" depends="all,test.application.api,test.translation"/> 
 
   <target name="all" depends="test.toolkit"/> 
 	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/spl_samples.py"
@@ -93,4 +93,9 @@
          </ant>
      </target>
 
+    <target name="test.translation" description="Run the translation tests">
+        <exec executable="/bin/bash" dir="spl/translation" failonerror="true">
+            <arg value="autorun.sh"/>
+        </exec>
+    </target>
 </project>
