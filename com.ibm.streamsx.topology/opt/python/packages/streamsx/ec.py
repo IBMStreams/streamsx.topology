@@ -351,7 +351,10 @@ def _set_opc(opc):
 # thread local
 def _clear_opc():
     if _State._state is None:
-        _check()
+        try:
+            _check()
+        except NotImplementedError:
+            pass
     if _State._state._supported:
         _State._state._opptrs._opc = None
 
