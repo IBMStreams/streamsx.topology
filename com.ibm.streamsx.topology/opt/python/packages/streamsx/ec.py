@@ -350,13 +350,11 @@ def _set_opc(opc):
 # Clear the operator pointer from the
 # thread local
 def _clear_opc():
-    if _State._state is None:
-        try:
-            _check()
-        except NotImplementedError:
-            pass
-    if _State._state._supported:
+    try:
+        _check()
         _State._state._opptrs._opc = None
+    except NotImplementedError:
+        pass
 
 # Save the opc in the operator class
 # (getting it from the thread local)
@@ -369,9 +367,11 @@ def _save_opc(obj):
            obj._streamsx_ec_op = opc
 
 def _get_opc(obj):
-    _check()
     try:
+        _check()
         return obj._streamsx_ec_op
+    except NotImplementedError:
+        pass
     except AttributeError:
         try:
             opc = _State._state._opptrs._opc
