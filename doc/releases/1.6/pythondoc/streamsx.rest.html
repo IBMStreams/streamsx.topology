@@ -79,11 +79,9 @@
           
             
             
-                <!-- Local TOC -->
-                <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">streamsx.rest module</a></li>
+                <ul class="simple">
 </ul>
-</div>
+
             
           
         </div>
@@ -104,7 +102,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -149,9 +147,9 @@ If not specified, it uses the value of <strong>STREAMING_ANALYTICS_SERVICE_NAME<
 </tbody>
 </table>
 <p class="rubric">Example</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Assume environment variable VCAP_SERVICES has correct information</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Assume environment variable VCAP_SERVICES has correct information</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">StreamingAnalyticsConnection</span><span class="p">(</span><span class="n">service_name</span><span class="o">=</span><span class="s1">&#39;Streaming-Analytics&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">get_streaming_analytics</span><span class="p">()</span><span class="o">.</span><span class="n">get_instance_status</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">get_streaming_analytics</span><span class="p">()</span><span class="o">.</span><span class="n">get_instance_status</span><span class="p">())</span>
 <span class="go">{&#39;plan&#39;: &#39;Standard&#39;, &#39;state&#39;: &#39;STARTED&#39;, &#39;enabled&#39;: True, &#39;status&#39;: &#39;running&#39;}</span>
 </pre></div>
 </div>
@@ -175,7 +173,7 @@ the Streaming Analytics service.</p>
 <dl class="attribute">
 <dt id="streamsx.rest.StreamingAnalyticsConnection.resource_url">
 <code class="descname">resource_url</code><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection.resource_url" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Root URL for IBM Streams REST API</p>
+<dd><p>str: Root URL for IBM Streams REST API</p>
 </dd></dl>
 
 </dd></dl>
@@ -203,21 +201,22 @@ retrieve that information.</p>
 </tbody>
 </table>
 <p class="rubric">Example</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">resource_url</span> <span class="o">=</span> <span class="s2">&quot;https://streamsqse.localdomain:8443/streams/rest/resources&quot;</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">resource_url</span> <span class="o">=</span> <span class="s2">&quot;https://streamsqse.localdomain:8443/streams/rest/resources&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">StreamsConnection</span><span class="p">(</span><span class="s2">&quot;streamsadmin&quot;</span><span class="p">,</span> <span class="s2">&quot;passw0rd&quot;</span><span class="p">,</span> <span class="n">resource_url</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">verify</span><span class="o">=</span><span class="kc">False</span>  <span class="c1"># manually disable SSL verification, if needed</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">verify</span><span class="o">=</span><span class="bp">False</span>  <span class="c1"># manually disable SSL verification, if needed</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">jobs_count</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">:</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">jobs_count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">get_jobs</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;There are </span><span class="si">{}</span><span class="s2"> jobs across all instances.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jobs_count</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s2">&quot;There are {} jobs across all instances.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jobs_count</span><span class="p">))</span>
 <span class="go">There are 10 jobs across all instances.</span>
 </pre></div>
 </div>
 <dl class="attribute">
 <dt id="streamsx.rest.StreamsConnection.session">
 <code class="descname">session</code><a class="headerlink" href="#streamsx.rest.StreamsConnection.session" title="Permalink to this definition">¶</a></dt>
-<dd><p><code class="xref py py-class docutils literal"><span class="pre">requests.Session</span></code> &#8211; Requests session object for making REST calls.</p>
+<dd><p><code class="xref py py-class docutils literal"><span class="pre">requests.Session</span></code></p>
+<p>Requests session object for making REST calls.</p>
 </dd></dl>
 
 <dl class="method">
@@ -234,7 +233,8 @@ retrieve that information.</p>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Domain" title="streamsx.rest_primitives.Domain"><code class="xref py py-class docutils literal"><span class="pre">Domain</span></code></a></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> &#8211; No matching domain exists or multiple matching domains exist.</td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> &#8211;
+No matching domain exists or multiple matching domains exist.</td>
 </tr>
 </tbody>
 </table>
@@ -286,7 +286,8 @@ retrieve that information.</p>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Instance" title="streamsx.rest_primitives.Instance"><code class="xref py py-class docutils literal"><span class="pre">Instance</span></code></a></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> &#8211; No matching instance exists or multiple matching instances exist.</td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> &#8211;
+No matching instance exists or multiple matching instances exist.</td>
 </tr>
 </tbody>
 </table>
@@ -327,7 +328,7 @@ retrieve that information.</p>
 <dl class="attribute">
 <dt id="streamsx.rest.StreamsConnection.resource_url">
 <code class="descname">resource_url</code><a class="headerlink" href="#streamsx.rest.StreamsConnection.resource_url" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Root URL for IBM Streams REST API</p>
+<dd><p>str: Root URL for IBM Streams REST API</p>
 </dd></dl>
 
 </dd></dl>

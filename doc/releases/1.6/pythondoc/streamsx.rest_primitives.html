@@ -79,11 +79,9 @@
           
             
             
-                <!-- Local TOC -->
-                <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">streamsx.rest_primitives module</a></li>
+                <ul class="simple">
 </ul>
-</div>
+
             
           
         </div>
@@ -104,7 +102,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -252,7 +250,8 @@ resource for running Streams services and applications.</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.Job" title="streamsx.rest_primitives.Job"><code class="xref py py-class docutils literal"><span class="pre">Job</span></code></a> objects. When <code class="docutils literal"><span class="pre">id</span></code> is not <code class="docutils literal"><span class="pre">None</span></code> a single matching <cite>Job</cite>
 is returned otherwise a list of <cite>Job</cite> objects.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> &#8211; <code class="docutils literal"><span class="pre">id</span></code> was specified and no matching job exists or multiple matching jobs exist.</td>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> &#8211;
+<code class="docutils literal"><span class="pre">id</span></code> was specified and no matching job exists or multiple matching jobs exist.</td>
 </tr>
 </tbody>
 </table>
@@ -294,7 +293,8 @@ a stream of JSON tuples that are subscribed to by SPL and Java applications.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>list</strong> &#8211; List of currently published topics.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>list</strong> &#8211;
+List of currently published topics.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.PublishedTopic" title="streamsx.rest_primitives.PublishedTopic">PublishedTopic</a></td>
 </tr>
@@ -406,7 +406,8 @@ a stream of JSON tuples that are subscribed to by SPL and Java applications.</p>
 expression using <code class="docutils literal"><span class="pre">re.match(name,</span> <span class="pre">metric_name</span></code>.
 If name is not supplied then all metrics for this operator are returned.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>list</strong> &#8211; List of matching metrics.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>list</strong> &#8211;
+List of matching metrics.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.Metric" title="streamsx.rest_primitives.Metric">Metric</a></td>
 </tr>

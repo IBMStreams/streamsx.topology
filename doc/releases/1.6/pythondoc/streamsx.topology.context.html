@@ -79,11 +79,9 @@
           
             
             
-                <!-- Local TOC -->
-                <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">streamsx.topology.context module</a></li>
+                <ul class="simple">
 </ul>
-</div>
+
             
           
         </div>
@@ -104,7 +102,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -207,7 +205,6 @@ distributing the execution of the application across multiple resources (hosts).
 <li><a class="reference internal" href="#streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE" title="streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE"><code class="xref py py-const docutils literal"><span class="pre">STREAMING_ANALYTICS_SERVICE</span></code></a> - Application is submitted to a Streaming Analytics service running on IBM Bluemix cloud platform.</li>
 <li><a class="reference internal" href="#streamsx.topology.context.ContextTypes.DISTRIBUTED" title="streamsx.topology.context.ContextTypes.DISTRIBUTED"><code class="xref py py-const docutils literal"><span class="pre">DISTRIBUTED</span></code></a> - Application is submitted to an IBM Streams instance.</li>
 <li><a class="reference internal" href="#streamsx.topology.context.ContextTypes.STANDALONE" title="streamsx.topology.context.ContextTypes.STANDALONE"><code class="xref py py-const docutils literal"><span class="pre">STANDALONE</span></code></a> - Application is executed as a local process, IBM Streams <cite>standalone</cite> application. Typically this is used during development or testing.</li>
-<li><a class="reference internal" href="#streamsx.topology.context.ContextTypes.JUPYTER" title="streamsx.topology.context.ContextTypes.JUPYTER"><code class="xref py py-const docutils literal"><span class="pre">JUPYTER</span></code></a> - Application is executed as a local process (see <a class="reference internal" href="#streamsx.topology.context.ContextTypes.STANDALONE" title="streamsx.topology.context.ContextTypes.STANDALONE"><code class="xref py py-const docutils literal"><span class="pre">STANDALONE</span></code></a>), with standard output made available to the caller of <a class="reference internal" href="#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal"><span class="pre">submit()</span></code></a>. This is suitable for use in a local Jupyer notebook environment.</li>
 </ul>
 </div></blockquote>
 <p>The <a class="reference internal" href="#streamsx.topology.context.ContextTypes.BUNDLE" title="streamsx.topology.context.ContextTypes.BUNDLE"><code class="xref py py-const docutils literal"><span class="pre">BUNDLE</span></code></a> context type compiles the application (<cite>Topology</cite>) to produce a
@@ -271,25 +268,6 @@ environment. For Streaming Analytics service this is currently RedHat/CentOS 6 a
 <li><strong>STREAMS_DOMAIN_ID</strong> - Domain identifier for the Streams instance.</li>
 <li><strong>STREAMS_INSTANCE_ID</strong> - Instance identifier.</li>
 <li><strong>STREAMS_ZKCONNECT</strong> - (optional) ZooKeeper connection string for domain (when not using an embedded ZooKeeper)</li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="streamsx.topology.context.ContextTypes.JUPYTER">
-<code class="descname">JUPYTER</code><em class="property"> = 'JUPYTER'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.JUPYTER" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build and execute locally from a Jupyter notebook.</p>
-<p>Used for ad-hoc execution in a local notebook environment.</p>
-<p>The execution mode is like <a class="reference internal" href="#streamsx.topology.context.ContextTypes.STANDALONE" title="streamsx.topology.context.ContextTypes.STANDALONE"><code class="xref py py-const docutils literal"><span class="pre">STANDALONE</span></code></a> but the standard output of the application is
-availble from the <a class="reference internal" href="#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal"><span class="pre">submit()</span></code></a> call. Thus any output printed to standard output through
-<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.print" title="streamsx.topology.topology.Stream.print"><code class="xref py py-meth docutils literal"><span class="pre">print()</span></code></a> is available in the notebook for processing
-or visualization.</p>
-<dl class="docutils">
-<dt>Environment variables:</dt>
-<dd><p class="first">This environment variables define how the application is built.</p>
-<ul class="last simple">
-<li><strong>STREAMS_INSTALL</strong> - Location of a IBM Streams installation (4.0.1 or later).</li>
 </ul>
 </dd>
 </dl>
@@ -415,7 +393,7 @@ within the cluster that is running the Streams instance.</li>
 </tbody>
 </table>
 <p>Example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Submit a job with the name NewsIngester</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Submit a job with the name NewsIngester</span>
 <span class="n">cfg</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="n">job_config</span> <span class="o">=</span> <span class="n">JobConfig</span><span class="p">(</span><span class="n">job_name</span><span class="o">=</span><span class="s1">&#39;NewsIngester&#39;</span><span class="p">)</span>
 <span class="n">job_config</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
@@ -517,8 +495,11 @@ code performing the submit. Accessing data from views created by
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">An output stream of bytes if submitting with JUPYTER, otherwise returns a dict containing information relevant
-to the submission.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Result of the submission. For details of what is contained see the <a class="reference internal" href="#streamsx.topology.context.ContextTypes" title="streamsx.topology.context.ContextTypes"><code class="xref py py-class docutils literal"><span class="pre">ContextTypes</span></code></a>
+constant passed as <cite>ctxtype</cite>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#streamsx.topology.context.SubmissionResult" title="streamsx.topology.context.SubmissionResult">SubmissionResult</a></p>
 </td>
 </tr>
 </tbody>

@@ -79,23 +79,9 @@
           
             
             
-                <!-- Local TOC -->
-                <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">streamsx.topology.topology module</a><ul>
-<li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#topology">Topology</a></li>
-<li><a class="reference internal" href="#stream">Stream</a></li>
-<li><a class="reference internal" href="#stream-processing">Stream processing</a><ul>
-<li><a class="reference internal" href="#callables">Callables</a></li>
-<li><a class="reference internal" href="#stateful-operations">Stateful operations</a></li>
-<li><a class="reference internal" href="#initialization-and-shutdown">Initialization and shutdown</a></li>
-<li><a class="reference internal" href="#spl-operators">SPL operators</a></li>
+                <ul class="simple">
 </ul>
-</li>
-</ul>
-</li>
-</ul>
-</div>
+
             
           
         </div>
@@ -116,7 +102,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -215,7 +201,7 @@ input tuples and whose return defines what output tuples are submitted for downs
 </ul>
 <p>For example a stream <code class="docutils literal"><span class="pre">words</span></code> containing only string objects can be
 processed by a <a class="reference internal" href="#streamsx.topology.topology.Stream.filter" title="streamsx.topology.topology.Stream.filter"><code class="xref py py-meth docutils literal"><span class="pre">filter()</span></code></a> using a lambda function:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Filter the stream so it only contains words starting with py</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Filter the stream so it only contains words starting with py</span>
 <span class="n">pywords</span> <span class="o">=</span> <span class="n">words</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">word</span> <span class="p">:</span> <span class="nb">tuple</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;py&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -243,7 +229,7 @@ the class must define both <code class="docutils literal"><span class="pre">__en
 Initialization at runtime, such as opening connections, occurs through the <code class="docutils literal"><span class="pre">__enter__</span></code> method.</p>
 </div>
 <p>Example of using <code class="docutils literal"><span class="pre">__enter__</span></code> to create custom metrics:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">streamsx.ec</span> <span class="k">as</span> <span class="nn">ec</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">streamsx.ec</span> <span class="kn">as</span> <span class="nn">ec</span>
 
 <span class="k">class</span> <span class="nc">Sentiment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -263,6 +249,59 @@ Initialization at runtime, such as opening connections, occurs through the <code
 <p>In addition an application declared by <cite>Topology</cite> can include stream processing defined by SPL primitive or
 composite operators. This allows reuse of adapters and analytics provided by IBM Streams,
 open source and third-party SPL toolkits.</p>
+<dl class="class">
+<dt id="streamsx.topology.topology.PendingStream">
+<em class="property">class </em><code class="descclassname">streamsx.topology.topology.</code><code class="descname">PendingStream</code><span class="sig-paren">(</span><em>topology</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.PendingStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Pending stream connection.</p>
+<p>A pending stream is an initially <cite>disconnected</cite> stream. The <cite>stream</cite> attribute
+can be used as an input stream when the required stream is not yet available. Once the required
+stream is available the connection is made using <a class="reference internal" href="#streamsx.topology.topology.PendingStream.complete" title="streamsx.topology.topology.PendingStream.complete"><code class="xref py py-meth docutils literal"><span class="pre">complete()</span></code></a>.</p>
+<p>The schema of the pending stream is defined by the stream passed into <cite>complete</cite>.</p>
+<p>A simple example is creating a source stream after the filter that will use it:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span># Create the pending or placeholder stream
+pending_source = PendingStream(topology)
+
+# Create a filter against the placeholder stream
+f = pending_source.stream.filter(lambda : t : t.startswith(&quot;H&quot;))
+
+source = topology.source([&#39;Hello&#39;, &#39;World&#39;])
+
+# Now complete the connection
+pending_source.complete(source)
+</pre></div>
+</div>
+<p>Streams allows feedback loops in its flow graphs, where downstream processing can produce a stream that is
+fed back into the input port of an upstream operator. Typically, feedback loops are
+used to modify the state of upstream transformations, rather than repeat processing of tuples.</p>
+<p>A feedback loop can be created by using a <cite>PendingStream</cite>. The upstream transformation or operator
+that will end the feedback loop uses <code class="xref py py-attr docutils literal"><span class="pre">stream</span></code> as one of its inputs. A processing
+pipeline is then created and once the downstream starting point of the feedback loop is available,
+it is passed to <a class="reference internal" href="#streamsx.topology.topology.PendingStream.complete" title="streamsx.topology.topology.PendingStream.complete"><code class="xref py py-meth docutils literal"><span class="pre">complete()</span></code></a> to create the loop.</p>
+<dl class="method">
+<dt id="streamsx.topology.topology.PendingStream.complete">
+<code class="descname">complete</code><span class="sig-paren">(</span><em>stream</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.PendingStream.complete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Complete the pending stream.</p>
+<p>Any connections made to <code class="xref py py-attr docutils literal"><span class="pre">stream</span></code> are connected to <cite>stream</cite> once
+this method returns.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stream</strong> (<a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><em>Stream</em></a>) &#8211; Stream that completes the connection.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.PendingStream.is_complete">
+<code class="descname">is_complete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.PendingStream.is_complete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Has this connection been completed.</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="streamsx.topology.topology.Routing">
 <em class="property">class </em><code class="descclassname">streamsx.topology.topology.</code><code class="descname">Routing</code><a class="headerlink" href="#streamsx.topology.topology.Routing" title="Permalink to this definition">¶</a></dt>
@@ -315,7 +354,7 @@ series of tuples which can be operated upon to produce another stream, as in the
 terminate a stream, as in the case of <a class="reference internal" href="#streamsx.topology.topology.Stream.for_each" title="streamsx.topology.topology.Stream.for_each"><code class="xref py py-meth docutils literal"><span class="pre">for_each()</span></code></a>.</p>
 <dl class="method">
 <dt id="streamsx.topology.topology.Stream.as_string">
-<code class="descname">as_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.as_string" title="Permalink to this definition">¶</a></dt>
+<code class="descname">as_string</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.as_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Declares a stream converting each tuple on this stream
 into a string using <cite>str(tuple)</cite>.</p>
 <p>The stream is typed as a stream of strings.</p>
@@ -433,7 +472,8 @@ the returned stream.</p>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> &#8211; if <cite>func</cite> does not return an iterator nor None</td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> &#8211;
+if <cite>func</cite> does not return an iterator nor None</td>
 </tr>
 </tbody>
 </table>
@@ -443,7 +483,7 @@ the returned stream.</p>
 <dt id="streamsx.topology.topology.Stream.for_each">
 <code class="descname">for_each</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.for_each" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sends information as a stream to an external system.</p>
-<p>For each tuple on the stream <code class="docutils literal"><span class="pre">func(tuple)</span></code> is called.</p>
+<p>For each tuple <cite>t</cite> on the stream <code class="docutils literal"><span class="pre">func(t)</span></code> is called.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -515,6 +555,22 @@ no tuple submission will occur.</p>
 <dt id="streamsx.topology.topology.Stream.multi_transform">
 <code class="descname">multi_transform</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.multi_transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to calling the flat_map() function</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.topology.Stream.name">
+<code class="descname">name</code><a class="headerlink" href="#streamsx.topology.topology.Stream.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Name of the stream.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -752,7 +808,7 @@ to be distributed across available resources in the Streams instance.</p>
 
 <dl class="method">
 <dt id="streamsx.topology.topology.Topology.subscribe">
-<code class="descname">subscribe</code><span class="sig-paren">(</span><em>topic</em>, <em>schema=&lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object&gt;&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.subscribe" title="Permalink to this definition">¶</a></dt>
+<code class="descname">subscribe</code><span class="sig-paren">(</span><em>topic</em>, <em>schema=&lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object at 0x7f1479daab00&gt;&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.subscribe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subscribe to a topic published by other Streams applications.
 A Streams application may publish a stream to allow other
 Streams applications to subscribe to it. A subscriber matches a

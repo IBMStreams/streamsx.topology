@@ -79,11 +79,9 @@
           
             
             
-                <!-- Local TOC -->
-                <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">streamsx.topology.mqtt module</a></li>
+                <ul class="simple">
 </ul>
-</div>
+
             
           
         </div>
@@ -104,7 +102,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -142,40 +140,40 @@ subscribing to MQTT topics and creating streams.</p>
 the configuration object config. Any number of  publish()and  subscribe()
 connections may be created from a single mqtt_streams connector.</p>
 <p>Sample use:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">(</span><span class="s2">&quot;An MQTT application&quot;</span><span class="p">)</span>
-<span class="c1"># define configuration information</span>
-<span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;clientID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;test_MQTTpublishClient&quot;</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;qos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">)</span> <span class="c1">#(needs to be int vs long)</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;keepAliveInterval&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="p">(</span><span class="n">needs</span> <span class="n">to</span> <span class="n">be</span> <span class="nb">int</span> <span class="n">vs</span> <span class="n">long</span><span class="p">)</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;commandTimeout&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">30000</span> <span class="p">(</span><span class="n">needs</span> <span class="n">to</span> <span class="n">be</span> <span class="nb">int</span> <span class="n">vs</span> <span class="n">long</span><span class="p">)</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;period&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5000</span> <span class="p">(</span><span class="n">needs</span> <span class="n">to</span> <span class="n">be</span> <span class="nb">int</span> <span class="n">vs</span> <span class="n">long</span><span class="p">)</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;messageQueueSize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span> <span class="p">(</span><span class="n">needs</span> <span class="n">to</span> <span class="n">be</span> <span class="nb">int</span> <span class="n">vs</span> <span class="n">long</span><span class="p">)</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;reconnectionBound&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;retain&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;foobar&quot;</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;trustStore&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;/tmp/no-such-trustStore&quot;</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;trustStorePassword&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;woohoo&quot;</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;keyStore&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;/tmp/no-such-keyStore&quot;</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;keyStorePassword&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;woohoo&quot;</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span>topo = Topology(&quot;An MQTT application&quot;)
+# define configuration information
+config = {}
+config[&#39;clientID&#39;] = &quot;test_MQTTpublishClient&quot;
+config[&#39;qos&#39;] = int(&quot;1&quot;) #(needs to be int vs long)
+config[&#39;keepAliveInterval&#39;] = int(20) (needs to be int vs long)
+config[&#39;commandTimeout&#39;] = 30000 (needs to be int vs long)
+config[&#39;period&#39;] = 5000 (needs to be int vs long)
+config[&#39;messageQueueSize&#39;] = 10 (needs to be int vs long)
+config[&#39;reconnectionBound&#39;] = int(20)
+config[&#39;retain&#39;] = True
+config[&#39;password&#39;] = &quot;foobar&quot;
+config[&#39;trustStore&#39;] = &quot;/tmp/no-such-trustStore&quot;
+config[&#39;trustStorePassword&#39;] = &quot;woohoo&quot;
+config[&#39;keyStore&#39;] = &quot;/tmp/no-such-keyStore&quot;
+config[&#39;keyStorePassword&#39;] = &quot;woohoo&quot;
 
-<span class="c1"># create the connector&#39;s configuration property map</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;serverURI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tcp://localhost:1883&quot;</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39;userID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;user1id&quot;</span>
-<span class="n">config</span><span class="p">[</span><span class="s1">&#39; password&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;user1passwrd&quot;</span>
+# create the connector&#39;s configuration property map
+config[&#39;serverURI&#39;] = &quot;tcp://localhost:1883&quot;
+config[&#39;userID&#39;] = &quot;user1id&quot;
+config[&#39; password&#39;] = &quot;user1passwrd&quot;
 
-<span class="c1"># create the connector</span>
-<span class="n">mqstream</span> <span class="o">=</span> <span class="n">MqttStreams</span><span class="p">(</span><span class="n">topo</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+# create the connector
+mqstream = MqttStreams(topo, config)
 
-<span class="c1"># publish a python source stream to the topic &quot;python.topic1&quot;</span>
-<span class="n">topic</span> <span class="o">=</span> <span class="s2">&quot;python.topic1&quot;</span>
-<span class="n">src</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">test_functions</span><span class="o">.</span><span class="n">mqtt_publish</span><span class="p">)</span>
-<span class="n">mqs</span> <span class="o">=</span> <span class="n">mqstream</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">topic</span><span class="p">)</span>
+# publish a python source stream to the topic &quot;python.topic1&quot;
+topic = &quot;python.topic1&quot;
+src = topo.source(test_functions.mqtt_publish)
+mqs = mqstream.publish(src, topic)
 
-<span class="c1"># subscribe to the topic &quot;python.topic1&quot;</span>
-<span class="n">topic</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;python.topic1&quot;</span><span class="p">,</span> <span class="p">]</span>
-<span class="n">mqs</span> <span class="o">=</span> <span class="n">mqstream</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">topic</span><span class="p">)</span>
-<span class="n">mqs</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
+# subscribe to the topic &quot;python.topic1&quot;
+topic = [&quot;python.topic1&quot;, ]
+mqs = mqstream.subscribe(topic)
+mqs.print()
 </pre></div>
 </div>
 <p>Configuration properties apply to publish and

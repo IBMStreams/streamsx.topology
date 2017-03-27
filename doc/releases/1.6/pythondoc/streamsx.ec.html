@@ -79,17 +79,9 @@
           
             
             
-                <!-- Local TOC -->
-                <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">streamsx.ec module</a><ul>
-<li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#distributed">Distributed</a></li>
-<li><a class="reference internal" href="#standalone">Standalone</a></li>
-<li><a class="reference internal" href="#execution-context">Execution Context</a></li>
+                <ul class="simple">
 </ul>
-</li>
-</ul>
-</div>
+
             
           
         </div>
@@ -110,7 +102,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -197,36 +189,42 @@ a <cite>Counter</cite>, <cite>Gauge</cite> or <cite>Time</cite> metric.</p>
 </table>
 <p>Examples:</p>
 <p>Simple example used as an instance to <code class="docutils literal"><span class="pre">Stream.filter</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyF</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">substring</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">substring</span> <span class="o">=</span> <span class="n">substring</span>
-        <span class="k">pass</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span>class MyF:
+    def __init__(self, substring):
+        self.substring = substring
+        pass
 
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">substring</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="nb">tuple</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">my_metric</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">return</span> <span class="kc">True</span>
+    def __call__(self, tuple):
+        if self.substring in str(tuple)
+            self.my_metric += 1
+        return True
 
-    <span class="c1"># Create the metric when the it is running</span>
-    <span class="c1"># in the Streams execution context</span>
-    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">my_metric</span> <span class="o">=</span> <span class="n">ec</span><span class="o">.</span><span class="n">CustomMetric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;count_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">substring</span><span class="p">)</span>
+    # Create the metric when the it is running
+    # in the Streams execution context
+    def __enter__(self):
+        self.my_metric = ec.CustomMetric(self, &quot;count_&quot; + self.substring)
 
-    <span class="c1"># must supply __exit__ if using __enter__</span>
-    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
-        <span class="k">pass</span>
+    # must supply __exit__ if using __enter__
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
-    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Remove metric from saved state.</span>
-        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">if</span> <span class="s1">&#39;my_metric&#39;</span> <span class="ow">in</span> <span class="n">state</span><span class="p">:</span>
-            <span class="k">del</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;my_metric&#39;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">state</span>
+    def __getstate__(self):
+        # Remove metric from saved state.
+        state = self.__dict__.copy()
+        if &#39;my_metric&#39; in state:
+            del state[&#39;my_metric&#39;]
+        return state
 
-    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+    def __setstate__(self, state):
+        self.__dict__.update(state)
 </pre></div>
 </div>
+<dl class="method">
+<dt id="streamsx.ec.CustomMetric.__iadd__">
+<code class="descname">__iadd__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.CustomMetric.__iadd__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increment the current value of the metric.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="streamsx.ec.CustomMetric.value">
 <code class="descname">value</code><a class="headerlink" href="#streamsx.ec.CustomMetric.value" title="Permalink to this definition">¶</a></dt>
@@ -319,7 +317,8 @@ IBM Streams applications require, such as:</p>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> &#8211; Application configuration does not exist.</td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> &#8211;
+Application configuration does not exist.</td>
 </tr>
 </tbody>
 </table>
