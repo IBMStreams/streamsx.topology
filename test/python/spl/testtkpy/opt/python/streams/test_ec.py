@@ -36,8 +36,7 @@ class PyTestOperatorContext:
         return True
 
     def check(self):
-        ok = ec._supported
-        ok = ok and self.same(self.domain_id, ec.domain_id())
+        ok = self.same(self.domain_id, ec.domain_id())
         ok = ok and self.same(self.instance_id, ec.instance_id())
         ok = ok and self.same(self.job_id, ec.job_id())
         ok = ok and self.same(self.pe_id, ec.pe_id())

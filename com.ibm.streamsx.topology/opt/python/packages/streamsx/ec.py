@@ -47,15 +47,40 @@ being invoked in a Streams application.
 import enum
 import pickle
 import threading
+import importlib
+import sys
 
 try:
     import _streamsx_ec as _ec
-    _supported = True
 except ImportError:
-    _supported = False
+    pass
+
+class _State(object):
+    _state = None
+    def __init__(self, supported):
+        self._supported = supported
+        # Thread local of operator pointers during
+        # operator class initialization
+        if supported:
+            self._opptrs = threading.local()
+
+def _is_supported():
+    if _State._state is None:
+        try:
+            _check()
+        except NotImplementedError:
+            pass
+    return _State._state is not None and _State._state._supported
 
 def _check():
-    if not _supported:
+    if _State._state is None:
+        try:
+            import _streamsx_ec as _ec
+            _State._state = _State(True)
+        except ImportError:
+            _State._state = _State(False)
+
+    if not _State._state._supported:
         raise NotImplementedError("Access to the execution context requires Python 3.5 and Streams 4.2 or later")
 
 def domain_id():
@@ -319,29 +344,27 @@ class CustomMetric(object):
 # internal functions
 ####################
 
-# Thread local of operator pointers during
-# operator class initialization
-if _supported:
-    _opptrs = threading.local()
 
 # Sets the operator pointer as a thread
 # local to allow access from an operator's
 # class __init__ method.
 def _set_opc(opc):
-    _opptrs._opc = opc
+    _check()
+    _State._state._opptrs._opc = opc
 
 # Clear the operator pointer from the
 # thread local
 def _clear_opc():
-    if _supported:
-        _opptrs._opc = None
+    if _is_supported():
+        _State._state._opptrs._opc = None
 
 # Save the opc in the operator class
 # (getting it from the thread local)
 def _save_opc(obj):
-    _opptrs.obj = obj
-    if hasattr(_opptrs, '_opc'):
-       opc = _opptrs._opc
+    _check()
+    _State._state._opptrs.obj = obj
+    if hasattr(_State._state._opptrs, '_opc'):
+       opc = _State._state._opptrs._opc
        if opc is not None:
            obj._streamsx_ec_op = opc
 
@@ -351,7 +374,7 @@ def _get_opc(obj):
         return obj._streamsx_ec_op
     except AttributeError:
         try:
-            opc = _opptrs._opc
+            opc = _State._state._opptrs._opc
             if opc is not None:
                 return opc
         except AttributeError:
