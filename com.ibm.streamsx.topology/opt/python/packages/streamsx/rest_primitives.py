@@ -464,15 +464,12 @@ class Instance(_ResourceElement):
 
         Args:
             name: Job name pattern to match.
-
+           
         Returns:
             :py:class:`Job` objects. When ``id`` is not ``None`` a single matching `Job`
             is returned otherwise a list of `Job` objects.
-
-        Raises:
-            ValueError: ``id`` was specified and no matching job exists or multiple matching jobs exist.
         """
-        return self._get_elements(self.jobs, 'jobs', Job, id, name)
+        return self._get_elements(self.jobs, 'jobs', Job, None, name)
 
     def get_job(self, id):
         return self._get_element_by_id(self.jobs, 'jobs', Job, str(id))
