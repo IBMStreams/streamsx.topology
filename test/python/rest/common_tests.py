@@ -102,6 +102,10 @@ class CommonTests(unittest.TestCase):
         self.assertIsInstance(instance, Instance)
         primitives_caller.check_instance(self, instance)
 
+        domain = instance.get_domain()
+        self.assertIsInstance(domain, Domain)
+        primitives_caller.check_domain(self, domain)
+
     def test_basic_calls(self):
         """
         Test the basic rest apis.

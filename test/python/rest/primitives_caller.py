@@ -43,6 +43,19 @@ def _fetch_from_job(tc, job):
     tc.assertIsInstance(job.get_instance(), Instance)
     tc.assertIsInstance(job.get_domain(), Domain)
 
+def check_domain(tc, domain):
+    """Basic test of calls against an Domain """
+    _fetch_from_domain(tc, domain)
+    domain.refresh()
+    _fetch_from_domain(tc, domain)
+
+def _fetch_from_domain(tc, domain):
+    _check_non_empty_list(tc, domain.get_hosts(), Host)
+    _check_non_empty_list(tc, domain.get_instances(), Instance)
+    _check_non_empty_list(tc, domain.get_active_services(), ActiveService)
+    _check_non_empty_list(tc, domain.get_resource_allocations(), ResourceAllocation)
+    #_check_non_empty_list(tc, domain.get_resources(), Resource)
+
 def _check_non_empty_list(tc, items, expect_class):
     tc.assertTrue(items)
     _check_list(tc, items, expect_class)
