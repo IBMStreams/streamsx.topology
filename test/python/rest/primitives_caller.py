@@ -16,6 +16,8 @@ def _fetch_from_instance(tc, instance):
     _check_non_empty_list(tc, instance.get_views(), View)
     #_check_non_empty_list(tc, instance.get_operator_connections(), OperatorConnection)
 
+    _check_list(tc, instance.get_exported_streams(), ExportedStream)
+
     tc.assertIsInstance(instance.get_domain(), Domain)
 
 def check_job(tc, job):
@@ -36,5 +38,8 @@ def _fetch_from_job(tc, job):
 
 def _check_non_empty_list(tc, items, expect_class):
     tc.assertTrue(items)
+    _check_list(tc, items, expect_class)
+
+def _check_list(tc, items, expect_class):
     for item in items:
         tc.assertIsInstance(item, expect_class)

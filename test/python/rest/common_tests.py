@@ -95,8 +95,12 @@ class CommonTests(unittest.TestCase):
 
     def _call_rest_apis(self):
         job = self.tester.submission_result.job
-        self.assertTrue(isinstance(job, Job))
+        self.assertIsInstance(job, Job)
         primitives_caller.check_job(self, job)
+
+        instance = job.get_instance()
+        self.assertIsInstance(instance, Instance)
+        primitives_caller.check_instance(self, instance)
 
     def test_basic_calls(self):
         """
