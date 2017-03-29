@@ -14,9 +14,10 @@ def _fetch_from_instance(tc, instance):
     _check_non_empty_list(tc, instance.get_jobs(), Job)
     _check_non_empty_list(tc, instance.get_operators(), Operator)
     _check_non_empty_list(tc, instance.get_views(), View)
-    #_check_non_empty_list(tc, instance.get_operator_connections(), OperatorConnection)
+    _check_non_empty_list(tc, instance.get_operator_connections(), OperatorConnection)
 
     _check_list(tc, instance.get_exported_streams(), ExportedStream)
+    _check_list(tc, instance.get_pe_connections(), PEConnection)
 
     tc.assertIsInstance(instance.get_domain(), Domain)
 
@@ -31,7 +32,9 @@ def _fetch_from_job(tc, job):
     _check_non_empty_list(tc, job.get_pes(), PE)
     _check_non_empty_list(tc, job.get_operators(), Operator)
     _check_non_empty_list(tc, job.get_views(), View)
-    #_check_non_empty_list(tc, job.get_operator_connections(), OperatorConnection)
+    _check_non_empty_list(tc, job.get_operator_connections(), OperatorConnection)
+
+    _check_list(tc, job.get_pe_connections(), PEConnection)
 
     tc.assertIsInstance(job.get_instance(), Instance)
     tc.assertIsInstance(job.get_domain(), Domain)
