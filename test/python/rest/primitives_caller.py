@@ -54,7 +54,7 @@ def _fetch_from_domain(tc, domain):
     _check_non_empty_list(tc, domain.get_instances(), Instance)
     _check_non_empty_list(tc, domain.get_active_services(), ActiveService)
     _check_non_empty_list(tc, domain.get_resource_allocations(), ResourceAllocation)
-    #_check_non_empty_list(tc, domain.get_resources(), Resource)
+    _check_non_empty_list(tc, domain.get_resources(), Resource)
 
 def _check_non_empty_list(tc, items, expect_class):
     tc.assertTrue(items)

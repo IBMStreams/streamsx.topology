@@ -583,7 +583,7 @@ class Domain(_ResourceElement):
         return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
 
     def get_resources(self):
-        return self._get_elements(self.resource_url, 'resources', Resource)
+        return self._get_elements(self.resources, 'resources', Resource)
 
 
 class Resource(_ResourceElement):
