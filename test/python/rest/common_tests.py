@@ -6,6 +6,9 @@ from operators import DelayedTupleSourceWithLastTuple
 from streamsx.topology.tester import Tester
 from streamsx.topology import topology, schema
 
+from streamsx.rest_primitives import *
+import primitives_caller
+
 logger = logging.getLogger('streamsx.test.rest_test')
 
 class CommonTests(unittest.TestCase):
@@ -89,3 +92,20 @@ class CommonTests(unittest.TestCase):
 
         if hasattr(self.job, 'health'):
             self.assertNotEqual('healthy', self.job.health)
+
+    def _call_rest_apis(self):
+        job = self.tester.submission_result.job
+        self.assertTrue(isinstance(job, Job))
+        primitives_caller.check_job(self, job)
+
+    def test_basic_calls(self):
+        """
+        Test the basic rest apis.
+        """
+        top = topology.Topology()
+        src = top.source(['Rest', 'tester'])
+
+        self.tester = Tester(top)
+        self.tester.tuple_count(src, 2)
+        self.tester.local_check = self._call_rest_apis
+        self.tester.test(self.test_ctxtype, self.test_config)
