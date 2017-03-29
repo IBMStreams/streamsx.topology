@@ -9,9 +9,14 @@ def check_instance(tc, instance):
     _fetch_from_instance(tc, instance)
 
 def _fetch_from_instance(tc, instance):
+    _check_non_empty_list(tc, instance.get_hosts(), Host)
     _check_non_empty_list(tc, instance.get_pes(), PE)
     _check_non_empty_list(tc, instance.get_jobs(), Job)
     _check_non_empty_list(tc, instance.get_operators(), Operator)
+    _check_non_empty_list(tc, instance.get_views(), View)
+    #_check_non_empty_list(tc, instance.get_operator_connections(), OperatorConnection)
+
+    tc.assertIsInstance(instance.get_domain(), Domain)
 
 def check_job(tc, job):
     """Basic test of calls against an Job """
@@ -23,9 +28,13 @@ def _fetch_from_job(tc, job):
     _check_non_empty_list(tc, job.get_hosts(), Host)
     _check_non_empty_list(tc, job.get_pes(), PE)
     _check_non_empty_list(tc, job.get_operators(), Operator)
+    _check_non_empty_list(tc, job.get_views(), View)
+    #_check_non_empty_list(tc, job.get_operator_connections(), OperatorConnection)
+
+    tc.assertIsInstance(job.get_instance(), Instance)
+    tc.assertIsInstance(job.get_domain(), Domain)
 
 def _check_non_empty_list(tc, items, expect_class):
     tc.assertTrue(items)
-    print("LIST", items)
     for item in items:
-        tc.assertTrue(isinstance(item, expect_class))
+        tc.assertIsInstance(item, expect_class)

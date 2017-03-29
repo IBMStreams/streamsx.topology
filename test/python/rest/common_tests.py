@@ -104,6 +104,9 @@ class CommonTests(unittest.TestCase):
         """
         top = topology.Topology()
         src = top.source(['Rest', 'tester'])
+        src = src.filter(lambda x : True)
+        src.view()
+        src = src.map(lambda x : x)
 
         self.tester = Tester(top)
         self.tester.tuple_count(src, 2)
