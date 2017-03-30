@@ -287,7 +287,7 @@ class Job(_ResourceElement):
         return self._get_elements(self.hosts, 'hosts', Host)
 
     def get_operator_connections(self):
-        return self._get_elements(self.operatorConnections, 'operatorConnections', OperatorConnection)
+        return self._get_elements(self.operatorConnections, 'connections', OperatorConnection)
 
     def get_operators(self):
         return self._get_elements(self.operators, 'operators', Operator)
@@ -296,7 +296,7 @@ class Job(_ResourceElement):
         return self._get_elements(self.pes, 'pes', PE)
 
     def get_pe_connections(self):
-        return self._get_elements(self.peConnections, 'peConnections', PEConnection)
+        return self._get_elements(self.peConnections, 'connections', PEConnection)
 
     def get_resource_allocations(self):
         return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
@@ -442,13 +442,13 @@ class Instance(_ResourceElement):
         return self._get_elements(self.operators, 'operators', Operator)
 
     def get_operator_connections(self):
-        return self._get_elements(self.operatorConnections, 'operatorConnections', OperatorConnection)
+        return self._get_elements(self.operatorConnections, 'connections', OperatorConnection)
 
     def get_pes(self):
         return self._get_elements(self.pes, 'pes', PE)
 
     def get_pe_connections(self):
-        return self._get_elements(self.peConnections, 'peConnections', PEConnection)
+        return self._get_elements(self.peConnections, 'connections', PEConnection)
 
     def get_views(self, name=None):
         return self._get_elements(self.views, 'views', View, name=name)
@@ -583,7 +583,7 @@ class Domain(_ResourceElement):
         return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
 
     def get_resources(self):
-        return self._get_elements(self.resource_url, 'resources', Resource)
+        return self._get_elements(self.resources, 'resources', Resource)
 
 
 class Resource(_ResourceElement):
