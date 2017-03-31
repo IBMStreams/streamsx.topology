@@ -79,6 +79,21 @@ public class GraphUtilities {
 
         return kindOperators;
     }
+    
+    /**
+     * Find all (non-virtual) operators of specific kinds (by string).
+     */
+    static Set<JsonObject> findOperatorsByKinds(final JsonObject graph, final Set<String> kinds) {
+
+        Set<JsonObject> kindOperators = new HashSet<>();
+
+        operators(graph, op -> {
+            if (kinds.contains(kind(op)))
+                kindOperators.add(op);
+        });
+
+        return kindOperators;
+    }
 
     /**
      * Get all operators immediately downstream of the {@code visitOp}
