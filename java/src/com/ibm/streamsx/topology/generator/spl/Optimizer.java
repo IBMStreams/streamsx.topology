@@ -4,6 +4,9 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.findOperatorsByKinds;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.kind;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
@@ -12,11 +15,10 @@ import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.google.gson.JsonPrimitive;
 
 /**
- * Preprocessor modifies the passed in JSON to perform logical graph
- * transformations.
+ * Optimize takes the preprocessed graph and adds any optimization.
  */
 class Optimizer {
 
@@ -37,7 +39,7 @@ class Optimizer {
     private static final Set<String> PY_FUNC_OPS = new HashSet<>();
 
     static {
-        for (String kind : new String[] { "Source", "Filter", "Map", "FlatMap" }) {
+        for (String kind : new String[] { "Source", "Filter", "Map", "FlatMap", "ForEach"}) {
             PY_FUNC_OPS.add(PY_OP_NS + "::" + kind);
             PY_FUNC_OPS.add(PY_OP_NS + "2::" + kind);
         }
@@ -51,11 +53,11 @@ class Optimizer {
      * 
      * If pass by reference cannot be used outputConnections will not be set.
      * 
-     * Does not modify the structure of the graph. Assumes the graph's structure
-     * will not be subsequently modified.
+     * Does not modify the structure of the graph.
+     * Assumes the graph's structure will not be subsequently modified.
      */
     private final void pyPassByRef() {
-        Set<JsonObject> pyops = GraphUtilities.findOperatorsByKinds(graph, PY_FUNC_OPS);
+        Set<JsonObject> pyops = findOperatorsByKinds(graph, PY_FUNC_OPS);
 
         if (pyops.isEmpty())
             return;
@@ -86,20 +88,40 @@ class Optimizer {
                     connCounts[port] = 0;
                     continue;
                 }
+                
+                boolean canPassByRef = true;
+                // TOOD - downstream for a specific port
+                Set<JsonObject> connected = getDownstream(pyop, graph);
+                for (JsonObject connectedOp : connected) {
+                    if (!PY_FUNC_OPS.contains(kind(connectedOp))) {
+                        canPassByRef = false;
+                        break;
+                    }
+                }
 
-                // TODO avoid situations where we cannot pass by reference
-                // by not setting the count to a positive number
-                // (ie. leaving it as -1)
-
-                connCounts[port] = conns.size();
+                if (canPassByRef)
+                    connCounts[port] = conns.size();
             }
 
-            // This is where we are assuming a single output.
-            if (connCounts[0] != -1) {
-                JsonObject params = GsonUtilities.objectCreate(pyop, "parameters");
+            boolean paramNeeded = false;
+            for (int i = 0; i < connCounts.length; i++) {
+                if (connCounts[0] != -1) {
+                    paramNeeded = true;
+                    break;
+                }
+            }
+
+            if (paramNeeded) {
                 JsonObject value = new JsonObject();
-                value.addProperty("value", connCounts[0]);
-                params.add("outputConnections", value);
+                if (connCounts.length == 1)
+                     value.addProperty("value", connCounts[0]);
+                else {
+                    JsonArray ocs = new JsonArray();
+                    for (int oc : connCounts)
+                        ocs.add(new JsonPrimitive(oc));
+                    value.add("value", ocs);
+                }
+                GraphUtilities.addOpParameter(pyop, "outputConnections", value);
             }
         }
     }
