@@ -48,10 +48,13 @@ namespace streamsx {
 
       public:
 
-    // Call the function passing an SPL attribute
-    // converted to a Python object and discard the return 
+    /*
+     * Call the function passing an SPL attribute
+     * converted to a Python object and discard the return 
+     * Implementation for function ForEach operator.
+     */
     template <class T>
-    static void pyTupleSink(PyObject * function, T & splVal) {
+    static void pyTupleForEach(PyObject * function, T & splVal) {
       SplpyGIL lock;
 
       PyObject * arg = pySplValueToPyObject(splVal);
@@ -68,6 +71,7 @@ namespace streamsx {
     /*
     * Call a function passing the SPL attribute value of type T
     * and return the function return as a boolean
+    * Implementation for function Filter operator.
     */
     template <class T>
     static int pyTupleFilter(PyObject * function, T & splVal) {
@@ -91,9 +95,10 @@ namespace streamsx {
     /*
     * Call a function passing the SPL attribute value of type T
     * and fill in the SPL attribute of type R with its result.
+    * Implementation for function Map operator.
     */
     template <class T, class R>
-    static int pyTupleTransform(PyObject * function, T & splVal, R & retSplVal) {
+    static int pyTupleMap(PyObject * function, T & splVal, R & retSplVal) {
       SplpyGIL lock;
 
       PyObject * arg = pySplValueToPyObject(splVal);
