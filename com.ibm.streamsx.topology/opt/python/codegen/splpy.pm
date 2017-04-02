@@ -181,6 +181,8 @@ sub splpy_inputtuple2value{
 
  if ($pystyle eq 'dict') {
   # nothing done here for dict style 
+  # instead cgt is used to generate code specific
+  # the input schema
  }
 }
 

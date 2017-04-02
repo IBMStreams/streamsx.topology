@@ -57,7 +57,7 @@ print splpy_inputtuple2value($pystyle);
 <%if ($pystyle eq 'dict') {%>
 @include "../pyspltuple2dict.cgt"
 <%}%>
-  streamsx::topology::Splpy::pyTupleSink(funcop_->callable(), value);
+  streamsx::topology::Splpy::pyTupleForEach(funcop_->callable(), value);
 }
 
 <%SPL::CodeGen::implementationEpilogue($model);%>

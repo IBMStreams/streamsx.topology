@@ -53,14 +53,14 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   IPort0Type const &ip = static_cast<IPort0Type const &>(tuple);
 
 <%
-print splpy_inputtuple2value($pystyle, $pyoutstyle);
+print splpy_inputtuple2value($pystyle);
 %>
 
 <%if ($pystyle eq 'dict') {%>
 @include "../pyspltuple2dict.cgt"
 <%}%>
   OPort0Type otuple;
-  if (streamsx::topology::Splpy::pyTupleTransform(funcop_->callable(), value,
+  if (streamsx::topology::Splpy::pyTupleMap(funcop_->callable(), value,
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>()))
      submit(otuple, 0);
 }
