@@ -95,6 +95,7 @@
 
     <target name="test.translation" description="Run the translation tests">
         <exec executable="/bin/bash" dir="spl/translation" failonerror="true">
+            <env key="PYTHONHOME" value="${topology.test.python.prefix}"/>
             <arg value="autorun.sh"/>
         </exec>
     </target>
