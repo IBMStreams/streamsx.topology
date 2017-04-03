@@ -1,6 +1,7 @@
 /* Additional includes go here */
 
 #include "splpy.h"
+#include "splpy_tuple.h"
 #include "splpy_funcop.h"
 
 using namespace streamsx::topology;
@@ -64,10 +65,8 @@ print splpy_inputtuple2value($pystyle);
 <%}%>
 
     SplpyGIL lock;
-    // convert spl attribute to python object
-    PyObject * pyArg = streamsx::topology::pySplValueToPyObject(value);
 
-    PyObject * pyIterator = streamsx::topology::Splpy::pyTupleFunc(funcop_->callable(), pyArg);
+    PyObject * pyIterator = streamsx::topology::pySplProcessTuple(funcop_->callable(), value);
 
     if (pyIterator == 0) {
          throw SplpyGeneral::pythonException(
