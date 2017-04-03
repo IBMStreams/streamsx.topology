@@ -67,6 +67,15 @@ public class GraphUtilities {
         return kind.equals(kind(op));
     }
     
+    /**
+     * Add an operator parameter, replacing the existing value if it exists.
+     * Handles the case where no parameters exist.
+     */
+    static void addOpParameter(JsonObject op, String name, JsonObject value) {
+        JsonObject params = GsonUtilities.objectCreate(op, "parameters");
+        params.add(name, value);
+    }
+    
     static Set<JsonObject> findOperatorByKind(BVirtualMarker virtualMarker,
                 JsonObject graph) {
 
