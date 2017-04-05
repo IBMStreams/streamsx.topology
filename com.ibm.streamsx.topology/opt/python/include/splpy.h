@@ -123,10 +123,8 @@ namespace streamsx {
 
       SplpyGIL lock;
 
-      PyObject * arg = pySplValueToPyObject(splVal);
+      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
 
-      // invoke python function that generates the hash
-      PyObject * pyReturnVar = pyTupleFunc(function, arg); 
       if (pyReturnVar == 0){
         throw SplpyGeneral::pythonException("hash");
       }

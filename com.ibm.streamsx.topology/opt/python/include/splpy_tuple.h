@@ -17,6 +17,18 @@
 #define __SPL__SPLPY_TUPLE_H
 
 #include "splpy_general.h"
+#include <SPL/Runtime/Common/RuntimeException.h>
+
+/**
+ * Structure representing a SPL tuple containing a PyObject * pointer.
+ */
+#define STREAMSX_TPP_PICKLE ((unsigned char) 0x80)
+#define STREAMSX_TPP_PTR ((unsigned char) 0x4F)
+#define STREAMSX_TPP_EMPTY ((unsigned char) 0x45)
+struct __SPLTuplePyPtr {
+    unsigned char fmt;
+    PyObject * pyptr;
+};
 
 namespace streamsx {
   namespace topology {
@@ -36,14 +48,56 @@ namespace streamsx {
 
   /**
    * Convert the SPL tuple that represents a Python object
-   * to a Python tuple that holds:
-   *  - pickled value as a memory view object
+   * to a Python tuple that holds as its first argument.
+   * One or two arguments in a Python tuple are passed to the function
+   * (which is a wrapper around the user function).
+   * 
+   *  Python object was passed by reference in the SPL tuple
+   *
+   *     (object) - pickle marker defaults to None to indicate actual object being passed
+   *
+   *  Python object was passed as pickled bytes in the SPL tuple
+   *
+   *  (pv, pv) - where pv is the pickled value as a memory view object.
+   *             the second value is just the marker (not None) to indicate
+   *             the value needs to be depickled.
+   *
+   *  This means to the functions that handle pickle style
+   *  on input two arguments are passed. The first with
+   *  the value and the second None or the value to indicate if it
+   *  is pickled.
    */
   inline PyObject * pySplProcessTuple(PyObject * function, const SPL::blob & pyo) {
-      PyObject *pickledValue = pySplValueToPyObject(pyo);
+      unsigned char const *data = pyo.getData();
+      unsigned char fmt = *data;
 
-      PyObject *pyTuple = PyTuple_New(1);
-      PyTuple_SET_ITEM(pyTuple, 0, pickledValue);
+      PyObject *pyTuple;
+      if (fmt == STREAMSX_TPP_PTR) {
+
+          // The fact it was passed to us must mean there is a
+          // reference count we can steal which is then stolen
+          // by the insertion into the Python tuple.
+          __SPLTuplePyPtr *stp = (__SPLTuplePyPtr *)(data);
+          PyObject * value = stp->pyptr;
+
+          pyTuple = PyTuple_New(1);
+          PyTuple_SET_ITEM(pyTuple, 0, value);
+      }
+      else if (fmt == STREAMSX_TPP_PICKLE) {
+          PyObject * value = pySplValueToPyObject(pyo);
+
+          pyTuple = PyTuple_New(2);
+          PyTuple_SET_ITEM(pyTuple, 0, value);
+
+          // Pass a non-None value is as the "pickle marker (pm)"
+          // simply use the same value bumping its ref.
+          // 'pm' is only checked for not being None
+          Py_INCREF(value);
+          PyTuple_SET_ITEM(pyTuple, 1, value);
+      }
+      else {
+          throw SPL::SPLRuntimeDeserializationException("pySplProcessTuple", "Invalid blob");
+      }
 
       return pyCallTupleFunc(function, pyTuple);
   }

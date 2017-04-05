@@ -85,26 +85,34 @@ class _FunctionalCallable(object):
             ec._callable_exit_clean(self._callable)
 
 class _PickleInObjectOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        return self._callable(pickle.loads(tuple))
+    def __call__(self, tuple, pm=None):
+        if pm is not None:
+            tuple = pickle.loads(tuple)
+        return self._callable(tuple)
 
 class _PickleInPickleOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(pickle.loads(tuple))
+    def __call__(self, tuple, pm=None):
+        if pm is not None:
+            tuple = pickle.loads(tuple)
+        rv =  self._callable(tuple)
         if rv is None:
             return None
         return pickle.dumps(rv)
 
 class _PickleInJSONOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(pickle.loads(tuple))
+    def __call__(self, tuple, pm=None):
+        if pm is not None:
+            tuple = pickle.loads(tuple)
+        rv =  self._callable(tuple)
         if rv is None:
             return None
         return json.dumps(rv, ensure_ascii=False)
 
 class _PickleInStringOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(pickle.loads(tuple))
+    def __call__(self, tuple, pm=None):
+        if pm is not None:
+            tuple = pickle.loads(tuple)
+        rv =  self._callable(tuple)
         if rv is None:
             return None
         return str(rv)
@@ -287,8 +295,10 @@ class _ObjectInPickleIter(_FunctionalCallable):
         return _PickleIterator(rv)
 
 class _PickleInPickleIter(_ObjectInPickleIter):
-    def __call__(self, tuple):
-        return super(_PickleInPickleIter, self).__call__(pickle.loads(tuple))
+    def __call__(self, tuple, pm=None):
+        if pm is not None:
+            tuple = pickle.loads(tuple)
+        return super(_PickleInPickleIter, self).__call__(tuple)
 
 class _JSONInPickleIter(_ObjectInPickleIter):
     def __call__(self, tuple):
