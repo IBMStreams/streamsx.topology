@@ -196,6 +196,11 @@ class SplpySetup {
 
         if (_SPLPy_IsInitialized() == 0) {
           typedef void (*__splpy_ie)(int);
+#if PY_MAJOR_VERSION == 3
+          typedef void (*__splpy_ssae)(int, wchar_t**, int);
+#else
+          typedef void (*__splpy_ssae)(int, char**, int);
+#endif
           typedef void (*__splpy_eit)(void);
           typedef PyThreadState * (*__splpy_est)(void);
 
@@ -218,6 +223,9 @@ class SplpySetup {
           __splpy_ie _SPLPy_InitializeEx =
              (__splpy_ie) dlsym(pydl, "Py_InitializeEx");
 
+          __splpy_ssae _SPLPySys_SetArgvEx =
+             (__splpy_ssae) dlsym(pydl, "PySys_SetArgvEx");
+
           __splpy_eit _SPLPyEval_InitThreads =
              (__splpy_eit) dlsym(pydl, "PyEval_InitThreads");
 
@@ -225,6 +233,14 @@ class SplpySetup {
              (__splpy_est) dlsym(pydl, "PyEval_SaveThread");
 
           _SPLPy_InitializeEx(0);
+#if PY_MAJOR_VERSION == 3
+          const wchar_t *argv[] = {L""};
+          _SPLPySys_SetArgvEx(1, (wchar_t **) argv, 0);
+#else
+          const char *argv[] = {""};
+          _SPLPySys_SetArgvEx(1, (char **) argv, 0);
+#endif
+
           _SPLPyEval_InitThreads();
           _SPLPyEval_SaveThread();
 
