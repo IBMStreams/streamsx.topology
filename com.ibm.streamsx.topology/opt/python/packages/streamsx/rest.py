@@ -89,7 +89,7 @@ class StreamsConnection:
         """Retrieves available domains.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Domain`: list of available domains
+            :py:obj:`list` of :py:class:`~.rest_primitives.Domain`: List of available domains
         """
         return self._get_elements('domains', Domain)
 
@@ -111,7 +111,7 @@ class StreamsConnection:
         """Retrieves available instances.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Instance`: list of available instances
+            :py:obj:`list` of :py:class:`~.rest_primitives.Instance`: List of available instances
         """
         return self._get_elements('instances', Instance)
 
@@ -133,7 +133,7 @@ class StreamsConnection:
         """Retrieves a list of all known Streams installations.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Installation`: list of all Installation resources.
+            :py:obj:`list` of :py:class:`~.rest_primitives.Installation`: List of all Installation resources.
         """
         return self._get_elements('installations', Installation)
 
@@ -141,7 +141,7 @@ class StreamsConnection:
         """Retrieves a list of all known Streams resources.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Resource`: list of all Streams resources.
+            :py:obj:`list` of :py:class:`~.rest_primitives.Resource`: List of all Streams resources.
         """
         resources = []
         json_resources = self.rest_client.make_request(self.resource_url)['resources']
@@ -191,7 +191,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
 
         Returns:
             :py:class:`~.rest_primitives.StreamingAnalyticsService`:
-                object for interacting with the Streaming Analytics service.
+                Object for interacting with the Streaming Analytics service.
         """
         return StreamingAnalyticsService(self.rest_client, self.credentials)
 

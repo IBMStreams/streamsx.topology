@@ -83,7 +83,7 @@ class _ResourceElement(object):
             name(str, optional): only return resources whose `name` property matches the given `name`
 
         Returns:
-            list(_ResourceElement): list of `eclass` instances
+            list(_ResourceElement): List of `eclass` instances
 
         Raises:
             ValueError: both `id` and `name` are specified together
