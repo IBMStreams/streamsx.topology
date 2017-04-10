@@ -889,8 +889,9 @@ class PendingStream(object):
         def __init__(self, topology):
             self.topology = topology
             self._marker = topology.graph.addOperator(kind="$Pending$")
+            self._pending_schema = StreamSchema('<pending')
 
-            self.stream = Stream(topology, self._marker.addOutputPort(schema=None))
+            self.stream = Stream(topology, self._marker.addOutputPort(schema=self._pending_schema))
 
         def complete(self, stream):
             """Complete the pending stream.
@@ -904,6 +905,10 @@ class PendingStream(object):
             assert not self.is_complete()
             self._marker.addInputPort(outputPort=stream.oport)
             self.stream.oport.schema = stream.oport.schema
+            # Update the pending schema to the actual schema
+            # Any downstream filters that took the reference
+            # will be automatically updated to the correct schema
+            self._pending_schema._set(stream.oport.schema)
 
         def is_complete(self):
             """Has this connection been completed.

@@ -18,6 +18,15 @@ class StreamSchema(object) :
         self.__spl_type = not schema.startswith("tuple<")
         self.__schema=schema
 
+    def _set(self, schema):
+        """Set a schema from another schema"""
+        if isinstance(schema, CommonSchema):
+            self.__spl_type = False
+            self.__schema = schema.schema()
+        else:
+            self.__spl_type = schema.__spl_type
+            self.__schema = schema.__schema
+
     def schema(self):
         return self.__schema
 
