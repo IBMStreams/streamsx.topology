@@ -86,7 +86,7 @@ class StreamsConnection:
         raise ValueError("Multiple resources matching: {0}".format(id))
 
     def get_domains(self):
-        """Retrieve available domains.
+        """Retrieves available domains.
 
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.Domain`: list of available domains
@@ -94,7 +94,7 @@ class StreamsConnection:
         return self._get_elements('domains', Domain)
 
     def get_domain(self, id):
-        """Retrieve available domain matching a specific domain ID
+        """Retrieves available domain matching a specific domain ID
 
         Args:
             id (str): domain ID
@@ -108,7 +108,7 @@ class StreamsConnection:
         return self._get_element_by_id('domains', Domain, id)
 
     def get_instances(self):
-        """Retrieve available instances.
+        """Retrieves available instances.
 
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.Instance`: list of available instances
@@ -116,7 +116,7 @@ class StreamsConnection:
         return self._get_elements('instances', Instance)
 
     def get_instance(self, id):
-        """Retrieve available instance matching a specific instance ID.
+        """Retrieves available instance matching a specific instance ID.
 
         Args:
             id (str): Instance identifier to retrieve.

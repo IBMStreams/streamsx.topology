@@ -876,7 +876,7 @@ class Instance(_ResourceElement):
         return Domain(self.rest_client.make_request(self.domain), self.rest_client)
 
     def get_jobs(self, name=None):
-        """Retrieve jobs running in this instance.
+        """Retrieves jobs running in this instance.
 
         Args:
             name (str, optional): Only return jobs containing property **name** that matches `name`. `name` can be a
@@ -888,7 +888,7 @@ class Instance(_ResourceElement):
         return self._get_elements(self.jobs, 'jobs', Job, None, name)
 
     def get_job(self, id):
-        """Retrieve a job matching the given `id`
+        """Retrieves a job matching the given `id`
 
         Args:
             id (str): Job `id` to match.
