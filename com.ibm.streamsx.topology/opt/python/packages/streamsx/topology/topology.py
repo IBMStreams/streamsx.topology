@@ -132,6 +132,20 @@ Example of using ``__enter__`` to create custom metrics::
         def __exit__(self, exc_type, exc_value, traceback):
             pass
 
+Tuple semantics
+===============
+
+Python objects on a stream may be passed by reference between callables (e.g. the value returned by a map callable may be passed by reference to a following filter callable). This can only occur when the functions are executing in the same PE (process). If an object is not passed by reference a deep-copy is passed. Streams that cross PE (process) boundaries  are always passed by deep-copy.
+
+Thus if a stream is consumed by two map and one filter callables in the same PE they may receive the same object reference that was sent by the upstream callable. If one (or more) callable modifies the passed in reference those changes may be seen by the upstream callable or the other callables. The order of execution of the downstream callables is not defined. One can prevent such potential non-deterministic behavior by one or more of these techniques:
+
+* Passing immutable objects
+* Not retaining a reference to an object that will be submitted on a stream
+* Not modifying input tuples in a callable
+* Using copy/deepcopy when returning a value that will be submitted to a stream.
+
+Applications cannot rely on pass-by reference,  it is a performance optimization that can be made in some situations when stream connections are within a PE.
+
 SPL operators
 =============
 
