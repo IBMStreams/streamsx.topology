@@ -21,7 +21,7 @@ class TestPending(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
 
-    def test_simple(self):
+    def test_simple_map(self):
         """Test pending connection simple case.
         """
         data = ['A1','B1', 'A2', 'A3', 'C1', 'C1']
@@ -29,6 +29,23 @@ class TestPending(unittest.TestCase):
         topo = Topology()
         pending = PendingStream(topo)
         ap = pending.stream.map(lambda s : s + "PC")
+        self.assertFalse(pending.is_complete())
+        pending.complete(topo.source(data))
+        self.assertTrue(pending.is_complete())
+
+        tester = Tester(topo)
+        tester.contents(ap, expected)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_simple_filter(self):
+        """Test pending connection simple case.
+        """
+        data = ['A1','B1', 'A2', 'A3', 'C1', 'C1']
+        expected =  ['A3']
+        topo = Topology()
+        pending = PendingStream(topo)
+        ap = pending.stream.filter(lambda s : s.startswith('A'))
+        ap = ap.filter(lambda s : s.endswith('3'))
         self.assertFalse(pending.is_complete())
         pending.complete(topo.source(data))
         self.assertTrue(pending.is_complete())
