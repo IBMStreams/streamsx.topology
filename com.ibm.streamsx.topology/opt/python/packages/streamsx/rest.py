@@ -103,7 +103,7 @@ class StreamsConnection:
             :py:class:`~.rest_primitives.Domain`: Domain matching `id`
 
         Raises:
-            ValueError: No matching domain exists or multiple matching domains exist.
+            ValueError: No matching domain exists.
         """
         return self._get_element_by_id('domains', Domain, id)
 
