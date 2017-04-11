@@ -2,8 +2,8 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 """
-Python APIs for use with Streaming Analytics service on
-IBM® Bluemix cloud platform and on-premises IBM Streams.
+Python APIs for use with IBM® Streaming Analytics service on
+IBM Bluemix® cloud platform and on-premises IBM Streams.
 
 Python Application API for Streams
 ----------------------------------
