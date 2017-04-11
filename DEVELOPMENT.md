@@ -52,7 +52,7 @@ The top-level Ant file `streamsx.topology/build.xml` has these main targets:
 * `test.quick` : Run the Junit tests quickly as a sanity check, this runs a subset of the tests, avoiding SPL generation & compilation and code coverage. *This target currently may still invoke some SPL compilation (sc) so may not be a quick as it could be.*
 
 ### Implementing toolkit messages
-This toolkit supports globalized messages with unique message IDs. The guidelines for implementing a message bundle are described in [Messages and National Language Support for Toolkits](https://github.com/IBMStreams/administration/wiki/The-messages-and-the-NLS-for-toolkits).
+This toolkit supports globalized messages with unique message IDs. The guidelines for implementing a message bundle are described in [Messages and National Language Support for Toolkits](https://github.com/IBMStreams/administration/wiki/Messages-and-National-Language-Support-for-toolkits).
 
 ### Distributed testing
 
