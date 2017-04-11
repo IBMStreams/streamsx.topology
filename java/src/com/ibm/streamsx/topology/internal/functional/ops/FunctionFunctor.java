@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.functional.ops;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.logging.Logger;
 
 import com.ibm.streams.operator.AbstractOperator;
@@ -13,6 +15,7 @@ import com.ibm.streams.operator.compile.OperatorContextChecker;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streamsx.topology.function.FunctionContext;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
@@ -23,7 +26,7 @@ import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
  * 
  */
 @SharedLoader
-public abstract class FunctionFunctor extends AbstractOperator implements Functional {
+public abstract class FunctionFunctor extends AbstractOperator implements Functional, Closeable {
 
     public static final String FUNCTIONAL_LOGIC_PARAM = FunctionalOpProperties.FUNCTIONAL_LOGIC_PARAM;
     static final Logger trace = Logger.getLogger("com.ibm.streamsx.topology.operators");
@@ -92,16 +95,21 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
         functionContext = new FunctionOperatorContext(context);
     }
     
-    FunctionContext getFunctionContext() {
+    protected FunctionContext getFunctionContext() {
         return functionContext;
     }
     
     @Override
     public synchronized void shutdown() throws Exception {
+        close();
+        
         if (logicHandler != null)
             logicHandler.close();
+               
         super.shutdown();
     }
+    
+    public void close() throws IOException {}
     
     public <T> FunctionalHandler<T> createLogicHandler() throws Exception {
         FunctionalHandler<T> handler = FunctionalOpUtils.createFunctionHandler(

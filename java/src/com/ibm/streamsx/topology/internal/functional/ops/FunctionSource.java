@@ -130,9 +130,11 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
     
     @Override
     public void shutdown() throws Exception {
+        close();
+        
         if (dataHandler != null)
              dataHandler.close();
-        close();
+        
         super.shutdown();
     }
 }

@@ -6,6 +6,8 @@ package com.ibm.streamsx.topology;
 
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.SPL_PREFIX;
 import static com.ibm.streamsx.topology.internal.core.TypeDiscoverer.getTupleName;
+import static com.ibm.streamsx.topology.spi.Invoker.invokeSource;
+import static com.ibm.streamsx.topology.spi.TupleSerializer.JAVA_SERIALIZER;
 
 import java.io.File;
 import java.lang.reflect.Type;
@@ -20,6 +22,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
@@ -48,6 +51,8 @@ import com.ibm.streamsx.topology.internal.logic.SingleToIterableSupplier;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.internal.tester.TupleCollection;
 import com.ibm.streamsx.topology.json.JSONSchemas;
+import com.ibm.streamsx.topology.spi.Invoker;
+import com.ibm.streamsx.topology.spi.TupleSerializer;
 import com.ibm.streamsx.topology.spi.ops.Source;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -235,12 +240,21 @@ public class Topology implements TopologyElement {
         } else if (data instanceof Constants) {
             opName = getTupleName(tupleType) + opName;
         }
+        
+        JsonObject config = new JsonObject();
+        com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(config, getClass());
+        config.addProperty("name", opName);
+        
+        return invokeSource(this, Source.class, config,
+                data, tupleType, JAVA_SERIALIZER, null);
 
+        /*
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
                 Source.class, data);
         SourceInfo.setSourceInfo(bop, getClass());
         return JavaFunctional.addJavaOutput(this, bop, tupleType);
+        */
     }
     
     /**

@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
@@ -55,6 +56,9 @@ import com.ibm.streamsx.topology.internal.logic.Throttle;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.logic.Logic;
+import com.ibm.streamsx.topology.spi.Invoker;
+import com.ibm.streamsx.topology.spi.TupleSerializer;
+import com.ibm.streamsx.topology.spi.ops.ForEach;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 
@@ -124,12 +128,21 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         if (opName.isEmpty()) {
             opName = getTupleName() + "Sink";
         }
+        
+        JsonObject config = new JsonObject();
+        com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(config, getClass());
+        config.addProperty("name", opName);
+        
+        return Invoker.invokeForEach(this, ForEach.class, config,
+                sinker, TupleSerializer.JAVA_SERIALIZER, null);
 
+/*
         BOperatorInvocation sink = JavaFunctional.addFunctionalOperator(this,
-                opName, FunctionSink.class, sinker);
+                opName, ForEach.class, sinker);
         SourceInfo.setSourceInfo(sink, StreamImpl.class);
         connectTo(sink, true, null);
         return new TSinkImpl(this, sink);
+        */
     }
     
     @Override

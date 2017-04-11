@@ -10,5 +10,10 @@
  * name: name of the operator invocation
  * outputs: array of outputs
  *     name: name of output
+ * sourcelocation: array of source location objects containing the following (all optional).
+ *     file
+ *     class
+ *     method
+ *     line
  */
 package com.ibm.streamsx.topology.spi;
