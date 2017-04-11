@@ -66,6 +66,10 @@ class EcForEach(object):
     def __exit__(self, a, b, c):
         pass
 
+def get_sys_argv():
+    import sys as sys_ec_test
+    return sys_ec_test.argv
+
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestEc(unittest.TestCase):
 
@@ -80,6 +84,13 @@ class TestEc(unittest.TestCase):
       s = s.map(EcMap('M523'))
       tester = Tester(topo)
       tester.contents(s, [('A211', 'EcSource_enter', 'M523', 'EcMap_enter')])
+      tester.test(self.test_ctxtype, self.test_config)
+
+  def test_sys_argv(self):
+      topo = Topology()
+      s = topo.source(get_sys_argv)
+      tester = Tester(topo)
+      tester.contents(s, [''])
       tester.test(self.test_ctxtype, self.test_config)
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
