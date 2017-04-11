@@ -7,17 +7,19 @@ package com.ibm.streamsx.topology.internal.spljava;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 
 import com.ibm.streams.operator.types.Blob;
+import com.ibm.streamsx.topology.spi.TupleSerializer;
 
 public class JavaObjectBlob implements Blob {
 
+    private final TupleSerializer serializer;
     private byte[] data;
     private final Object object;
 
-    JavaObjectBlob(Object object) {
+    JavaObjectBlob(TupleSerializer serializer, Object object) {
+        this.serializer = serializer;
         this.object = object;
     }
 
@@ -79,10 +81,8 @@ public class JavaObjectBlob implements Blob {
 
         try {
             AB baos = new AB();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(object);
-            oos.flush();
-            oos.close();
+            
+            serializer.serialize(object, baos);
             data = baos.data();
 
         } catch (IOException e) {

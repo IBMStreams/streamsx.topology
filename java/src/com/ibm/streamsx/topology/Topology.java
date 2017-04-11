@@ -48,6 +48,7 @@ import com.ibm.streamsx.topology.internal.logic.SingleToIterableSupplier;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.internal.tester.TupleCollection;
 import com.ibm.streamsx.topology.json.JSONSchemas;
+import com.ibm.streamsx.topology.spi.ops.Source;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
@@ -237,7 +238,7 @@ public class Topology implements TopologyElement {
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
-                FunctionSource.class, data);
+                Source.class, data);
         SourceInfo.setSourceInfo(bop, getClass());
         return JavaFunctional.addJavaOutput(this, bop, tupleType);
     }

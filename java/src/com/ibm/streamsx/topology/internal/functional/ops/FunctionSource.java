@@ -6,6 +6,8 @@ package com.ibm.streamsx.topology.internal.functional.ops;
 
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getOutputMapping;
 
+import java.io.Closeable;
+
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.StreamingData;
@@ -23,10 +25,7 @@ import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
-@PrimitiveOperator
-@OutputPortSet(cardinality = 1)
-@SharedLoader
-public class FunctionSource extends ProcessTupleProducer implements Functional {
+public abstract class FunctionSource extends ProcessTupleProducer implements Functional, Closeable {
     
     @ContextCheck(runtime=false)
     public static void checkNotConsistentRegionSource(OperatorContextChecker checker) {
@@ -59,10 +58,19 @@ public class FunctionSource extends ProcessTupleProducer implements Functional {
         
         dataHandler = FunctionalOpUtils.createFunctionHandler(
                 getOperatorContext(), getFunctionContext(), getFunctionalLogic());
+        
+        initialize();
     }
     
-    FunctionContext getFunctionContext() {
+    protected void initialize() throws Exception {        
+    }
+    
+    protected FunctionContext getFunctionContext() {
         return functionContext;
+    }
+    
+    protected Supplier<Iterable<Object>> getLogic() {
+        return dataHandler.getLogic();
     }
 
     public String getFunctionalLogic() {
@@ -105,7 +113,7 @@ public class FunctionSource extends ProcessTupleProducer implements Functional {
     protected void process() throws Exception {
 
         try {
-            Supplier<Iterable<Object>> data = dataHandler.getLogic();
+            Supplier<Iterable<Object>> data = getLogic();
             for (Object tuple : data.get()) {
                 if (Thread.interrupted())
                     return;
@@ -124,6 +132,7 @@ public class FunctionSource extends ProcessTupleProducer implements Functional {
     public void shutdown() throws Exception {
         if (dataHandler != null)
              dataHandler.close();
+        close();
         super.shutdown();
     }
 }
