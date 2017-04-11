@@ -37,7 +37,7 @@ Streaming Analytics service
 +++++++++++++++++++++++++++
 
 The service instance has Anaconda 4.1 installed with Python 3.5 as the
-runtime environment and has PYTHONHOME application environment variable
+runtime environment and has **PYTHONHOME** application environment variable
 pre-configured.
 
 Any streaming applications using Python must use Python 3.5 when
