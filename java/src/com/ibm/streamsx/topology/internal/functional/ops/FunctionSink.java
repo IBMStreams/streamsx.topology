@@ -9,6 +9,7 @@ import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.get
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.StreamingInput;
 import com.ibm.streams.operator.Tuple;
+import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
@@ -16,6 +17,7 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 public abstract class FunctionSink extends FunctionFunctor {
     private FunctionalHandler<Consumer<Object>> sinkerHandler;
     private SPLMapping<?> mapping;
+    private String tupleSerializer;
 
     @Override
     public synchronized void initialize(OperatorContext context)
@@ -27,6 +29,11 @@ public abstract class FunctionSink extends FunctionFunctor {
         mapping = getInputMapping(this, 0);
         
         initialize();
+    }
+    
+    @Parameter(optional=true)
+    public final void setTupleSerializer(String tupleSerializer) {
+        this.tupleSerializer = tupleSerializer;
     }
     
     protected void initialize() throws Exception {        

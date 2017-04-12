@@ -3,10 +3,11 @@ package com.ibm.streamsx.topology.spi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 
 import com.ibm.streamsx.topology.internal.spljava.JavaSerializer;
 
-public interface TupleSerializer {
+public interface TupleSerializer extends Serializable {
     
     TupleSerializer JAVA_SERIALIZER = new JavaSerializer();
     

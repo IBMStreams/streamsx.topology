@@ -1,8 +1,11 @@
 package com.ibm.streamsx.topology.spi;
 
+import static com.ibm.streamsx.topology.internal.functional.ObjectUtils.serializeLogic;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonObject;
@@ -11,11 +14,14 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.function.ObjIntConsumer;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
+import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 import com.ibm.streamsx.topology.spi.operators.ForEach;
+import com.ibm.streamsx.topology.spi.operators.Primitive;
 import com.ibm.streamsx.topology.spi.operators.Source;
 
 /**
@@ -40,22 +46,26 @@ public interface Invoker {
      * 
      * @return Stream produced by the source operator invocation.
      */
-    static <T> TStream<T> invokeSource(
-            Topology topology,
-            Class<? extends Source> opClass,
-            JsonObject config,
-            Supplier<Iterable<T>> logic,
-            Type tupleType,
-            TupleSerializer tupleSerializer,
-            Map<String,Object> parameters) {
-        
-        BOperatorInvocation source = JavaFunctional.addFunctionalOperator(topology,
-                jstring(config, "name"),
-                opClass, logic);
-        
+    static <T> TStream<T> invokeSource(Topology topology, Class<? extends Source> opClass, JsonObject config,
+            Supplier<Iterable<T>> logic, Type tupleType, TupleSerializer tupleSerializer,
+            Map<String, Object> parameters) {
+
+        if (tupleSerializer != null) {
+            Map<String, Object> ps = new HashMap<>();
+            if (parameters != null)
+                ps.putAll(parameters);
+
+            ps.put("tupleSerializer", serializeLogic(tupleSerializer));
+
+            parameters = ps;
+        }
+
+        BOperatorInvocation source = JavaFunctional.addFunctionalOperator(topology, jstring(config, "name"), opClass,
+                logic, parameters);
+
         // Extract any source location information from the config.
         SourceInfo.setSourceInfo(source, config);
-        
+
         return JavaFunctional.addJavaOutput(topology, source, tupleType);
     }
     
@@ -71,7 +81,8 @@ public interface Invoker {
                 stream,
                 jstring(config, "name"),
                 opClass,
-                logic);
+                logic,
+                parameters);
         
         // Extract any source location information from the config.
         SourceInfo.setSourceInfo(forEach, config);
@@ -79,5 +90,16 @@ public interface Invoker {
         stream.connectTo(forEach, true, null);
         
         return new TSinkImpl(stream, forEach);        
+    }
+    
+    static List<TStream<?>> invokeFunctor(
+            List<TStream<?>> streams,
+            Class<? extends Primitive> opClass,
+            JsonObject config,         
+            ObjIntConsumer<?> logic,
+            List<Type> tupleTypes,
+            List<TupleSerializer> tupleSerializers
+            ) {
+        return null;
     }
 }

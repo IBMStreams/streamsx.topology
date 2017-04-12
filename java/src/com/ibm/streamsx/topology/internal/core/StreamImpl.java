@@ -133,7 +133,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(config, getClass());
               
         return Invoker.invokeForEach(this, ForEach.class, config,
-                sinker, TupleSerializer.JAVA_SERIALIZER, null);
+                sinker, null, null);
     }
     
     @Override

@@ -23,6 +23,7 @@ import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
+import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 public abstract class FunctionSource extends ProcessTupleProducer implements Functional, Closeable {
@@ -36,6 +37,7 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
     private SPLMapping<Object> mapping;
 
     private String functionalLogic;
+    private String tupleSerializer;
     private String[] jar;
     private String[] submissionParamNames;
     private String[] submissionParamValues;
@@ -54,6 +56,7 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
         functionContext = new FunctionOperatorContext(context);
         
         output = getOutput(0);
+            
         mapping = getOutputMapping(this, 0);
         
         dataHandler = FunctionalOpUtils.createFunctionHandler(
@@ -107,6 +110,11 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
     @Parameter(optional = true)
     public final void setSubmissionParamValues(String[] SubmissionParamValues) {
         this.submissionParamValues = SubmissionParamValues;
+    }
+    
+    @Parameter(optional=true)
+    public final void setTupleSerializer(String tupleSerializer) {
+        this.tupleSerializer = tupleSerializer;
     }
 
     @Override

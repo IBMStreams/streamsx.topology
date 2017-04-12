@@ -243,7 +243,7 @@ public class Topology implements TopologyElement {
         config.addProperty("name", opName);
         
         return invokeSource(this, Source.class, config,
-                data, tupleType, JAVA_SERIALIZER, null);
+                data, tupleType, null, null);
     }
     
     /**
