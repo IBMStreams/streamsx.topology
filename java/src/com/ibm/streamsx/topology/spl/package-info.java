@@ -42,9 +42,17 @@
  * When a primitive operator's parameter cardinality allows multiple values the parameter
  * value is a {@code java.util.Collection} containing values of the correct type, typically
  * a {@code java.util.List} or {@code java.util.Set}.
- * <BR>
+ * <P>
  * Operator parameters can also be passed as submission parameters, see
  * {@link com.ibm.streamsx.topology.spl.SPL} for examples.
+ * </P>
+ * <P>
+ * SPL input attributes are passed using an instance of {@code com.ibm.streams.operator.Attribute} from
+ * the input schema. For example setting the {@code key} parameter for the {@code DeDuplicate} operator
+ * to the input attribute {@code id} would use (where {@code s} is the input stream):
+ * <BR>
+ * {@code params.put("key", s.getSchema().getAttribute("id"));}
+ * </P>
  * <h4>Full use of SPL capabilities</h4>
  * Only invocation of SPL operators is supported, functionality such as SPL logic clauses,
  * function invocations, annotations etc. are not supported.
