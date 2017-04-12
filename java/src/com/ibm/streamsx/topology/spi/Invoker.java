@@ -15,8 +15,8 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
-import com.ibm.streamsx.topology.spi.ops.ForEach;
-import com.ibm.streamsx.topology.spi.ops.Source;
+import com.ibm.streamsx.topology.spi.operators.ForEach;
+import com.ibm.streamsx.topology.spi.operators.Source;
 
 /**
  * 
@@ -70,7 +70,7 @@ public interface Invoker {
         BOperatorInvocation forEach = JavaFunctional.addFunctionalOperator(
                 stream,
                 jstring(config, "name"),
-                ForEach.class,
+                opClass,
                 logic);
         
         // Extract any source location information from the config.

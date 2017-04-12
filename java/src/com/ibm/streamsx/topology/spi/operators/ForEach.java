@@ -1,6 +1,5 @@
-package com.ibm.streamsx.topology.spi.ops;
+package com.ibm.streamsx.topology.spi.operators;
 
-import java.io.Closeable;
 import java.io.IOException;
 
 import com.ibm.streams.operator.OperatorContext;
@@ -9,6 +8,7 @@ import com.ibm.streams.operator.model.InputPorts;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSink;
+import com.ibm.streamsx.topology.spi.FunctionalOperator;
 
 /**
  * A functional for each (sink) operator.
@@ -22,12 +22,13 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionSink;
  */
 @InputPorts(@InputPortSet(cardinality = 1))
 @SharedLoader
-public abstract class ForEach extends FunctionSink implements Closeable {
+public abstract class ForEach extends FunctionSink implements FunctionalOperator {
     
     /**
      * Operator initialization.
      * This implementation does nothing.
      */
+    @Override
     public void initialize() throws Exception {       
     }
     
@@ -37,7 +38,8 @@ public abstract class ForEach extends FunctionSink implements Closeable {
      * This allows full access to the SPL environment.
      * @return
      */
-    public final OperatorContext getSplOpContext() {
+    @Override
+    public final OperatorContext getStreamsContext() {
         return super.getOperatorContext();
     }
     
@@ -47,6 +49,7 @@ public abstract class ForEach extends FunctionSink implements Closeable {
      * This is effectively a clean subset of OperatorContext
      * that hides any operator specific functionality.
      */
+    @Override
     public final FunctionContext getFunctionContext() {
         return super.getFunctionContext();
     }

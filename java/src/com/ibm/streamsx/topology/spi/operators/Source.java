@@ -1,16 +1,15 @@
-package com.ibm.streamsx.topology.spi.ops;
+package com.ibm.streamsx.topology.spi.operators;
 
-import java.io.Closeable;
 import java.io.IOException;
 
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.OutputPorts;
-import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSource;
+import com.ibm.streamsx.topology.spi.FunctionalOperator;
 import com.ibm.streamsx.topology.spi.Invoker;
 
 /**
@@ -23,15 +22,15 @@ import com.ibm.streamsx.topology.spi.Invoker;
  * Use of super-class methods (except those defined by {@code java.lang.Object)}
  * is not recommended and such methods may change or be removed at any time.
  */
-@PrimitiveOperator
 @OutputPorts(@OutputPortSet(cardinality = 1))
 @SharedLoader
-public class Source extends FunctionSource implements Closeable {
+public abstract class Source extends FunctionSource implements FunctionalOperator {
     
     /**
      * Operator initialization.
      * This implementation does nothing.
      */
+    @Override
     public void initialize() throws Exception {       
     }
     
@@ -41,7 +40,8 @@ public class Source extends FunctionSource implements Closeable {
      * This allows full access to the SPL environment.
      * @return
      */
-    public final OperatorContext getSplOpContext() {
+    @Override
+    public final OperatorContext getStreamsContext() {
         return super.getOperatorContext();
     }
     
@@ -51,6 +51,7 @@ public class Source extends FunctionSource implements Closeable {
      * This is effectively a clean subset of OperatorContext
      * that hides any operator specific functionality.
      */
+    @Override
     public final FunctionContext getFunctionContext() {
         return super.getFunctionContext();
     }
