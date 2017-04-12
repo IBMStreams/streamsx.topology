@@ -6,7 +6,6 @@ import java.io.IOException;
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.InputPorts;
-import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSink;
@@ -21,10 +20,9 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionSink;
  * Use of super-class methods (except those defined by {@code java.lang.Object)}
  * is not recommended and such methods may change or be removed at any time.
  */
-@PrimitiveOperator
 @InputPorts(@InputPortSet(cardinality = 1))
 @SharedLoader
-public class ForEach extends FunctionSink implements Closeable {
+public abstract class ForEach extends FunctionSink implements Closeable {
     
     /**
      * Operator initialization.

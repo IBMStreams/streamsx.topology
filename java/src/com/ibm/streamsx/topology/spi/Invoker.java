@@ -14,7 +14,6 @@ import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
-import com.ibm.streamsx.topology.internal.core.StreamImpl;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
 import com.ibm.streamsx.topology.spi.ops.ForEach;
 import com.ibm.streamsx.topology.spi.ops.Source;

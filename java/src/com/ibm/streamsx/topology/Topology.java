@@ -42,7 +42,6 @@ import com.ibm.streamsx.topology.internal.core.StreamImpl;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionPeriodicSource;
-import com.ibm.streamsx.topology.internal.functional.ops.FunctionSource;
 import com.ibm.streamsx.topology.internal.logic.Constants;
 import com.ibm.streamsx.topology.internal.logic.EndlessSupplier;
 import com.ibm.streamsx.topology.internal.logic.LimitedSupplier;
@@ -51,9 +50,7 @@ import com.ibm.streamsx.topology.internal.logic.SingleToIterableSupplier;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.internal.tester.TupleCollection;
 import com.ibm.streamsx.topology.json.JSONSchemas;
-import com.ibm.streamsx.topology.spi.Invoker;
-import com.ibm.streamsx.topology.spi.TupleSerializer;
-import com.ibm.streamsx.topology.spi.ops.Source;
+import com.ibm.streamsx.topology.internal.functional.operators.Source;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
@@ -247,14 +244,6 @@ public class Topology implements TopologyElement {
         
         return invokeSource(this, Source.class, config,
                 data, tupleType, JAVA_SERIALIZER, null);
-
-        /*
-        BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
-                opName,
-                Source.class, data);
-        SourceInfo.setSourceInfo(bop, getClass());
-        return JavaFunctional.addJavaOutput(this, bop, tupleType);
-        */
     }
     
     /**
