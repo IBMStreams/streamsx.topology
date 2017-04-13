@@ -30,6 +30,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="streamsx 1.6.0 documentation" href="index.html"/> 
 
   
@@ -79,9 +82,11 @@
           
             
             
-                <ul class="simple">
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">streamsx.topology.context module</a></li>
 </ul>
-
+</div>
             
           
         </div>
@@ -102,7 +107,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -114,7 +119,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/streamsx.topology.context.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/streamsx.topology.context.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -393,7 +398,7 @@ within the cluster that is running the Streams instance.</li>
 </tbody>
 </table>
 <p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Submit a job with the name NewsIngester</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Submit a job with the name NewsIngester</span>
 <span class="n">cfg</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="n">job_config</span> <span class="o">=</span> <span class="n">JobConfig</span><span class="p">(</span><span class="n">job_name</span><span class="o">=</span><span class="s1">&#39;NewsIngester&#39;</span><span class="p">)</span>
 <span class="n">job_config</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>

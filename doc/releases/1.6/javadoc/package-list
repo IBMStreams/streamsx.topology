@@ -1,11 +1,8 @@
 com.ibm.streamsx.topology
 com.ibm.streamsx.topology.consistent
 com.ibm.streamsx.topology.context
-com.ibm.streamsx.topology.context.remote
 com.ibm.streamsx.topology.file
 com.ibm.streamsx.topology.function
-com.ibm.streamsx.topology.generator.functional
-com.ibm.streamsx.topology.generator.operator
 com.ibm.streamsx.topology.inet
 com.ibm.streamsx.topology.jobconfig
 com.ibm.streamsx.topology.json

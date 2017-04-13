@@ -30,6 +30,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="streamsx 1.6.0 documentation" href="index.html"/> 
 
   
@@ -79,9 +82,11 @@
           
             
             
-                <ul class="simple">
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">streamsx.spl.op module</a></li>
 </ul>
-
+</div>
             
           
         </div>
@@ -102,7 +107,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -114,7 +119,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/streamsx.spl.op.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/streamsx.spl.op.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -197,6 +202,11 @@ where the number of items is the number of output ports.</div></blockquote>
 <code class="descname">output</code><span class="sig-paren">(</span><em>stream</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Invoke.output" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="attribute">
+<dt id="streamsx.spl.op.Invoke.params">
+<code class="descname">params</code><a class="headerlink" href="#streamsx.spl.op.Invoke.params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -231,8 +241,18 @@ and single output stream.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="streamsx.spl.op.Map.expression">
+<code class="descname">expression</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Map.expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="streamsx.spl.op.Map.output">
 <code class="descname">output</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Map.output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.spl.op.Map.params">
+<code class="descname">params</code><a class="headerlink" href="#streamsx.spl.op.Map.params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -265,6 +285,26 @@ of the common case of a operator with a single input port.</p>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="streamsx.spl.op.Sink.attribute">
+<code class="descname">attribute</code><span class="sig-paren">(</span><em>stream</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Sink.attribute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Sink.expression">
+<code class="descname">expression</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Sink.expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Sink.output">
+<code class="descname">output</code><span class="sig-paren">(</span><em>stream</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Sink.output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.spl.op.Sink.params">
+<code class="descname">params</code><a class="headerlink" href="#streamsx.spl.op.Sink.params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -294,8 +334,23 @@ of the common case of a operator with a single output port.</p>
 </tbody>
 </table>
 <dl class="method">
+<dt id="streamsx.spl.op.Source.attribute">
+<code class="descname">attribute</code><span class="sig-paren">(</span><em>stream</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Source.attribute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Source.expression">
+<code class="descname">expression</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Source.expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="streamsx.spl.op.Source.output">
 <code class="descname">output</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Source.output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.spl.op.Source.params">
+<code class="descname">params</code><a class="headerlink" href="#streamsx.spl.op.Source.params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
