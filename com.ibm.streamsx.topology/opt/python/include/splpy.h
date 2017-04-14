@@ -92,7 +92,7 @@ namespace streamsx {
     }
 
     /*
-    * Call a function passing the SPL attribute value of type T
+    
     * and fill in the SPL attribute of type R with its result.
     * Implementation for function Map operator.
     */
@@ -107,7 +107,51 @@ namespace streamsx {
         Py_DECREF(pyReturnVar);
         return 0;
       } else if(pyReturnVar == 0){
-         throw SplpyGeneral::pythonException("transform");
+         throw SplpyGeneral::pythonException("map");
+      } 
+
+      pySplValueFromPyObject(retSplVal, pyReturnVar);
+      Py_DECREF(pyReturnVar);
+
+      return 1;
+    }
+
+    /**
+     * Implementation for Map operator when the output port
+     * can pass by reference.
+     * occ = 0,-1 do not pass by ref
+     * occ >= 1 - pass by ref - occ is the reference count bumps
+     * we must leave the object with.
+     */
+    template <class T>
+    static int pyTupleMapByRef(PyObject * function, T & splVal, SPL::blob & retSplVal, int32_t occ) {
+      SplpyGIL lock;
+
+      // invoke python nested function that calls the application function
+      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
+
+      if (SplpyGeneral::isNone(pyReturnVar)) {
+        Py_DECREF(pyReturnVar);
+        return 0;
+      } else if(pyReturnVar == 0){
+         throw SplpyGeneral::pythonException("map");
+      } 
+
+      if (occ != -1) {
+          __SPLTuplePyPtr stpp;
+          stpp.fmt = STREAMSX_TPP_PTR;
+          stpp.pyptr = pyReturnVar;
+
+          if (occ > 1) {
+               // We already hold one reference count to
+               // actuall have the object, so we never decrement
+               // that and instead bump by (occ-1)
+               for (int i = 1; i < occ; i++)
+                   Py_INCREF(pyReturnVar);
+          }
+
+          retSplVal.setData((unsigned char const *) &stpp, sizeof(__SPLTuplePyPtr));
+          return 1;
       } 
 
       pySplValueFromPyObject(retSplVal, pyReturnVar);

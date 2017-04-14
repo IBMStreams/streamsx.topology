@@ -236,6 +236,9 @@ def pickle_in__json_out(callable):
 def pickle_in__string_out(callable):
     return _PickleInStringOut(callable)
 
+def pickle_in__object_out(callable):
+    return _PickleInObjectOut(callable)
+
 
 class _IterablePickleOut(_FunctionalCallable):
     def __init__(self, callable):

@@ -1,0 +1,25 @@
+#define SPLPY_TUPLE_MAP(f, v, r, occ) \
+    streamsx::topology::Splpy::pyTupleMap(f, v, r)
+
+<%
+ my $oc = $model->getParameterByName("outputConnections");
+
+ if ($oc) {
+    my $occ = $oc->getValueAt(0)->getSPLExpression();
+    if ($occ > 0) {
+        my $pybyrefwrapfunc = $pystyle . '_in__object_out';
+%>
+#undef SPLPY_TUPLE_MAP
+#define SPLPY_TUPLE_MAP(f, v, r, occ) \
+    streamsx::topology::Splpy::pyTupleMapByRef(f, v, r, occ)
+
+        if (!this->getOutputPortAt(0).isConnectedToAPEOutputPort()) {
+          // pass by reference
+          wrapfn = "<%=$pybyrefwrapfunc%>";
+          occ_ = <%=$occ%>;
+        }
+<%
+    } 
+ }
+%>
+
