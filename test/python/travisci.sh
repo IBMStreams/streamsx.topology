@@ -1,5 +1,14 @@
+set -e
+
 echo JAVA_HOME=$JAVA_HOME
 java -version
+J=`which javac`
+JH1=`dirname $J`
+JH2=`dirname $JH1`
+
+export JAVA_HOME=$JH2
+echo JAVA_HOME=$JAVA_HOME
+
 
 cd $TRAVIS_BUILD_DIR/java
 export STREAMS_INSTALL=/dev/null
