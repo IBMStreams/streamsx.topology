@@ -254,13 +254,31 @@ class _IterablePickleOut(_FunctionalCallable):
         except StopIteration:
             return None
 
+class _IterableObjectOut(_FunctionalCallable):
+    def __init__(self, callable):
+        super(_IterableObjectOut, self).__init__(callable)
+        self._it = iter(self._callable())
+
+    def __call__(self):
+        try:
+            while True:
+                tuple = next(self._it)
+                if not tuple is None:
+                    return tuple
+        except StopIteration:
+            return None
 
 # Given a function that returns an iterable
 # return a function that can be called
 # repeatably by a source operator returning
 # the next tuple in its pickled form
-def iterableSource(callable) :
+def source_pickle(callable) :
     return _IterablePickleOut(callable)
+
+# Source iterator that returns objects
+# when passing by ref
+def source_object(callable) :
+    return _IterableObjectOut(callable)
 
 # Iterator that wraps another iterator
 # to discard any values that are None
