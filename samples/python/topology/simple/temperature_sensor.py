@@ -40,7 +40,7 @@ def main():
     source.print()
     
     # Now execute the topology by submitting to a standalone context.
-    streamsx.topology.context.submit("STANDALONE")
+    streamsx.topology.context.submit("STANDALONE",topo)
      
 if __name__ == '__main__':
     main()
