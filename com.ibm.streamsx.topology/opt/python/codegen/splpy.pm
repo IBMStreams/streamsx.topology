@@ -55,6 +55,9 @@ sub splToPythonConversionCheck{
     elsif(SPL::CodeGen::Type::isTimestamp($type)) {
       return;
     }
+    elsif(SPL::CodeGen::Type::isBlob($type)) {
+      return;
+    }
     elsif (SPL::CodeGen::Type::isComplex32($type) || SPL::CodeGen::Type::isComplex64($type)) {
       return;
     }
