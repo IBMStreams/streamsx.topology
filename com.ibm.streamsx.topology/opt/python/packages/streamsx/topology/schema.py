@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
 """
-Schemas for structured streams.
+Schemas for streams.
 
 On a structured stream a tuple is a sequence of attributes,
 and an attribute is a named value of a specific type.
