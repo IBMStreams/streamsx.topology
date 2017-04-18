@@ -130,6 +130,25 @@ namespace streamsx {
       return pyCallTupleFunc(function, pyTuple);
     }
 
+    /**
+     * Set a blob in an output tuple to be a pass-by-reference
+     * of the PyObject pointer.
+     */
+    inline void pyTupleByRef(SPL::blob & retSplVal, PyObject *value, int32_t occ) {
+       __SPLTuplePyPtr stpp;
+       stpp.fmt = STREAMSX_TPP_PTR;
+       stpp.pyptr = value;
+
+       if (occ > 1) {
+           // We already hold one reference count to
+           // actually have the object, so we never decrement
+           // that and instead bump by (occ-1)
+           for (int i = 1; i < occ; i++)
+               Py_INCREF(value);
+       }
+
+       retSplVal.setData((unsigned char const *) &stpp, sizeof(__SPLTuplePyPtr));
+    }
 }
 }
 #endif

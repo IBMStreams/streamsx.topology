@@ -215,11 +215,20 @@ def pickle_in__pickle_out(callable):
 def json_in__pickle_out(callable):
     return _JSONInPickleOut(callable)
 
+def json_in__object_out(callable):
+    return _JSONInObjectOut(callable)
+
 def string_in__pickle_out(callable):
     return _ObjectInPickleOut(callable)
 
+def string_in__object_out(callable):
+    return _FunctionalCallable(callable)
+
 def dict_in__pickle_out(callable):
     return _ObjectInPickleOut(callable)
+
+def dict_in__object_out(callable):
+    return _FunctionalCallable(callable)
 
 ##################################################
 

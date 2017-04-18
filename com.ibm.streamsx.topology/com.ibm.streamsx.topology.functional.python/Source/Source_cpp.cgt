@@ -11,9 +11,33 @@ using namespace streamsx::topology;
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
-    funcop_(NULL)
+    funcop_(NULL),
+    occ_(-1)
 {
-    funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
+    const char * wrapfn = "<%=$pywrapfunc%>";
+<%
+# If occ parameter is positive then pass-by-ref is possible
+# Generate code to allow pass by ref but only use when
+# not connected to a PE output port.
+
+ my $oc = $model->getParameterByName("outputConnections");
+
+ if ($oc) {
+    my $occ = $oc->getValueAt(0)->getSPLExpression();
+    if ($occ > 0) {
+%>
+
+    if (!this->getOutputPortAt(0).isConnectedToAPEOutputPort()) {
+       // pass by reference
+       wrapfn = "source_object";
+       occ_ = <%=$occ%>;
+    }
+<%
+    } 
+ }
+%>
+
+    funcop_ = new SplpyFuncOp(this, wrapfn);
 }
 
 // Destructor
@@ -60,13 +84,22 @@ void MY_OPERATOR::process(uint32_t idx)
         break;
       }
 
-      // Use the pointer of the pickled bytes object
-      // as the blob data so we need to maintain the
-      // reference count across the submit.
-      // We decrement it on the next loop iteration
-      // which is when we natually regain the lock.
+      if (occ_ > 0) {
+          // passing by reference
 
-      pySplValueUsingPyObject(otuple.get___spl_po(), pyReturnVar);
+          pyTupleByRef(otuple.get___spl_po(), pyReturnVar, occ_);
+          pyReturnVar = NULL;
+      }
+      else {
+
+          // Use the pointer of the pickled bytes object
+          // as the blob data so we need to maintain the
+          // reference count across the submit.
+          // We decrement it on the next loop iteration
+          // which is when we natually regain the lock.
+
+          pySplValueUsingPyObject(otuple.get___spl_po(), pyReturnVar);
+      }
 
     } // end lock
 

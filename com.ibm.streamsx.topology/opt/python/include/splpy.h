@@ -137,20 +137,8 @@ namespace streamsx {
          throw SplpyGeneral::pythonException("map");
       } 
 
-      if (occ != -1) {
-          __SPLTuplePyPtr stpp;
-          stpp.fmt = STREAMSX_TPP_PTR;
-          stpp.pyptr = pyReturnVar;
-
-          if (occ > 1) {
-               // We already hold one reference count to
-               // actuall have the object, so we never decrement
-               // that and instead bump by (occ-1)
-               for (int i = 1; i < occ; i++)
-                   Py_INCREF(pyReturnVar);
-          }
-
-          retSplVal.setData((unsigned char const *) &stpp, sizeof(__SPLTuplePyPtr));
+      if (occ > 0) {
+          pyTupleByRef(retSplVal, pyReturnVar, occ);
           return 1;
       } 
 
@@ -159,6 +147,7 @@ namespace streamsx {
 
       return 1;
     }
+
 
     // Python hash of an SPL value
     // Python hashes are signed integer values

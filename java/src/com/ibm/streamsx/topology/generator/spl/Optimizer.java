@@ -97,6 +97,14 @@ class Optimizer {
                         canPassByRef = false;
                         break;
                     }
+                        
+                        // TEMP
+                        // Currently only Map and ForEach completly handle
+                        // by reference.
+                        if (!kind(connectedOp).endsWith("::Map") && !kind(connectedOp).endsWith("::ForEach")) {
+                        canPassByRef = false;
+                        break;
+                        }
                 }
 
                 if (canPassByRef)

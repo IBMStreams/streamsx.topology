@@ -14,6 +14,9 @@ using namespace streamsx::topology;
  my $pywrapfunc= $pystyle . '_in__' . $pyoutstyle . '_out';
 %>
 
+#define SPLPY_TUPLE_MAP(f, v, r, occ) \
+    streamsx::topology::Splpy::pyTupleMap(f, v, r)
+
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
@@ -22,7 +25,32 @@ MY_OPERATOR::MY_OPERATOR() :
 {
     const char * wrapfn = "<%=$pywrapfunc%>";
 
-@include "../pysplbyref.cgt"
+<%
+# If occ parameter is positive then pass-by-ref is possible
+# Generate code to allow pass by ref but only use when
+# not connected to a PE output port.
+
+ my $oc = $model->getParameterByName("outputConnections");
+
+ if ($oc) {
+    my $occ = $oc->getValueAt(0)->getSPLExpression();
+    if ($occ > 0) {
+        my $pybyrefwrapfunc = $pystyle . '_in__object_out';
+%>
+
+#undef SPLPY_TUPLE_MAP
+#define SPLPY_TUPLE_MAP(f, v, r, occ) \
+    streamsx::topology::Splpy::pyTupleMapByRef(f, v, r, occ)
+
+    if (!this->getOutputPortAt(0).isConnectedToAPEOutputPort()) {
+       // pass by reference
+       wrapfn = "<%=$pybyrefwrapfunc%>";
+       occ_ = <%=$occ%>;
+    }
+<%
+    } 
+ }
+%>
 
     funcop_ = new SplpyFuncOp(this, wrapfn);
 
