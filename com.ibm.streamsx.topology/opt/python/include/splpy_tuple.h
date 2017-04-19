@@ -48,15 +48,15 @@ namespace streamsx {
 
   /**
    * Convert the SPL tuple that represents a Python object
-   * to a Python tuple that holds as its first argument.
-   * One or two arguments in a Python tuple are passed to the function
+   * to a Python tuple that holds as its first argument:
+   * One or two arguments in a Python tuple which is passed to the function
    * (which is a wrapper around the user function).
    * 
-   *  Python object was passed by reference in the SPL tuple
+   *  If Python object was passed by reference in the SPL tuple:
    *
    *     (object) - pickle marker defaults to None to indicate actual object being passed
    *
-   *  Python object was passed as pickled bytes in the SPL tuple
+   *  If Python object was passed as pickled bytes in the SPL tuple
    *
    *  (pv, pv) - where pv is the pickled value as a memory view object.
    *             the second value is just the marker (not None) to indicate
@@ -89,9 +89,10 @@ namespace streamsx {
           pyTuple = PyTuple_New(2);
           PyTuple_SET_ITEM(pyTuple, 0, value);
 
-          // Pass a non-None value is as the "pickle marker (pm)"
+          // Pass a non-None value as the "pickle marker (pm)"
           // simply use the same value bumping its ref.
           // 'pm' is only checked for not being None
+          // in the wrapper Python function.
           Py_INCREF(value);
           PyTuple_SET_ITEM(pyTuple, 1, value);
       }
