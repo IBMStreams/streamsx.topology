@@ -153,6 +153,8 @@ In addition an application declared by `Topology` can include stream processing 
 composite operators. This allows reuse of adapters and analytics provided by IBM Streams,
 open source and third-party SPL toolkits.
 
+See :py:mod:`streamsx.spl.op`
+
 """
 
 from __future__ import unicode_literals

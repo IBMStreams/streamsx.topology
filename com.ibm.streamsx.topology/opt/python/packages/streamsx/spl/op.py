@@ -334,16 +334,14 @@ class Expression(object):
 
     @staticmethod
     def expression(value):
-    """Create an SPL expression.
+        """Create an SPL expression.
 
-    Args:
-        value: Expression as a string or another `Expression`. If value is
-            an instance of `Expression` then a new instance is returned
-            containing the same type and value.
+        Args:
+            value: Expression as a string or another `Expression`. If value is an instance of `Expression` then a new instance is returned containing the same type and value.
 
-    Returns:
-        Expression: SPL expression from `value`.
-    """
+        Returns:
+            Expression: SPL expression from `value`.
+        """
         if isinstance(value, Expression):
             # Clone the expression to allow it to
             # be used in multiple contexts

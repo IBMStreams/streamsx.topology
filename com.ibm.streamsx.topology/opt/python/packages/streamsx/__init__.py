@@ -21,7 +21,7 @@ to allow tuple processing using Python in an SPL application.
 SPL (Streams Processing Language) is a domain specific language for streaming
 analytics supported by Streams.
 
-See :py:mod:`streamsx.spl`
+See :py:mod:`streamsx.spl.spl`
 
 Streams Python REST API
 -----------------------
