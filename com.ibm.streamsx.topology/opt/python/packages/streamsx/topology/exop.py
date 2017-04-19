@@ -19,6 +19,8 @@ class ExtensionOperator(object):
 
     @property
     def params(self):
+        """Parameters for the operator invocation.
+        """
         return self._op.params
 
     def __inputs(self, inputs):

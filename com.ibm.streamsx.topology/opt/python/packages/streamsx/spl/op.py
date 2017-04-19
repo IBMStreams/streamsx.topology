@@ -229,6 +229,10 @@ class Source(Invoke):
     @property
     def stream(self):
         """
+        Stream produced by the operator invocation.
+
+        Returns:
+            Stream: Stream produced by the operator invocation.
         """
         return self.outputs[0]
 
@@ -349,6 +353,7 @@ class Expression(object):
         return Expression('splexpr', value)
 
     def spl_json(self):
+        """Private method. May be removed at any time."""
         _splj = {}
         _splj["type"] = self._type
         _splj["value"] = self._value
