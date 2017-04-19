@@ -39,6 +39,8 @@ class StreamSchema(object) :
     for ``tuple<...>`` or by passing the name of an SPL type from
     an SPL toolkit, for example ``com.ibm.streamsx.transportation.vehicle::VehicleLocation``.
 
+    Attribute names must start with an ASCII letter or underscore, followed by ASCII letters, digits, or underscores.
+
     Args:
         schema(str): Schema definition. Either a schema definition or the name of an SPL type.
     """
