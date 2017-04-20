@@ -23,9 +23,18 @@ public class FunctionalHelper {
                 .getStreamSchema());
     }
 
+    public static <T> SPLMapping<T> getOutputMapping(AbstractOperator operator,
+            int port) throws ClassNotFoundException {
+        return getOutputMapping(operator, port, null);
+    }
     @SuppressWarnings("unchecked")
     public static <T> SPLMapping<T> getOutputMapping(AbstractOperator operator,
-            int port) {
+            int port, String outputSerializer) throws ClassNotFoundException {
+        
+        if (outputSerializer != null) {
+            return (SPLMapping<T>) Schemas.getObjectMapping(outputSerializer);
+        }
+        
         return (SPLMapping<T>) Schemas.getSPLMapping(operator.getOutput(port)
                 .getStreamSchema());
     }

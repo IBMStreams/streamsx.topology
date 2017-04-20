@@ -27,8 +27,12 @@ class SPLJavaObject extends SPLMapping<Object> {
     private final TupleSerializer serializer;
 
     SPLJavaObject(StreamSchema schema) {
+        this(schema, TupleSerializer.JAVA_SERIALIZER);
+    }
+    
+    SPLJavaObject(StreamSchema schema, TupleSerializer serializer) {
         super(schema);
-        serializer = TupleSerializer.JAVA_SERIALIZER;
+        this.serializer = serializer;
     }
 
     @Override

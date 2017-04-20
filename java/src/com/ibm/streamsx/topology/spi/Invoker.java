@@ -47,15 +47,15 @@ public interface Invoker {
      * @return Stream produced by the source operator invocation.
      */
     static <T> TStream<T> invokeSource(Topology topology, Class<? extends Source> opClass, JsonObject config,
-            Supplier<Iterable<T>> logic, Type tupleType, TupleSerializer tupleSerializer,
+            Supplier<Iterable<T>> logic, Type tupleType, TupleSerializer outputSerializer,
             Map<String, Object> parameters) {
 
-        if (tupleSerializer != null) {
+        if (outputSerializer != null) {
             Map<String, Object> ps = new HashMap<>();
             if (parameters != null)
                 ps.putAll(parameters);
 
-            ps.put("tupleSerializer", serializeLogic(tupleSerializer));
+            ps.put("outputSerializer", serializeLogic(outputSerializer));
 
             parameters = ps;
         }

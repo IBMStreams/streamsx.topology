@@ -9,21 +9,17 @@ import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.get
 import java.io.Closeable;
 
 import com.ibm.streams.operator.OperatorContext;
+import com.ibm.streams.operator.OperatorContext.ContextCheck;
 import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.StreamingData;
 import com.ibm.streams.operator.StreamingOutput;
-import com.ibm.streams.operator.OperatorContext.ContextCheck;
 import com.ibm.streams.operator.compile.OperatorContextChecker;
-import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.Parameter;
-import com.ibm.streams.operator.model.PrimitiveOperator;
-import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streams.operator.samples.patterns.ProcessTupleProducer;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
-import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 public abstract class FunctionSource extends ProcessTupleProducer implements Functional, Closeable {
@@ -37,14 +33,14 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
     private SPLMapping<Object> mapping;
 
     private String functionalLogic;
-    private String tupleSerializer;
+    private String outputSerializer;
     private String[] jar;
     private String[] submissionParamNames;
     private String[] submissionParamValues;
     private StreamingOutput<OutputTuple> output;
-    
+     
     private FunctionContext functionContext;
-
+    
     @Override
     public synchronized void initialize(OperatorContext context)
             throws Exception {
@@ -57,7 +53,7 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
         
         output = getOutput(0);
             
-        mapping = getOutputMapping(this, 0);
+        mapping = getOutputMapping(this, 0, outputSerializer);
         
         dataHandler = FunctionalOpUtils.createFunctionHandler(
                 getOperatorContext(), getFunctionContext(), getFunctionalLogic());
@@ -113,8 +109,8 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
     }
     
     @Parameter(optional=true)
-    public final void setTupleSerializer(String tupleSerializer) {
-        this.tupleSerializer = tupleSerializer;
+    public final void setOutputSerializer(String outputSerializer) {
+        this.outputSerializer = outputSerializer;
     }
 
     @Override
