@@ -1,6 +1,7 @@
 package com.ibm.streamsx.topology.spi.operators;
 
 import java.io.IOException;
+import com.ibm.streamsx.topology.function.ObjIntConsumer;
 
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.model.SharedLoader;
@@ -49,6 +50,10 @@ public abstract class Primitive extends AbstractPrimitive implements FunctionalO
     @Override
     public final FunctionContext getFunctionContext() {
         return super.getFunctionContext();
+    }
+    
+    public final ObjIntConsumer<Object> submitter() {
+        return super.submitter();
     }
 
     /**

@@ -42,7 +42,7 @@ public interface Invoker {
      * @param opClass Java functional operator class.
      * @param config Operator configuration.
      * @param logic Functional logic.
-     * @param parameters Additional SPL operator parameters, specific to 
+     * @param parameters Additional SPL operator parameters. 
      * 
      * @return Stream produced by the source operator invocation.
      */
@@ -69,6 +69,16 @@ public interface Invoker {
         return JavaFunctional.addJavaOutput(topology, source, tupleType);
     }
     
+    /**
+     * Invoke a functional for each operator consuming a single stream.
+     * @param stream Stream to be consumed.
+     * @param opClass Java functional operator class.
+     * @param config Operator configuration.
+     * @param logic Functional logic.
+     * @param tupleSerializer How tuples are serialized.
+     * @param parameters Additional SPL operator parameters.
+     * @return
+     */
     static <T> TSink invokeForEach(
             TStream<T> stream,
             Class<? extends ForEach> opClass,
@@ -92,6 +102,18 @@ public interface Invoker {
         return new TSinkImpl(stream, forEach);        
     }
     
+    /**
+     * Invoke a functional operator consuming an aribitrary number of
+     * input streams and producing an arbitrary number of output streams.
+     * 
+     * @param streams
+     * @param opClass
+     * @param config
+     * @param logic
+     * @param tupleTypes
+     * @param tupleSerializers
+     * @return
+     */
     static List<TStream<?>> invokeFunctor(
             List<TStream<?>> streams,
             Class<? extends Primitive> opClass,
