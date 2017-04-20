@@ -3,95 +3,91 @@ package com.ibm.streamsx.rest ;
 
 import java.io.IOException ;
 
+import java.net.URL ;
+import java.net.MalformedURLException ;
+
+import org.apache.http.client.AuthCache ;
+import org.apache.http.impl.client.BasicAuthCache ;
+import org.apache.http.impl.auth.BasicScheme ;
 import org.apache.http.client.ClientProtocolException ;
 import org.apache.http.client.fluent.Executor ;
-import org.apache.http.client.fluent.Form ;
 import org.apache.http.client.fluent.Request ;
 import org.apache.http.client.fluent.Response ;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.Gson;
-
-import com.ibm.streamsx.rest.primitives.Instance;
-import com.ibm.streamsx.rest.primitives.Job;
-import com.ibm.streamsx.rest.primitives.Operator;
-import com.ibm.streamsx.rest.primitives.ActiveVersion;
-import com.ibm.streamsx.rest.primitives.Metrics;
+import org.apache.http.HttpHost ;
+import org.apache.http.auth.UsernamePasswordCredentials ;
+import org.apache.http.auth.Credentials ;
+import org.apache.http.auth.AuthScope ;
 
 public class StreamsConnection {
 
-   private String userName ;
-   private String authToken ;
+   private Credentials credentials ;
+   private HttpHost httpHost ;
+   private AuthCache authCache = new BasicAuthCache() ;
    private String url ;
 
    private Executor executor ;
-//   private CookieStore cookieStore ;
-
-   private static Gson gson ;
 
    public StreamsConnection( String userName, String authToken, String url ) 
    {
-//      this.cookieStore  = new CookieStore() ;
-      this.userName = userName ;
-      this.authToken = authToken ;
-      this.executor = Executor.newInstance()
-//         .use( cookieStore )
-         .auth( userName, authToken ) ;
-      this.url = url ;
-      this.gson = new Gson() ;
+      try {
+         URL xUrl = new URL( url ) ;
+         String hostName = xUrl.getHost() ;
+
+         this.credentials = new UsernamePasswordCredentials( userName, authToken ) ; 
+         this.httpHost = new HttpHost( hostName ) ;
+
+         this.authCache.put( httpHost, new BasicScheme() ) ;
+ 
+         this.executor = Executor.newInstance()
+           .auth( credentials ) ;
+           
+         this.url = url ;
+      } catch (MalformedURLException e ) {
+        e.printStackTrace() ;
+     }
    }
 
-   private String getResponseString( String inputString ) throws ClientProtocolException, IOException
+   private String getResponseString( String inputString )
    {
       String sReturn = "" ;
       try {
-        Request request = Request.Get( inputString ) ;
+        Request request = Request.Get( inputString )
+                          .useExpectContinue() ;
         Response response = executor.execute( request ) ;
 
-        // need to decode errors
+        // TODO: need to decode errors
         sReturn = response.returnContent().asString() ;
       }
       catch ( ClientProtocolException e ) {
         e.printStackTrace() ; 
       }
+      catch ( IOException e ) {
+        e.printStackTrace() ; 
+      }
       return sReturn ;
    }
 
-   public Instance getInstance( String instanceName )
-   {
-      StringBuilder sb = new StringBuilder() ; 
-      sb.append( url ) ;
-      sb.append( "instances/instanceName" ) ;
-
-      String sReturn = "" ;
-      try {
-        sReturn = getResponseString( sb.toString() ) ;
-       } catch ( Exception e ) {
-         e.printStackTrace() ;
-       }
-      // need to check return code
-      System.out.println( sReturn ) ;
-      Instance si = gson.fromJson( sReturn, Instance.class ) ;
-
-      return si ;
-   } 
-
    public static void main( String[] args)
    {
-
      String userName = args[0] ;
      String authToken = args[1] ;
      String url = args[2] ;
-     String instanceName = args[3] ;
+     String inRequest = args[3] ;
 
      System.out.println( userName ) ;
      System.out.println( authToken ) ;
      System.out.println( url ) ;
-     System.out.println( instanceName ) ;
-     StreamsConnection rClient = new StreamsConnection( userName, authToken, url ) ;
+     System.out.println( inRequest ) ;
+     StreamsConnection sClient = new StreamsConnection( userName, authToken, url ) ;
+    
+     StringBuilder sRequest = new StringBuilder() ;
+     sRequest.append( url ) ;
+     sRequest.append( inRequest ) ;
 
-     rClient.getInstance( instanceName ) ; 
+     System.out.println( "Request: " + sRequest.toString()  ) ;
+     String sResponse = sClient.getResponseString( sRequest.toString() ) ; 
+     System.out.println( sResponse ) ;
    }
 }
 
