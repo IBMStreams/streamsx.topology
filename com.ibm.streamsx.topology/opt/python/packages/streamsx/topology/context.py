@@ -477,9 +477,6 @@ class ContextTypes(object):
     occurs remotely by the service. This allows creation and submission of Streams applications
     without a local install of IBM Streams.
 
-    .. warning::
-        Remote build functionality is not yet generally available for the Streaming Analytics service.
-
     When **STREAMS_INSTALL** is set and the :py:func:`submit` `config` parameter has
     :py:const:`~ConfigParams.FORCE_REMOTE_BUILD` set to `False` or not set then the creation of the
     Streams application bundle occurs locally and the bundle is submitted for execution on the service.
@@ -618,9 +615,6 @@ class ConfigParams(object):
     When submitting to :py:const:`STREAMING_ANALYTICS_SERVICE` a local build of the Streams application bundle
     will occur if the environment variable **STREAMS_INSTALL** is set. Setting this flag to `True` ignores the
     local Streams install and forces the build to occur remotely using the service.
-
-    .. warning::
-        Remote build functionality is not yet generally available for the Streaming Analytics service.
 
     """
     JOB_CONFIG = 'topology.jobConfigOverlays'
