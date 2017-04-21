@@ -49,7 +49,7 @@ public interface FunctionalOperator extends Closeable {
      * @param e Cause of failure.
      * @return Exception to be thrown.
      */
-    default Exception exception(Exception e) {
+    default Throwable exception(Exception e) {
         return e;
     }
     

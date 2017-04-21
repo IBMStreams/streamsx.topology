@@ -51,4 +51,10 @@ class FunctionalOpUtils {
     static TupleSerializer createTupleSerializer(String tupleSerializer) throws ClassNotFoundException {
         return (TupleSerializer) ObjectUtils.deserializeLogic(tupleSerializer);
     }
+    
+    static Exception throwError(Throwable t) {
+        if (t instanceof Error)
+            throw (Error) t;
+        return (Exception) t;
+    }
 }

@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.functional.ops;
 
 import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getOutputMapping;
+import static com.ibm.streamsx.topology.internal.functional.ops.FunctionalOpUtils.throwError;
 
 import java.io.Closeable;
 
@@ -63,7 +64,7 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
             
             initialize();
         } catch (Exception e) {
-            throw exception(e);
+            throw throwError(exception(e));
         }
     }
     
@@ -129,7 +130,7 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
                 output.submit(mapping.convertTo(tuple));
             }
         } catch (Exception e) {
-            throw exception(e);
+            throw throwError(exception(e));
         } finally {
             dataHandler.close();
             dataHandler = null;
@@ -145,7 +146,7 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
             if (dataHandler != null)
                  dataHandler.close();
         } catch (Exception e) {
-            throw exception(e);
+            throw throwError(exception(e));
         }
         
         super.shutdown();
