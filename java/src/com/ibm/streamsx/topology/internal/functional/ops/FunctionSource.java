@@ -21,8 +21,9 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
+import com.ibm.streamsx.topology.spi.FunctionalOperator;
 
-public abstract class FunctionSource extends ProcessTupleProducer implements Functional, Closeable {
+public abstract class FunctionSource extends ProcessTupleProducer implements Functional, Closeable, FunctionalOperator {
     
     @ContextCheck(runtime=false)
     public static void checkNotConsistentRegionSource(OperatorContextChecker checker) {
@@ -42,29 +43,31 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
     private FunctionContext functionContext;
     
     @Override
-    public synchronized void initialize(OperatorContext context)
+    public final synchronized void initialize(OperatorContext context)
             throws Exception {
         super.initialize(context);
 
-        FunctionalHelper.addLibraries(this, getJar());
-        SubmissionParameterManager.initialize(context);
+        try {
+            FunctionalHelper.addLibraries(this, getJar());
+            SubmissionParameterManager.initialize(context);
 
-        functionContext = new FunctionOperatorContext(context);
-        
-        output = getOutput(0);
+            functionContext = new FunctionOperatorContext(context);
             
-        mapping = getOutputMapping(this, 0, outputSerializer);
-        
-        dataHandler = FunctionalOpUtils.createFunctionHandler(
-                getOperatorContext(), getFunctionContext(), getFunctionalLogic());
-        
-        initialize();
+            output = getOutput(0);
+                
+            mapping = getOutputMapping(this, 0, outputSerializer);
+            
+            dataHandler = FunctionalOpUtils.createFunctionHandler(
+                    getOperatorContext(), getFunctionContext(), getFunctionalLogic());
+            
+            
+            initialize();
+        } catch (Exception e) {
+            throw exception(e);
+        }
     }
     
-    protected void initialize() throws Exception {        
-    }
-    
-    protected FunctionContext getFunctionContext() {
+    public FunctionContext getFunctionContext() {
         return functionContext;
     }
     
@@ -114,7 +117,7 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
     }
 
     @Override
-    protected void process() throws Exception {
+    protected final void process() throws Exception {
 
         try {
             Supplier<Iterable<Object>> data = getLogic();
@@ -125,6 +128,8 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
                     continue;
                 output.submit(mapping.convertTo(tuple));
             }
+        } catch (Exception e) {
+            throw exception(e);
         } finally {
             dataHandler.close();
             dataHandler = null;
@@ -134,10 +139,14 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
     
     @Override
     public void shutdown() throws Exception {
-        close();
-        
-        if (dataHandler != null)
-             dataHandler.close();
+        try {
+            close();
+            
+            if (dataHandler != null)
+                 dataHandler.close();
+        } catch (Exception e) {
+            throw exception(e);
+        }
         
         super.shutdown();
     }

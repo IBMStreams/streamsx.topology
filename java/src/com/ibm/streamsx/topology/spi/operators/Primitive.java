@@ -1,11 +1,9 @@
 package com.ibm.streamsx.topology.spi.operators;
 
-import java.io.IOException;
-import com.ibm.streamsx.topology.function.ObjIntConsumer;
-
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streamsx.topology.function.FunctionContext;
+import com.ibm.streamsx.topology.function.ObjIntConsumer;
 import com.ibm.streamsx.topology.internal.functional.ops.AbstractPrimitive;
 import com.ibm.streamsx.topology.spi.FunctionalOperator;
 
@@ -21,14 +19,6 @@ import com.ibm.streamsx.topology.spi.FunctionalOperator;
  */
 @SharedLoader
 public abstract class Primitive extends AbstractPrimitive implements FunctionalOperator {
-    
-    /**
-     * Operator initialization.
-     * This implementation does nothing.
-     */
-    @Override
-    public void initialize() throws Exception {       
-    }
     
     /**
      * Return the SPL Operator context.
@@ -54,13 +44,5 @@ public abstract class Primitive extends AbstractPrimitive implements FunctionalO
     
     public final ObjIntConsumer<Object> submitter() {
         return super.submitter();
-    }
-
-    /**
-     * Operator shutdown.
-     * This implementation does nothing.
-     */
-    @Override
-    public void close() throws IOException {        
     }
 }

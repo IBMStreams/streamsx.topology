@@ -1,7 +1,5 @@
 package com.ibm.streamsx.topology.spi.operators;
 
-import java.io.IOException;
-
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.OutputPorts;
@@ -25,14 +23,6 @@ import com.ibm.streamsx.topology.spi.Invoker;
 @OutputPorts(@OutputPortSet(cardinality = 1))
 @SharedLoader
 public abstract class Source extends FunctionSource implements FunctionalOperator {
-    
-    /**
-     * Operator initialization.
-     * This implementation does nothing.
-     */
-    @Override
-    public void initialize() throws Exception {       
-    }
     
     /**
      * Return the SPL Operator context.
@@ -64,13 +54,5 @@ public abstract class Source extends FunctionSource implements FunctionalOperato
      */
     public final Supplier<Iterable<Object>> getLogic() {
         return super.getLogic();
-    }
-
-    /**
-     * Operator shutdown.
-     * This implementation does nothing.
-     */
-    @Override
-    public void close() throws IOException {        
     }
 }

@@ -1,6 +1,7 @@
 package com.ibm.streamsx.topology.spi;
 
 import java.io.Closeable;
+import java.io.IOException;
 
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streamsx.topology.function.FunctionContext;
@@ -20,7 +21,8 @@ public interface FunctionalOperator extends Closeable {
     /**
      * Operator initialization. This implementation does nothing.
      */
-    void initialize() throws Exception;
+    default void initialize() throws Exception {
+    }
 
     /**
      * Return the Streams Operator context.
@@ -38,4 +40,24 @@ public interface FunctionalOperator extends Closeable {
      * operator specific functionality.
      */
     FunctionContext getFunctionContext();
+    
+    /**
+     * Return the exception to be thrown on failure.
+     * 
+     * Allows a service provided to throw a specific exception
+     * for a failure. Default implementation is to return {@code e}.
+     * @param e Cause of failure.
+     * @return Exception to be thrown.
+     */
+    default Exception exception(Exception e) {
+        return e;
+    }
+    
+    /**
+     * Operator shutdown.
+     * This implementation does nothing.
+     */
+    @Override
+    default void close() throws IOException {        
+    }
 }
