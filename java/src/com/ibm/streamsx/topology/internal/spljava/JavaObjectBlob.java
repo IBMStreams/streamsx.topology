@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.spljava;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,7 +54,7 @@ public class JavaObjectBlob implements Blob {
         if (data == null)
             serializeObject();
 
-        return null;
+        return new ByteArrayInputStream(data);
     }
 
     @Override
