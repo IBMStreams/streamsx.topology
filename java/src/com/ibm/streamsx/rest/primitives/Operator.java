@@ -1,25 +1,94 @@
 package com.ibm.streamsx.rest.primitives;
 
-public class Operator
-{
+import java.util.List;
 
-   public Operator() {} ;
+import com.google.gson.Gson;
+import com.ibm.streamsx.rest.StreamsConnection;
 
-   public String connections ; 
-   public String domain ; 
-   public String host ; 
-   public long indexWithinJob ; 
-   public String inputPorts ; 
-   public String instance ; 
-   public String job ; 
-   public String metrics ; 
-   public String name ; 
-   public String operatorKind ; 
-   public String outputPorts ; 
-   public String pe ; 
-   public String resourceAllocation ; 
-   public String resourceType ; 
-   public String restid ; 
-   public String self ; 
+public class Operator {
+	private final StreamsConnection connection;
+	private final Gson gson = new Gson();
+	private OperatorGson operator;
+
+	public Operator(StreamsConnection sc, OperatorGson gsonOperator) {
+		this.connection = sc;
+		this.operator = gsonOperator;
+	};
+
+	public List<Metric> getMetrics() {
+		String sGetMetricsURI = operator.metrics;
+
+		String sReturn = "";
+		try {
+			sReturn = connection.getResponseString(sGetMetricsURI);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// need to check return code
+		System.out.println(sReturn);
+		List<Metric> sMetrics = new MetricsArray(connection, sReturn).getMetrics();
+
+		return sMetrics;
+	}
+
+	public String getConnections() {
+		return operator.connections;
+	}
+
+	public String getDomain() {
+		return operator.domain;
+	}
+
+	public String getHost() {
+		return operator.host;
+	}
+
+	public long getIndexWithinJob() {
+		return operator.indexWithinJob;
+	}
+
+	public String getInputPorts() {
+		return operator.inputPorts;
+	}
+
+	public String getInstance() {
+		return operator.instance;
+	}
+
+	public String getJob() {
+		return operator.job;
+	}
+
+	public String getName() {
+		return operator.name;
+	}
+
+	public String getOperatorKind() {
+		return operator.operatorKind;
+	}
+
+	public String getOutputPorts() {
+		return operator.outputPorts;
+	}
+
+	public String getPe() {
+		return operator.pe;
+	}
+
+	public String getResourceAllocation() {
+		return operator.resourceAllocation;
+	}
+
+	public String getResourceType() {
+		return operator.resourceType;
+	}
+
+	public String getRestid() {
+		return operator.restid;
+	}
+
+	public String getSelf() {
+		return operator.self;
+	}
 
 }

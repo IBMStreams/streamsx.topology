@@ -1,0 +1,11 @@
+package com.ibm.streamsx.rest.primitives;
+
+class MetricGson {
+	public String description;
+	public long lastTimeRetrieved;
+	public String metricKind;
+	public String metricType;
+	public String name;
+	public String resourceType;
+	public long value;
+}

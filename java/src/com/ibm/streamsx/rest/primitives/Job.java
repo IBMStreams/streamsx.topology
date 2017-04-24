@@ -1,38 +1,149 @@
 package com.ibm.streamsx.rest.primitives;
 
-public class Job
-{
+import java.util.ArrayList;
+import java.util.List;
 
-   public Job() {} ;
+import com.google.gson.Gson;
+import com.ibm.streamsx.rest.StreamsConnection;
 
-   public String activeViews ;
-   public String adlFile ; 
-   public String applicationName ; 
-   public String applicationPath ; 
-   public String applicationScope ; 
-   public String applicationVersion ; 
-   public String checkpointPath ; 
-   public String dataPath ; 
-   public String domain ; 
-   public String health ; 
-   public String hosts ; 
-   public String id ; 
-   public String instance ; 
-   public String jobGroup ; 
-   public String name ; 
-   public String operatorConnections ; 
-   public String operators ; 
-   public String outputPath ; 
-   public String peConnections ; 
-   public String pes ; 
-   public String resourceAllocations ; 
-   public String resourceType ; 
-   public String restid ; 
-   public String self ; 
-   public String startedBy ; 
-   public String status ; 
-   public String submitParameters ; 
-   public long submitTime ; 
-   public String views ; 
+public class Job {
+	private final StreamsConnection connection;
+	private final Gson gson = new Gson();
+	private JobGson job;
+
+	public Job(StreamsConnection sc, JobGson gsonJob) {
+		this.connection = sc;
+		this.job = gsonJob;
+	};
+
+	public List<Operator> getOperators() {
+		String sGetOperatorsURI = job.operators;
+
+		System.out.println(sGetOperatorsURI);
+		String sReturn = "";
+		try {
+			sReturn = connection.getResponseString(sGetOperatorsURI);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		// need to check return code
+		System.out.println(sReturn);
+		List<Operator> operators = new OperatorsArray(connection, sReturn).getOperators();
+
+		return operators;
+	}
+
+	public String getActiveViews() {
+		return job.activeViews;
+	}
+
+	public String getAdlFile() {
+		return job.adlFile;
+	}
+
+	public String getApplicationName() {
+		return job.applicationName;
+	}
+
+	public String getApplicationPath() {
+		return job.applicationPath;
+	}
+
+	public String getApplicationScope() {
+		return job.applicationScope;
+	}
+
+	public String getApplicationVersion() {
+		return job.applicationVersion;
+	}
+
+	public String getCheckpointPath() {
+		return job.checkpointPath;
+	}
+
+	public String getDataPath() {
+		return job.dataPath;
+	}
+
+	public String getDomain() {
+		return job.domain;
+	}
+
+	public String getHealth() {
+		return job.health;
+	}
+
+	public String getHosts() {
+		return job.hosts;
+	}
+
+	public String getId() {
+		return job.id;
+	}
+
+	public String getInstance() {
+		return job.instance;
+	}
+
+	public String getJobGroup() {
+		return job.jobGroup;
+	}
+
+	public String getName() {
+		return job.name;
+	}
+
+	public String getOperatorConnections() {
+		return job.operatorConnections;
+	}
+
+	public String getOutputPath() {
+		return job.outputPath;
+	}
+
+	public String getPeConnections() {
+		return job.peConnections;
+	}
+
+	public String getPes() {
+		return job.pes;
+	}
+
+	public String getResourceAllocations() {
+		return job.resourceAllocations;
+	}
+
+	public String getResourceType() {
+		return job.resourceType;
+	}
+
+	public String getRestid() {
+		return job.restid;
+	}
+
+	public String getSelf() {
+		return job.self;
+	}
+
+	public String getStartedBy() {
+		return job.startedBy;
+	}
+
+	public String getStatus() {
+		return job.status;
+	}
+
+	public ArrayList<String> getSubmitParameters() {
+		return job.submitParameters;
+	}
+
+	public long getSubmitTime() {
+		return job.submitTime;
+	}
+
+	public String getViews() {
+		return job.views;
+	}
 
 }
