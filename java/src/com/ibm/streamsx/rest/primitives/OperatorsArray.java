@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.google.gson.Gson;
 import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.rest.primitives.Operator;
+import com.ibm.streamsx.rest.primitives.OperatorGson;
 
 public class OperatorsArray {
 	private final StreamsConnection connection;

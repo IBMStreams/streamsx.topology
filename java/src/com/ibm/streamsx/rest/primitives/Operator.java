@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.gson.Gson;
 import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.rest.primitives.Metric;
 
 public class Operator {
 	private final StreamsConnection connection;
@@ -24,8 +25,6 @@ public class Operator {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		// need to check return code
-		System.out.println(sReturn);
 		List<Metric> sMetrics = new MetricsArray(connection, sReturn).getMetrics();
 
 		return sMetrics;

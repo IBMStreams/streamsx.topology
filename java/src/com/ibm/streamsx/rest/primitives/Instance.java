@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.google.gson.Gson;
 import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.rest.primitives.Job;
+import com.ibm.streamsx.rest.primitives.ActiveVersion;
 
 public class Instance {
 	private final StreamsConnection connection;
@@ -24,9 +26,6 @@ public class Instance {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		// need to check return code
-		System.out.println(sReturn);
-
 		List<Job> jobs = new JobsArray(connection, sReturn).getJobs();
 
 		return jobs;

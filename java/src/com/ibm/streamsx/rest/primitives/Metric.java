@@ -2,6 +2,7 @@ package com.ibm.streamsx.rest.primitives;
 
 import com.google.gson.Gson;
 import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.rest.primitives.MetricGson;
 
 public class Metric {
 	private final StreamsConnection connection;

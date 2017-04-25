@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.google.gson.Gson;
 import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.rest.primitives.Metric;
+import com.ibm.streamsx.rest.primitives.MetricGson;
 
 public class MetricsArray {
 	private final StreamsConnection connection;

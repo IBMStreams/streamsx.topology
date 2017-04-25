@@ -2,14 +2,16 @@
 package com.ibm.streamsx.rest;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.http.HttpStatus;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpEntity;
 import org.apache.http.auth.AUTH;
+import org.apache.http.util.EntityUtils ;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.fluent.Executor;
@@ -32,20 +34,12 @@ public class StreamsConnection {
 	private final Gson gson = new Gson();
 
 	public StreamsConnection(String userName, String authToken, String url) {
-		try {
-			URL xUrl = new URL(url);
-			String hostName = xUrl.getHost();
-
-			String apiCredentials = userName + ":" + authToken;
-			this.apiKey = "Basic "
+   	String apiCredentials = userName + ":" + authToken;
+   	this.apiKey = "Basic "
 					+ DatatypeConverter.printBase64Binary(apiCredentials.getBytes(StandardCharsets.UTF_8));
 
-			this.executor = Executor.newInstance();
-
-			this.url = url;
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
+	   this.executor = Executor.newInstance();
+		this.url = url;
 	}
 
 	public String getResponseString(String inputString) throws ClientProtocolException, IOException {
@@ -54,9 +48,15 @@ public class StreamsConnection {
 			Request request = Request.Get(inputString).addHeader(AUTH.WWW_AUTH_RESP, this.apiKey).useExpectContinue();
 
 			Response response = executor.execute(request);
+         HttpResponse hResponse = response.returnResponse() ;
+         int rcResponse = hResponse.getStatusLine().getStatusCode();
 
-			// TODO: need to decode errors
-			sReturn = response.returnContent().asString();
+         if (HttpStatus.SC_OK == rcResponse) {
+            sReturn = EntityUtils.toString(hResponse.getEntity()) ;
+            // FIXME: remove this line
+            System.out.println(sReturn);
+         }
+
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
 		}

@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.gson.Gson;
 import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.rest.primitives.Operator;
 
 public class Job {
 	private final StreamsConnection connection;
@@ -27,8 +28,6 @@ public class Job {
 			e.printStackTrace();
 		}
 
-		// need to check return code
-		System.out.println(sReturn);
 		List<Operator> operators = new OperatorsArray(connection, sReturn).getOperators();
 
 		return operators;
