@@ -34,6 +34,14 @@ public class Instance {
 		return jobs;
 	}
 
+	public Job getJob(String jobId ) throws ClientProtocolException, IOException {
+		String sGetJobURI = instance.jobs + "/" + jobId ;
+
+		String sReturn = connection.getResponseString(sGetJobURI);
+		Job job = new Job(connection, sReturn);
+		return job;
+   }
+
 	public String getActiveServices() {
 		return instance.activeServices;
 	}

@@ -93,6 +93,10 @@ public class StreamingAnalyticsConnection {
 					List<Metric> metrics = op.getMetrics();
 				}
 			}
+
+			System.out.println(" Getting job 0 specifically" ) ;
+			Job job = instance.getJob( "0" );
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

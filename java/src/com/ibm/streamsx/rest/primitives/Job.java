@@ -20,6 +20,11 @@ public class Job {
 		this.job = gsonJob;
 	};
 
+	public Job(StreamsConnection sc, String sJob) {
+		this.connection = sc;
+		this.job = gson.fromJson( sJob, JobGson.class);
+   }
+
 	public List<Operator> getOperators() throws ClientProtocolException, IOException {
 		String sGetOperatorsURI = job.operators;
 

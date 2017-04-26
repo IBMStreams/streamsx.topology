@@ -70,8 +70,9 @@ public class StreamsConnection {
 
 		if (HttpStatus.SC_OK == rcResponse) {
 			sReturn = EntityUtils.toString(hResponse.getEntity());
-		} else {
-			String httpError = "HttpStatus is " + rcResponse + " for URL: " + inputString;
+		}
+		else {
+			String httpError = "HttpStatus is " + rcResponse + " for url " + inputString ;
 			throw new IllegalStateException(httpError);
 		}
 		// FIXME: remove these lines
