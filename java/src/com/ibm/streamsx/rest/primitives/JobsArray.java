@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+ */
 package com.ibm.streamsx.rest.primitives;
 
 import java.util.ArrayList;
@@ -9,39 +13,39 @@ import com.ibm.streamsx.rest.primitives.Job;
 import com.ibm.streamsx.rest.primitives.JobGson;
 
 public class JobsArray {
-	private final StreamsConnection connection;
-	private final Gson gson = new Gson();
-	private List<Job> jobs;
-	private JobsArrayGson jobArray;
+    private final StreamsConnection connection;
+    private List<Job> jobs;
+    private JobsArrayGson jobArray;
 
-	public JobsArray(StreamsConnection sc, String gsonJobs) {
-		this.connection = sc;
-		this.jobArray = gson.fromJson(gsonJobs, JobsArrayGson.class);
+    public JobsArray(StreamsConnection sc, String gsonJobs) {
+        connection = sc;
+        jobArray = new Gson().fromJson(gsonJobs, JobsArrayGson.class);
 
-		this.jobArray.jobsList = new ArrayList<Job>(jobArray.jobs.size());
-		for (JobGson jg : jobArray.jobs) {
-			jobArray.jobsList.add(new Job(sc, jg));
-		}
-		this.jobs = jobArray.jobsList;
-	};
+        jobs = new ArrayList<Job>(jobArray.jobs.size());
+        for (JobGson jg : jobArray.jobs) {
+            jobs.add(new Job(sc, jg));
+        }
+    };
 
-	public List<Job> getJobs() {
-		return jobs;
-	}
+    /**
+     * @return List of {@Job}
+     */
+    public List<Job> getJobs() {
+        return jobs;
+    }
 
-	private static class JobsArrayGson {
-		public ArrayList<JobGson> jobs;
-		public ArrayList<Job> jobsList;
-		public String resourceType;
-		public int total;
-	}
+    private static class JobsArrayGson {
+        public ArrayList<JobGson> jobs;
+        public String resourceType;
+        public int total;
+    }
 
-	public String getResourceType() {
-		return jobArray.resourceType;
-	}
+    public String getResourceType() {
+        return jobArray.resourceType;
+    }
 
-	public int getTotal() {
-		return jobArray.total;
-	}
+    public int getTotal() {
+        return jobArray.total;
+    }
 
 }

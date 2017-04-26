@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+ */
 package com.ibm.streamsx.rest.primitives;
 
 import java.util.ArrayList;
@@ -9,44 +13,44 @@ import com.ibm.streamsx.rest.primitives.Metric;
 import com.ibm.streamsx.rest.primitives.MetricGson;
 
 public class MetricsArray {
-	private final StreamsConnection connection;
-	private final Gson gson = new Gson();
-	private List<Metric> metrics;
-	private MetricsArrayGson metricsArray;
+    private final StreamsConnection connection;
+    private List<Metric> metrics;
+    private MetricsArrayGson metricsArray;
 
-	public MetricsArray(StreamsConnection sc, String gsonMetrics) {
-		this.connection = sc;
-		this.metricsArray = gson.fromJson(gsonMetrics, MetricsArrayGson.class);
+    public MetricsArray(StreamsConnection sc, String gsonMetrics) {
+        connection = sc;
+        metricsArray = new Gson().fromJson(gsonMetrics, MetricsArrayGson.class);
 
-		this.metricsArray.metricsList = new ArrayList<Metric>(metricsArray.metrics.size());
-		for (MetricGson mg : metricsArray.metrics) {
-			metricsArray.metricsList.add(new Metric(sc, mg));
-		}
-		this.metrics = metricsArray.metricsList;
-	};
+        metrics = new ArrayList<Metric>(metricsArray.metrics.size());
+        for (MetricGson mg : metricsArray.metrics) {
+            metrics.add(new Metric(sc, mg));
+        }
+    };
 
-	public List<Metric> getMetrics() {
-		return metrics;
-	}
+    /**
+     * @return List of {@Metric}
+     */
+    public List<Metric> getMetrics() {
+        return metrics;
+    }
 
-	private static class MetricsArrayGson {
-		public ArrayList<MetricGson> metrics;
-		public ArrayList<Metric> metricsList;
-		public String owner;
-		public String resourceType;
-		public long total;
-	}
+    private static class MetricsArrayGson {
+        public ArrayList<MetricGson> metrics;
+        public String owner;
+        public String resourceType;
+        public long total;
+    }
 
-	public String getOwner() {
-		return metricsArray.owner;
-	}
+    public String getOwner() {
+        return metricsArray.owner;
+    }
 
-	public String getResourceType() {
-		return metricsArray.resourceType;
-	}
+    public String getResourceType() {
+        return metricsArray.resourceType;
+    }
 
-	public long getTotal() {
-		return metricsArray.total;
-	}
+    public long getTotal() {
+        return metricsArray.total;
+    }
 
 }

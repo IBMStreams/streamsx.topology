@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+ */
 package com.ibm.streamsx.rest.primitives;
 
 import java.util.ArrayList;
@@ -9,39 +13,39 @@ import com.ibm.streamsx.rest.primitives.Instance;
 import com.ibm.streamsx.rest.primitives.InstanceGson;
 
 public class InstancesArray {
-	private final StreamsConnection connection;
-	private final Gson gson = new Gson();
-	private List<Instance> instances;
-	private InstancesArrayGson instanceArray;
+    private final StreamsConnection connection;
+    private List<Instance> instances;
+    private InstancesArrayGson instanceArray;
 
-	public InstancesArray(StreamsConnection sc, String gsonInstances) {
-		this.connection = sc;
-		this.instanceArray = gson.fromJson(gsonInstances, InstancesArrayGson.class);
+    public InstancesArray(StreamsConnection sc, String gsonInstances) {
+        connection = sc;
+        instanceArray = new Gson().fromJson(gsonInstances, InstancesArrayGson.class);
 
-		this.instanceArray.instancesList = new ArrayList<Instance>(instanceArray.instances.size());
-		for (InstanceGson ig : instanceArray.instances) {
-			instanceArray.instancesList.add(new Instance(sc, ig));
-		}
-		this.instances = instanceArray.instancesList;
-	};
+        instances = new ArrayList<Instance>(instanceArray.instances.size());
+        for (InstanceGson ig : instanceArray.instances) {
+            instances.add(new Instance(sc, ig));
+        }
+    };
 
-	public List<Instance> getInstances() {
-		return instances;
-	}
+    /**
+     * @return
+     */
+    public List<Instance> getInstances() {
+        return instances;
+    }
 
-	private static class InstancesArrayGson {
-		public ArrayList<InstanceGson> instances;
-		public ArrayList<Instance> instancesList;
-		public String resourceType;
-		public int total;
-	}
+    private static class InstancesArrayGson {
+        public ArrayList<InstanceGson> instances;
+        public String resourceType;
+        public int total;
+    }
 
-	public String getResourceType() {
-		return instanceArray.resourceType;
-	}
+    public String getResourceType() {
+        return instanceArray.resourceType;
+    }
 
-	public int getTotal() {
-		return instanceArray.total;
-	}
+    public int getTotal() {
+        return instanceArray.total;
+    }
 
 }
