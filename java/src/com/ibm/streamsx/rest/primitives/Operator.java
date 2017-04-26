@@ -1,6 +1,9 @@
 package com.ibm.streamsx.rest.primitives;
 
+import java.io.IOException;
 import java.util.List;
+
+import org.apache.http.client.ClientProtocolException;
 
 import com.google.gson.Gson;
 import com.ibm.streamsx.rest.StreamsConnection;
@@ -16,15 +19,10 @@ public class Operator {
 		this.operator = gsonOperator;
 	};
 
-	public List<Metric> getMetrics() {
+	public List<Metric> getMetrics() throws ClientProtocolException, IOException {
 		String sGetMetricsURI = operator.metrics;
 
-		String sReturn = "";
-		try {
-			sReturn = connection.getResponseString(sGetMetricsURI);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		String sReturn = connection.getResponseString(sGetMetricsURI);
 		List<Metric> sMetrics = new MetricsArray(connection, sReturn).getMetrics();
 
 		return sMetrics;

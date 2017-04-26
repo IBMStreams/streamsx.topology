@@ -1,10 +1,14 @@
 package com.ibm.streamsx.rest.primitives;
 
+import java.io.IOException;
 import java.util.List;
+import org.apache.http.client.ClientProtocolException;
 
 import com.google.gson.Gson;
+
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.rest.primitives.Job;
+import com.ibm.streamsx.rest.primitives.InstanceGson;
 import com.ibm.streamsx.rest.primitives.ActiveVersion;
 
 public class Instance {
@@ -17,51 +21,18 @@ public class Instance {
 		this.instance = gson.fromJson(gsonInstance, InstanceGson.class);
 	};
 
-	public List<Job> getJobs() {
+	public Instance(StreamsConnection sc, InstanceGson gsonInstance) {
+		this.connection = sc;
+		this.instance = gsonInstance;
+	};
+
+	public List<Job> getJobs() throws ClientProtocolException, IOException {
 		String sGetJobsURI = instance.jobs;
+		String sReturn = connection.getResponseString(sGetJobsURI);
 
-		String sReturn = "";
-		try {
-			sReturn = connection.getResponseString(sGetJobsURI);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 		List<Job> jobs = new JobsArray(connection, sReturn).getJobs();
-
 		return jobs;
 	}
-
-	private static class InstanceGson {
-		public InstanceGson() {
-		};
-
-		public String activeServices;
-		public ActiveVersion activeVersion; // not a string
-		public String activeViews;
-		public String configuredViews;
-		public long creationTime;
-		public String creationUser;
-		public String domain;
-		public String exportedStreams;
-		public String health;
-		public String hosts;
-		public String id;
-		public String importedStreams;
-		public String jobs;
-		public String operatorConnections;
-		public String operators;
-		public String owner;
-		public String peConnections;
-		public String pes;
-		public String resourceAllocations;
-		public String resourceType;
-		public String restid;
-		public String self;
-		public long startTime;
-		public String startedBy;
-		public String status;
-		public String views;
-	};
 
 	public String getActiveServices() {
 		return instance.activeServices;

@@ -1,7 +1,10 @@
 package com.ibm.streamsx.rest.primitives;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.http.client.ClientProtocolException;
 
 import com.google.gson.Gson;
 import com.ibm.streamsx.rest.StreamsConnection;
@@ -17,19 +20,13 @@ public class Job {
 		this.job = gsonJob;
 	};
 
-	public List<Operator> getOperators() {
+	public List<Operator> getOperators() throws ClientProtocolException, IOException {
 		String sGetOperatorsURI = job.operators;
 
 		System.out.println(sGetOperatorsURI);
-		String sReturn = "";
-		try {
-			sReturn = connection.getResponseString(sGetOperatorsURI);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		String sReturn = connection.getResponseString(sGetOperatorsURI);
 
 		List<Operator> operators = new OperatorsArray(connection, sReturn).getOperators();
-
 		return operators;
 	}
 

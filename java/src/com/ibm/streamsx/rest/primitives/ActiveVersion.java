@@ -1,8 +1,6 @@
 package com.ibm.streamsx.rest.primitives;
 
 public class ActiveVersion {
-	public ActiveVersion() {
-	};
 
 	public String getArchitecture() {
 		return architecture;
