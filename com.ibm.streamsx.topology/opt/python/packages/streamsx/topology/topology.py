@@ -308,6 +308,9 @@ class Topology(object):
         if "Anaconda" in sys.version:
             import streamsx.topology.condapkgs
             self.exclude_packages.update(streamsx.topology.condapkgs._CONDA_PACKAGES)
+        import streamsx.topology._deppkgs
+        self.exclude_packages.update(streamsx.topology._deppkgs._DEP_PACKAGES)
+        
         self.graph = graph.SPLGraph(self, name, namespace)
         if files is not None:
             self.files = files
