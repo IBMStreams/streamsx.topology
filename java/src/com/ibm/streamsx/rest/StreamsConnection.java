@@ -168,6 +168,34 @@ public class StreamsConnection {
     }
 
     /**
+     * @param  allowInsecure boolean whether insecure hosts are allowed(true) or not(false)
+     * @return true if insecure hosts will be allowed
+     *         false if insecure hosts will not be allowed
+     */
+    public boolean allowInsecureHosts(boolean allowInsecure) {
+        try {
+            if (( allowInsecure ) && ( false == allowInsecureHosts )) {
+                CloseableHttpClient httpClient = HttpClients.custom()
+                        .setHostnameVerifier( new AllowAllHostnameVerifier())
+                        .setSslcontext( new SSLContextBuilder().loadTrustMaterial( null, new TrustStrategy() {
+                            public boolean isTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+                                return true ;
+                            }
+                        }).build()).build();
+                executor = Executor.newInstance(httpClient) ;
+                allowInsecureHosts = true ;
+            } else if (( false == allowInsecure ) && ( true == allowInsecureHosts ) ){
+                executor = Executor.newInstance() ;
+                allowInsecureHosts = false ;
+            }
+        } catch ( NoSuchAlgorithmException | KeyStoreException | KeyManagementException e ) {
+            executor = Executor.newInstance() ;
+            allowInsecureHosts = false ;
+        }
+        return allowInsecureHosts ;
+    }
+
+    /**
      * Main function to test this class for now will be removed eventually
      */
     public static void main(String[] args) {
@@ -182,20 +210,25 @@ public class StreamsConnection {
         System.out.println(instanceName);
         StreamsConnection sClient = new StreamsConnection(userName, authToken, url);
 
+        if ( args.length == 5 )
+        {
+          if ( args[4].equals("true" ) ) {
+            sClient.allowInsecureHosts(true) ;
+          }
+        }
+        
         try {
-          System.out.println("Returning instances");
+          System.out.println("Instance: ");
           List<Instance> instances = sClient.getInstances();
 
           for (Instance instance : instances) {
-              System.out.println("Returning jobs");
+              System.out.println("Job: ");
               List<Job> jobs = instance.getJobs();
-
-              System.out.println("Returning operators");
               for (Job job : jobs) {
-                  System.out.println("Looking at job");
+                  System.out.println("Operator: ");
                   List<Operator> operators = job.getOperators();
                   for (Operator op : operators) {
-                      System.out.println("Looking at metrics for job");
+                      System.out.println("Metric: ") ;
                       List<Metric> metrics = op.getMetrics();
                   }
               }
