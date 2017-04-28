@@ -17,6 +17,7 @@ public class JavaObjectBlob implements Blob {
 
     private final TupleSerializer serializer;
     private byte[] data;
+    private int len;
     private final Object object;
 
     JavaObjectBlob(TupleSerializer serializer, Object object) {
@@ -32,14 +33,14 @@ public class JavaObjectBlob implements Blob {
     public long getLength() {
         if (data == null)
             serializeObject();
-        return data.length;
+        return len;
     }
 
     @Override
     public ByteBuffer getByteBuffer() {
         if (data == null)
             serializeObject();
-        return ByteBuffer.wrap(data);
+        return ByteBuffer.wrap(data, 0, len);
     }
 
     @Override
@@ -54,7 +55,7 @@ public class JavaObjectBlob implements Blob {
         if (data == null)
             serializeObject();
 
-        return new ByteArrayInputStream(data);
+        return new ByteArrayInputStream(data, 0, len);
     }
 
     @Override
@@ -68,7 +69,7 @@ public class JavaObjectBlob implements Blob {
     public ByteBuffer put(ByteBuffer buf) {
         if (data == null)
             serializeObject();
-        return buf.put(data);
+        return buf.put(data, 0, len);
     }
     
     @Override
@@ -78,12 +79,13 @@ public class JavaObjectBlob implements Blob {
 
     /************************/
 
-    private void serializeObject() {
+    private synchronized void serializeObject() {
 
         try {
             AB baos = new AB();
             
             serializer.serialize(object, baos);
+            len = baos.size();
             data = baos.data();
 
         } catch (IOException e) {
