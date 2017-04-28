@@ -41,7 +41,7 @@ public class StreamsConnection {
     private String url;
     private String instanceId;
     private String apiKey;
-    private boolean allowInsecureHosts;
+    private boolean allowInsecureHosts = false ;
 
     private Executor executor;
 
@@ -53,7 +53,7 @@ public class StreamsConnection {
      * @param url
      *            String root path to the REST API
      */
-    private void setURL(String url) {
+    protected void setURL(String url) {
         if (url.equals("") || (url.charAt(url.length() - 1) != '/')) {
             this.url = url;
         } else {
@@ -71,12 +71,16 @@ public class StreamsConnection {
      * @param url
      *            String representing the root url to the REST API
      */
-    public StreamsConnection(String userName, String authToken, String url) {
+    protected StreamsConnection(String userName, String authToken, String url) {
         String apiCredentials = userName + ":" + authToken;
         apiKey = "Basic " + DatatypeConverter.printBase64Binary(apiCredentials.getBytes(StandardCharsets.UTF_8));
 
         executor = Executor.newInstance();
         setURL(url);
+    }
+
+    public static StreamsConnection createInstance( String userName, String authToken, String url ) {
+        return new StreamsConnection( userName, authToken, url ) ; 
     }
 
     /**
@@ -192,6 +196,7 @@ public class StreamsConnection {
             executor = Executor.newInstance() ;
             allowInsecureHosts = false ;
         }
+        System.out.println( "setting insecure host" ) ;
         return allowInsecureHosts ;
     }
 
@@ -208,7 +213,7 @@ public class StreamsConnection {
         System.out.println(authToken);
         System.out.println(url);
         System.out.println(instanceName);
-        StreamsConnection sClient = new StreamsConnection(userName, authToken, url);
+        StreamsConnection sClient = StreamsConnection.createInstance(userName, authToken, url);
 
         if ( args.length == 5 )
         {

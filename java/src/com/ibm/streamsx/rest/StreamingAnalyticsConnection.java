@@ -17,12 +17,7 @@ import com.ibm.streamsx.rest.primitives.Metric;
 import com.ibm.streamsx.rest.primitives.Operator;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
-public class StreamingAnalyticsConnection {
-
-    private StreamsConnection connection;
-    private String streaming_analytics_rest_url;
-    private String instance_rest_url;
-    private Instance instance;
+public class StreamingAnalyticsConnection extends StreamsConnection{
 
     /**
      * Basic connection to the Streaming Analytics Instance
@@ -33,7 +28,11 @@ public class StreamingAnalyticsConnection {
      *            Name of the service in the file above
      * @throws IOException
      */
-    public StreamingAnalyticsConnection(String credentialsFile, String serviceName)
+    private StreamingAnalyticsConnection(String userName, String authToken, String url) {
+      super( userName, authToken, url );
+    }
+
+    public static StreamingAnalyticsConnection createInstance( String credentialsFile, String serviceName )
             throws IOException {
 
         JsonObject SAcredentials = new JsonObject();
@@ -51,44 +50,29 @@ public class StreamingAnalyticsConnection {
         String resourcesPath = credential.get("resources_path").getAsString();
         String sURL = credential.get("rest_url").getAsString() + resourcesPath;
 
-        connection = new StreamsConnection(userId, authToken, "");
+        String restURL = "" ;
+        StreamingAnalyticsConnection SAConn = new StreamingAnalyticsConnection( userId, authToken, restURL ) ;
 
-        String sResources = connection.getResponseString(sURL);
-
+        String sResources = SAConn.getResponseString(sURL);
         if (!sResources.equals("")) {
             JsonParser jParse = new JsonParser();
             JsonObject resources = jParse.parse(sResources).getAsJsonObject();
 
-            String restURL = resources.get("streams_rest_url").getAsString();
-            connection.setStreamsInstanceRestURL(restURL);
-        } else {
+            restURL = resources.get("streams_rest_url").getAsString();
+        }
+
+        if ( restURL.equals("") ) {
             throw new IllegalStateException("Missing restURL for service");
         }
 
+        SAConn.setURL( restURL ) ;
         String[] rTokens = resourcesPath.split("/");
         if (rTokens[3].equals("service_instances")) {
-            connection.setInstanceId(rTokens[4]);
+            SAConn.setInstanceId(rTokens[4]) ;
         } else {
             throw new IllegalStateException("Resource Path decoding error.");
         }
-    }
-
-    /**
-     * @return {@code Instance}
-     * @throws IOException
-     */
-    public Instance getInstance() throws IOException {
-        return connection.getInstance();
-    }
-
-    /**
-     * @param instanceId
-     *            String representing the instance id
-     * @return {@code Instance}
-     * @throws IOException
-     */
-    public Instance getInstance(String instanceId) throws IOException {
-        return connection.getInstance(instanceId);
+        return SAConn ;
     }
 
     /**
@@ -107,7 +91,7 @@ public class StreamingAnalyticsConnection {
         System.out.println(serviceName);
 
         try {
-            StreamingAnalyticsConnection sClient = new StreamingAnalyticsConnection(credentials, serviceName);
+            StreamsConnection sClient = StreamingAnalyticsConnection.createInstance(credentials, serviceName);
 
             System.out.println("Returning instance");
             Instance instance = sClient.getInstance();
