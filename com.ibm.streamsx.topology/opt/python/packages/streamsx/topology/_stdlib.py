@@ -154,5 +154,72 @@ _STD_LIB_MODULES = {
     'xml.sax.handler',
     'xml.sax.saxutils',
     'xml.sax.xmlreader',
-    'xml.parsers.expat'
+    'xml.parsers.expat',
+
+    # 21. Internet Protocols and Support
+    'webbrowser',
+    'cgi',
+    'cgitb',
+    'wsgiref',
+    'urllib',
+    'http',
+    'ftplib',
+    'poplib',
+    'imaplib',
+    'nntplib',
+    'smtplib',
+    'smtpd',
+    'telnetlib',
+    'uuid',
+    'socketserver',
+    'xmlrpc',
+    'ipaddress',
+
+    # 22. Multimedia Services
+    'audioop',
+    'aifc',
+    'sunau',
+    'wave',
+    'chunk',
+    'colorsys',
+    'imghdr',
+    'sndhdr',
+    'ossaudiodev',
+
+    # 29. Python Runtime Services
+    'sys',
+    'sysconfig',
+    'builtins',
+    'warnings',
+    'contextlib',
+    'abc',
+    'atexit',
+    'traceback',
+    '__future__',
+    'gc',
+    'inspect',
+    'site',
+    'fpectl',
+
+    # 30. Importing modules
+    'zipimport',
+    'pkgutil',
+    'moduleinder',
+    'runpy',
+    'importlib',
+
+    # 32. Python Language Services
+    'parser',
+    'ast',
+    'symtable',
+    'symbol',
+    'token',
+    'keyword',
+    'tokenize',
+    'tabnanny',
+    'pyclbr',
+    'py_compile',
+    'compileall',
+    'dis',
+    'pickletools'
 }
