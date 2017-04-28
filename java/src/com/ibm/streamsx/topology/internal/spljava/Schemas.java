@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.spljava;
 
 import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
+import static com.ibm.streamsx.topology.internal.functional.ObjectUtils.deserializeLogic;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -14,6 +15,8 @@ import java.util.Set;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.types.Blob;
 import com.ibm.streams.operator.types.XML;
+import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
+import com.ibm.streamsx.topology.spi.TupleSerializer;
 
 public class Schemas {
     @SuppressWarnings("unused")
@@ -71,6 +74,11 @@ public class Schemas {
         }
 
         return JAVA_OBJECT;
+    }
+    
+    public static SPLMapping<?> getObjectMapping(String tupleSerializer) throws ClassNotFoundException {
+        TupleSerializer serializer = (TupleSerializer) deserializeLogic(tupleSerializer);
+        return new SPLJavaObject(JAVA_OBJECT, serializer);
     }
 
     public static SPLMapping<?> getSPLMapping(StreamSchema schema) {

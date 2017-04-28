@@ -5,11 +5,11 @@
 package com.ibm.streamsx.topology.internal.spljava;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
 
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.types.Blob;
+import com.ibm.streamsx.topology.spi.TupleSerializer;
 
 /**
  * Mapping for a Java object as an SPL schema.
@@ -23,9 +23,16 @@ class SPLJavaObject extends SPLMapping<Object> {
      * Attribute name for a schema with a serialized java object
      */
     public static final String SPL_JAVA_OBJECT = "__spl_jo";
+    
+    private final TupleSerializer serializer;
 
     SPLJavaObject(StreamSchema schema) {
+        this(schema, TupleSerializer.JAVA_SERIALIZER);
+    }
+    
+    SPLJavaObject(StreamSchema schema, TupleSerializer serializer) {
         super(schema);
+        this.serializer = serializer;
     }
 
     @Override
@@ -36,9 +43,9 @@ class SPLJavaObject extends SPLMapping<Object> {
             JavaObjectBlob jblob = (JavaObjectBlob) blob;
             return jblob.getObject();
         }
-
-        try (ObjectInputStream ois = new ObjectInputStream(blob.getInputStream())) {
-            return ois.readObject();
+        
+        try {
+            return serializer.deserialize(blob.getInputStream());
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
@@ -49,7 +56,7 @@ class SPLJavaObject extends SPLMapping<Object> {
     @Override
     public Tuple convertTo(Object tuple) {
 
-        JavaObjectBlob jblob = new JavaObjectBlob(tuple);
+        JavaObjectBlob jblob = new JavaObjectBlob(serializer, tuple);
         return getSchema().getTuple(new Blob[] { jblob });
     }
 }
