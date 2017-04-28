@@ -11,7 +11,9 @@ import com.ibm.streams.operator.state.CheckpointContext.Kind;
 import com.ibm.streams.operator.state.ConsistentRegionContext;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.internal.messages.Messages;
+import com.ibm.streamsx.topology.spi.TupleSerializer;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
+import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 import com.ibm.streamsx.topology.internal.functional.StatelessFunctionalHandler;
 
 class FunctionalOpUtils {
@@ -44,5 +46,15 @@ class FunctionalOpUtils {
 
         if (crc.isStartOfRegion() || crc.isTriggerOperator())
             checker.setInvalidContext(Messages.getString("CONSISTENT_CHECK_1"), new String[] {context.getKind()});
+    }
+    
+    static TupleSerializer createTupleSerializer(String tupleSerializer) throws ClassNotFoundException {
+        return (TupleSerializer) ObjectUtils.deserializeLogic(tupleSerializer);
+    }
+    
+    static Exception throwError(Throwable t) {
+        if (t instanceof Error)
+            throw (Error) t;
+        return (Exception) t;
     }
 }

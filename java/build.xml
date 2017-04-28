@@ -35,18 +35,21 @@
        a build farm.
    -->
   <property name="cisxt" value="com/ibm/streamsx/topology"/>
+  <property name="pure.source"
+       value="${cisxt}/function/*.java
+              ${cisxt}/internal/gson/*.java
+              ${cisxt}/generator/**
+              ${cisxt}/context/remote/*.java
+              ${cisxt}/internal/context/remote/*.java
+              ${cisxt}/internal/streaminganalytics/*.java
+              "
+  />
   <target name="compile.pure" depends="init">
     <javac debug="true" includeantruntime="no"
        srcdir="${src}" 
        destdir="${classes}"
        classpathref="compile.pure.classpath"
-       includes="${cisxt}/function/*.java
-                 ${cisxt}/internal/gson/*.java
-                 ${cisxt}/generator/**
-                 ${cisxt}/context/remote/*.java
-                 ${cisxt}/internal/context/remote/*.java
-                 ${cisxt}/internal/streaminganalytics/*.java
-                 "
+       includes="${pure.source}"
     />
     <copy toDir="${classes}">
       <fileset dir="${src}" includes="**/*.properties"/>
@@ -57,7 +60,9 @@
     <javac debug="true" includeantruntime="no"
        srcdir="${src}" 
        destdir="${classes}"
-       classpathref="compile.classpath"/>
+       classpathref="compile.classpath"
+       excludes="${pure.source}"
+       />
     <ant dir="../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
 
@@ -72,7 +77,7 @@
        </fileset>
      </classpath>
   </manifestclasspath>
-    <jar destfile="${jar}">
+    <jar destfile="${jar}" filesonly="true">
        <manifest>
           <attribute name="Class-Path" value="${jar.classpath}"/>
        </manifest>
