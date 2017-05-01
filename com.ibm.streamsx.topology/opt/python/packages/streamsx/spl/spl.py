@@ -14,7 +14,7 @@ operator.
     Operator names must be valid SPL identifers,
     SPL identifiers start with an ASCII letter or underscore,
     followed by ASCII letters, digits, or underscores.
-    The name also must not be a SPL keyword.
+    The name also must not be an SPL keyword.
 
 Once created the operators become part of a toolkit and may be used
 like any other SPL operator.
@@ -48,7 +48,7 @@ are not supported.
     Parameter names must be valid SPL identifers,
     SPL identifiers start with an ASCII letter or underscore,
     followed by ASCII letters, digits, or underscores.
-    The name also must not be a SPL keyword.
+    The name also must not be an SPL keyword.
 
     Parameter names ``suppress`` and ``include`` are reserved.
 
@@ -140,7 +140,7 @@ In SPL terms this is similar to an SPL Custom operator, where
 the code in the Python function is the custom code. For
 operators with input ports the function is called for each
 input tuple, passing a Python representation of the SPL input tuple.
-For a SPL source operator the function is called to obtain an iterable
+For an SPL source operator the function is called to obtain an iterable
 whose contents will be submitted to the output stream as SPL tuples.
 
 Operator parameters are not supported.
@@ -286,7 +286,7 @@ They do not support the ``style`` parameter.
 Examples
 ++++++++
 
-These examples how a SPL tuple with the schema and value::
+These examples show how an SPL tuple with the schema and value::
 
     tuple<rstring id, float64 temp, boolean increase>
     {id='battery', temp=23.7, increase=true}
@@ -386,7 +386,7 @@ call and the resulting values of the function's parameters.
 
 In all cases the SPL tuple must be able to provide all parameters
 required by the function. If the SPL schema is insufficient then
-an error will result, typically a SPL compile time error.
+an error will result, typically an SPL compile time error.
 
 The SPL schema can provide a subset of the formal parameters if the
 remaining attributes are optional (having a default).
@@ -494,7 +494,7 @@ When a returned tuple has more values than attributes in the SPL output schema t
 
 Python dictionary
 +++++++++++++++++
-A Python dictionary is converted to a SPL tuple for submission to
+A Python dictionary is converted to an SPL tuple for submission to
 the associated output port. An SPL attribute is set from the
 dictionary if the dictionary contains a key equal to the attribute
 name. The value is used to set the attribute, unless the attribute is
@@ -508,7 +508,7 @@ Any keys in the dictionary that do not map to SPL attribute names are ignored.
     
 Python list
 +++++++++++
-When a list returned, each value is converted to an SPL tuple and
+When a list is returned, each value is converted to an SPL tuple and
 submitted to the output port, in order of the list starting with the
 first element (position 0). If the list contains `None` at an index
 then no SPL tuple is submitted for that index.
@@ -558,7 +558,7 @@ def _valid_op_parameter(name):
 
 def pipe(wrapped):
     """
-    Decorator to create a SPL operator from a function.
+    Decorator to create an SPL operator from a function.
     
     A pipe SPL operator with a single input port and a single
     output port. For each tuple on the input port the
@@ -566,10 +566,9 @@ def pipe(wrapped):
 
     SPL attributes from the tuple are passed by position.
     
-    The value returned from the function defines what is
-    submitted to the output port. If None is returned then
-    nothing is submitted. If a tuple is returned then it
-    is c
+    The value returned from the function results in
+    zero or more tuples being submitted to the operator output
+    port, see :ref:`submit-from-python`.
     """
     if not inspect.isfunction(wrapped):
         raise TypeError('A function is required')
@@ -723,7 +722,7 @@ class source:
     where ``value`` is the return of the function.
 
     For each value in the iteration SPL zero or more tuples
-    are submitted to the output port, dervied from the value,
+    are submitted to the output port, derived from the value,
     see :ref:`submit-from-python`.
     
     If the iteration completes then no more tuples

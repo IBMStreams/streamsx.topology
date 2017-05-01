@@ -43,7 +43,7 @@ Here is a simple example that tests a filter correctly only passes tuples with v
             tester.contents(s, [7, 9, 8])
 
             # Submit the application for test
-            # If it fails an AssetionError will be raised.
+            # If it fails an AssertionError will be raised.
            tester.test(self.test_ctxtype, self.test_config)
 
 
@@ -87,7 +87,7 @@ class Tester(object):
 
     .. warning::
         For future compatibility applications under test should not include intended failures that cause
-        a processing element to stop or restart. Thus currently testing is against expected application behavior.
+        a processing element to stop or restart. Thus, currently testing is against expected application behavior.
 
     Args:
         topology: Topology to be tested.
@@ -101,10 +101,10 @@ class Tester(object):
     @staticmethod
     def setup_standalone(test):
         """
-        Setup a unittest.TestCase to run tests using IBM Streams standalone mode.
+        Set up a unittest.TestCase to run tests using IBM Streams standalone mode.
 
         Requires a local IBM Streams install define by the STREAMS_INSTALL
-        environment variable. If STREAMS_INSTALL is not set then the
+        environment variable. If STREAMS_INSTALL is not set, then the
         test is skipped.
 
         Two attributes are set in the test case:
@@ -124,13 +124,13 @@ class Tester(object):
     @staticmethod
     def setup_distributed(test):
         """
-        Setup a unittest.TestCase to run tests using IBM Streams distributed mode.
+        Set up a unittest.TestCase to run tests using IBM Streams distributed mode.
 
         Requires a local IBM Streams install define by the STREAMS_INSTALL
         environment variable. If STREAMS_INSTALL is not set then the
         test is skipped.
 
-        The Steams instance to use is defined by the environment variables:
+        The Streams instance to use is defined by the environment variables:
          * STREAMS_ZKCONNECT - Zookeeper connection string
          * STREAMS_DOMAIN_ID - Domain identifier
          * STREAMS_INSTANCE_ID - Instance identifier
@@ -161,13 +161,13 @@ class Tester(object):
     @staticmethod
     def setup_streaming_analytics(test, service_name=None, force_remote_build=False):
         """
-        Setup a unittest.TestCase to run tests using Streaming Analytics service on IBM Bluemix cloud platform.
+        Set up a unittest.TestCase to run tests using Streaming Analytics service on IBM Bluemix cloud platform.
 
         The service to use is defined by:
          * VCAP_SERVICES environment variable containing `streaming_analytics` entries.
          * service_name which defaults to the value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.
 
-        If VCAP_SERVICES is not set or a service name is not defined then the test is skipped.
+        If VCAP_SERVICES is not set or a service name is not defined, then the test is skipped.
 
         Two attributes are set in the test case:
          * test_ctxtype - Context type the test will be run in.
@@ -210,15 +210,15 @@ class Tester(object):
         return stream
 
     def tuple_count(self, stream, count, exact=True):
-        """Test that that a stream contains an number of tuples.
+        """Test that a stream contains a number of tuples.
 
-        If `exact` is `True` then condition becomes valid when `count`
-        tuples are seen on stream during the test. Subsequently if additional
-        tuples are seen on stream then the condition fails and can never
+        If `exact` is `True`, then condition becomes valid when `count`
+        tuples are seen on `stream` during the test. Subsequently if additional
+        tuples are seen on `stream` then the condition fails and can never
         become valid.
 
-        If `exact` is `False` then the condition becomes valid once `count`
-        tuples are seen on stream and remains valid regardless of
+        If `exact` is `False`, then the condition becomes valid once `count`
+        tuples are seen on `stream` and remains valid regardless of
         any additional tuples.
 
         Args:
@@ -280,7 +280,7 @@ class Tester(object):
                     yield r.random()
 
             class TestFilterMap(unittest.testCase):
-            # Setup omitted
+            # Set up omitted
 
                 def test_filter(self):
                     # Declare the application to be tested
@@ -297,7 +297,7 @@ class Tester(object):
 
 
                     # Submit the application for test
-                    # If it fails an AssetionError will be raised.
+                    # If it fails an AssertionError will be raised.
                     tester.test(self.test_ctxtype, self.test_config)
 
         Args:
@@ -316,7 +316,7 @@ class Tester(object):
         The check is in the context of the Python runtime executing the unittest case,
         typically the callable is a method of the test case.
 
-        The application remains running until the all the conditions are met
+        The application remains running until all the conditions are met
         and `callable` returns. If `callable` raises an error, typically
         through an assertion method from `unittest` then the test will fail.
 
