@@ -4,6 +4,7 @@ import static com.ibm.streamsx.topology.internal.functional.ObjectUtils.serializ
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.ObjIntConsumer;
@@ -19,7 +21,6 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
-import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 import com.ibm.streamsx.topology.spi.operators.ForEach;
 import com.ibm.streamsx.topology.spi.operators.Primitive;
 import com.ibm.streamsx.topology.spi.operators.Source;
@@ -103,7 +104,7 @@ public interface Invoker {
     }
     
     /**
-     * Invoke a functional operator consuming an aribitrary number of
+     * Invoke a functional operator consuming an arbitrary number of
      * input streams and producing an arbitrary number of output streams.
      * 
      * @param streams
@@ -114,14 +115,65 @@ public interface Invoker {
      * @param tupleSerializers
      * @return
      */
-    static List<TStream<?>> invokeFunctor(
+    static List<TStream<?>> invokePrimitive(
+            TopologyElement te,
             List<TStream<?>> streams,
             Class<? extends Primitive> opClass,
             JsonObject config,         
             ObjIntConsumer<?> logic,
             List<Type> tupleTypes,
-            List<TupleSerializer> tupleSerializers
+            List<TupleSerializer> inputSerializers,
+            List<TupleSerializer> outputSerializers,
+            Map<String,Object> parameters
             ) {
-        return null;
+        
+        Map<String,Object> ps = new HashMap<>();
+        if (parameters != null)
+            ps.putAll(parameters);
+        parameters = ps;
+        
+        if (inputSerializers != null && !inputSerializers.isEmpty()) {
+            String[] serializers = new String[inputSerializers.size()];
+            for (int i = 0; i < serializers.length; i++) {
+                TupleSerializer serializer = inputSerializers.get(i);
+                if (serializer == null)
+                    serializers[i] = "";
+                else
+                    serializers[i] = serializeLogic(serializer);
+            }
+            
+            parameters.put("inputSerializer", serializers);
+        }
+        
+        if (outputSerializers != null && !outputSerializers.isEmpty()) {
+            String[] serializers = new String[outputSerializers.size()];
+            for (int i = 0; i < serializers.length; i++) {
+                TupleSerializer serializer = outputSerializers.get(i);
+                if (serializer == null)
+                    serializers[i] = "";
+                else
+                    serializers[i] = serializeLogic(serializer);
+            }
+            
+            parameters.put("outputSerializer", serializers);
+        }
+        
+        BOperatorInvocation primitive = JavaFunctional.addFunctionalOperator(te,
+                jstring(config, "name"), opClass,
+                logic, parameters);
+
+        // Extract any source location information from the config.
+        SourceInfo.setSourceInfo(primitive, config);
+        
+        List<TStream<?>> outputs = null;
+        
+        if (tupleTypes != null) {       
+            outputs = new ArrayList<>(tupleTypes.size());
+            for (Type tupleType : tupleTypes) {
+                outputs.add(JavaFunctional.addJavaOutput(te, primitive, tupleType));
+            }
+        }
+           
+        return outputs;
     }
 }

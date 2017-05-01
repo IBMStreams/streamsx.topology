@@ -42,6 +42,9 @@ public abstract class Primitive extends AbstractPrimitive implements FunctionalO
         return super.getFunctionContext();
     }
     
+    /**
+     * Return a function that submits tuples to an output ports.
+     */
     public final ObjIntConsumer<Object> submitter() {
         return super.submitter();
     }

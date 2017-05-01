@@ -9,6 +9,7 @@ import java.util.List;
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.StreamingInput;
 import com.ibm.streams.operator.Tuple;
+import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streamsx.topology.function.ObjIntConsumer;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
@@ -19,6 +20,19 @@ public abstract class AbstractPrimitive extends FunctionFunctor {
     private List<SPLMapping<Object>> inputMappings;
     private List<SPLMapping<Object>> outputMappings;
     
+    private String[] outputSerializer;
+    private String[] inputSerializer;
+    
+    @Parameter
+    public void setOutputSerializer(String[] outputSerializer) {
+        this.outputSerializer = outputSerializer;
+    }
+
+    @Parameter
+    public void setInputSerializer(String[] inputSerializer) {
+        this.inputSerializer = inputSerializer;
+    }
+
     @Override
     public synchronized void initialize(OperatorContext context) throws Exception {
         super.initialize(context);
@@ -28,12 +42,20 @@ public abstract class AbstractPrimitive extends FunctionFunctor {
         initialize();
         
         inputMappings = new ArrayList<>(context.getNumberOfStreamingInputs());        
-        for (int p = 0; p < context.getNumberOfStreamingInputs(); p++)
-            inputMappings.add(getInputMapping(this, p));
+        for (int p = 0; p < context.getNumberOfStreamingInputs(); p++) {
+            String serializer = null;
+            if (inputSerializer != null)
+                serializer = inputSerializer[p];
+            inputMappings.add(getInputMapping(this, p, serializer));
+        }
         
         outputMappings = new ArrayList<>(context.getNumberOfStreamingOutputs());
-        for (int p = 0; p < context.getNumberOfStreamingOutputs(); p++)
-            outputMappings.add(getOutputMapping(this, p));
+        for (int p = 0; p < context.getNumberOfStreamingOutputs(); p++) {
+            String serializer = null;
+            if (outputSerializer != null)
+                serializer = outputSerializer[p];
+            outputMappings.add(getOutputMapping(this, p, serializer));
+        }
         
     }
     
