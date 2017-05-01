@@ -2,23 +2,21 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
  */
-package com.ibm.streamsx.rest.primitives;
+package com.ibm.streamsx.rest;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
-import com.ibm.streamsx.rest.StreamsConnection;
-import com.ibm.streamsx.rest.primitives.Job;
-import com.ibm.streamsx.rest.primitives.JobGson;
 
-public class JobsArray {
-    private final StreamsConnection connection;
+/**
+ * Package class to hold information about the Jobs list from GET jobs URL
+ */
+class JobsArray {
     private List<Job> jobs;
     private JobsArrayGson jobArray;
 
     public JobsArray(StreamsConnection sc, String gsonJobs) {
-        connection = sc;
         jobArray = new Gson().fromJson(gsonJobs, JobsArrayGson.class);
 
         jobs = new ArrayList<Job>(jobArray.jobs.size());

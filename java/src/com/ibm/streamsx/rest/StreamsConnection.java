@@ -5,15 +5,16 @@
 package com.ibm.streamsx.rest;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-
-import javax.net.ssl.SSLHandshakeException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.security.NoSuchAlgorithmException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.List;
+import java.util.logging.Logger;
+
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.http.HttpResponse;
@@ -29,23 +30,16 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
-import com.google.gson.Gson;
-import com.ibm.streamsx.rest.primitives.Instance;
-import com.ibm.streamsx.rest.primitives.InstancesArray;
-import com.ibm.streamsx.rest.primitives.Job;
-import com.ibm.streamsx.rest.primitives.Metric;
-import com.ibm.streamsx.rest.primitives.Operator;
-
 public class StreamsConnection {
+
+    static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.topology.rest.StreamsConnection");
 
     private String url;
     private String instanceId;
-    private String apiKey;
-    private boolean allowInsecureHosts = false ;
+    protected String apiKey;
+    private boolean allowInsecureHosts = false;
 
-    private Executor executor;
-
-    private final Gson gson = new Gson();
+    protected Executor executor;
 
     /**
      * sets the url for this object removing the trailing slash
@@ -79,8 +73,18 @@ public class StreamsConnection {
         setURL(url);
     }
 
-    public static StreamsConnection createInstance( String userName, String authToken, String url ) {
-        return new StreamsConnection( userName, authToken, url ) ; 
+    /**
+     * Basic connection to a streams instance
+     * 
+     * @param userName
+     *            String representing the userName to connect to the instance
+     * @param authToken
+     *            String representing the password to connect to the instance
+     * @param url
+     *            String representing the root url to the REST API
+     */
+    public static StreamsConnection createInstance(String userName, String authToken, String url) {
+        return new StreamsConnection(userName, authToken, url);
     }
 
     /**
@@ -108,7 +112,7 @@ public class StreamsConnection {
      * @return Response from the inputString
      * @throws IOException
      */
-    public String getResponseString(String inputString) throws IOException {
+    String getResponseString(String inputString) throws IOException {
         String sReturn = "";
         Request request = Request.Get(inputString).addHeader(AUTH.WWW_AUTH_RESP, apiKey).useExpectContinue();
 
@@ -122,11 +126,8 @@ public class StreamsConnection {
             String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
             throw new IllegalStateException(httpError);
         }
-        // FIXME: remove these lines
-        System.out.println("-----------------");
-        System.out.println(inputString);
-        System.out.println(rcResponse + ": " + sReturn);
-        System.out.println("-----------------");
+        traceLog.finest("Request: " + inputString);
+        traceLog.finest(rcResponse + ": " + sReturn);
         return sReturn;
     }
 
@@ -172,32 +173,33 @@ public class StreamsConnection {
     }
 
     /**
-     * @param  allowInsecure boolean whether insecure hosts are allowed(true) or not(false)
-     * @return true if insecure hosts will be allowed
+     * @param allowInsecure
+     *            boolean whether insecure hosts are allowed(true) or not(false)
+     * @return true  if insecure hosts will be allowed
      *         false if insecure hosts will not be allowed
      */
     public boolean allowInsecureHosts(boolean allowInsecure) {
         try {
-            if (( allowInsecure ) && ( false == allowInsecureHosts )) {
+            if ((allowInsecure) && (false == allowInsecureHosts)) {
                 CloseableHttpClient httpClient = HttpClients.custom()
-                        .setHostnameVerifier( new AllowAllHostnameVerifier())
-                        .setSslcontext( new SSLContextBuilder().loadTrustMaterial( null, new TrustStrategy() {
+                        .setHostnameVerifier(new AllowAllHostnameVerifier())
+                        .setSslcontext(new SSLContextBuilder().loadTrustMaterial(null, new TrustStrategy() {
                             public boolean isTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-                                return true ;
+                                return true;
                             }
                         }).build()).build();
-                executor = Executor.newInstance(httpClient) ;
-                allowInsecureHosts = true ;
-            } else if (( false == allowInsecure ) && ( true == allowInsecureHosts ) ){
-                executor = Executor.newInstance() ;
-                allowInsecureHosts = false ;
+                executor = Executor.newInstance(httpClient);
+                allowInsecureHosts = true;
+            } else if ((false == allowInsecure) && (true == allowInsecureHosts)) {
+                executor = Executor.newInstance();
+                allowInsecureHosts = false;
             }
-        } catch ( NoSuchAlgorithmException | KeyStoreException | KeyManagementException e ) {
-            executor = Executor.newInstance() ;
-            allowInsecureHosts = false ;
+        } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+            executor = Executor.newInstance();
+            allowInsecureHosts = false;
         }
-        System.out.println( "setting insecure host" ) ;
-        return allowInsecureHosts ;
+        traceLog.info("Insecure Host Connection enabled");
+        return allowInsecureHosts;
     }
 
     /**
@@ -215,31 +217,35 @@ public class StreamsConnection {
         System.out.println(instanceName);
         StreamsConnection sClient = StreamsConnection.createInstance(userName, authToken, url);
 
-        if ( args.length == 5 )
-        {
-          if ( args[4].equals("true" ) ) {
-            sClient.allowInsecureHosts(true) ;
-          }
+        if (args.length == 5) {
+            if (args[4].equals("true")) {
+                sClient.allowInsecureHosts(true);
+            }
         }
-        
-        try {
-          System.out.println("Instance: ");
-          List<Instance> instances = sClient.getInstances();
 
-          for (Instance instance : instances) {
-              System.out.println("Job: ");
-              List<Job> jobs = instance.getJobs();
-              for (Job job : jobs) {
-                  System.out.println("Operator: ");
-                  List<Operator> operators = job.getOperators();
-                  for (Operator op : operators) {
-                      System.out.println("Metric: ") ;
-                      List<Metric> metrics = op.getMetrics();
-                  }
-              }
-          }
+        try {
+            System.out.println("Instance: ");
+            List<Instance> instances = sClient.getInstances();
+
+            for (Instance instance : instances) {
+                System.out.println("Job: ");
+                List<Job> jobs = instance.getJobs();
+                for (Job job : jobs) {
+                    System.out.println("Operator: ");
+                    List<Operator> operators = job.getOperators();
+                    for (Operator op : operators) {
+                        System.out.println("Metric: ");
+                        List<Metric> metrics = op.getMetrics();
+                    }
+                }
+
+                if (!jobs.isEmpty()) {
+                    System.out.println("Looking at first job specifically");
+                    Job job = jobs.get(0);
+                }
+            }
         } catch (Exception e) {
-          e.printStackTrace();
+            e.printStackTrace();
         }
     }
 }

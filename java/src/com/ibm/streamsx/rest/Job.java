@@ -2,15 +2,13 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
  */
-package com.ibm.streamsx.rest.primitives;
+package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
-import com.ibm.streamsx.rest.StreamsConnection;
-import com.ibm.streamsx.rest.primitives.Operator;
 
 public class Job {
     private final StreamsConnection connection;
@@ -33,7 +31,6 @@ public class Job {
     public List<Operator> getOperators() throws IOException {
         String sGetOperatorsURI = job.operators;
 
-        System.out.println(sGetOperatorsURI);
         String sReturn = connection.getResponseString(sGetOperatorsURI);
 
         List<Operator> operators = new OperatorsArray(connection, sReturn).getOperators();

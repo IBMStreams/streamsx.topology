@@ -2,23 +2,21 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
  */
-package com.ibm.streamsx.rest.primitives;
+package com.ibm.streamsx.rest;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
-import com.ibm.streamsx.rest.StreamsConnection;
-import com.ibm.streamsx.rest.primitives.Metric;
-import com.ibm.streamsx.rest.primitives.MetricGson;
 
-public class MetricsArray {
-    private final StreamsConnection connection;
+/**
+ * Package class to hold information all metrics information from the GET metrics URL
+ */
+class MetricsArray {
     private List<Metric> metrics;
     private MetricsArrayGson metricsArray;
 
     public MetricsArray(StreamsConnection sc, String gsonMetrics) {
-        connection = sc;
         metricsArray = new Gson().fromJson(gsonMetrics, MetricsArrayGson.class);
 
         metrics = new ArrayList<Metric>(metricsArray.metrics.size());

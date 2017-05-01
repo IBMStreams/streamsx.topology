@@ -2,15 +2,11 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
  */
-package com.ibm.streamsx.rest.primitives;
-
-import com.google.gson.Gson;
-import com.ibm.streamsx.rest.StreamsConnection;
-import com.ibm.streamsx.rest.primitives.MetricGson;
+package com.ibm.streamsx.rest;
 
 public class Metric {
+    @SuppressWarnings("unused")
     private final StreamsConnection connection;
-    private final Gson gson = new Gson();
     private MetricGson metric;
 
     public Metric(StreamsConnection sc, MetricGson gsonMetric) {

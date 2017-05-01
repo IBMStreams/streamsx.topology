@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
  */
-package com.ibm.streamsx.rest.primitives;
+package com.ibm.streamsx.rest;
 
 class MetricGson {
     public String description;
