@@ -38,9 +38,7 @@ public abstract class AbstractPrimitive extends FunctionFunctor {
         super.initialize(context);
               
         processor = createLogicHandler();
-        
-        initialize();
-        
+         
         inputMappings = new ArrayList<>(context.getNumberOfStreamingInputs());        
         for (int p = 0; p < context.getNumberOfStreamingInputs(); p++) {
             String serializer = null;
@@ -57,6 +55,7 @@ public abstract class AbstractPrimitive extends FunctionFunctor {
             outputMappings.add(getOutputMapping(this, p, serializer));
         }
         
+        initialize();
     }
     
     abstract public void initialize() throws Exception;
@@ -68,6 +67,10 @@ public abstract class AbstractPrimitive extends FunctionFunctor {
         final Object value = inputMappings.get(port).convertFrom(tuple);
         
         processor.getLogic().accept(value, port);
+    }
+    
+    public ObjIntConsumer<Object> getLogic() {
+        return processor.getLogic();
     }
     
     protected ObjIntConsumer<Object> submitter() {

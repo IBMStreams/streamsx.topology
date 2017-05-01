@@ -117,8 +117,8 @@ public interface Invoker {
      */
     static List<TStream<?>> invokePrimitive(
             TopologyElement te,
-            List<TStream<?>> streams,
             Class<? extends Primitive> opClass,
+            List<TStream<?>> streams,           
             JsonObject config,         
             ObjIntConsumer<?> logic,
             List<Type> tupleTypes,
