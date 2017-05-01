@@ -112,8 +112,8 @@ class Optimizer {
             }
 
             boolean paramNeeded = false;
-            for (int i = 0; i < connCounts.length; i++) {
-                if (connCounts[0] != -1) {
+            for (int oc: connCounts) {
+                if (oc != -1) {
                     paramNeeded = true;
                     break;
                 }
