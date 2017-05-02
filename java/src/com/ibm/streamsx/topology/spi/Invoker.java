@@ -115,12 +115,12 @@ public interface Invoker {
      * @param tupleSerializers
      * @return
      */
-    static <I, O> List<TStream<O>> invokePrimitive(
+    static List<TStream<?>> invokePrimitive(
             TopologyElement te,
             Class<? extends Primitive> opClass,
-            List<TStream<I>> streams,           
+            List<TStream<?>> streams,           
             JsonObject config,         
-            ObjIntConsumer<I> logic,
+            ObjIntConsumer<Object> logic,
             List<Type> tupleTypes,
             List<TupleSerializer> inputSerializers,
             List<TupleSerializer> outputSerializers,
@@ -165,7 +165,7 @@ public interface Invoker {
         // Extract any source location information from the config.
         SourceInfo.setSourceInfo(primitive, config);
         
-        List<TStream<O>> outputs = null;
+        List<TStream<?>> outputs = null;
         
         if (tupleTypes != null) {       
             outputs = new ArrayList<>(tupleTypes.size());
