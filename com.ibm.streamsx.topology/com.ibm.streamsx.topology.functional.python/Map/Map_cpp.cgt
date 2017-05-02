@@ -14,12 +14,45 @@ using namespace streamsx::topology;
  my $pywrapfunc= $pystyle . '_in__' . $pyoutstyle . '_out';
 %>
 
+#define SPLPY_TUPLE_MAP(f, v, r, occ) \
+    streamsx::topology::Splpy::pyTupleMap(f, v, r)
+
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
-   pyInNames_(NULL)
+   pyInNames_(NULL),
+   occ_(-1)
 {
-    funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
+    const char * wrapfn = "<%=$pywrapfunc%>";
+
+<%
+# If occ parameter is positive then pass-by-ref is possible
+# Generate code to allow pass by ref but only use when
+# not connected to a PE output port.
+
+ my $oc = $model->getParameterByName("outputConnections");
+
+ if ($oc) {
+    my $occ = $oc->getValueAt(0)->getSPLExpression();
+    if ($occ > 0) {
+        my $pybyrefwrapfunc = $pystyle . '_in__object_out';
+%>
+
+#undef SPLPY_TUPLE_MAP
+#define SPLPY_TUPLE_MAP(f, v, r, occ) \
+    streamsx::topology::Splpy::pyTupleMapByRef(f, v, r, occ)
+
+    if (!this->getOutputPortAt(0).isConnectedToAPEOutputPort()) {
+       // pass by reference
+       wrapfn = "<%=$pybyrefwrapfunc%>";
+       occ_ = <%=$occ%>;
+    }
+<%
+    } 
+ }
+%>
+
+    funcop_ = new SplpyFuncOp(this, wrapfn);
 
 <% if ($pystyle eq 'dict') { %>
      SplpyGIL lock;
@@ -60,8 +93,8 @@ print splpy_inputtuple2value($pystyle);
 @include "../pyspltuple2dict.cgt"
 <%}%>
   OPort0Type otuple;
-  if (streamsx::topology::Splpy::pyTupleMap(funcop_->callable(), value,
-       otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>()))
+  if (SPLPY_TUPLE_MAP(funcop_->callable(), value,
+       otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_))
      submit(otuple, 0);
 }
 

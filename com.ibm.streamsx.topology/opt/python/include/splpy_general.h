@@ -324,6 +324,21 @@ class SplpyGeneral {
     }
 
     /*
+     * Sets the blob data to use the bytes from the PyBytes object.
+     * Thus while the blob is active the reference count must
+     * be held on value.
+     */
+    inline void pySplValueUsingPyObject(SPL::blob & splv, PyObject * value) {
+      char * bytes = PyBytes_AsString(value);          
+      if (bytes == NULL) {
+         SPLAPPTRC(L_ERROR, "Python can't convert to SPL blob!", "python");
+         throw SplpyGeneral::pythonException("blob");
+      }
+      long int size = PyBytes_GET_SIZE(value);
+      splv.useExternalData((unsigned char *)bytes, size);
+    }
+
+    /*
     ** Convert to a SPL rstring from a Python string object.
     */
     inline void pySplValueFromPyObject(SPL::rstring & splv, PyObject * value) {

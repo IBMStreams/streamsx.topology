@@ -92,7 +92,7 @@ namespace streamsx {
     }
 
     /*
-    * Call a function passing the SPL attribute value of type T
+    
     * and fill in the SPL attribute of type R with its result.
     * Implementation for function Map operator.
     */
@@ -107,7 +107,7 @@ namespace streamsx {
         Py_DECREF(pyReturnVar);
         return 0;
       } else if(pyReturnVar == 0){
-         throw SplpyGeneral::pythonException("transform");
+         throw SplpyGeneral::pythonException("map");
       } 
 
       pySplValueFromPyObject(retSplVal, pyReturnVar);
@@ -116,6 +116,39 @@ namespace streamsx {
       return 1;
     }
 
+    /**
+     * Implementation for Map operator when the output port
+     * can pass by reference.
+     * occ = 0,-1 do not pass by ref
+     * occ >= 1 - pass by ref - occ is the reference count bumps
+     * we must leave the object with.
+     */
+    template <class T>
+    static int pyTupleMapByRef(PyObject * function, T & splVal, SPL::blob & retSplVal, int32_t occ) {
+      SplpyGIL lock;
+
+      // invoke python nested function that calls the application function
+      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
+
+      if (SplpyGeneral::isNone(pyReturnVar)) {
+        Py_DECREF(pyReturnVar);
+        return 0;
+      } else if(pyReturnVar == 0){
+         throw SplpyGeneral::pythonException("map");
+      } 
+
+      if (occ > 0) {
+          pyTupleByRef(retSplVal, pyReturnVar, occ);
+          return 1;
+      } 
+
+      pySplValueFromPyObject(retSplVal, pyReturnVar);
+      Py_DECREF(pyReturnVar);
+
+      return 1;
+    }
+
+
     // Python hash of an SPL value
     // Python hashes are signed integer values
     template <class T>
@@ -123,10 +156,8 @@ namespace streamsx {
 
       SplpyGIL lock;
 
-      PyObject * arg = pySplValueToPyObject(splVal);
+      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
 
-      // invoke python function that generates the hash
-      PyObject * pyReturnVar = pyTupleFunc(function, arg); 
       if (pyReturnVar == 0){
         throw SplpyGeneral::pythonException("hash");
       }
