@@ -165,6 +165,9 @@ public interface Invoker {
         // Extract any source location information from the config.
         SourceInfo.setSourceInfo(primitive, config);
         
+        for (TStream<?> stream : streams)
+            stream.connectTo(primitive, true, null);
+        
         List<TStream<?>> outputs = null;
         
         if (tupleTypes != null) {       
