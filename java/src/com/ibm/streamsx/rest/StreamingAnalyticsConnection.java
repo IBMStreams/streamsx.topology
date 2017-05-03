@@ -11,6 +11,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.auth.AUTH;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.client.fluent.Response;
+import org.apache.http.util.EntityUtils;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
@@ -53,8 +60,12 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
         String resourcesPath = credential.get("resources_path").getAsString();
         String sURL = credential.get("rest_url").getAsString() + resourcesPath;
 
+        String jobPath = credential.get("jobs_path").getAsString();
+        String jobString = credential.get("rest_url").getAsString() + jobPath;
+
         String restURL = "";
         StreamingAnalyticsConnection streamingConnection = new StreamingAnalyticsConnection(userId, authToken, restURL);
+        streamingConnection.setJobsPath(jobString);
 
         String sResources = streamingConnection.getResponseString(sURL);
         if (!sResources.equals("")) {
@@ -78,6 +89,38 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
         return streamingConnection;
     }
 
+    private void setJobsPath(String sJobs) {
+        jobsPath = sJobs;
+    }
+
+    /**
+     * @param jobId
+     *            string indicating the job id to be cancelled
+     * @return true if job is cancelled, false otherwise
+     * @throws Exception
+     */
+    @Override
+    public boolean cancelJob(String jobId) throws IOException {
+        boolean rc = false;
+        String sReturn = "";
+        String deleteJob = jobsPath + "?job_id=" + jobId;
+
+        Request request = Request.Delete(deleteJob).addHeader(AUTH.WWW_AUTH_RESP, apiKey).useExpectContinue();
+
+        Response response = executor.execute(request);
+        HttpResponse hResponse = response.returnResponse();
+        int rcResponse = hResponse.getStatusLine().getStatusCode();
+
+        if (HttpStatus.SC_OK == rcResponse) {
+            sReturn = EntityUtils.toString(hResponse.getEntity());
+            rc = true;
+        } else {
+            rc = false;
+        }
+        traceLog.finest("Request: [" + deleteJob + "]");
+        traceLog.finest(rcResponse + ": " + sReturn);
+        return rc;
+    }
 
     /**
      * main currently exists to test this object
@@ -112,8 +155,11 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
             }
 
             if (!jobs.isEmpty()) {
-                System.out.println("Getting first job");
+                System.out.println("Removing first job");
                 Job job = jobs.get(0);
+                if (job.cancel()) {
+                    System.out.println("Job canceled");
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

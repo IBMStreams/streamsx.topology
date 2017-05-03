@@ -37,6 +37,13 @@ public class Job {
         return operators;
     }
 
+    /**
+     * @return true if this job is cancelled, false otherwise
+     */
+    public boolean cancel() throws Exception, IOException {
+        return connection.cancelJob(job.id);
+    }
+
     public String getActiveViews() {
         return job.activeViews;
     }

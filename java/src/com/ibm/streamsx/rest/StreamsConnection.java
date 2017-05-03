@@ -30,6 +30,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
+import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
+
 public class StreamsConnection {
 
     static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.topology.rest.StreamsConnection");
@@ -203,6 +205,18 @@ public class StreamsConnection {
     }
 
     /**
+     * @param jobId string identifying the job to be cancelled
+     * @return true if job is cancelled
+     * @throws Exception
+     */
+    public boolean cancelJob(String jobId) throws Exception {
+        boolean rc = true;
+        InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId));
+        cancelJob.invoke();
+        return rc;
+    }
+
+    /**
      * Main function to test this class for now will be removed eventually
      */
     public static void main(String[] args) {
@@ -240,8 +254,11 @@ public class StreamsConnection {
                 }
 
                 if (!jobs.isEmpty()) {
-                    System.out.println("Looking at first job specifically");
+                    System.out.println("Removing first job specifically");
                     Job job = jobs.get(0);
+                    if (job.cancel()) {
+                        System.out.println("Job canceled");
+                    }
                 }
             }
         } catch (Exception e) {
