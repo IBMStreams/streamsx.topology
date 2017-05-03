@@ -31,17 +31,13 @@ public abstract class Primitive extends AbstractPrimitive implements FunctionalO
         return super.getOperatorContext();
     }
     
-    /**
-     * Get the functional context seen by the logic.
-     * 
-     * This is effectively a clean subset of OperatorContext
-     * that hides any operator specific functionality.
-     */
-    @Override
-    public final FunctionContext getFunctionContext() {
-        return super.getFunctionContext();
+    public ObjIntConsumer<Object> getLogic() {
+        return super.getLogic();
     }
     
+    /**
+     * Return a function that submits tuples to an output ports.
+     */
     public final ObjIntConsumer<Object> submitter() {
         return super.submitter();
     }
