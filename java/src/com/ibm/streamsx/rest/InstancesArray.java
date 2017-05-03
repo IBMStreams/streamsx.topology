@@ -2,23 +2,21 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
  */
-package com.ibm.streamsx.rest.primitives;
+package com.ibm.streamsx.rest;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
-import com.ibm.streamsx.rest.StreamsConnection;
-import com.ibm.streamsx.rest.primitives.Instance;
-import com.ibm.streamsx.rest.primitives.InstanceGson;
 
-public class InstancesArray {
-    private final StreamsConnection connection;
+/**
+ * class to hold information about instances from GET instances URL
+ */
+class InstancesArray {
     private List<Instance> instances;
     private InstancesArrayGson instanceArray;
 
     public InstancesArray(StreamsConnection sc, String gsonInstances) {
-        connection = sc;
         instanceArray = new Gson().fromJson(gsonInstances, InstancesArrayGson.class);
 
         instances = new ArrayList<Instance>(instanceArray.instances.size());
