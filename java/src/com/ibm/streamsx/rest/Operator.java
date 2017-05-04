@@ -2,14 +2,10 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
  */
-package com.ibm.streamsx.rest.primitives;
+package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.util.List;
-
-import com.google.gson.Gson;
-import com.ibm.streamsx.rest.StreamsConnection;
-import com.ibm.streamsx.rest.primitives.Metric;
 
 public class Operator {
     private final StreamsConnection connection;

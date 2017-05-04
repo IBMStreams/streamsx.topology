@@ -4,20 +4,29 @@
  */
 package com.ibm.streamsx.rest;
 
-import java.io.IOException;
-import java.util.List;
-
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.logging.Logger;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.auth.AUTH;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.client.fluent.Response;
+import org.apache.http.util.EntityUtils;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.ibm.streamsx.rest.primitives.Instance;
-import com.ibm.streamsx.rest.primitives.Job;
-import com.ibm.streamsx.rest.primitives.Metric;
-import com.ibm.streamsx.rest.primitives.Operator;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
-public class StreamingAnalyticsConnection extends StreamsConnection{
+public class StreamingAnalyticsConnection extends StreamsConnection {
+
+    static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.topology.rest.StreamingAnalyticsConnection");
+
+    private String jobsPath;
 
     /**
      * Basic connection to the Streaming Analytics Instance
@@ -29,31 +38,36 @@ public class StreamingAnalyticsConnection extends StreamsConnection{
      * @throws IOException
      */
     private StreamingAnalyticsConnection(String userName, String authToken, String url) {
-      super( userName, authToken, url );
+        super(userName, authToken, url);
     }
 
-    public static StreamingAnalyticsConnection createInstance( String credentialsFile, String serviceName )
+    public static StreamingAnalyticsConnection createInstance(String credentialsFile, String serviceName)
             throws IOException {
 
-        JsonObject SAcredentials = new JsonObject();
+        JsonObject streamingAnalyticsCredentials = new JsonObject();
 
-        SAcredentials.addProperty(SERVICE_NAME, serviceName);
-        SAcredentials.addProperty(VCAP_SERVICES, credentialsFile);
+        streamingAnalyticsCredentials.addProperty(SERVICE_NAME, serviceName);
+        streamingAnalyticsCredentials.addProperty(VCAP_SERVICES, credentialsFile);
 
-        JsonObject service = VcapServices.getVCAPService(SAcredentials);
+        JsonObject service = VcapServices.getVCAPService(streamingAnalyticsCredentials);
 
         JsonObject credential = new JsonObject();
         credential = service.get("credentials").getAsJsonObject();
 
         String userId = credential.get("userid").getAsString();
         String authToken = credential.get("password").getAsString();
+
         String resourcesPath = credential.get("resources_path").getAsString();
         String sURL = credential.get("rest_url").getAsString() + resourcesPath;
 
-        String restURL = "" ;
-        StreamingAnalyticsConnection SAConn = new StreamingAnalyticsConnection( userId, authToken, restURL ) ;
+        String jobPath = credential.get("jobs_path").getAsString();
+        String jobString = credential.get("rest_url").getAsString() + jobPath;
 
-        String sResources = SAConn.getResponseString(sURL);
+        String restURL = "";
+        StreamingAnalyticsConnection streamingConnection = new StreamingAnalyticsConnection(userId, authToken, restURL);
+        streamingConnection.setJobsPath(jobString);
+
+        String sResources = streamingConnection.getResponseString(sURL);
         if (!sResources.equals("")) {
             JsonParser jParse = new JsonParser();
             JsonObject resources = jParse.parse(sResources).getAsJsonObject();
@@ -61,18 +75,51 @@ public class StreamingAnalyticsConnection extends StreamsConnection{
             restURL = resources.get("streams_rest_url").getAsString();
         }
 
-        if ( restURL.equals("") ) {
+        if (restURL.equals("")) {
             throw new IllegalStateException("Missing restURL for service");
         }
 
-        SAConn.setURL( restURL ) ;
+        streamingConnection.setURL(restURL);
         String[] rTokens = resourcesPath.split("/");
         if (rTokens[3].equals("service_instances")) {
-            SAConn.setInstanceId(rTokens[4]) ;
+            streamingConnection.setInstanceId(rTokens[4]);
         } else {
             throw new IllegalStateException("Resource Path decoding error.");
         }
-        return SAConn ;
+        return streamingConnection;
+    }
+
+    private void setJobsPath(String sJobs) {
+        jobsPath = sJobs;
+    }
+
+    /**
+     * @param jobId
+     *            string indicating the job id to be cancelled
+     * @return true if job is cancelled, false otherwise
+     * @throws Exception
+     */
+    @Override
+    public boolean cancelJob(String jobId) throws IOException {
+        boolean rc = false;
+        String sReturn = "";
+        String deleteJob = jobsPath + "?job_id=" + jobId;
+
+        Request request = Request.Delete(deleteJob).addHeader(AUTH.WWW_AUTH_RESP, apiKey).useExpectContinue();
+
+        Response response = executor.execute(request);
+        HttpResponse hResponse = response.returnResponse();
+        int rcResponse = hResponse.getStatusLine().getStatusCode();
+
+        if (HttpStatus.SC_OK == rcResponse) {
+            sReturn = EntityUtils.toString(hResponse.getEntity());
+            rc = true;
+        } else {
+            rc = false;
+        }
+        traceLog.finest("Request: [" + deleteJob + "]");
+        traceLog.finest(rcResponse + ": " + sReturn);
+        return rc;
     }
 
     /**
@@ -107,9 +154,13 @@ public class StreamingAnalyticsConnection extends StreamsConnection{
                 }
             }
 
-            System.out.println(" Getting job 0 specifically");
-            Job job = instance.getJob("0");
-
+            if (!jobs.isEmpty()) {
+                System.out.println("Removing first job");
+                Job job = jobs.get(0);
+                if (job.cancel()) {
+                    System.out.println("Job canceled");
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

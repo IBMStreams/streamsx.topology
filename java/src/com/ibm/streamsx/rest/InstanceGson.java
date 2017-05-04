@@ -2,38 +2,37 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
  */
-package com.ibm.streamsx.rest.primitives;
+package com.ibm.streamsx.rest;
 
-import java.util.ArrayList;
+/**
+ * Class used to hold the Instance JSON structur
+ */
+class InstanceGson {
 
-class JobGson {
+    public String activeServices;
+    public ActiveVersion activeVersion;
     public String activeViews;
-    public String adlFile;
-    public String applicationName;
-    public String applicationPath;
-    public String applicationScope;
-    public String applicationVersion;
-    public String checkpointPath;
-    public String dataPath;
+    public String configuredViews;
+    public long creationTime;
+    public String creationUser;
     public String domain;
+    public String exportedStreams;
     public String health;
     public String hosts;
     public String id;
-    public String instance;
-    public String jobGroup;
-    public String name;
+    public String importedStreams;
+    public String jobs;
     public String operatorConnections;
     public String operators;
-    public String outputPath;
+    public String owner;
     public String peConnections;
     public String pes;
     public String resourceAllocations;
     public String resourceType;
     public String restid;
     public String self;
+    public long startTime;
     public String startedBy;
     public String status;
-    public ArrayList<String> submitParameters;
-    public long submitTime;
     public String views;
 }

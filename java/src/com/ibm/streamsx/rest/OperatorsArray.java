@@ -2,23 +2,21 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
  */
-package com.ibm.streamsx.rest.primitives;
+package com.ibm.streamsx.rest;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
-import com.ibm.streamsx.rest.StreamsConnection;
-import com.ibm.streamsx.rest.primitives.Operator;
-import com.ibm.streamsx.rest.primitives.OperatorGson;
 
-public class OperatorsArray {
-    private final StreamsConnection connection;
+/**
+ * Package class to hold all information about operators from the GET operators URL
+ */
+class OperatorsArray {
     private List<Operator> operators;
     private OperatorsArrayGson operatorsArray;
 
     public OperatorsArray(StreamsConnection sc, String gsonOperators) {
-        connection = sc;
         operatorsArray = new Gson().fromJson(gsonOperators, OperatorsArrayGson.class);
 
         operators = new ArrayList<Operator>(operatorsArray.operators.size());
