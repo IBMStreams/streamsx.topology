@@ -29,7 +29,7 @@ public interface FunctionalOperator extends Closeable {
      * 
      * This allows full access to the Streams runtime environment.
      * 
-     * @return
+     * @return Streams operator context for this functional operator.
      */
     OperatorContext getStreamsContext();
 
