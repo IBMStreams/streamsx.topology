@@ -143,19 +143,35 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
             System.out.println("Returning instance");
             Instance instance = sClient.getInstance();
 
-            System.out.println("Returning jobs");
             List<Job> jobs = instance.getJobs();
             for (Job job : jobs) {
-                System.out.println("Looking at job: " + job.getId());
+                System.out.println("Job: " + job.toString());
                 List<Operator> operators = job.getOperators();
                 for (Operator op : operators) {
-                    System.out.println("Looking at metrics for job");
+                    System.out.println("Operator: " + op.toString());
                     List<Metric> metrics = op.getMetrics();
+                    for (Metric m : metrics) {
+                        System.out.println("Metric: " + m.toString());
+                    }
+                    List<OutputPort> outP = op.getOutputPorts();
+                    for (OutputPort oport : outP) {
+                        System.out.println("Output Port: " + oport.toString());
+                        for (Metric om : oport.getMetrics()) {
+                            System.out.println("Output Port Metric: " + om.toString());
+                        }
+                    }
+                    List<InputPort> inP = op.getInputPorts();
+                    for (InputPort ip : inP) {
+                        System.out.println("Input Port: " + ip.toString());
+                        for (Metric im : ip.getMetrics()) {
+                            System.out.println("Input Port Metric: " + im.toString());
+                        }
+                    }
                 }
             }
 
             if (!jobs.isEmpty()) {
-                System.out.println("Removing first job");
+                System.out.println("Removing first job specifically");
                 Job job = jobs.get(0);
                 if (job.cancel()) {
                     System.out.println("Job canceled");

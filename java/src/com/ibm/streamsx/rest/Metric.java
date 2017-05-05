@@ -4,6 +4,10 @@
  */
 package com.ibm.streamsx.rest;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
+
 public class Metric {
     @SuppressWarnings("unused")
     private final StreamsConnection connection;
@@ -42,4 +46,8 @@ public class Metric {
         return metric.value;
     }
 
+    @Override
+    public String toString() {
+       return (new GsonBuilder().setPrettyPrinting().create().toJson(metric)) ;
+    }
 }

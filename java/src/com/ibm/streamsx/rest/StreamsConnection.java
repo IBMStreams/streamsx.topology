@@ -36,6 +36,7 @@ public class StreamsConnection {
 
     static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.topology.rest.StreamsConnection");
 
+    private final String userName;
     private String url;
     private String instanceId;
     protected String apiKey;
@@ -68,6 +69,7 @@ public class StreamsConnection {
      *            String representing the root url to the REST API
      */
     protected StreamsConnection(String userName, String authToken, String url) {
+        this.userName = userName ;
         String apiCredentials = userName + ":" + authToken;
         apiKey = "Basic " + DatatypeConverter.printBase64Binary(apiCredentials.getBytes(StandardCharsets.UTF_8));
 
@@ -177,8 +179,8 @@ public class StreamsConnection {
     /**
      * @param allowInsecure
      *            boolean whether insecure hosts are allowed(true) or not(false)
-     * @return true  if insecure hosts will be allowed
-     *         false if insecure hosts will not be allowed
+     * @return true if insecure hosts will be allowed false if insecure hosts
+     *         will not be allowed
      */
     public boolean allowInsecureHosts(boolean allowInsecure) {
         try {
@@ -205,13 +207,14 @@ public class StreamsConnection {
     }
 
     /**
-     * @param jobId string identifying the job to be cancelled
+     * @param jobId
+     *            string identifying the job to be cancelled
      * @return true if job is cancelled
      * @throws Exception
      */
     public boolean cancelJob(String jobId) throws Exception {
         boolean rc = true;
-        InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId));
+        InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId), userName );
         cancelJob.invoke();
         return rc;
     }
@@ -242,14 +245,30 @@ public class StreamsConnection {
             List<Instance> instances = sClient.getInstances();
 
             for (Instance instance : instances) {
-                System.out.println("Job: ");
                 List<Job> jobs = instance.getJobs();
                 for (Job job : jobs) {
-                    System.out.println("Operator: ");
+                    System.out.println("Job: " + job.toString());
                     List<Operator> operators = job.getOperators();
                     for (Operator op : operators) {
-                        System.out.println("Metric: ");
+                        System.out.println("Operator: " + op.toString());
                         List<Metric> metrics = op.getMetrics();
+                        for (Metric m : metrics) {
+                            System.out.println("Metric: " + m.toString());
+                        }
+                        List<OutputPort> outP = op.getOutputPorts();
+                        for (OutputPort oport : outP) {
+                            System.out.println("Output Port: " + oport.toString());
+                            for (Metric om : oport.getMetrics()) {
+                                System.out.println("Output Port Metric: " + om.toString());
+                            }
+                        }
+                        List<InputPort> inP = op.getInputPorts();
+                        for (InputPort ip : inP) {
+                            System.out.println("Input Port: " + ip.toString());
+                            for (Metric im : ip.getMetrics()) {
+                                System.out.println("Input Port Metric: " + im.toString());
+                            }
+                        }
                     }
                 }
 
