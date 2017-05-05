@@ -7,6 +7,8 @@ package com.ibm.streamsx.rest;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.gson.GsonBuilder;
+
 public class Operator {
     private final StreamsConnection connection;
     private OperatorGson operator;
@@ -45,8 +47,12 @@ public class Operator {
         return operator.indexWithinJob;
     }
 
-    public String getInputPorts() {
-        return operator.inputPorts;
+    public List<InputPort> getInputPorts() throws IOException {
+        String sGetInputPortsURI = operator.inputPorts;
+        String sReturn = connection.getResponseString(sGetInputPortsURI);
+
+        List<InputPort> sInPorts = new InputPortsArray(connection, sReturn).getInputPorts();
+        return sInPorts;
     }
 
     public String getInstance() {
@@ -65,8 +71,12 @@ public class Operator {
         return operator.operatorKind;
     }
 
-    public String getOutputPorts() {
-        return operator.outputPorts;
+    public List<OutputPort> getOutputPorts() throws IOException {
+        String sGetOutputPortsURI = operator.outputPorts;
+        String sReturn = connection.getResponseString(sGetOutputPortsURI);
+
+        List<OutputPort> sOutPorts = new OutputPortsArray(connection, sReturn).getOutputPorts();
+        return sOutPorts;
     }
 
     public String getPe() {
@@ -89,4 +99,8 @@ public class Operator {
         return operator.self;
     }
 
+    @Override
+    public String toString() {
+        return (new GsonBuilder().setPrettyPrinting().create().toJson(operator));
+    }
 }
