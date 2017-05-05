@@ -36,6 +36,7 @@ public class StreamsConnection {
 
     static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.topology.rest.StreamsConnection");
 
+    private final String userName;
     private String url;
     private String instanceId;
     protected String apiKey;
@@ -68,6 +69,7 @@ public class StreamsConnection {
      *            String representing the root url to the REST API
      */
     protected StreamsConnection(String userName, String authToken, String url) {
+        this.userName = userName ;
         String apiCredentials = userName + ":" + authToken;
         apiKey = "Basic " + DatatypeConverter.printBase64Binary(apiCredentials.getBytes(StandardCharsets.UTF_8));
 
@@ -212,7 +214,7 @@ public class StreamsConnection {
      */
     public boolean cancelJob(String jobId) throws Exception {
         boolean rc = true;
-        InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId));
+        InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId), userName );
         cancelJob.invoke();
         return rc;
     }
