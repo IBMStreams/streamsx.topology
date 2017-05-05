@@ -4,6 +4,10 @@
  */
 package com.ibm.streamsx.rest;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -156,4 +160,8 @@ public class Job {
         return job.views;
     }
 
+    @Override
+    public String toString() {
+       return (new GsonBuilder().setPrettyPrinting().create().toJson(job)) ;
+    }
 }
