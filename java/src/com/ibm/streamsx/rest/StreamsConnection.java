@@ -161,7 +161,7 @@ public class StreamsConnection {
             String instanceURL = url + "/instances/" + instanceId;
             String sReturn = getResponseString(instanceURL);
 
-            si = new Instance(this, sReturn);
+            si = Instance.create(this, sReturn);
         }
         return si;
     }

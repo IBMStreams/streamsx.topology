@@ -7,21 +7,21 @@ package com.ibm.streamsx.rest;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
 
 /**
  * Package class to hold information about the Jobs list from GET jobs URL
  */
 class JobsArray {
-    private List<Job> jobs;
     private JobsArrayGson jobArray;
 
     public JobsArray(StreamsConnection sc, String gsonJobs) {
-        jobArray = new Gson().fromJson(gsonJobs, JobsArrayGson.class);
+        jobArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
+                                    .fromJson(gsonJobs, JobsArrayGson.class);
 
-        jobs = new ArrayList<Job>(jobArray.jobs.size());
-        for (JobGson jg : jobArray.jobs) {
-            jobs.add(new Job(sc, jg));
+        for (Job job : jobArray.jobs) {
+            job.setConnection(sc);
         }
     };
 
@@ -29,12 +29,15 @@ class JobsArray {
      * @return List of {@Job}
      */
     public List<Job> getJobs() {
-        return jobs;
+        return jobArray.jobs;
     }
 
     private static class JobsArrayGson {
-        public ArrayList<JobGson> jobs;
+        @Expose
+        public ArrayList<Job> jobs;
+        @Expose
         public String resourceType;
+        @Expose
         public int total;
     }
 

@@ -9,45 +9,62 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
 public class Metric {
-    @SuppressWarnings("unused")
-    private final StreamsConnection connection;
-    private MetricGson metric;
 
-    public Metric(StreamsConnection sc, MetricGson gsonMetric) {
+    @SuppressWarnings("unused")
+    private StreamsConnection connection;
+
+    @Expose 
+    private String description;
+    @Expose 
+    private long lastTimeRetrieved;
+    @Expose 
+    private String metricKind;
+    @Expose 
+    private String metricType;
+    @Expose 
+    private String name;
+    @Expose 
+    private String resourceType;
+    @Expose 
+    private long value;
+
+    /**
+      * this function is not intended for external consumption
+      */
+    void setConnection(final StreamsConnection sc) {
         connection = sc;
-        metric = gsonMetric;
-    };
+    }
 
     public String getDescription() {
-        return metric.description;
+        return description;
     }
 
     public long getLastTimeRetrieved() {
-        return metric.lastTimeRetrieved;
+        return lastTimeRetrieved;
     }
 
     public String getMetricKind() {
-        return metric.metricKind;
+        return metricKind;
     }
 
     public String getMetricType() {
-        return metric.metricType;
+        return metricType;
     }
 
     public String getName() {
-        return metric.name;
+        return name;
     }
 
     public String getResourceType() {
-        return metric.resourceType;
+        return resourceType;
     }
 
     public long getValue() {
-        return metric.value;
+        return value;
     }
 
     @Override
     public String toString() {
-       return (new GsonBuilder().setPrettyPrinting().create().toJson(metric)) ;
+        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
 }

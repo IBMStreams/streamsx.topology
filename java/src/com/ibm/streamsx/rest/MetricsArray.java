@@ -8,20 +8,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
 
 /**
  * Package class to hold information all metrics information from the GET metrics URL
  */
 class MetricsArray {
-    private List<Metric> metrics;
     private MetricsArrayGson metricsArray;
 
     public MetricsArray(StreamsConnection sc, String gsonMetrics) {
-        metricsArray = new Gson().fromJson(gsonMetrics, MetricsArrayGson.class);
-
-        metrics = new ArrayList<Metric>(metricsArray.metrics.size());
-        for (MetricGson mg : metricsArray.metrics) {
-            metrics.add(new Metric(sc, mg));
+        metricsArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(gsonMetrics, MetricsArrayGson.class);
+        for (Metric m: metricsArray.metrics) {
+          m.setConnection(sc) ;
         }
     };
 
@@ -29,13 +28,17 @@ class MetricsArray {
      * @return List of {@Metric}
      */
     public List<Metric> getMetrics() {
-        return metrics;
+        return metricsArray.metrics;
     }
 
     private static class MetricsArrayGson {
-        public ArrayList<MetricGson> metrics;
+        @Expose
+        public ArrayList<Metric> metrics;
+        @Expose
         public String owner;
+        @Expose
         public String resourceType;
+        @Expose
         public long total;
     }
 
