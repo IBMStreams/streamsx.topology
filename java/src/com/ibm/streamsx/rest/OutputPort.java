@@ -45,7 +45,7 @@ public class OutputPort {
     /**
      * this function is not intended for external consumption
      */
-    public void setConnection(final StreamsConnection sc) {
+    void setConnection(final StreamsConnection sc) {
         connection = sc;
     }
 

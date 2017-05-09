@@ -7,43 +7,94 @@ package com.ibm.streamsx.rest;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
 
 /**
  * {@Instance}
  */
 public class Instance {
-    private final StreamsConnection connection;
-    private InstanceGson instance;
+    private StreamsConnection connection;
+
+    @Expose
+    private String activeServices;
+    @Expose
+    private ActiveVersion activeVersion;
+    @Expose
+    private String activeViews;
+    @Expose
+    private String configuredViews;
+    @Expose
+    private long creationTime;
+    @Expose
+    private String creationUser;
+    @Expose
+    private String domain;
+    @Expose
+    private String exportedStreams;
+    @Expose
+    private String health;
+    @Expose
+    private String hosts;
+    @Expose
+    private String id;
+    @Expose
+    private String importedStreams;
+    @Expose
+    private String jobs;
+    @Expose
+    private String operatorConnections;
+    @Expose
+    private String operators;
+    @Expose
+    private String owner;
+    @Expose
+    private String peConnections;
+    @Expose
+    private String pes;
+    @Expose
+    private String resourceAllocations;
+    @Expose
+    private String resourceType;
+    @Expose
+    private String restid;
+    @Expose
+    private String self;
+    @Expose
+    private long startTime;
+    @Expose
+    private String startedBy;
+    @Expose
+    private String status;
+    @Expose
+    private String views;
 
     /**
-     * @param sc
-     * @param gsonInstance
+     * this function is not intended for external consumption
      */
-    public Instance(StreamsConnection sc, String gsonInstance) {
-        connection = sc;
-        instance = new Gson().fromJson(gsonInstance, InstanceGson.class);
-    };
+    static final Instance create( final StreamsConnection sc, String gsonInstance ) {
+        Instance instance = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
+                                             .fromJson(gsonInstance, Instance.class);
+        instance.setConnection(sc);
+        return instance ;
+    }
 
     /**
-     * @param sc
-     * @param gsonInstance
+     * this function is not intended for external consumption
      */
-    public Instance(StreamsConnection sc, InstanceGson gsonInstance) {
+    void setConnection(final StreamsConnection sc) {
         connection = sc;
-        instance = gsonInstance;
-    };
+    }
 
     /**
      * @return List of {@Job}
      * @throws IOException
      */
     public List<Job> getJobs() throws IOException {
-        String sGetJobsURI = instance.jobs;
-        String sReturn = connection.getResponseString(sGetJobsURI);
+        String sReturn = connection.getResponseString(jobs);
 
-        List<Job> jobs = new JobsArray(connection, sReturn).getJobs();
-        return jobs;
+        List<Job> lJobs = new JobsArray(connection, sReturn).getJobs();
+        return lJobs;
     }
 
     /**
@@ -52,110 +103,115 @@ public class Instance {
      * @throws IOException
      */
     public Job getJob(String jobId) throws IOException {
-        String sGetJobURI = instance.jobs + "/" + jobId;
+        String sGetJobURI = jobs + "/" + jobId;
 
         String sReturn = connection.getResponseString(sGetJobURI);
-        Job job = new Job(connection, sReturn);
+        Job job = Job.create(connection, sReturn);
         return job;
     }
 
     public String getActiveServices() {
-        return instance.activeServices;
+        return activeServices;
     }
 
     public ActiveVersion getActiveVersion() {
-        return instance.activeVersion;
+        return activeVersion;
     }
 
     public String getActiveViews() {
-        return instance.activeViews;
+        return activeViews;
     }
 
     public String getConfiguredViews() {
-        return instance.configuredViews;
+        return configuredViews;
     }
 
     public long getCreationTime() {
-        return instance.creationTime;
+        return creationTime;
     }
 
     public String getCreationUser() {
-        return instance.creationUser;
+        return creationUser;
     }
 
     public String getDomain() {
-        return instance.domain;
+        return domain;
     }
 
     public String getExportedStreams() {
-        return instance.exportedStreams;
+        return exportedStreams;
     }
 
     public String getHealth() {
-        return instance.health;
+        return health;
     }
 
     public String getHosts() {
-        return instance.hosts;
+        return hosts;
     }
 
     public String getId() {
-        return instance.id;
+        return id;
     }
 
     public String getImportedStreams() {
-        return instance.importedStreams;
+        return importedStreams;
     }
 
     public String getOperatorConnections() {
-        return instance.operatorConnections;
+        return operatorConnections;
     }
 
     public String getOperators() {
-        return instance.operators;
+        return operators;
     }
 
     public String getOwner() {
-        return instance.owner;
+        return owner;
     }
 
     public String getPeConnections() {
-        return instance.peConnections;
+        return peConnections;
     }
 
     public String getPes() {
-        return instance.pes;
+        return pes;
     }
 
     public String getResourceAllocations() {
-        return instance.resourceAllocations;
+        return resourceAllocations;
     }
 
     public String getResourceType() {
-        return instance.resourceType;
+        return resourceType;
     }
 
     public String getRestid() {
-        return instance.restid;
+        return restid;
     }
 
     public String getSelf() {
-        return instance.self;
+        return self;
     }
 
     public long getStartTime() {
-        return instance.startTime;
+        return startTime;
     }
 
     public String getStartedBy() {
-        return instance.startedBy;
+        return startedBy;
     }
 
     public String getStatus() {
-        return instance.status;
+        return status;
     }
 
     public String getViews() {
-        return instance.views;
+        return views;
+    }
+
+    @Override
+    public String toString() {
+        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
 }

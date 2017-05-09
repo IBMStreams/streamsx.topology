@@ -7,34 +7,37 @@ package com.ibm.streamsx.rest;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
 
 /**
  * class to hold information about instances from GET instances URL
  */
 class InstancesArray {
-    private List<Instance> instances;
     private InstancesArrayGson instanceArray;
 
     public InstancesArray(StreamsConnection sc, String gsonInstances) {
-        instanceArray = new Gson().fromJson(gsonInstances, InstancesArrayGson.class);
+        instanceArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
+                                         .fromJson(gsonInstances, InstancesArrayGson.class);
 
-        instances = new ArrayList<Instance>(instanceArray.instances.size());
-        for (InstanceGson ig : instanceArray.instances) {
-            instances.add(new Instance(sc, ig));
+        for (Instance in : instanceArray.instances) {
+            in.setConnection(sc);
         }
     };
 
     /**
-     * @return
+     * @return List of {@Instance}
      */
     public List<Instance> getInstances() {
-        return instances;
+        return instanceArray.instances;
     }
 
     private static class InstancesArrayGson {
-        public ArrayList<InstanceGson> instances;
+        @Expose
+        public ArrayList<Instance> instances;
+        @Expose
         public String resourceType;
+        @Expose
         public int total;
     }
 

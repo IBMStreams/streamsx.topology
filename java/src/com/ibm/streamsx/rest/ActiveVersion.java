@@ -4,10 +4,11 @@
  */
 package com.ibm.streamsx.rest;
 
+import com.google.gson.annotations.Expose;
+
 /**
  * Basic class to hold the ActiveVersion JSON structure
  */
-
 public class ActiveVersion {
 
     public String getArchitecture() {
@@ -46,13 +47,22 @@ public class ActiveVersion {
         return productVersion;
     }
 
+    @Expose
     private String architecture;
+    @Expose
     private String buildVersion;
+    @Expose
     private String editionName;
+    @Expose
     private String fullProductVersion;
+    @Expose
     private String minimumOSBaseVersion;
+    @Expose
     private String minimumOSPatchVersion;
+    @Expose
     private String minimumOSVersion;
+    @Expose
     private String productName;
+    @Expose
     private String productVersion;
 }
