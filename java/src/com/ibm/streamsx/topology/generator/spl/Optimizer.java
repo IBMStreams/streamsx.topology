@@ -101,7 +101,7 @@ class Optimizer {
                         // TEMP
                         // Currently only Map and ForEach completly handle
                         // by reference.
-                        if (!kind(connectedOp).endsWith("::Map") && !kind(connectedOp).endsWith("::ForEach")) {
+                        if (!kind(connectedOp).endsWith("::Map") && !kind(connectedOp).endsWith("::ForEach") && !kind(connectedOp).endsWith("::FlatMap")) {
                         canPassByRef = false;
                         break;
                         }
