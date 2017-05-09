@@ -26,12 +26,12 @@ public abstract class AbstractPrimitive extends FunctionFunctor implements Funct
     private String[] outputSerializer;
     private String[] inputSerializer;
     
-    @Parameter
+    @Parameter(optional=true)
     public void setOutputSerializer(String[] outputSerializer) {
         this.outputSerializer = outputSerializer;
     }
 
-    @Parameter
+    @Parameter(optional=true)
     public void setInputSerializer(String[] inputSerializer) {
         this.inputSerializer = inputSerializer;
     }

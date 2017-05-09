@@ -27,12 +27,12 @@ public abstract class AbstractPipe extends FunctionFunctor implements Functional
     
     private StreamingOutput<OutputTuple> outputPort;
     
-    @Parameter
+    @Parameter(optional=true)
     public void setOutputSerializer(String outputSerializer) {
         this.outputSerializer = outputSerializer;
     }
 
-    @Parameter
+    @Parameter(optional=true)
     public void setInputSerializer(String inputSerializer) {
         this.inputSerializer = inputSerializer;
     }
