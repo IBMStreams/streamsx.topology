@@ -15,17 +15,82 @@ import java.util.List;
 import com.google.gson.Gson;
 
 public class Job {
-    private final StreamsConnection connection;
-    private JobGson job;
+    private StreamsConnection connection;
 
-    public Job(StreamsConnection sc, JobGson gsonJob) {
-        connection = sc;
-        job = gsonJob;
-    };
+    @Expose
+    private String activeViews;
+    @Expose
+    private String adlFile;
+    @Expose
+    private String applicationName;
+    @Expose
+    private String applicationPath;
+    @Expose
+    private String applicationScope;
+    @Expose
+    private String applicationVersion;
+    @Expose
+    private String checkpointPath;
+    @Expose
+    private String dataPath;
+    @Expose
+    private String domain;
+    @Expose
+    private String health;
+    @Expose
+    private String hosts;
+    @Expose
+    private String id;
+    @Expose
+    private String instance;
+    @Expose
+    private String jobGroup;
+    @Expose
+    private String name;
+    @Expose
+    private String operatorConnections;
+    @Expose
+    private String operators;
+    @Expose
+    private String outputPath;
+    @Expose
+    private String peConnections;
+    @Expose
+    private String pes;
+    @Expose
+    private String resourceAllocations;
+    @Expose
+    private String resourceType;
+    @Expose
+    private String restid;
+    @Expose
+    private String self;
+    @Expose
+    private String startedBy;
+    @Expose
+    private String status;
+    @Expose
+    private ArrayList<String> submitParameters;
+    @Expose
+    private long submitTime;
+    @Expose
+    private String views;
 
-    public Job(StreamsConnection sc, String sJob) {
+    /**
+      * this function is not intended for external consumption
+      */
+    static final Job create(StreamsConnection sc, String gsonJobString) {
+        Job job = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
+                                   .fromJson(gsonJobString, Job.class);
+        job.setConnection(sc);
+        return job ;
+    }
+
+    /**
+      * this function is not intended for external consumption
+      */
+    void setConnection( final StreamsConnection sc) {
         connection = sc;
-        job = new Gson().fromJson(sJob, JobGson.class);
     }
 
     /**
@@ -33,135 +98,135 @@ public class Job {
      * @throws IOException
      */
     public List<Operator> getOperators() throws IOException {
-        String sGetOperatorsURI = job.operators;
+        String sReturn = connection.getResponseString(operators);
 
-        String sReturn = connection.getResponseString(sGetOperatorsURI);
-
-        List<Operator> operators = new OperatorsArray(connection, sReturn).getOperators();
-        return operators;
+        List<Operator> oList = new OperatorsArray(connection, sReturn).getOperators();
+        return oList;
     }
 
     /**
      * @return true if this job is cancelled, false otherwise
+     * @throws IOException
+     * @throws Exception
      */
     public boolean cancel() throws Exception, IOException {
-        return connection.cancelJob(job.id);
+        return connection.cancelJob(id);
     }
 
     public String getActiveViews() {
-        return job.activeViews;
+        return activeViews;
     }
 
     public String getAdlFile() {
-        return job.adlFile;
+        return adlFile;
     }
 
     public String getApplicationName() {
-        return job.applicationName;
+        return applicationName;
     }
 
     public String getApplicationPath() {
-        return job.applicationPath;
+        return applicationPath;
     }
 
     public String getApplicationScope() {
-        return job.applicationScope;
+        return applicationScope;
     }
 
     public String getApplicationVersion() {
-        return job.applicationVersion;
+        return applicationVersion;
     }
 
     public String getCheckpointPath() {
-        return job.checkpointPath;
+        return checkpointPath;
     }
 
     public String getDataPath() {
-        return job.dataPath;
+        return dataPath;
     }
 
     public String getDomain() {
-        return job.domain;
+        return domain;
     }
 
     public String getHealth() {
-        return job.health;
+        return health;
     }
 
     public String getHosts() {
-        return job.hosts;
+        return hosts;
     }
 
     public String getId() {
-        return job.id;
+        return id;
     }
 
     public String getInstance() {
-        return job.instance;
+        return instance;
     }
 
     public String getJobGroup() {
-        return job.jobGroup;
+        return jobGroup;
     }
 
     public String getName() {
-        return job.name;
+        return name;
     }
 
     public String getOperatorConnections() {
-        return job.operatorConnections;
+        return operatorConnections;
     }
 
     public String getOutputPath() {
-        return job.outputPath;
+        return outputPath;
     }
 
     public String getPeConnections() {
-        return job.peConnections;
+        return peConnections;
     }
 
     public String getPes() {
-        return job.pes;
+        return pes;
     }
 
     public String getResourceAllocations() {
-        return job.resourceAllocations;
+        return resourceAllocations;
     }
 
     public String getResourceType() {
-        return job.resourceType;
+        return resourceType;
     }
 
     public String getRestid() {
-        return job.restid;
+        return restid;
     }
 
     public String getSelf() {
-        return job.self;
+        return self;
     }
 
     public String getStartedBy() {
-        return job.startedBy;
+        return startedBy;
     }
 
     public String getStatus() {
-        return job.status;
+        return status;
     }
 
     public ArrayList<String> getSubmitParameters() {
-        return job.submitParameters;
+        return submitParameters;
     }
 
     public long getSubmitTime() {
-        return job.submitTime;
+        return submitTime;
     }
 
     public String getViews() {
-        return job.views;
+        return views;
     }
 
     @Override
     public String toString() {
-       return (new GsonBuilder().setPrettyPrinting().create().toJson(job)) ;
+        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
 }

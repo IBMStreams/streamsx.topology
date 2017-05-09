@@ -8,99 +8,129 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
 
 public class Operator {
-    private final StreamsConnection connection;
-    private OperatorGson operator;
 
-    public Operator(StreamsConnection sc, OperatorGson gsonOperator) {
+    private StreamsConnection connection;
+    @Expose
+    private String connections;
+    @Expose
+    private String domain;
+    @Expose
+    private String host;
+    @Expose
+    private long indexWithinJob;
+    @Expose
+    private String inputPorts;
+    @Expose
+    private String instance;
+    @Expose
+    private String job;
+    @Expose
+    private String metrics;
+    @Expose
+    private String name;
+    @Expose
+    private String operatorKind;
+    @Expose
+    private String outputPorts;
+    @Expose
+    private String pe;
+    @Expose
+    private String resourceAllocation;
+    @Expose
+    private String resourceType;
+    @Expose
+    private String restid;
+    @Expose
+    private String self;
+
+    /**
+     * this function is not intended for external consumption
+     */
+    void setConnection(final StreamsConnection sc) {
         connection = sc;
-        operator = gsonOperator;
-    };
+    }
 
     /**
      * @return List of {@Metric}
      * @throws IOException
      */
     public List<Metric> getMetrics() throws IOException {
-        String sGetMetricsURI = operator.metrics;
 
-        String sReturn = connection.getResponseString(sGetMetricsURI);
-        List<Metric> sMetrics = new MetricsArray(connection, sReturn).getMetrics();
+        String sReturn = connection.getResponseString(metrics);
+        List<Metric> lMetrics = new MetricsArray(connection, sReturn).getMetrics();
 
-        return sMetrics;
+        return lMetrics;
     }
 
     public String getConnections() {
-        return operator.connections;
+        return connections;
     }
 
     public String getDomain() {
-        return operator.domain;
+        return domain;
     }
 
     public String getHost() {
-        return operator.host;
+        return host;
     }
 
     public long getIndexWithinJob() {
-        return operator.indexWithinJob;
+        return indexWithinJob;
     }
 
     public List<InputPort> getInputPorts() throws IOException {
-        String sGetInputPortsURI = operator.inputPorts;
-        String sReturn = connection.getResponseString(sGetInputPortsURI);
-
-        List<InputPort> sInPorts = new InputPortsArray(connection, sReturn).getInputPorts();
-        return sInPorts;
+        String sReturn = connection.getResponseString(inputPorts);
+        List<InputPort> lInPorts = new InputPortsArray(connection, sReturn).getInputPorts();
+        return lInPorts;
     }
 
     public String getInstance() {
-        return operator.instance;
+        return instance;
     }
 
     public String getJob() {
-        return operator.job;
+        return job;
     }
 
     public String getName() {
-        return operator.name;
+        return name;
     }
 
     public String getOperatorKind() {
-        return operator.operatorKind;
+        return operatorKind;
     }
 
     public List<OutputPort> getOutputPorts() throws IOException {
-        String sGetOutputPortsURI = operator.outputPorts;
-        String sReturn = connection.getResponseString(sGetOutputPortsURI);
-
-        List<OutputPort> sOutPorts = new OutputPortsArray(connection, sReturn).getOutputPorts();
-        return sOutPorts;
+        String sReturn = connection.getResponseString(outputPorts);
+        List<OutputPort> lOutPorts = new OutputPortsArray(connection, sReturn).getOutputPorts();
+        return lOutPorts;
     }
 
     public String getPe() {
-        return operator.pe;
+        return pe;
     }
 
     public String getResourceAllocation() {
-        return operator.resourceAllocation;
+        return resourceAllocation;
     }
 
     public String getResourceType() {
-        return operator.resourceType;
+        return resourceType;
     }
 
     public String getRestid() {
-        return operator.restid;
+        return restid;
     }
 
     public String getSelf() {
-        return operator.self;
+        return self;
     }
 
     @Override
     public String toString() {
-        return (new GsonBuilder().setPrettyPrinting().create().toJson(operator));
+        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
 }

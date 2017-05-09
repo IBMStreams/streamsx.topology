@@ -7,21 +7,21 @@ package com.ibm.streamsx.rest;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
 
 /**
  * Package class to hold all information about operators from the GET operators URL
  */
 class OperatorsArray {
-    private List<Operator> operators;
     private OperatorsArrayGson operatorsArray;
 
     public OperatorsArray(StreamsConnection sc, String gsonOperators) {
-        operatorsArray = new Gson().fromJson(gsonOperators, OperatorsArrayGson.class);
+        operatorsArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
+                                          .fromJson(gsonOperators, OperatorsArrayGson.class);
 
-        operators = new ArrayList<Operator>(operatorsArray.operators.size());
-        for (OperatorGson og : operatorsArray.operators) {
-            operators.add(new Operator(sc, og));
+        for (Operator op : operatorsArray.operators) {
+            op.setConnection(sc);
         }
     };
 
@@ -29,12 +29,15 @@ class OperatorsArray {
      * @return List of {@Operator}
      */
     public List<Operator> getOperators() {
-        return operators;
+        return operatorsArray.operators;
     }
 
     private static class OperatorsArrayGson {
-        private ArrayList<OperatorGson> operators;
+        @Expose
+        private ArrayList<Operator> operators;
+        @Expose
         private String resourceType;
+        @Expose
         private int total;
     }
 
