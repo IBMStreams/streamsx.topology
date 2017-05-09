@@ -31,7 +31,7 @@ class TestByRef(unittest.TestCase):
         Tester.setup_standalone(self)
 
     def test_ByRef(self):
-        topo = Topology('test_TopologySourceList')
+        topo = Topology()
         s = topo.source(['ByRef', 3, list(('a', 42))])
         s = s.map(lambda x : x)
         s = s.flat_map(lambda x : x if isinstance(x, list) else [x])
@@ -42,7 +42,7 @@ class TestByRef(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_NotByRef(self):
-        topo = Topology('test_TopologySourceList')
+        topo = Topology()
         s = topo.source(['ByRef', 3, list(('a', 42))])
         f = op.Map('spl.relational::Filter', s)
         s = f.stream.map(lambda x : x)

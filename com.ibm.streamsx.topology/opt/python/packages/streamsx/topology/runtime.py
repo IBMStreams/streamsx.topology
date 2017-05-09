@@ -291,8 +291,7 @@ def source_object(callable) :
 
 # Iterator that wraps another iterator
 # to discard any values that are None
-# and pickle any returned value.
-class _PickleIterator:
+class _ObjectIterator(object):
    def __init__(self, it):
        self.it = iter(it)
    def __iter__(self):
@@ -301,11 +300,16 @@ class _PickleIterator:
        nv = next(self.it)
        while nv is None:
           nv = next(self.it)
-       return pickle.dumps(nv)
+       return nv
 # python 2.7 uses the next function whereas 
 # python 3.x uses __next__ 
    def next(self):
        return self.__next__()
+
+# and pickle any returned value.
+class _PickleIterator(_ObjectIterator):
+   def __next__(self):
+       return pickle.dumps(super(_PickleIterator, self).__next__())
 
 # Return a function that depickles
 # the input tuple calls callable
