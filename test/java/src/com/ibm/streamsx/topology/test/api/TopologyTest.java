@@ -37,8 +37,15 @@ public class TopologyTest extends TestTopology {
         assumeTrue(isMainRun());
         final Topology f = new Topology("F123");
         assertEquals("F123", f.getName());
+        assertEquals("com.ibm.streamsx.topology.test.api", f.getNamespace());
         assertSame(f, f.topology());
         assertNotNull(f.graph());
+        
+        final Topology f2 = new Topology("NS123", "F456");
+        assertEquals("NS123", f2.getNamespace());
+        assertEquals("F456", f2.getName());
+        assertSame(f2, f2.topology());
+        assertNotNull(f2.graph());
     }
     
     @Test
@@ -47,6 +54,7 @@ public class TopologyTest extends TestTopology {
         final Topology f = new Topology();
         assertSame(f, f.topology());
         assertEquals("testDefaultName", f.getName());
+        assertEquals("com.ibm.streamsx.topology.test.api", f.getNamespace());
     }
     
     /**

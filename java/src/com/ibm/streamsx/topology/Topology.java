@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology;
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.SPL_PREFIX;
 import static com.ibm.streamsx.topology.internal.core.TypeDiscoverer.getTupleName;
 import static com.ibm.streamsx.topology.spi.Invoker.invokeSource;
+import static java.util.Objects.requireNonNull;
 
 import java.io.File;
 import java.lang.reflect.Type;
@@ -65,6 +66,17 @@ import com.ibm.streamsx.topology.tester.Tester;
  * provide specific source streams, or transformations on streams with specific
  * types.
  * 
+ * <P>
+ * A {@code Topology} has a namespace and a name. When a Streams application is
+ * created application name will be {@code namespace::name}. Thus:
+ * <UL>
+ * <LI>the Streams application bundle will be named {@code namespace.name.sab}, </LI>
+ * <LI>when submitted the job name (if not supplied) will be {@code namespace::name_jobid}.</LI>
+ * </UL>
+ * Note that if a namespace or name has non ASCII characters then actual values used
+ * will be modified to only contain ASCII characters.
+ * </P>
+ * 
  */
 public class Topology implements TopologyElement {
     
@@ -78,7 +90,9 @@ public class Topology implements TopologyElement {
      */
     public static Logger STREAMS_LOGGER = Logger.getLogger("com.ibm.streamsx.topology.streams");
 
+    private final String namespace;
     private final String name;
+
 
     private final DependencyResolver dependencyResolver;
 
@@ -103,22 +117,43 @@ public class Topology implements TopologyElement {
     public Topology() {
         String[] defaultNames = defaultNamespaceName(true);
         dependencyResolver = new DependencyResolver(this);
+        namespace = defaultNames[0];
         name = defaultNames[1];
-        builder = new GraphBuilder(defaultNames[0], name);
+        builder = new GraphBuilder(namespace, name);
         
         checkForScala();
     }
     
     /**
      * Create an new topology with a given name.
+     * 
+     * @param name Name of the topology.
      */
     public Topology(String name) {
-        this.name = name;
+        this.name = requireNonNull(name);
         String[] defaultNames = defaultNamespaceName(false);
+        this.namespace = defaultNames[0];
         dependencyResolver = new DependencyResolver(this);
-        builder = new GraphBuilder(defaultNames[0], name);
+        builder = new GraphBuilder(namespace, name);
         
         checkForScala();
+    }
+    
+    /**
+     * Create an new topology with a given name and namespace.
+     * 
+     * @param namespace Namespace of the topology.
+     * @param name Name of the topology.
+     * 
+     * @since 1.7
+     */
+    public Topology(String namespace, String name) {
+        this.name = requireNonNull(name);
+        this.namespace = requireNonNull(namespace);
+        dependencyResolver = new DependencyResolver(this);
+        builder = new GraphBuilder(namespace, name);
+        
+        checkForScala();        
     }
     
     /**
@@ -150,6 +185,16 @@ public class Topology implements TopologyElement {
      */
     public String getName() {
         return name;
+    }
+    
+    /**
+     * Namespace of this topology.
+     * @return Namespace of this topology.
+     * 
+     * @since 1.7
+     */
+    public String getNamespace() {
+        return namespace;
     }
     
     public Map<String,Object> getConfig() {
