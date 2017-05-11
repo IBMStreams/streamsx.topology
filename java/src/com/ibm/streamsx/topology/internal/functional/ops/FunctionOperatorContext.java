@@ -63,4 +63,9 @@ class FunctionOperatorContext implements FunctionContext {
         return context.getMetrics().createCustomMetric(
                 requireNonNull(name), requireNonNull(description), requireNonNull(kind));
     }
+    
+    @Override
+    public Metric getCustomMetric(String name) {
+        return context.getMetrics().getCustomMetric(requireNonNull(name));
+    }
 }
