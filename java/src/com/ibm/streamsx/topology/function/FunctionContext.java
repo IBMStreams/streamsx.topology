@@ -8,6 +8,8 @@ import java.net.MalformedURLException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 
+import com.ibm.streams.operator.metrics.Metric;
+
 /**
  * Context for a function executing in a IBM Streams application.
  */
@@ -142,4 +144,15 @@ public interface FunctionContext {
      * 
      */
     void addClassLibraries(String[] libraries) throws MalformedURLException;
+    
+    /**
+     * Create a custom metric.
+     * @param name Name of the metric.
+     * @param description Description of the metric.
+     * @param kind Kind of the metric.
+     * @return Metric reference.
+     * 
+     * @since 1.7
+     */
+    Metric createCustomMetric(String name, String description, Metric.Kind kind);
 }
