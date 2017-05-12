@@ -69,7 +69,7 @@ public class StreamsConnection {
      *            String representing the root url to the REST API
      */
     protected StreamsConnection(String userName, String authToken, String url) {
-        this.userName = userName ;
+        this.userName = userName;
         String apiCredentials = userName + ":" + authToken;
         apiKey = "Basic " + DatatypeConverter.printBase64Binary(apiCredentials.getBytes(StandardCharsets.UTF_8));
 
@@ -214,7 +214,7 @@ public class StreamsConnection {
      */
     public boolean cancelJob(String jobId) throws Exception {
         boolean rc = true;
-        InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId), userName );
+        InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId), userName);
         cancelJob.invoke();
         return rc;
     }
@@ -269,6 +269,9 @@ public class StreamsConnection {
                                 System.out.println("Input Port Metric: " + im.toString());
                             }
                         }
+                    }
+                    for (ProcessingElement pe : job.getPes()) {
+                        System.out.println("ProcessingElement:" + pe.toString());
                     }
                 }
 
