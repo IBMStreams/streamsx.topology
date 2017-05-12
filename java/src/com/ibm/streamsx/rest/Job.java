@@ -185,8 +185,10 @@ public class Job {
         return peConnections;
     }
 
-    public String getPes() {
-        return pes;
+    public List<ProcessingElement> getPes() throws IOException {
+        String sReturn = connection.getResponseString(pes);
+        List<ProcessingElement> peList = ProcessingElement.getPEList(connection, sReturn);
+        return peList;
     }
 
     public String getResourceAllocations() {
