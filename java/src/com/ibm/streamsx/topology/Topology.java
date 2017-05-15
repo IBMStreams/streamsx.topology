@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology;
 
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.SPL_PREFIX;
 import static com.ibm.streamsx.topology.internal.core.TypeDiscoverer.getTupleName;
+import static com.ibm.streamsx.topology.spi.Invoker.invokeSource;
 
 import java.io.File;
 import java.lang.reflect.Type;
@@ -20,6 +21,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
@@ -38,8 +40,8 @@ import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.StreamImpl;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
+import com.ibm.streamsx.topology.internal.functional.operators.Source;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionPeriodicSource;
-import com.ibm.streamsx.topology.internal.functional.ops.FunctionSource;
 import com.ibm.streamsx.topology.internal.logic.Constants;
 import com.ibm.streamsx.topology.internal.logic.EndlessSupplier;
 import com.ibm.streamsx.topology.internal.logic.LimitedSupplier;
@@ -234,12 +236,13 @@ public class Topology implements TopologyElement {
         } else if (data instanceof Constants) {
             opName = getTupleName(tupleType) + opName;
         }
-
-        BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
-                opName,
-                FunctionSource.class, data);
-        SourceInfo.setSourceInfo(bop, getClass());
-        return JavaFunctional.addJavaOutput(this, bop, tupleType);
+        
+        JsonObject config = new JsonObject();
+        com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(config, getClass());
+        config.addProperty("name", opName);
+        
+        return invokeSource(this, Source.class, config,
+                data, tupleType, null, null);
     }
     
     /**
