@@ -4,9 +4,17 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
+import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.json4j;
+import static com.ibm.streamsx.topology.spi.SourceInfo.SOURCE_LOCATIONS;
+
+import java.io.IOException;
+
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
+import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 
 
 public class SourceInfo {
@@ -34,45 +42,31 @@ public class SourceInfo {
     
     
     public static void setSourceInfo(BOperatorInvocation bop, Class<?> calledClass) {
-        
-        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-        
-        StackTraceElement calledMethod  = null;
-        StackTraceElement caller  = null;
-        
-        boolean foundCalled = false;
-        for (int i = 0; i < stack.length; i++) {
-            StackTraceElement ste = stack[i];
-            if (calledClass.getName().equals(ste.getClassName())) {
-                foundCalled = true;
-                calledMethod = ste;
-                continue;
-            }
-            
-            if (foundCalled) {
-                caller = ste;
-                break; 
-            }
+                
+        JsonObject holder = new JsonObject();
+
+        if (bop.json().containsKey(SOURCE_LOCATIONS)) {
+            holder.add(SOURCE_LOCATIONS,
+                    gson((JSONObject) (bop.json().get(SOURCE_LOCATIONS))));
         }
         
-       
-        JSONArray ja = (JSONArray) bop.json().get("sourcelocation");
-        if (ja == null)
-            bop.json().put("sourcelocation", ja = new JSONArray());
-        JSONObject sourceInfo = new JSONObject();
-        if (caller != null) {
-            if (caller.getFileName() != null)
-                sourceInfo.put("file", caller.getFileName());
-            if (caller.getClassName() != null)
-                sourceInfo.put("class", caller.getClassName());
-            if (caller.getMethodName() != null)
-                sourceInfo.put("method", caller.getMethodName());
-            if (caller.getLineNumber() > 0)
-                sourceInfo.put("line", caller.getLineNumber());
-       }
-        if (calledMethod != null)
-            sourceInfo.put("topology.method", calledMethod.getMethodName());
+        com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(holder, calledClass);
         
-        ja.add(sourceInfo);
+        setSourceInfo(bop, holder);       
+    }
+    
+    public static void setSourceInfo(BOperatorInvocation bop, JsonObject config) {
+        
+        if (!config.has(SOURCE_LOCATIONS))
+            return;
+        
+        JSONObject holder4j;
+        try {
+            holder4j = json4j(config);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        
+        bop.json().put(SOURCE_LOCATIONS, holder4j.get(SOURCE_LOCATIONS));
     }
 }
