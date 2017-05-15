@@ -130,9 +130,18 @@ class Invoke(exop.ExtensionOperator):
             outut ports. Otherwise a list or tuple of schemas
             where the number of items is the number of output ports.
         params: Operator parameters.
+        name: Name of the operator. When ``None`` defaults to a name
+            derived from the operator kind.
              
     """
     def __init__(self,topology,kind,inputs=None,schemas=None,params=None,name=None):
+        action=None
+        if name is None:
+             if '::' in kind:
+                 action = kind[kind.rfind('::') + 2 :]
+             else:
+                 action = kind
+        name = topology.graph._requested_name(name, action)
         super(Invoke,self).__init__(topology,kind,inputs,schemas,params,name)
         self._op._ex_op = self
 
@@ -222,6 +231,8 @@ class Source(Invoke):
         kind(str): SPL operator kind, e.g. ``spl.utility::Beacon``.
         schema: Schema of the output port.
         params: Operator parameters.
+        name: Name of the operator. When ``None`` defaults to a name
+            derived from the operator kind.
     """
     def __init__(self,topology,kind,schema,params=None,name=None):
         super(Source,self).__init__(topology, kind, schemas=schema, params=params,name=name)
@@ -248,7 +259,6 @@ class Source(Invoke):
         return super(Source, self).output(self.stream, value)
 
 
-
 class Map(Invoke):
     """
     Declaration of an invocation of an SPL *map* operator.
@@ -268,7 +278,8 @@ class Map(Invoke):
         stream: Stream to connect to the operator.
         schema: Schema of the output stream. If set to `None` then the output schema is the same as the schema of `stream`.
         params: Operator parameters.
-
+        name: Name of the operator. When ``None`` defaults to a name
+            derived from the operator kind.
     """
     def __init__(self,kind,stream,schema=None,params=None,name=None):
         if schema is None:
@@ -325,6 +336,8 @@ class Sink(Invoke):
         kind(str): SPL operator kind, e.g. ``spl.adapter::FileSink``.
         input: Stream to connect to the operator.
         params: Operator parameters.
+        name: Name of the operator. When ``None`` defaults to a name
+            derived from the operator kind.
     """
     def __init__(self,kind,stream,params=None,name=None):
         super(Sink,self).__init__(stream.topology,kind,inputs=stream,params=params,name=name)
