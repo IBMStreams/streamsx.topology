@@ -859,6 +859,31 @@ class Stream(object):
         self.oport.operator.colocate(string_stream.oport.operator, 'as_string')
         return string_stream
 
+    def as_json(self, name=None):
+        """
+        Declares a stream converting each tuple on this stream
+        into a JSON object using `json.dumps(tuple)`.
+
+        The stream is typed as a :py:const:`JSON stream <streamsx.topology.schema.CommonSchema.Json>`.
+
+        .. versionadded:: 1.7
+
+        Returns:
+            Stream: Stream containing the JSON representations of tuples on this stream.
+
+        """
+        return self._change_schema(CommonSchema.Json, 'as_json', name)
+
+    def _change_schema(self, schema, action, name=None):
+        """Internal method to change a schema.
+        """
+        if name is None:
+            name = action 
+        css = self._map(streamsx.topology.functions.identity, schema, name=name)
+        self.oport.operator.colocate(css.oport.operator, action)
+        return css
+
+
 class View(object):
     """
     A View is an object which is associated with a Stream, and provides access to the items on the stream.
