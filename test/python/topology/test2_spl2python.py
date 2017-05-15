@@ -42,9 +42,14 @@ class TestSPL2Python(unittest.TestCase):
                 topo = Topology('test_schemas_filter')
                 b = beacon(topo, schema)
                 f = b.filter(lambda tuple : True)
+
+                f2 = b.filter(lambda tuple : True)
+                f2 = op.Map('spl.relational::Filter', f2).stream
+
+                f = f.union({f2})
         
                 tester = Tester(topo)
-                tester.tuple_count(f, 100)
+                tester.tuple_count(f, 200)
                 tester.test(self.test_ctxtype, self.test_config)
 
     def test_schemas_map(self):
@@ -56,9 +61,14 @@ class TestSPL2Python(unittest.TestCase):
                 topo = Topology('test_schemas_map')
                 b = beacon(topo, schema)
                 f = b.map(lambda tuple : tuple)
+
+                f2 = b.map(lambda tuple : tuple)
+                f2 = op.Map('spl.relational::Filter', f2).stream
+
+                f = f.union({f2})
         
                 tester = Tester(topo)
-                tester.tuple_count(f, 100)
+                tester.tuple_count(f, 200)
                 tester.test(self.test_ctxtype, self.test_config)
 
     def test_schemas_flat_map(self):
@@ -70,9 +80,16 @@ class TestSPL2Python(unittest.TestCase):
                 topo = Topology('test_schemas_flat_map')
                 b = beacon(topo, schema)
                 f = b.flat_map(lambda tuple : [tuple, tuple])
-        
+
+                # Check all combinations of the output type
+                # passing by value
+                f2 = b.flat_map(lambda tuple : [tuple, tuple, tuple])
+                f2 = op.Map('spl.relational::Filter', f2).stream
+
+                f = f.union({f2})
+
                 tester = Tester(topo)
-                tester.tuple_count(f, 200)
+                tester.tuple_count(f, 500)
                 tester.test(self.test_ctxtype, self.test_config)
 
     def test_schemas_for_each(self):
