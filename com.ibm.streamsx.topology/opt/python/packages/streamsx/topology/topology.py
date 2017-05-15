@@ -432,6 +432,8 @@ class Stream(object):
         
         Args:
             func: A callable that takes a single parameter for the tuple and returns None.
+            name(str): Name of the stream, defaults to a generated name.
+
         Returns:
             None
         """
@@ -455,6 +457,7 @@ class Stream(object):
         
         Args:
             func: Filter callable that takes a single parameter for the tuple.
+            name(str): Name of the stream, defaults to a generated name.
         Returns:
             Stream: A Stream containing tuples that have not been filtered out.
         """
@@ -490,7 +493,7 @@ class Stream(object):
         Args:
             buffer_time: Specifies the buffer size to use measured in seconds.
             sample_size: Specifies the number of tuples to sample per second.
-            name: Name of the view. Name must be unique within the topology. Defaults to a generated name.
+            name(str): Name of the view. Name must be unique within the topology. Defaults to a generated name.
             description: Description of the view.
             start(bool): Start buffering data when the job is submitted.
                 If `False` then the view is starts buffering data when the first
@@ -535,6 +538,7 @@ class Stream(object):
         
         Args:
             func: A callable that takes a single parameter for the tuple.
+            name(str): Name of the mapped stream, defaults to a generated name.
 
         Returns:
             Stream: A stream containing tuples mapped by `func`.
@@ -562,6 +566,8 @@ class Stream(object):
         
         Args:
             func: A callable that takes a single parameter for the tuple.
+            name(str): Name of the flattened stream, defaults to a generated name.
+
         Returns:
             Stream: A Stream containing transformed tuples.
         Raises:
@@ -732,14 +738,30 @@ class Stream(object):
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
 
-    def print(self):
+    def print(self, tag=None, name=None):
         """
         Prints each tuple to stdout flushing after each tuple.
 
+        If `tag` is not `None` then each tuple has `tag: ` prepended
+        to it before printing.
+
+        Args:
+            tag: A tag to prepend to each tuple.
+            name(str): Name of the resulting stream.
+                When `None` defaults to a generated name.
         Returns:
             None
+
+        .. versionadded:: 1.6.1 `tag`, `name` parameters.
+
         """
-        self.sink(streamsx.topology.functions.print_flush)
+        if name is None:
+            name = self.name + '_print'
+        fn = streamsx.topology.functions.print_flush
+        if tag is not None:
+            tag = str(tag) + ': '
+            fn = lambda v : streamsx.topology.functions.print_flush(tag + str(v))
+        self.for_each(fn, name=name)
 
     def publish(self, topic, schema=None):
         """
@@ -816,14 +838,17 @@ class Stream(object):
 
         The stream is typed as a stream of strings.
 
+        Args:
+            name(str): Name of the resulting stream.
+                When `None` defaults to a generated name.
+
         .. versionadded:: 1.6
 
         Returns:
             Stream: Stream containing the string representations of tuples on this stream.
-
         """
         if name is None:
-            name = self.name + '_String'
+            name = self.name + '_as_string'
         string_stream = self._map(streamsx.topology.functions.identity, CommonSchema.String, name=name)
         self.oport.operator.colocate(string_stream.oport.operator, 'as_string')
         return string_stream
