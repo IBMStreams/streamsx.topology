@@ -853,11 +853,7 @@ class Stream(object):
         Returns:
             Stream: Stream containing the string representations of tuples on this stream.
         """
-        if name is None:
-            name = 'as_string'
-        string_stream = self._map(streamsx.topology.functions.identity, CommonSchema.String, name=name)
-        self.oport.operator.colocate(string_stream.oport.operator, 'as_string')
-        return string_stream
+        return self._change_schema(CommonSchema.String, 'as_string', name)
 
     def as_json(self, name=None):
         """

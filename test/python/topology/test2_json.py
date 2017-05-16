@@ -32,8 +32,9 @@ class TestJson(unittest.TestCase):
 
     def test_as_json(self):
         topo = Topology()
-        s = topo.source(['ByRef', 3, list(('a', 42))])
+        s = topo.source(['JSON!', 3, list(('a', 42))])
         s = s.map(lambda x : {'abc': x})
+        s = s.as_json()
         s = s.as_json()
         f = op.Map('spl.relational::Functor', s, schema='tuple<rstring string>')
         f.string = f.output(f.attribute('jsonString'))
@@ -41,5 +42,15 @@ class TestJson(unittest.TestCase):
         s = s.map(lambda x : x['abc'])
 
         tester = Tester(topo)
-        tester.contents(s, ['ByRef', 3, ['a', 42]])
+        tester.contents(s, ['JSON!', 3, ['a', 42]])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_as_string(self):
+        topo = Topology()
+        s = topo.source(['String!', 3, 42.0])
+        s = s.as_string()
+        s = s.as_string()
+
+        tester = Tester(topo)
+        tester.contents(s, ['String!', '3', '42.0'])
         tester.test(self.test_ctxtype, self.test_config)
