@@ -306,7 +306,7 @@ class Map(Invoke):
         Returns:
             Expression: Expression representing the input attribute.
         """
-        return super(Map, self).attribute(input, name)
+        return super(Map, self).attribute(self.inputs[0], name)
 
     def output(self, value):
         """SPL output port assignment expression.
