@@ -141,9 +141,10 @@ class CommonSchema(enum.Enum):
     created from ``json.loads(json_formatted_str)`` where `json_formatted_str`
     is the JSON formatted representation of tuple.
 
-    Python objects are converted to JSON objects as though
-    ``json.dumps(tuple)`` was called. It is expected that the object
-    will result in a JSON object, thus typically a `dict` is required.
+    Python objects that are to be converted to JSON objects
+    must be supported by `JSONEncoder`. If the object is not a `dict`
+    then it will be converted to a JSON object with a single key `payload`
+    containing the value.
     """
     String = StreamSchema("tuple<rstring string>")
     """

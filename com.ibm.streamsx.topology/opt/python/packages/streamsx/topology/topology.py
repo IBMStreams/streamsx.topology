@@ -842,13 +842,18 @@ class Stream(object):
         Declares a stream converting each tuple on this stream
         into a string using `str(tuple)`.
 
-        The stream is typed as a stream of strings.
+        The stream is typed as a :py:const:`string stream <streamsx.topology.schema.CommonSchema.String>`.
+
+        If this stream is already typed as a string stream then it will
+        be returned (with no additional processing against it and `name`
+        is ignored).
 
         Args:
             name(str): Name of the resulting stream.
                 When `None` defaults to a generated name.
 
         .. versionadded:: 1.6
+        .. versionadded:: 1.6.1 `name` parameter added.
 
         Returns:
             Stream: Stream containing the string representations of tuples on this stream.
@@ -857,12 +862,24 @@ class Stream(object):
 
     def as_json(self, name=None):
         """
-        Declares a stream converting each tuple on this stream
-        into a JSON object using `json.dumps(tuple)`.
+        Declares a stream converting each tuple on this stream into
+        a JSON object.
 
         The stream is typed as a :py:const:`JSON stream <streamsx.topology.schema.CommonSchema.Json>`.
 
-        .. versionadded:: 1.7
+        Each tuple must be supported by `JSONEncoder`.
+        If the tuple is not a `dict` then it will be converted to
+        a JSON object with a single key `payload` containing the tuple.
+
+        If this stream is already typed as a JSON stream then it will
+        be returned (with no additional processing against it and `name`
+        is ignored).
+
+        Args:
+            name(str): Name of the resulting stream.
+                When `None` defaults to a generated name.
+
+        .. versionadded:: 1.6.1
 
         Returns:
             Stream: Stream containing the JSON representations of tuples on this stream.
@@ -873,6 +890,9 @@ class Stream(object):
     def _change_schema(self, schema, action, name=None):
         """Internal method to change a schema.
         """
+        if self.oport.schema.schema() == schema.schema():
+            return self
+
         if name is None:
             name = action 
         css = self._map(streamsx.topology.functions.identity, schema, name=name)
