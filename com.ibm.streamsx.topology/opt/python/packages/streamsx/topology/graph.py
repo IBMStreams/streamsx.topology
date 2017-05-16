@@ -184,6 +184,7 @@ class _SPLInvocation(object):
         self.viewable = True
         self.sl = sl
         self._placement = {}
+        self._start_op = False
 
         if view_configs is None:
             self.view_configs = []
@@ -243,6 +244,8 @@ class _SPLInvocation(object):
 
         _op["kind"] = self.kind
         _op["partitioned"] = False
+        if self._start_op:
+            _op["startOp"] = True
 
         _outputs = []
         _inputs = []

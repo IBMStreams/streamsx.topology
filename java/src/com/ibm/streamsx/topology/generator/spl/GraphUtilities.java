@@ -4,7 +4,9 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.START_OP;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectArray;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.stringArray;
@@ -37,9 +39,13 @@ public class GraphUtilities {
                 // should this be kind?
                 String name = jstring(op, "name");
                 
-                if(name != null && !name.startsWith("$"))
+                if(name != null && !name.startsWith("$")) {
                     starts.add(op);
+                    return;
                 }
+            }
+            if (jboolean(op, START_OP))
+                starts.add(op);
             });
         
         return starts;
