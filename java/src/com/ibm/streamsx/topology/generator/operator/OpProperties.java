@@ -18,6 +18,15 @@ public interface OpProperties {
     String LANGUAGE_CPP = "cpp";
     String LANGUAGE_PYTHON = "python";
     String LANGUAGE_SPL = "spl";
+    
+    /**
+     * Boolean top-level parameter indicating
+     * the operator is a starting point for
+     * graph traversal. Added when a pending
+     * stream is created to avoid not finding
+     * a start (no input ports operator).
+     */
+    String START_OP = "startOp";
       
     /**
      * JSON attribute for operator configuration.

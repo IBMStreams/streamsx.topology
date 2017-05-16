@@ -4,6 +4,7 @@ import unittest
 import sys
 import itertools
 import time
+import os
 
 import test_vers
 
@@ -117,3 +118,23 @@ class TestPending(unittest.TestCase):
         tester = Tester(topo)
         tester.contents(result, expected)
         tester.test(self.test_ctxtype, self.test_config)
+
+class TestPendingCompileOnly(unittest.TestCase):
+
+    def test_pure_loop(self):
+        topo = Topology()
+
+        feedback = PendingStream(topo)
+        
+        df = op.Map('spl.utility::Custom',
+            feedback.stream,
+            schema=schema.CommonSchema.String)
+
+        delayed_out = op.Map('spl.utility::Delay', df.stream, params={'delay': 0.05}).stream
+
+        feedback.complete(delayed_out)
+
+        sr = streamsx.topology.context.submit('BUNDLE', topo)
+        self.assertEqual(0, sr['return_code'])
+        os.remove(sr.bundlePath)
+

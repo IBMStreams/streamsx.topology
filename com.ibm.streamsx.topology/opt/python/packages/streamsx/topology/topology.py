@@ -940,6 +940,10 @@ class PendingStream(object):
             # will be automatically updated to the correct schema
             self._pending_schema._set(stream.oport.schema)
 
+            # Mark the operator with the pending stream
+            # a start point for graph travesal
+            stream.oport.operator._start_op = True
+
         def is_complete(self):
             """Has this connection been completed.
             """
