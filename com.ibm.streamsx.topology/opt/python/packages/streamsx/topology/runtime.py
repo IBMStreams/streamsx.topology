@@ -328,15 +328,32 @@ class _ObjectInPickleIter(_FunctionalCallable):
             return None
         return _PickleIterator(rv)
 
+class _ObjectInObjectIter(_FunctionalCallable):
+    def __call__(self, tuple):
+        rv =  self._callable(tuple)
+        if rv is None:
+            return None
+        return _ObjectIterator(rv)
+
 class _PickleInPickleIter(_ObjectInPickleIter):
     def __call__(self, tuple, pm=None):
         if pm is not None:
             tuple = pickle.loads(tuple)
         return super(_PickleInPickleIter, self).__call__(tuple)
 
+class _PickleInObjectIter(_ObjectInObjectIter):
+    def __call__(self, tuple, pm=None):
+        if pm is not None:
+            tuple = pickle.loads(tuple)
+        return super(_PickleInObjectIter, self).__call__(tuple)
+
 class _JSONInPickleIter(_ObjectInPickleIter):
     def __call__(self, tuple):
         return super(_JSONInPickleIter, self).__call__(json.loads(tuple))
+
+class _JSONInObjectIter(_ObjectInPickleIter):
+    def __call__(self, tuple):
+        return super(_JSONInObjectIter, self).__call__(json.loads(tuple))
 
 # The returned function must not maintain a reference
 # to the passed in value as it will be a memory view
@@ -353,3 +370,15 @@ def string_in__pickle_iter(callable):
 def dict_in__pickle_iter(callable):
     return _ObjectInPickleIter(callable)
 
+# By reference versions
+def pickle_in__object_iter(callable):
+    return _PickleInObjectIter(callable)
+
+def json_in__object_iter(callable):
+    return _JSONInObjectIter(callable)
+
+def string_in__object_iter(callable):
+    return _ObjectInObjectIter(callable)
+
+def dict_in__object_iter(callable):
+    return _ObjectInObjectIter(callable)
