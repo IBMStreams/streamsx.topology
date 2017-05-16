@@ -369,7 +369,7 @@ class Topology(object):
         oport = op.addOutputPort(name=name)
         return Stream(self, oport)
 
-    def subscribe(self, topic, schema=CommonSchema.Python):
+    def subscribe(self, topic, schema=CommonSchema.Python, name=None):
         """
         Subscribe to a topic published by other Streams applications.
         A Streams application may publish a stream to allow other
@@ -393,13 +393,15 @@ class Topology(object):
         Args:
             topic(str): Topic to subscribe to.
             schema(~streamsx.topology.schema.StreamSchema): schema to subscribe to.
+            name(str): Name of the subscribed stream, defaults to a generated name.
 
         Returns:
             Stream:  A stream whose tuples have been published to the topic by other Streams applications.
         """
+        name = self.graph._requested_name(name, 'subscribe')
         sl = _SourceLocation(_source_info(), "subscribe")
-        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl)
-        oport = op.addOutputPort(schema=schema)
+        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl, name=name)
+        oport = op.addOutputPort(schema=schema, name=name)
         subscribeParams = {'topic': topic, 'streamType': schema}
         op.setParameters(subscribeParams)
         return Stream(self, oport)
@@ -763,7 +765,7 @@ class Stream(object):
             fn = lambda v : streamsx.topology.functions.print_flush(tag + str(v))
         self.for_each(fn, name=name)
 
-    def publish(self, topic, schema=None):
+    def publish(self, topic, schema=None, name=None):
         """
         Publish this stream on a topic for other Streams applications to subscribe to.
         A Streams application may publish a stream to allow other
@@ -787,24 +789,28 @@ class Stream(object):
         Args:
             topic(str): Topic to publish this stream to.
             schema: Schema to publish. Defaults to CommonSchema.Python representing Python objects.
+            name(str): Name of the publish operator, defaults to a generated name.
         Returns:
             None
+
+        .. versionadded:: 1.6.1 `name` parameter.
         """
         if schema is not None and self.oport.schema.schema() != schema.schema():
             nc = None
             if schema == CommonSchema.Json:
-                nc = self.name + "_JSON"
+                nc = 'as_json'
             elif schema == CommonSchema.String:
-                nc = self.name + "_String"
+                nc = 'as_string'
                
             schema_change = self._map(streamsx.topology.functions.identity,schema=schema, name=nc)
             self.oport.operator.colocate(schema_change.oport.operator, 'publish')
-            schema_change.publish(topic, schema=schema)
+            schema_change.publish(topic, schema=schema, name=name)
             return None
 
+        name = self.topology.graph._requested_name(name, action="publish")
         sl = _SourceLocation(_source_info(), "publish")
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl)
-        op.addInputPort(outputPort=self.oport, name=self.name)
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=name)
+        op.addInputPort(outputPort=self.oport)
         self.oport.operator.colocate(op, 'publish')
 
     def autonomous(self):
