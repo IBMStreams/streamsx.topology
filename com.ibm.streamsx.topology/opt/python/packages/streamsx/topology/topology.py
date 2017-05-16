@@ -756,7 +756,7 @@ class Stream(object):
 
         """
         if name is None:
-            name = self.name + '_print'
+            name = 'print'
         fn = streamsx.topology.functions.print_flush
         if tag is not None:
             tag = str(tag) + ': '
@@ -848,7 +848,7 @@ class Stream(object):
             Stream: Stream containing the string representations of tuples on this stream.
         """
         if name is None:
-            name = self.name + '_as_string'
+            name = 'as_string'
         string_stream = self._map(streamsx.topology.functions.identity, CommonSchema.String, name=name)
         self.oport.operator.colocate(string_stream.oport.operator, 'as_string')
         return string_stream
