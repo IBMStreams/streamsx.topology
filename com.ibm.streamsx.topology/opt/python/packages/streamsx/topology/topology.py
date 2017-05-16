@@ -772,23 +772,30 @@ class Stream(object):
         Streams applications to subscribe to it. A subscriber
         matches a publisher if the topic and schema match.
 
-        By default a stream is published as Python objects (CommonSchema.Python)
-        which allows other Streams Python applications to subscribe to
-        the stream using the same topic.
+        By default a stream is published using its schema.
 
-        If a stream is published with CommonSchema.Json then it is published
-        as JSON, other Streams applications may subscribe to it regardless
-        of their implementation language. A Python tuple is converted to
-        JSON using json.dumps(tuple, ensure_ascii=False).
+        A stream of :py:const:`Python objects <streamsx.topology.schema.CommonSchema.Python>` can be suubscribed to by other Streams Python applications.
 
-        If a stream is published with CommonSchema.String then it is published
-        as strings, other Streams applications may subscribe to it regardless
-        of their implementation language. A Python tuple is converted to
-        a string using str(tuple).
+        If a stream is published setting `schema` to
+        :py:const:`~streamsx.topology.schema.CommonSchema.Json`
+        then it is published as a stream of JSON objects.
+        Other Streams applications may subscribe to it regardless
+        of their implementation language.
+
+        If a stream is published setting `schema` to
+        :py:const:`~streamsx.topology.schema.CommonSchema.String`
+        then it is published as strings
+        Other Streams applications may subscribe to it regardless
+        of their implementation language.
+
+        Supported values of `schema` are only
+        :py:const:`~streamsx.topology.schema.CommonSchema.Json`
+        and
+        :py:const:`~streamsx.topology.schema.CommonSchema.String`.
 
         Args:
             topic(str): Topic to publish this stream to.
-            schema: Schema to publish. Defaults to CommonSchema.Python representing Python objects.
+            schema: Schema to publish. Defaults to the schema of this stream.
             name(str): Name of the publish operator, defaults to a generated name.
         Returns:
             None
@@ -798,14 +805,14 @@ class Stream(object):
         if schema is not None and self.oport.schema.schema() != schema.schema():
             nc = None
             if schema == CommonSchema.Json:
-                nc = 'as_json'
+                schema_change = self.as_json()
             elif schema == CommonSchema.String:
-                nc = 'as_string'
+                schema_change = self.as_string()
+            else:
+                raise ValueError(schema)
                
-            schema_change = self._map(streamsx.topology.functions.identity,schema=schema, name=nc)
             self.oport.operator.colocate(schema_change.oport.operator, 'publish')
-            schema_change.publish(topic, schema=schema, name=name)
-            return None
+            return schema_change.publish(topic, schema=schema)
 
         name = self.topology.graph._requested_name(name, action="publish")
         sl = _SourceLocation(_source_info(), "publish")

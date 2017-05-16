@@ -129,6 +129,13 @@ class _ObjectInPickleOut(_FunctionalCallable):
             return None
         return pickle.dumps(rv)
 
+class _ObjectInStringOut(_FunctionalCallable):
+    def __call__(self, tuple):
+        rv =  self._callable(tuple)
+        if rv is None:
+            return None
+        return str(rv)
+
 class _ObjectInJSONOut(_FunctionalCallable):
     def __call__(self, tuple):
         rv =  self._callable(tuple)
@@ -252,6 +259,13 @@ def dict_in__pickle_out(callable):
 
 def dict_in__object_out(callable):
     return _FunctionalCallable(callable)
+
+def dict_in__json_out(callable):
+    return _ObjectInJSONOut(callable)
+
+def dict_in__string_out(callable):
+    return _ObjectInStringOut(callable)
+
 
 ##################################################
 
