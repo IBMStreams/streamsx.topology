@@ -131,13 +131,20 @@ class CommonSchema(enum.Enum):
     """
     Json = StreamSchema("tuple<rstring jsonString>")
     """
-    Stream where each tuple is a JSON object.
+    Stream where each tuple is logically a JSON object.
 
     `Json` can be used as a natural interchange format between Streams applications
     implemented in different programming languages. All languages supported by
     Streams support publishing and subscribing to JSON streams.
 
-    Python objects are converted to JSON objects using `json.dumps(obj)`.
+    A Python callable receives each tuple as a `dict` as though it was
+    created from ``json.loads(json_formatted_str)`` where `json_formatted_str`
+    is the JSON formatted representation of tuple.
+
+    Python objects that are to be converted to JSON objects
+    must be supported by `JSONEncoder`. If the object is not a `dict`
+    then it will be converted to a JSON object with a single key `payload`
+    containing the value.
     """
     String = StreamSchema("tuple<rstring string>")
     """
@@ -146,6 +153,8 @@ class CommonSchema(enum.Enum):
     `String` can be used as a natural interchange format between Streams applications
     implemented in different programming languages. All languages supported by
     Streams support publishing and subscribing to string streams.
+
+    A Python callable receives each tuple as a `str` object.
 
     Python objects are converted to strings using `str(obj)`.
     """

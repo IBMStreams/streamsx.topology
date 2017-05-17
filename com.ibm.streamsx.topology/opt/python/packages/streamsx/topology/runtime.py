@@ -38,7 +38,14 @@ def setupOperator(dir):
     __splpy_addDirToPath(os.path.join(pydir, 'packages'))
     #print("sys.path", sys.path)
 
-
+def _json_object_out(v):
+    """Return a serialized JSON object for a value."""
+    if v is None:
+        return None
+    if not isinstance(v, dict):
+        v = {'payload': v}
+    return json.dumps(v, ensure_ascii=False)
+    
 # Get the callable from the value
 # passed into the SPL PyFunction operator.
 #
@@ -104,9 +111,7 @@ class _PickleInJSONOut(_FunctionalCallable):
         if pm is not None:
             tuple = pickle.loads(tuple)
         rv =  self._callable(tuple)
-        if rv is None:
-            return None
-        return json.dumps(rv, ensure_ascii=False)
+        return _json_object_out(rv)
 
 class _PickleInStringOut(_FunctionalCallable):
     def __call__(self, tuple, pm=None):
@@ -124,6 +129,18 @@ class _ObjectInPickleOut(_FunctionalCallable):
             return None
         return pickle.dumps(rv)
 
+class _ObjectInStringOut(_FunctionalCallable):
+    def __call__(self, tuple):
+        rv =  self._callable(tuple)
+        if rv is None:
+            return None
+        return str(rv)
+
+class _ObjectInJSONOut(_FunctionalCallable):
+    def __call__(self, tuple):
+        rv =  self._callable(tuple)
+        return _json_object_out(rv)
+
 class _JSONInObjectOut(_FunctionalCallable):
     def __call__(self, tuple):
         return self._callable(json.loads(tuple))
@@ -134,6 +151,13 @@ class _JSONInPickleOut(_FunctionalCallable):
         if rv is None:
             return None
         return pickle.dumps(rv)
+
+class _JSONInStringOut(_FunctionalCallable):
+    def __call__(self, tuple):
+        rv =  self._callable(json.loads(tuple))
+        if rv is None:
+            return None
+        return str(rv)
 
 # Given a callable 'callable', return a function
 # that depickles the input and then calls 'callable'
@@ -215,6 +239,9 @@ def pickle_in__pickle_out(callable):
 def json_in__pickle_out(callable):
     return _JSONInPickleOut(callable)
 
+def json_in__string_out(callable):
+    return _JSONInStringOut(callable)
+
 def json_in__object_out(callable):
     return _JSONInObjectOut(callable)
 
@@ -224,11 +251,21 @@ def string_in__pickle_out(callable):
 def string_in__object_out(callable):
     return _FunctionalCallable(callable)
 
+def string_in__json_out(callable):
+    return _ObjectInJSONOut(callable)
+
 def dict_in__pickle_out(callable):
     return _ObjectInPickleOut(callable)
 
 def dict_in__object_out(callable):
     return _FunctionalCallable(callable)
+
+def dict_in__json_out(callable):
+    return _ObjectInJSONOut(callable)
+
+def dict_in__string_out(callable):
+    return _ObjectInStringOut(callable)
+
 
 ##################################################
 

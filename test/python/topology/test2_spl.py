@@ -57,6 +57,34 @@ class TestSPL(unittest.TestCase):
         tester.contents(s, [0, 4, 8, 12, 16, 20, 24])
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_SPL_as_json(self):
+        topo = Topology()
+        b = op.Source(topo, "spl.utility::Beacon",
+            'tuple<uint64 seq, rstring b>',
+            params = {'period': 0.02, 'iterations':5})
+        b.seq = b.output('IterationCount()')
+
+        s = b.stream.as_json()
+
+        tester = Tester(topo)
+        tester.contents(s, [{'seq':0, 'b':''}, {'seq':1, 'b':''}, {'seq':2, 'b':''}, {'seq':3, 'b':''}, {'seq':4, 'b':''}])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_SPL_as_string(self):
+        topo = Topology()
+        b = op.Source(topo, "spl.utility::Beacon",
+            'tuple<uint64 seq, rstring b>',
+            params = {'period': 0.02, 'iterations':5})
+        b.seq = b.output('IterationCount()')
+        b.b = b.output('"str!"')
+
+        s = b.stream.as_string()
+        s = s.map(lambda x : eval(x))
+
+        tester = Tester(topo)
+        tester.contents(s, [{'seq':0, 'b':'str!'}, {'seq':1, 'b':'str!'}, {'seq':2, 'b':'str!'}, {'seq':3, 'b':'str!'}, {'seq':4, 'b':'str!'}])
+        tester.test(self.test_ctxtype, self.test_config)
+
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestDistributedSPL(TestSPL):
     def setUp(self):
