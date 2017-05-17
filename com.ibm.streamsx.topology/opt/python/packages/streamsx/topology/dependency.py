@@ -234,7 +234,15 @@ def _is_builtin_module(module):
     """
     if (not hasattr(module, '__file__')) or  module.__name__ in sys.builtin_module_names:
         return True
-    return module.__name__ in _stdlib._STD_LIB_MODULES
+    if module.__name__ in _stdlib._STD_LIB_MODULES:
+        return True
+    if not '.' in module.__name__:
+        return False
+    mn_top = module.__name__.split('.')[0]
+    return mn_top in _stdlib._STD_LIB_MODULES
+    
+        
+
 
 def _is_streamsx_module(module):
     if hasattr(module, '__name__'):

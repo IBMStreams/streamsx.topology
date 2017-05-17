@@ -38,7 +38,14 @@ def setupOperator(dir):
     __splpy_addDirToPath(os.path.join(pydir, 'packages'))
     #print("sys.path", sys.path)
 
-
+def _json_object_out(v):
+    """Return a serialized JSON object for a value."""
+    if v is None:
+        return None
+    if not isinstance(v, dict):
+        v = {'payload': v}
+    return json.dumps(v, ensure_ascii=False)
+    
 # Get the callable from the value
 # passed into the SPL PyFunction operator.
 #
@@ -85,26 +92,32 @@ class _FunctionalCallable(object):
             ec._callable_exit_clean(self._callable)
 
 class _PickleInObjectOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        return self._callable(pickle.loads(tuple))
+    def __call__(self, tuple, pm=None):
+        if pm is not None:
+            tuple = pickle.loads(tuple)
+        return self._callable(tuple)
 
 class _PickleInPickleOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(pickle.loads(tuple))
+    def __call__(self, tuple, pm=None):
+        if pm is not None:
+            tuple = pickle.loads(tuple)
+        rv =  self._callable(tuple)
         if rv is None:
             return None
         return pickle.dumps(rv)
 
 class _PickleInJSONOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(pickle.loads(tuple))
-        if rv is None:
-            return None
-        return json.dumps(rv, ensure_ascii=False)
+    def __call__(self, tuple, pm=None):
+        if pm is not None:
+            tuple = pickle.loads(tuple)
+        rv =  self._callable(tuple)
+        return _json_object_out(rv)
 
 class _PickleInStringOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(pickle.loads(tuple))
+    def __call__(self, tuple, pm=None):
+        if pm is not None:
+            tuple = pickle.loads(tuple)
+        rv =  self._callable(tuple)
         if rv is None:
             return None
         return str(rv)
@@ -116,6 +129,18 @@ class _ObjectInPickleOut(_FunctionalCallable):
             return None
         return pickle.dumps(rv)
 
+class _ObjectInStringOut(_FunctionalCallable):
+    def __call__(self, tuple):
+        rv =  self._callable(tuple)
+        if rv is None:
+            return None
+        return str(rv)
+
+class _ObjectInJSONOut(_FunctionalCallable):
+    def __call__(self, tuple):
+        rv =  self._callable(tuple)
+        return _json_object_out(rv)
+
 class _JSONInObjectOut(_FunctionalCallable):
     def __call__(self, tuple):
         return self._callable(json.loads(tuple))
@@ -126,6 +151,13 @@ class _JSONInPickleOut(_FunctionalCallable):
         if rv is None:
             return None
         return pickle.dumps(rv)
+
+class _JSONInStringOut(_FunctionalCallable):
+    def __call__(self, tuple):
+        rv =  self._callable(json.loads(tuple))
+        if rv is None:
+            return None
+        return str(rv)
 
 # Given a callable 'callable', return a function
 # that depickles the input and then calls 'callable'
@@ -207,11 +239,33 @@ def pickle_in__pickle_out(callable):
 def json_in__pickle_out(callable):
     return _JSONInPickleOut(callable)
 
+def json_in__string_out(callable):
+    return _JSONInStringOut(callable)
+
+def json_in__object_out(callable):
+    return _JSONInObjectOut(callable)
+
 def string_in__pickle_out(callable):
     return _ObjectInPickleOut(callable)
 
+def string_in__object_out(callable):
+    return _FunctionalCallable(callable)
+
+def string_in__json_out(callable):
+    return _ObjectInJSONOut(callable)
+
 def dict_in__pickle_out(callable):
     return _ObjectInPickleOut(callable)
+
+def dict_in__object_out(callable):
+    return _FunctionalCallable(callable)
+
+def dict_in__json_out(callable):
+    return _ObjectInJSONOut(callable)
+
+def dict_in__string_out(callable):
+    return _ObjectInStringOut(callable)
+
 
 ##################################################
 
@@ -228,6 +282,9 @@ def pickle_in__json_out(callable):
 def pickle_in__string_out(callable):
     return _PickleInStringOut(callable)
 
+def pickle_in__object_out(callable):
+    return _PickleInObjectOut(callable)
+
 
 class _IterablePickleOut(_FunctionalCallable):
     def __init__(self, callable):
@@ -243,18 +300,35 @@ class _IterablePickleOut(_FunctionalCallable):
         except StopIteration:
             return None
 
+class _IterableObjectOut(_FunctionalCallable):
+    def __init__(self, callable):
+        super(_IterableObjectOut, self).__init__(callable)
+        self._it = iter(self._callable())
+
+    def __call__(self):
+        try:
+            while True:
+                tuple = next(self._it)
+                if not tuple is None:
+                    return tuple
+        except StopIteration:
+            return None
 
 # Given a function that returns an iterable
 # return a function that can be called
 # repeatably by a source operator returning
 # the next tuple in its pickled form
-def iterableSource(callable) :
+def source_pickle(callable) :
     return _IterablePickleOut(callable)
+
+# Source iterator that returns objects
+# when passing by ref
+def source_object(callable) :
+    return _IterableObjectOut(callable)
 
 # Iterator that wraps another iterator
 # to discard any values that are None
-# and pickle any returned value.
-class _PickleIterator:
+class _ObjectIterator(object):
    def __init__(self, it):
        self.it = iter(it)
    def __iter__(self):
@@ -263,11 +337,16 @@ class _PickleIterator:
        nv = next(self.it)
        while nv is None:
           nv = next(self.it)
-       return pickle.dumps(nv)
+       return nv
 # python 2.7 uses the next function whereas 
 # python 3.x uses __next__ 
    def next(self):
        return self.__next__()
+
+# and pickle any returned value.
+class _PickleIterator(_ObjectIterator):
+   def __next__(self):
+       return pickle.dumps(super(_PickleIterator, self).__next__())
 
 # Return a function that depickles
 # the input tuple calls callable
@@ -286,13 +365,32 @@ class _ObjectInPickleIter(_FunctionalCallable):
             return None
         return _PickleIterator(rv)
 
-class _PickleInPickleIter(_ObjectInPickleIter):
+class _ObjectInObjectIter(_FunctionalCallable):
     def __call__(self, tuple):
-        return super(_PickleInPickleIter, self).__call__(pickle.loads(tuple))
+        rv =  self._callable(tuple)
+        if rv is None:
+            return None
+        return _ObjectIterator(rv)
+
+class _PickleInPickleIter(_ObjectInPickleIter):
+    def __call__(self, tuple, pm=None):
+        if pm is not None:
+            tuple = pickle.loads(tuple)
+        return super(_PickleInPickleIter, self).__call__(tuple)
+
+class _PickleInObjectIter(_ObjectInObjectIter):
+    def __call__(self, tuple, pm=None):
+        if pm is not None:
+            tuple = pickle.loads(tuple)
+        return super(_PickleInObjectIter, self).__call__(tuple)
 
 class _JSONInPickleIter(_ObjectInPickleIter):
     def __call__(self, tuple):
         return super(_JSONInPickleIter, self).__call__(json.loads(tuple))
+
+class _JSONInObjectIter(_ObjectInPickleIter):
+    def __call__(self, tuple):
+        return super(_JSONInObjectIter, self).__call__(json.loads(tuple))
 
 # The returned function must not maintain a reference
 # to the passed in value as it will be a memory view
@@ -309,3 +407,15 @@ def string_in__pickle_iter(callable):
 def dict_in__pickle_iter(callable):
     return _ObjectInPickleIter(callable)
 
+# By reference versions
+def pickle_in__object_iter(callable):
+    return _PickleInObjectIter(callable)
+
+def json_in__object_iter(callable):
+    return _JSONInObjectIter(callable)
+
+def string_in__object_iter(callable):
+    return _ObjectInObjectIter(callable)
+
+def dict_in__object_iter(callable):
+    return _ObjectInObjectIter(callable)

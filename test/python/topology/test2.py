@@ -24,10 +24,19 @@ def removeArtifacts(submissionResult):
         shutil.rmtree(submissionResult['toolkitRoot'])
     if 'archivePath' in submissionResult:
         os.remove(submissionResult['archivePath'])
+    if 'jobConfigPath' in submissionResult:
+        os.remove(submissionResult['jobConfigPath'])
 
 def assertBundlePath(test, submissionResult):
     test.assertIn('bundlePath', submissionResult)
     test.assertTrue(os.path.isfile(submissionResult['bundlePath']))
+    if ((test.test_ctxtype == 'BUNDLE' or
+         test.test_ctxtype != 'STANDALONE' and
+         test.test_config.get('topology.keepArtifacts', False))):
+        test.assertIn('jobConfigPath', submissionResult)
+        test.assertTrue(os.path.isfile(submissionResult['jobConfigPath']))
+    else:
+        test.assertNotIn('jobConfigPath', test.result)
 
 def assertToolkitRoot(test, submissionResult):
     test.assertIn('toolkitRoot', submissionResult)

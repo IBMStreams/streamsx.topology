@@ -19,6 +19,8 @@ class ExtensionOperator(object):
 
     @property
     def params(self):
+        """Parameters for the operator invocation.
+        """
         return self._op.params
 
     def __inputs(self, inputs):
@@ -29,22 +31,24 @@ class ExtensionOperator(object):
                 self.inputs = list(inputs)
             except TypeError:
                 # not iterable, single input
-                self._op.addInputPort(outputPort=inputs.oport)
+                self._op.addInputPort(outputPort=inputs.oport, name=inputs.name)
                 self.inputs = [inputs]
 
     def __outputs(self, schemas):
         self.outputs = []
         if schemas is not None:
+            stream_name = None
             if isinstance(schemas, str):
                 schemas = (schemas,)
+                stream_name = self._op.name
 
             try:
                 for schema in schemas:
                     schema = sch._stream_schema(schema)
-                    oport = self._op.addOutputPort(schema=schema)
+                    oport = self._op.addOutputPort(schema=schema, name=stream_name)
                     self.outputs.append(Stream(self.topology, oport))
             except TypeError:
                 # not iterable, single schema
                 schema = sch._stream_schema(schemas)
-                oport = self._op.addOutputPort(schema=schema)
+                oport = self._op.addOutputPort(schema=schema, name=self._op.name)
                 self.outputs.append(Stream(self.topology, oport))

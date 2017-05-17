@@ -12,28 +12,10 @@ class TestStringFeatures(unittest.TestCase):
 ## Running tests
 To run the test suite, just invoke
 ```
-python test_runner.py
-```
-or
-```
-python -m unittest rests_*
+python -m unittest discover
 ```
 
-You can add filter to run a particular module, class or test method by:
-```
-# Run all tests within rest_local_tests module
-python -m unittest rest_local_tests
-```
-or
-```
-# Run all test methods within TestRestFeaturesLocal class in rest_local_tests module
-python -m unittest rest_local_tests.TestRestFeaturesLocal
-```
-or
-```
-# Run test_username_and_password class within rest_local_test module
-python -m unittest rest_local_tests.TestRestFeaturesLocal.test_username_and_password
-```
+Run a subset of tests using the standard Python unittest approaches.
 
 ## Configuring the rest tests
 A default set of SWS username and password for the rest_local_tests are supplied:

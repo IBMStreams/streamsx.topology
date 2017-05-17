@@ -166,6 +166,8 @@ public class InvokeStandalone {
             } finally {
                 deleteBundle();
             }
+            
+            isDone = true;
             trace.info("Standalone application completed: return code=" + rc);
             notifyAll();
             return rc;

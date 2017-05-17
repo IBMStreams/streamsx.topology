@@ -4,6 +4,7 @@ import unittest
 import sys
 import itertools
 import time
+import os
 
 import test_vers
 
@@ -21,7 +22,7 @@ class TestPending(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
 
-    def test_simple(self):
+    def test_simple_map(self):
         """Test pending connection simple case.
         """
         data = ['A1','B1', 'A2', 'A3', 'C1', 'C1']
@@ -29,6 +30,23 @@ class TestPending(unittest.TestCase):
         topo = Topology()
         pending = PendingStream(topo)
         ap = pending.stream.map(lambda s : s + "PC")
+        self.assertFalse(pending.is_complete())
+        pending.complete(topo.source(data))
+        self.assertTrue(pending.is_complete())
+
+        tester = Tester(topo)
+        tester.contents(ap, expected)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_simple_filter(self):
+        """Test pending connection simple case.
+        """
+        data = ['A1','B1', 'A2', 'A3', 'C1', 'C1']
+        expected =  ['A3']
+        topo = Topology()
+        pending = PendingStream(topo)
+        ap = pending.stream.filter(lambda s : s.startswith('A'))
+        ap = ap.filter(lambda s : s.endswith('3'))
         self.assertFalse(pending.is_complete())
         pending.complete(topo.source(data))
         self.assertTrue(pending.is_complete())
@@ -100,3 +118,23 @@ class TestPending(unittest.TestCase):
         tester = Tester(topo)
         tester.contents(result, expected)
         tester.test(self.test_ctxtype, self.test_config)
+
+class TestPendingCompileOnly(unittest.TestCase):
+
+    def test_pure_loop(self):
+        topo = Topology()
+
+        feedback = PendingStream(topo)
+        
+        df = op.Map('spl.utility::Custom',
+            feedback.stream,
+            schema=schema.CommonSchema.String)
+
+        delayed_out = op.Map('spl.utility::Delay', df.stream, params={'delay': 0.05}).stream
+
+        feedback.complete(delayed_out)
+
+        sr = streamsx.topology.context.submit('BUNDLE', topo)
+        self.assertEqual(0, sr['return_code'])
+        os.remove(sr.bundlePath)
+

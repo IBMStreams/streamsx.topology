@@ -11,7 +11,6 @@ import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.gson;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
@@ -21,7 +20,8 @@ import java.nio.file.Files;
 import java.util.Date;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.internal.graph.GraphKeys;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * Keys in the JSON deploy object for job submission.
@@ -125,6 +125,9 @@ public interface DeployKeys {
             String jcos_str = gson().toJson(jcos);
 
             Files.write(jcf.toPath(), jcos_str.getBytes(StandardCharsets.UTF_8));
+            
+            final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
+            submissionResult.addProperty(SubmissionResultsKeys.JOB_CONFIG_PATH, jcf.getCanonicalPath());
             
             return jcf;
         }

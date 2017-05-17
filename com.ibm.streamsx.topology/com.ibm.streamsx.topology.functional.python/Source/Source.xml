@@ -69,6 +69,15 @@
         <type>rstring</type>
         <cardinality>1</cardinality>
       </parameter>
+      <parameter>
+        <name>outputConnections</name>
+        <description>Number of output connections.</description>
+        <optional>true</optional>
+        <rewriteAllowed>false</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>int32</type>
+        <cardinality>1</cardinality>
+      </parameter>
     </parameters>
     <inputPorts>
     </inputPorts>

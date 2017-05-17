@@ -132,12 +132,28 @@ Example of using ``__enter__`` to create custom metrics::
         def __exit__(self, exc_type, exc_value, traceback):
             pass
 
+Tuple semantics
+===============
+
+Python objects on a stream may be passed by reference between callables (e.g. the value returned by a map callable may be passed by reference to a following filter callable). This can only occur when the functions are executing in the same PE (process). If an object is not passed by reference a deep-copy is passed. Streams that cross PE (process) boundaries  are always passed by deep-copy.
+
+Thus if a stream is consumed by two map and one filter callables in the same PE they may receive the same object reference that was sent by the upstream callable. If one (or more) callable modifies the passed in reference those changes may be seen by the upstream callable or the other callables. The order of execution of the downstream callables is not defined. One can prevent such potential non-deterministic behavior by one or more of these techniques:
+
+* Passing immutable objects
+* Not retaining a reference to an object that will be submitted on a stream
+* Not modifying input tuples in a callable
+* Using copy/deepcopy when returning a value that will be submitted to a stream.
+
+Applications cannot rely on pass-by reference,  it is a performance optimization that can be made in some situations when stream connections are within a PE.
+
 SPL operators
 =============
 
 In addition an application declared by `Topology` can include stream processing defined by SPL primitive or
 composite operators. This allows reuse of adapters and analytics provided by IBM Streams,
 open source and third-party SPL toolkits.
+
+See :py:mod:`streamsx.spl.op`
 
 """
 
@@ -292,6 +308,9 @@ class Topology(object):
         if "Anaconda" in sys.version:
             import streamsx.topology.condapkgs
             self.exclude_packages.update(streamsx.topology.condapkgs._CONDA_PACKAGES)
+        import streamsx.topology._deppkgs
+        self.exclude_packages.update(streamsx.topology._deppkgs._DEP_PACKAGES)
+        
         self.graph = graph.SPLGraph(self, name, namespace)
         if files is not None:
             self.files = files
@@ -350,7 +369,7 @@ class Topology(object):
         oport = op.addOutputPort(name=name)
         return Stream(self, oport)
 
-    def subscribe(self, topic, schema=CommonSchema.Python):
+    def subscribe(self, topic, schema=CommonSchema.Python, name=None):
         """
         Subscribe to a topic published by other Streams applications.
         A Streams application may publish a stream to allow other
@@ -374,13 +393,15 @@ class Topology(object):
         Args:
             topic(str): Topic to subscribe to.
             schema(~streamsx.topology.schema.StreamSchema): schema to subscribe to.
+            name(str): Name of the subscribed stream, defaults to a generated name.
 
         Returns:
             Stream:  A stream whose tuples have been published to the topic by other Streams applications.
         """
+        name = self.graph._requested_name(name, 'subscribe')
         sl = _SourceLocation(_source_info(), "subscribe")
-        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl)
-        oport = op.addOutputPort(schema=schema)
+        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl, name=name)
+        oport = op.addOutputPort(schema=schema, name=name)
         subscribeParams = {'topic': topic, 'streamType': schema}
         op.setParameters(subscribeParams)
         return Stream(self, oport)
@@ -413,6 +434,8 @@ class Stream(object):
         
         Args:
             func: A callable that takes a single parameter for the tuple and returns None.
+            name(str): Name of the stream, defaults to a generated name.
+
         Returns:
             None
         """
@@ -436,6 +459,7 @@ class Stream(object):
         
         Args:
             func: Filter callable that takes a single parameter for the tuple.
+            name(str): Name of the stream, defaults to a generated name.
         Returns:
             Stream: A Stream containing tuples that have not been filtered out.
         """
@@ -471,7 +495,7 @@ class Stream(object):
         Args:
             buffer_time: Specifies the buffer size to use measured in seconds.
             sample_size: Specifies the number of tuples to sample per second.
-            name: Name of the view. Name must be unique within the topology. Defaults to a generated name.
+            name(str): Name of the view. Name must be unique within the topology. Defaults to a generated name.
             description: Description of the view.
             start(bool): Start buffering data when the job is submitted.
                 If `False` then the view is starts buffering data when the first
@@ -516,6 +540,7 @@ class Stream(object):
         
         Args:
             func: A callable that takes a single parameter for the tuple.
+            name(str): Name of the mapped stream, defaults to a generated name.
 
         Returns:
             Stream: A stream containing tuples mapped by `func`.
@@ -543,6 +568,8 @@ class Stream(object):
         
         Args:
             func: A callable that takes a single parameter for the tuple.
+            name(str): Name of the flattened stream, defaults to a generated name.
+
         Returns:
             Stream: A Stream containing transformed tuples.
         Raises:
@@ -713,57 +740,84 @@ class Stream(object):
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
 
-    def print(self):
+    def print(self, tag=None, name=None):
         """
         Prints each tuple to stdout flushing after each tuple.
 
+        If `tag` is not `None` then each tuple has `tag: ` prepended
+        to it before printing.
+
+        Args:
+            tag: A tag to prepend to each tuple.
+            name(str): Name of the resulting stream.
+                When `None` defaults to a generated name.
         Returns:
             None
-        """
-        self.sink(streamsx.topology.functions.print_flush)
 
-    def publish(self, topic, schema=None):
+        .. versionadded:: 1.6.1 `tag`, `name` parameters.
+
+        """
+        if name is None:
+            name = 'print'
+        fn = streamsx.topology.functions.print_flush
+        if tag is not None:
+            tag = str(tag) + ': '
+            fn = lambda v : streamsx.topology.functions.print_flush(tag + str(v))
+        self.for_each(fn, name=name)
+
+    def publish(self, topic, schema=None, name=None):
         """
         Publish this stream on a topic for other Streams applications to subscribe to.
         A Streams application may publish a stream to allow other
         Streams applications to subscribe to it. A subscriber
         matches a publisher if the topic and schema match.
 
-        By default a stream is published as Python objects (CommonSchema.Python)
-        which allows other Streams Python applications to subscribe to
-        the stream using the same topic.
+        By default a stream is published using its schema.
 
-        If a stream is published with CommonSchema.Json then it is published
-        as JSON, other Streams applications may subscribe to it regardless
-        of their implementation language. A Python tuple is converted to
-        JSON using json.dumps(tuple, ensure_ascii=False).
+        A stream of :py:const:`Python objects <streamsx.topology.schema.CommonSchema.Python>` can be suubscribed to by other Streams Python applications.
 
-        If a stream is published with CommonSchema.String then it is published
-        as strings, other Streams applications may subscribe to it regardless
-        of their implementation language. A Python tuple is converted to
-        a string using str(tuple).
+        If a stream is published setting `schema` to
+        :py:const:`~streamsx.topology.schema.CommonSchema.Json`
+        then it is published as a stream of JSON objects.
+        Other Streams applications may subscribe to it regardless
+        of their implementation language.
+
+        If a stream is published setting `schema` to
+        :py:const:`~streamsx.topology.schema.CommonSchema.String`
+        then it is published as strings
+        Other Streams applications may subscribe to it regardless
+        of their implementation language.
+
+        Supported values of `schema` are only
+        :py:const:`~streamsx.topology.schema.CommonSchema.Json`
+        and
+        :py:const:`~streamsx.topology.schema.CommonSchema.String`.
 
         Args:
             topic(str): Topic to publish this stream to.
-            schema: Schema to publish. Defaults to CommonSchema.Python representing Python objects.
+            schema: Schema to publish. Defaults to the schema of this stream.
+            name(str): Name of the publish operator, defaults to a generated name.
         Returns:
             None
+
+        .. versionadded:: 1.6.1 `name` parameter.
         """
         if schema is not None and self.oport.schema.schema() != schema.schema():
             nc = None
             if schema == CommonSchema.Json:
-                nc = self.name + "_JSON"
+                schema_change = self.as_json()
             elif schema == CommonSchema.String:
-                nc = self.name + "_String"
+                schema_change = self.as_string()
+            else:
+                raise ValueError(schema)
                
-            schema_change = self._map(streamsx.topology.functions.identity,schema=schema, name=nc)
             self.oport.operator.colocate(schema_change.oport.operator, 'publish')
-            schema_change.publish(topic, schema=schema)
-            return None
+            return schema_change.publish(topic, schema=schema)
 
+        name = self.topology.graph._requested_name(name, action="publish")
         sl = _SourceLocation(_source_info(), "publish")
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl)
-        op.addInputPort(outputPort=self.oport, name=self.name)
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=name)
+        op.addInputPort(outputPort=self.oport)
         self.oport.operator.colocate(op, 'publish')
 
     def autonomous(self):
@@ -795,19 +849,63 @@ class Stream(object):
         Declares a stream converting each tuple on this stream
         into a string using `str(tuple)`.
 
-        The stream is typed as a stream of strings.
+        The stream is typed as a :py:const:`string stream <streamsx.topology.schema.CommonSchema.String>`.
+
+        If this stream is already typed as a string stream then it will
+        be returned (with no additional processing against it and `name`
+        is ignored).
+
+        Args:
+            name(str): Name of the resulting stream.
+                When `None` defaults to a generated name.
 
         .. versionadded:: 1.6
+        .. versionadded:: 1.6.1 `name` parameter added.
 
         Returns:
             Stream: Stream containing the string representations of tuples on this stream.
+        """
+        return self._change_schema(CommonSchema.String, 'as_string', name)
+
+    def as_json(self, name=None):
+        """
+        Declares a stream converting each tuple on this stream into
+        a JSON object.
+
+        The stream is typed as a :py:const:`JSON stream <streamsx.topology.schema.CommonSchema.Json>`.
+
+        Each tuple must be supported by `JSONEncoder`.
+        If the tuple is not a `dict` then it will be converted to
+        a JSON object with a single key `payload` containing the tuple.
+
+        If this stream is already typed as a JSON stream then it will
+        be returned (with no additional processing against it and `name`
+        is ignored).
+
+        Args:
+            name(str): Name of the resulting stream.
+                When `None` defaults to a generated name.
+
+        .. versionadded:: 1.6.1
+
+        Returns:
+            Stream: Stream containing the JSON representations of tuples on this stream.
 
         """
+        return self._change_schema(CommonSchema.Json, 'as_json', name)
+
+    def _change_schema(self, schema, action, name=None):
+        """Internal method to change a schema.
+        """
+        if self.oport.schema.schema() == schema.schema():
+            return self
+
         if name is None:
-            name = self.name + '_String'
-        string_stream = self._map(streamsx.topology.functions.identity, CommonSchema.String, name=name)
-        self.oport.operator.colocate(string_stream.oport.operator, 'as_string')
-        return string_stream
+            name = action 
+        css = self._map(streamsx.topology.functions.identity, schema, name=name)
+        self.oport.operator.colocate(css.oport.operator, action)
+        return css
+
 
 class View(object):
     """
@@ -875,8 +973,9 @@ class PendingStream(object):
         def __init__(self, topology):
             self.topology = topology
             self._marker = topology.graph.addOperator(kind="$Pending$")
+            self._pending_schema = StreamSchema('<pending')
 
-            self.stream = Stream(topology, self._marker.addOutputPort(schema=None))
+            self.stream = Stream(topology, self._marker.addOutputPort(schema=self._pending_schema))
 
         def complete(self, stream):
             """Complete the pending stream.
@@ -890,6 +989,14 @@ class PendingStream(object):
             assert not self.is_complete()
             self._marker.addInputPort(outputPort=stream.oport)
             self.stream.oport.schema = stream.oport.schema
+            # Update the pending schema to the actual schema
+            # Any downstream filters that took the reference
+            # will be automatically updated to the correct schema
+            self._pending_schema._set(stream.oport.schema)
+
+            # Mark the operator with the pending stream
+            # a start point for graph travesal
+            stream.oport.operator._start_op = True
 
         def is_complete(self):
             """Has this connection been completed.

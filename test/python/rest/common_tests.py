@@ -1,10 +1,13 @@
 import logging
 import unittest
 import time
-from test_operators import DelayedTupleSourceWithLastTuple
+from operators import DelayedTupleSourceWithLastTuple
 
 from streamsx.topology.tester import Tester
 from streamsx.topology import topology, schema
+
+from streamsx.rest_primitives import *
+import primitives_caller
 
 logger = logging.getLogger('streamsx.test.rest_test')
 
@@ -65,23 +68,55 @@ class CommonTests(unittest.TestCase):
 
     def _verify_job_refresh(self):
         result = self.tester.submission_result
-        job = self.sc.get_instance(result['instanceId']).get_job(result['jobId'])
+        self.job = self.sc.get_instance(result['instanceId']).get_job(result['jobId'])
 
-        self.assertEqual('healthy', job.health)
+        self.assertEqual('healthy', self.job.health)
 
-        # cancel the job and wait for health to deteriorate
-        timeout = 10
-        job.cancel()
-        while hasattr(job, 'health') and 'healthy' == job.health:
-            time.sleep(1)
-            timeout -= 1
-            job.refresh()
-            self.assertGreaterEqual(timeout, 0, msg='Timeout exceeded while waiting for job to cancel')
 
     def test_job_refresh(self):
         top = topology.Topology('jobRefreshTest')
-        top.source(['Hello'])
+        src = top.source(['Hello'])
 
         self.tester = Tester(top)
+        self.tester.tuple_count(src, 1)
         self.tester.local_check = self._verify_job_refresh
+        self.tester.test(self.test_ctxtype, self.test_config)
+
+        # Job was cancelled by test wait for health to change
+        timeout = 10
+        while hasattr(self.job, 'health') and 'healthy' == self.job.health:
+            time.sleep(0.2)
+            timeout -= 1
+            self.job.refresh()
+            self.assertGreaterEqual(timeout, 0, msg='Timeout exceeded while waiting for job to cancel')
+
+        if hasattr(self.job, 'health'):
+            self.assertNotEqual('healthy', self.job.health)
+
+    def _call_rest_apis(self):
+        job = self.tester.submission_result.job
+        self.assertIsInstance(job, Job)
+        primitives_caller.check_job(self, job)
+
+        instance = job.get_instance()
+        self.assertIsInstance(instance, Instance)
+        primitives_caller.check_instance(self, instance)
+
+        domain = instance.get_domain()
+        self.assertIsInstance(domain, Domain)
+        primitives_caller.check_domain(self, domain)
+
+    def test_basic_calls(self):
+        """
+        Test the basic rest apis.
+        """
+        top = topology.Topology()
+        src = top.source(['Rest', 'tester'])
+        src = src.filter(lambda x : True)
+        src.view()
+        src = src.map(lambda x : x)
+
+        self.tester = Tester(top)
+        self.tester.tuple_count(src, 2)
+        self.tester.local_check = self._call_rest_apis
         self.tester.test(self.test_ctxtype, self.test_config)

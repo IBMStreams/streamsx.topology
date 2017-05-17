@@ -51,6 +51,9 @@ The top-level Ant file `streamsx.topology/build.xml` has these main targets:
 * `test.report` : Build a test report for the JUnit test runs. This is invoked automatically when the `test` target passes, but in case of a failure, this may be invoked to produce a test report to easily display the failure(s).
 * `test.quick` : Run the Junit tests quickly as a sanity check, this runs a subset of the tests, avoiding SPL generation & compilation and code coverage. *This target currently may still invoke some SPL compilation (sc) so may not be a quick as it could be.*
 
+### Implementing toolkit messages
+This toolkit supports globalized messages with unique message IDs. The guidelines for implementing a message bundle are described in [Messages and National Language Support for Toolkits](https://github.com/IBMStreams/administration/wiki/Messages-and-National-Language-Support-for-toolkits).
+
 ### Distributed testing
 
 By default the Ant `test` target does not run the tests against a Streams instance (distributed), as it requires an instance to be running, which may not always be the case. A sub-set of the tests can also be run against a Streams instance like this:
@@ -127,3 +130,27 @@ When referencing environment variable, use bold(**):
     """
 ```
 
+When referencing types in Args or Returns, use the type name directly.  Sphinx would convert the reference into hyperlinks, and this ensures the builtin help() will display the arguments and return nicely. 
+```python
+    def function(arg1):
+        """function summary
+        Args:
+            arg1 (UserType1): argument 1
+        Returns:
+            UserType2: return something
+        """
+```
+
+Container types such as lists and dictionaries can use the following syntax:
+```python
+    def function(arg1, arg2):
+        """function summary
+        Args:
+            arg1 (list(int)): list of integers
+            arg2 (dict(str, int)): mapping of str to int
+        Returns:
+            tuple(float, float): returns two float tuples
+        """
+```
+
+The `__init__` method should be documented on the `__init__` method itself (not in the class level docstring).  This results in better rendering for the builtin help() function. 

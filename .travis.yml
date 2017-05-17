@@ -1,0 +1,8 @@
+language: python
+python: "3.5"
+addons:
+  apt:
+    packages:
+      - oracle-java8-set-default
+
+script: ./test/python/travisci.sh

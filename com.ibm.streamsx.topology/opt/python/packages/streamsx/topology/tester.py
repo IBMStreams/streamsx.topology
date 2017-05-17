@@ -2,6 +2,57 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 
+"""Testing support for streaming applications.
+
+Allows testing of a streaming application by creation conditions
+on streams that are expected to become valid during the processing.
+`Tester` is designed to be used with Python's `unittest` module.
+
+A complete application may be tested or fragments of it, for example a sub-graph can be tested
+in isolation that takes input data and scores it using a model.
+
+Supports execution of the application on
+:py:const:`~streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE`,
+:py:const:`~streamsx.topology.context.ContextTypes.DISTRIBUTED`
+or :py:const:`~streamsx.topology.context.ContextTypes.STANDALONE`.
+
+A :py:class:`Tester` instance is created and associated with the :py:class:`Topology` to be tested.
+Conditions are then created against streams, such as a stream must receive 10 tuples using
+:py:meth:`~Tester.tuple_count`.
+
+Here is a simple example that tests a filter correctly only passes tuples with values greater than 5::
+
+    import unittest
+    from streamsx.topology.topology import Topology
+    from streamsx.topology.tester import Tester
+
+    class TestSimpleFilter(unittest.TestCase):
+
+        def setUp(self):
+            # Sets self.test_ctxtype and self.test_config
+            Tester.setup_streaming_analytics(self)
+
+        def test_filter(self):
+            # Declare the application to be tested
+            topology = Topology()
+            s = topology.source([5, 7, 2, 4, 9, 3, 8])
+            s = s.filter(lambda x : x > 5)
+
+            # Create tester and assign conditions
+            tester = Tester(topology)
+            tester.contents(s, [7, 9, 8])
+
+            # Submit the application for test
+            # If it fails an AssertionError will be raised.
+           tester.test(self.test_ctxtype, self.test_config)
+
+
+A stream may have any number of conditions and any number of streams may be tested.
+
+.. warning::
+    Python 3.5 and Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
+"""
+
 import streamsx.ec as ec
 import streamsx.topology.context as stc
 import os
@@ -13,6 +64,8 @@ from streamsx.rest import StreamsConnection
 from streamsx.rest import StreamingAnalyticsConnection
 from streamsx.topology.context import ConfigParams
 import time
+
+
 
 _logger = logging.getLogger('streamsx.topology.test')
 
@@ -32,6 +85,10 @@ class Tester(object):
     If a topology is submitted through the test method then the topology
     may be modified to include operations to ensure the conditions are met.
 
+    .. warning::
+        For future compatibility applications under test should not include intended failures that cause
+        a processing element to stop or restart. Thus, currently testing is against expected application behavior.
+
     Args:
         topology: Topology to be tested.
     """
@@ -44,10 +101,10 @@ class Tester(object):
     @staticmethod
     def setup_standalone(test):
         """
-        Setup a unittest.TestCase to run tests using IBM Streams standalone mode.
+        Set up a unittest.TestCase to run tests using IBM Streams standalone mode.
 
         Requires a local IBM Streams install define by the STREAMS_INSTALL
-        environment variable. If STREAMS_INSTALL is not set then the
+        environment variable. If STREAMS_INSTALL is not set, then the
         test is skipped.
 
         Two attributes are set in the test case:
@@ -67,13 +124,13 @@ class Tester(object):
     @staticmethod
     def setup_distributed(test):
         """
-        Setup a unittest.TestCase to run tests using IBM Streams distributed mode.
+        Set up a unittest.TestCase to run tests using IBM Streams distributed mode.
 
         Requires a local IBM Streams install define by the STREAMS_INSTALL
         environment variable. If STREAMS_INSTALL is not set then the
         test is skipped.
 
-        The Steams instance to use is defined by the environment variables:
+        The Streams instance to use is defined by the environment variables:
          * STREAMS_ZKCONNECT - Zookeeper connection string
          * STREAMS_DOMAIN_ID - Domain identifier
          * STREAMS_INSTANCE_ID - Instance identifier
@@ -104,13 +161,13 @@ class Tester(object):
     @staticmethod
     def setup_streaming_analytics(test, service_name=None, force_remote_build=False):
         """
-        Setup a unittest.TestCase to run tests using Streaming Analytics service on IBM Bluemix cloud platform.
+        Set up a unittest.TestCase to run tests using Streaming Analytics service on IBM Bluemix cloud platform.
 
         The service to use is defined by:
          * VCAP_SERVICES environment variable containing `streaming_analytics` entries.
          * service_name which defaults to the value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.
 
-        If VCAP_SERVICES is not set or a service name is not defined then the test is skipped.
+        If VCAP_SERVICES is not set or a service name is not defined, then the test is skipped.
 
         Two attributes are set in the test case:
          * test_ctxtype - Context type the test will be run in.
@@ -136,29 +193,42 @@ class Tester(object):
             test.test_config['topology.forceRemoteBuild'] = True
 
     def add_condition(self, stream, condition):
+        """Add a condition to a stream.
+
+        Conditions are normally added through :py:meth:`tuple_count`, :py:meth:`contents` or :py:meth:`tuple_check`.
+
+        This allows an additional conditions that are implementations of :py:class:`Condition`.
+
+        Args:
+            stream(Stream): Stream to be tested.
+            condition(Condition): Arbitrary condition.
+
+        Returns:
+            Stream: stream
+        """
         self._conditions[condition.name] = (stream, condition)
         return stream
 
     def tuple_count(self, stream, count, exact=True):
-        """Test that that a stream contains an number of tuples.
+        """Test that a stream contains a number of tuples.
 
-        If exact is True then condition becomes valid when count
-        tuples are seen on stream during the test. Subsequently if additional
-        tuples are seen on stream then the condition fails and can never
+        If `exact` is `True`, then condition becomes valid when `count`
+        tuples are seen on `stream` during the test. Subsequently if additional
+        tuples are seen on `stream` then the condition fails and can never
         become valid.
 
-        If exact is False then the condition becomes valid once count
-        tuples are seen on stream and remains valid regardless of
+        If `exact` is `False`, then the condition becomes valid once `count`
+        tuples are seen on `stream` and remains valid regardless of
         any additional tuples.
 
         Args:
             stream(Stream): Stream to be tested.
-            count: Number of tuples expected.
-            exact: True if the stream must contain the exactly count of tuples
-            to be value, False if the stream must contain at least count tuples.
+            count(int): Number of tuples expected.
+            exact(bool): `True` if the stream must contain exactly `count`
+                tuples, `False` if the stream must contain at least `count` tuples.
 
-        Returns: stream
-
+        Returns:
+            Stream: stream
         """
         _logger.debug("Adding tuple count (%d) condition to stream %s.", count, stream)
         if exact:
@@ -178,7 +248,7 @@ class Tester(object):
             ordered(bool): True if the ordering of received tuples must match expected.
 
         Returns:
-
+            Stream: stream
         """
         name = "StreamContents" + str(len(self._conditions))
         if ordered:
@@ -190,16 +260,45 @@ class Tester(object):
     def tuple_check(self, stream, checker):
         """Check each tuple on a stream.
 
-        For each tuple ``t`` on ``stream`` ``checker(t)`` is called.
+        For each tuple ``t`` on `stream` ``checker(t)`` is called.
 
-        If the return evaluates to ``False`` then the condition fails.
+        If the return evaluates to `False` then the condition fails.
         Once the condition fails it can never become valid.
         Otherwise the condition becomes or remains valid. The first
         tuple on the stream makes the condition valid if the checker
-        callable evaluates to true.
+        callable evaluates to `True`.
 
         The condition can be combined with :py:meth:`tuple_count` with
         ``exact=False`` to test a stream map or filter with random input data.
+
+        An example of combining `tuple_count` and `tuple_check` to test a filter followed
+        by a map is working correctly across a random set of values::
+
+            def rands():
+                r = random.Random()
+                while True:
+                    yield r.random()
+
+            class TestFilterMap(unittest.testCase):
+            # Set up omitted
+
+                def test_filter(self):
+                    # Declare the application to be tested
+                    topology = Topology()
+                    r = topology.source(rands())
+                    r = r.filter(lambda x : x > 0.7)
+                    r = r.map(lambda x : x + 0.2)
+
+                    # Create tester and assign conditions
+                    tester = Tester(topology)
+                    # Ensure at least 1000 tuples pass through the filter.
+                    tester.tuple_count(r, 1000, exact=False)
+                    tester.tuple_check(r, lambda x : x > 0.9)
+
+
+                    # Submit the application for test
+                    # If it fails an AssertionError will be raised.
+                    tester.test(self.test_ctxtype, self.test_config)
 
         Args:
             stream(Stream): Stream to be tested.
@@ -211,12 +310,73 @@ class Tester(object):
         return self.add_condition(stream, cond)
 
     def local_check(self, callable):
+        """Perform local check while the application is being tested.
+
+        A call to `callable` is made after the application under test is submitted.
+        The check is in the context of the Python runtime executing the unittest case,
+        typically the callable is a method of the test case.
+
+        The application remains running until all the conditions are met
+        and `callable` returns. If `callable` raises an error, typically
+        through an assertion method from `unittest` then the test will fail.
+
+        Used for testing side effects of the application, typically with `STREAMING_ANALYTICS_SERVICE`
+        or `DISTRIBUTED`. The callable may also use the REST api for context types that support
+        it to dynamically monitor the running application.
+
+        The callable can use `submission_result` and `streams_connection` attributes from :py:class:`Tester` instance
+        to interact with the job or the running Streams instance.
+
+        Simple example of checking the job is healthy::
+
+            import unittest
+            from streamsx.topology.topology import Topology
+            from streamsx.topology.tester import Tester
+
+            class TestLocalCheckExample(unittest.TestCase):
+                def setUp(self):
+                    Tester.setup_distributed(self)
+
+                def test_job_is_healthy(self):
+                    topology = Topology()
+                    s = topology.source(['Hello', 'World'])
+
+                    self.tester = Tester(topology)
+                    self.tester.tuple_count(s, 2)
+
+                    # Add the local check
+                    self.tester.local_check = self.local_checks
+
+                    # Run the test
+                    self.tester.test(self.test_ctxtype, self.test_config)
+
+
+                def local_checks(self):
+                    job = self.tester.submission_result.job
+                    self.assertEqual('healthy', job.health)
+
+        .. warning::
+            A local check must not cancel the job (application under test).
+
+        Args:
+            callable: Callable object.
+        """
         self.local_check = callable
 
     def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None):
         """Test the topology.
 
         Submits the topology for testing and verifies the test conditions are met.
+
+        The submitted application (job) is monitored for the test conditions and
+        will be canceled when all the conditions are valid or at least one failed.
+        In addition if a local check was specified using :py:meth:`local_check` then
+        that callable must complete before the job is cancelled.
+
+        The test passes if all conditions became valid and the local check callable (if present) completed without
+        raising an error.
+
+        The test fails if any condition fails or the local check callable (if present) raised an exception.
 
         Args:
             ctxtype(str): Context type for submission.
@@ -225,8 +385,13 @@ class Tester(object):
             username(str): username for distributed tests
             password(str): password for distributed tests
 
+        Attributes:
+            submission_result: Result of the application submission from :py:func:`~streamsx.topology.context.submit`.
+            streams_connection(StreamsConnection): Connection object that can be used to interact with the REST API of
+                the Streaming Analytics service or instance.
+
         Returns:
-            bool: True if test passed, False if test failed.
+            bool: `True` if test passed, `False` if test failed if `assert_on_fail` is `False`.
 
         """
 
@@ -322,6 +487,11 @@ class Tester(object):
             self.local_check_exception = e
 
 class Condition(object):
+    """A condition for testing.
+
+    Args:
+        name(str): Condition name, must be unique within the tester.
+    """
     _METRIC_PREFIX = "streamsx.condition:"
 
     @staticmethod
@@ -332,8 +502,13 @@ class Condition(object):
         self.name = name
         self._valid = False
         self._fail = False
+
     @property
     def valid(self):
+        """Is the condition valid.
+
+        A subclass must set `valid` when the condition becomes valid.
+        """
         return self._valid
     @valid.setter
     def valid(self, v):
@@ -348,6 +523,11 @@ class Condition(object):
         self._metric_seq += 1
 
     def fail(self):
+        """Fail the condition.
+
+        Marks the condition as failed. Once a condition has failed it
+        can never become valid, the test that uses the condition will fail.
+        """
         self._metric_fail.value = 1
         self.valid = False
         self._fail = True

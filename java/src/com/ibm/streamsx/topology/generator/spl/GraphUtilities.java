@@ -4,7 +4,9 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.START_OP;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectArray;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.stringArray;
@@ -37,9 +39,13 @@ public class GraphUtilities {
                 // should this be kind?
                 String name = jstring(op, "name");
                 
-                if(name != null && !name.startsWith("$"))
+                if(name != null && !name.startsWith("$")) {
                     starts.add(op);
+                    return;
                 }
+            }
+            if (jboolean(op, START_OP))
+                starts.add(op);
             });
         
         return starts;
@@ -67,6 +73,15 @@ public class GraphUtilities {
         return kind.equals(kind(op));
     }
     
+    /**
+     * Add an operator parameter, replacing the existing value if it exists.
+     * Handles the case where no parameters exist.
+     */
+    static void addOpParameter(JsonObject op, String name, JsonObject value) {
+        JsonObject params = GsonUtilities.objectCreate(op, "parameters");
+        params.add(name, value);
+    }
+    
     static Set<JsonObject> findOperatorByKind(BVirtualMarker virtualMarker,
                 JsonObject graph) {
 
@@ -74,6 +89,21 @@ public class GraphUtilities {
         
         operators(graph, op -> {
             if (virtualMarker.isThis(kind(op)))
+                kindOperators.add(op);
+        });
+
+        return kindOperators;
+    }
+    
+    /**
+     * Find all (non-virtual) operators of specific kinds (by string).
+     */
+    static Set<JsonObject> findOperatorsByKinds(final JsonObject graph, final Set<String> kinds) {
+
+        Set<JsonObject> kindOperators = new HashSet<>();
+
+        operators(graph, op -> {
+            if (kinds.contains(kind(op)))
                 kindOperators.add(op);
         });
 

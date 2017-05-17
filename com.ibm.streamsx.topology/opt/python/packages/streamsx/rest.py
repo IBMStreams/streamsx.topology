@@ -1,5 +1,42 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
+
+"""
+Python API that wraps the REST apis for IBM® Streams
+& IBM Streaming Analytics service on IBM Bluemix®.
+
+Streams REST API
+################
+
+The Streams REST API provides programmatic access to configuration and status information for IBM Streams objects such as domains, instances, and jobs. 
+
+:py:class:`StreamsConnection` is the entry point to using the Streams REST API
+from Python. Through its functions and the returned objects status information
+can be obtained for items such as :py:class:`instances <.rest_primitives.Instance>` and
+:py:class:`jobs <.rest_primitives.Job>`.
+
+Streaming Analytics REST API
+############################
+
+You can use the Streaming Analytics REST API to manage your service instance and the IBM Streams jobs that are running on the instance. The Streaming Analytics REST API is accessible from the Bluemix applications that are bound to your service instance or from an application outside of Bluemix that is configured with the service instance VCAP information.
+
+:py:class:`StreamingAnalyticsConnection` is the entry point to using the
+Streaming Analytics REST API. The function :py:func:`~StreamingAnalyticsConnection.get_streaming_analytics` returns a :py:class:`~.rest_primitives.StreamingAnalyticsService` instance which is the wrapper around the Streaming Analytics REST API. This API allows functions such as
+:py:meth:`start <streamsx.rest_primitives.StreamingAnalyticsService.start_instance>`
+and 
+:py:meth:`stop <streamsx.rest_primitives.StreamingAnalyticsService.stop_instance>`
+the service instance.
+
+In addtion `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnection` and thus provides access to the Streams REST API for the service instance.
+
+.. seealso::
+    `IBM Streams REST API overview <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.0/com.ibm.streams.restapi.doc/doc/restapis.html>`_
+        Reference documentation for the Streams REST API.
+    `Streaming Analytics REST API <https://console.ng.bluemix.net/apidocs/220-streaming-analytics?&language=node#introduction>`_
+        Reference documentation for the Streaming Analytics service REST API.
+
+"""
+
 import os
 import json
 import logging
@@ -86,15 +123,15 @@ class StreamsConnection:
         raise ValueError("Multiple resources matching: {0}".format(id))
 
     def get_domains(self):
-        """Retrieve available domains.
+        """Retrieves available domains.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Domain`: list of available domains
+            :py:obj:`list` of :py:class:`~.rest_primitives.Domain`: List of available domains
         """
         return self._get_elements('domains', Domain)
 
     def get_domain(self, id):
-        """Retrieve available domain matching a specific domain ID
+        """Retrieves available domain matching a specific domain ID
 
         Args:
             id (str): domain ID
@@ -103,20 +140,20 @@ class StreamsConnection:
             :py:class:`~.rest_primitives.Domain`: Domain matching `id`
 
         Raises:
-            ValueError: No matching domain exists or multiple matching domains exist.
+            ValueError: No matching domain exists.
         """
         return self._get_element_by_id('domains', Domain, id)
 
     def get_instances(self):
-        """Retrieve available instances.
+        """Retrieves available instances.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Instance`: list of available instances
+            :py:obj:`list` of :py:class:`~.rest_primitives.Instance`: List of available instances
         """
         return self._get_elements('instances', Instance)
 
     def get_instance(self, id):
-        """Retrieve available instance matching a specific instance ID.
+        """Retrieves available instance matching a specific instance ID.
 
         Args:
             id (str): Instance identifier to retrieve.
@@ -133,7 +170,7 @@ class StreamsConnection:
         """Retrieves a list of all known Streams installations.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Installation`: list of all Installation resources.
+            :py:obj:`list` of :py:class:`~.rest_primitives.Installation`: List of all Installation resources.
         """
         return self._get_elements('installations', Installation)
 
@@ -141,7 +178,7 @@ class StreamsConnection:
         """Retrieves a list of all known Streams resources.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Resource`: list of all Streams resources.
+            :py:obj:`list` of :py:class:`~.rest_primitives.Resource`: List of all Streams resources.
         """
         resources = []
         json_resources = self.rest_client.make_request(self.resource_url)['resources']
@@ -191,7 +228,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
 
         Returns:
             :py:class:`~.rest_primitives.StreamingAnalyticsService`:
-                object for interacting with the Streaming Analytics service.
+                Object for interacting with the Streaming Analytics service.
         """
         return StreamingAnalyticsService(self.rest_client, self.credentials)
 
