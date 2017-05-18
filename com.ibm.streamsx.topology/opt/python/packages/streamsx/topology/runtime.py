@@ -356,7 +356,7 @@ class _PickleIterator(_ObjectIterator):
 # None, otherwise it returns
 # an instance of _PickleIterator
 # wrapping an iterator from the iterable
-# Used by FlatMap
+# Used by FlatMap (flat_map)
 
 class _ObjectInPickleIter(_FunctionalCallable):
     def __call__(self, tuple):
@@ -388,7 +388,7 @@ class _JSONInPickleIter(_ObjectInPickleIter):
     def __call__(self, tuple):
         return super(_JSONInPickleIter, self).__call__(json.loads(tuple))
 
-class _JSONInObjectIter(_ObjectInPickleIter):
+class _JSONInObjectIter(_ObjectInObjectIter):
     def __call__(self, tuple):
         return super(_JSONInObjectIter, self).__call__(json.loads(tuple))
 
