@@ -774,7 +774,7 @@ class Stream(object):
 
         By default a stream is published using its schema.
 
-        A stream of :py:const:`Python objects <streamsx.topology.schema.CommonSchema.Python>` can be suubscribed to by other Streams Python applications.
+        A stream of :py:const:`Python objects <streamsx.topology.schema.CommonSchema.Python>` can be subscribed to by other Streams Python applications.
 
         If a stream is published setting `schema` to
         :py:const:`~streamsx.topology.schema.CommonSchema.Json`
