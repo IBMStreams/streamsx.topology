@@ -5,13 +5,16 @@
 package com.ibm.streamsx.rest;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
 /**
- * {@Instance}
+ * 
+ * An object describing an IBM Streams Instance
+ * 
  */
 public class Instance {
     private StreamsConnection connection;
@@ -69,25 +72,31 @@ public class Instance {
     @Expose
     private String views;
 
-    /**
-     * this function is not intended for external consumption
-     */
-    static final Instance create( final StreamsConnection sc, String gsonInstance ) {
-        Instance instance = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
-                                             .fromJson(gsonInstance, Instance.class);
+    static final Instance create(final StreamsConnection sc, String gsonInstance) {
+        Instance instance = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(gsonInstance,
+                Instance.class);
         instance.setConnection(sc);
-        return instance ;
+        return instance;
     }
 
-    /**
-     * this function is not intended for external consumption
-     */
-    void setConnection(final StreamsConnection sc) {
+    private void setConnection(final StreamsConnection sc) {
         connection = sc;
     }
 
+    final static List<Instance> getInstanceList(StreamsConnection sc, String instanceGSONList) {
+        InstancesArray iArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(instanceGSONList,
+                InstancesArray.class);
+
+        for (Instance instance : iArray.instances) {
+            instance.setConnection(sc);
+        }
+        return iArray.instances;
+    }
+
     /**
-     * @return List of {@Job}
+     * Returns a list of Jobs that this Instance knows about
+     * 
+     * @return List of {@link Job}
      * @throws IOException
      */
     public List<Job> getJobs() throws IOException {
@@ -98,8 +107,11 @@ public class Instance {
     }
 
     /**
+     * Returns the {@link Job} for a given jobId in this instance
+     * 
      * @param jobId
-     * @return {@Job}
+     *            String identifying the job
+     * @return {@link Job}
      * @throws IOException
      */
     public Job getJob(String jobId) throws IOException {
@@ -110,108 +122,124 @@ public class Instance {
         return job;
     }
 
-    public String getActiveServices() {
-        return activeServices;
-    }
-
+    /**
+     * Provides information about the IBM Streams Installation that was used to
+     * start this instance
+     * 
+     * @return {@link ActiveVersion}
+     */
     public ActiveVersion getActiveVersion() {
         return activeVersion;
     }
 
-    public String getActiveViews() {
-        return activeViews;
-    }
-
-    public String getConfiguredViews() {
-        return configuredViews;
-    }
-
+    /**
+     * Provides the time in milliseconds when this instance was created
+     * 
+     * @return {@link long} representing milliseconds since epoch
+     */
     public long getCreationTime() {
         return creationTime;
     }
 
+    /**
+     * Provides the user ID that created this instance
+     * 
+     * @return {@link String}
+     */
     public String getCreationUser() {
         return creationUser;
     }
 
-    public String getDomain() {
-        return domain;
-    }
-
-    public String getExportedStreams() {
-        return exportedStreams;
-    }
-
+    /**
+     * Provides the summarized status of jobs in this instance
+     * <ul>
+     * <li>healthy
+     * <li>partiallyHealthy
+     * <li>partiallyUnhealthy
+     * <li>unhealthy
+     * <li>unknown
+     * </ul>
+     * 
+     * @return {@link String}
+     */
     public String getHealth() {
         return health;
     }
 
-    public String getHosts() {
-        return hosts;
-    }
-
+    /**
+     * Provides the IBM Streams unique identifier for this instance
+     * 
+     * @return {@link String}
+     */
     public String getId() {
         return id;
     }
 
-    public String getImportedStreams() {
-        return importedStreams;
-    }
-
-    public String getOperatorConnections() {
-        return operatorConnections;
-    }
-
-    public String getOperators() {
-        return operators;
-    }
-
+    /**
+     * Provides the user ID that represents the Owner of this instance
+     * 
+     * @return
+     */
     public String getOwner() {
         return owner;
     }
 
-    public String getPeConnections() {
-        return peConnections;
-    }
-
-    public String getPes() {
-        return pes;
-    }
-
-    public String getResourceAllocations() {
-        return resourceAllocations;
-    }
-
+    /**
+     * Provides the resource type (instance) associated with this object
+     * 
+     * @return {@link String}
+     */
     public String getResourceType() {
         return resourceType;
     }
 
-    public String getRestid() {
-        return restid;
-    }
-
-    public String getSelf() {
-        return self;
-    }
-
+    /**
+     * Provides the time in milliseconds since the instance was started.
+     * 
+     * @return {@long} representing milliseconds since epoch
+     */
     public long getStartTime() {
         return startTime;
     }
 
-    public String getStartedBy() {
-        return startedBy;
-    }
-
+    /**
+     * Provides the status of the instance
+     * <ul>
+     * <li>running
+     * <li>failed
+     * <li>stopped
+     * <li>partiallyFailed
+     * <li>partiallyRunning
+     * <li>starting
+     * <li>stopping
+     * <li>unknown
+     * </ul>
+     * 
+     * @return {@link String}
+     */
     public String getStatus() {
         return status;
     }
 
-    public String getViews() {
-        return views;
-    }
-
+    /**
+     * Provides a user friendly printing function for this object
+     * 
+     * @return {@link String}
+     */
     @Override
     public String toString() {
         return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
+    }
+
+    /**
+     * internal usae to get list of instances
+     */
+    private static class InstancesArray {
+        @Expose
+        public ArrayList<Instance> instances;
+        @Expose
+        public String resourceType;
+        @Expose
+        public int total;
     }
 }
