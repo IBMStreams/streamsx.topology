@@ -909,7 +909,23 @@ class Stream(object):
 
 class View(object):
     """
-    The View class provides access to a continuously updated sampling of data items on a Stream. A view object is produced by the view method, and will access data items from the stream on which it is invoked.
+    The View class provides access to a continuously updated sampling of data items on a Stream after submission.
+    A view object is produced by the view method, and will access data items from the stream on which it is invoked.
+
+    For example, a View object could be created and used as follows:
+
+        >>> topology = Topology()
+        >>> rands = topology.source(lambda: random.random())
+        >>> view = rands.view()       
+        >>> submit(ContextTypes.DISTRIBUTED, topology)
+        >>> queue = view.start_data_fetch()
+        >>> for val in iter(queue.get, None):
+        ... print(val)
+        ...
+        0.6527
+        0.1963
+        0.0512
+
     """
     def __init__(self, name):
         self.name = name
@@ -933,7 +949,8 @@ class View(object):
         self._view_object.stop_data_fetch()
 
     def start_data_fetch(self):
-        """Starts a background thread which begins accessing data from the remote Stream. The data items are placed asynchronously in a queue, which is returned from this method.
+        """Starts a background thread which begins accessing data from the remote Stream.
+        The data items are placed asynchronously in a queue, which is returned from this method.
 
         Returns:
             A Queue object which is populated with the data items of the stream.
