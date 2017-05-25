@@ -38,7 +38,6 @@ public class StreamsConnection {
 
     private final String userName;
     private String url;
-    private String instanceId;
     protected String apiKey;
     private boolean allowInsecureHosts = false;
 
@@ -102,15 +101,6 @@ public class StreamsConnection {
     }
 
     /**
-     * @param id
-     * @return id that has been set
-     */
-    public String setInstanceId(String id) {
-        instanceId = id;
-        return id;
-    }
-
-    /**
      * @param inputString
      *            Rest call to make
      * @return Response from the inputString
@@ -143,16 +133,16 @@ public class StreamsConnection {
         String instancesURL = url + "/instances/";
 
         String sReturn = getResponseString(instancesURL);
-        InstancesArray iArray = new InstancesArray(this, sReturn);
+        List<Instance> instanceList = Instance.getInstanceList(this, sReturn);
 
-        return iArray.getInstances();
+        return instanceList;
     }
 
     /**
      * @return {@Instance}
      * @throws IOException
      */
-    public Instance getInstance() throws IOException {
+    public Instance getInstance(String instanceId) throws IOException {
         Instance si = null;
         if (instanceId.equals("")) {
             // should add some fallback code to see if there's only one instance
@@ -164,16 +154,6 @@ public class StreamsConnection {
             si = Instance.create(this, sReturn);
         }
         return si;
-    }
-
-    /**
-     * @param id
-     * @return {@Instance}
-     * @throws IOException
-     */
-    public Instance getInstance(String id) throws IOException {
-        instanceId = id;
-        return getInstance();
     }
 
     /**

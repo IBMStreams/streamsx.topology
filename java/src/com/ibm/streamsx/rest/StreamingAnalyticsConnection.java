@@ -24,9 +24,10 @@ import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 public class StreamingAnalyticsConnection extends StreamsConnection {
 
-    static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.topology.rest.StreamingAnalyticsConnection");
+    static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamingAnalyticsConnection");
 
     private String jobsPath;
+    private String instanceId;
 
     /**
      * Basic connection to the Streaming Analytics Instance
@@ -89,8 +90,21 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
         return streamingConnection;
     }
 
+    private void setInstanceId(String id) {
+        instanceId = id;
+    }
+
     private void setJobsPath(String sJobs) {
         jobsPath = sJobs;
+    }
+
+    /**
+     * Streaming Analytics only allows one instance per service, so each
+     * connection can only ever access a single instance that we've known about
+     * since object creation
+     */
+    public Instance getInstance() throws IOException {
+        return super.getInstance(instanceId);
     }
 
     /**
@@ -99,7 +113,6 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
      * @return true if job is cancelled, false otherwise
      * @throws Exception
      */
-    @Override
     public boolean cancelJob(String jobId) throws IOException {
         boolean rc = false;
         String sReturn = "";
@@ -138,7 +151,8 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
         System.out.println(serviceName);
 
         try {
-            StreamsConnection sClient = StreamingAnalyticsConnection.createInstance(credentials, serviceName);
+            StreamingAnalyticsConnection sClient = StreamingAnalyticsConnection.createInstance(credentials,
+                    serviceName);
 
             System.out.println("Returning instance");
             Instance instance = sClient.getInstance();
