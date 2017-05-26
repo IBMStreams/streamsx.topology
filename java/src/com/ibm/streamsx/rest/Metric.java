@@ -8,57 +8,107 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
+/**
+ * An object describing an IBM Streams Metric
+ *
+ */
 public class Metric {
 
     @SuppressWarnings("unused")
     private StreamsConnection connection;
 
-    @Expose 
+    @Expose
     private String description;
-    @Expose 
+    @Expose
     private long lastTimeRetrieved;
-    @Expose 
+    @Expose
     private String metricKind;
-    @Expose 
+    @Expose
     private String metricType;
-    @Expose 
+    @Expose
     private String name;
-    @Expose 
+    @Expose
     private String resourceType;
-    @Expose 
+    @Expose
     private long value;
 
     /**
-      * this function is not intended for external consumption
-      */
+     * this function is not intended for external consumption
+     */
     void setConnection(final StreamsConnection sc) {
         connection = sc;
     }
 
+    /**
+     * Gets the description for this metric
+     * 
+     * @return {@link String}
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Gets the Epoch time when the metric was most recently retrieved
+     * 
+     * @return long
+     */
     public long getLastTimeRetrieved() {
         return lastTimeRetrieved;
     }
 
+    /**
+     * Describes the kind of metric that has been retrieved
+     * 
+     * @return {@link String} that contains one of the following values:
+     *         <ul>
+     *         <li>counter
+     *         <li>guage
+     *         <li>time
+     *         <li>unknown
+     *         </ul>
+     */
     public String getMetricKind() {
         return metricKind;
     }
 
+    /**
+     * Describes the type of metric that has been retrieved
+     * 
+     * @return {@link String} that contains one of the following values:
+     *         <ul>
+     *         <li>system
+     *         <li>custom
+     *         <li>unknown
+     *         </ul>
+     */
     public String getMetricType() {
         return metricType;
     }
 
+    /**
+     * Gets the name of this metric
+     * 
+     * @return {@link String}
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Identifies the REST resource type, which is "metric"
+     * 
+     * @return {@link String}
+     */
     public String getResourceType() {
         return resourceType;
     }
 
+    /**
+     * Gets the value for this metric
+     * 
+     * @return long
+     */
     public long getValue() {
         return value;
     }

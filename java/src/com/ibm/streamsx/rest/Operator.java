@@ -10,6 +10,10 @@ import java.util.List;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
+/**
+ * An object describing an IBM Streams Operator
+ *
+ */
 public class Operator {
 
     private StreamsConnection connection;
@@ -54,7 +58,9 @@ public class Operator {
     }
 
     /**
-     * @return List of {@Metric}
+     * Gets a list of {@link Metric metrics} for this operator
+     * 
+     * @return List of {@link Metric}
      * @throws IOException
      */
     public List<Metric> getMetrics() throws IOException {
@@ -65,68 +71,65 @@ public class Operator {
         return lMetrics;
     }
 
-    public String getConnections() {
-        return connections;
-    }
-
-    public String getDomain() {
-        return domain;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
+    /**
+     * Gets the index of this operator within the {@link Job}
+     * 
+     * @return long
+     */
     public long getIndexWithinJob() {
         return indexWithinJob;
     }
 
+    /**
+     * Gets a list of {@link InputPort input ports} for this operator
+     *
+     * 
+     * @return List of {@link InputPort}
+     * @throws IOException
+     */
     public List<InputPort> getInputPorts() throws IOException {
         String sReturn = connection.getResponseString(inputPorts);
         List<InputPort> lInPorts = new InputPortsArray(connection, sReturn).getInputPorts();
         return lInPorts;
     }
 
-    public String getInstance() {
-        return instance;
-    }
-
-    public String getJob() {
-        return job;
-    }
-
+    /**
+     * Name of this operator
+     * 
+     * @return {@link String}
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * SPL primitive operator type for this operator
+     * 
+     * @return {@link String}
+     */
     public String getOperatorKind() {
         return operatorKind;
     }
 
+    /**
+     * Gets a list of {@link OutputPort output ports} for this operator
+     * 
+     * @return List of {@link OutputPort}
+     * @throws IOException
+     */
     public List<OutputPort> getOutputPorts() throws IOException {
         String sReturn = connection.getResponseString(outputPorts);
         List<OutputPort> lOutPorts = new OutputPortsArray(connection, sReturn).getOutputPorts();
         return lOutPorts;
     }
 
-    public String getPe() {
-        return pe;
-    }
-
-    public String getResourceAllocation() {
-        return resourceAllocation;
-    }
-
+    /**
+     * Identifies the REST resource type as 'operator'
+     * 
+     * @return {@link String}
+     */
     public String getResourceType() {
         return resourceType;
-    }
-
-    public String getRestid() {
-        return restid;
-    }
-
-    public String getSelf() {
-        return self;
     }
 
     @Override

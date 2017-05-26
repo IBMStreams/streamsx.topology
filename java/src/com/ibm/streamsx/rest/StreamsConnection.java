@@ -32,9 +32,12 @@ import org.apache.http.util.EntityUtils;
 
 import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
 
+/**
+ * Basic connection to IBM Streams
+ */
 public class StreamsConnection {
 
-    static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.topology.rest.StreamsConnection");
+    static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamsConnection");
 
     private final String userName;
     private String url;
@@ -42,20 +45,6 @@ public class StreamsConnection {
     private boolean allowInsecureHosts = false;
 
     protected Executor executor;
-
-    /**
-     * sets the url for this object removing the trailing slash
-     * 
-     * @param url
-     *            String root path to the REST API
-     */
-    protected void setURL(String url) {
-        if (url.equals("") || (url.charAt(url.length() - 1) != '/')) {
-            this.url = url;
-        } else {
-            this.url = url.substring(0, url.length() - 1);
-        }
-    }
 
     /**
      * Basic connection to a streams instance
@@ -73,7 +62,21 @@ public class StreamsConnection {
         apiKey = "Basic " + DatatypeConverter.printBase64Binary(apiCredentials.getBytes(StandardCharsets.UTF_8));
 
         executor = Executor.newInstance();
-        setURL(url);
+        setStreamsRESTURL(url);
+    }
+
+    /**
+     * sets the REST API url for this connection removing the trailing slash
+     * 
+     * @param url
+     *            String root path to the REST API
+     */
+    protected void setStreamsRESTURL(String url) {
+        if (url.equals("") || (url.charAt(url.length() - 1) != '/')) {
+            this.url = url;
+        } else {
+            this.url = url.substring(0, url.length() - 1);
+        }
     }
 
     /**
@@ -88,16 +91,6 @@ public class StreamsConnection {
      */
     public static StreamsConnection createInstance(String userName, String authToken, String url) {
         return new StreamsConnection(userName, authToken, url);
-    }
-
-    /**
-     * @param url
-     * @return old value of the url
-     */
-    public String setStreamsInstanceRestURL(String url) {
-        String old_url = url;
-        setURL(url);
-        return old_url;
     }
 
     /**
@@ -116,7 +109,12 @@ public class StreamsConnection {
 
         if (HttpStatus.SC_OK == rcResponse) {
             sReturn = EntityUtils.toString(hResponse.getEntity());
+        } else if ((HttpStatus.SC_UNAUTHORIZED == rcResponse) || (HttpStatus.SC_REQUEST_TIMEOUT == rcResponse)) {
+            throw new RESTHTTPException(rcResponse);
+        } else if (HttpStatus.SC_NOT_FOUND == rcResponse) {
+            throw new RESTException(rcResponse);
         } else {
+            // all other errors...
             String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
             throw new IllegalStateException(httpError);
         }
@@ -126,7 +124,10 @@ public class StreamsConnection {
     }
 
     /**
-     * @return List of {@Instance}
+     * Gets a list of {@link Instance instances} that are available to this
+     * streams connection
+     * 
+     * @return List of {@link Instance}
      * @throws IOException
      */
     public List<Instance> getInstances() throws IOException {
@@ -139,7 +140,12 @@ public class StreamsConnection {
     }
 
     /**
-     * @return {@Instance}
+     * Gets a specific {@link Instance instance} identified by the instanceId at
+     * this streams connection
+     * 
+     * @param instanceId
+     *            name of the instance to be retrieved
+     * @return {@link Instance}
      * @throws IOException
      */
     public Instance getInstance(String instanceId) throws IOException {
@@ -157,10 +163,19 @@ public class StreamsConnection {
     }
 
     /**
+     * This function is used to disable checking the trusted certificate chain
+     * and should never be used in production environments
+     * 
      * @param allowInsecure
-     *            boolean whether insecure hosts are allowed(true) or not(false)
-     * @return true if insecure hosts will be allowed false if insecure hosts
-     *         will not be allowed
+     *            <ul>
+     *            <li>true - disables checking
+     *            <li>false - enables checking (default)
+     *            </ul>
+     * @return boolean
+     *         <ul>
+     *         <li>true - checking disabled
+     *         <li>false - checking enabled
+     *         </ul>
      */
     public boolean allowInsecureHosts(boolean allowInsecure) {
         try {
@@ -187,9 +202,15 @@ public class StreamsConnection {
     }
 
     /**
+     * Cancels a job at this streams connection identified by the jobId
+     * 
      * @param jobId
      *            string identifying the job to be cancelled
-     * @return true if job is cancelled
+     * @return boolean
+     *         <ul>
+     *         <li>true - job is cancelled
+     *         <li>false - job did not get cancelled
+     *         </ul>
      * @throws Exception
      */
     public boolean cancelJob(String jobId) throws Exception {

@@ -48,28 +48,18 @@ public class InputPort {
     }
 
     /**
-     * @return the connections
-     */
-    public String getConnections() {
-        return connections;
-    }
-
-    /**
-     * @return the indexWithinOperator
+     * Gets the index of this input port within the {@link Operator}
+     * 
+     * @return long
      */
     public long getIndexWithinOperator() {
         return indexWithinOperator;
     }
 
     /**
-     * @return the job
-     */
-    public String getJob() {
-        return job;
-    }
-
-    /**
-     * @return the metrics
+     * Gets the {@link Metric metrics} for this input port
+     * 
+     * @return {@link List} of {@link Metric}
      */
     public List<Metric> getMetrics() throws IOException {
         String sReturn = connection.getResponseString(metrics);
@@ -78,52 +68,21 @@ public class InputPort {
     }
 
     /**
-     * @return the name
+     * Gets the name for this input port
+     * 
+     * @return {@link String}
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @return the operator
-     */
-    public String getOperator() {
-        return operator;
-    }
-
-    /**
-     * @return the pe
-     */
-    public String getPe() {
-        return pe;
-    }
-
-    /**
-     * @return the peInputPorts
-     */
-    public String getPeInputPorts() {
-        return peInputPorts;
-    }
-
-    /**
-     * @return the resourceType
+     * Identifies the REST resource type, which is "inputport"
+     * 
+     * @return {@link String}
      */
     public String getResourceType() {
         return resourceType;
-    }
-
-    /**
-     * @return the restid
-     */
-    public String getRestid() {
-        return restid;
-    }
-
-    /**
-     * @return the self
-     */
-    public String getSelf() {
-        return self;
     }
 
     @Override
