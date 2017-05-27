@@ -4,8 +4,12 @@
  */
 package com.ibm.streamsx.topology.internal.functional.ops;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.Map;
 
 import com.ibm.streams.operator.ProcessingElement;
 import com.ibm.streamsx.topology.function.FunctionContainer;
@@ -47,5 +51,25 @@ class FunctionPEContainer implements FunctionContainer {
     public InetAddress getConfiguredHost() throws UnknownHostException {
         return pe.getConfiguredHost();
     }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<String, String> getApplicationConfiguration(String name) {
+        if (!pe.isStandalone()) {
 
+            try {
+                Method gac = pe.getClass().getMethod("getApplicationConfiguration", String.class);
+                return (Map<String,String>) gac.invoke(pe, name);
+            } catch (NoSuchMethodException e) {
+            } catch (InvocationTargetException|IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return Collections.emptyMap();
+    }
+    
+    @Override
+    public String getJobName() {
+        return pe.getJobName();
+    }
 }

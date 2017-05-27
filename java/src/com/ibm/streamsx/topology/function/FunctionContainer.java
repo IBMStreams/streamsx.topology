@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.function;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Map;
 
 /**
  * Container for a function executing in a IBM Streams application.
@@ -19,12 +20,6 @@ public interface FunctionContainer {
      * @return The job identifier for the current application.
      */
     String getJobId();
-    
-    /**
-     * Return the name of this job.
-     * @return name for the job the PE is running in
-     */
-    // String getJobName();
 
     /**
      * Get the runtime identifier for this container.
@@ -78,4 +73,35 @@ public interface FunctionContainer {
      * @return Host this container is executing on
      */
     public InetAddress getConfiguredHost() throws UnknownHostException;
+    
+    /**
+     * Get the application configuration specified by name.
+     * <BR>
+     * A secure application configuration is defined for a Streams domain
+     * or instance and contains a set of key-value properties. Typically
+     * they are used to store credentials that applications need to use
+     * to access external systems or other configuration items for an
+     * application, such as a threshold value.
+     * <BR>
+     * Application configuration objects are stored in Apache ZooKeeper in an encoded state.
+     * <P>
+     * An empty map is returned if the configuration is not found,
+     * the application is running embedded or standalone, or a
+     * distributed instance is running a Streams install older than 4.2.
+     * </P>
+     * @param name Name of the application configuration.
+     * 
+     * @return A read-only map containing the named application configuration.
+     * 
+     * @since 1.7
+     */
+    Map<String,String> getApplicationConfiguration(String name);
+    
+    /**
+     * Return the name of this job.
+     * @return name for the job the PE is running in
+     * 
+     * @since 1.7
+     */
+    String getJobName();
 }
