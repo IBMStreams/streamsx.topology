@@ -23,8 +23,10 @@
  * Structure representing a SPL tuple containing a PyObject * pointer.
  */
 #define STREAMSX_TPP_PICKLE ((unsigned char) 0x80)
-#define STREAMSX_TPP_PTR ((unsigned char) 0x4F)
-#define STREAMSX_TPP_EMPTY ((unsigned char) 0x45)
+// Values must be non-ASCII characters as default
+// format for Python 2 is ASCII with no special header.
+#define STREAMSX_TPP_PTR ((unsigned char) 0x8F)
+#define STREAMSX_TPP_EMPTY ((unsigned char) 0x85)
 struct __SPLTuplePyPtr {
     unsigned char fmt;
     PyObject * pyptr;
@@ -83,7 +85,8 @@ namespace streamsx {
           pyTuple = PyTuple_New(1);
           PyTuple_SET_ITEM(pyTuple, 0, value);
       }
-      else if (fmt == STREAMSX_TPP_PICKLE) {
+      // Anything ASCII is also Pickle (Python 2 default format)
+      else if (fmt <= STREAMSX_TPP_PICKLE) {
           PyObject * value = pySplValueToPyObject(pyo);
 
           pyTuple = PyTuple_New(2);
