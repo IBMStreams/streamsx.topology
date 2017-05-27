@@ -1,3 +1,4 @@
+# coding=utf-8
 #
 # Standard library module names:
 # https://docs.python.org/3/library/
