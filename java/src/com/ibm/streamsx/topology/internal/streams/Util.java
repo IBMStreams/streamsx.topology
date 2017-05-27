@@ -13,6 +13,7 @@ import java.util.Map;
 
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONObject;
+import com.ibm.streamsx.topology.context.StreamsContextFactory;
 
 public class Util {
     public static final String STREAMS_DOMAIN_ID = "STREAMS_DOMAIN_ID";
@@ -83,8 +84,8 @@ public class Util {
      */
     public static void checkInvokeStreamtoolPreconditions() 
             throws IllegalStateException {
-        Util.getenv(Util.STREAMS_DOMAIN_ID);
-        Util.getenv(Util.STREAMS_INSTANCE_ID);
+        StreamsContextFactory.getDefaultDomainId();
+        StreamsContextFactory.getDefaultInstanceId();
     }
  
     /**
