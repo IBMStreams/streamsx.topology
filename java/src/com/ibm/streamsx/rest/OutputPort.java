@@ -52,7 +52,7 @@ public class OutputPort {
     /**
      * Gets the index of this output port within the {@link Operator}
      * 
-     * @return long
+     * @return the index as a long
      */
     public long getIndexWithinOperator() {
         return indexWithinOperator;
@@ -61,7 +61,7 @@ public class OutputPort {
     /**
      * Gets the {@link Metric metrics} for this output port
      * 
-     * @return {@link List} of {@link Metric}
+     * @return List of {@link Metric IBM Streams Metrics}
      */
     public List<Metric> getMetrics() throws IOException {
         String sReturn = connection.getResponseString(metrics);
@@ -73,16 +73,16 @@ public class OutputPort {
     /**
      * Gets the name for this output port
      * 
-     * @return {@link String}
+     * @return the output port name
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Identifies the REST resource type, which is "outputport"
+     * Identifies the REST resource type
      * 
-     * @return {@link String}
+     * @return "outputport"
      */
     public String getResourceType() {
         return resourceType;
@@ -91,7 +91,7 @@ public class OutputPort {
     /**
      * Identifies the name of the output stream associated with this output port
      * 
-     * @return {@link String}
+     * @return the output stream name for this port
      */
     public String getStreamName() {
         return streamName;

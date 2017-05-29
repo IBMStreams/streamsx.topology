@@ -60,7 +60,7 @@ public class Operator {
     /**
      * Gets a list of {@link Metric metrics} for this operator
      * 
-     * @return List of {@link Metric}
+     * @return List of {@link Metric IBM Streams Metrics}
      * @throws IOException
      */
     public List<Metric> getMetrics() throws IOException {
@@ -74,7 +74,7 @@ public class Operator {
     /**
      * Gets the index of this operator within the {@link Job}
      * 
-     * @return long
+     * @return the index as a long
      */
     public long getIndexWithinJob() {
         return indexWithinJob;
@@ -84,7 +84,7 @@ public class Operator {
      * Gets a list of {@link InputPort input ports} for this operator
      *
      * 
-     * @return List of {@link InputPort}
+     * @return List of {@link InputPort Input Ports} for this operator
      * @throws IOException
      */
     public List<InputPort> getInputPorts() throws IOException {
@@ -96,7 +96,7 @@ public class Operator {
     /**
      * Name of this operator
      * 
-     * @return {@link String}
+     * @return the operator name
      */
     public String getName() {
         return name;
@@ -105,7 +105,7 @@ public class Operator {
     /**
      * SPL primitive operator type for this operator
      * 
-     * @return {@link String}
+     * @return the SPL primitive operator type
      */
     public String getOperatorKind() {
         return operatorKind;
@@ -114,7 +114,7 @@ public class Operator {
     /**
      * Gets a list of {@link OutputPort output ports} for this operator
      * 
-     * @return List of {@link OutputPort}
+     * @return List of {@link OutputPort Output Ports} for this operator
      * @throws IOException
      */
     public List<OutputPort> getOutputPorts() throws IOException {
@@ -124,9 +124,9 @@ public class Operator {
     }
 
     /**
-     * Identifies the REST resource type as 'operator'
+     * Identifies the REST resource type
      * 
-     * @return {@link String}
+     * @return "operator"
      */
     public String getResourceType() {
         return resourceType;

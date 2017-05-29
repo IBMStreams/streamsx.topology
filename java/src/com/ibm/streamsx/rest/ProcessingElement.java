@@ -98,7 +98,7 @@ public class ProcessingElement {
     /**
      * Gets a list of {@link Metric metrics} for this processing element
      * 
-     * @return List of {@link Metric}
+     * @return List of {@link Metric IBM Streams Metrics}
      * @throws IOException
      */
     public List<Metric> getMetrics() throws IOException {
@@ -110,7 +110,7 @@ public class ProcessingElement {
     /**
      * Gets a list of {@link InputPort input ports} for this processing element
      * 
-     * @return List of {@link InputPort}
+     * @return List of {@link InputPort Input Ports}
      * @throws IOException
      */
     public List<InputPort> getInputPorts() throws IOException {
@@ -122,7 +122,7 @@ public class ProcessingElement {
     /**
      * Gets a list of {@link Operator operators} for this processing element
      * 
-     * @return List of {@link Operator}
+     * @return List of {@link Operator IBM Streams Operators}
      * @throws IOException
      */
     public List<Operator> getOperators() throws IOException {
@@ -135,7 +135,7 @@ public class ProcessingElement {
      * Gets a list of {@link OutputPort output ports} for this processing
      * element
      * 
-     * @return List of {@link OutputPort}
+     * @return List of {@link OutputPort Output Ports}
      * @throws IOException
      */
     public List<OutputPort> getOutputPorts() throws IOException {
@@ -147,7 +147,7 @@ public class ProcessingElement {
     /**
      * Gets the current working path of the processing element
      * 
-     * @return {@link String}
+     * @return the current working path
      */
     public String getCurrentWorkingPath() {
         return currentWorkingPath;
@@ -156,7 +156,7 @@ public class ProcessingElement {
     /**
      * Gets the health indicator for this processing element
      * 
-     * @return {@link String} that contains one of the following values:
+     * @return the health indicator that contains one of the following values:
      *         <ul>
      *         <li>healthy
      *         <li>partiallyHealthy
@@ -172,7 +172,7 @@ public class ProcessingElement {
     /**
      * Gets the id of this processing element
      * 
-     * @return {@link String}
+     * @return the processing element id
      */
     public String getId() {
         return id;
@@ -181,7 +181,7 @@ public class ProcessingElement {
     /**
      * Gets the index of this processing element within the {@link Job}
      * 
-     * @return long
+     * @return processing element index as a long
      */
     public long getIndexWithinJob() {
         return indexWithinJob;
@@ -191,7 +191,7 @@ public class ProcessingElement {
      * Gets the number of times this processing element was started manually or
      * automatically because of failures
      * 
-     * @return int
+     * @return number of times the processing element was started as an int
      */
     public int getLaunchCount() {
         return launchCount;
@@ -200,7 +200,7 @@ public class ProcessingElement {
     /**
      * Gets the status of optional connections for this processing element.
      * 
-     * @return {@link String} that contains one of the following values:
+     * @return the optional connection status that contains one of the following values:
      *         <ul>
      *         <li>connected
      *         <li>disconnected
@@ -215,7 +215,7 @@ public class ProcessingElement {
     /**
      * Gets a list of the operating system capabilities
      * 
-     * @return {@link List} of {@link String}
+     * @return List of the operating system capabilities
      */
     public List<String> getOsCapabilities() {
         return osCapabilities;
@@ -225,7 +225,7 @@ public class ProcessingElement {
      * Describes a pending change to the granularity of the trace information
      * that is stored for this processing element.
      * 
-     * @return {@link String} that contains one of the following values:
+     * @return the pending trace level change that contains one of the following values:
      *         <ul>
      *         <li>off
      *         <li>debug
@@ -241,7 +241,7 @@ public class ProcessingElement {
     /**
      * Gets the operating system process ID for this processing element
      * 
-     * @return {@link String}
+     * @return the operating sytem process ID
      */
     public String getProcessId() {
         return processId;
@@ -251,7 +251,7 @@ public class ProcessingElement {
      * Indicates whether or not this processing element can be relocated to a
      * different resource
      * 
-     * @return boolean
+     * @return boolean indicating whether or not relocation is possible
      */
     public boolean getRelocatable() {
         return relocatable;
@@ -260,7 +260,7 @@ public class ProcessingElement {
     /**
      * Status of the required connections for this processing element.
      * 
-     * @return {@link String} that contains one of the following values:
+     * @return required connection status that contains one of the following values:
      *         <ul>
      *         <li>connected
      *         <li>disconnected
@@ -275,16 +275,16 @@ public class ProcessingElement {
     /**
      * Gets a list of resource tags for this processing element
      * 
-     * @return {@link List} of {@link String}
+     * @return List of resource tags
      */
     public List<String> getResourceTags() {
         return resourceTags;
     }
 
     /**
-     * Identifies the REST resource type as 'pe'
+     * Identifies the REST resource type
      * 
-     * @return {@link String}
+     * @return "pe"
      */
     public String getResourceType() {
         return resourceType;
@@ -293,7 +293,7 @@ public class ProcessingElement {
     /**
      * Indicates whether or not this processing element can be restarted
      * 
-     * @return boolean
+     * @return the restart indicator as a boolean
      */
     public boolean getRestartable() {
         return restartable;
@@ -302,7 +302,7 @@ public class ProcessingElement {
     /**
      * Gets the status of this processing element
      * 
-     * @return (@link String}
+     * @return the processing element status
      */
     public String getStatus() {
         return status;
@@ -311,7 +311,7 @@ public class ProcessingElement {
     /**
      * Gets additional status for this processing element
      * 
-     * @return {@link String}
+     * @return any addition status for this processing element
      */
     public String getStatusReason() {
         return statusReason;
@@ -320,7 +320,7 @@ public class ProcessingElement {
     /**
      * Gets the granularity of the tracing level for this processing element
      * 
-     * @return {@link String} that contains one of the following values:
+     * @return the current tracing level that contains one of the following values:
      *         <ul>
      *         <li>off
      *         <li>debug

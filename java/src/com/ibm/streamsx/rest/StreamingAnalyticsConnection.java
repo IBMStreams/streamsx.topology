@@ -107,9 +107,9 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
      * connection can only ever access a single instance that we've known about
      * since object creation
      *
-     * @return {@link Instance}
+     * @return an {@link Instance IBM Streams Instance} associated with this connection
      *
-     * @throws Exception
+     * @throws IOException
      */
     public Instance getInstance() throws IOException {
         return super.getInstance(instanceId);
@@ -120,12 +120,12 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
      *
      * @param jobId
      *            string indicating the job id to be canceled
-     * @return boolean
+     * @return boolean indicating
      *         <ul>
      *         <li>true - if job is cancelled
-     *         <li>false -if the job still exists
+     *         <li>false - if the job still exists
      *         </ul>
-     * @throws Exception
+     * @throws IOException
      */
     public boolean cancelJob(String jobId) throws IOException {
         boolean rc = false;

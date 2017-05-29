@@ -109,10 +109,6 @@ public class StreamsConnection {
 
         if (HttpStatus.SC_OK == rcResponse) {
             sReturn = EntityUtils.toString(hResponse.getEntity());
-        } else if ((HttpStatus.SC_UNAUTHORIZED == rcResponse) || (HttpStatus.SC_REQUEST_TIMEOUT == rcResponse)) {
-            throw new RESTHTTPException(rcResponse);
-        } else if (HttpStatus.SC_NOT_FOUND == rcResponse) {
-            throw new RESTException(rcResponse);
         } else {
             // all other errors...
             String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
@@ -127,7 +123,7 @@ public class StreamsConnection {
      * Gets a list of {@link Instance instances} that are available to this
      * streams connection
      * 
-     * @return List of {@link Instance}
+     * @return List of {@link Instance IBM Streams Instances} available to this connection
      * @throws IOException
      */
     public List<Instance> getInstances() throws IOException {
@@ -145,7 +141,7 @@ public class StreamsConnection {
      * 
      * @param instanceId
      *            name of the instance to be retrieved
-     * @return {@link Instance}
+     * @return a single {@link Instance}
      * @throws IOException
      */
     public Instance getInstance(String instanceId) throws IOException {
@@ -171,10 +167,10 @@ public class StreamsConnection {
      *            <li>true - disables checking
      *            <li>false - enables checking (default)
      *            </ul>
-     * @return boolean
+     * @return a boolean indicating the state of the connection after this method was called.
      *         <ul>
-     *         <li>true - checking disabled
-     *         <li>false - checking enabled
+     *         <li>true - if checking is disabled
+     *         <li>false - if checking is enabled
      *         </ul>
      */
     public boolean allowInsecureHosts(boolean allowInsecure) {
@@ -197,7 +193,9 @@ public class StreamsConnection {
             executor = Executor.newInstance();
             allowInsecureHosts = false;
         }
-        traceLog.info("Insecure Host Connection enabled");
+        if ( allowInsecureHosts ) {
+            traceLog.info("Insecure Host Connection enabled");
+        }
         return allowInsecureHosts;
     }
 
@@ -206,10 +204,10 @@ public class StreamsConnection {
      * 
      * @param jobId
      *            string identifying the job to be cancelled
-     * @return boolean
+     * @return a boolean indicating
      *         <ul>
-     *         <li>true - job is cancelled
-     *         <li>false - job did not get cancelled
+     *         <li>true if the jobId is cancelled
+     *         <li>false if the jobId did not get cancelled
      *         </ul>
      * @throws Exception
      */

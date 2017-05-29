@@ -96,7 +96,7 @@ public class Instance {
     /**
      * Gets a list of {@link Job jobs} that this instance knows about
      * 
-     * @return List of {@link Job}
+     * @return List of {@link Job IBM Streams Jobs}
      * @throws IOException
      */
     public List<Job> getJobs() throws IOException {
@@ -111,7 +111,7 @@ public class Instance {
      * 
      * @param jobId
      *            String identifying the job
-     * @return {@link Job}
+     * @return a single {@link Job}
      * @throws IOException
      */
     public Job getJob(String jobId) throws IOException {
@@ -135,7 +135,7 @@ public class Instance {
     /**
      * Gets the time in milliseconds when this instance was created
      * 
-     * @return long representing milliseconds since epoch
+     * @return the epoch time in milliseconds when the instance was created as a long
      */
     public long getCreationTime() {
         return creationTime;
@@ -144,7 +144,7 @@ public class Instance {
     /**
      * Gets the user ID that created this instance
      * 
-     * @return {@link String}
+     * @return the creation user ID
      */
     public String getCreationUser() {
         return creationUser;
@@ -153,7 +153,7 @@ public class Instance {
     /**
      * Gets the summarized status of jobs in this instance
      *
-     * @return {@link String} that contains one of the following values:
+     * @return the summarized status that contains one of the following values:
      * <ul>
      * <li>healthy
      * <li>partiallyHealthy
@@ -170,7 +170,7 @@ public class Instance {
     /**
      * Gets the IBM Streams unique identifier for this instance
      * 
-     * @return {@link String}
+     * @return the IBM Streams unique idenitifer
      */
     public String getId() {
         return id;
@@ -179,25 +179,25 @@ public class Instance {
     /**
      * Gets the user ID that represents the owner of this instance
      * 
-     * @return {@link String}
+     * @return the owner user ID
      */
     public String getOwner() {
         return owner;
     }
 
     /**
-     * Identifies the REST resource type as 'instance'
+     * Identifies the REST resource type
      *
-     * @return {@link String}
+     * @return "instance"
      */
     public String getResourceType() {
         return resourceType;
     }
 
     /**
-     * Gets the time in milliseconds since the instance was started.
+     * Gets the time in milliseconds when the instance was started.
      * 
-     * @return long representing milliseconds since epoch
+     * @return the epoch time in milliseconds when the instance was started as a long
      */
     public long getStartTime() {
         return startTime;
@@ -206,7 +206,7 @@ public class Instance {
     /**
      * Gets the status of the instance
      *
-     * @return {@link String} that contains one of the following values:
+     * @return the instance status that contains one of the following values:
      * <ul>
      * <li>running
      * <li>failed

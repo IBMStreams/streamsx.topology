@@ -50,7 +50,7 @@ public class InputPort {
     /**
      * Gets the index of this input port within the {@link Operator}
      * 
-     * @return long
+     * @return the index number as a long
      */
     public long getIndexWithinOperator() {
         return indexWithinOperator;
@@ -59,7 +59,7 @@ public class InputPort {
     /**
      * Gets the {@link Metric metrics} for this input port
      * 
-     * @return {@link List} of {@link Metric}
+     * @return List of {@link Metric IBM Streams Metrics}
      */
     public List<Metric> getMetrics() throws IOException {
         String sReturn = connection.getResponseString(metrics);
@@ -70,16 +70,16 @@ public class InputPort {
     /**
      * Gets the name for this input port
      * 
-     * @return {@link String}
+     * @return the name
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Identifies the REST resource type, which is "inputport"
+     * Identifies the REST resource type
      * 
-     * @return {@link String}
+     * @return "inputport"
      */
     public String getResourceType() {
         return resourceType;

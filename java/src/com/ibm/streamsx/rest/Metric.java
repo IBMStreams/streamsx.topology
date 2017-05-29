@@ -42,7 +42,7 @@ public class Metric {
     /**
      * Gets the description for this metric
      * 
-     * @return {@link String}
+     * @return the metric description
      */
     public String getDescription() {
         return description;
@@ -51,7 +51,7 @@ public class Metric {
     /**
      * Gets the Epoch time when the metric was most recently retrieved
      * 
-     * @return long
+     * @return the epoch time when the metric was most recently retrieved as a long
      */
     public long getLastTimeRetrieved() {
         return lastTimeRetrieved;
@@ -60,7 +60,7 @@ public class Metric {
     /**
      * Describes the kind of metric that has been retrieved
      * 
-     * @return {@link String} that contains one of the following values:
+     * @return the metric kind that contains one of the following values:
      *         <ul>
      *         <li>counter
      *         <li>guage
@@ -75,7 +75,7 @@ public class Metric {
     /**
      * Describes the type of metric that has been retrieved
      * 
-     * @return {@link String} that contains one of the following values:
+     * @return the metric type that contains one of the following values:
      *         <ul>
      *         <li>system
      *         <li>custom
@@ -89,16 +89,16 @@ public class Metric {
     /**
      * Gets the name of this metric
      * 
-     * @return {@link String}
+     * @return the metric name
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Identifies the REST resource type, which is "metric"
+     * Identifies the REST resource type
      * 
-     * @return {@link String}
+     * @return "metric"
      */
     public String getResourceType() {
         return resourceType;
@@ -107,7 +107,7 @@ public class Metric {
     /**
      * Gets the value for this metric
      * 
-     * @return long
+     * @return the metric value as a long
      */
     public long getValue() {
         return value;

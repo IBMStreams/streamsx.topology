@@ -98,7 +98,7 @@ public class Job {
     /**
      * Gets a list of {@link Operator operators} for this job
      * 
-     * @return List of {@link Operator}
+     * @return List of {@link Operator IBM Streams Operators}
      * @throws IOException
      */
     public List<Operator> getOperators() throws IOException {
@@ -111,7 +111,7 @@ public class Job {
     /**
      * Cancels this job
      * 
-     * @return boolean
+     * @return the result of the cancel method
      *         <ul>
      *         <li>true if this job is cancelled
      *         <li>false if this job still exists
@@ -127,7 +127,7 @@ public class Job {
      * Gets the name of the streams processing application that this job is
      * running
      * 
-     * @return {@link String}
+     * @return the application name
      */
     public String getApplicationName() {
         return applicationName;
@@ -136,7 +136,7 @@ public class Job {
     /**
      * Gets the health indicator for this job
      * 
-     * @return {@link String} containing one of these possible values
+     * @return the health indicator containing one of the following values:
      *         <ul>
      *         <li>healthy
      *         <li>partiallyHealthy
@@ -153,7 +153,7 @@ public class Job {
     /**
      * Gets the id of this job
      * 
-     * @return {@link String}
+     * @return the job identifier
      */
     public String getId() {
         return id;
@@ -162,7 +162,7 @@ public class Job {
     /**
      * Gets the group this job belongs to
      * 
-     * @return {@link String}
+     * @return the job group
      */
     public String getJobGroup() {
         return jobGroup;
@@ -171,7 +171,7 @@ public class Job {
     /**
      * Gets the name of this job
      * 
-     * @return {@link String}
+     * @return the job name
      */
     public String getName() {
         return name;
@@ -180,7 +180,7 @@ public class Job {
     /**
      * Gets a list of {@link ProcessingElement processing elements} for this job
      * 
-     * @return List of {@link ProcessingElement}
+     * @return List of {@link ProcessingElement Processing Elements}
      * @throws IOException
      */
     public List<ProcessingElement> getPes() throws IOException {
@@ -190,9 +190,9 @@ public class Job {
     }
 
     /**
-     * Identifies the REST resource type as 'job'
+     * Identifies the REST resource type
      * 
-     * @return {@link String}
+     * @return "job"
      */
     public String getResourceType() {
         return resourceType;
@@ -201,7 +201,7 @@ public class Job {
     /**
      * Identifies the user ID that started this job
      * 
-     * @return {@link String}
+     * @return the user ID that started this job
      */
     public String getStartedBy() {
         return startedBy;
@@ -210,7 +210,7 @@ public class Job {
     /**
      * Describes the status of this job
      * 
-     * @return {@link String} that contains one of the following values:
+     * @return the job status that contains one of the following values:
      *         <ul>
      *         <li>canceling
      *         <li>running
@@ -225,7 +225,7 @@ public class Job {
     /**
      * Gets the list of parameters that were submitted to this job
      * 
-     * @return {@link List} of {@link String}
+     * @return List of parameters 
      */
     public List<String> getSubmitParameters() {
         return submitParameters;
@@ -234,7 +234,7 @@ public class Job {
     /**
      * Gets the Epoch time when this job was submitted
      * 
-     * @return long
+     * @return the epoch time when the job was submitted as a long
      */
     public long getSubmitTime() {
         return submitTime;
