@@ -3,7 +3,7 @@
         Common definitions for streamsx.topology
     </description>
 
-  <property name="streamsx.topology.version" value="1.6"/>
+  <property name="streamsx.topology.version" value="1.7"/>
 
   <dirname property="streamsx.topology" file="${ant.file.streamsx.topology.common}"/>
 
