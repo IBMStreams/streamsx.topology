@@ -14,6 +14,9 @@ import java.util.List;
 
 import com.google.gson.Gson;
 
+/**
+ * An object describing an IBM Streams Job submitted within a specified instance
+ */
 public class Job {
     private StreamsConnection connection;
 
@@ -77,24 +80,25 @@ public class Job {
     private String views;
 
     /**
-      * this function is not intended for external consumption
-      */
+     * this function is not intended for external consumption
+     */
     static final Job create(StreamsConnection sc, String gsonJobString) {
-        Job job = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
-                                   .fromJson(gsonJobString, Job.class);
+        Job job = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(gsonJobString, Job.class);
         job.setConnection(sc);
-        return job ;
+        return job;
     }
 
     /**
-      * this function is not intended for external consumption
-      */
-    void setConnection( final StreamsConnection sc) {
+     * this function is not intended for external consumption
+     */
+    void setConnection(final StreamsConnection sc) {
         connection = sc;
     }
 
     /**
-     * @return {@Operator}
+     * Gets a list of {@link Operator operators} for this job
+     * 
+     * @return List of {@link Operator IBM Streams Operators}
      * @throws IOException
      */
     public List<Operator> getOperators() throws IOException {
@@ -105,7 +109,13 @@ public class Job {
     }
 
     /**
-     * @return true if this job is cancelled, false otherwise
+     * Cancels this job
+     * 
+     * @return the result of the cancel method
+     *         <ul>
+     *         <li>true if this job is cancelled
+     *         <li>false if this job still exists
+     *         </ul>
      * @throws IOException
      * @throws Exception
      */
@@ -113,118 +123,121 @@ public class Job {
         return connection.cancelJob(id);
     }
 
-    public String getActiveViews() {
-        return activeViews;
-    }
-
-    public String getAdlFile() {
-        return adlFile;
-    }
-
+    /**
+     * Gets the name of the streams processing application that this job is
+     * running
+     * 
+     * @return the application name
+     */
     public String getApplicationName() {
         return applicationName;
     }
 
-    public String getApplicationPath() {
-        return applicationPath;
-    }
-
-    public String getApplicationScope() {
-        return applicationScope;
-    }
-
-    public String getApplicationVersion() {
-        return applicationVersion;
-    }
-
-    public String getCheckpointPath() {
-        return checkpointPath;
-    }
-
-    public String getDataPath() {
-        return dataPath;
-    }
-
-    public String getDomain() {
-        return domain;
-    }
-
+    /**
+     * Gets the health indicator for this job
+     * 
+     * @return the health indicator containing one of the following values:
+     *         <ul>
+     *         <li>healthy
+     *         <li>partiallyHealthy
+     *         <li>partiallyUnhealthy
+     *         <li>unhealthy
+     *         <li>unknown
+     *         </ul>
+     *
+     */
     public String getHealth() {
         return health;
     }
 
-    public String getHosts() {
-        return hosts;
-    }
-
+    /**
+     * Gets the id of this job
+     * 
+     * @return the job identifier
+     */
     public String getId() {
         return id;
     }
 
-    public String getInstance() {
-        return instance;
-    }
-
+    /**
+     * Gets the group this job belongs to
+     * 
+     * @return the job group
+     */
     public String getJobGroup() {
         return jobGroup;
     }
 
+    /**
+     * Gets the name of this job
+     * 
+     * @return the job name
+     */
     public String getName() {
         return name;
     }
 
-    public String getOperatorConnections() {
-        return operatorConnections;
-    }
-
-    public String getOutputPath() {
-        return outputPath;
-    }
-
-    public String getPeConnections() {
-        return peConnections;
-    }
-
+    /**
+     * Gets a list of {@link ProcessingElement processing elements} for this job
+     * 
+     * @return List of {@link ProcessingElement Processing Elements}
+     * @throws IOException
+     */
     public List<ProcessingElement> getPes() throws IOException {
         String sReturn = connection.getResponseString(pes);
         List<ProcessingElement> peList = ProcessingElement.getPEList(connection, sReturn);
         return peList;
     }
 
-    public String getResourceAllocations() {
-        return resourceAllocations;
-    }
-
+    /**
+     * Identifies the REST resource type
+     * 
+     * @return "job"
+     */
     public String getResourceType() {
         return resourceType;
     }
 
-    public String getRestid() {
-        return restid;
-    }
-
-    public String getSelf() {
-        return self;
-    }
-
+    /**
+     * Identifies the user ID that started this job
+     * 
+     * @return the user ID that started this job
+     */
     public String getStartedBy() {
         return startedBy;
     }
 
+    /**
+     * Describes the status of this job
+     * 
+     * @return the job status that contains one of the following values:
+     *         <ul>
+     *         <li>canceling
+     *         <li>running
+     *         <li>canceled
+     *         <li>unknown
+     *         </ul>
+     */
     public String getStatus() {
         return status;
     }
 
-    public ArrayList<String> getSubmitParameters() {
+    /**
+     * Gets the list of parameters that were submitted to this job
+     * 
+     * @return List of parameters 
+     */
+    public List<String> getSubmitParameters() {
         return submitParameters;
     }
 
+    /**
+     * Gets the Epoch time when this job was submitted
+     * 
+     * @return the epoch time when the job was submitted as a long
+     */
     public long getSubmitTime() {
         return submitTime;
-    }
-
-    public String getViews() {
-        return views;
     }
 
     @Override

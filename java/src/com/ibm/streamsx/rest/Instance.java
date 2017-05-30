@@ -94,9 +94,9 @@ public class Instance {
     }
 
     /**
-     * Returns a list of Jobs that this Instance knows about
+     * Gets a list of {@link Job jobs} that this instance knows about
      * 
-     * @return List of {@link Job}
+     * @return List of {@link Job IBM Streams Jobs}
      * @throws IOException
      */
     public List<Job> getJobs() throws IOException {
@@ -107,11 +107,11 @@ public class Instance {
     }
 
     /**
-     * Returns the {@link Job} for a given jobId in this instance
+     * Gets the {@link Job} for a given jobId in this instance
      * 
      * @param jobId
      *            String identifying the job
-     * @return {@link Job}
+     * @return a single {@link Job}
      * @throws IOException
      */
     public Job getJob(String jobId) throws IOException {
@@ -123,7 +123,7 @@ public class Instance {
     }
 
     /**
-     * Provides information about the IBM Streams Installation that was used to
+     * Gets information about the IBM Streams Installation that was used to
      * start this instance
      * 
      * @return {@link ActiveVersion}
@@ -133,25 +133,27 @@ public class Instance {
     }
 
     /**
-     * Provides the time in milliseconds when this instance was created
+     * Gets the time in milliseconds when this instance was created
      * 
-     * @return {@link long} representing milliseconds since epoch
+     * @return the epoch time in milliseconds when the instance was created as a long
      */
     public long getCreationTime() {
         return creationTime;
     }
 
     /**
-     * Provides the user ID that created this instance
+     * Gets the user ID that created this instance
      * 
-     * @return {@link String}
+     * @return the creation user ID
      */
     public String getCreationUser() {
         return creationUser;
     }
 
     /**
-     * Provides the summarized status of jobs in this instance
+     * Gets the summarized status of jobs in this instance
+     *
+     * @return the summarized status that contains one of the following values:
      * <ul>
      * <li>healthy
      * <li>partiallyHealthy
@@ -160,50 +162,51 @@ public class Instance {
      * <li>unknown
      * </ul>
      * 
-     * @return {@link String}
      */
     public String getHealth() {
         return health;
     }
 
     /**
-     * Provides the IBM Streams unique identifier for this instance
+     * Gets the IBM Streams unique identifier for this instance
      * 
-     * @return {@link String}
+     * @return the IBM Streams unique idenitifer
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Provides the user ID that represents the Owner of this instance
+     * Gets the user ID that represents the owner of this instance
      * 
-     * @return
+     * @return the owner user ID
      */
     public String getOwner() {
         return owner;
     }
 
     /**
-     * Provides the resource type (instance) associated with this object
-     * 
-     * @return {@link String}
+     * Identifies the REST resource type
+     *
+     * @return "instance"
      */
     public String getResourceType() {
         return resourceType;
     }
 
     /**
-     * Provides the time in milliseconds since the instance was started.
+     * Gets the time in milliseconds when the instance was started.
      * 
-     * @return {@long} representing milliseconds since epoch
+     * @return the epoch time in milliseconds when the instance was started as a long
      */
     public long getStartTime() {
         return startTime;
     }
 
     /**
-     * Provides the status of the instance
+     * Gets the status of the instance
+     *
+     * @return the instance status that contains one of the following values:
      * <ul>
      * <li>running
      * <li>failed
@@ -215,17 +218,11 @@ public class Instance {
      * <li>unknown
      * </ul>
      * 
-     * @return {@link String}
      */
     public String getStatus() {
         return status;
     }
 
-    /**
-     * Provides a user friendly printing function for this object
-     * 
-     * @return {@link String}
-     */
     @Override
     public String toString() {
         return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));

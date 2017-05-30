@@ -11,6 +11,10 @@ import java.util.List;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
+/**
+ * An object describing an IBM Streams Processing Element
+ *
+ */
 public class ProcessingElement {
 
     private StreamsConnection connection;
@@ -52,7 +56,7 @@ public class ProcessingElement {
     @Expose
     private String processId;
     @Expose
-    private String relocatable;
+    private boolean relocatable;
     @Expose
     private String requiredConnections;
     @Expose
@@ -81,11 +85,6 @@ public class ProcessingElement {
         connection = sc;
     }
 
-    /**
-     * @param sc StreamsConnection to access other REST apis
-     * @param peGSONList 
-     * @return
-     */
     final static List<ProcessingElement> getPEList(StreamsConnection sc, String peGSONList) {
         ProcessingElementArray peArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
                 .fromJson(peGSONList, ProcessingElementArray.class);
@@ -97,7 +96,9 @@ public class ProcessingElement {
     }
 
     /**
-     * @return List of {@Metric}
+     * Gets a list of {@link Metric metrics} for this processing element
+     * 
+     * @return List of {@link Metric IBM Streams Metrics}
      * @throws IOException
      */
     public List<Metric> getMetrics() throws IOException {
@@ -107,7 +108,9 @@ public class ProcessingElement {
     }
 
     /**
-     * @return List of {@InputPort}
+     * Gets a list of {@link InputPort input ports} for this processing element
+     * 
+     * @return List of {@link InputPort Input Ports}
      * @throws IOException
      */
     public List<InputPort> getInputPorts() throws IOException {
@@ -117,7 +120,9 @@ public class ProcessingElement {
     }
 
     /**
-     * @return List of {@Operator}
+     * Gets a list of {@link Operator operators} for this processing element
+     * 
+     * @return List of {@link Operator IBM Streams Operators}
      * @throws IOException
      */
     public List<Operator> getOperators() throws IOException {
@@ -127,7 +132,10 @@ public class ProcessingElement {
     }
 
     /**
-     * @return List of {@OutputPort}
+     * Gets a list of {@link OutputPort output ports} for this processing
+     * element
+     * 
+     * @return List of {@link OutputPort Output Ports}
      * @throws IOException
      */
     public List<OutputPort> getOutputPorts() throws IOException {
@@ -137,175 +145,188 @@ public class ProcessingElement {
     }
 
     /**
-     * @return the connections
-     */
-    public String getConnections() {
-        return connections;
-    }
-
-    /**
-     * @return the currentWorkingPath
+     * Gets the current working path of the processing element
+     * 
+     * @return the current working path
      */
     public String getCurrentWorkingPath() {
         return currentWorkingPath;
     }
 
     /**
-     * @return the domain
-     */
-    public String getDomain() {
-        return domain;
-    }
-
-    /**
-     * @return the health
+     * Gets the health indicator for this processing element
+     * 
+     * @return the health indicator that contains one of the following values:
+     *         <ul>
+     *         <li>healthy
+     *         <li>partiallyHealthy
+     *         <li>partiallyUnhealthy
+     *         <li>unhealthy
+     *         <li>unknown
+     *         </ul>
      */
     public String getHealth() {
         return health;
     }
 
     /**
-     * @return the host
-     */
-    public String getHost() {
-        return host;
-    }
-
-    /**
-     * @return the id
+     * Gets the id of this processing element
+     * 
+     * @return the processing element id
      */
     public String getId() {
         return id;
     }
 
     /**
-     * @return the indexWithinJob
+     * Gets the index of this processing element within the {@link Job}
+     * 
+     * @return processing element index as a long
      */
     public long getIndexWithinJob() {
         return indexWithinJob;
     }
 
     /**
-     * @return the instance
-     */
-    public String getInstance() {
-        return instance;
-    }
-
-    /**
-     * @return the job
-     */
-    public String getJob() {
-        return job;
-    }
-
-    /**
-     * @return the launchCount
+     * Gets the number of times this processing element was started manually or
+     * automatically because of failures
+     * 
+     * @return number of times the processing element was started as an int
      */
     public int getLaunchCount() {
         return launchCount;
     }
 
     /**
-     * @return the optionalConnections
+     * Gets the status of optional connections for this processing element.
+     * 
+     * @return the optional connection status that contains one of the following values:
+     *         <ul>
+     *         <li>connected
+     *         <li>disconnected
+     *         <li>partiallyConnected
+     *         <li>unknown
+     *         </ul>
      */
     public String getOptionalConnections() {
         return optionalConnections;
     }
 
     /**
-     * @return the osCapabilities
+     * Gets a list of the operating system capabilities
+     * 
+     * @return List of the operating system capabilities
      */
     public List<String> getOsCapabilities() {
         return osCapabilities;
     }
 
     /**
-     * @return the pendingTracingLevel
+     * Describes a pending change to the granularity of the trace information
+     * that is stored for this processing element.
+     * 
+     * @return the pending trace level change that contains one of the following values:
+     *         <ul>
+     *         <li>off
+     *         <li>debug
+     *         <li>error
+     *         <li>trace
+     *         </ul>
+     *         a null value indicates no pending change to the trace level
      */
     public String getPendingTracingLevel() {
         return pendingTracingLevel;
     }
 
     /**
-     * @return the processId
+     * Gets the operating system process ID for this processing element
+     * 
+     * @return the operating sytem process ID
      */
     public String getProcessId() {
         return processId;
     }
 
     /**
-     * @return the relocatable
+     * Indicates whether or not this processing element can be relocated to a
+     * different resource
+     * 
+     * @return boolean indicating whether or not relocation is possible
      */
-    public String getRelocatable() {
+    public boolean getRelocatable() {
         return relocatable;
     }
 
     /**
-     * @return the requiredConnections
+     * Status of the required connections for this processing element.
+     * 
+     * @return required connection status that contains one of the following values:
+     *         <ul>
+     *         <li>connected
+     *         <li>disconnected
+     *         <li>partiallyConnected
+     *         <li>unknown
+     *         </ul>
      */
     public String getRequiredConnections() {
         return requiredConnections;
     }
 
     /**
-     * @return the resourceAllocation
-     */
-    public String getResourceAllocation() {
-        return resourceAllocation;
-    }
-
-    /**
-     * @return the resourceTags
+     * Gets a list of resource tags for this processing element
+     * 
+     * @return List of resource tags
      */
     public List<String> getResourceTags() {
         return resourceTags;
     }
 
     /**
-     * @return the resourceType
+     * Identifies the REST resource type
+     * 
+     * @return "pe"
      */
     public String getResourceType() {
         return resourceType;
     }
 
     /**
-     * @return the restartable
+     * Indicates whether or not this processing element can be restarted
+     * 
+     * @return the restart indicator as a boolean
      */
     public boolean getRestartable() {
         return restartable;
     }
 
     /**
-     * @return the restid
-     */
-    public String getRestid() {
-        return restid;
-    }
-
-    /**
-     * @return the self
-     */
-    public String getSelf() {
-        return self;
-    }
-
-    /**
-     * @return the status
+     * Gets the status of this processing element
+     * 
+     * @return the processing element status
      */
     public String getStatus() {
         return status;
     }
 
     /**
-     * @return the statusReason
+     * Gets additional status for this processing element
+     * 
+     * @return any addition status for this processing element
      */
     public String getStatusReason() {
         return statusReason;
     }
 
     /**
-     * @return the tracingLevel
+     * Gets the granularity of the tracing level for this processing element
+     * 
+     * @return the current tracing level that contains one of the following values:
+     *         <ul>
+     *         <li>off
+     *         <li>debug
+     *         <li>error
+     *         <li>trace
+     *         </ul>
      */
     public String getTracingLevel() {
         return tracingLevel;

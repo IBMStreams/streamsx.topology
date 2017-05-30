@@ -50,28 +50,18 @@ public class OutputPort {
     }
 
     /**
-     * @return the connections
-     */
-    public String getConnections() {
-        return connections;
-    }
-
-    /**
-     * @return the indexWithinOperator
+     * Gets the index of this output port within the {@link Operator}
+     * 
+     * @return the index as a long
      */
     public long getIndexWithinOperator() {
         return indexWithinOperator;
     }
 
     /**
-     * @return the job
-     */
-    public String getJob() {
-        return job;
-    }
-
-    /**
-     * @return the metrics
+     * Gets the {@link Metric metrics} for this output port
+     * 
+     * @return List of {@link Metric IBM Streams Metrics}
      */
     public List<Metric> getMetrics() throws IOException {
         String sReturn = connection.getResponseString(metrics);
@@ -81,56 +71,27 @@ public class OutputPort {
     }
 
     /**
-     * @return the name
+     * Gets the name for this output port
+     * 
+     * @return the output port name
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @return the operator
-     */
-    public String getOperator() {
-        return operator;
-    }
-
-    /**
-     * @return the pe
-     */
-    public String getPe() {
-        return pe;
-    }
-
-    /**
-     * @return the peOutputPorts
-     */
-    public String getPeOutputPorts() {
-        return peOutputPorts;
-    }
-
-    /**
-     * @return the resourceType
+     * Identifies the REST resource type
+     * 
+     * @return "outputport"
      */
     public String getResourceType() {
         return resourceType;
     }
 
     /**
-     * @return the restid
-     */
-    public String getRestid() {
-        return restid;
-    }
-
-    /**
-     * @return the self
-     */
-    public String getSelf() {
-        return self;
-    }
-
-    /**
-     * @return the streamName
+     * Identifies the name of the output stream associated with this output port
+     * 
+     * @return the output stream name for this port
      */
     public String getStreamName() {
         return streamName;

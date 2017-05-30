@@ -22,6 +22,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
+/**
+  * Basic connection to a Streaming Analytics Instance
+  *
+  */
 public class StreamingAnalyticsConnection extends StreamsConnection {
 
     static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamingAnalyticsConnection");
@@ -80,7 +84,7 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
             throw new IllegalStateException("Missing restURL for service");
         }
 
-        streamingConnection.setURL(restURL);
+        streamingConnection.setStreamsRESTURL(restURL);
         String[] rTokens = resourcesPath.split("/");
         if (rTokens[3].equals("service_instances")) {
             streamingConnection.setInstanceId(rTokens[4]);
@@ -102,16 +106,26 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
      * Streaming Analytics only allows one instance per service, so each
      * connection can only ever access a single instance that we've known about
      * since object creation
+     *
+     * @return an {@link Instance IBM Streams Instance} associated with this connection
+     *
+     * @throws IOException
      */
     public Instance getInstance() throws IOException {
         return super.getInstance(instanceId);
     }
 
     /**
+     * Cancels a job that has been submitted to IBM Streams
+     *
      * @param jobId
-     *            string indicating the job id to be cancelled
-     * @return true if job is cancelled, false otherwise
-     * @throws Exception
+     *            string indicating the job id to be canceled
+     * @return boolean indicating
+     *         <ul>
+     *         <li>true - if job is cancelled
+     *         <li>false - if the job still exists
+     *         </ul>
+     * @throws IOException
      */
     public boolean cancelJob(String jobId) throws IOException {
         boolean rc = false;
@@ -138,10 +152,8 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
     /**
      * main currently exists to test this object
      * 
-     * @param credentials
-     *            String representing the VCAP_SERVICES, or a file location
-     * @param serviceName
-     *            String representing the service name
+     * credentials - String representing the VCAP_SERVICES, or a file location
+     * serviceName - String representing the service name
      */
     public static void main(String[] args) {
         String credentials = args[0];
