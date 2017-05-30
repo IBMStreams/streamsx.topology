@@ -4,20 +4,24 @@
  */
 package com.ibm.streamsx.topology.internal.spljava;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 
 import com.ibm.streams.operator.types.Blob;
+import com.ibm.streamsx.topology.spi.TupleSerializer;
 
 public class JavaObjectBlob implements Blob {
 
+    private final TupleSerializer serializer;
     private byte[] data;
+    private int len;
     private final Object object;
 
-    JavaObjectBlob(Object object) {
+    JavaObjectBlob(TupleSerializer serializer, Object object) {
+        this.serializer = serializer;
         this.object = object;
     }
 
@@ -29,14 +33,14 @@ public class JavaObjectBlob implements Blob {
     public long getLength() {
         if (data == null)
             serializeObject();
-        return data.length;
+        return len;
     }
 
     @Override
     public ByteBuffer getByteBuffer() {
         if (data == null)
             serializeObject();
-        return ByteBuffer.wrap(data);
+        return ByteBuffer.wrap(data, 0, len);
     }
 
     @Override
@@ -51,7 +55,7 @@ public class JavaObjectBlob implements Blob {
         if (data == null)
             serializeObject();
 
-        return null;
+        return new ByteArrayInputStream(data, 0, len);
     }
 
     @Override
@@ -65,7 +69,7 @@ public class JavaObjectBlob implements Blob {
     public ByteBuffer put(ByteBuffer buf) {
         if (data == null)
             serializeObject();
-        return buf.put(data);
+        return buf.put(data, 0, len);
     }
     
     @Override
@@ -75,14 +79,13 @@ public class JavaObjectBlob implements Blob {
 
     /************************/
 
-    private void serializeObject() {
+    private synchronized void serializeObject() {
 
         try {
             AB baos = new AB();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(object);
-            oos.flush();
-            oos.close();
+            
+            serializer.serialize(object, baos);
+            len = baos.size();
             data = baos.data();
 
         } catch (IOException e) {

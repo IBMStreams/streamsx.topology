@@ -67,6 +67,12 @@ import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitDependencyType;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
 public class ToolkitRemoteContext extends RemoteContextImpl<File> {
+    
+    /**
+     * Location where dependent jars are placed.
+     */
+    public static final String DEP_JAR_LOC = "opt" + File.separator + "streamsx.topology.depends";
+
 
 	private final boolean keepToolkit;
 
@@ -184,12 +190,12 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         File tkNamespace = new File(toolkitRoot, namespace);
         File tkImplLib = new File(toolkitRoot, Paths.get("impl", "lib").toString());
         File tkEtc = new File(toolkitRoot, "etc");
-        File tkOpt = new File(toolkitRoot, "opt");
+        File tkOptDepends = new File(toolkitRoot, DEP_JAR_LOC);
 
         tkImplLib.mkdirs();
         tkNamespace.mkdirs();
         tkEtc.mkdir();
-        tkOpt.mkdir();
+        tkOptDepends.mkdirs();
     }
     
     /**

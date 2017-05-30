@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.DEP_JAR_LOC;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -22,6 +24,7 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
+import com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext;
 import com.ibm.streamsx.topology.internal.functional.ops.Functional;
 import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 
@@ -30,7 +33,8 @@ import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
  * resolution/copying from the topology.
  * 
  */
-public class DependencyResolver {
+public class DependencyResolver {    
+    
     private final Map<BOperatorInvocation, Set<Path>> operatorToJarDependencies = new HashMap<>();
     private final Set<Path> globalDependencies = new HashSet<>();
     private final Set<Artifact> globalFileDependencies = new HashSet<>();
@@ -170,7 +174,7 @@ public class DependencyResolver {
             
             for (Path source : operatorToJarDependencies.get(op)) {
                 String jarName = resolveDependency(source, includes);
-                jars.add("impl/lib/" + jarName);
+                jars.add(DEP_JAR_LOC + File.separator + jarName);
             }
 
             String[] jarPaths = jars.toArray(new String[jars.size()]);
@@ -180,7 +184,7 @@ public class DependencyResolver {
         ArrayList<String> jars = new ArrayList<String>();
         for(Path source : globalDependencies){
             String jarName = resolveDependency(source, includes);
-            jars.add("impl/lib/" + jarName);	    
+            jars.add(DEP_JAR_LOC + File.separator  + jarName);	    
         }	
         
         List<BOperator> ops = topology.builder().getOps();
@@ -227,7 +231,7 @@ public class DependencyResolver {
                 jarName = source.getFileName().toString();
                 
                 include.put("source", source.toAbsolutePath().toString());
-                include.put("target", "impl/lib");
+                include.put("target", DEP_JAR_LOC);
             } 
             
             else if (sourceFile.isDirectory()) {
@@ -235,7 +239,7 @@ public class DependencyResolver {
                 jarName = "classes" + previouslyCopiedDependencies.size() + "_" + sourceFile.getName() + ".jar";
                 include.put("classes", source.toAbsolutePath().toString());
                 include.put("name", jarName);
-                include.put("target", "impl/lib");
+                include.put("target", DEP_JAR_LOC);
             }
             
             else {
