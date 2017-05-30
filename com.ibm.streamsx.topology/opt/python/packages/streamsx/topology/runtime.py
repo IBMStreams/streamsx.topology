@@ -42,9 +42,13 @@ def _json_object_out(v):
     """Return a serialized JSON object for a value."""
     if v is None:
         return None
+    return json.dumps(v, ensure_ascii=False)
+
+def _json_force_object(v):
+    """Force a non-dictionary object to be a JSON dict object"""
     if not isinstance(v, dict):
         v = {'payload': v}
-    return json.dumps(v, ensure_ascii=False)
+    return v
     
 # Get the callable from the value
 # passed into the SPL PyFunction operator.

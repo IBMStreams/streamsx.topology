@@ -173,6 +173,7 @@ import random
 from streamsx.topology import graph
 from streamsx.topology.schema import StreamSchema, CommonSchema
 import streamsx.topology.functions
+import streamsx.topology.runtime
 import json
 import threading
 import queue
@@ -509,7 +510,7 @@ class Stream(object):
             name = ''.join(random.choice('0123456789abcdef') for x in range(16))
 
         if self.oport.schema == CommonSchema.Python:
-            view_stream = self._map(streamsx.topology.functions.identity,schema=CommonSchema.Json)
+            view_stream = self.as_json(force_object=False)
             # colocate map operator with stream that is being viewed.
             self.oport.operator.colocate(view_stream.oport.operator, 'view')
         else:
@@ -867,22 +868,29 @@ class Stream(object):
         """
         return self._change_schema(CommonSchema.String, 'as_string', name)
 
-    def as_json(self, name=None):
+    def as_json(self, force_object=True, name=None):
         """
         Declares a stream converting each tuple on this stream into
-        a JSON object.
+        a JSON value.
 
         The stream is typed as a :py:const:`JSON stream <streamsx.topology.schema.CommonSchema.Json>`.
 
         Each tuple must be supported by `JSONEncoder`.
-        If the tuple is not a `dict` then it will be converted to
-        a JSON object with a single key `payload` containing the tuple.
+
+        If `force_object` is `True` then each tuple that not a `dict` 
+        will be converted to a JSON object with a single key `payload`
+        containing the tuple. Thus each object on the stream will
+        be a JSON object.
+
+        If `force_object` is `False` then each tuple is converted to
+        a JSON value directly using `json` package.
 
         If this stream is already typed as a JSON stream then it will
-        be returned (with no additional processing against it and `name`
-        is ignored).
+        be returned (with no additional processing against it and
+        `force_object` and `name` are ignored).
 
         Args:
+            force_object(bool): Force conversion of non dicts to JSON objects.
             name(str): Name of the resulting stream.
                 When `None` defaults to a generated name.
 
@@ -892,17 +900,21 @@ class Stream(object):
             Stream: Stream containing the JSON representations of tuples on this stream.
 
         """
-        return self._change_schema(CommonSchema.Json, 'as_json', name)
+        func = streamsx.topology.runtime._json_force_object if force_object else None
+        return self._change_schema(CommonSchema.Json, 'as_json', name, func)
 
-    def _change_schema(self, schema, action, name=None):
+    def _change_schema(self, schema, action, name=None, func=None):
         """Internal method to change a schema.
         """
         if self.oport.schema.schema() == schema.schema():
             return self
 
+        if func is None:
+            func = streamsx.topology.functions.identity
+
         if name is None:
             name = action 
-        css = self._map(streamsx.topology.functions.identity, schema, name=name)
+        css = self._map(func, schema, name=name)
         self.oport.operator.colocate(css.oport.operator, action)
         return css
 
