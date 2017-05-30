@@ -774,7 +774,7 @@ class Stream(object):
 
         By default a stream is published using its schema.
 
-        A stream of :py:const:`Python objects <streamsx.topology.schema.CommonSchema.Python>` can be suubscribed to by other Streams Python applications.
+        A stream of :py:const:`Python objects <streamsx.topology.schema.CommonSchema.Python>` can be subscribed to by other Streams Python applications.
 
         If a stream is published setting `schema` to
         :py:const:`~streamsx.topology.schema.CommonSchema.Json`
@@ -909,7 +909,23 @@ class Stream(object):
 
 class View(object):
     """
-    A View is an object which is associated with a Stream, and provides access to the items on the stream.
+    The View class provides access to a continuously updated sampling of data items on a Stream after submission.
+    A view object is produced by the view method, and will access data items from the stream on which it is invoked.
+
+    For example, a View object could be created and used as follows:
+
+        >>> topology = Topology()
+        >>> rands = topology.source(lambda: random.random())
+        >>> view = rands.view()       
+        >>> submit(ContextTypes.DISTRIBUTED, topology)
+        >>> queue = view.start_data_fetch()
+        >>> for val in iter(queue.get, None):
+        ... print(val)
+        ...
+        0.6527
+        0.1963
+        0.0512
+
     """
     def __init__(self, name):
         self.name = name
@@ -919,6 +935,8 @@ class View(object):
         self._streams_connection = None
 
     def initialize_rest(self):
+        """Used to initialize the View object on first use.
+        """
         if self._streams_connection is None:
             if self._submit_context is None:
                 raise ValueError("View has not been created.")
@@ -926,9 +944,17 @@ class View(object):
             self._streams_connection = self._submit_context.streams_connection()
 
     def stop_data_fetch(self):
+        """Terminates the background thread fetching stream data items.
+        """
         self._view_object.stop_data_fetch()
 
     def start_data_fetch(self):
+        """Starts a background thread which begins accessing data from the remote Stream.
+        The data items are placed asynchronously in a queue, which is returned from this method.
+
+        Returns:
+            A Queue object which is populated with the data items of the stream.
+        """
         self.initialize_rest()
         sc = self._streams_connection
         instance = sc.get_instance(id=self._submit_context.submission_results['instanceId'])
