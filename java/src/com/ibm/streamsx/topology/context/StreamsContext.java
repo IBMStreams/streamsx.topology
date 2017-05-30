@@ -197,8 +197,20 @@ public interface StreamsContext<T> {
          * streams, sub-topologies, and, SPL primitive operators and composites.
          */
         DISTRIBUTED_TESTER,
+              
+        /**
+         * The topology is submitted to a Streams instance running
+         * in Streaming Analytics service on
+         * <a href="http://www.ibm.com/Bluemix‎" target="_blank">IBM Bluemix</a>
+         * cloud platform.
+         * 
+         * <P>
+         * This is a synonym for {@link #STREAMING_ANALYTICS_SERVICE}.
+         * </P>
+         */
+        ANALYTICS_SERVICE,
         
-        
+
         /**
          * The topology is submitted to a Streams instance running
          * in Streaming Analytics service on
@@ -222,18 +234,6 @@ public interface StreamsContext<T> {
          * This takes precedence over the environment variable.</LI>
          * <LI>Using the environment variable {@code VCAP_SERVICES}</LI>
          * </UL>
-         * </P>
-         */
-        ANALYTICS_SERVICE,
-        
-        /**
-         * The topology is submitted to a Streams instance running
-         * in Streaming Analytics service on
-         * <a href="http://www.ibm.com/Bluemix‎" target="_blank">IBM Bluemix</a>
-         * cloud platform.
-         * 
-         * <P>
-         * This is a synonym for {@link #ANALYTICS_SERVICE}.
          * </P>
          */
         STREAMING_ANALYTICS_SERVICE,
