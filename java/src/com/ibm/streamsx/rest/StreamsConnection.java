@@ -109,10 +109,14 @@ public class StreamsConnection {
 
         if (HttpStatus.SC_OK == rcResponse) {
             sReturn = EntityUtils.toString(hResponse.getEntity());
+        } else if (HttpStatus.SC_NOT_FOUND == rcResponse) {
+            // with a 404 message, we are likely to have a message from Streams
+            sReturn = EntityUtils.toString(hResponse.getEntity());
+            throw RESTException.create(rcResponse, sReturn);
         } else {
             // all other errors...
             String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
-            throw new IllegalStateException(httpError);
+            throw new RESTException(httpError);
         }
         traceLog.finest("Request: " + inputString);
         traceLog.finest(rcResponse + ": " + sReturn);
@@ -281,6 +285,14 @@ public class StreamsConnection {
                         System.out.println("Job canceled");
                     }
                 }
+                try {
+                   instance.getJob("15") ;
+                } catch (RESTException e) {
+                        System.out.println( "Status Code: " + e.getStatusCode() ) ;
+                        System.out.println( "Message Id: " + e.getStreamsErrorMessageId() ) ;
+                        System.out.println( "MessageAsJson: " + e.getStreamsErrorMessageAsJson().toString() ) ;
+                        System.out.println( "Message: " + e.getMessage()) ;
+                    }
             }
         } catch (Exception e) {
             e.printStackTrace();
