@@ -340,14 +340,16 @@ public class StreamTest extends TestTopology {
                 
         Tester tester = t.getTester();
         
-        Condition<Long> spCount = tester.tupleCount(strings, 7);
+        Condition<Long> spCount = tester.tupleCount(strings, 9);
         Condition<List<String>> spContents = tester.stringContents(strings, 
                 "channel=-1",
                 "domainId=" + System.getProperty("user.name"),
                 "id=0",
                 "instanceId=" + System.getProperty("user.name"),
                 "jobId=0",
+                "jobName=NOTNULL",
                 "maxChannels=0",
+                "noAppConfig={}",
                 "relaunchCount=0"
                 );
 
@@ -361,7 +363,7 @@ public class StreamTest extends TestTopology {
     public static class ExtractFunctionContext
          implements Function<Long,Map<String,Object>>, Initializable {
         private static final long serialVersionUID = 1L;
-        private FunctionContext functionContext;
+        private transient FunctionContext functionContext;
         
         @Override
         public Map<String, Object> apply(Long v) {
@@ -377,6 +379,9 @@ public class StreamTest extends TestTopology {
             
             values.put("domainId", container.getDomainId());
             values.put("instanceId", container.getInstanceId());
+            
+            values.put("jobName", container.getJobName() == null ? "NULL" : "NOTNULL");
+            values.put("noAppConfig", container.getApplicationConfiguration("no_such_config"));
             
             return values;
         }
