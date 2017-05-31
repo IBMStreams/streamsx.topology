@@ -58,7 +58,7 @@ class FunctionPEContainer implements FunctionContainer {
         if (!pe.isStandalone()) {
 
             try {
-                Method gac = pe.getClass().getMethod("getApplicationConfiguration", String.class);
+                Method gac = ProcessingElement.class.getMethod("getApplicationConfiguration", String.class);
                 return (Map<String,String>) gac.invoke(pe, name);
             } catch (NoSuchMethodException e) {
             } catch (InvocationTargetException|IllegalAccessException e) {
