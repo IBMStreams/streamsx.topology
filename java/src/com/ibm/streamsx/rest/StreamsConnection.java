@@ -116,7 +116,7 @@ public class StreamsConnection {
         } else {
             // all other errors...
             String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
-            throw new RESTException(httpError);
+            throw new RESTException(rcResponse, httpError);
         }
         traceLog.finest("Request: " + inputString);
         traceLog.finest(rcResponse + ": " + sReturn);
