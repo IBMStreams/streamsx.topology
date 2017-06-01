@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 
-from streamsx.topology.topology import Stream
+from streamsx.topology.topology import Stream, Window
 import streamsx.topology.schema as sch
 
 
@@ -24,16 +24,23 @@ class ExtensionOperator(object):
         """
         return self._op.params
 
+    def _add_input(self, _input):
+        win_cfg = None
+        if isinstance(_input, Window):
+            win_cfg = _input._config
+            _input = _input.stream
+        self._op.addInputPort(outputPort=_input.oport, name=_input.name, window_config = win_cfg)
+        self._inputs.append(_input)
+
     def __inputs(self, inputs):
         if inputs is not None:
+            self._inputs = []
             try:
-                for input in inputs:
-                    self._op.addInputPort(outputPort=input.oport, name=input.name)
-                self.inputs = list(inputs)
+                for _input in inputs:
+                    self._add_input(_input)
             except TypeError:
                 # not iterable, single input
-                self._op.addInputPort(outputPort=inputs.oport, name=inputs.name)
-                self.inputs = [inputs]
+                self._add_input(inputs)
 
     def __outputs(self, schemas):
         self.outputs = []

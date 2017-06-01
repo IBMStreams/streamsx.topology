@@ -182,6 +182,7 @@ import os
 import time
 import inspect
 import logging
+import datetime
 from enum import Enum
 
 logger = logging.getLogger('streamsx.topology')
@@ -721,6 +722,37 @@ class Stream(object):
         endP = Stream(self.topology, oport)
         return endP
 
+    def last(self, size=1):
+        """ Declares a window containing most recent tuples on this stream.
+
+        The number of tuples maintained in the window is defined by `size`.
+
+        If `size` is an `int` then it is the count of tuples in the window.
+        For example, with ``size=10`` the window always contains the
+        last (most recent) ten tuples.
+
+        If `size` is an `datetime.timedelta` then it is the duration
+        of the window. With a `timedelta` representing five minutes
+        then the window contains any tuples that arrived in the last
+        five minutes.
+ 
+        Args:
+            size: The size of the window, either an `int` to define the
+                number of tuples or `datetime.timedelta` to define the
+                duration of the window.
+
+        Returns:
+            Window: Window of the last (most recent) tuples on this stream.
+        """
+        win = Window(self, 'SLIDING')
+        if isinstance(size, datetime.timedelta):
+            win._evict_time(size)
+        elif isinstance(size, int):
+            win._evict_count(size)
+        else:
+            raise ValueError(size)
+        return win
+
     def union(self, streamSet):
         """
         Creates a stream that is a union of this stream and other streams
@@ -1040,3 +1072,74 @@ class PendingStream(object):
             """Has this connection been completed.
             """
             return self._marker.inputPorts
+
+
+class Window(object):
+    """Declaration of a window of tuples on a `Stream`.
+
+    A `Window` can be passed as the input of an SPL
+    operator invocation to indicate the operator's
+    input port is windowed.
+
+    Example invoking the SPL `Aggregate` operator with a sliding window of
+    the last two minutes, triggering every five tuples::
+   
+        win = s.last(datetime.timedelta(minutes=2)).trigger(5)
+
+        agg = op.Map('spl.relational::Aggregate', win,
+                    schema = 'tuple<uint64 sum, uint64 max>')
+        agg.sum = agg.output('Sum(val)')
+        agg.max = agg.output('Max(val)')
+    """
+    def __init__(self, stream, window_type):
+        self.topology = stream.topology
+        self.stream = stream
+        self._config = {'type': window_type}
+
+    def _evict_count(self, size):
+        self._config['evictPolicy'] = 'COUNT'
+        self._config['evictConfig'] = size
+
+    def _evict_time(self, duration):
+        self._config['evictPolicy'] = 'TIME'
+        self._config['evictConfig'] = int(duration.total_seconds() * 1000.0)
+        self._config['evictTimeUnit'] = 'MILLISECONDS'
+
+    def trigger(self, when=1):
+        """Declare a window with this window's size and a trigger policy.
+
+        When the window is triggered is defined by `when`.
+
+        If `when` is an `int` then the window is triggered every
+        `when` tuples.  For example, with ``when=5`` the window
+        will be triggered every five tuples.
+
+        If `when` is an `datetime.timedelta` then it is the period
+        of the trigger. With a `timedelta` representing one minute
+        then the window is triggered every minute.
+
+        By default, when `trigger` has not been called on a `Window`
+        it triggers for every tuple inserted into the window
+        (equivalent to ``when=1``).
+
+        Args:
+            when: The size of the window, either an `int` to define the
+                number of tuples or `datetime.timedelta` to define the
+                duration of the window.
+
+        Returns:
+            Window: Window that will be triggered.
+    """
+        tw = Window(self.stream, self._config['type'])
+        tw._config['evictPolicy'] = self._config['evictPolicy']
+        tw._config['evictConfig'] = self._config['evictConfig']
+        if isinstance(when, datetime.timedelta):
+            tw._config['triggerPolicy'] = 'TIME'
+            tw._config['triggerConfig'] = int(when.total_seconds() * 1000.0)
+            tw._config['triggerTimeUnit'] = 'MILLISECONDS'
+        elif isinstance(when, int):
+            tw._config['triggerPolicy'] = 'COUNT'
+            tw._config['triggerConfig'] = when
+        else:
+            raise ValueError(when)
+        return tw

@@ -224,13 +224,13 @@ class _SPLInvocation(object):
     def addViewConfig(self, view_configs):
         self.view_configs.append(view_configs)
 
-    def addInputPort(self, name=None, outputPort=None):
+    def addInputPort(self, name=None, outputPort=None, window_config=None):
         if name is None:
             name = self.name + "_IN"+ str(len(self.inputPorts))
         iPortSchema = CommonSchema.Python    
         if not outputPort is None :
             iPortSchema = outputPort.schema        
-        iport = IPort(name, self, len(self.inputPorts),iPortSchema)
+        iport = IPort(name, self, len(self.inputPorts),iPortSchema, window_config)
         self.inputPorts.append(iport)
 
         if not outputPort is None:
@@ -337,11 +337,12 @@ class _SPLInvocation(object):
             print(port.name)
 
 class IPort(object):
-    def __init__(self, name, operator, index, schema):
+    def __init__(self, name, operator, index, schema, window_config):
         self.name = name
         self.operator = operator
         self.index = index
         self.schema = schema
+        self.window_config = window_config
         self.outputPorts = []
 
     def connect(self, oport):
@@ -356,6 +357,8 @@ class IPort(object):
         _iport["name"] = self.name
         _iport["connections"] = [port.name for port in self.outputPorts]
         _iport["type"] = self.schema.schema()
+        if self.window_config is not None:
+            _iport['window'] = self.window_config
         return _iport
 
 class OPort(object):
