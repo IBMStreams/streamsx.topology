@@ -166,11 +166,17 @@ and subscribe using <a class="reference internal" href="streamsx.topology.topolo
 <dl class="attribute">
 <dt id="streamsx.topology.schema.CommonSchema.Json">
 <code class="descname">Json</code><em class="property"> = &lt;streamsx.topology.schema.StreamSchema object&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.Json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stream where each tuple is a JSON object.</p>
+<dd><p>Stream where each tuple is logically a JSON object.</p>
 <p><cite>Json</cite> can be used as a natural interchange format between Streams applications
 implemented in different programming languages. All languages supported by
 Streams support publishing and subscribing to JSON streams.</p>
-<p>Python objects are converted to JSON objects using <cite>json.dumps(obj)</cite>.</p>
+<p>A Python callable receives each tuple as a <cite>dict</cite> as though it was
+created from <code class="docutils literal"><span class="pre">json.loads(json_formatted_str)</span></code> where <cite>json_formatted_str</cite>
+is the JSON formatted representation of tuple.</p>
+<p>Python objects that are to be converted to JSON objects
+must be supported by <cite>JSONEncoder</cite>. If the object is not a <cite>dict</cite>
+then it will be converted to a JSON object with a single key <cite>payload</cite>
+containing the value.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -187,6 +193,7 @@ Streams support publishing and subscribing to JSON streams.</p>
 <p><cite>String</cite> can be used as a natural interchange format between Streams applications
 implemented in different programming languages. All languages supported by
 Streams support publishing and subscribing to string streams.</p>
+<p>A Python callable receives each tuple as a <cite>str</cite> object.</p>
 <p>Python objects are converted to strings using <cite>str(obj)</cite>.</p>
 </dd></dl>
 

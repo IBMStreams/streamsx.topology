@@ -284,14 +284,16 @@ is a list of <code class="docutils literal"><span class="pre">Stream</span></cod
 <li><strong>topology</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><em>Topology</em></a>) &#8211; Topology that will invoke the operator.</li>
 <li><strong>kind</strong> (<em>str</em>) &#8211; SPL operator kind, e.g. <code class="docutils literal"><span class="pre">spl.utility::Beacon</span></code>.</li>
 <li><strong>inputs</strong> &#8211; Streams to connect to the operator. If not set or set to
-<code class="docutils literal"><span class="pre">None</span></code> or an empty collection then the operator has no
+<cite>None</cite> or an empty collection then the operator has no
 input ports. Otherwise a list or tuple of <code class="docutils literal"><span class="pre">Stream</span></code> instances
 where the number of items is the number of input ports.</li>
 <li><strong>schemas</strong> &#8211; Schemas of the output ports. If not set or set to
-<code class="docutils literal"><span class="pre">None</span></code> or an empty collection then the operator has no
+<cite>None</cite> or an empty collection then the operator has no
 outut ports. Otherwise a list or tuple of schemas
 where the number of items is the number of output ports.</li>
 <li><strong>params</strong> &#8211; Operator parameters.</li>
+<li><strong>name</strong> &#8211; Name of the operator. When <cite>None</cite> defaults to a name
+derived from the operator kind.</li>
 </ul>
 </td>
 </tr>
@@ -396,6 +398,7 @@ and single output stream.</p>
 <li><strong>stream</strong> &#8211; Stream to connect to the operator.</li>
 <li><strong>schema</strong> &#8211; Schema of the output stream. If set to <cite>None</cite> then the output schema is the same as the schema of <cite>stream</cite>.</li>
 <li><strong>params</strong> &#8211; Operator parameters.</li>
+<li><strong>name</strong> &#8211; Name of the operator. When <cite>None</cite> defaults to a generated name.</li>
 </ul>
 </td>
 </tr>
@@ -500,6 +503,7 @@ of the common case of a operator with a single input port.</p>
 <li><strong>kind</strong> (<em>str</em>) &#8211; SPL operator kind, e.g. <code class="docutils literal"><span class="pre">spl.adapter::FileSink</span></code>.</li>
 <li><strong>input</strong> &#8211; Stream to connect to the operator.</li>
 <li><strong>params</strong> &#8211; Operator parameters.</li>
+<li><strong>name</strong> &#8211; Name of the operator. When <cite>None</cite> defaults to a generated name.</li>
 </ul>
 </td>
 </tr>
@@ -604,6 +608,7 @@ of the common case of a operator with a single output port.</p>
 <li><strong>kind</strong> (<em>str</em>) &#8211; SPL operator kind, e.g. <code class="docutils literal"><span class="pre">spl.utility::Beacon</span></code>.</li>
 <li><strong>schema</strong> &#8211; Schema of the output port.</li>
 <li><strong>params</strong> &#8211; Operator parameters.</li>
+<li><strong>name</strong> &#8211; Name of the operator. When <cite>None</cite> defaults to a generated name.</li>
 </ul>
 </td>
 </tr>
