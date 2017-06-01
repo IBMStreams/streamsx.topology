@@ -23,9 +23,9 @@ import com.google.gson.JsonParser;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 /**
-  * Basic connection to a Streaming Analytics Instance
-  *
-  */
+ * Basic connection to a Streaming Analytics Instance
+ *
+ */
 public class StreamingAnalyticsConnection extends StreamsConnection {
 
     static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamingAnalyticsConnection");
@@ -34,7 +34,7 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
     private String instanceId;
 
     /**
-     * Basic connection to the Streaming Analytics Instance
+     * Basic connection to IBM Streaming Analytics service
      *
      * @param credentialsFile
      *            Credentials from the Streaming Analytics File
@@ -46,6 +46,16 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
         super(userName, authToken, url);
     }
 
+    /**
+     * Basic connection to IBM Streaming Analytics service
+     *
+     * @param credentialsFile
+     *            Credentials from the Streaming Analytics File
+     * @param serviceName
+     *            Name of the service in the file above
+     * @return a connection to IBM Streaming Analytics service
+     * @throws IOException
+     */
     public static StreamingAnalyticsConnection createInstance(String credentialsFile, String serviceName)
             throws IOException {
 
@@ -104,10 +114,11 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
 
     /**
      * Streaming Analytics only allows one instance per service, so each
-     * connection can only ever access a single instance that we've known about
-     * since object creation
+     * connection can only ever access a single instance that we have known
+     * about since object creation
      *
-     * @return an {@link Instance IBM Streams Instance} associated with this connection
+     * @return an {@link Instance IBM Streams Instance} associated with this
+     *         connection
      *
      * @throws IOException
      */
@@ -116,7 +127,7 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
     }
 
     /**
-     * Cancels a job that has been submitted to IBM Streams
+     * Cancels a job that has been submitted to IBM Streaming Analytcis service
      *
      * @param jobId
      *            string indicating the job id to be canceled
@@ -149,62 +160,4 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
         return rc;
     }
 
-    /**
-     * main currently exists to test this object
-     * 
-     * credentials - String representing the VCAP_SERVICES, or a file location
-     * serviceName - String representing the service name
-     */
-    public static void main(String[] args) {
-        String credentials = args[0];
-        String serviceName = args[1];
-
-        System.out.println(credentials);
-        System.out.println(serviceName);
-
-        try {
-            StreamingAnalyticsConnection sClient = StreamingAnalyticsConnection.createInstance(credentials,
-                    serviceName);
-
-            System.out.println("Returning instance");
-            Instance instance = sClient.getInstance();
-
-            List<Job> jobs = instance.getJobs();
-            for (Job job : jobs) {
-                System.out.println("Job: " + job.toString());
-                List<Operator> operators = job.getOperators();
-                for (Operator op : operators) {
-                    System.out.println("Operator: " + op.toString());
-                    List<Metric> metrics = op.getMetrics();
-                    for (Metric m : metrics) {
-                        System.out.println("Metric: " + m.toString());
-                    }
-                    List<OutputPort> outP = op.getOutputPorts();
-                    for (OutputPort oport : outP) {
-                        System.out.println("Output Port: " + oport.toString());
-                        for (Metric om : oport.getMetrics()) {
-                            System.out.println("Output Port Metric: " + om.toString());
-                        }
-                    }
-                    List<InputPort> inP = op.getInputPorts();
-                    for (InputPort ip : inP) {
-                        System.out.println("Input Port: " + ip.toString());
-                        for (Metric im : ip.getMetrics()) {
-                            System.out.println("Input Port Metric: " + im.toString());
-                        }
-                    }
-                }
-            }
-
-            if (!jobs.isEmpty()) {
-                System.out.println("Removing first job specifically");
-                Job job = jobs.get(0);
-                if (job.cancel()) {
-                    System.out.println("Job canceled");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }

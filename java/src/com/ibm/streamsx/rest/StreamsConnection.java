@@ -47,14 +47,15 @@ public class StreamsConnection {
     protected Executor executor;
 
     /**
-     * Basic connection to a streams instance
+     * Basic connection to IBM Streams
      * 
      * @param userName
      *            String representing the userName to connect to the instance
      * @param authToken
      *            String representing the password to connect to the instance
      * @param url
-     *            String representing the root url to the REST API
+     *            String representing the root url to the REST API, for example:
+     *            https:server:port/streams/rest
      */
     protected StreamsConnection(String userName, String authToken, String url) {
         this.userName = userName;
@@ -69,7 +70,8 @@ public class StreamsConnection {
      * sets the REST API url for this connection removing the trailing slash
      * 
      * @param url
-     *            String root path to the REST API
+     *            String representing the root url to the REST API, for example:
+     *            https:server:port/streams/rest
      */
     protected void setStreamsRESTURL(String url) {
         if (url.equals("") || (url.charAt(url.length() - 1) != '/')) {
@@ -80,7 +82,7 @@ public class StreamsConnection {
     }
 
     /**
-     * Basic connection to a streams instance
+     * Basic connection to IBM Streams
      * 
      * @param userName
      *            String representing the userName to connect to the instance
@@ -88,15 +90,18 @@ public class StreamsConnection {
      *            String representing the password to connect to the instance
      * @param url
      *            String representing the root url to the REST API
+     * @return a connection to IBM Streams
      */
     public static StreamsConnection createInstance(String userName, String authToken, String url) {
         return new StreamsConnection(userName, authToken, url);
     }
 
     /**
+     * Gets a response to an HTTP call
+     * 
      * @param inputString
-     *            Rest call to make
-     * @return Response from the inputString
+     *            REST call to make
+     * @return response from the inputString
      * @throws IOException
      */
     String getResponseString(String inputString) throws IOException {
@@ -124,10 +129,11 @@ public class StreamsConnection {
     }
 
     /**
-     * Gets a list of {@link Instance instances} that are available to this
-     * streams connection
+     * Gets a list of {@link Instance instances} that are available to this IBM
+     * Streams connection
      * 
-     * @return List of {@link Instance IBM Streams Instances} available to this connection
+     * @return List of {@link Instance IBM Streams Instances} available to this
+     *         connection
      * @throws IOException
      */
     public List<Instance> getInstances() throws IOException {
@@ -141,7 +147,7 @@ public class StreamsConnection {
 
     /**
      * Gets a specific {@link Instance instance} identified by the instanceId at
-     * this streams connection
+     * this IBM Streams connection
      * 
      * @param instanceId
      *            name of the instance to be retrieved
@@ -171,7 +177,8 @@ public class StreamsConnection {
      *            <li>true - disables checking
      *            <li>false - enables checking (default)
      *            </ul>
-     * @return a boolean indicating the state of the connection after this method was called.
+     * @return a boolean indicating the state of the connection after this
+     *         method was called.
      *         <ul>
      *         <li>true - if checking is disabled
      *         <li>false - if checking is enabled
@@ -197,7 +204,7 @@ public class StreamsConnection {
             executor = Executor.newInstance();
             allowInsecureHosts = false;
         }
-        if ( allowInsecureHosts ) {
+        if (allowInsecureHosts) {
             traceLog.info("Insecure Host Connection enabled");
         }
         return allowInsecureHosts;
@@ -220,82 +227,5 @@ public class StreamsConnection {
         InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId), userName);
         cancelJob.invoke();
         return rc;
-    }
-
-    /**
-     * Main function to test this class for now will be removed eventually
-     */
-    public static void main(String[] args) {
-        String userName = args[0];
-        String authToken = args[1];
-        String url = args[2];
-        String instanceName = args[3];
-
-        System.out.println(userName);
-        System.out.println(authToken);
-        System.out.println(url);
-        System.out.println(instanceName);
-        StreamsConnection sClient = StreamsConnection.createInstance(userName, authToken, url);
-
-        if (args.length == 5) {
-            if (args[4].equals("true")) {
-                sClient.allowInsecureHosts(true);
-            }
-        }
-
-        try {
-            System.out.println("Instance: ");
-            List<Instance> instances = sClient.getInstances();
-
-            for (Instance instance : instances) {
-                List<Job> jobs = instance.getJobs();
-                for (Job job : jobs) {
-                    System.out.println("Job: " + job.toString());
-                    List<Operator> operators = job.getOperators();
-                    for (Operator op : operators) {
-                        System.out.println("Operator: " + op.toString());
-                        List<Metric> metrics = op.getMetrics();
-                        for (Metric m : metrics) {
-                            System.out.println("Metric: " + m.toString());
-                        }
-                        List<OutputPort> outP = op.getOutputPorts();
-                        for (OutputPort oport : outP) {
-                            System.out.println("Output Port: " + oport.toString());
-                            for (Metric om : oport.getMetrics()) {
-                                System.out.println("Output Port Metric: " + om.toString());
-                            }
-                        }
-                        List<InputPort> inP = op.getInputPorts();
-                        for (InputPort ip : inP) {
-                            System.out.println("Input Port: " + ip.toString());
-                            for (Metric im : ip.getMetrics()) {
-                                System.out.println("Input Port Metric: " + im.toString());
-                            }
-                        }
-                    }
-                    for (ProcessingElement pe : job.getPes()) {
-                        System.out.println("ProcessingElement:" + pe.toString());
-                    }
-                }
-
-                if (!jobs.isEmpty()) {
-                    System.out.println("Removing first job specifically");
-                    Job job = jobs.get(0);
-                    if (job.cancel()) {
-                        System.out.println("Job canceled");
-                    }
-                }
-                try {
-                   instance.getJob("15") ;
-                } catch (RESTException e) {
-                        System.out.println( "Status Code: " + e.getStatusCode() ) ;
-                        System.out.println( "Message Id: " + e.getStreamsErrorMessageId() ) ;
-                        System.out.println( "MessageAsJson: " + e.getStreamsErrorMessageAsJson().toString() ) ;
-                        System.out.println( "Message: " + e.getMessage()) ;
-                    }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }
