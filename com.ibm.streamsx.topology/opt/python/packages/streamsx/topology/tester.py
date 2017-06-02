@@ -461,12 +461,18 @@ class Tester(object):
         return self._distributed_wait_for_result()
 
     def _distributed_wait_for_result(self):
-        self._start_local_check()
+
         cc = _ConditionChecker(self, self.streams_connection, self.submission_result)
-        self.result = cc._complete()
+        # Wait for the job to be healthy before calling the local check.
+        if cc._wait_for_healthy():
+            self._start_local_check()
+            self.result = cc._complete()
+            if self.local_check is not None:
+                self._local_thread.join()
+        else:
+            self.result = cc._end(False, _ConditionChecker._UNHEALTHY)
+
         self.result['submission_result'] = self.submission_result
-        if self.local_check is not None:
-            self._local_thread.join()
         cc._canceljob(self.result)
         if self.local_check_exception is not None:
             raise self.local_check_exception
@@ -661,6 +667,8 @@ def _result_to_dict(passed, t):
     return result
 
 class _ConditionChecker(object):
+    _UNHEALTHY = (False, False, False, None)
+
     def __init__(self, tester, sc, sjr):
         self.tester = tester
         self._sc = sc
@@ -676,6 +684,16 @@ class _ConditionChecker(object):
         self.additional_checks = 2
 
         self.job = self._find_job()
+
+    # Wait for job ot be healthy. Returns True
+    # if the job became healthy, False if not.
+    def _wait_for_healthy(self):
+        while (self.waits * self.delay) < self.timeout:
+            if self.__check_job_health():
+                self.waits = 0
+                return True
+            time.sleep(self.delay)
+        return False
 
     def _complete(self):
         while (self.waits * self.delay) < self.timeout:
@@ -703,6 +721,8 @@ class _ConditionChecker(object):
             self.job.cancel(force=not result['passed'])
 
     def __check_once(self):
+        if not self.__check_job_health():
+            return _ConditionChecker._UNHEALTHY
         cms = self._get_job_metrics()
         valid = True
         progress = True
@@ -746,6 +766,10 @@ class _ConditionChecker(object):
                 condition_states[cn] = 'Valid'
 
         return (valid, fail, progress, condition_states)
+
+    def __check_job_health(self):
+        self.job.refresh()
+        return self.job.health == 'healthy'
 
     def _find_job(self):
         instance = self._sc.get_instance(id=self._instance_id)
