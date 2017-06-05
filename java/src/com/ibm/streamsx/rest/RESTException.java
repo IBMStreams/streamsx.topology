@@ -11,6 +11,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 
+import com.ibm.streamsx.rest.RESTErrorMessage;
+
 /**
  * Exception for REST api wrappers
  */
@@ -25,17 +27,27 @@ public class RESTException extends IOException {
      * @param code
      *            - error message code (matches HTTP response codes)
      *
-     * @return a {@link RESTException} created from a code and an IBM Streams Message
+     * @return a {@link RESTException} created from a code and an IBM Streams
+     *         Message
      */
     public static final RESTException create(int code, String streamsMessage) {
-        RESTErrorMessage error = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(streamsMessage,
-                RESTErrorMessage.class);
-        return new RESTException(code, error);
+        RESTErrorMessage error = null;
+        RESTException rcException;
+        try {
+            error = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(streamsMessage,
+                    RESTErrorMessage.class);
+            rcException = new RESTException(code, error);
+        } catch (IllegalStateException e) {
+            // chances are this is a 404 http error with no streams message but
+            // something else
+            rcException = new RESTException(code, streamsMessage);
+        }
+        return rcException;
     }
 
     private RESTException(int code, RESTErrorMessage error) {
         super(error.getMessage());
-        status = code; 
+        status = code;
         this.error = error;
     }
 
@@ -43,10 +55,11 @@ public class RESTException extends IOException {
      * Customized exception that can provide more information on REST errors
      * 
      * @param code
-     *            - error message code (currently will contain only HTTP response codes)
+     *            - error message code (currently will contain only HTTP
+     *            response codes)
      */
     public RESTException(int code) {
-        super("HTTP error:" + code );
+        super("HTTP code:" + code);
         status = code;
     }
 
@@ -89,7 +102,7 @@ public class RESTException extends IOException {
      */
 
     public String getStreamsErrorMessageId() {
-        String id = null ;
+        String id = null;
         if (error != null) {
             id = error.getMessageId();
         }
