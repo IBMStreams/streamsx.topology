@@ -158,11 +158,11 @@ public class ProcessingElement {
      * 
      * @return the health indicator that contains one of the following values:
      *         <ul>
-     *         <li>healthy
-     *         <li>partiallyHealthy
-     *         <li>partiallyUnhealthy
-     *         <li>unhealthy
-     *         <li>unknown
+     *         <li>healthy</li>
+     *         <li>partiallyHealthy</li>
+     *         <li>partiallyUnhealthy</li>
+     *         <li>unhealthy</li>
+     *         <li>unknown</li>
      *         </ul>
      */
     public String getHealth() {
@@ -202,10 +202,10 @@ public class ProcessingElement {
      * 
      * @return the optional connection status that contains one of the following values:
      *         <ul>
-     *         <li>connected
-     *         <li>disconnected
-     *         <li>partiallyConnected
-     *         <li>unknown
+     *         <li>connected</li>
+     *         <li>disconnected</li>
+     *         <li>partiallyConnected</li>
+     *         <li>unknown</li>
      *         </ul>
      */
     public String getOptionalConnections() {
@@ -227,10 +227,10 @@ public class ProcessingElement {
      * 
      * @return the pending trace level change that contains one of the following values:
      *         <ul>
-     *         <li>off
-     *         <li>debug
-     *         <li>error
-     *         <li>trace
+     *         <li>off</li>
+     *         <li>debug</li>
+     *         <li>error</li>
+     *         <li>trace</li>
      *         </ul>
      *         a null value indicates no pending change to the trace level
      */
@@ -262,10 +262,10 @@ public class ProcessingElement {
      * 
      * @return required connection status that contains one of the following values:
      *         <ul>
-     *         <li>connected
-     *         <li>disconnected
-     *         <li>partiallyConnected
-     *         <li>unknown
+     *         <li>connected</li>
+     *         <li>disconnected</li>
+     *         <li>partiallyConnected</li>
+     *         <li>unknown</li>
      *         </ul>
      */
     public String getRequiredConnections() {
@@ -322,10 +322,10 @@ public class ProcessingElement {
      * 
      * @return the current tracing level that contains one of the following values:
      *         <ul>
-     *         <li>off
-     *         <li>debug
-     *         <li>error
-     *         <li>trace
+     *         <li>off</li>
+     *         <li>debug</li>
+     *         <li>error</li>
+     *         <li>trace</li>
      *         </ul>
      */
     public String getTracingLevel() {

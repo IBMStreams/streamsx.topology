@@ -155,11 +155,11 @@ public class Instance {
      *
      * @return the summarized status that contains one of the following values:
      * <ul>
-     * <li>healthy
-     * <li>partiallyHealthy
-     * <li>partiallyUnhealthy
-     * <li>unhealthy
-     * <li>unknown
+     * <li>healthy</li>
+     * <li>partiallyHealthy</li>
+     * <li>partiallyUnhealthy</li>
+     * <li>unhealthy</li>
+     * <li>unknown</li>
      * </ul>
      * 
      */
@@ -208,14 +208,14 @@ public class Instance {
      *
      * @return the instance status that contains one of the following values:
      * <ul>
-     * <li>running
-     * <li>failed
-     * <li>stopped
-     * <li>partiallyFailed
-     * <li>partiallyRunning
-     * <li>starting
-     * <li>stopping
-     * <li>unknown
+     * <li>running</li>
+     * <li>failed</li>
+     * <li>stopped</li>
+     * <li>partiallyFailed</li>
+     * <li>partiallyRunning</li>
+     * <li>starting</li>
+     * <li>stopping</li>
+     * <li>unknown</li>
      * </ul>
      * 
      */
