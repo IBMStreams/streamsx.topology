@@ -8,7 +8,7 @@ _PRIMITIVES = ['boolean', 'blob', 'int8', 'int16', 'int32', 'int64',
                  'uint8', 'uint16', 'uint32', 'uint64',
                  'float32', 'float64',
                  'complex32', 'complex64',
-                 'timestamp'
+                 'timestamp', 'xml'
                ]
 
 _COLLECTIONS = ['list', 'set']
@@ -17,6 +17,13 @@ def random_type(depth):
     r = random.random()
     if r < 0.10 and depth < 3:
         return random_schema(depth=depth)
+    elif r < 0.2:
+         c = 'map<'
+         c += random_type(depth)
+         c += ','
+         c += random_type(depth)
+         c += '>'
+         return c
     elif r < 0.35:
          c = random.choice(_COLLECTIONS)
          c += '<'
@@ -68,6 +75,11 @@ class TestSchema(unittest.TestCase):
                   self.assertEqual(1, len(p._type))
                   self.assertIsInstance(p._type[0][0], tuple)
                   self.assertEqual('c', p._type[0][1])
+
+    def test_collections(self):
+        typ = 'map<int32, complex64>'
+        p = _SchemaParser('tuple<' + typ + ' m>')
+        p._parse()
 
     def test_nested_tuple(self):
       p = _SchemaParser('tuple<int32 a, tuple<int64 b, complex32 c, float32 d> e>')
