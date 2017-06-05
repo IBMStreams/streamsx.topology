@@ -62,10 +62,10 @@ public class Metric {
      * 
      * @return the metric kind that contains one of the following values:
      *         <ul>
-     *         <li>counter
-     *         <li>guage
-     *         <li>time
-     *         <li>unknown
+     *         <li>counter</li>
+     *         <li>guage</li>
+     *         <li>time</li>
+     *         <li>unknown</li>
      *         </ul>
      */
     public String getMetricKind() {
@@ -77,9 +77,9 @@ public class Metric {
      * 
      * @return the metric type that contains one of the following values:
      *         <ul>
-     *         <li>system
-     *         <li>custom
-     *         <li>unknown
+     *         <li>system</li>
+     *         <li>custom</li>
+     *         <li>unknown</li>
      *         </ul>
      */
     public String getMetricType() {

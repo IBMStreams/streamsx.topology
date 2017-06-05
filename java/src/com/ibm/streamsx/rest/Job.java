@@ -113,8 +113,8 @@ public class Job {
      * 
      * @return the result of the cancel method
      *         <ul>
-     *         <li>true if this job is cancelled
-     *         <li>false if this job still exists
+     *         <li>true if this job is cancelled</li>
+     *         <li>false if this job still exists</li>
      *         </ul>
      * @throws IOException
      * @throws Exception
@@ -138,11 +138,11 @@ public class Job {
      * 
      * @return the health indicator containing one of the following values:
      *         <ul>
-     *         <li>healthy
-     *         <li>partiallyHealthy
-     *         <li>partiallyUnhealthy
-     *         <li>unhealthy
-     *         <li>unknown
+     *         <li>healthy</li>
+     *         <li>partiallyHealthy</li>
+     *         <li>partiallyUnhealthy</li>
+     *         <li>unhealthy</li>
+     *         <li>unknown</li>
      *         </ul>
      *
      */
@@ -212,10 +212,10 @@ public class Job {
      * 
      * @return the job status that contains one of the following values:
      *         <ul>
-     *         <li>canceling
-     *         <li>running
-     *         <li>canceled
-     *         <li>unknown
+     *         <li>canceling</li>
+     *         <li>running</li>
+     *         <li>canceled</li>
+     *         <li>unknown</li>
      *         </ul>
      */
     public String getStatus() {
