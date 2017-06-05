@@ -23,7 +23,7 @@ import com.google.gson.JsonParser;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 /**
- * Basic connection to a Streaming Analytics Instance
+ * Connection to a Streaming Analytics Instance
  *
  */
 public class StreamingAnalyticsConnection extends StreamsConnection {
@@ -34,7 +34,7 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
     private String instanceId;
 
     /**
-     * Basic connection to IBM Streaming Analytics service
+     * Connection to IBM Streaming Analytics service
      *
      * @param credentialsFile
      *            Credentials from the Streaming Analytics File
@@ -47,7 +47,7 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
     }
 
     /**
-     * Basic connection to IBM Streaming Analytics service
+     * Connection to IBM Streaming Analytics service
      *
      * @param credentialsFile
      *            Credentials from the Streaming Analytics File
@@ -113,9 +113,8 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
     }
 
     /**
-     * Streaming Analytics only allows one instance per service, so each
-     * connection can only ever access a single instance that we have known
-     * about since object creation
+     * Gets the {@link Instance IBM Streams Instance} object for the Streaming
+     * Analytics service.
      *
      * @return an {@link Instance IBM Streams Instance} associated with this
      *         connection
@@ -133,8 +132,8 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
      *            string indicating the job id to be canceled
      * @return boolean indicating
      *         <ul>
-     *         <li>true - if job is cancelled
-     *         <li>false - if the job still exists
+     *         <li>true - if job is cancelled</li>
+     *         <li>false - if the job still exists</li>
      *         </ul>
      * @throws IOException
      */

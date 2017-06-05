@@ -22,13 +22,15 @@ import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
  * The example connects to the streams instance and gets a list of resources.
  * The objects printed out include all the fields known in the JSON object per
  * the REST api however, the classes may not have accessors for all objects.
+ * </p>
  *
  * <p>
  * The following arguments are required for the sample:
  * <ul>
- * <li>credentials (as an absolute file path, or JSON string)
- * <li>serviceName identifiying the credentials to use in the file
+ * <li>credentials (as an absolute file path, or JSON string)</li>
+ * <li>serviceName identifiying the credentials to use in the file</li>
  * </ul>
+ * </p>
  *
  */
 public class StreamingAnalyticsConnectionSample {

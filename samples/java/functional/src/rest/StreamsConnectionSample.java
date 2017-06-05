@@ -24,15 +24,17 @@ import com.ibm.streamsx.rest.StreamsConnection;
  * The example connects to the streams instance and gets a list of resources The
  * objects printed out include all the fields known in the JSON object per the
  * REST api however, the classes may not have accessors for all objects
+ * </p>
  *
  * <p>
  * The following arguments are required for the sample:
  * <ul>
- * <li>userName
- * <li>password
- * <li>rest url for the IBM Streams Instance (streamstool geturl --api)
- * <li>instance name
+ * <li>userName</li>
+ * <li>password</li>
+ * <li>rest url for the IBM Streams Instance (streamstool geturl --api)</li>
+ * <li>instance name</li>
  * </ul>
+ * </p>
  */
 public class StreamsConnectionSample {
 

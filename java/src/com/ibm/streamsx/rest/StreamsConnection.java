@@ -33,7 +33,7 @@ import org.apache.http.util.EntityUtils;
 import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
 
 /**
- * Basic connection to IBM Streams
+ * Connection to IBM Streams
  */
 public class StreamsConnection {
 
@@ -47,7 +47,7 @@ public class StreamsConnection {
     protected Executor executor;
 
     /**
-     * Basic connection to IBM Streams
+     * Connection to IBM Streams
      * 
      * @param userName
      *            String representing the userName to connect to the instance
@@ -82,7 +82,7 @@ public class StreamsConnection {
     }
 
     /**
-     * Basic connection to IBM Streams
+     * Connection to IBM Streams
      * 
      * @param userName
      *            String representing the userName to connect to the instance
@@ -174,14 +174,14 @@ public class StreamsConnection {
      * 
      * @param allowInsecure
      *            <ul>
-     *            <li>true - disables checking
-     *            <li>false - enables checking (default)
+     *            <li>true - disables checking</li>
+     *            <li>false - enables checking (default)</li>
      *            </ul>
      * @return a boolean indicating the state of the connection after this
      *         method was called.
      *         <ul>
-     *         <li>true - if checking is disabled
-     *         <li>false - if checking is enabled
+     *         <li>true - if checking is disabled</li>
+     *         <li>false - if checking is enabled</li>
      *         </ul>
      */
     public boolean allowInsecureHosts(boolean allowInsecure) {
@@ -217,8 +217,8 @@ public class StreamsConnection {
      *            string identifying the job to be cancelled
      * @return a boolean indicating
      *         <ul>
-     *         <li>true if the jobId is cancelled
-     *         <li>false if the jobId did not get cancelled
+     *         <li>true if the jobId is cancelled</li>
+     *         <li>false if the jobId did not get cancelled</li>
      *         </ul>
      * @throws Exception
      */
