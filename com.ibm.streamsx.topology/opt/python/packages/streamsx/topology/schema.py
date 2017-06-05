@@ -10,6 +10,9 @@ and an attribute is a named value of a specific type.
 The supported types are defined by IBM Streams Streams Processing Language (SPL).
 """
 import enum
+import io
+import token
+import tokenize
 
 def _stream_schema(schema):
     if isinstance(schema, StreamSchema):
@@ -192,3 +195,100 @@ class CommonSchema(enum.Enum):
 
     def __str__(self):
         return str(self.schema())
+
+_SPL_PRIMITIVE_TYPES = { 'boolean',
+                         'uint8', 'uint16', 'uint32', 'uint64',
+                         'int8', 'int16', 'int32', 'int64',
+                         'float32', 'float64',
+                         'complex32', 'complex64',
+                         'rstring', 'ustring',
+                         'timestamp', 'blob'}
+
+_SPL_COLLECTION_TYPES = { 'list', 'set'}
+
+class _SchemaParser(object):
+    def __init__(self, schema):
+        self.schema = schema
+        self._type = []
+
+    def _parse_error(self, token):
+        raise SyntaxError("Invalid schema:" + self.schema + " token " + str(token))
+
+    def _req_op(self, tokens, which):
+        token = next(tokens)
+        if token.type != tokenize.OP or which != token.string:
+            self._parse_error(token)
+
+    def _parse(self):
+        schema = self.schema.replace(">>", ' > > ')
+        schema = schema.replace('<<', ' < < ')
+
+        ios = io.StringIO(schema).readline
+        tokens = tokenize.generate_tokens(ios)
+        self._parse_tuple(self._type, next(tokens), tokens)
+        endtoken = next(tokens)
+        if not endtoken.type == token.ENDMARKER:
+            self._parse_error(endtoken)
+
+    def _parse_tuple(self, _type, token, tokens):
+        if token.type != tokenize.NAME or 'tuple' != token.string:
+            self._parse_error(token)
+        self._req_op(tokens, '<')
+    
+        token = None
+        while True:
+            token = next(tokens)
+            if token.type == tokenize.OP:
+                if token.string == ',':
+                    continue
+                if token.string == '>':
+                    break
+                self._parse_error(token)
+
+            if token.type == tokenize.NAME:
+                self._parse_attribute_type(_type, token, tokens)
+                continue
+
+            self._parse_error(token)
+
+    def _parse_element_type(self, _type, collection_type, tokens):
+        _element_type = []
+        self._parse_attribute_type(_element_type, next(tokens), tokens)
+        self._req_op(tokens, '>')
+        _type.append((collection_type.string, _element_type[0]))
+
+
+    def _parse_type(self, attr_type, tokens):
+        if attr_type.type != tokenize.NAME:
+            self._parse_error(attr_type)
+
+        if 'tuple' == attr_type.string:
+            nested_tuple = []
+            self._parse_tuple(nested_tuple, attr_type, tokens)
+            return ('tuple', nested_tuple)
+
+        if attr_type.string in _SPL_PRIMITIVE_TYPES:
+            return attr_type.string
+
+        if attr_type.string in _SPL_COLLECTION_TYPES:
+            self._req_op(tokens, '<')
+            element_type = self._parse_type(next(tokens), tokens)
+            self._req_op(tokens, '>')
+            return (attr_type.string, element_type)
+
+        self._parse_error(attr_type)
+
+    def _parse_attribute_type(self, _type, attr_type, tokens):
+        if attr_type.type != tokenize.NAME:
+            self._parse_error(attr_type)
+
+        attr_type = self._parse_type(attr_type, tokens)
+
+        attr = (attr_type, self._parse_attribute_name(tokens))
+        _type.append(attr)
+
+    def _parse_attribute_name(self, tokens):
+        attr_name = next(tokens)
+        if attr_name.type != tokenize.NAME:
+            self._parse_error(attr_name)
+        return attr_name.string
