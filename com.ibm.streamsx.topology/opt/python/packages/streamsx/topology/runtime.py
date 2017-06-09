@@ -66,6 +66,13 @@ def _get_callable(f):
             return ci
     raise TypeError("Class is not callable" + type(ci))
 
+def _verify_tuple(rv):
+    if rv is None:
+        return None
+    if isinstance(rv, tuple):
+        return rv
+    raise TypeError("Function must return a tuple")
+
 import inspect
 class _FunctionalCallable(object):
     def __init__(self, callable):
@@ -126,6 +133,18 @@ class _PickleInStringOut(_FunctionalCallable):
             return None
         return str(rv)
 
+class _PickleInTupleOut(_FunctionalCallable):
+    def __call__(self, t, pm=None):
+        if pm is not None:
+            t = pickle.loads(t)
+        rv =  self._callable(t)
+        return _verify_tuple(rv)
+
+class _ObjectInTupleOut(_FunctionalCallable):
+    def __call__(self, t):
+        rv =  self._callable(t)
+        return _verify_tuple(rv)
+
 class _ObjectInPickleOut(_FunctionalCallable):
     def __call__(self, tuple):
         rv =  self._callable(tuple)
@@ -162,6 +181,11 @@ class _JSONInStringOut(_FunctionalCallable):
         if rv is None:
             return None
         return str(rv)
+
+class _JSONInTupleOut(_FunctionalCallable):
+    def __call__(self, tuple):
+        rv =  self._callable(json.loads(tuple))
+        return _verify_tuple(rv)
 
 # Given a callable 'callable', return a function
 # that depickles the input and then calls 'callable'
@@ -249,6 +273,9 @@ def json_in__string_out(callable):
 def json_in__object_out(callable):
     return _JSONInObjectOut(callable)
 
+def json_in__dict_out(callable):
+    return _JSONInTupleOut(callable)
+
 def string_in__pickle_out(callable):
     return _ObjectInPickleOut(callable)
 
@@ -257,6 +284,9 @@ def string_in__object_out(callable):
 
 def string_in__json_out(callable):
     return _ObjectInJSONOut(callable)
+
+def string_in__dict_out(callable):
+    return _ObjectInTupleOut(callable)
 
 def dict_in__pickle_out(callable):
     return _ObjectInPickleOut(callable)
@@ -270,6 +300,8 @@ def dict_in__json_out(callable):
 def dict_in__string_out(callable):
     return _ObjectInStringOut(callable)
 
+def dict_in__dict_out(callable):
+    return _ObjectInTupleOut(callable)
 
 ##################################################
 
@@ -289,6 +321,8 @@ def pickle_in__string_out(callable):
 def pickle_in__object_out(callable):
     return _PickleInObjectOut(callable)
 
+def pickle_in__dict_out(callable):
+    return _PickleInTupleOut(callable)
 
 class _IterablePickleOut(_FunctionalCallable):
     def __init__(self, callable):

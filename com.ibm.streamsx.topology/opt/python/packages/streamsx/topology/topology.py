@@ -918,6 +918,37 @@ class Stream(object):
         self.oport.operator.colocate(css.oport.operator, action)
         return css
 
+    def as_structured(self, func, schema, name=None):
+        """
+        Declares a structured stream from this stream.
+
+        For each tuple on this stream ``func(tuple)`` is called.
+        If the result is not `None` then the result is converted
+        into a structured tuple and be submitted on the returned stream.
+        If the result is `None` then no tuple submission will occur.
+
+        The stream's structure is defined by `schema`. The result
+        from ``func(tuple)`` is converted to a structured tuple
+        as follows:
+
+        Tuple 
+            Each attribute in the structured tuple is set by position
+            from the result tuple. If the value in the tuple is
+            `None` or not present then the attribute has its default value.
+
+        Args:
+            func: A callable that takes a single parameter for the tuple.
+            schema(StreamSchema): Schema for the structured stream.
+            name(str): Name of the resulting stream.
+                When `None` defaults to a generated name.
+
+        .. versionadded:: 1.7
+
+        Returns:
+            Stream: Structured stream transformed from this stream.
+        """
+        return self._map(func, schema, name=name)
+
 
 class View(object):
     """
