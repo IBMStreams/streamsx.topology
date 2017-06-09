@@ -5,6 +5,7 @@
 package com.ibm.streamsx.rest;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
@@ -50,11 +51,25 @@ public class Operator {
     @Expose
     private String self;
 
-    /**
-     * this function is not intended for external consumption
-     */
-    void setConnection(final StreamsConnection sc) {
+    private void setConnection(final StreamsConnection sc) {
         connection = sc;
+    }
+
+    static final List<Operator> getOperatorList(StreamsConnection sc, String operatorsList) {
+        List<Operator> opList;
+        OperatorArray opArray;
+        try {
+            opArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(operatorsList,
+                    OperatorArray.class);
+
+            opList = opArray.operators;
+            for (Operator op : opList) {
+                op.setConnection(sc);
+            }
+        } catch (IllegalStateException e) {
+            opList = new ArrayList<Operator>();
+        }
+        return opList;
     }
 
     /**
@@ -66,7 +81,7 @@ public class Operator {
     public List<Metric> getMetrics() throws IOException {
 
         String sReturn = connection.getResponseString(metrics);
-        List<Metric> lMetrics = new MetricsArray(connection, sReturn).getMetrics();
+        List<Metric> lMetrics = Metric.getMetricList(connection, sReturn);
 
         return lMetrics;
     }
@@ -89,7 +104,7 @@ public class Operator {
      */
     public List<InputPort> getInputPorts() throws IOException {
         String sReturn = connection.getResponseString(inputPorts);
-        List<InputPort> lInPorts = new InputPortsArray(connection, sReturn).getInputPorts();
+        List<InputPort> lInPorts = InputPort.getInputPortList(connection, sReturn);
         return lInPorts;
     }
 
@@ -119,7 +134,7 @@ public class Operator {
      */
     public List<OutputPort> getOutputPorts() throws IOException {
         String sReturn = connection.getResponseString(outputPorts);
-        List<OutputPort> lOutPorts = new OutputPortsArray(connection, sReturn).getOutputPorts();
+        List<OutputPort> lOutPorts = OutputPort.getOutputPortList(connection, sReturn);
         return lOutPorts;
     }
 
@@ -136,4 +151,14 @@ public class Operator {
     public String toString() {
         return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
+
+    private static class OperatorArray {
+        @Expose
+        private ArrayList<Operator> operators;
+        @Expose
+        private String resourceType;
+        @Expose
+        private int total;
+    }
+
 }

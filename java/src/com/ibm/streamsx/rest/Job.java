@@ -79,20 +79,31 @@ public class Job {
     @Expose
     private String views;
 
-    /**
-     * this function is not intended for external consumption
-     */
     static final Job create(StreamsConnection sc, String gsonJobString) {
         Job job = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(gsonJobString, Job.class);
         job.setConnection(sc);
         return job;
     }
 
-    /**
-     * this function is not intended for external consumption
-     */
-    void setConnection(final StreamsConnection sc) {
+    private void setConnection(final StreamsConnection sc) {
         connection = sc;
+    }
+
+    static final List<Job> getJobList(StreamsConnection sc, String gsonJobList) {
+        List<Job> jList;
+        JobArray jobsArray;
+        try {
+            jobsArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(gsonJobList,
+                    JobArray.class);
+
+            jList = jobsArray.jobs;
+            for (Job job : jList) {
+                job.setConnection(sc);
+            }
+        } catch (IllegalStateException e) {
+            jList = new ArrayList<Job>();
+        }
+        return jList;
     }
 
     /**
@@ -104,8 +115,8 @@ public class Job {
     public List<Operator> getOperators() throws IOException {
         String sReturn = connection.getResponseString(operators);
 
-        List<Operator> oList = new OperatorsArray(connection, sReturn).getOperators();
-        return oList;
+        List<Operator> opList = Operator.getOperatorList(connection, sReturn);
+        return opList;
     }
 
     /**
@@ -244,4 +255,14 @@ public class Job {
     public String toString() {
         return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
+
+    private static class JobArray {
+        @Expose
+        public ArrayList<Job> jobs;
+        @Expose
+        public String resourceType;
+        @Expose
+        public int total;
+    }
+
 }

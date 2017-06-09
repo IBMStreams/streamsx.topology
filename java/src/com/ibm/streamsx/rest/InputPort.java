@@ -5,6 +5,7 @@
 package com.ibm.streamsx.rest;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
@@ -40,11 +41,25 @@ public class InputPort {
     @Expose
     private String self;
 
-    /**
-     * this function is not intended for external consumption
-     */
-    void setConnection(final StreamsConnection sc) {
+    private void setConnection(final StreamsConnection sc) {
         connection = sc;
+    }
+
+    static final List<InputPort> getInputPortList(StreamsConnection sc, String inputPortListString) {
+        List<InputPort> ipList;
+        InputPortArray ipArray;
+        try {
+            ipArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(inputPortListString,
+                    InputPortArray.class);
+
+            ipList = ipArray.inputPorts;
+            for (InputPort ip : ipList) {
+                ip.setConnection(sc);
+            }
+        } catch (IllegalStateException e) {
+            ipList = new ArrayList<InputPort>();
+        }
+        return ipList;
     }
 
     /**
@@ -63,7 +78,7 @@ public class InputPort {
      */
     public List<Metric> getMetrics() throws IOException {
         String sReturn = connection.getResponseString(metrics);
-        List<Metric> sMetrics = new MetricsArray(connection, sReturn).getMetrics();
+        List<Metric> sMetrics = Metric.getMetricList(connection, sReturn);
         return sMetrics;
     }
 
@@ -89,4 +104,14 @@ public class InputPort {
     public String toString() {
         return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
+
+    private static class InputPortArray {
+        @Expose
+        private ArrayList<InputPort> inputPorts;
+        @Expose
+        private String resourceType;
+        @Expose
+        private int total;
+    }
+
 }

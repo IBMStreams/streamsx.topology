@@ -78,9 +78,6 @@ public class ProcessingElement {
     @Expose
     private String tracingLevel;
 
-    /**
-     * this function is not intended for external consumption
-     */
     void setConnection(final StreamsConnection sc) {
         connection = sc;
     }
@@ -103,7 +100,7 @@ public class ProcessingElement {
      */
     public List<Metric> getMetrics() throws IOException {
         String sReturn = connection.getResponseString(metrics);
-        List<Metric> lMetrics = new MetricsArray(connection, sReturn).getMetrics();
+        List<Metric> lMetrics = Metric.getMetricList(connection, sReturn);
         return lMetrics;
     }
 
@@ -115,7 +112,7 @@ public class ProcessingElement {
      */
     public List<InputPort> getInputPorts() throws IOException {
         String sReturn = connection.getResponseString(inputPorts);
-        List<InputPort> lInPorts = new InputPortsArray(connection, sReturn).getInputPorts();
+        List<InputPort> lInPorts = InputPort.getInputPortList(connection, sReturn);
         return lInPorts;
     }
 
@@ -127,7 +124,7 @@ public class ProcessingElement {
      */
     public List<Operator> getOperators() throws IOException {
         String sReturn = connection.getResponseString(operators);
-        List<Operator> oList = new OperatorsArray(connection, sReturn).getOperators();
+        List<Operator> oList = Operator.getOperatorList(connection, sReturn);
         return oList;
     }
 
@@ -140,7 +137,7 @@ public class ProcessingElement {
      */
     public List<OutputPort> getOutputPorts() throws IOException {
         String sReturn = connection.getResponseString(outputPorts);
-        List<OutputPort> lOutPorts = new OutputPortsArray(connection, sReturn).getOutputPorts();
+        List<OutputPort> lOutPorts = OutputPort.getOutputPortList(connection, sReturn);
         return lOutPorts;
     }
 
@@ -200,7 +197,8 @@ public class ProcessingElement {
     /**
      * Gets the status of optional connections for this processing element.
      * 
-     * @return the optional connection status that contains one of the following values:
+     * @return the optional connection status that contains one of the following
+     *         values:
      *         <ul>
      *         <li>connected</li>
      *         <li>disconnected</li>
@@ -225,7 +223,8 @@ public class ProcessingElement {
      * Describes a pending change to the granularity of the trace information
      * that is stored for this processing element.
      * 
-     * @return the pending trace level change that contains one of the following values:
+     * @return the pending trace level change that contains one of the following
+     *         values:
      *         <ul>
      *         <li>off</li>
      *         <li>debug</li>
@@ -260,7 +259,8 @@ public class ProcessingElement {
     /**
      * Status of the required connections for this processing element.
      * 
-     * @return required connection status that contains one of the following values:
+     * @return required connection status that contains one of the following
+     *         values:
      *         <ul>
      *         <li>connected</li>
      *         <li>disconnected</li>
@@ -320,7 +320,8 @@ public class ProcessingElement {
     /**
      * Gets the granularity of the tracing level for this processing element
      * 
-     * @return the current tracing level that contains one of the following values:
+     * @return the current tracing level that contains one of the following
+     *         values:
      *         <ul>
      *         <li>off</li>
      *         <li>debug</li>
