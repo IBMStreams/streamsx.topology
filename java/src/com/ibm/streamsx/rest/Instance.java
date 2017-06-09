@@ -6,6 +6,7 @@ package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
@@ -95,7 +96,7 @@ public class Instance {
             }
 
         } catch (IllegalStateException e) {
-            iList = new ArrayList<Instance>();
+            iList = Collections.<Instance>emptyList();
         }
         return iList;
     }

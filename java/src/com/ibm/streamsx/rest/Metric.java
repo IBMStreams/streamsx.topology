@@ -5,6 +5,7 @@
 package com.ibm.streamsx.rest;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
@@ -50,7 +51,7 @@ public class Metric {
                 m.setConnection(sc);
             }
         } catch (IllegalStateException e) {
-            mList = new ArrayList<Metric>();
+            mList = Collections.<Metric>emptyList();
         }
         return mList;
     }

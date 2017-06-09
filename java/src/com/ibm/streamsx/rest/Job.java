@@ -10,6 +10,7 @@ import com.google.gson.annotations.Expose;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -101,7 +102,7 @@ public class Job {
                 job.setConnection(sc);
             }
         } catch (IllegalStateException e) {
-            jList = new ArrayList<Job>();
+            jList = Collections.<Job>emptyList();
         }
         return jList;
     }

@@ -6,6 +6,7 @@ package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
@@ -57,7 +58,7 @@ public class InputPort {
                 ip.setConnection(sc);
             }
         } catch (IllegalStateException e) {
-            ipList = new ArrayList<InputPort>();
+            ipList = Collections.<InputPort>emptyList();
         }
         return ipList;
     }
