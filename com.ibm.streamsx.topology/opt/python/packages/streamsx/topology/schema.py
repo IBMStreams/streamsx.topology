@@ -232,7 +232,8 @@ class StreamSchema(object) :
 
     _NAMED_SCHEMAS = {}
 
-    def namedtuple(self):
+    def _namedtuple(self):
+        """WIP - Gets a named tuple that matches the schema."""
         if self.__nt is not None:
             return self.__nt
         if self in StreamSchema._NAMED_SCHEMAS:

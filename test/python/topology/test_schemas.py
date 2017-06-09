@@ -116,8 +116,8 @@ class TestSchema(unittest.TestCase):
     def test_named_schema(self):
         s = _sch.StreamSchema('tuple<int32 a, boolean alert>')
 
-        nt1 = s.namedtuple()
-        nt2 = s.namedtuple()
+        nt1 = s._namedtuple()
+        nt2 = s._namedtuple()
         self.assertIs(nt1, nt2)
 
         t = nt1(345, False)
