@@ -9,6 +9,7 @@ and an attribute is a named value of a specific type.
 
 The supported types are defined by IBM Streams Streams Processing Language (SPL).
 """
+import collections
 import enum
 import io
 import token
@@ -125,12 +126,19 @@ class _SchemaParser(object):
             self._parse_error(attr_name)
         return attr_name.string
 
+
 def _stream_schema(schema):
     if isinstance(schema, StreamSchema):
         return schema
     if isinstance(schema, CommonSchema):
         return schema
     return StreamSchema(str(schema))
+
+def _attribute_names(types):
+    names = []
+    for attr in types:
+        names.append(attr[1])
+    return names
 
 class StreamSchema(object) :
     """Defines a schema for a structured stream.
@@ -162,6 +170,7 @@ class StreamSchema(object) :
         schema = schema.strip()
         self.__spl_type = not schema.startswith("tuple<")
         self.__schema=schema
+        self.__nt = None
         if not self.__spl_type:
             parser = _SchemaParser(schema)
             self._types = parser._parse()
@@ -220,6 +229,19 @@ class StreamSchema(object) :
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    _NAMED_SCHEMAS = {}
+
+    def namedtuple(self):
+        if self.__nt is not None:
+            return self.__nt
+        if self in StreamSchema._NAMED_SCHEMAS:
+             return StreamSchema._NAMED_SCHEMAS[self]
+
+        name = "Structured"
+        self.__nt = collections.namedtuple(name, _attribute_names(self._types))
+        StreamSchema._NAMED_SCHEMAS[self] = self.__nt
+        return self.__nt
 
 @enum.unique
 class CommonSchema(enum.Enum):

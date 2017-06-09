@@ -2,8 +2,10 @@
 # Copyright IBM Corp. 2016
 import unittest
 import random
+import collections
 
 from streamsx.topology.schema import _SchemaParser
+import streamsx.topology.schema as _sch
 _PRIMITIVES = ['boolean', 'blob', 'int8', 'int16', 'int32', 'int64',
                  'uint8', 'uint16', 'uint32', 'uint64',
                  'float32', 'float64',
@@ -110,4 +112,16 @@ class TestSchema(unittest.TestCase):
             schema = random_schema()
             p = _SchemaParser(schema)
             p._parse()
-  
+
+    def test_named_schema(self):
+        s = _sch.StreamSchema('tuple<int32 a, boolean alert>')
+
+        nt1 = s.namedtuple()
+        nt2 = s.namedtuple()
+        self.assertIs(nt1, nt2)
+
+        t = nt1(345, False)
+        self.assertEqual(345, t.a)
+        self.assertFalse(t.alert)
+        self.assertEqual(345, t[0])
+        self.assertFalse(t[1])
