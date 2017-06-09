@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -57,8 +58,8 @@ public class InputPort {
             for (InputPort ip : ipList) {
                 ip.setConnection(sc);
             }
-        } catch (IllegalStateException e) {
-            ipList = Collections.<InputPort>emptyList();
+        } catch (JsonSyntaxException e) {
+            ipList = Collections.<InputPort> emptyList();
         }
         return ipList;
     }

@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -95,8 +96,8 @@ public class Instance {
                 instance.setConnection(sc);
             }
 
-        } catch (IllegalStateException e) {
-            iList = Collections.<Instance>emptyList();
+        } catch (JsonSyntaxException e) {
+            iList = Collections.<Instance> emptyList();
         }
         return iList;
     }

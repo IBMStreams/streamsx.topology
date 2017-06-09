@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -50,8 +51,8 @@ public class Metric {
             for (Metric m : mList) {
                 m.setConnection(sc);
             }
-        } catch (IllegalStateException e) {
-            mList = Collections.<Metric>emptyList();
+        } catch (JsonSyntaxException e) {
+            mList = Collections.<Metric> emptyList();
         }
         return mList;
     }

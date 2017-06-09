@@ -4,16 +4,14 @@
  */
 package com.ibm.streamsx.rest;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.Expose;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.Expose;
 
 /**
  * An object describing an IBM Streams Job submitted within a specified instance
@@ -101,8 +99,8 @@ public class Job {
             for (Job job : jList) {
                 job.setConnection(sc);
             }
-        } catch (IllegalStateException e) {
-            jList = Collections.<Job>emptyList();
+        } catch (JsonSyntaxException e) {
+            jList = Collections.<Job> emptyList();
         }
         return jList;
     }
@@ -237,7 +235,7 @@ public class Job {
     /**
      * Gets the list of parameters that were submitted to this job
      * 
-     * @return List of parameters 
+     * @return List of parameters
      */
     public List<String> getSubmitParameters() {
         return submitParameters;

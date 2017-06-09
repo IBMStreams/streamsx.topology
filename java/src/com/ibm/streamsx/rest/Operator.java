@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -67,8 +68,8 @@ public class Operator {
             for (Operator op : opList) {
                 op.setConnection(sc);
             }
-        } catch (IllegalStateException e) {
-            opList = Collections.<Operator>emptyList();
+        } catch (JsonSyntaxException e) {
+            opList = Collections.<Operator> emptyList();
         }
         return opList;
     }

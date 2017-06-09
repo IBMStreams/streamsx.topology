@@ -6,9 +6,11 @@ package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -83,13 +85,20 @@ public class ProcessingElement {
     }
 
     final static List<ProcessingElement> getPEList(StreamsConnection sc, String peGSONList) {
-        ProcessingElementArray peArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
-                .fromJson(peGSONList, ProcessingElementArray.class);
+        List<ProcessingElement> peList;
+        try {
+            ProcessingElementArray peArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
+                    .fromJson(peGSONList, ProcessingElementArray.class);
 
-        for (ProcessingElement pe : peArray.pes) {
-            pe.setConnection(sc);
+            peList = peArray.pes;
+            for (ProcessingElement pe : peList) {
+                pe.setConnection(sc);
+            }
+        } catch (JsonSyntaxException e) {
+
+            peList = Collections.<ProcessingElement> emptyList();
         }
-        return peArray.pes;
+        return peList;
     }
 
     /**
