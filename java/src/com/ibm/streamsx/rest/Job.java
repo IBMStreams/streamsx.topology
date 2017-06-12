@@ -72,7 +72,7 @@ public class Job {
     @Expose
     private String status;
     @Expose
-    private ArrayList<String> submitParameters;
+    private ArrayList<JobSubmitParameters> submitParameters;
     @Expose
     private long submitTime;
     @Expose
@@ -233,11 +233,12 @@ public class Job {
     }
 
     /**
-     * Gets the list of parameters that were submitted to this job
+     * Gets the list of {@link JobSubmitParameters parameters} that were
+     * submitted to this job
      * 
-     * @return List of parameters
+     * @return List of (@link JobSubmitParameters job submission parameters}
      */
-    public List<String> getSubmitParameters() {
+    public List<JobSubmitParameters> getSubmitParameters() {
         return submitParameters;
     }
 
