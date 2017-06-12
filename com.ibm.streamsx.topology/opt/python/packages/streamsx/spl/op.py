@@ -16,7 +16,20 @@ a sensor reading with a sensor identifier, timestamp and value.
 A schema is defined using :py:class:`~streamsx.topology.schema.StreamSchema`.
 
 A Python topology application can take advantage of SPL operators
-by using streams with structured schemas.
+by using streams with structured schemas. A stream of Python objects
+can be converted to a structured stream using
+:py:meth:`~streamsx.topology.topology.Stream.map`
+with the `schema` parameter set::
+
+    # s is stream of Python objects representing a sensor
+    s = ...
+    
+    # map s to a structured stream using a lamda function
+    # for each sensor reading r a Python tuple is created
+    # with the required values matching the order of the
+    # structured schema.
+    s2 = s.map(lambda r : (r.sensor_id, r.reading_time, r.reading),
+         schema='tuple<rstring id, timestamp ts, float64 value>'
 
 An SPL operator is invoked in an application by creating an
 instance of:

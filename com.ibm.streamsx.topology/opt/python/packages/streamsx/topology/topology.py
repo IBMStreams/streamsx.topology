@@ -62,7 +62,7 @@ The schema for a Python Topology is either:
 * :py:const:`~streamsx.topology.schema.CommonSchema.String` - Each tuple is a Unicode string.
 * :py:const:`~streamsx.topology.schema.CommonSchema.Binary` - Each tuple is a blob.
 * :py:const:`~streamsx.topology.schema.CommonSchema.Json` - Each tuple is a Python dict that can be expressed as a JSON object.
-* Structured - A stream that is an ordered list of attributes, with each attribute having a fixed type (e.g. float64 or int32) and a name.
+* Structured - A stream that has a structured schema of a ordered list of attributes, with each attribute having a fixed type (e.g. float64 or int32) and a name. The schema of a structured stream is defined using :py:const:`~streamsx.topology.schema.StreamSchema`.
 
 Stream processing
 #################
@@ -530,27 +530,44 @@ class Stream(object):
         self.topology.graph.get_views().append(_view)
         return _view
 
-    def map(self, func, name=None):
+    def map(self, func, name=None, *, schema=None):
         """
         Maps each tuple from this stream into 0 or 1 tuples.
 
-        For each tuple on this stream ``func(tuple)`` is called.
-        If the result is not `None` then the result will be submitted
-        as a tuple on the returned stream. If the result is `None` then
+        For each tuple on this stream ``result = func(tuple)`` is called.
+        If `result` is not `None` then the result will be submitted
+        as a tuple on the returned stream. If `result` is `None` then
         no tuple submission will occur.
-        
+
+        By default the submitted tuple is `result` without modification
+        resulting in a stream of pickable Python objects. Setting the
+        `schema` parameter changes the type of the stream and
+        modifies each `result` before submission.
+
+        * :py:const:`~streamsx.topology.schema.CommonSchema.Python` - The defaullt:  `result` is submitted.
+        * :py:const:`~streamsx.topology.schema.CommonSchema.String` - A stream of strings: ``str(result)`` is submitted.
+        * :py:const:`~streamsx.topology.schema.CommonSchema.Json` - A stream of JSON objects: ``result`` must be convertable to a JSON object using `json` package.
+        * :py:const:`~streamsx.topology.schema.StreamSchema` - A structured stream. `result` must be a (Python) tuple. Each attribute in the structured tuple is set by position from `result`. If the value in `result` is `None` or not present then the attribute has the default value for its type.
+
         Args:
             func: A callable that takes a single parameter for the tuple.
             name(str): Name of the mapped stream, defaults to a generated name.
+            schema(StreamSchema): Schema of the resulting stream.
 
         Returns:
             Stream: A stream containing tuples mapped by `func`.
+
+        .. versionadded:: 1.7 `schema` argument added to allow conversion to
+            a structured stream.
         """
-        return self._map(func, schema=CommonSchema.Python, name=name)
+        if schema is None:
+             schema = CommonSchema.Python
+     
+        return self._map(func, schema=schema, name=name)
 
     def transform(self, func, name=None):
         """
-        Equivalent to calling :py:meth:`map`.
+        Equivalent to calling :py:meth:``map(func, name)``.
         """
         return self.map(func, name)
              
@@ -917,37 +934,6 @@ class Stream(object):
         css = self._map(func, schema, name=name)
         self.oport.operator.colocate(css.oport.operator, action)
         return css
-
-    def as_structured(self, func, schema, name=None):
-        """
-        Declares a structured stream from this stream.
-
-        For each tuple on this stream ``func(tuple)`` is called.
-        If the result is not `None` then the result is converted
-        into a structured tuple and be submitted on the returned stream.
-        If the result is `None` then no tuple submission will occur.
-
-        The stream's structure is defined by `schema`. The result
-        from ``func(tuple)`` is converted to a structured tuple
-        as follows:
-
-        Tuple 
-            Each attribute in the structured tuple is set by position
-            from the result tuple. If the value in the tuple is
-            `None` or not present then the attribute has its default value.
-
-        Args:
-            func: A callable that takes a single parameter for the tuple.
-            schema(StreamSchema): Schema for the structured stream.
-            name(str): Name of the resulting stream.
-                When `None` defaults to a generated name.
-
-        .. versionadded:: 1.7
-
-        Returns:
-            Stream: Structured stream transformed from this stream.
-        """
-        return self._map(func, schema, name=name)
 
 
 class View(object):

@@ -23,7 +23,7 @@ class TestPython2SPL(unittest.TestCase):
     def test_object_to_schema(self):
         topo = Topology()
         s = topo.source([1,2,3])
-        st = s.as_structured(lambda x : (x,), 'tuple<int32 x>')
+        st = s.map(lambda x : (x,), schema='tuple<int32 x>')
 
         tester = Tester(topo)
         tester.contents(st, [{'x':1}, {'x':2}, {'x':3}])
@@ -32,7 +32,7 @@ class TestPython2SPL(unittest.TestCase):
     def test_string_to_schema(self):
         topo = Topology()
         s = topo.source(['a', 'b', 'c']).as_string()
-        st = s.as_structured(lambda x : (x+'struct!',), 'tuple<rstring y>')
+        st = s.map(lambda x : (x+'struct!',), schema='tuple<rstring y>')
 
         tester = Tester(topo)
         tester.contents(st, [{'y':'astruct!'}, {'y':'bstruct!'}, {'y':'cstruct!'}])
@@ -41,7 +41,7 @@ class TestPython2SPL(unittest.TestCase):
     def test_json_to_schema(self):
         topo = Topology()
         s = topo.source([{'a':7}, {'b':8}, {'c':9}]).as_json()
-        st = s.as_structured(lambda x : (next(iter(x)), x[next(iter(x))]), 'tuple<rstring y, int32 x>')
+        st = s.map(lambda x : (next(iter(x)), x[next(iter(x))]), schema='tuple<rstring y, int32 x>')
 
         tester = Tester(topo)
         tester.contents(st, [{'y':'a', 'x':7}, {'y':'b', 'x':8}, {'y':'c', 'x':9}])
@@ -50,9 +50,9 @@ class TestPython2SPL(unittest.TestCase):
     def test_dict_to_schema(self):
         topo = Topology()
         s = topo.source([{'a':7}, {'b':8}, {'c':9}]).as_json()
-        st = s.as_structured(lambda x : (next(iter(x)), x[next(iter(x))]), 'tuple<rstring y, int32 x>')
+        st = s.map(lambda x : (next(iter(x)), x[next(iter(x))]), schema='tuple<rstring y, int32 x>')
 
-        st = st.as_structured(lambda x : (x['y'], x['x']+3), 'tuple<rstring id, int32 value>')
+        st = st.map(lambda x : (x['y'], x['x']+3), schema='tuple<rstring id, int32 value>')
 
         tester = Tester(topo)
         tester.contents(st, [{'id':'a', 'value':10}, {'id':'b', 'value':11}, {'id':'c', 'value':12}])

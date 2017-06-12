@@ -163,6 +163,17 @@ class StreamSchema(object) :
 
     Attribute names must start with an ASCII letter or underscore, followed by ASCII letters, digits, or underscores.
 
+    When a tuple on a structured scheme is passed into Python it
+    is converted to a `dict` containing all attributes of the tuple.
+    Each key is the attribute name as a `str` and
+    the value is the attribute's value.
+
+    When a Python object is submitted to a structured stream,
+    for example as the return from the function invoked in a 
+    :py:meth:`~streamsx.topology.topology.Stream.map` with the
+    `schema` parameter set, it must be:
+         * A Python tuple. Attributes are set by position, with the first attribute being the value at index 0 in the Python tuple. If a value does not exist (the tuple has less values than the structured schema) or is set to `None` then the attribute has its default value, zero, false, empty list or string etc.
+
     Args:
         schema(str): Schema definition. Either a schema definition or the name of an SPL type.
     """
@@ -263,7 +274,10 @@ class CommonSchema(enum.Enum):
     """
     Python = StreamSchema("tuple<blob __spl_po>")
     """
-    Stream where each tuple is a Python object.
+    Stream where each tuple is a Python object. Each object
+    must be picklable to allow execution in a distributed
+    environment where streams can connect processes
+    running on the same or different resources.
 
     Python streams can only be used by Python applications.
     """
@@ -294,7 +308,7 @@ class CommonSchema(enum.Enum):
 
     A Python callable receives each tuple as a `str` object.
 
-    Python objects are converted to strings using `str(obj)`.
+    Python objects are converted to strings using ``str(obj)``.
     """
     Binary = StreamSchema("tuple<blob binary>")
     """
