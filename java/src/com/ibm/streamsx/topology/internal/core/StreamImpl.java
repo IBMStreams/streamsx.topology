@@ -131,11 +131,16 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         connectTo(sink, true, null);
         return new TSinkImpl(this, sink);
     }
-    
+
     @Override
     public <U> TStream<U> transform(Function<T, U> transformer) {
-        return _transform(transformer, 
-                TypeDiscoverer.determineStreamType(transformer, null));
+        return map(transformer);
+    }
+    
+    @Override
+    public <U> TStream<U> map(Function<T, U> mapper) {
+        return _transform(mapper, 
+                TypeDiscoverer.determineStreamType(mapper, null));
     }
     
     private <U> TStream<U> _transform(Function<T, U> transformer, Type tupleType) {

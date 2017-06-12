@@ -90,7 +90,7 @@ public class StreamTest extends TestTopology {
         TStream<String> source = f.strings("325", "457", "9325");
         assertStream(f, source);
 
-        TStream<Integer> i1 = source.transform(stringToInt());
+        TStream<Integer> i1 = source.map(stringToInt());
         TStream<Integer> i2 = i1.transform(add17());
         completeAndValidate(i2, 10, "342", "474", "9342");
     }
@@ -102,7 +102,7 @@ public class StreamTest extends TestTopology {
         assertStream(f, source);
 
         TStream<Integer> i1 = source.transform(stringToIntExcept68());
-        TStream<Integer> i2 = i1.transform(add17());
+        TStream<Integer> i2 = i1.map(add17());
         
         completeAndValidate(i2, 10, "110", "238");
     }
