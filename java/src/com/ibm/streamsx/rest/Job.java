@@ -4,15 +4,12 @@
  */
 package com.ibm.streamsx.rest;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.Expose;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
 
 /**
  * An object describing an IBM Streams Job submitted within a specified instance
@@ -73,7 +70,7 @@ public class Job {
     @Expose
     private String status;
     @Expose
-    private ArrayList<String> submitParameters;
+    private ArrayList<JobSubmitParameters> submitParameters;
     @Expose
     private long submitTime;
     @Expose
@@ -223,11 +220,12 @@ public class Job {
     }
 
     /**
-     * Gets the list of parameters that were submitted to this job
+     * Gets the list of {@link JobSubmitParameters parameters} that were
+     * submitted to this job
      * 
-     * @return List of parameters 
+     * @return List of (@link JobSubmitParameters job submission parameters}
      */
-    public List<String> getSubmitParameters() {
+    public List<JobSubmitParameters> getSubmitParameters() {
         return submitParameters;
     }
 
