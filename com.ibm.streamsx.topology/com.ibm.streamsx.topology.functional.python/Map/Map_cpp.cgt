@@ -128,7 +128,7 @@ if ($pyoutstyle eq 'dict') {
 
 %>
 // Create member function that converts Python tuple to SPL tuple
-@include  "../../opt/python/templates/common/py_pyTupleTosplTuple.cgt"
+@include  "../../opt/python/codegen/py_pyTupleTosplTuple.cgt"
 <%}%>
 
 <%SPL::CodeGen::implementationEpilogue($model);%>
