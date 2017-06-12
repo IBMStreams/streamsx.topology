@@ -6,9 +6,11 @@ package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -84,13 +86,20 @@ public class Instance {
     }
 
     final static List<Instance> getInstanceList(StreamsConnection sc, String instanceGSONList) {
-        InstancesArray iArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(instanceGSONList,
-                InstancesArray.class);
+        List<Instance> iList;
+        try {
+            InstancesArray iArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
+                    .fromJson(instanceGSONList, InstancesArray.class);
 
-        for (Instance instance : iArray.instances) {
-            instance.setConnection(sc);
+            iList = iArray.instances;
+            for (Instance instance : iList) {
+                instance.setConnection(sc);
+            }
+
+        } catch (JsonSyntaxException e) {
+            iList = Collections.<Instance> emptyList();
         }
-        return iArray.instances;
+        return iList;
     }
 
     /**
@@ -102,7 +111,7 @@ public class Instance {
     public List<Job> getJobs() throws IOException {
         String sReturn = connection.getResponseString(jobs);
 
-        List<Job> lJobs = new JobsArray(connection, sReturn).getJobs();
+        List<Job> lJobs = Job.getJobList(connection, sReturn);
         return lJobs;
     }
 
@@ -135,7 +144,8 @@ public class Instance {
     /**
      * Gets the time in milliseconds when this instance was created
      * 
-     * @return the epoch time in milliseconds when the instance was created as a long
+     * @return the epoch time in milliseconds when the instance was created as a
+     *         long
      */
     public long getCreationTime() {
         return creationTime;
@@ -154,13 +164,13 @@ public class Instance {
      * Gets the summarized status of jobs in this instance
      *
      * @return the summarized status that contains one of the following values:
-     * <ul>
-     * <li>healthy</li>
-     * <li>partiallyHealthy</li>
-     * <li>partiallyUnhealthy</li>
-     * <li>unhealthy</li>
-     * <li>unknown</li>
-     * </ul>
+     *         <ul>
+     *         <li>healthy</li>
+     *         <li>partiallyHealthy</li>
+     *         <li>partiallyUnhealthy</li>
+     *         <li>unhealthy</li>
+     *         <li>unknown</li>
+     *         </ul>
      * 
      */
     public String getHealth() {
@@ -197,7 +207,8 @@ public class Instance {
     /**
      * Gets the time in milliseconds when the instance was started.
      * 
-     * @return the epoch time in milliseconds when the instance was started as a long
+     * @return the epoch time in milliseconds when the instance was started as a
+     *         long
      */
     public long getStartTime() {
         return startTime;
@@ -207,16 +218,16 @@ public class Instance {
      * Gets the status of the instance
      *
      * @return the instance status that contains one of the following values:
-     * <ul>
-     * <li>running</li>
-     * <li>failed</li>
-     * <li>stopped</li>
-     * <li>partiallyFailed</li>
-     * <li>partiallyRunning</li>
-     * <li>starting</li>
-     * <li>stopping</li>
-     * <li>unknown</li>
-     * </ul>
+     *         <ul>
+     *         <li>running</li>
+     *         <li>failed</li>
+     *         <li>stopped</li>
+     *         <li>partiallyFailed</li>
+     *         <li>partiallyRunning</li>
+     *         <li>starting</li>
+     *         <li>stopping</li>
+     *         <li>unknown</li>
+     *         </ul>
      * 
      */
     public String getStatus() {

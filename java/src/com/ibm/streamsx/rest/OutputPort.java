@@ -5,9 +5,12 @@
 package com.ibm.streamsx.rest;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -42,11 +45,25 @@ public class OutputPort {
     @Expose
     private String streamName;
 
-    /**
-     * this function is not intended for external consumption
-     */
-    void setConnection(final StreamsConnection sc) {
+    private void setConnection(final StreamsConnection sc) {
         connection = sc;
+    }
+
+    static final List<OutputPort> getOutputPortList(StreamsConnection sc, String outputPortList) {
+        List<OutputPort> opList;
+        OutputPortArray opArray;
+        try {
+            opArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(outputPortList,
+                    OutputPortArray.class);
+
+            opList = opArray.outputPorts;
+            for (OutputPort op : opList) {
+                op.setConnection(sc);
+            }
+        } catch (JsonSyntaxException e) {
+            opList = Collections.<OutputPort> emptyList();
+        }
+        return opList;
     }
 
     /**
@@ -65,7 +82,7 @@ public class OutputPort {
      */
     public List<Metric> getMetrics() throws IOException {
         String sReturn = connection.getResponseString(metrics);
-        List<Metric> sMetrics = new MetricsArray(connection, sReturn).getMetrics();
+        List<Metric> sMetrics = Metric.getMetricList(connection, sReturn);
 
         return sMetrics;
     }
@@ -101,4 +118,14 @@ public class OutputPort {
     public String toString() {
         return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
+
+    private static class OutputPortArray {
+        @Expose
+        private ArrayList<OutputPort> outputPorts;
+        @Expose
+        private String resourceType;
+        @Expose
+        private int total;
+    }
+
 }

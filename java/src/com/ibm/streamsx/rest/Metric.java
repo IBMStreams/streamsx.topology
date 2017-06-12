@@ -4,8 +4,12 @@
  */
 package com.ibm.streamsx.rest;
 
-import com.google.gson.Gson;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -32,11 +36,25 @@ public class Metric {
     @Expose
     private long value;
 
-    /**
-     * this function is not intended for external consumption
-     */
-    void setConnection(final StreamsConnection sc) {
+    private void setConnection(final StreamsConnection sc) {
         connection = sc;
+    }
+
+    static final List<Metric> getMetricList(StreamsConnection sc, String metricsList) {
+        List<Metric> mList;
+        MetricArray mArray;
+        try {
+            mArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(metricsList,
+                    MetricArray.class);
+
+            mList = mArray.metrics;
+            for (Metric m : mList) {
+                m.setConnection(sc);
+            }
+        } catch (JsonSyntaxException e) {
+            mList = Collections.<Metric> emptyList();
+        }
+        return mList;
     }
 
     /**
@@ -51,7 +69,8 @@ public class Metric {
     /**
      * Gets the Epoch time when the metric was most recently retrieved
      * 
-     * @return the epoch time when the metric was most recently retrieved as a long
+     * @return the epoch time when the metric was most recently retrieved as a
+     *         long
      */
     public long getLastTimeRetrieved() {
         return lastTimeRetrieved;
@@ -117,4 +136,16 @@ public class Metric {
     public String toString() {
         return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
+
+    private static class MetricArray {
+        @Expose
+        public ArrayList<Metric> metrics;
+        @Expose
+        public String owner;
+        @Expose
+        public String resourceType;
+        @Expose
+        public long total;
+    }
+
 }
