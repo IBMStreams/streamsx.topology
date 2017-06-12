@@ -232,12 +232,61 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * </pre>
      * 
      * </P>
+     * <P>
+     * This function is equivalent to {@link #map(Function)}.
+     * </P>
      * @param transformer
      *            Transformation logic to be executed against each tuple.
      * @return Stream that will contain tuples of type {@code U} transformed from this
      *         stream's tuples.
      */
     <U> TStream<U> transform(Function<T, U> transformer);
+
+    /**
+     * Declare a new stream that maps each tuple from this stream into one
+     * (or zero) tuple of a different type {@code U}. For each tuple {@code t}
+     * on this stream, the returned stream will contain a tuple that is the
+     * result of {@code mapper.apply(t)} when the return is not {@code null}.
+     * If {@code mapper.apply(t)} returns {@code null} then no tuple
+     * is submitted to the returned stream for {@code t}.
+     * 
+     * <P>
+     * Examples of mapping a stream containing numeric values as
+     * {@code String} objects into a stream of {@code Double} values.
+     * 
+     * <pre>
+     * <code>
+     * // Java 8 - Using lambda expression
+     * TStream&lt;String> strings = ...
+     * TStream&lt;Double> doubles = strings.map(v -> Double.valueOf(v));
+     * 
+     * // Java 8 - Using method reference
+     * TStream&lt;String> strings = ...
+     * TStream&lt;Double> doubles = strings.map(Double::valueOf);
+     * 
+     * // Java 7 - Using anonymous class
+     * TStream&lt;String> strings = ...
+     * TStream&lt;Double> doubles = strings.map(new Function<String, Double>() {
+     *             &#64;Override
+     *             public Double apply(String v) {
+     *                 return Double.valueOf(v);
+     *             }});
+     * </code>
+     * </pre>
+     * 
+     * </P>
+     * <P>
+     * This function is equivalent to {@link #transform(Function)}.
+     * The typical term in most apis is {@code map}.
+     * </P>
+     * @param mapper
+     *            Mapping logic to be executed against each tuple.
+     * @return Stream that will contain tuples of type {@code U} mapped from this
+     *         stream's tuples.
+     *
+     * @since 1.7 
+     */
+    <U> TStream<U> map(Function<T, U> mapper);
 
     /**
      * Declare a new stream that modifies each tuple from this stream into one
@@ -267,7 +316,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * <P>
      * This method is equivalent to
      * {@code transform(Function<T,T> modifier}).
-     * </P
+     * </P>
      * 
      * @param modifier
      *            Modifier logic to be executed against each tuple.
