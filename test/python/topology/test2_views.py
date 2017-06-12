@@ -43,7 +43,7 @@ class TestViews(unittest.TestCase):
         topo = Topology()
         s = topo.source(rands)
         throttle = op.Map('spl.utility::Throttle', s,
-            params = {'rate': 50.0})
+            params = {'rate': 25.0})
         s = throttle.stream
         self._ov = s.view()
         self._expected_type = float
@@ -59,7 +59,7 @@ class TestViews(unittest.TestCase):
         topo = Topology()
         s = topo.source(rands)
         throttle = op.Map('spl.utility::Throttle', s,
-            params = {'rate': 50.0})
+            params = {'rate': 25.0})
         s = throttle.stream
         s = s.map(lambda t : "ABC" + str(t))
         s = s.as_string()
@@ -77,7 +77,7 @@ class TestViews(unittest.TestCase):
         topo = Topology()
         s = op.Source(topo, "spl.utility::Beacon",
             'tuple<uint64 seq, rstring fixed>',
-            params = {'period': 0.02, 'iterations':1000})
+            params = {'period': 0.05, 'iterations':1000})
         s.seq = s.output('IterationCount()')
         s.fixed = s.output(spltypes.rstring('FixedValue'))
 
