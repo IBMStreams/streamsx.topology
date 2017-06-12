@@ -49,6 +49,12 @@ Here is a simple example that tests a filter correctly only passes tuples with v
 
 A stream may have any number of conditions and any number of streams may be tested.
 
+A py:meth:`~Tester.local_check` is supported where a method of the
+unittest class is executed once the job becomes healthy. This performs
+checks from the context of the Python unittest class, such as
+checking external effects of the application or using the REST api to
+monitor the application.
+
 .. warning::
     Python 3.5 and Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
 """
@@ -312,7 +318,7 @@ class Tester(object):
     def local_check(self, callable):
         """Perform local check while the application is being tested.
 
-        A call to `callable` is made after the application under test is submitted.
+        A call to `callable` is made after the application under test is submitted and becomes healthy.
         The check is in the context of the Python runtime executing the unittest case,
         typically the callable is a method of the test case.
 
@@ -360,13 +366,14 @@ class Tester(object):
 
         Args:
             callable: Callable object.
+
         """
         self.local_check = callable
 
     def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None):
         """Test the topology.
 
-        Submits the topology for testing and verifies the test conditions are met.
+        Submits the topology for testing and verifies the test conditions are met and the job remained healthy through its execution.
 
         The submitted application (job) is monitored for the test conditions and
         will be canceled when all the conditions are valid or at least one failed.
@@ -376,7 +383,7 @@ class Tester(object):
         The test passes if all conditions became valid and the local check callable (if present) completed without
         raising an error.
 
-        The test fails if any condition fails or the local check callable (if present) raised an exception.
+        The test fails if the job is unhealthy, any condition fails or the local check callable (if present) raised an exception.
 
         Args:
             ctxtype(str): Context type for submission.
@@ -685,7 +692,7 @@ class _ConditionChecker(object):
 
         self.job = self._find_job()
 
-    # Wait for job ot be healthy. Returns True
+    # Wait for job to be healthy. Returns True
     # if the job became healthy, False if not.
     def _wait_for_healthy(self):
         while (self.waits * self.delay) < self.timeout:
@@ -693,6 +700,7 @@ class _ConditionChecker(object):
                 self.waits = 0
                 return True
             time.sleep(self.delay)
+            self.waits += 1
         return False
 
     def _complete(self):
