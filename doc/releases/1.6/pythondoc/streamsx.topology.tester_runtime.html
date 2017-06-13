@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Search &mdash; streamsx 1.6.2 documentation</title>
+  <title>streamsx.topology.tester_runtime module &mdash; streamsx 1.6.2 documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
         <link rel="index" title="Index"
               href="genindex.html"/>
-        <link rel="search" title="Search" href="#"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="streamsx 1.6.2 documentation" href="index.html"/> 
 
   
@@ -68,7 +68,7 @@
 
           
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="#" method="get">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -83,7 +83,10 @@
             
             
                 <!-- Local TOC -->
-                <div class="local-toc"></div>
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">streamsx.topology.tester_runtime module</a></li>
+</ul>
+</div>
             
           
         </div>
@@ -104,7 +107,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -112,8 +115,12 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Search</li>
+    <li>streamsx.topology.tester_runtime module</li>
       <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/streamsx.topology.tester_runtime.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
   </ul>
@@ -122,19 +129,42 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <noscript>
-  <div id="fallback" class="admonition warning">
-    <p class="last">
-      Please activate JavaScript to enable the search
-      functionality.
-    </p>
-  </div>
-  </noscript>
+  <div class="section" id="module-streamsx.topology.tester_runtime">
+<span id="streamsx-topology-tester-runtime-module"></span><h1>streamsx.topology.tester_runtime module<a class="headerlink" href="#module-streamsx.topology.tester_runtime" title="Permalink to this headline">¶</a></h1>
+<p>Contains test related code that is executed at runtime
+in the context of the application under test.</p>
+<dl class="class">
+<dt id="streamsx.topology.tester_runtime.Condition">
+<em class="property">class </em><code class="descclassname">streamsx.topology.tester_runtime.</code><code class="descname">Condition</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester_runtime.Condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A condition for testing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) &#8211; Condition name, must be unique within the tester.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="streamsx.topology.tester_runtime.Condition.fail">
+<code class="descname">fail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester_runtime.Condition.fail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fail the condition.</p>
+<p>Marks the condition as failed. Once a condition has failed it
+can never become valid, the test that uses the condition will fail.</p>
+</dd></dl>
 
-  
-  <div id="search-results">
-  
-  </div>
+<dl class="attribute">
+<dt id="streamsx.topology.tester_runtime.Condition.valid">
+<code class="descname">valid</code><a class="headerlink" href="#streamsx.topology.tester_runtime.Condition.valid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is the condition valid.</p>
+<p>A subclass must set <cite>valid</cite> when the condition becomes valid.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
 
            </div>
           </div>
@@ -176,7 +206,6 @@
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/searchtools.js"></script>
 
   
 
@@ -192,14 +221,7 @@
           SphinxRtdTheme.StickyNav.enable();
       });
   </script>
-  
-  <script type="text/javascript">
-    jQuery(function() { Search.loadIndex("searchindex.js"); });
-  </script>
-  
-  <script type="text/javascript" id="searchindexloader"></script>
    
-
 
 </body>
 </html>

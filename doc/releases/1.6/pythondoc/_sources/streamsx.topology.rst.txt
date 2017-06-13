@@ -10,6 +10,7 @@ Submodules
    streamsx.topology.mqtt
    streamsx.topology.schema
    streamsx.topology.tester
+   streamsx.topology.tester_runtime
    streamsx.topology.topology
 
 Module contents

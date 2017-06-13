@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.tester module &mdash; streamsx 1.6.0 documentation</title>
+  <title>streamsx.topology.tester module &mdash; streamsx 1.6.2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.6.0 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.6.2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -171,40 +171,15 @@ Conditions are then created against streams, such as a stream must receive 10 tu
 </pre></div>
 </div>
 <p>A stream may have any number of conditions and any number of streams may be tested.</p>
+<p>A py:meth:<cite>~Tester.local_check</cite> is supported where a method of the
+unittest class is executed once the job becomes healthy. This performs
+checks from the context of the Python unittest class, such as
+checking external effects of the application or using the REST api to
+monitor the application.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">Python 3.5 and Streaming Analytics service or IBM Streams 4.2 or later is required when using <cite>Tester</cite>.</p>
 </div>
-<dl class="class">
-<dt id="streamsx.topology.tester.Condition">
-<em class="property">class </em><code class="descclassname">streamsx.topology.tester.</code><code class="descname">Condition</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Condition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>A condition for testing.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) &#8211; Condition name, must be unique within the tester.</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="streamsx.topology.tester.Condition.fail">
-<code class="descname">fail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Condition.fail" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fail the condition.</p>
-<p>Marks the condition as failed. Once a condition has failed it
-can never become valid, the test that uses the condition will fail.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="streamsx.topology.tester.Condition.valid">
-<code class="descname">valid</code><a class="headerlink" href="#streamsx.topology.tester.Condition.valid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Is the condition valid.</p>
-<p>A subclass must set <cite>valid</cite> when the condition becomes valid.</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="class">
 <dt id="streamsx.topology.tester.Tester">
 <em class="property">class </em><code class="descclassname">streamsx.topology.tester.</code><code class="descname">Tester</code><span class="sig-paren">(</span><em>topology</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester" title="Permalink to this definition">¶</a></dt>
@@ -237,14 +212,14 @@ a processing element to stop or restart. Thus, currently testing is against expe
 <code class="descname">add_condition</code><span class="sig-paren">(</span><em>stream</em>, <em>condition</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.add_condition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a condition to a stream.</p>
 <p>Conditions are normally added through <a class="reference internal" href="#streamsx.topology.tester.Tester.tuple_count" title="streamsx.topology.tester.Tester.tuple_count"><code class="xref py py-meth docutils literal"><span class="pre">tuple_count()</span></code></a>, <a class="reference internal" href="#streamsx.topology.tester.Tester.contents" title="streamsx.topology.tester.Tester.contents"><code class="xref py py-meth docutils literal"><span class="pre">contents()</span></code></a> or <a class="reference internal" href="#streamsx.topology.tester.Tester.tuple_check" title="streamsx.topology.tester.Tester.tuple_check"><code class="xref py py-meth docutils literal"><span class="pre">tuple_check()</span></code></a>.</p>
-<p>This allows an additional conditions that are implementations of <a class="reference internal" href="#streamsx.topology.tester.Condition" title="streamsx.topology.tester.Condition"><code class="xref py py-class docutils literal"><span class="pre">Condition</span></code></a>.</p>
+<p>This allows an additional conditions that are implementations of <code class="xref py py-class docutils literal"><span class="pre">Condition</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><em>Stream</em></a>) &#8211; Stream to be tested.</li>
-<li><strong>condition</strong> (<a class="reference internal" href="#streamsx.topology.tester.Condition" title="streamsx.topology.tester.Condition"><em>Condition</em></a>) &#8211; Arbitrary condition.</li>
+<li><strong>condition</strong> (<a class="reference internal" href="streamsx.topology.tester_runtime.html#streamsx.topology.tester_runtime.Condition" title="streamsx.topology.tester_runtime.Condition"><em>Condition</em></a>) &#8211; Arbitrary condition.</li>
 </ul>
 </td>
 </tr>
@@ -287,7 +262,7 @@ a processing element to stop or restart. Thus, currently testing is against expe
 <dt id="streamsx.topology.tester.Tester.local_check">
 <code class="descname">local_check</code><span class="sig-paren">(</span><em>callable</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.local_check" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform local check while the application is being tested.</p>
-<p>A call to <cite>callable</cite> is made after the application under test is submitted.
+<p>A call to <cite>callable</cite> is made after the application under test is submitted and becomes healthy.
 The check is in the context of the Python runtime executing the unittest case,
 typically the callable is a method of the test case.</p>
 <p>The application remains running until all the conditions are met
@@ -440,14 +415,14 @@ entry in the VCAP services. Defaults to value of STREAMING_ANALYTICS_SERVICE_NAM
 <dt id="streamsx.topology.tester.Tester.test">
 <code class="descname">test</code><span class="sig-paren">(</span><em>ctxtype</em>, <em>config=None</em>, <em>assert_on_fail=True</em>, <em>username=None</em>, <em>password=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.test" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test the topology.</p>
-<p>Submits the topology for testing and verifies the test conditions are met.</p>
+<p>Submits the topology for testing and verifies the test conditions are met and the job remained healthy through its execution.</p>
 <p>The submitted application (job) is monitored for the test conditions and
 will be canceled when all the conditions are valid or at least one failed.
 In addition if a local check was specified using <a class="reference internal" href="#streamsx.topology.tester.Tester.local_check" title="streamsx.topology.tester.Tester.local_check"><code class="xref py py-meth docutils literal"><span class="pre">local_check()</span></code></a> then
 that callable must complete before the job is cancelled.</p>
 <p>The test passes if all conditions became valid and the local check callable (if present) completed without
 raising an error.</p>
-<p>The test fails if any condition fails or the local check callable (if present) raised an exception.</p>
+<p>The test fails if the job is unhealthy, any condition fails or the local check callable (if present) raised an exception.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -612,7 +587,7 @@ tuples, <cite>False</cite> if the stream must contain at least <cite>count</cite
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.6.0',
+            VERSION:'1.6.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
