@@ -14,67 +14,66 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
- * An Input Port of the IBM Streams Operator
+ * An Input Port of the IBM Streams Processing Element
  */
-public class InputPort {
-    @SuppressWarnings("unused")
+public class PEInputPort {
+
     private StreamsConnection connection;
 
     @Expose
     private String connections;
     @Expose
-    long indexWithinOperator;
+    private long indexWithinPE;
+    @Expose
+    private String id;
     @Expose
     private String job;
     @Expose
     private String metrics;
     @Expose
-    private String name;
-    @Expose
-    private String operator;
-    @Expose
     private String pe;
-    @Expose
-    private String peInputPorts;
     @Expose
     private String resourceType;
     @Expose
     private String restid;
     @Expose
     private String self;
+    @Expose
+    private String transportType;
 
     private void setConnection(final StreamsConnection sc) {
         connection = sc;
     }
 
-    static final List<InputPort> getInputPortList(StreamsConnection sc, String inputPortListString) {
-        List<InputPort> ipList;
-        InputPortArray ipArray;
+    static final List<PEInputPort> getInputPortList(StreamsConnection sc, String inputPortListString) {
+        List<PEInputPort> ipList;
+        PEInputPortArray ipArray;
         try {
             ipArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(inputPortListString,
-                    InputPortArray.class);
+                    PEInputPortArray.class);
 
             ipList = ipArray.inputPorts;
-            for (InputPort ip : ipList) {
+            for (PEInputPort ip : ipList) {
                 ip.setConnection(sc);
             }
         } catch (JsonSyntaxException e) {
-            ipList = Collections.<InputPort> emptyList();
+            ipList = Collections.<PEInputPort> emptyList();
         }
         return ipList;
     }
 
     /**
-     * Gets the index of this input port within the {@link Operator}
+     * Gets the index of this input port within the {@link ProcessingElement
+     * processing element}
      * 
      * @return the index number as a long
      */
-    public long getIndexWithinOperator() {
-        return indexWithinOperator;
+    public long getIndexWithinPE() {
+        return indexWithinPE;
     }
 
     /**
-     * Gets the {@link Metric metrics} for this input port
+     * Gets the {@link Metric metrics} for this processing element input port
      * 
      * @return List of {@link Metric IBM Streams Metrics}
      */
@@ -85,18 +84,24 @@ public class InputPort {
     }
 
     /**
-     * Gets the name for this input port
+     * Gets the transport type for this processing element input port
      * 
-     * @return the name
+     * @return the transport type containing one of the following possible
+     *         values:
+     *         <ul>
+     *         <li>tcp</li>
+     *         <li>llm-rum-tcp</li>
+     *         <li>llm-rum-ib</li>
+     *         </ul>
      */
-    public String getName() {
-        return name;
+    public String getTransportType() {
+        return transportType;
     }
 
     /**
      * Identifies the REST resource type
      * 
-     * @return "operatorInputPort"
+     * @return "peInputPort"
      */
     public String getResourceType() {
         return resourceType;
@@ -107,9 +112,9 @@ public class InputPort {
         return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
 
-    private static class InputPortArray {
+    private static class PEInputPortArray {
         @Expose
-        private ArrayList<InputPort> inputPorts;
+        private ArrayList<PEInputPort> inputPorts;
         @Expose
         private String resourceType;
         @Expose

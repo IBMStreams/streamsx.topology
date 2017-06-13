@@ -14,7 +14,7 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
- * An OutputPort of the IBM Streams Operator
+ * An Output Port of the IBM Streams Operator
  */
 public class OutputPort {
     @SuppressWarnings("unused")
@@ -67,7 +67,7 @@ public class OutputPort {
     }
 
     /**
-     * Gets the index of this output port within the {@link Operator}
+     * Gets the index of this output port within the {@link Operator operator}
      * 
      * @return the index as a long
      */
@@ -99,7 +99,7 @@ public class OutputPort {
     /**
      * Identifies the REST resource type
      * 
-     * @return "outputport"
+     * @return "operatorOutputPort"
      */
     public String getResourceType() {
         return resourceType;
