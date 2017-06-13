@@ -369,7 +369,7 @@ class Topology(object):
         name = self.graph._requested_name(name, action='source', func=func)
         op = self.graph.addOperator(self.opnamespace+"::Source", func, name=name, sl=sl)
         oport = op.addOutputPort(name=name)
-        return Stream(self, oport)
+        return Stream(self, oport)._make_placeable()
 
     def subscribe(self, topic, schema=CommonSchema.Python, name=None):
         """
@@ -418,6 +418,7 @@ class Stream(object):
     def __init__(self, topology, oport):
         self.topology = topology
         self.oport = oport
+        self._placeable = False
 
     @property
     def name(self):
@@ -470,14 +471,14 @@ class Stream(object):
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
         oport = op.addOutputPort(schema=self.oport.schema, name=name)
-        return Stream(self.topology, oport)
+        return Stream(self.topology, oport)._make_placeable()
 
     def _map(self, func, schema, name=None):
         name = self.topology.graph._requested_name(name, action="map", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=name)
         op.addInputPort(outputPort=self.oport, name=self.name)
         oport = op.addOutputPort(schema=schema, name=name)
-        return Stream(self.topology, oport)
+        return Stream(self.topology, oport)._make_placeable()
 
     def view(self, buffer_time = 10.0, sample_size = 10000, name=None, description=None, start=False):
         """
@@ -582,7 +583,7 @@ class Stream(object):
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
         oport = op.addOutputPort(name=name)
-        return Stream(self.topology, oport)
+        return Stream(self.topology, oport)._make_placeable()
     
     def multi_transform(self, func, name=None):
         """
@@ -949,6 +950,45 @@ class Stream(object):
         css = self._map(func, schema, name=name)
         self.oport.operator.colocate(css.oport.operator, action)
         return css
+
+    def _make_placeable(self):
+        self._placeable = True
+        return self
+
+    @property
+    def resource_tags(self):
+        """Resource tags for this stream.
+
+        Tags are a mechanism for differentiating and identifying resources that have different physical characteristics or logical uses. For example a resource (host) that has external connectivity for public data sources may be tagged `ingest`.
+
+        A stream can be associated with one or more tags to require its
+        creating callable to run on suitably tagged resources. For example
+        adding tags `ingest` and `db` requires that the processing element
+        containing the callable that created the stream runs on a host
+        tagged with both `ingest` and `db`.
+
+        A stream that was not created directly with a Python callable
+        cannot have tags associated with it. For example a stream that
+        is a :py:meth:`union` of multiple streams cannot be tagged.
+        In this case this method returns an empty `frozenset` which
+        cannot be modified.
+
+        See https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/tags.html for more details of tags within IBM Streams.
+
+        Returns:
+            set: Set of resource tags for the stream, initially empty.
+
+        .. warning:: If no resources exist with the required tags then job submission will fail.
+        
+        .. versionadded:: 1.7
+   
+        """
+        if not self._placeable:
+            return frozenset()
+        plc = self.oport.operator._placement
+        if not 'resourceTags' in plc:
+            plc['resourceTags'] = set()
+        return plc['resourceTags']
 
 
 class View(object):

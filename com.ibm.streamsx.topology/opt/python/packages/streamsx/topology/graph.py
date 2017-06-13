@@ -262,6 +262,10 @@ class _SPLInvocation(object):
         _op["config"]["viewConfigs"] = self.view_configs
         if self._placement:
             _op["config"]["placement"] = self._placement
+            if 'resourceTags' in self._placement:
+                # Convert the set to a list for JSON
+                tags = _op['config']['placement']['resourceTags']
+                _op['config']['placement']['resourceTags'] = list(tags)
         _params = {}
         # Add parameters as their string representation
         # unless they value has a spl_json() function,

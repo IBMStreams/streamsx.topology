@@ -247,3 +247,46 @@ class TestTopologyMethods(unittest.TestCase):
           standalone(self, topo)
       finally:
           del test_functions2
+
+class TestPlaceable(unittest.TestCase):
+
+  def test_placeable(self):
+      topo = Topology()
+      s1 = topo.source([])
+      self.assertFalse(s1.resource_tags)
+      self.assertIsInstance(s1.resource_tags, set)
+      s1.resource_tags.add('ingest')
+      s1.resource_tags.add('db')
+      self.assertEqual({'ingest', 'db'}, s1.resource_tags)
+
+      s2 = s1.filter(lambda x : True)
+      s2.resource_tags.add('cpu1')
+      self.assertEqual({'cpu1'}, s2.resource_tags)
+
+      s3 = s1.map(lambda x : x)
+      s3.resource_tags.add('cpu2')
+      self.assertEqual({'cpu2'}, s3.resource_tags)
+
+      s4 = s1.flat_map(lambda x : [x])
+      s4.resource_tags.add('cpu3')
+      self.assertEqual({'cpu3'}, s4.resource_tags)
+
+      self.assertEqual({'ingest', 'db'}, s1.resource_tags)
+      self.assertEqual({'cpu1'}, s2.resource_tags)
+      self.assertEqual({'cpu2'}, s3.resource_tags)
+      self.assertEqual({'cpu3'}, s4.resource_tags)
+
+  def test_not_placeable(self):
+      topo = Topology()
+      s1 = topo.source([])
+      s2 = topo.source([])
+      s3 = s1.union({s2})
+      self._check_not_placeable(s3)
+      self._check_not_placeable(s1.autonomous())
+      self._check_not_placeable(s1.isolate())
+      self._check_not_placeable(s1.parallel(3))
+      self._check_not_placeable(s1.low_latency())
+
+  def _check_not_placeable(self, s):
+      self.assertFalse(s.resource_tags)
+      self.assertIsInstance(s.resource_tags, frozenset)
