@@ -33,7 +33,7 @@ public class VcapServices {
      * 
      * Object can be one of the following:
      * <ul>
-     * <li>JsonObject - assumed to contain VCAP_SERVICES, and SERVICE_NAME</li>
+     * <li>JsonObject - assumed to contain VCAP_SERVICES </li>
      * <li>String - assumed to contain serialized VCAP_SERVICES JSON, or the
      * location of a file containing the serialized VCAP_SERVICES JSON</li>
      * <li>null - assumed to be in the environment variable VCAP_SERVICES</li>
@@ -96,7 +96,7 @@ public class VcapServices {
 
         // if we don't find our serviceName check the environment variable
         if (serviceName == null) {
-            serviceName = System.getenv("SERVICE_NAME");
+            serviceName = System.getenv("STREAMING_ANALYTICS_SERVICE_NAME");
         }
 
         if (serviceName != null)
