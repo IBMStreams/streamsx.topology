@@ -155,12 +155,4 @@ public interface FunctionContext {
      * @since 1.7
      */
     Metric createCustomMetric(String name, String description, Metric.Kind kind);
-    
-    /**
-     * Get a custom metric.
-     * @return Metric reference.
-     * 
-     * @since 1.7
-     */
-    Metric getCustomMetric(String name);
 }
