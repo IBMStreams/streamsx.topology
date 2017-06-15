@@ -91,14 +91,6 @@ public class StreamingAnalyticsConnectionSample {
                 }
             }
 
-            /* Cancel the first job in the list */
-            if (!jobs.isEmpty()) {
-                System.out.println("Removing first job specifically");
-                Job job = jobs.get(0);
-                if (job.cancel()) {
-                    System.out.println("Job canceled");
-                }
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -111,20 +111,11 @@ public class StreamsConnectionSample {
                 }
             }
 
-            /* Remove the first job from the list */
-            if (!jobs.isEmpty()) {
-                Job job = jobs.get(0);
-                System.out.println("Removing first job in the list");
-                if (job.cancel()) {
-                    System.out.println("Job canceled");
-                }
-            }
-
             try {
                 /*
                  * Get a specific job in the instance
                  */
-                instance.getJob("15");
+                instance.getJob("99999");
             } catch (RESTException e) {
                 /*
                  * This shows what is available in the RESTException should
