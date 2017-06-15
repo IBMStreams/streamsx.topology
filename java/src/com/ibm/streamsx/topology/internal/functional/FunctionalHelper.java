@@ -16,16 +16,36 @@ public class FunctionalHelper {
     
     static final Logger trace = Logger.getLogger("com.ibm.streamsx.topology.functional");
 
+    public static <T> SPLMapping<T> getInputMapping(AbstractOperator operator,
+            int port) throws ClassNotFoundException {
+        return getInputMapping(operator, port, null);
+    }
+    
     @SuppressWarnings("unchecked")
     public static <T> SPLMapping<T> getInputMapping(AbstractOperator operator,
-            int port) {
+            int port, String serializer) throws ClassNotFoundException {
+             
+        if (serializer != null && !serializer.isEmpty()) {
+            return (SPLMapping<T>) Schemas.getObjectMapping(serializer);
+        }
+        
         return (SPLMapping<T>) Schemas.getSPLMapping(operator.getInput(port)
                 .getStreamSchema());
     }
 
+    public static <T> SPLMapping<T> getOutputMapping(AbstractOperator operator,
+            int port) throws ClassNotFoundException {
+        return getOutputMapping(operator, port, null);
+    }
+    
     @SuppressWarnings("unchecked")
     public static <T> SPLMapping<T> getOutputMapping(AbstractOperator operator,
-            int port) {
+            int port, String serializer) throws ClassNotFoundException {
+        
+        if (serializer != null && !serializer.isEmpty()) {
+            return (SPLMapping<T>) Schemas.getObjectMapping(serializer);
+        }
+        
         return (SPLMapping<T>) Schemas.getSPLMapping(operator.getOutput(port)
                 .getStreamSchema());
     }
