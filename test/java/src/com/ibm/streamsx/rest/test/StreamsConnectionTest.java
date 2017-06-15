@@ -88,7 +88,7 @@ public class StreamsConnectionTest {
         } catch (RESTException r) {
             // if we get here, the local Streams test has failed
             r.printStackTrace();
-            fail();
+            fail(r.getMessage());
         } catch (IOException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -110,7 +110,7 @@ public class StreamsConnectionTest {
         } catch (RESTException r) {
             // if we get here, the local Streams test has failed
             r.printStackTrace();
-            fail();
+            fail(r.getMessage());
         } catch (IOException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -119,8 +119,9 @@ public class StreamsConnectionTest {
         try {
             // try a fake instance name
             connection.getInstance("fakeName");
-            fail();
+            fail("the connection.getInstance call should have thrown an exception");
         } catch (RESTException r) {
+            // not a failure, this is the expected result
             assertEquals(404, r.getStatusCode());
         } catch (IOException e) {
             e.printStackTrace();
@@ -214,7 +215,7 @@ public class StreamsConnectionTest {
             }
         } catch (Exception e) {
             // if the job doesn't cancel, we should fail
-            fail("failed to cancel job");
+            fail(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -250,10 +251,11 @@ public class StreamsConnectionTest {
 
         } catch (RESTException r) {
             // zero jobs should return an empty array
-            fail();
+            r.printStackTrace();
+            fail(r.getMessage());
         } catch (IOException e) {
             e.printStackTrace();
-            fail();
+            fail(e.getMessage());
         }
 
     }
@@ -281,13 +283,13 @@ public class StreamsConnectionTest {
             // get a non-existant job
             @SuppressWarnings("unused")
             Job nonExistantJob = instance.getJob("999999");
-            fail();
+            fail("this job number should not exist");
         } catch (RESTException r) {
             assertEquals(404, r.getStatusCode());
             assertEquals("CDISW5000E", r.getStreamsErrorMessageId());
         } catch (IOException e) {
             e.printStackTrace();
-            fail();
+            fail(e.getMessage());
         }
 
         try {
@@ -295,7 +297,7 @@ public class StreamsConnectionTest {
             boolean failCancel = connection.cancelJob("99999");
             assertTrue(failCancel == false);
         } catch (Exception e) {
-            // job not cancelled
+            // job not cancelled because it doesn't exist
             e.printStackTrace();
         }
 
@@ -378,10 +380,11 @@ public class StreamsConnectionTest {
             }
 
         } catch (RESTException r) {
-            fail();
+            r.printStackTrace();
+            fail(r.getMessage());
         } catch (IOException e) {
             e.printStackTrace();
-            fail();
+            fail(e.getMessage());
         }
 
     }
@@ -484,10 +487,11 @@ public class StreamsConnectionTest {
             assertEquals(peOp.getOperatorKind(), jobOp.getOperatorKind());
 
         } catch (RESTException r) {
-            fail();
+            r.printStackTrace();
+            fail(r.getMessage());
         } catch (IOException e) {
             e.printStackTrace();
-            fail();
+            fail(e.getMessage());
         }
 
     }

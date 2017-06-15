@@ -40,7 +40,8 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
                 connection = StreamingAnalyticsConnection.createInstance(vcapServices, serviceName);
             }
         } catch (IOException e) {
-            fail("This shouldn't cause an exception");
+            e.printStackTrace();
+            fail(e.getMessage());
         }
     }
 
@@ -56,7 +57,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
         } catch (RESTException r) {
             // if we get here, the local Streams test has failed
             r.printStackTrace();
-            fail();
+            fail(r.getMessage());
         } catch (IOException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -79,7 +80,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
 
         } catch (RESTException r) {
             r.printStackTrace();
-            fail();
+            fail(r.getMessage());
         } catch (IOException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -88,7 +89,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
         try {
             // try a fake instance name
             connection.getInstance("fakeName");
-            fail();
+            fail("the connection.getInstance() call should have thrown an exception");
         } catch (RESTException r) {
             assertEquals(404, r.getStatusCode());
         } catch (IOException e) {
@@ -111,7 +112,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            fail();
+            fail(e.getMessage());
         }
     }
 }
