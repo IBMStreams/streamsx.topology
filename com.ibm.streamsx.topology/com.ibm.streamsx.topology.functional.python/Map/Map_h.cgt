@@ -5,6 +5,12 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
+@include "../pyspltuple.cgt"
+<%
+ my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
+ my $oport = $model->getOutputPortAt(0);
+%>
+
 class MY_OPERATOR : public MY_BASE_OPERATOR 
 {
 public:
@@ -21,6 +27,12 @@ public:
   void process(Tuple const & tuple, uint32_t port);
 
 private:
+<%
+if ($pyoutstyle eq 'dict') {
+%>
+    void fromPythonToPort0(PyObject * pyTuple, <%=$oport->getCppTupleType()%> & otuple);
+<%}%>
+
     // Members
     // Control for interaction with Python
     SplpyFuncOp *funcop_;

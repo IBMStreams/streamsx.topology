@@ -101,19 +101,31 @@ namespace streamsx {
       SplpyGIL lock;
 
       // invoke python nested function that calls the application function
-      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
+      PyObject * pyReturnVar = pyTupleMap(function, splVal);
 
-      if (SplpyGeneral::isNone(pyReturnVar)) {
-        Py_DECREF(pyReturnVar);
-        return 0;
-      } else if(pyReturnVar == 0){
-         throw SplpyGeneral::pythonException("map");
-      } 
+      if (pyReturnVar == NULL)
+          return 0;
 
       pySplValueFromPyObject(retSplVal, pyReturnVar);
       Py_DECREF(pyReturnVar);
 
       return 1;
+    }
+
+    template <class T>
+    static PyObject * pyTupleMap(PyObject * function, T & splVal) {
+
+      // invoke python nested function that calls the application function
+      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
+
+      if (SplpyGeneral::isNone(pyReturnVar)) {
+        Py_DECREF(pyReturnVar);
+        return NULL;
+      } else if(pyReturnVar == 0){
+         throw SplpyGeneral::pythonException("map");
+      } 
+
+      return pyReturnVar;
     }
 
     /**
@@ -128,14 +140,10 @@ namespace streamsx {
       SplpyGIL lock;
 
       // invoke python nested function that calls the application function
-      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
+      PyObject * pyReturnVar = pyTupleMap(function, splVal);
 
-      if (SplpyGeneral::isNone(pyReturnVar)) {
-        Py_DECREF(pyReturnVar);
+      if (pyReturnVar == NULL)
         return 0;
-      } else if(pyReturnVar == 0){
-         throw SplpyGeneral::pythonException("map");
-      } 
 
       if (occ > 0) {
           pyTupleByRef(retSplVal, pyReturnVar, occ);
