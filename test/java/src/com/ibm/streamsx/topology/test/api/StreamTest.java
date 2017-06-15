@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +33,7 @@ import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Initializable;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.ToIntFunction;
+import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
 import com.ibm.streamsx.topology.streams.CollectionStreams;
 import com.ibm.streamsx.topology.streams.StringStreams;
@@ -391,6 +393,45 @@ public class StreamTest extends TestTopology {
                 throws Exception {
             this.functionContext = functionContext;
             
+        }
+        
+    }
+    
+    /**
+     * Ensure we can create the three types of metrics.
+     * @throws Exception
+     */
+    @Test
+    public void testMetricCreate() throws Exception {
+
+        final Topology topo = new Topology();
+        
+        TStream<String> strings = topo.strings("a", "b", "c");
+        Tester tester = topo.getTester();
+        
+        Condition<Long> spCount = tester.tupleCount(strings, 3);
+        complete(tester, spCount, 20, TimeUnit.SECONDS);
+    }
+    
+    public static class CreateMetricTester<T> implements UnaryOperator<T>, Initializable {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public T apply(T v) {
+            return v;
+        }
+
+        @Override
+        public void initialize(FunctionContext functionContext) throws Exception {
+            functionContext.createCustomMetric("aCounter", "Counter desc.",
+                    "counter", () -> this.hashCode());
+            
+            functionContext.createCustomMetric("aTimer", "the time!", "time",
+                    System::currentTimeMillis); 
+            
+            Random r = new Random();
+            functionContext.createCustomMetric("aGauge", "Some gauge", "gauge",
+                    r::nextLong);
         }
         
     }
