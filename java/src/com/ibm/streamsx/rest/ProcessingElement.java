@@ -114,14 +114,15 @@ public class ProcessingElement {
     }
 
     /**
-     * Gets a list of {@link InputPort input ports} for this processing element
+     * Gets a list of {@link PEInputPort processing element input ports} for
+     * this processing element
      * 
-     * @return List of {@link InputPort Input Ports}
+     * @return List of {@link PEInputPort Processing Element Input Ports}
      * @throws IOException
      */
-    public List<InputPort> getInputPorts() throws IOException {
+    public List<PEInputPort> getInputPorts() throws IOException {
         String sReturn = connection.getResponseString(inputPorts);
-        List<InputPort> lInPorts = InputPort.getInputPortList(connection, sReturn);
+        List<PEInputPort> lInPorts = PEInputPort.getInputPortList(connection, sReturn);
         return lInPorts;
     }
 
@@ -138,15 +139,15 @@ public class ProcessingElement {
     }
 
     /**
-     * Gets a list of {@link OutputPort output ports} for this processing
-     * element
+     * Gets a list of {@link PEOutputPort processing element output ports} for
+     * this processing element
      * 
-     * @return List of {@link OutputPort Output Ports}
+     * @return List of {@link PEOutputPort Processing Element Output Ports}
      * @throws IOException
      */
-    public List<OutputPort> getOutputPorts() throws IOException {
+    public List<PEOutputPort> getOutputPorts() throws IOException {
         String sReturn = connection.getResponseString(outputPorts);
-        List<OutputPort> lOutPorts = OutputPort.getOutputPortList(connection, sReturn);
+        List<PEOutputPort> lOutPorts = PEOutputPort.getOutputPortList(connection, sReturn);
         return lOutPorts;
     }
 
