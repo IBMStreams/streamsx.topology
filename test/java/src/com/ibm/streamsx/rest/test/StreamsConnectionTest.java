@@ -447,7 +447,7 @@ public class StreamsConnectionTest {
             }
 
             ProcessingElement pe2 = pes.get(1);
-            assertEquals(1, pe2.getIndexWithinJob(), 1);
+            assertEquals(1, pe2.getIndexWithinJob());
             assertEquals("running", pe2.getStatus());
             assertEquals("none", pe2.getStatusReason());
             assertTrue(pe2.getProcessId() != null);
