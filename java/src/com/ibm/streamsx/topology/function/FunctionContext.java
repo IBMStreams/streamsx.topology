@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.function;
 import java.net.MalformedURLException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.function.LongSupplier;
 
 /**
  * Context for a function executing in a IBM Streams application.
@@ -142,4 +143,67 @@ public interface FunctionContext {
      * 
      */
     void addClassLibraries(String[] libraries) throws MalformedURLException;
+    
+    
+    /**        
+     * Create a custom metric.
+     * <BR>
+     * A custom metric allows monitoring of an application through
+     * IBM Streams monitoring APIs including Streams console and the REST apis.
+     * 
+     * A metric has a single {@code long} value and has a kind of:
+     * <UL>
+     * <LI>{@code counter} - A counter metric observes a value that
+     * represents a count of an occurrence.</LI>
+     * <LI>{@code gauge} - A gauge metric observes a value that is continuously variable with time.
+     * <LI>{@code time} - A time metric represents a point in time. It is recommended that the
+     * value represents the number of milliseconds since the 1970/01/01 epoch, i.e. a
+     * value consistent with {@code System.currentTimeMillis()}.
+     * </UL>
+     * <BR>
+     * The initial value of the metric is set from {@code value.getAsLong()} during this
+     * method call. Subsequently, periodically {@code value.getAsLong()} will be called
+     * to get the current value of the metric so that it can be reported through the monitoring APIs.
+     * <P>
+     * A lambda expression can be used as the supplier, for example to monitor the length
+     * of a queue (or any collection) {@code items} a metric can be created from
+     * {@link Initializable#initialize(FunctionContext)} as:
+     * <pre>
+     * <code>
+     *     this.items = new PriorityQueue();
+     *     functionContext.createCustomMetric("queuedItems", "Number of queued items.",
+     *               "gauge", () -> this.items.size());
+     * </code>
+     * </pre>
+     * The metric will now automatically track the length of the queue (subject to the
+     * periodic collection cycle).
+     * </P>
+     * <P>
+     * A {@code java.util.concurrent.atomic.AtomicLong} can be used as a metric's value,
+     * for example a counter where no other natural value exists, e.g.:
+     * <pre>
+     * <code>
+     *     this.nFailedRequests = new AtomicLong();
+     *     functionContext.createCustomMetric("nFailedRequests", "Number of failed requests.",
+     *               "counter", this.nFailedRequests::get);
+     * </code>
+     * </pre>
+     * Subsequently the counter is incremented using:
+     * <pre>
+     * <code>
+     *     this.nFailedRequests.incrementAndGet();
+     * </code>
+     * </pre>
+     * </P>
+     * @param name Name of the metric.        
+     * @param description Description of the metric.      
+     * @param kind Kind of the metric.
+     * @param value function that returns the value of the metric  
+     * 
+     * @throws IllegalStateException A metric with {@code name} already exists or {@code kind} is
+     * not valid.
+     *        
+     * @since 1.7     
+     */       
+    void createCustomMetric(String name, String description, String kind, LongSupplier value);
 }
