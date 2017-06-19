@@ -282,6 +282,64 @@
      <fail message="Unittests failed" if="topology.tests.failed"/>
   </target>
 
+  <target name="unittest.restapi.base">
+     <mkdir dir="${test.dir}"/>
+     <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
+     <mkdir dir="${topology.test.dir}"/>
+   <jacoco:coverage enabled="${topology.test.coverage}">
+     <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
+           threads="${topology.test.threads}"
+           haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
+       <sysproperty key="topology.test.root" value="${topology.test.root}"/>
+       <sysproperty key="topology.test.type" value="${topology.test.type}"/>
+       <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
+       <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
+       <sysproperty key="topology.test.resource_dir" file="resources"/>
+       <sysproperty key="topology.toolkit.release" value="${topology.toolkit.release}"/>
+       <sysproperty key="topology.install.compile" value="${topology.install.compile}"/>
+       <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
+
+       <classpath>
+         <path refid="test.classpath"/>
+       </classpath>
+       <assertions><enable/></assertions>
+       <formatter type="xml"/>
+       <batchtest todir="${topology.test.dir}">
+          <fileset dir="${basedir}/src"
+             excludes="**/samples/*Test.java" >
+             <include name="**/StreamsConnectionTest.java"/>
+             <include name="**/StreamingAnalyticsConnectionTest.java"/>
+          </fileset>
+       </batchtest>
+     </junit>
+   </jacoco:coverage>
+   <jacoco:coverage enabled="${topology.test.coverage}">
+     <junit fork="yes" dir="${topology.test.dir}" printsummary="yes"
+           threads="${topology.test.threads}"
+           haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
+       <sysproperty key="topology.test.root" value="${topology.test.root}"/>
+       <sysproperty key="topology.test.type" value="${topology.test.type}"/>
+       <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
+       <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
+       <sysproperty key="topology.install.compile" value="${topology.install.compile}"/>
+       <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
+
+       <classpath>
+         <path refid="test.sample.classpath"/>
+       </classpath>
+       <assertions><enable/></assertions>
+       <formatter type="xml"/>
+       <batchtest todir="${topology.test.dir}">
+          <fileset dir="${classes}">
+             <include name="**/*Test.class"/>
+          </fileset>
+       </batchtest>
+     </junit>
+   </jacoco:coverage>
+   <fail message="Unittests failed" if="topology.tests.failed"/>
+   </target>
+
+
   <target name="unittest.simple" depends="jar">
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>

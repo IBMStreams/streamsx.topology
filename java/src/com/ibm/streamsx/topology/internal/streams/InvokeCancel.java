@@ -18,10 +18,17 @@ public class InvokeCancel {
     static final Logger trace = Topology.STREAMS_LOGGER;
 
     private final BigInteger jobId;
+    private final String userName;
 
+    public InvokeCancel(BigInteger jobId, String userName) {
+        super();
+        this.jobId = jobId;
+        this.userName = userName;
+    }
     public InvokeCancel(BigInteger jobId) {
         super();
         this.jobId = jobId;
+        this.userName = null;
     }
 
     public void invoke() throws Exception, InterruptedException {
@@ -34,6 +41,11 @@ public class InvokeCancel {
 
         commands.add(sj.getAbsolutePath());
         commands.add("canceljob");
+        if ( null != userName )
+        {
+          commands.add("-U");
+          commands.add(userName);
+        }
         commands.add(jobId.toString());
 
         trace.info("Invoking streamtool canceljob " + jobId);
