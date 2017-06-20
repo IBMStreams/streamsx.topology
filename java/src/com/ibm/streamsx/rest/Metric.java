@@ -16,10 +16,7 @@ import com.google.gson.annotations.Expose;
  * An object describing an IBM Streams Metric
  *
  */
-public class Metric {
-
-    @SuppressWarnings("unused")
-    private StreamsConnection connection;
+public class Metric extends Element {
 
     @Expose
     private String description;
@@ -36,16 +33,10 @@ public class Metric {
     @Expose
     private long value;
 
-    private void setConnection(final StreamsConnection sc) {
-        connection = sc;
-    }
-
     static final List<Metric> getMetricList(StreamsConnection sc, String metricsList) {
         List<Metric> mList;
-        MetricArray mArray;
         try {
-            mArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(metricsList,
-                    MetricArray.class);
+            MetricArray mArray = gson.fromJson(metricsList, MetricArray.class);
 
             mList = mArray.metrics;
             for (Metric m : mList) {
@@ -82,7 +73,7 @@ public class Metric {
      * @return the metric kind that contains one of the following values:
      *         <ul>
      *         <li>counter</li>
-     *         <li>guage</li>
+     *         <li>gauge</li>
      *         <li>time</li>
      *         <li>unknown</li>
      *         </ul>
