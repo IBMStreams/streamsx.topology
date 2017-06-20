@@ -17,9 +17,7 @@ import com.google.gson.annotations.Expose;
  * An object describing an IBM Streams Processing Element
  *
  */
-public class ProcessingElement {
-
-    private StreamsConnection connection;
+public class ProcessingElement extends Element {
 
     @Expose
     private String connections;
@@ -72,23 +70,16 @@ public class ProcessingElement {
     @Expose
     private String restid;
     @Expose
-    private String self;
-    @Expose
     private String status;
     @Expose
     private String statusReason;
     @Expose
     private String tracingLevel;
 
-    void setConnection(final StreamsConnection sc) {
-        connection = sc;
-    }
-
     final static List<ProcessingElement> getPEList(StreamsConnection sc, String peGSONList) {
         List<ProcessingElement> peList;
         try {
-            ProcessingElementArray peArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
-                    .fromJson(peGSONList, ProcessingElementArray.class);
+            ProcessingElementArray peArray = gson.fromJson(peGSONList, ProcessingElementArray.class);
 
             peList = peArray.pes;
             for (ProcessingElement pe : peList) {
@@ -108,8 +99,8 @@ public class ProcessingElement {
      * @throws IOException
      */
     public List<Metric> getMetrics() throws IOException {
-        String sReturn = connection.getResponseString(metrics);
-        List<Metric> lMetrics = Metric.getMetricList(connection, sReturn);
+        String sReturn = connection().getResponseString(metrics);
+        List<Metric> lMetrics = Metric.getMetricList(connection(), sReturn);
         return lMetrics;
     }
 
@@ -121,8 +112,8 @@ public class ProcessingElement {
      * @throws IOException
      */
     public List<PEInputPort> getInputPorts() throws IOException {
-        String sReturn = connection.getResponseString(inputPorts);
-        List<PEInputPort> lInPorts = PEInputPort.getInputPortList(connection, sReturn);
+        String sReturn = connection().getResponseString(inputPorts);
+        List<PEInputPort> lInPorts = PEInputPort.getInputPortList(connection(), sReturn);
         return lInPorts;
     }
 
@@ -133,8 +124,8 @@ public class ProcessingElement {
      * @throws IOException
      */
     public List<Operator> getOperators() throws IOException {
-        String sReturn = connection.getResponseString(operators);
-        List<Operator> oList = Operator.getOperatorList(connection, sReturn);
+        String sReturn = connection().getResponseString(operators);
+        List<Operator> oList = Operator.getOperatorList(connection(), sReturn);
         return oList;
     }
 
@@ -146,8 +137,8 @@ public class ProcessingElement {
      * @throws IOException
      */
     public List<PEOutputPort> getOutputPorts() throws IOException {
-        String sReturn = connection.getResponseString(outputPorts);
-        List<PEOutputPort> lOutPorts = PEOutputPort.getOutputPortList(connection, sReturn);
+        String sReturn = connection().getResponseString(outputPorts);
+        List<PEOutputPort> lOutPorts = PEOutputPort.getOutputPortList(connection(), sReturn);
         return lOutPorts;
     }
 
