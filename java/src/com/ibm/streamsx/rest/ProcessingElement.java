@@ -334,11 +334,6 @@ public class ProcessingElement extends Element {
         return tracingLevel;
     }
 
-    @Override
-    public String toString() {
-        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
-    }
-
     /**
      * internal usage to get the list of processing elements
      * 

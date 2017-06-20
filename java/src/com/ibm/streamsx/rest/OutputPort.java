@@ -104,11 +104,6 @@ public class OutputPort extends Element {
         return streamName;
     };
 
-    @Override
-    public String toString() {
-        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
-    }
-
     private static class OutputPortArray {
         @Expose
         private ArrayList<OutputPort> outputPorts;

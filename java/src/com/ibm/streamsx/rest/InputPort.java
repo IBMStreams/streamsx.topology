@@ -92,11 +92,6 @@ public class InputPort extends Element {
         return resourceType;
     }
 
-    @Override
-    public String toString() {
-        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
-    }
-
     private static class InputPortArray {
         @Expose
         private ArrayList<InputPort> inputPorts;

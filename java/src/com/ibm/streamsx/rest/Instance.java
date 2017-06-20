@@ -226,11 +226,6 @@ public class Instance extends Element {
         return status;
     }
 
-    @Override
-    public String toString() {
-        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
-    }
-
     /**
      * internal usae to get list of instances
      */

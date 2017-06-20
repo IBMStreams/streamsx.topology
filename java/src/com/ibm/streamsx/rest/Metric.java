@@ -123,11 +123,6 @@ public class Metric extends Element {
         return value;
     }
 
-    @Override
-    public String toString() {
-        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
-    }
-
     private static class MetricArray {
         @Expose
         public ArrayList<Metric> metrics;

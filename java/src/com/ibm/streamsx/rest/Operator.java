@@ -139,12 +139,7 @@ public class Operator extends Element {
     public String getResourceType() {
         return resourceType;
     }
-
-    @Override
-    public String toString() {
-        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
-    }
-
+    
     private static class OperatorArray {
         @Expose
         private ArrayList<Operator> operators;

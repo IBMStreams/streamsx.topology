@@ -17,6 +17,8 @@ public abstract class Element {
     
     static final Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
     
+    private static final Gson pretty = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
+    
     private StreamsConnection connection;
     
     @Expose
@@ -28,5 +30,11 @@ public abstract class Element {
     
     void setConnection(StreamsConnection connection) {
         this.connection = connection;
+    }
+    
+
+    @Override
+    public final String toString() {
+        return pretty.toJson(this);
     }
 }

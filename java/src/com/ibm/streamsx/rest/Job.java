@@ -244,11 +244,6 @@ public class Job extends Element {
         return submitTime;
     }
 
-    @Override
-    public String toString() {
-        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
-    }
-
     private static class JobArray {
         @Expose
         public ArrayList<Job> jobs;
