@@ -104,6 +104,9 @@ public class StreamsConnectionTest {
 
         Instance i2 = connection.getInstance(instanceName);
         assertEquals(instanceName, i2.getId());
+        
+        i2.refresh();
+        assertEquals(instanceName, i2.getId());   
 
         try {
             // try a fake instance name
@@ -136,26 +139,10 @@ public class StreamsConnectionTest {
                 fail("This test should be skipped");
             }
 
-            // start the job, wait for healthy before continuing
-            int counter = 0;
-            while (counter != 60) {
-                job = instance.getJob(jobId);
-                if (!job.getHealth().equals("healthy")) {
-                    // sleep a bit of time to ensure job is started
-                    try {
-                        TimeUnit.SECONDS.sleep(1);
-                    } catch (InterruptedException e) {
-                        // if we don't sleep a whole second, that's ok
-                    }
-                } else {
-                    break;
-                }
-                counter++;
-            }
-            if (!job.getHealth().equals("healthy")) {
-                // we waited 60 seconds, should have been long enough
-                fail("Job is not healthy, bailing on test");
-            }
+            job = instance.getJob(jobId);
+            job.waitForHealthy(60, TimeUnit.SECONDS);
+            
+            assertEquals("healthy", job.getHealth());
         }
         System.out.println("jobId: " + jobId + " is setup.");
     }
@@ -219,8 +206,8 @@ public class StreamsConnectionTest {
             assertEquals("job", job2.getResourceType());
             assertEquals("job", job.getResourceType());
 
-            // Thread.sleep(400);
-            // job2.refresh();
+            Thread.sleep(400);
+            job2.refresh();
         }
 
         // job is setup with 3 operators
@@ -370,6 +357,16 @@ public class StreamsConnectionTest {
             assertNotNull(m.getDescription());
             assertTrue(m.getLastTimeRetrieved() > 0);
         }
+        //Metric m = peMetrics.get(0);
+        //long lastTime = m.getLastTimeRetrieved();
+        //Thread.sleep(3500);
+        //m.refresh();
+        //assertTrue(lastTime < m.getLastTimeRetrieved());       
+        
+        String pid = pe1.getProcessId();
+        pe1.refresh();
+        assertEquals(pid, pe1.getProcessId());
+        
 
         List<PEInputPort> inputPorts = pe1.getInputPorts();
         assertTrue(inputPorts.size() == 0);

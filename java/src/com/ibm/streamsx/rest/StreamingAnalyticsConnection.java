@@ -8,7 +8,6 @@ import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVI
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.http.HttpResponse;
