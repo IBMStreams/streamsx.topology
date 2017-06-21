@@ -31,7 +31,7 @@ public class InvokeCancel {
         this.userName = null;
     }
 
-    public void invoke() throws Exception, InterruptedException {
+    public int invoke(boolean throwOnError) throws Exception, InterruptedException {
         String si = Util.getStreamsInstall();
         File sj = new File(si, "bin/streamtool");
         
@@ -57,8 +57,8 @@ public class InvokeCancel {
         sjProcess.getOutputStream().close();
         int rc = sjProcess.waitFor();
         trace.info("streamtool canceljob complete: return code=" + rc);
-        if (rc != 0)
+        if (throwOnError && rc != 0)
             throw new Exception("streamtool canceljob failed!");
-
+        return rc;
     }
 }
