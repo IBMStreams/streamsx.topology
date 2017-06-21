@@ -41,7 +41,7 @@ public class DistributedTesterContextFuture implements Future<BigInteger> {
             cancelled = true;
         }
         try {
-            cancel.invoke();
+            cancel.invoke(true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

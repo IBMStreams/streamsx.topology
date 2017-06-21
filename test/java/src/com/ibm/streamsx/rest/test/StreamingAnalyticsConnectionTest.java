@@ -6,12 +6,10 @@
 package com.ibm.streamsx.rest.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.junit.Test;
@@ -22,69 +20,43 @@ import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
 
 public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
 
-    // Tests that access StreamingAnalyticsConnection need to be overridden in
-    // this class
-    StreamingAnalyticsConnection connection = null;
-
     @Override
-    public void setupConnection() {
-        try {
-            if (connection == null) {
-                String serviceName = System.getenv("STREAMING_ANALYTICS_SERVICE_NAME");
-                String vcapServices = System.getenv("VCAP_SERVICES");
+    public void setupConnection() throws Exception {
+        if (connection == null) {
+            String serviceName = System.getenv("STREAMING_ANALYTICS_SERVICE_NAME");
+            String vcapServices = System.getenv("VCAP_SERVICES");
 
-                // if we don't have serviceName or vcapServices, skip the test
-                assumeNotNull(serviceName, vcapServices);
+            // if we don't have serviceName or vcapServices, skip the test
+            assumeNotNull(serviceName, vcapServices);
 
-                testType = "STREAMING_ANALYTICS_SERVICE";
-                connection = StreamingAnalyticsConnection.createInstance(vcapServices, serviceName);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
+            testType = "STREAMING_ANALYTICS_SERVICE";
+            connection = StreamingAnalyticsConnection.createInstance(vcapServices, serviceName);
         }
     }
 
     @Override
-    public void setupInstance() {
+    public void setupInstance() throws Exception {
         setupConnection();
-        try {
-            if (instance == null) {
-                instance = connection.getInstance();
-                // bail if streaming analytics instance isn't up & running
-                assumeTrue(instance.getStatus().equals("running"));
-            }
-        } catch (RESTException r) {
-            // if we get here, the local Streams test has failed
-            r.printStackTrace();
-            fail(r.getMessage());
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
+        if (instance == null) {
+            instance = ((StreamingAnalyticsConnection) connection).getInstance();
+            // bail if streaming analytics instance isn't up & running
+            assumeTrue(instance.getStatus().equals("running"));
         }
     }
 
     @Override
     @Test
-    public void testGetInstances() {
+    public void testGetInstances() throws Exception {
         setupConnection();
-        try {
-            // get all instances in the domain
-            List<Instance> instances = connection.getInstances();
-            // there should be at least one instance
-            assertTrue(instances.size() > 0);
 
-            String instanceName = instances.get(0).getId();
-            Instance i2 = connection.getInstance(instanceName);
-            assertEquals(instanceName, i2.getId());
+        // get all instances in the domain
+        List<Instance> instances = connection.getInstances();
+        // there should be at least one instance
+        assertEquals(1, instances.size());
 
-        } catch (RESTException r) {
-            r.printStackTrace();
-            fail(r.getMessage());
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
+        String instanceName = instances.get(0).getId();
+        Instance i2 = connection.getInstance(instanceName);
+        assertEquals(instanceName, i2.getId());
 
         try {
             // try a fake instance name
@@ -92,27 +64,6 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
             fail("the connection.getInstance() call should have thrown an exception");
         } catch (RESTException r) {
             assertEquals(404, r.getStatusCode());
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-    }
-
-    @Override
-    @Test
-    public void testCancelSpecificJob() {
-        try {
-            if (jobId != null) {
-                // cancel the job
-                boolean cancel = connection.cancelJob(jobId);
-                assertTrue(cancel == true);
-                // remove these so @After doesn't fail
-                job = null;
-                jobId = null;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
         }
     }
 }
