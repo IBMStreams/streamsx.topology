@@ -60,9 +60,6 @@ public class SPLGenerator {
         stvHelper = new SubmissionTimeValue(graph);
         new Preprocessor(this, graph).preprocess();
         
-        // Optimize phase.
-        new Optimizer(this, graph).optimize();
-       
         // Generate parallel composites
         JsonObject mainCompsiteDef = new JsonObject();
         mainCompsiteDef.addProperty("kind", graph.get("name").getAsString());

@@ -64,6 +64,9 @@ class Preprocessor {
         AutonomousRegions.preprocessAutonomousRegions(graph);
         
         pePlacementPreprocess.resolveColocationTags();
+
+        // Optimize phase.
+        new Optimizer(graph).optimize();       
     }
        
     /**
