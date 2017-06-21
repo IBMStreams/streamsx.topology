@@ -16,9 +16,7 @@ import com.google.gson.annotations.Expose;
 /**
  * A Output Port of the IBM Streams Processing Element
  */
-public class PEOutputPort {
-
-    private StreamsConnection connection;
+public class PEOutputPort extends Element {
 
     @Expose
     private String connections;
@@ -37,20 +35,12 @@ public class PEOutputPort {
     @Expose
     private String restid;
     @Expose
-    private String self;
-    @Expose
     private String transportType;
-
-    private void setConnection(final StreamsConnection sc) {
-        connection = sc;
-    }
 
     static final List<PEOutputPort> getOutputPortList(StreamsConnection sc, String outputPortList) {
         List<PEOutputPort> opList;
-        PEOutputPortArray opArray;
         try {
-            opArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(outputPortList,
-                    PEOutputPortArray.class);
+            PEOutputPortArray opArray = gson.fromJson(outputPortList, PEOutputPortArray.class);
 
             opList = opArray.outputPorts;
             for (PEOutputPort op : opList) {
@@ -78,8 +68,8 @@ public class PEOutputPort {
      * @return List of {@link Metric IBM Streams Metrics}
      */
     public List<Metric> getMetrics() throws IOException {
-        String sReturn = connection.getResponseString(metrics);
-        List<Metric> sMetrics = Metric.getMetricList(connection, sReturn);
+        String sReturn = connection().getResponseString(metrics);
+        List<Metric> sMetrics = Metric.getMetricList(connection(), sReturn);
 
         return sMetrics;
     }
@@ -106,11 +96,6 @@ public class PEOutputPort {
      */
     public String getResourceType() {
         return resourceType;
-    }
-
-    @Override
-    public String toString() {
-        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
 
     private static class PEOutputPortArray {

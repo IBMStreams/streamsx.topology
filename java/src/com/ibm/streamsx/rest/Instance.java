@@ -18,9 +18,8 @@ import com.google.gson.annotations.Expose;
  * An object describing an IBM Streams Instance
  * 
  */
-public class Instance {
-    private StreamsConnection connection;
-
+public class Instance extends Element {
+    
     @Expose
     private String activeServices;
     @Expose
@@ -64,8 +63,6 @@ public class Instance {
     @Expose
     private String restid;
     @Expose
-    private String self;
-    @Expose
     private long startTime;
     @Expose
     private String startedBy;
@@ -75,14 +72,9 @@ public class Instance {
     private String views;
 
     static final Instance create(final StreamsConnection sc, String gsonInstance) {
-        Instance instance = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(gsonInstance,
-                Instance.class);
+        Instance instance = gson.fromJson(gsonInstance, Instance.class);
         instance.setConnection(sc);
         return instance;
-    }
-
-    private void setConnection(final StreamsConnection sc) {
-        connection = sc;
     }
 
     final static List<Instance> getInstanceList(StreamsConnection sc, String instanceGSONList) {
@@ -109,9 +101,9 @@ public class Instance {
      * @throws IOException
      */
     public List<Job> getJobs() throws IOException {
-        String sReturn = connection.getResponseString(jobs);
+        String sReturn = connection().getResponseString(jobs);
 
-        List<Job> lJobs = Job.getJobList(connection, sReturn);
+        List<Job> lJobs = Job.getJobList(connection(), sReturn);
         return lJobs;
     }
 
@@ -126,8 +118,8 @@ public class Instance {
     public Job getJob(String jobId) throws IOException {
         String sGetJobURI = jobs + "/" + jobId;
 
-        String sReturn = connection.getResponseString(sGetJobURI);
-        Job job = Job.create(connection, sReturn);
+        String sReturn = connection().getResponseString(sGetJobURI);
+        Job job = Job.create(connection(), sReturn);
         return job;
     }
 
@@ -232,11 +224,6 @@ public class Instance {
      */
     public String getStatus() {
         return status;
-    }
-
-    @Override
-    public String toString() {
-        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
 
     /**

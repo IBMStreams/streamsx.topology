@@ -16,8 +16,7 @@ import com.google.gson.annotations.Expose;
 /**
  * An object describing an IBM Streams Job submitted within a specified instance
  */
-public class Job {
-    private StreamsConnection connection;
+public class Job extends Element {
 
     @Expose
     private String activeViews;
@@ -66,8 +65,6 @@ public class Job {
     @Expose
     private String restid;
     @Expose
-    private String self;
-    @Expose
     private String startedBy;
     @Expose
     private String status;
@@ -79,13 +76,9 @@ public class Job {
     private String views;
 
     static final Job create(StreamsConnection sc, String gsonJobString) {
-        Job job = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(gsonJobString, Job.class);
+        Job job = gson.fromJson(gsonJobString, Job.class);
         job.setConnection(sc);
         return job;
-    }
-
-    private void setConnection(final StreamsConnection sc) {
-        connection = sc;
     }
 
     static final List<Job> getJobList(StreamsConnection sc, String gsonJobList) {
@@ -112,9 +105,9 @@ public class Job {
      * @throws IOException
      */
     public List<Operator> getOperators() throws IOException {
-        String sReturn = connection.getResponseString(operators);
+        String sReturn = connection().getResponseString(operators);
 
-        List<Operator> opList = Operator.getOperatorList(connection, sReturn);
+        List<Operator> opList = Operator.getOperatorList(connection(), sReturn);
         return opList;
     }
 
@@ -130,7 +123,7 @@ public class Job {
      * @throws Exception
      */
     public boolean cancel() throws Exception, IOException {
-        return connection.cancelJob(id);
+        return connection().cancelJob(id);
     }
 
     /**
@@ -194,8 +187,8 @@ public class Job {
      * @throws IOException
      */
     public List<ProcessingElement> getPes() throws IOException {
-        String sReturn = connection.getResponseString(pes);
-        List<ProcessingElement> peList = ProcessingElement.getPEList(connection, sReturn);
+        String sReturn = connection().getResponseString(pes);
+        List<ProcessingElement> peList = ProcessingElement.getPEList(connection(), sReturn);
         return peList;
     }
 
@@ -249,11 +242,6 @@ public class Job {
      */
     public long getSubmitTime() {
         return submitTime;
-    }
-
-    @Override
-    public String toString() {
-        return (new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create().toJson(this));
     }
 
     private static class JobArray {
