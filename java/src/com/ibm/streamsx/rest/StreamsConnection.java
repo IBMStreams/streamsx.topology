@@ -223,9 +223,7 @@ public class StreamsConnection {
      * @throws Exception
      */
     public boolean cancelJob(String jobId) throws Exception {
-        boolean rc = true;
         InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId), userName);
-        cancelJob.invoke();
-        return rc;
+        return cancelJob.invoke(false) == 0;
     }
 }

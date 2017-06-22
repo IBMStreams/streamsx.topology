@@ -4,11 +4,13 @@
  */
 package com.ibm.streamsx.rest;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
@@ -33,17 +35,22 @@ public class Metric extends Element {
     @Expose
     private long value;
 
-    static final List<Metric> getMetricList(StreamsConnection sc, String metricsList) {
+    static final List<Metric> getMetricList(StreamsConnection sc, String uri) throws IOException {
+        
+        String metricsList = sc.getResponseString(uri);
         List<Metric> mList;
         try {
             MetricArray mArray = gson.fromJson(metricsList, MetricArray.class);
 
             mList = mArray.metrics;
             for (Metric m : mList) {
-                m.setConnection(sc);
+                m.setConnection(sc, uri + "?name=" + URLEncoder.encode(m.getName(), "UTF-8"));
             }
         } catch (JsonSyntaxException e) {
             mList = Collections.<Metric> emptyList();
+        } catch (UnsupportedEncodingException e) {
+            // Should not happen!
+            throw new RuntimeException(e);
         }
         return mList;
     }
@@ -121,6 +128,16 @@ public class Metric extends Element {
      */
     public long getValue() {
         return value;
+    }
+    
+    @Override
+    public void refresh() throws IOException {
+        List<Metric> updates = getMetricList(connection(), self());
+        if (!updates.isEmpty()) {
+            Metric update = updates.get(0);
+            value = update.getValue();
+            lastTimeRetrieved = update.getLastTimeRetrieved();
+        }
     }
 
     private static class MetricArray {

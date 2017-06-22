@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
@@ -242,6 +244,47 @@ public class Job extends Element {
      */
     public long getSubmitTime() {
         return submitTime;
+    }
+    
+    /**
+     * Wait for this job to become healthy.
+     * <BR>
+     * When submitted a Streams job has to reach a {@code healthy} state
+     * before stream processing is started. During this startup time processing
+     * elements are started on resources and then connected. This method
+     * allows code to wait for the job to become healthy before using
+     * the REST api to monitor its elements.
+     * <P>
+     * Note that a job may subsequently become unhealthy after this
+     * call returns due to failures of processing or resources.
+     * </P>
+     * 
+     * @param timeout Time to wait for the job to become healthy.
+     * @param unit Unit for {@code timeout}.
+     * 
+     * @throws TimeoutException Job did not become healthy in the time allowed.
+     * @throws InterruptedException Thread was interrupted.
+     * @throws IOException Error communicating with Streams.
+     */
+    public void waitForHealthy(long timeout, TimeUnit unit) throws TimeoutException, InterruptedException, IOException {
+        final long start =  System.currentTimeMillis();
+        final long end = start + unit.toMillis(timeout);
+        long sleepTime = 200;
+        while (!"healthy".equals(getHealth())) {
+            
+            long now = System.currentTimeMillis();
+            
+            if (now > end)
+                throw new TimeoutException();
+            
+            // backoff if it seems like it is unlikely to start
+            if ((now - start) > 5000) {
+                sleepTime = 1000;
+            }
+            
+            Thread.sleep(sleepTime);
+            refresh();
+        }
     }
 
     private static class JobArray {

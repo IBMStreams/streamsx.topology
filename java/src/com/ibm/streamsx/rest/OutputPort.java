@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
@@ -71,8 +70,8 @@ public class OutputPort extends Element {
      * @return List of {@link Metric IBM Streams Metrics}
      */
     public List<Metric> getMetrics() throws IOException {
-        String sReturn = connection().getResponseString(metrics);
-        List<Metric> sMetrics = Metric.getMetricList(connection(), sReturn);
+
+        List<Metric> sMetrics = Metric.getMetricList(connection(), metrics);
 
         return sMetrics;
     }
