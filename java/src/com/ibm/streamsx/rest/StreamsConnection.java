@@ -116,8 +116,14 @@ public class StreamsConnection {
             sReturn = EntityUtils.toString(hResponse.getEntity());
         } else if (HttpStatus.SC_NOT_FOUND == rcResponse) {
             // with a 404 message, we are likely to have a message from Streams
+            // but if not, provide a better message
             sReturn = EntityUtils.toString(hResponse.getEntity());
-            throw RESTException.create(rcResponse, sReturn);
+            if ((sReturn != null) && (!sReturn.equals(""))) {
+                throw RESTException.create(rcResponse, sReturn);
+            } else {
+                String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
+                throw new RESTException(rcResponse, httpError);
+            }
         } else {
             // all other errors...
             String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;

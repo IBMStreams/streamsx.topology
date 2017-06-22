@@ -9,9 +9,7 @@ import java.io.IOException;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.google.gson.annotations.Expose;
-
-import com.ibm.streamsx.rest.RESTErrorMessage;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * Exception for REST api wrappers
@@ -33,14 +31,18 @@ public class RESTException extends IOException {
     public static final RESTException create(int code, String streamsMessage) {
         RESTErrorMessage error = null;
         RESTException rcException;
-        try {
-            error = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(streamsMessage,
-                    RESTErrorMessage.class);
-            rcException = new RESTException(code, error);
-        } catch (IllegalStateException e) {
-            // chances are this is a 404 http error with no streams message but
-            // something else
-            rcException = new RESTException(code, streamsMessage);
+
+        if ((streamsMessage == null) || streamsMessage.equals("")) {
+            rcException = new RESTException(code);
+        } else {
+            try {
+                error = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(streamsMessage,
+                        RESTErrorMessage.class);
+                rcException = new RESTException(code, error);
+            } catch (JsonSyntaxException e) {
+                // chances are this is a 404 http error with some other message
+                rcException = new RESTException(code, streamsMessage);
+            }
         }
         return rcException;
     }
