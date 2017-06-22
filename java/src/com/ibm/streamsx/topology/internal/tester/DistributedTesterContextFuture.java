@@ -20,12 +20,12 @@ import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
 public class DistributedTesterContextFuture implements Future<BigInteger> {
 
     private final BigInteger jobId;
-    private final TupleCollection tester;
+    private final TesterRuntime trt;
     private boolean cancelled;
 
-    public DistributedTesterContextFuture(BigInteger jobId, TupleCollection tester) {
+    public DistributedTesterContextFuture(BigInteger jobId, TesterRuntime trt) {
         this.jobId = jobId;
-        this.tester = tester;
+        this.trt = trt;
     }
 
     @Override
@@ -81,7 +81,7 @@ public class DistributedTesterContextFuture implements Future<BigInteger> {
 
     void shutdownTester() {
         try {
-            tester.shutdown();
+            trt.shutdown();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

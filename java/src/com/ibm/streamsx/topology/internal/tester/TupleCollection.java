@@ -547,8 +547,12 @@ public class TupleCollection implements Tester {
         return expectedContents;
     }
 
-    public void startLocalCollector() {
+    void startLocalCollector() {
         assert this.localCollector != null;
         localRunningCollector = localCollector.execute();       
-    }   
+    } 
+    
+    public TesterRuntime getRuntime() {
+        return new TesterRuntime(this);
+    }
 }
