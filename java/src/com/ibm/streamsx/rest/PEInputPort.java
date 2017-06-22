@@ -67,8 +67,7 @@ public class PEInputPort extends Element {
      * @return List of {@link Metric IBM Streams Metrics}
      */
     public List<Metric> getMetrics() throws IOException {
-        String sReturn = connection().getResponseString(metrics);
-        List<Metric> sMetrics = Metric.getMetricList(connection(), sReturn);
+        List<Metric> sMetrics = Metric.getMetricList(connection(), metrics);
         return sMetrics;
     }
 

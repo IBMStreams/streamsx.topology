@@ -357,11 +357,11 @@ public class StreamsConnectionTest {
             assertNotNull(m.getDescription());
             assertTrue(m.getLastTimeRetrieved() > 0);
         }
-        //Metric m = peMetrics.get(0);
-        //long lastTime = m.getLastTimeRetrieved();
-        //Thread.sleep(3500);
-        //m.refresh();
-        //assertTrue(lastTime < m.getLastTimeRetrieved());       
+        Metric m = peMetrics.get(0);
+        long lastTime = m.getLastTimeRetrieved();
+        Thread.sleep(3500);
+        m.refresh();
+        assertTrue(lastTime < m.getLastTimeRetrieved());       
         
         String pid = pe1.getProcessId();
         pe1.refresh();

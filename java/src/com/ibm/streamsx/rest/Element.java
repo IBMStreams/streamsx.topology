@@ -33,8 +33,16 @@ public abstract class Element {
         return connection;
     }
     
+    String self() {
+        return self;
+    }
+    
     void setConnection(StreamsConnection connection) {
         this.connection = connection;
+    }
+    void setConnection(StreamsConnection connection, String self) {
+        this.connection = connection;
+        this.self = self;
     }
     
 
