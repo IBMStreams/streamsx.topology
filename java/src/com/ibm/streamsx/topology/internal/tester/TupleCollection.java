@@ -47,6 +47,8 @@ import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.internal.test.handlers.StringTupleTester;
 import com.ibm.streamsx.topology.internal.tester.ops.TesterSink;
+import com.ibm.streamsx.topology.internal.tester.tcp.TCPTestServer;
+import com.ibm.streamsx.topology.internal.tester.tcp.TestTuple;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.tester.Condition;
