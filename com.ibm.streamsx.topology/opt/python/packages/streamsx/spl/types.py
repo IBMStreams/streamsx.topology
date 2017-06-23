@@ -170,13 +170,13 @@ def float32(value):
     """
     Create an SPL ``float32`` value.
     """
-    return Expression('FLOAT32', int(value))
+    return Expression('FLOAT32', float(value))
 
 def float64(value):
     """
     Create an SPL ``float64`` value.
     """
-    return Expression('FLOAT64', int(value))
+    return Expression('FLOAT64', float(value))
 
 def rstring(value):
     """
