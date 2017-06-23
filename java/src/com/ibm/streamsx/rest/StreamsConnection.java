@@ -71,13 +71,43 @@ public class StreamsConnection {
      * 
      * @param url
      *            String representing the root url to the REST API, for example:
-     *            https:server:port/streams/rest
+     *            https:server:port/streams/rest/resources
+     *            https:server/streams/rest Need to remove the '/resources' for
+     *            all other access to be efficient
      */
-    protected void setStreamsRESTURL(String url) {
-        if (url.equals("") || (url.charAt(url.length() - 1) != '/')) {
-            this.url = url;
-        } else {
-            this.url = url.substring(0, url.length() - 1);
+    protected void setStreamsRESTURL(String iUrl) {
+        // set this originally to what comes in to force a 404 if it's not what
+        // we wanted
+        this.url = iUrl;
+        if (!iUrl.isEmpty()) {
+            // strip trailing slash
+            if (iUrl.charAt(iUrl.length() - 1) == '/') {
+                iUrl = iUrl.substring(0, iUrl.length() - 1);
+            }
+
+            // IBM Streams returns the REST URI Root as
+            // https:server:port/streams/rest/resources
+            // whereas Streaming Analytics returns the REST URI as
+            // https:server/streams/rest
+            // https:server/streams/rest is the common path between them
+            String keyword = "streams/rest";
+            String endString = "";
+            if (getClass() == StreamsConnection.class) {
+                endString = "/resources";
+            }
+
+            int index = iUrl.indexOf(keyword);
+            if (index != -1) {
+                String remants = "";
+                if (index < iUrl.length()) {
+                    remants = iUrl.substring(index + keyword.length(), iUrl.length());
+                }
+                // verify that there's nothing at the end
+                if (remants.equals(endString)) {
+                    // make sure we stop at streams/rest
+                    this.url = iUrl.substring(0, index + keyword.length());
+                }
+            }
         }
     }
 

@@ -49,33 +49,52 @@ public class StreamsConnectionTest {
     public StreamsConnectionTest() {
     }
 
+    private String getUserName() {
+        // allow the user to specify a different user name for this test
+        String userName = System.getenv("STREAMS_INSTANCE_USERID");
+        if ((userName == null) || (userName.isEmpty())) {
+            userName = System.getenv("USER");
+        }
+        return userName;
+    }
+
+    private String getStreamsPort() {
+        String streamsPort = System.getenv("STREAMS_INSTANCE_PORT");
+        if ((streamsPort == null) || streamsPort.isEmpty()) {
+            // if port not specified, assume default one
+            streamsPort = "8443";
+        }
+        return streamsPort;
+    }
+
+    private String getUserPassword() {
+        String instancePassword = System.getenv("STREAMS_INSTANCE_PASSWORD");
+        // Default password for the QSE
+        if ("streamsadmin".equals(getUserName()) && instancePassword == null) {
+            instancePassword = "passw0rd";
+        }
+        // don't print this out unless you need it
+        // System.out.println("InstancePWD: " + instancePassword);
+        return instancePassword;
+    }
+
     public void setupConnection() throws Exception {
         if (connection == null) {
-            String userName = System.getenv("USER");
-            instanceName = System.getenv("STREAMS_INSTANCE_ID");
-            String streamsPort = System.getenv("streamsPort");
-            String instancePassword = System.getenv("STREAMS_INSTANCE_PASSWORD");
-
             testType = "DISTRIBUTED";
 
-            // Default to QSE
-            if ("streamsadmin".equals(userName) && instancePassword == null) {
-                instancePassword = "passw0rd";
-            }
-            
-            System.out.println("UserName: " + userName);
-
-            if ((streamsPort == null) || streamsPort.isEmpty()) {
-                // if port not specified, assume default one
-                streamsPort = "8443";
-            }
+            instanceName = System.getenv("STREAMS_INSTANCE_ID");
             System.out.println("InstanceName: " + instanceName);
-            System.out.println("InstancePWD: " + instancePassword);
+
+            String userName = getUserName();
+            System.out.println("UserName: " + userName);
+            String streamsPort = getStreamsPort();
+            System.out.println("streamsPort: " + streamsPort);
+            String instancePassword = getUserPassword();
 
             // if the instance name and password are not set, bail
             assumeNotNull(instanceName, instancePassword);
 
-            String restUrl = "https://localhost:" + streamsPort + "/streams/rest";
+            String restUrl = "https://localhost:" + streamsPort + "/streams/rest/resources";
             connection = StreamsConnection.createInstance(userName, instancePassword, restUrl);
 
             // for localhost, need to disable security
@@ -95,6 +114,55 @@ public class StreamsConnectionTest {
     }
 
     @Test
+    public void testBadConnections() throws Exception {
+        // only run this test if this is a Streams Connection
+        assumeTrue(getClass() == StreamsConnectionTest.class);
+
+        String iName = getUserName();
+        String sPort = getStreamsPort();
+        String iPassword = getUserPassword();
+
+        // send in wrong url
+        String badUrl = "https://localhost:" + sPort + "/streams/re";
+        StreamsConnection badConn = StreamsConnection.createInstance(iName, iPassword, badUrl);
+        badConn.allowInsecureHosts(true);
+        try {
+            badConn.getInstances();
+        } catch (RESTException r) {
+            assertEquals(404, r.getStatusCode());
+        }
+
+        // send in url too long
+        String badURL = "https://localhost:" + sPort + "/streams/rest/resourcesTooLong";
+        badConn = StreamsConnection.createInstance(iName, iPassword, badURL);
+        badConn.allowInsecureHosts(true);
+        try {
+            badConn.getInstances();
+        } catch (RESTException r) {
+            assertEquals(404, r.getStatusCode());
+        }
+
+        // send in bad iName
+        String restUrl = "https://localhost:" + sPort + "/streams/rest/resources";
+        badConn = StreamsConnection.createInstance("fakeName", iPassword, restUrl);
+        badConn.allowInsecureHosts(true);
+        try {
+            badConn.getInstances();
+        } catch (RESTException r) {
+            assertEquals(401, r.getStatusCode());
+        }
+
+        // send in wrong password
+        badConn = StreamsConnection.createInstance(iName, "badPassword", restUrl);
+        badConn.allowInsecureHosts(true);
+        try {
+            badConn.getInstances();
+        } catch (RESTException r) {
+            assertEquals(401, r.getStatusCode());
+        }
+    }
+
+    @Test
     public void testGetInstances() throws Exception {
         setupConnection();
         // get all instances in the domain
@@ -104,9 +172,9 @@ public class StreamsConnectionTest {
 
         Instance i2 = connection.getInstance(instanceName);
         assertEquals(instanceName, i2.getId());
-        
+
         i2.refresh();
-        assertEquals(instanceName, i2.getId());   
+        assertEquals(instanceName, i2.getId());
 
         try {
             // try a fake instance name
@@ -122,9 +190,8 @@ public class StreamsConnectionTest {
     public void setupJob() throws Exception {
         setupInstance();
         if (jobId == null) {
-            
-            Topology topology = new Topology(
-                    getClass().getSimpleName(), // avoid clashes with sub-class tests
+            // avoid clashes with sub-class tests
+            Topology topology = new Topology(getClass().getSimpleName(), 
                     "JobForRESTApiTest");
 
             TStream<Integer> source = topology.periodicSource(randomGenerator(), 200, TimeUnit.MILLISECONDS);
@@ -144,7 +211,7 @@ public class StreamsConnectionTest {
 
             job = instance.getJob(jobId);
             job.waitForHealthy(60, TimeUnit.SECONDS);
-            
+
             assertEquals("healthy", job.getHealth());
         }
         System.out.println("jobId: " + jobId + " is setup.");
@@ -364,12 +431,11 @@ public class StreamsConnectionTest {
         long lastTime = m.getLastTimeRetrieved();
         Thread.sleep(3500);
         m.refresh();
-        assertTrue(lastTime < m.getLastTimeRetrieved());       
-        
+        assertTrue(lastTime < m.getLastTimeRetrieved());
+
         String pid = pe1.getProcessId();
         pe1.refresh();
         assertEquals(pid, pe1.getProcessId());
-        
 
         List<PEInputPort> inputPorts = pe1.getInputPorts();
         assertTrue(inputPorts.size() == 0);
