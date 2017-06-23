@@ -122,7 +122,10 @@ public class StreamsConnectionTest {
     public void setupJob() throws Exception {
         setupInstance();
         if (jobId == null) {
-            Topology topology = new Topology("JobForRESTApiTest");
+            
+            Topology topology = new Topology(
+                    getClass().getSimpleName(), // avoid clashes with sub-class tests
+                    "JobForRESTApiTest");
 
             TStream<Integer> source = topology.periodicSource(randomGenerator(), 200, TimeUnit.MILLISECONDS);
             TStream<Integer> sourceDouble = source.transform(doubleNumber());
