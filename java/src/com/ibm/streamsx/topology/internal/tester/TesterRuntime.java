@@ -4,23 +4,37 @@
  */
 package com.ibm.streamsx.topology.internal.tester;
 
+import java.util.Map;
+import java.util.Set;
+
+import com.ibm.streams.flow.handlers.StreamHandler;
+import com.ibm.streams.operator.Tuple;
+import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.Topology;
+
 /**
  * Separation of the runtime aspects of a
  * Tester from definition time.
  *
  */
-public class TesterRuntime {
+public abstract class TesterRuntime {
     private final TupleCollection tester;
     
     protected TesterRuntime(TupleCollection tester) {
         this.tester = tester;
     }
     
-    public void start() {
-        tester.startLocalCollector();
+    protected TupleCollection tester() {
+        return tester;
     }
+    
+    protected Topology topology() {
+        return tester().getTopology();
+    }
+    
+    public abstract void start();
 
-    public void shutdown() throws Exception {
-        tester.shutdown();  
-    }
+    public abstract void shutdown() throws Exception;
+    
+    public abstract void finalizeTester(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers) throws Exception;  
 }
