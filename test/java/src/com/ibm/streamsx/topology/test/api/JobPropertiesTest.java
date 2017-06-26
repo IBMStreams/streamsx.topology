@@ -22,7 +22,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.streams.operator.OutputTuple;
@@ -49,7 +48,6 @@ import com.ibm.streamsx.topology.tester.Condition;
 public class JobPropertiesTest extends TestTopology {
 
     @Test
-    @Ignore("Issue #1108")
     public void testNameProperty() throws Exception {
         List<String> result = testItDirect("testNameProperty", JobProperties.NAME,
                 "JobPropertiesTestJobName");
@@ -61,7 +59,6 @@ public class JobPropertiesTest extends TestTopology {
     }
 
     @Test
-    @Ignore("Issue #1108")
     public void testGroupPropertyDefault() throws Exception {
         List<String> result = testItDirect("testGroupProperty", JobProperties.GROUP,
                 // lame, but otherwise need a real pre-existing non-default one.
@@ -73,7 +70,6 @@ public class JobPropertiesTest extends TestTopology {
     }
 
     @Test
-    @Ignore("Issue #1108")
     public void testGroupPropertyNonDefault() throws Exception {
         // NOT a real API EV... though perhaps should be.
         // Must name a pre-existing job group.
@@ -88,14 +84,12 @@ public class JobPropertiesTest extends TestTopology {
     }
 
     @Test(expected=Exception.class)
-    @Ignore("Issue #1108")
     public void testGroupPropertyNeg() throws Exception {
         testItDirect("testGroupProperty", JobProperties.GROUP,
                 "myJobGroup-"+((long)(Math.random() + 10000)));
     }
 
     @Test
-    @Ignore("Issue #1108")
     public void testDataDirectoryProperty() throws Exception {
         List<String> result = testItDirect("testDataDirectoryProperty", JobProperties.DATA_DIRECTORY,
                 "/no/such/path");

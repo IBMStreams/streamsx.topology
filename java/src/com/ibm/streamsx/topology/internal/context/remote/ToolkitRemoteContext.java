@@ -69,9 +69,16 @@ import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 public class ToolkitRemoteContext extends RemoteContextImpl<File> {
     
     /**
-     * Location where dependent jars are placed.
+     * Location where dependent jars are placed
+     * that do not include primitive operators.
      */
     public static final String DEP_JAR_LOC = "opt" + File.separator + "streamsx.topology.depends";
+    
+    /**
+     * Location where dependent jars are placed
+     * that do not include primitive operators.
+     */
+    public static final String DEP_OP_JAR_LOC = "impl" + File.separator + "lib";
 
 
 	private final boolean keepToolkit;

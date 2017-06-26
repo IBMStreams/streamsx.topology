@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.core;
 
 import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.DEP_JAR_LOC;
+import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.DEP_OP_JAR_LOC;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,10 +22,10 @@ import java.util.Set;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
+import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
-import com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext;
 import com.ibm.streamsx.topology.internal.functional.ops.Functional;
 import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 
@@ -36,7 +37,12 @@ import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 public class DependencyResolver {    
     
     private final Map<BOperatorInvocation, Set<Path>> operatorToJarDependencies = new HashMap<>();
-    private final Set<Path> globalDependencies = new HashSet<>();
+    /**
+     * Map of jar paths that are dependencies.
+     * Value is a boolean indicating if it includes a primitive
+     * operator that needs to be part of the generated toolkit.
+     */
+    private final Map<Path, Boolean> globalDependencies = new HashMap<>();
     private final Set<Artifact> globalFileDependencies = new HashSet<>();
 
     private static class Artifact {
@@ -82,10 +88,22 @@ public class DependencyResolver {
             throw new IllegalArgumentException("File not found. Invalid "
       	       + "third party dependency location:"+ f.toPath().toAbsolutePath().toString());
         }
-        globalDependencies.add(f.toPath().toAbsolutePath());    
+        
+        addGlobalDependency(f.toPath().toAbsolutePath(), false); 
+    }
+    
+    private void addGlobalDependency(Path path, boolean containsOps) {
+        
+        if (globalDependencies.containsKey(path)) {
+            boolean jarContainsOps = globalDependencies.get(path);
+            if ((jarContainsOps == containsOps) && !containsOps)
+                return;
+        }
+        globalDependencies.put(path, containsOps);
     }
     
     public void addClassDependency(Class<?> clazz){
+        boolean containsOperator = false;
         CodeSource source = clazz.getProtectionDomain().getCodeSource();
         if (source == null)
             return;
@@ -93,9 +111,11 @@ public class DependencyResolver {
         try {
             absolutePath = Paths.get(source.getLocation().toURI()).toAbsolutePath();
         } catch (URISyntaxException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-        globalDependencies.add(absolutePath);
+        containsOperator = clazz.isAnnotationPresent(PrimitiveOperator.class);
+            
+        addGlobalDependency(absolutePath, containsOperator);
     }
 
     public void addJarDependency(BOperatorInvocation op, Object logic) {
@@ -122,7 +142,7 @@ public class DependencyResolver {
         try {
             absolutePath = Paths.get(source.getLocation().toURI()).toAbsolutePath();
         } catch (URISyntaxException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         
         if (operatorToJarDependencies.containsKey(op)) {
@@ -173,7 +193,7 @@ public class DependencyResolver {
             ArrayList<String> jars = new ArrayList<String>();
             
             for (Path source : operatorToJarDependencies.get(op)) {
-                String jarName = resolveDependency(source, includes);
+                String jarName = resolveDependency(source, false, includes);
                 jars.add(DEP_JAR_LOC + File.separator + jarName);
             }
 
@@ -182,9 +202,11 @@ public class DependencyResolver {
         }
         
         ArrayList<String> jars = new ArrayList<String>();
-        for(Path source : globalDependencies){
-            String jarName = resolveDependency(source, includes);
-            jars.add(DEP_JAR_LOC + File.separator  + jarName);	    
+        for(Path source : globalDependencies.keySet()){
+            boolean containsOperator = globalDependencies.get(source);
+            String jarName = resolveDependency(source, containsOperator, includes);
+            String location = depJarRoot(containsOperator);
+            jars.add(location + File.separator  + jarName);	    
         }	
         
         List<BOperator> ops = topology.builder().getOps();
@@ -216,7 +238,11 @@ public class DependencyResolver {
             resolveFileDependency(dep, includes);
     }
     
-    private String resolveDependency(Path source, JSONArray includes){ 
+    private static String depJarRoot(boolean containsOperator) {
+        return containsOperator ? DEP_OP_JAR_LOC : DEP_JAR_LOC;
+    }
+    
+    private String resolveDependency(Path source, boolean containsOperator, JSONArray includes){ 
         
         String jarName;
         
@@ -231,7 +257,7 @@ public class DependencyResolver {
                 jarName = source.getFileName().toString();
                 
                 include.put("source", source.toAbsolutePath().toString());
-                include.put("target", DEP_JAR_LOC);
+                include.put("target", depJarRoot(containsOperator));
             } 
             
             else if (sourceFile.isDirectory()) {
