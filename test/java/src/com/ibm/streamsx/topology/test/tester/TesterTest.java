@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.test.tester;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +27,6 @@ import com.ibm.streamsx.topology.tester.Tester;
 
 public class TesterTest extends TestTopology {
     @Test
-    @Ignore
     public void testStringFilter() throws Exception {
         final Topology topology = new Topology("StringFilter");
         TStream<String> source = topology.strings("hello", "goodbye",
@@ -48,6 +48,7 @@ public class TesterTest extends TestTopology {
     @Test
     public void testComplete1() throws Exception {
         assumeSPLOk();
+        assumeTrue(getTesterType() == StreamsContext.Type.STANDALONE_TESTER);
         
         final Topology topology = new Topology("StringFilter");
         TStream<String> source = topology.strings("hello", "tester");
@@ -67,6 +68,7 @@ public class TesterTest extends TestTopology {
     @Test
     public void testComplete2() throws Exception {
         assumeSPLOk();
+        assumeTrue(getTesterType() == StreamsContext.Type.STANDALONE_TESTER);
         
         final Topology topology = new Topology("StringFilter");
         TStream<String> source = topology.strings("hello", "tester");
@@ -86,6 +88,7 @@ public class TesterTest extends TestTopology {
     @Test
     public void testComplete3() throws Exception {
         assumeSPLOk();
+        assumeTrue(getTesterType() == StreamsContext.Type.STANDALONE_TESTER);
         
         final Topology topology = new Topology("StringFilter");
         TStream<String> source = topology.strings("hello", "tester");
