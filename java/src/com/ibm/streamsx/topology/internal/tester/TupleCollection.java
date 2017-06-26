@@ -474,12 +474,12 @@ public class TupleCollection implements Tester {
         checkOneUse();
         context.submit(topology).get();
     }
+    @Override
     public boolean complete(StreamsContext<?> context, Condition<?> endCondition, long timeout, TimeUnit unit) throws Exception {
-        checkOneUse();
         Map<String,Object> noConfig = new HashMap<>(); // Collections.emptyMap();
         return complete(context, noConfig, endCondition,timeout, unit);
     }
-    
+    @Override
     public boolean complete(StreamsContext<?> context, Map<String,Object> config, Condition<?> endCondition, long timeout, TimeUnit unit) throws Exception {
         checkOneUse();
         
