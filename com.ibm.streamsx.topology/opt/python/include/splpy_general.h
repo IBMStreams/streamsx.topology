@@ -534,7 +534,11 @@ class SplpyGeneral {
 #if PY_MAJOR_VERSION == 3
       return PyMemoryView_FromMemory((char *) bytes, sizeb, PyBUF_READ);
 #else
-      return PyBuffer_FromMemory((void *)bytes, sizeb);
+      Py_buffer buf;
+      PyBuffer_FillInfo(&buf, NULL, (void*) bytes, (Py_ssize_t) sizeb , 1, PyBUF_SIMPLE);
+      
+      // PyMemoryView_FromBuffer makes a copy of the info from buf.
+      return PyMemoryView_FromBuffer(&buf);
 #endif
     }
 
