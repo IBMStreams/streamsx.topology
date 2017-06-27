@@ -9,6 +9,10 @@ and an attribute is a named value of a specific type.
 
 The supported types are defined by IBM Streams Streams Processing Language (SPL).
 """
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+from builtins import *
+
 import collections
 import enum
 import io
@@ -47,7 +51,7 @@ class _SchemaParser(object):
 
     def _req_op(self, tokens, which):
         token = next(tokens)
-        if token.type != tokenize.OP or which != token.string:
+        if token[0] != tokenize.OP or which != token[1]:
             self._parse_error(token)
 
     def _parse(self):
@@ -58,41 +62,41 @@ class _SchemaParser(object):
         tokens = tokenize.generate_tokens(ios)
         self._parse_tuple(self._type, next(tokens), tokens)
         endtoken = next(tokens)
-        if not endtoken.type == token.ENDMARKER:
+        if not endtoken[0] == token.ENDMARKER:
             self._parse_error(endtoken)
         return self._type
 
     def _parse_tuple(self, _type, token, tokens):
-        if token.type != tokenize.NAME or 'tuple' != token.string:
+        if token[0] != tokenize.NAME or 'tuple' != token[1]:
             self._parse_error(token)
         self._req_op(tokens, '<')
     
         token = None
         while True:
             token = next(tokens)
-            if token.type == tokenize.OP:
-                if token.string == ',':
+            if token[0] == tokenize.OP:
+                if token[1] == ',':
                     continue
-                if token.string == '>':
+                if token[1] == '>':
                     break
                 self._parse_error(token)
 
-            if token.type == tokenize.NAME:
+            if token[0] == tokenize.NAME:
                 self._parse_attribute_type(_type, token, tokens)
                 continue
 
             self._parse_error(token)
 
     def _parse_type(self, attr_type, tokens):
-        if attr_type.type != tokenize.NAME:
+        if attr_type[0] != tokenize.NAME:
             self._parse_error(attr_type)
 
-        if 'tuple' == attr_type.string:
+        if 'tuple' == attr_type[1]:
             nested_tuple = []
             self._parse_tuple(nested_tuple, attr_type, tokens)
             return ('tuple', nested_tuple)
 
-        if 'map' == attr_type.string:
+        if 'map' == attr_type[1]:
             self._req_op(tokens, '<')
             key_type = self._parse_type(next(tokens), tokens)
             self._req_op(tokens, ',')
@@ -100,19 +104,19 @@ class _SchemaParser(object):
             self._req_op(tokens, '>')
             return ('map', (key_type, value_type))
             
-        if attr_type.string in _SchemaParser._SPL_PRIMITIVE_TYPES:
-            return attr_type.string
+        if attr_type[1] in _SchemaParser._SPL_PRIMITIVE_TYPES:
+            return attr_type[1]
 
-        if attr_type.string in _SchemaParser._SPL_COLLECTION_TYPES:
+        if attr_type[1] in _SchemaParser._SPL_COLLECTION_TYPES:
             self._req_op(tokens, '<')
             element_type = self._parse_type(next(tokens), tokens)
             self._req_op(tokens, '>')
-            return (attr_type.string, element_type)
+            return (attr_type[1], element_type)
 
         self._parse_error(attr_type)
 
     def _parse_attribute_type(self, _type, attr_type, tokens):
-        if attr_type.type != tokenize.NAME:
+        if attr_type[0] != tokenize.NAME:
             self._parse_error(attr_type)
 
         attr_type = self._parse_type(attr_type, tokens)
@@ -122,9 +126,9 @@ class _SchemaParser(object):
 
     def _parse_attribute_name(self, tokens):
         attr_name = next(tokens)
-        if attr_name.type != tokenize.NAME:
+        if attr_name[0] != tokenize.NAME:
             self._parse_error(attr_name)
-        return attr_name.string
+        return attr_name[1]
 
 
 def _stream_schema(schema):
