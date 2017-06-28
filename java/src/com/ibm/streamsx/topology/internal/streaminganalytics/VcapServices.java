@@ -54,7 +54,7 @@ public class VcapServices {
                                 + VCAP_SERVICES);
             }
             // resulting string can be either the serialized JSON or filename
-            if (vcapString.startsWith(File.separator)) {
+            if (Files.isRegularFile(Paths.get(vcapString))) {
                 Path vcapFile = Paths.get(vcapString);
                 vcapContents = new String(Files.readAllBytes(vcapFile), StandardCharsets.UTF_8);
             } else {
@@ -65,7 +65,7 @@ public class VcapServices {
         } else if (rawServices.isJsonPrimitive()) {
             // String can be either the serialized JSON or filename
             String rawString = rawServices.getAsString();
-            if (rawString.startsWith(File.separator)) {
+            if (Files.isRegularFile(Paths.get(rawString))) {
                 Path vcapFile = Paths.get(rawString);
                 vcapContents = new String(Files.readAllBytes(vcapFile), StandardCharsets.UTF_8);
             } else
