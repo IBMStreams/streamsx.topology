@@ -11,6 +11,7 @@ import java.util.concurrent.Future;
 
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.tester.DistributedTesterContextFuture;
+import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.TupleCollection;
 
 public class DistributedTester extends DistributedStreamsContext {
@@ -26,7 +27,7 @@ public class DistributedTester extends DistributedStreamsContext {
         if (app == null)
             return future;
         return new DistributedTesterContextFuture(future.get(),
-                (TupleCollection) (app.getTester()));
+                ((TupleCollection) (app.getTester())).getRuntime());
     }
     
     
@@ -35,8 +36,8 @@ public class DistributedTester extends DistributedStreamsContext {
     void preInvoke(AppEntity entity, File bundle) {
         Topology app = entity.app;
         if (app != null && app.hasTester()) {
-            TupleCollection collector = (TupleCollection) app.getTester();
-            collector.startLocalCollector();
+            TesterRuntime trt = ((TupleCollection) app.getTester()).getRuntime();
+            trt.start();
         }
     }
 }

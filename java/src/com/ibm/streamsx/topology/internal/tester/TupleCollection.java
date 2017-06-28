@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.internal.tester;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,34 +18,20 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.mina.core.service.IoHandlerAdapter;
-import org.apache.mina.core.session.IoSession;
-
-import com.ibm.streams.flow.declare.InputPortDeclaration;
-import com.ibm.streams.flow.declare.OperatorGraph;
-import com.ibm.streams.flow.declare.OperatorGraphFactory;
-import com.ibm.streams.flow.declare.OperatorInvocation;
-import com.ibm.streams.flow.declare.OutputPortDeclaration;
 import com.ibm.streams.flow.handlers.StreamCollector;
 import com.ibm.streams.flow.handlers.StreamCounter;
 import com.ibm.streams.flow.handlers.StreamHandler;
-import com.ibm.streams.flow.javaprimitives.JavaOperatorTester;
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
-import com.ibm.streams.operator.OutputTuple;
-import com.ibm.streams.operator.StreamingOutput;
 import com.ibm.streams.operator.Tuple;
-import com.ibm.streams.operator.samples.operators.PassThrough;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.builder.BInputPort;
-import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.internal.test.handlers.StringTupleTester;
-import com.ibm.streamsx.topology.internal.tester.ops.TesterSink;
+import com.ibm.streamsx.topology.internal.tester.tcp.TCPTesterRuntime;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -63,42 +48,13 @@ import com.ibm.streamsx.topology.tester.Tester;
 public class TupleCollection implements Tester {
 
     private final Topology topology;
-    private OperatorGraph collectorGraph;
-    private JavaTestableGraph localCollector;
-    private Future<JavaTestableGraph> localRunningCollector;
     private AtomicBoolean used = new AtomicBoolean();
-
-    private final Map<TStream<?>, StreamTester> testers = new HashMap<>();
 
     private final Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers = new HashMap<>();
 
     public TupleCollection(Topology topology) {
         this.topology = topology;
     }
-
-    /**
-     * Holds the information in the declared collector graph about the testers
-     * so that the handlers can be attached once the graph is executed.
-     */
-    private static class StreamTester {
-        final int testerId;
-        final InputPortDeclaration input;
-        final OutputPortDeclaration output;
-
-        // In the graph executing locally, add a PassThrough operator that
-        // the TCP server will inject tuples to. It's output will be where
-        // the StreamHandlers are attached to.
-        StreamTester(OperatorGraph graph, int testerId, TStream<?> stream) {
-            this.testerId = testerId;
-            OperatorInvocation<PassThrough> operator = graph
-                    .addOperator(PassThrough.class);
-            input = operator.addInput(stream.output().schema());
-            output = operator.addOutput(stream.output().schema());
-        }
-    }
-
-    private Map<Integer, TestTupleInjector> injectors = Collections
-            .synchronizedMap(new HashMap<Integer, TestTupleInjector>());
 
     /*
      * Graph declaration time.
@@ -332,117 +288,24 @@ public class TupleCollection implements Tester {
             break;
         case DISTRIBUTED_TESTER:
         case STANDALONE_TESTER:
-            finalizeStandaloneTester();
+            synchronized (this) {
+                runtime = new TCPTesterRuntime(this);
+            }
+            runtime.finalizeTester(handlers);
             break;
         default: // nothing to do
             break;
         }
     }
 
-    private TCPTestServer tcpServer;
-    private BOperatorInvocation testerSinkOp;
 
-    // private SPLOperator testerSinkSplOp;
-
-    /**
-     * 
-     * @param graphItems
-     * @throws Exception
-     */
-    private void finalizeStandaloneTester()
-            throws Exception {
-
-        addTCPServerAndSink();
-        collectorGraph = OperatorGraphFactory.newGraph();
-        for (TStream<?> stream : handlers.keySet()) {
-            int testerId = connectToTesterSink(stream);
-            testers.put(stream, new StreamTester(collectorGraph, testerId,
-                    stream));
-        }
-
-        localCollector = new JavaOperatorTester()
-                .executable(collectorGraph);
-        setupTestHandlers();
-    }
 
     private void finalizeEmbeddedTester()
             throws Exception {
 
     }
 
-    /**
-     * Connect a stream in the real topology to the TestSink operator that was
-     * added.
-     */
-    private int connectToTesterSink(TStream<?> stream) {
-        BInputPort inputPort = stream.connectTo(testerSinkOp, true, null);
-        // testerSinkSplOp.addInput(inputPort);
-        return inputPort.port().getPortNumber();
-    }
 
-    /**
-     * Add a TCP server that will list for tuples to be directed to handlers.
-     * Adds a sink to the topology to capture those tuples and deliver them to
-     * the current jvm to run Junit type tests.
-     */
-    private void addTCPServerAndSink() throws Exception {
-
-        tcpServer = new TCPTestServer(0, new IoHandlerAdapter() {
-            @Override
-            public void messageReceived(IoSession session, Object message)
-                    throws Exception {
-                TestTuple tuple = (TestTuple) message;
-                TestTupleInjector injector = injectors.get(tuple.getTesterId());
-                injector.tuple(tuple.getTupleData());
-            }
-        });
-
-        InetSocketAddress testAddr = tcpServer.start();
-        addTesterSink(testAddr);
-    }
-
-    public void shutdown() throws Exception {
-        tcpServer.shutdown();
-        localRunningCollector.cancel(true);       
-    }
-
-    private void addTesterSink(InetSocketAddress testAddr) {
-
-        Map<String, Object> hostInfo = new HashMap<>();
-        hostInfo.put("host", testAddr.getHostString());
-        hostInfo.put("port", testAddr.getPort());
-        this.testerSinkOp = topology.builder().addOperator(TesterSink.class,
-                hostInfo);
-
-        /*
-         * 
-         * testerSinkOp = topology.graph().addOperator(TesterSink.class);
-         * 
-         * testerSinkSplOp = topology.splgraph().addOperator(testerSinkOp);
-         * testerSinkOp.setStringParameter("host", testAddr.getHostString());
-         * testerSinkOp.setIntParameter("port", testAddr.getPort());
-         * 
-         * Map<String, Object> params = new HashMap<>(); params.put("host",
-         * testAddr.getHostString()); params.put("port", testAddr.getPort());
-         * testerSinkSplOp.setParameters(params);
-         */
-    }
-
-    private void setupTestHandlers() throws Exception {
-
-        for (TStream<?> stream : handlers.keySet()) {
-            Set<StreamHandler<Tuple>> streamHandlers = handlers.get(stream);
-            StreamTester tester = testers.get(stream);
-
-            StreamingOutput<OutputTuple> injectPort = localCollector
-                    .getInputTester(tester.input);
-            injectors.put(tester.testerId, new TestTupleInjector(injectPort));
-
-            for (StreamHandler<Tuple> streamHandler : streamHandlers) {
-                localCollector.registerStreamHandler(tester.output, streamHandler);
-            }
-        }
-    }
 
     public void setupEmbeddedTestHandlers(JavaTestableGraph tg)
             throws Exception {
@@ -544,9 +407,11 @@ public class TupleCollection implements Tester {
         complete(context, config, expectedCount, timeout, unit);
         return expectedContents;
     }
-
-    public void startLocalCollector() {
-        assert this.localCollector != null;
-        localRunningCollector = localCollector.execute();       
-    }   
+    
+    private TesterRuntime runtime;
+    public synchronized TesterRuntime getRuntime() {
+        if (runtime == null)
+            throw new IllegalStateException();
+        return runtime;
+    }
 }
