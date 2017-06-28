@@ -161,8 +161,6 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
-from builtins import super
-from builtins import range
 try:
     from future import standard_library
     standard_library.install_aliases()
@@ -532,7 +530,7 @@ class Stream(object):
         self.topology.graph.get_views().append(_view)
         return _view
 
-    def map(self, func, name=None, *, schema=None):
+    def map(self, func, name=None, schema=None):
         """
         Maps each tuple from this stream into 0 or 1 tuples.
 

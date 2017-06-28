@@ -3,6 +3,7 @@
 import unittest
 import random
 import collections
+import sys
 
 from streamsx.topology.schema import _SchemaParser
 import streamsx.topology.schema as _sch
@@ -58,6 +59,7 @@ class TestSchema(unittest.TestCase):
       self.assertEqual('int64', p._type[1][0])
       self.assertEqual('b', p._type[1][1])
 
+    @unittest.skipIf(sys.version_info.major == 2, "subTest requires 3.5")
     def test_primitives(self):
       for typ in _PRIMITIVES:
           with self.subTest(typ = typ):
@@ -67,6 +69,7 @@ class TestSchema(unittest.TestCase):
               self.assertEqual(typ, p._type[0][0])
               self.assertEqual('p', p._type[0][1])
 
+    @unittest.skipIf(sys.version_info.major == 2, "subTest requires 3.5")
     def test_collections(self):
       for ctyp in _COLLECTIONS:
           for etyp in _PRIMITIVES:
