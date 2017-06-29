@@ -28,16 +28,23 @@ class BlobTest:
 
     def __call__(self, *tuple):
         v = tuple[0]
+        hash(v)
         if not isinstance(v, memoryview):
-            return "Expected memory view is" + str(type(v))
+            return ("Expected memory view is" + str(type(v)),)
 
         if not v.readonly:
-            return "Expected readonly memory view"
+            return "Expected readonly memory view",
            
         if self.last:
             for b in self.last:
-                #TODO verify value has been released.
-                pass
+                print("TRYING LAST")
+                try:
+                    hash(b)
+                    print("GOT_VALUE LAST")
+                    return "Expected released memory view",
+                except ValueError as ve:
+                    print("VALUE_ERRRO", ve)
+                    pass
                 
         self.last.append(v)
         return str(v, 'utf-8'),
