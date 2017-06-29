@@ -143,21 +143,26 @@ extern "C" {
 
 #else
 typedef int (*__splpy_sasas_fp)(PyObject *, char **, Py_ssize_t *);
-typedef PyObject * (*__splpy_bfm_fp)(void *, Py_ssize_t);
+typedef PyObject * (*__splpy_mvfb_fp)(Py_buffer *);
+typedef int (*__splpy_bfi_fp)(Py_buffer *, PyObject *, void *, Py_ssize_t, int, int);
 extern "C" {
   static __splpy_sasas_fp __spl_fp_PyString_AsStringAndSize;
-  static __splpy_bfm_fp __spl_fp_PyBuffer_FromMemory;
+  static __splpy_mvfb_fp __spl_fp_PyMemoryView_FromBuffer;
+  static __splpy_bfi_fp __spl_fp_PyBuffer_FillInfo;
   static int __spl_fi_PyString_AsStringAndSize(PyObject * o, char ** buf, Py_ssize_t *size) {
      return __spl_fp_PyString_AsStringAndSize(o, buf, size);
   }
-  static PyObject * __spl_fi_PyBuffer_FromMemory(void *mem, Py_ssize_t size) {
-     return __spl_fp_PyBuffer_FromMemory(mem, size);
+  static PyObject * __spl_fi_PyMemoryView_FromBuffer(Py_buffer *buf) {
+     return __spl_fp_PyMemoryView_FromBuffer(buf);
+  }
+  static int __spl_fi_PyBuffer_FillInfo(Py_buffer *view, PyObject *o, void *buf, Py_ssize_t len, int readonly, int flags) {
+     return __spl_fp_PyBuffer_FillInfo(view, o, buf, len, readonly, flags);
   }
 }
 #pragma weak PyString_AsStringAndSize = __spl_fi_PyString_AsStringAndSize
-#pragma weak PyBuffer_FromMemory = __spl_fi_PyBuffer_FromMemory
+#pragma weak PyMemoryView_FromBuffer = __spl_fi_PyMemoryView_FromBuffer
+#pragma weak PyBuffer_FillInfo = __spl_fi_PyBuffer_FillInfo
 #endif
-
 
 /*
  * Loading modules, running code
@@ -446,7 +451,8 @@ class SplpySym {
      __SPLFIX(PyMemoryView_FromMemory, __splpy_mvfm_fp);
 #else
      __SPLFIX(PyString_AsStringAndSize, __splpy_sasas_fp);
-     __SPLFIX(PyBuffer_FromMemory, __splpy_bfm_fp);
+     __SPLFIX(PyMemoryView_FromBuffer, __splpy_mvfb_fp);
+     __SPLFIX(PyBuffer_FillInfo, __splpy_bfi_fp);
 #endif
 
      __SPLFIX(PyObject_GetAttrString, __splpy_ogas_fp);
