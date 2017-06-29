@@ -92,16 +92,9 @@ class _ResourceElement(object):
         if id is not None and name is not None:
             raise ValueError("id and name cannot specified together")
 
-        elements = []
         json_elements = self.rest_client.make_request(url)[key]
-        for json_element in json_elements:
-            if not _exact_resource(json_element, id):
-                continue
-            if not _matching_resource(json_element, name):
-                continue
-            elements.append(eclass(json_element, self.rest_client))
-
-        return elements
+        return [eclass(element, self.rest_client) for element in json_elements
+                if _exact_resource(element, id) and _matching_resource(element, name)]
 
     def _get_element_by_id(self, url, key, eclass, id):
         """Get a single element matching an `id`
@@ -166,10 +159,9 @@ class _ViewDataFetcher(object):
 
     def __call__(self):
         while not self._stopped():
-            _items = self._get_deduplicated_view_items()
-            if _items is not None:
-                for itm in _items:
-                    self.items.put(itm)
+            _items = self._get_deduplicated_view_items() or []
+            for itm in _items:
+                self.items.put(itm)
             time.sleep(1)
 
     def _get_deduplicated_view_items(self):
@@ -326,9 +318,8 @@ class View(_ResourceElement):
         Returns:
             list(ViewItem): List of ViewItem(s) associated with this view.
         """
-        view_items = []
-        for json_view_items in self.rest_client.make_request(self.viewItems)['viewItems']:
-            view_items.append(ViewItem(json_view_items, self.rest_client))
+        view_items = [ViewItem(json_view_items, self.rest_client) for json_view_items
+                      in self.rest_client.make_request(self.viewItems)['viewItems']]
         logger.debug("Retrieved " + str(len(view_items)) + " items from view " + self.name)
         return view_items
 
