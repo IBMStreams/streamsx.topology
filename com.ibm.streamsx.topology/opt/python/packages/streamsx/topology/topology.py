@@ -676,14 +676,14 @@ class Stream(object):
             func: Optional function called when :py:const:`Routing.HASH_PARTITIONED` routing is specified.
                 The function provides an integer value to be used as the hash that determines
                 the tuple channel routing.
-            name (String): The name to display for the parallel region.
+            name (str): The name to display for the parallel region.
 
         Returns:
             Stream: A stream for which subsequent transformations will be executed in parallel.
 
         """
         if name is None:
-            name = "parallel"
+            name = self.name
         if routing == None or routing == Routing.ROUND_ROBIN:
             op2 = self.topology.graph.addOperator("$Parallel$", name=name)
             op2.addInputPort(outputPort=self.oport)

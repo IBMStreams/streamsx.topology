@@ -109,7 +109,10 @@ class SPLGraph(object):
 
         if name is None:
             name = self._requested_name(None,action="Op", func = function)
-
+        
+        else:
+            name = self._requested_name(name, action="Op", func = function)
+            
         if(kind.startswith("$")):    
             op = Marker(len(self.operators), kind, name, {}, self)                           
         else:
