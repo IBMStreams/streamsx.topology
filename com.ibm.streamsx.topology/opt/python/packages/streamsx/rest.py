@@ -44,8 +44,8 @@ import logging
 from pprint import pformat
 
 from streamsx import st
-from .rest_primitives import Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService, \
-    _exact_resource
+from .rest_primitives import (Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService,
+    _exact_resource)
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -78,7 +78,7 @@ class StreamsConnection:
         session (:py:class:`requests.Session`): Requests session object for making REST calls.
     """
     def __init__(self, username=None, password=None, resource_url=None):
-        # manually specify username, password, and resource_url
+        """specify username, password, and resource_url"""
         if username and password:
             # resource URL can be obtained via streamtool geturl or REST call
             pass
@@ -99,8 +99,7 @@ class StreamsConnection:
     @property
     def resource_url(self):
         """str: Root URL for IBM Streams REST API"""
-        if self._resource_url is None:
-            self._resource_url = st.get_rest_api()
+        self._resource_url = self._resource_url or st.get_rest_api()
         return self._resource_url
 
     def _get_elements(self, resource_name, eclass, id=None):
@@ -181,11 +180,8 @@ class StreamsConnection:
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.Resource`: List of all Streams resources.
         """
-        resources = []
         json_resources = self.rest_client.make_request(self.resource_url)['resources']
-        for json_resource in json_resources:
-            resources.append(Resource(json_resource, self.rest_client))
-        return resources
+        return [Resource(resource, self.rest_client) for resource in json_resources]
 
     def __str__(self):
         return pformat(self.__dict__)
@@ -208,19 +204,15 @@ class StreamingAnalyticsConnection(StreamsConnection):
         {'plan': 'Standard', 'state': 'STARTED', 'enabled': True, 'status': 'running'}
     """
     def __init__(self, vcap_services=None, service_name=None):
-        vcap = _get_vcap_services(vcap_services)
-        self.service_name = service_name
-        if service_name is None:
-            self.service_name = os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME')
-        self.credentials = _get_credentials(vcap, self.service_name)
+        self.service_name = service_name or os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME')
+        self.credentials = _get_credentials(_get_vcap_services(vcap_services), self.service_name)
         super(StreamingAnalyticsConnection, self).__init__(self.credentials['userid'], self.credentials['password'])
         self._analytics_service = True
 
     @property
     def resource_url(self):
         """str: Root URL for IBM Streams REST API"""
-        if self._resource_url is None:
-            self._resource_url = _get_rest_api_url_from_creds(self.session, self.credentials)
+        self._resource_url = self._resource_url or _get_rest_api_url_from_creds(self.session, self.credentials)
         return self._resource_url
 
     def get_streaming_analytics(self):
@@ -250,12 +242,10 @@ def _get_vcap_services(vcap_services=None):
             * if `vcap_services` nor VCAP_SERVICES environment variable are specified.
             * cannot parse `vcap_services` as a JSON string nor as a filename.
     """
-    if vcap_services is None:
-        vcap_services = os.environ.get('VCAP_SERVICES')
-        if vcap_services is None:
-            raise ValueError(
-                "VCAP_SERVICES information must be supplied as a parameter or as environment variable 'VCAP_SERVICES'")
-
+    vcap_services = vcap_services or os.environ.get('VCAP_SERVICES')
+    if not vcap_services:
+        raise ValueError(
+            "VCAP_SERVICES information must be supplied as a parameter or as environment variable 'VCAP_SERVICES'")
     # If it was passed to config as a dict, simply return it
     if isinstance(vcap_services, dict):
         return vcap_services
@@ -287,8 +277,7 @@ def _get_credentials(vcap_services, service_name=None):
     Raises:
         ValueError:  Cannot find `service_name` in `vcap_services`
     """
-    if service_name is None:
-        service_name = os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME', None)
+    service_name = service_name or os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME', None)
     # Get the service corresponding to the SERVICE_NAME
     services = vcap_services['streaming-analytics']
     creds = None
