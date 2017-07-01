@@ -1285,6 +1285,7 @@ class Window(object):
             raise ValueError(when)
         return tw
 
+
 class Sink(object):
     """
     Termination of a `Stream`.
