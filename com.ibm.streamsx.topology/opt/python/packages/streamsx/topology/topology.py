@@ -684,6 +684,9 @@ class Stream(object):
         """
         if name is None:
             name = self.name
+            
+        name = self.topology.graph._requested_name(name, action='parallel', func=func)
+
         if routing == None or routing == Routing.ROUND_ROBIN:
             op2 = self.topology.graph.addOperator("$Parallel$", name=name)
             op2.addInputPort(outputPort=self.oport)

@@ -399,7 +399,7 @@ public class SPLGenerator {
      */
     private JsonObject createCompositeDefinition(JsonObject graph, List<JsonObject> unvisited, JsonObject startOp) {
         
-        String compositeKind = "__parallel_Composite_" + numParallelComposites;
+        String compositeKind = "__parallel__" + numParallelComposites;
                 
         // The new composite definition, represented in JSON
         JsonObject compositeDefinition = new JsonObject();
