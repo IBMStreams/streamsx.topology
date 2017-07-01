@@ -101,26 +101,6 @@ print splpy_inputtuple2value($pystyle);
 <%}%>
 
   window_.insert(value);
-
-  OPort0Type otuple;
-
-<%if ($pyoutstyle eq 'dict') {%>
-  {
-  SplpyGIL lock;
-  PyObject * ret = streamsx::topology::Splpy::pyTupleMap(funcop_->callable(), value);
-  if (ret == NULL)
-     return;
-  fromPythonToPort0(ret, otuple);
-  Py_DECREF(ret);
-  }
-  
-<% } else { %>
-
-  if (SPLPY_TUPLE_MAP(funcop_->callable(), value,
-       otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_))
-
-<%}%>
-     submit(otuple, 0);
 }
 
 
