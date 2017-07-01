@@ -56,7 +56,7 @@ class CommonTests(unittest.TestCase):
         top = topology.Topology('basicViewTest')
         # Send only one tuple
         stream = top.source(DelayedTupleSourceWithLastTuple(['hello'], 20))
-        self._view = stream.view(start=True)
+        self._view = stream.view(start=True, buffer_time=60)
 
         # Temporary workaround for Bluemix TLS issue with views
         #stream.publish(schema=schema.CommonSchema.String, topic="__test_topic::test_basic_view_support")
