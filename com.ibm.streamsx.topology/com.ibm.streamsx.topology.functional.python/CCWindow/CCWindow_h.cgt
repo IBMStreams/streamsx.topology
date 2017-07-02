@@ -49,6 +49,7 @@ if ($pyoutstyle eq 'dict') {
     // Members
     // Control for interaction with Python
     SplpyFuncOp *funcop_;
+    SplpyFuncOp *obj_out_funcop_;
     
     // Names of input attributes
     PyObject *pyInNames_;
