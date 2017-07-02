@@ -29,8 +29,17 @@ public:
   void process(Tuple const & tuple, uint32_t port);
 
   // Window
-  void onWindowTriggerEvent(Window<IPort0Type*> & window, int const &);
+  void onWindowTriggerEvent(
+     Window<IPort0Type*> & window, Window<PyObject *>::TupleType & key);
+  
+void afterTupleEvictionEvent(
+     Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
+     Window<PyObject *>::PartitionType const & partition)
+
 private:
+
+
+
 <%
 if ($pyoutstyle eq 'dict') {
 %>

@@ -104,18 +104,27 @@ print splpy_inputtuple2value($pystyle);
 }
 
 
-void MY_OPERATOR::onWindowTriggerEvent(Window<IPort0Type*> & window, int const & key){
+void MY_OPERATOR::afterTupleEvictionEvent(
+     Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,  Window<PyObject *>::PartitionType const & partition) {
+     // Drop reference to tuple after it is removed from the window.
+     Py_DECREF(tuple);
+}
+
+void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObject *>::PartitionType const & key){
     WindowType::DataType & content = window.getWindowData();
 
-    PyObject *tuples = PyList_New(std::distance(content.begin(), content.end()));
+    PyObject *items = PyTuple_New(std::distance(content.begin(), content.end()));
     unsigned int idx = 0;
     for(WindowType::DataType::iterator it=content.begin(); it!=content.end(); ++it) {
         PyObject *item = *it;
-	PyList_SetItem(tuples, idx, item);
+	// The tuple steals a reference, increment such that the window can maintain a copy
+	// once the tuple is deleted.
+	Py_INCREF(item);
+	PyTuple_SET_ITEM(item, idx, item);
 	++idx;
     }
 
-    PyObject *value = tuples;
+    PyObject *value = items;
 
   OPort0Type otuple;
 
@@ -123,8 +132,10 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<IPort0Type*> & window, int const &
   {
   SplpyGIL lock;
   PyObject * ret = streamsx::topology::Splpy::pyTupleMap(funcop_->callable(), value);
-  if (ret == NULL)
+  if (ret == NULL){
+     Py_DECREF(items);
      return;
+  }
   fromPythonToPort0(ret, otuple);
   Py_DECREF(ret);
   }
@@ -135,6 +146,7 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<IPort0Type*> & window, int const &
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_))
 
 <%}%>
+     Py_DECREF(items);
      submit(otuple, 0);
 }
 
