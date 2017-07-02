@@ -111,7 +111,10 @@ void MY_OPERATOR::afterTupleEvictionEvent(
 }
 
 void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObject *>::PartitionType const & key){
-    WindowType::DataType & content = window.getWindowData();
+    SPL::AutoWindowDataAcquirer awda(window);
+    Window<PyObject *>::StorageType const & storage = awda.getWindowStorage();
+
+    Window<PyObject *>::DataType & content = storage.at(key);
 
     PyObject *items = PyTuple_New(std::distance(content.begin(), content.end()));
     unsigned int idx = 0;
