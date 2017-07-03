@@ -36,7 +36,7 @@ class Optimizer {
     private static final Set<String> PY_FUNC_OPS = new HashSet<>();
 
     static {
-        for (String kind : new String[] { "Source", "Filter", "Map", "FlatMap", "ForEach"}) {
+        for (String kind : new String[] { "Source", "Filter", "Map", "FlatMap", "ForEach", "CCWindow"}) {
             PY_FUNC_OPS.add(PY_OP_NS + "::" + kind);
             PY_FUNC_OPS.add(PY_OP_NS + "2::" + kind);
         }
@@ -98,7 +98,8 @@ class Optimizer {
                         // TEMP
                         // Currently only Map and ForEach completly handle
                         // by reference.
-                        if (!kind(connectedOp).endsWith("::Map") && !kind(connectedOp).endsWith("::ForEach") && !kind(connectedOp).endsWith("::FlatMap")) {
+                        if (!kind(connectedOp).endsWith("::Map") && !kind(connectedOp).endsWith("::ForEach") && !kind(connectedOp).endsWith("::FlatMap")
+			    && !kind(connectedOp).endsWith("::CCWindow")) {
                         canPassByRef = false;
                         break;
                         }
