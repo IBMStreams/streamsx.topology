@@ -1,3 +1,4 @@
+
 /* Additional includes go here */
 
 #include "splpy.h"
@@ -14,7 +15,7 @@ using namespace streamsx::topology;
 
  # Function to help convert input to PyObject *, so it can be 
  # inserted into the window.
- my $in_function = $pystyle . '_in__object_out';
+ # my $in_function = $pystyle . '_in__object_out';
 
  # Function to convert output of aggregation function
  # to correct output.
@@ -34,6 +35,7 @@ MY_OPERATOR::MY_OPERATOR() :
    occ_(-1)
 {
     windowOfReadings_.registerOnWindowTriggerHandler(this);
+    windowOfReadings_.registerAfterTupleEvictionHandler(this);
 
 <%
 # If occ parameter is positive then pass-by-ref is possible
@@ -45,6 +47,8 @@ MY_OPERATOR::MY_OPERATOR() :
  if ($oc) {
     my $occ = $oc->getValueAt(0)->getSPLExpression();
     if ($occ > 0) {
+        # If the occ variable is set, it is known that the output type is
+        # and SPL::blob
         $pyoutstyle = 'object';
         my $out_function = 'pickle_in__object_out';
 %>
@@ -62,8 +66,8 @@ MY_OPERATOR::MY_OPERATOR() :
  }
 %>
 
-    # TODO: set with passthrough function
-    in_funcop = new SplpyFuncOp(this, "<%=$in_function%>");
+    // TODO: set with passthrough function
+    //in_funcop = new SplpyFuncOp(this, "<%=$in_function%>");
     out_funcop = new SplpyFuncOp(this, "<%=$out_function%>");    
 
 <% if ($pystyle eq 'dict') { %>
@@ -108,8 +112,21 @@ print splpy_inputtuple2value($pystyle);
 @include "../pyspltuple2dict.cgt"
 <%}%>
 
-  PyObject * ret = streamsx::topology::Splpy::pyTupleMap(in_funcop->callable(), value);  
-  window_.insert(ret);
+  unsigned char const *data = value.getData();
+  unsigned char fmt = *data;
+
+  PyObject *python_value;
+
+  if (fmt == STREAMSX_TPP_PTR) {
+      __SPLTuplePyPtr *stp = (__SPLTuplePyPtr *)(data);
+      python_value = stp->pyptr;
+  }
+  // Anything ASCII is also Pickle (Python 2 default format)
+  else if (fmt <= STREAMSX_TPP_PICKLE) {
+      python_value = pySplValueToPyObject(pyo);
+  }
+  //PyObject * ret = streamsx::topology::Splpy::pyTupleMap(in_funcop->callable(), value);  
+  window_.insert(python_value);
 }
 
 
@@ -139,16 +156,10 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
     PyObject *value = items;
   OPort0Type otuple;
 
-    // Need to wrap PyObject in SPLTuplePyPtr and put it in an SPL::blob
-    // so it can be passed to the pyTupleMapByRef.
-    SPL::blob wrappedTupleRef;
-    streamsx::topology::pyTypleByRef(wrappedTupleRef, value, 0);
-        
-
 <%if ($pyoutstyle eq 'dict') {%>
   {
   SplpyGIL lock;
-  PyObject * ret = streamsx::topology::Splpy::pyTupleMap(out_funcop->callable(), wrappedTupleRef);
+  PyObject * ret = streamsx::topology::Splpy::pyTupleMap(out_funcop->callable(), value);
   if (ret == NULL){
      Py_DECREF(items);
      return;
@@ -159,12 +170,13 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
   
 <% } else { %>
 
-  if (SPLPY_TUPLE_MAP(out_funcop->callable(), wrappedTupleRef,
+  if (SPLPY_TUPLE_MAP(out_funcop->callable(), value,
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_))
 
-<%}%>
+<%}%>{
      Py_DECREF(items);
      submit(otuple, 0);
+     }
 }
 
 
