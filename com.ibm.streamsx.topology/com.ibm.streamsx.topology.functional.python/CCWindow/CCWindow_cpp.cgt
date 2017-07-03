@@ -28,14 +28,15 @@ using namespace streamsx::topology;
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    window_(*this, 0,
-   CountWindowPolicy(getParameter_evictionConfig()),
-   CountWindowPolicy(getParameter_triggerConfig())),
+   CountWindowPolicy(<%=$model->getParameterByName("evictConfig")->getValueAt(0)->getSPLExpression()%>),
+   CountWindowPolicy(<%=$model->getParameterByName("triggerConfig")->getValueAt(0)->getSPLExpression()%>)),
    funcop_(NULL),
+   out_funcop(NULL),
    pyInNames_(NULL),
    occ_(-1)
 {
-    windowOfReadings_.registerOnWindowTriggerHandler(this);
-    windowOfReadings_.registerAfterTupleEvictionHandler(this);
+    window_.registerOnWindowTriggerHandler(this);
+    window_.registerAfterTupleEvictionHandler(this);
 
 <%
 # If occ parameter is positive then pass-by-ref is possible
@@ -79,7 +80,7 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-  windowOfReadings_.deleteWindowObjects();
+  window_.deleteWindowObjects();
 <% if ($pystyle eq 'dict') { %>
     if (pyInNames_) {
       SplpyGIL lock;
@@ -122,7 +123,7 @@ print splpy_inputtuple2value($pystyle);
   }
   // Anything ASCII is also Pickle (Python 2 default format)
   else if (fmt <= STREAMSX_TPP_PICKLE) {
-      python_value = pySplValueToPyObject(pyo);
+      python_value = pySplValueToPyObject(value);
   }
   //PyObject * ret = streamsx::topology::Splpy::pyTupleMap(in_funcop->callable(), value);  
   window_.insert(python_value);

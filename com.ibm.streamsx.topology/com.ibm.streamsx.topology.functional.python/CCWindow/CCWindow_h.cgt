@@ -30,11 +30,11 @@ public:
 
   // Window
   void onWindowTriggerEvent(
-     Window<IPort0Type*> & window, Window<PyObject *>::TupleType & key);
+     Window<PyObject *> & window, Window<PyObject *>::PartitionType const& key);
   
 void afterTupleEvictionEvent(
      Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
-     Window<PyObject *>::PartitionType const & partition)
+     Window<PyObject *>::PartitionType const & partition);
 
 private:
 
@@ -49,7 +49,7 @@ if ($pyoutstyle eq 'dict') {
     // Members
     // Control for interaction with Python
     SplpyFuncOp *funcop_;
-    SplpyFuncOp *obj_out_funcop_;
+    SplpyFuncOp *out_funcop;
     
     // Names of input attributes
     PyObject *pyInNames_;
