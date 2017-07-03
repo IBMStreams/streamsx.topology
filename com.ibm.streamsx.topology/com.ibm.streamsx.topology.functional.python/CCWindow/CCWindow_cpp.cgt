@@ -67,7 +67,6 @@ MY_OPERATOR::MY_OPERATOR() :
 %>
 
     // TODO: set with passthrough function
-    //in_funcop = new SplpyFuncOp(this, "<%=$in_function%>");
     out_funcop = new SplpyFuncOp(this, "<%=$out_function%>");    
 
 <% if ($pystyle eq 'dict') { %>

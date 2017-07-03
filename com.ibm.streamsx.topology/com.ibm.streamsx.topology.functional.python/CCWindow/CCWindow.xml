@@ -43,7 +43,7 @@
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
         <type>int32</type>
-        <cardinality>1</cardinality><parameter>
+        <cardinality>1</cardinality>
       </parameter>
       <parameter>
 	<name>triggerConfig</name>
