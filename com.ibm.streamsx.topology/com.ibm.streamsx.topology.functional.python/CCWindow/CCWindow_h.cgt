@@ -28,6 +28,14 @@ public:
   // Tuple processing for non-mutating ports
   void process(Tuple const & tuple, uint32_t port);
 
+  // Window
+  void onWindowTriggerEvent(
+     Window<PyObject *> & window, Window<PyObject *>::PartitionType const& key);
+  
+void afterTupleEvictionEvent(
+     Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
+     Window<PyObject *>::PartitionType const & partition);
+
 private:
 <%
 if ($pyoutstyle eq 'dict') {

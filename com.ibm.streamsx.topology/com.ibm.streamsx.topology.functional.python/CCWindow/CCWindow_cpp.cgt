@@ -11,6 +11,10 @@ using namespace streamsx::topology;
 <%
  # Select the Python wrapper function
  my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
+ 
+ # Temporary, until more input types are supported. At the moment, only pass by reference types 
+ # are supported.
+ $pystyle = 'pickle';
  my $pywrapfunc= $pystyle . '_in__' . $pyoutstyle . '_out';
 %>
 
@@ -26,6 +30,9 @@ MY_OPERATOR::MY_OPERATOR() :
    CountWindowPolicy(<%=$model->getParameterByName("evictConfig")->getValueAt(0)->getSPLExpression()%>),
    CountWindowPolicy(<%=$model->getParameterByName("triggerConfig")->getValueAt(0)->getSPLExpression()%>))
 {
+    window_.registerOnWindowTriggerHandler(this);
+    window_.registerAfterTupleEvictionHandler(this);
+
     const char * wrapfn = "<%=$pywrapfunc%>";
 
 <%
@@ -98,12 +105,64 @@ print splpy_inputtuple2value($pystyle);
 
   OPort0Type otuple;
 
+
+  unsigned char const *data = value.getData();
+  unsigned char fmt = *data;
+
+  PyObject *python_value;
+
+  if (fmt == STREAMSX_TPP_PTR) {
+      __SPLTuplePyPtr *stp = (__SPLTuplePyPtr *)(data);
+      python_value = stp->pyptr;
+  }
+  // Anything ASCII is also Pickle (Python 2 default format)
+  else if (fmt <= STREAMSX_TPP_PICKLE) {
+      python_value = pySplValueToPyObject(value);
+  }
+
+  window_.insert(python_value);
+
+}
+
+
+// ##############################
+// Window Event Handler Overrides
+// ##############################
+
+
+void MY_OPERATOR::afterTupleEvictionEvent(
+     Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,  Window<PyObject *>::PartitionType const & partition) {
+     // Drop reference to tuple after it is removed from the window.
+     Py_DECREF(tuple);
+}
+
+void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObject *>::PartitionType const & key){
+    Window<PyObject *>::StorageType & storage = window.getWindowStorage();
+
+    Window<PyObject *>::DataType & content = storage[key];
+
+    PyObject *items = PyTuple_New(std::distance(content.begin(), content.end()));
+    unsigned int idx = 0;
+    for(WindowType::DataType::iterator it=content.begin(); it!=content.end(); ++it) {
+        PyObject *item = *it;
+	// The tuple steals a reference, increment such that the window can maintain a copy
+	// once the tuple is deleted.
+	Py_INCREF(item);
+	PyTuple_SET_ITEM(items, idx, item);
+	++idx;
+    }
+
+    PyObject *value = items;
+  OPort0Type otuple;
+
 <%if ($pyoutstyle eq 'dict') {%>
   {
   SplpyGIL lock;
   PyObject * ret = streamsx::topology::Splpy::pyTupleMap(funcop_->callable(), value);
-  if (ret == NULL)
+  if (ret == NULL){
+     Py_DECREF(items);
      return;
+  }
   fromPythonToPort0(ret, otuple);
   Py_DECREF(ret);
   }
@@ -113,9 +172,16 @@ print splpy_inputtuple2value($pystyle);
   if (SPLPY_TUPLE_MAP(funcop_->callable(), value,
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_))
 
-<%}%>
+<%}%>{
+     Py_DECREF(items);
      submit(otuple, 0);
+     }
 }
+
+// ##################################
+// End Window Event Handler Overrides
+// ##################################
+
 
 <%
 if ($pyoutstyle eq 'dict') {
