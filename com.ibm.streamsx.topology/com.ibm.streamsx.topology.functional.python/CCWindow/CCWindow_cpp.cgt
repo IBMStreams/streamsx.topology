@@ -136,17 +136,30 @@ if ($pyoutstyle eq 'dict') {
 
 
 namespace SPL{
-    Checkpoint & operator <<(Checkpoint &ostr, PyObject * const & obj){
+    Checkpoint & operator <<(Checkpoint &ostr, const PyObject  & obj){
         return ostr;
     }
 
-    Checkpoint & operator <<(Checkpoint &ostr, PyObject const * & obj){
+    Checkpoint & operator >>(Checkpoint &ostr, const PyObject  & obj){
         return ostr;
     }
 
-    Checkpoint & operator <<(Checkpoint &ostr, const PyObject * const & obj){
-        return ostr;
+    ByteBuffer<Checkpoint> & operator<<(ByteBuffer<Checkpoint> & ckpt, PyObject * obj){
+        return ckpt;
+    }
+
+
+    ByteBuffer<Checkpoint> & operator>>(ByteBuffer<Checkpoint> & ckpt, PyObject * obj){
+        return ckpt;
     }
 
  }
+
+std::ostream & operator <<(std::ostream &ostr, const PyObject  & obj){
+    return ostr;
+}
+
+std::ostream & operator >>(std::ostream &ostr, const PyObject  & obj){
+    return ostr;
+}
 <%SPL::CodeGen::implementationEpilogue($model);%>
