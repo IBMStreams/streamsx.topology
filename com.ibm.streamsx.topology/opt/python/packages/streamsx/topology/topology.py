@@ -1285,6 +1285,44 @@ class Window(object):
             raise ValueError(when)
         return tw
 
+    def aggregate(self, function, name=None):
+        """Declares a function or callable to aggregate the contents of 
+        the window when it is triggered.
+        
+        The supplied function is passed a list containing the contents 
+        of the window. The return values of the function are passed as
+        the tuples on the returned `stream`. For example, a window that
+        calculates a moving average of the last  10 tuples could be 
+        written as follows:  
+        
+            win = s.last(10).trigger(1)
+            moving_averages = win.aggregate(lambda tuples: sum(tuples)/len(tuples))
+            
+        Args:
+            function: The function which aggregates the contents of the window
+                
+        Returns: 
+            Stream: A `Stream` of the returned values of the supplied function.                                                                                                                                                             
+        """
+        # WIP: TODO: support other window types and policies                                                                                                                                                                               
+        if self._config['evictPolicy'] != 'COUNT' or self._config['triggerPolicy'] != 'COUNT':
+            raise NotImplementedError("Currently, only windows with eviction policies of type COUNT and trigger policies of type COUNT are supported")
+
+
+        sl = _SourceLocation(_source_info(), "window")
+        name = self.topology.graph._requested_name(name, action="window", func=function)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::CCWindow", function, name=name, sl=sl)
+        op.addInputPort(outputPort=self.stream.oport, name=self.stream.name)
+        oport = op.addOutputPort(schema=self.stream.oport.schema, name=name)
+
+        op.params['evictConfig'] = self._config['evictConfig']
+        op.params['triggerConfig'] = self._config['triggerConfig']
+
+
+        return Stream(self.topology, oport)
+
+
+
 class Sink(object):
     """
     Termination of a `Stream`.
