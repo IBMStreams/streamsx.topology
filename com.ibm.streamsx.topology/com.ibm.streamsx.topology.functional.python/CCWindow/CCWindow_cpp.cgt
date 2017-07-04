@@ -103,9 +103,6 @@ print splpy_inputtuple2value($pystyle);
 @include "../pyspltuple2dict.cgt"
 <%}%>
 
-  OPort0Type otuple;
-
-
   unsigned char const *data = value.getData();
   unsigned char fmt = *data;
 
@@ -133,15 +130,18 @@ print splpy_inputtuple2value($pystyle);
 void MY_OPERATOR::afterTupleEvictionEvent(
      Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,  Window<PyObject *>::PartitionType const & partition) {
      // Drop reference to tuple after it is removed from the window.
+     SplpyGIL lock;
      Py_DECREF(tuple);
 }
 
-void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObject *>::PartitionType const & key){
+void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObject *>::PartitionType const & key){    
     Window<PyObject *>::StorageType & storage = window.getWindowStorage();
 
     Window<PyObject *>::DataType & content = storage[key];
-
-    PyObject *items = PyTuple_New(std::distance(content.begin(), content.end()));
+    PyObject *items;
+    {
+    SplpyGIL lock;
+    items = PyTuple_New(std::distance(content.begin(), content.end()));
     unsigned int idx = 0;
     for(WindowType::DataType::iterator it=content.begin(); it!=content.end(); ++it) {
         PyObject *item = *it;
@@ -151,16 +151,14 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
 	PyTuple_SET_ITEM(items, idx, item);
 	++idx;
     }
-
+    }
     PyObject *value = items;
   OPort0Type otuple;
 
 <%if ($pyoutstyle eq 'dict') {%>
   {
-  SplpyGIL lock;
   PyObject * ret = streamsx::topology::Splpy::pyTupleMap(funcop_->callable(), value);
   if (ret == NULL){
-     Py_DECREF(items);
      return;
   }
   fromPythonToPort0(ret, otuple);
@@ -173,7 +171,6 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_))
 
 <%}%>{
-     Py_DECREF(items);
      submit(otuple, 0);
      }
 }
