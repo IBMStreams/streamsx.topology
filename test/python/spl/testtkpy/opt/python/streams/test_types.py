@@ -28,7 +28,7 @@ class BlobTest:
 
     def __call__(self, *tuple):
         v = tuple[0]
-        hash(v)
+        bs = v.tobytes()
         if not isinstance(v, memoryview):
             return ("Expected memory view is" + str(type(v)),)
 
@@ -37,13 +37,10 @@ class BlobTest:
            
         if self.last:
             for b in self.last:
-                print("TRYING LAST")
                 try:
-                    hash(b)
-                    print("GOT_VALUE LAST")
+                    bs = b.tobytes()
                     return "Expected released memory view",
                 except ValueError as ve:
-                    print("VALUE_ERRRO", ve)
                     pass
                 
         self.last.append(v)
