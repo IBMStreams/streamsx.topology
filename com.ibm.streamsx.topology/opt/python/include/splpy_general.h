@@ -254,6 +254,11 @@ class SplpyGeneral {
         SPLAPPTRC(L_INFO, "Callable function: " << fn, "python");
         return function;
       }
+    static PyObject * loadFunctionGIL(const std::string & mn, const std::string & fn)
+    {    
+        SplpyGIL lock;
+        return loadFunction(mn, fn);
+    }
 
     /*
      * Import a module, returning the reference to the module.
@@ -648,6 +653,66 @@ class SplpyGeneral {
         }
         return pySet;
     }
+
+/*
+ * Maintains any object that is or contains a memory view object.
+ * Since the memory being viewed is from the incoming SPL tuple
+ * it becomes invalid once the operator process method returns.
+ * This is an RAII object that will go put of scope at the
+ * end of the process method, resulting in a call into Python
+ * for any memory view object that is still being used or
+ * any object that is a collection holding a memory view.
+ */
+class MemoryViewCleanup {
+   public:
+        MemoryViewCleanup() {
+        }
+        ~MemoryViewCleanup() {
+             SplpyGIL lock;
+
+             Py_ssize_t np = 0;
+
+             // Determine how many items we need
+             // to pass into Python.
+             for (int i = 0; i < mvs_.size(); i++) {
+                 PyObject *mv = mvs_[i];
+                 if (PyMemoryView_Check(mv) && (Py_REFCNT(mv) == 1)) {
+                     // Only we hold a reference to it and it's
+                     // a memory view object, simply decrement 
+                     Py_DECREF(mv);
+                     mvs_[i] = NULL;
+                     continue;
+                 }
+                 np++;
+             }
+
+             if (np != 0) {
+                 Py_ssize_t npi = 0;
+                 PyObject *args = PyTuple_New(np);
+                 for (int i = 0; i < mvs_.size();i++) {
+                     PyObject *mv = mvs_[i];
+                     if (mv != NULL) {
+                         // steals our reference
+                         PyTuple_SET_ITEM(args, npi++, mv);
+                     }
+                 }
+                 PyObject * ret = SplpyGeneral::pyCallObject(releaser(), args);
+                 Py_DECREF(ret);
+             }
+        }
+        void add(PyObject *mv) {
+            Py_INCREF(mv);
+            mvs_.push_back(mv);
+        }
+        
+      private:
+        std::vector<PyObject *> mvs_;
+
+        static PyObject * releaser() {
+           static PyObject * releaser = SplpyGeneral::loadFunctionGIL("streamsx.spl.runtime", "_splpy_release_memoryviews");
+           return releaser;
+        }
+};
 
 }}
 

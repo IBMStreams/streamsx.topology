@@ -95,24 +95,38 @@ sub convertToPythonValueFromExpr {
   return "streamsx::topology::pySplValueToPyObject($iv)";
 }
 
+# Check if a type includes blobs in its defintion.
+# Could be just blob, or list<blob> etc.
+# TODO - additional types
+sub typeHasBlobs {
+  my $type = $_[0];
+
+  if (SPL::CodeGen::Type::isBlob($type)) {
+      return 1;
+  }
+
+  return 0;
+}
+
 #
-# Return a C++ statement converting a input attribute
+# Return a C++ code block converting a input attribute
 # from an SPL input tuple to a Python object and
 # setting it into pyTuple (as a Python Tuple).
-# Assumes a C++ variable pyTuple are defined.
+# Assumes a C++ variable pyTuple is defined.
 #
 sub convertToPythonValueAsTuple {
   my $ituple = $_[0];
   my $i = $_[1];
   my $type = $_[2];
   my $name = $_[3];
-
-  my $getAndConvert = convertAttributeToPythonValue($ituple, $type, $name);
   
-  # Note PyTuple_SET_ITEM steals the reference to the value
-  my $assign =  "    PyTuple_SET_ITEM(pyTuple, $i, $getAndConvert);\n";
+  # starts a C++ block and sets pyValue
+  my $get = _attr2Value($ituple, $type, $name);
 
-  return $get . $assign ;
+  # Note PyTuple_SET_ITEM steals the reference to the value
+  my $assign =  "PyTuple_SET_ITEM(pyTuple, $i, value);\n";
+
+  return $get . $assign . "}\n" ;
 }
 
 # Determine which style of argument is being
@@ -189,6 +203,31 @@ sub splpy_inputtuple2value{
  }
 }
 
+# Starts a block that converts an SPL attribute
+# to the enclosed variable value
+sub _attr2Value {
+  my $ituple = $_[0];
+  my $type = $_[1];
+  my $name = $_[2];
+
+  my $get = '{ PyObject * value = ';
+  $get = $get . convertAttributeToPythonValue($ituple, $type, $name);
+  $get = $get . ";\n";
+
+  # If the attribute has blobs then
+  # save the corresponding memory view objects.
+  # We just save the attribute's Python representation
+  # Typically, it will be a memoryview (from a blob) but
+  # if it's something containing blobs the complete collection
+  # object is passed to Python for release.
+  #
+  # Assumes that pyMvs exists set up by py_splTupleCheckForBlobs.cgt
+  if (typeHasBlobs($type)) {
+      $get = $get . "pyMvs.add(value);\n";
+  }
+  return $get;
+}
+
 #
 # Convert attribute of an SPL tuple to Python
 # and add to a dictionary object.
@@ -206,18 +245,17 @@ sub convertAndAddToPythonDictionaryObject {
   my $name = $_[3];
   my $names = $_[4];
 
-  my $get = '{ PyObject * pyValue = ';
-  $get = $get . convertAttributeToPythonValue($ituple, $type, $name);
-  $get = $get . ";\n";
+  # starts a C++ blockand sets value
+  my $get = _attr2Value($ituple, $type, $name);
 
   # PyTuple_GET_ITEM returns a borrowed reference.
-  $getkey = '{ PyObject * pyDictKey = PyTuple_GET_ITEM(' . $names . ',' . $i . ") ;\n";
+  $getkey = 'PyObject * key = PyTuple_GET_ITEM(' . $names . ',' . $i . ");\n";
 
 # Note PyDict_SetItem does not steal the references to the key and value
-  my $setdict =  "  PyDict_SetItem(pyDict, pyDictKey, pyValue);\n";
-  $setdict =  $setdict . "  Py_DECREF(pyValue);}}\n";
+  my $setdict =  "PyDict_SetItem(pyDict, key, value);\n";
+  $setdict =  $setdict . "Py_DECREF(value);\n";
 
-  return $get . $getkey . $setdict ;
+  return $get . $getkey . $setdict . "}\n" ;
 }
 
 1;
