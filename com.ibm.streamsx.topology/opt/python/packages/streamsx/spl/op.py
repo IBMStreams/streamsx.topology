@@ -172,9 +172,9 @@ class Invoke(exop.ExtensionOperator):
         Returns:
             Expression: Expression representing the input attribute.
         """
-        if stream not in self.inputs:
+        if stream not in self._inputs:
             raise ValueError("Stream is not an input of this operator.")
-        if len(self.inputs) == 1:
+        if len(self._inputs) == 1:
             return Expression('attribute', name)
         else:
             return Expression('attribute', stream.oport.name + '.' + name)
@@ -319,7 +319,7 @@ class Map(Invoke):
         Returns:
             Expression: Expression representing the input attribute.
         """
-        return super(Map, self).attribute(self.inputs[0], name)
+        return super(Map, self).attribute(self._inputs[0], name)
 
     def output(self, value):
         """SPL output port assignment expression.
