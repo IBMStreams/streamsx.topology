@@ -267,6 +267,14 @@ public class BOperatorInvocation extends BOperator {
 
         return input;
     }
+    
+    public JSONObject layout() {
+        JSONObject layout = (JSONObject) json().get("layout");
+        if (layout == null) {
+            json().put("layout", layout = new JSONObject());
+        }
+        return layout;
+    }
 
     @Override
     public JSONObject complete() {

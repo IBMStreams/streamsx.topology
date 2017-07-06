@@ -490,6 +490,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             BOperatorInvocation hashAdder = JavaFunctional.addFunctionalOperator(this,
                     "HashAdder",
                     HashAdder.class, hasher);
+            hashAdder.layout().put("hidden", true);
             // hashAdder.json().put("routing", routing.toString());
             BInputPort ip = connectTo(hashAdder, true, null);
 
@@ -510,6 +511,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                     parallelOutput, getTupleType());
             BOperatorInvocation hashRemover = builder().addOperator(
                     HashRemover.class, null);
+            hashRemover.layout().put("hidden", true);
             BInputPort pip = parallelStream.connectTo(hashRemover, true, null);
             parallelOutput = hashRemover.addOutput(pip.port().getStreamSchema()
                     .remove("__spl_hash"));
