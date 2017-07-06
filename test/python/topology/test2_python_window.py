@@ -1,6 +1,7 @@
 import unittest
 
 from streamsx.topology.topology import *
+from streamsx.topology.schema import CommonSchema
 from streamsx.topology.tester import Tester
 
 class Person(object):
@@ -23,6 +24,31 @@ class TestPythonWindowing(unittest.TestCase):
         tester = Tester(topo)
         tester.contents(s, [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5])
         tester.test(self.test_ctxtype, self.test_config)
+
+    def test_JsonInputCountCountWindow(self):
+        topo = Topology()
+        s = topo.source([{'a':1},{'b':2,'c':3}, {'d': 4, 'e': 5}])
+        
+        # Check the averages of the values of the Json objects
+        s = s.map(lambda x: x, schema = CommonSchema.Json)
+        s = s.last(3).trigger(1).aggregate(lambda x: int(sum([sum([s[k] for k in s]) for s in x])/len(x)))
+        
+        tester = Tester(topo)
+        tester.contents(s, [1,3,5])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_StringInputCountCountWindow(self):
+        topo = Topology()
+        s = topo.source(['1','3','5','7'])
+        s = s.map(lambda x: x, schema = CommonSchema.String)
+        #s = s.last(3).trigger(1).aggregate(lambda x: int(sum([int(s) for s in x])/len(x)))
+        s = s.last(3).trigger(1).aggregate(lambda x: int(sum([int(s) for s in x])/len(x)),
+                                           schema = CommonSchema.Python)
+
+        tester = Tester(topo)
+        tester.contents(s, [1,2,3,5])
+        tester.test(self.test_ctxtype, self.test_config)
+
 
     def test_ClassCountCountWindow(self):
         topo = Topology()

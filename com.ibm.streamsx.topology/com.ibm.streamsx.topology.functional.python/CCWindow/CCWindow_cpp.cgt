@@ -14,8 +14,8 @@ using namespace streamsx::topology;
  
  # Temporary, until more input types are supported. At the moment, only pass by reference types 
  # are supported.
- $pystyle = 'pickle';
- my $pywrapfunc= $pystyle . '_in__' . $pyoutstyle . '_out';
+ my $in_pywrapfunc =  $pystyle . '_in__object_out';
+ my $out_pywrapfunc=  'pickle_in__' . $pyoutstyle . '_out';
 %>
 
 #define SPLPY_TUPLE_MAP(f, v, r, occ) \
@@ -33,7 +33,10 @@ MY_OPERATOR::MY_OPERATOR() :
     window_.registerOnWindowTriggerHandler(this);
     window_.registerAfterTupleEvictionHandler(this);
 
-    const char * wrapfn = "<%=$pywrapfunc%>";
+    const char * in_wrapfn = "<%=$in_pywrapfunc%>";
+    const char * out_wrapfn = "<%=$out_pywrapfunc%>";
+    const char * functions_module = "streamsx.topology.functions";
+    const char * identity_function = "identity";
 
 <%
 # If occ parameter is positive then pass-by-ref is possible
@@ -45,7 +48,7 @@ MY_OPERATOR::MY_OPERATOR() :
  if ($oc) {
     my $occ = $oc->getValueAt(0)->getSPLExpression();
     if ($occ > 0) {
-        my $pybyrefwrapfunc = $pystyle . '_in__object_out';
+        my $pybyrefwrapfunc = 'pickle_in__object_out';
 %>
 
 #undef SPLPY_TUPLE_MAP
@@ -54,7 +57,7 @@ MY_OPERATOR::MY_OPERATOR() :
 
     if (!this->getOutputPortAt(0).isConnectedToAPEOutputPort()) {
        // pass by reference
-       wrapfn = "<%=$pybyrefwrapfunc%>";
+       out_wrapfn = "<%=$pybyrefwrapfunc%>";
        occ_ = <%=$occ%>;
     }
 <%
@@ -62,7 +65,8 @@ MY_OPERATOR::MY_OPERATOR() :
  }
 %>
 
-    funcop_ = new SplpyFuncOp(this, wrapfn);
+    funcop_ = new SplpyFuncOp(this, out_wrapfn);
+    spl_in_object_out = new SplpyFuncOp(this, in_wrapfn, functions_module, identity_function);
 
 <% if ($pystyle eq 'dict') { %>
      SplpyGIL lock;
@@ -82,6 +86,7 @@ MY_OPERATOR::~MY_OPERATOR()
 <% } %>
 
   delete funcop_;
+  delete spl_in_object_out;
 }
 
 // Notify pending shutdown
@@ -103,22 +108,31 @@ print splpy_inputtuple2value($pystyle);
 @include "../pyspltuple2dict.cgt"
 <%}%>
 
-  unsigned char const *data = value.getData();
-  unsigned char fmt = *data;
-
   PyObject *python_value;
 
-  if (fmt == STREAMSX_TPP_PTR) {
-      __SPLTuplePyPtr *stp = (__SPLTuplePyPtr *)(data);
-      python_value = stp->pyptr;
-  }
-  // Anything ASCII is also Pickle (Python 2 default format)
-  else if (fmt <= STREAMSX_TPP_PICKLE) {
-      python_value = pySplValueToPyObject(value);
-  }
+// If the input style is pickle,
+{
+  // None of the streamsx::topology methods in this scope grab the lock
+  // so we need to do it here.
+  SplpyGIL lock; 
+  <%if ($pystyle eq 'pickle'){%>
+
+      unsigned char const *data = value.getData();
+      unsigned char fmt = *data;
+      if (fmt == STREAMSX_TPP_PTR) {
+          __SPLTuplePyPtr *stp = (__SPLTuplePyPtr *)(data);
+          python_value = stp->pyptr;
+      }
+      // Anything ASCII is also Pickle (Python 2 default format)
+      else if (fmt <= STREAMSX_TPP_PICKLE) {
+          python_value = pySplValueToPyObject(value);
+      }
+  <%} else {%>
+      python_value = streamsx::topology::Splpy::pyTupleMap(spl_in_object_out->callable(), value);
+  <%}%>
+} // End SplpyGIL lock
 
   window_.insert(python_value);
-
 }
 
 

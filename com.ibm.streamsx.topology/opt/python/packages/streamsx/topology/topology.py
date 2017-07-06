@@ -1285,7 +1285,7 @@ class Window(object):
             raise ValueError(when)
         return tw
 
-    def aggregate(self, function, name=None):
+    def aggregate(self, function, name=None, schema = None):
         """Declares a function or callable to aggregate the contents of 
         the window when it is triggered.
         
@@ -1305,15 +1305,18 @@ class Window(object):
             Stream: A `Stream` of the returned values of the supplied function.                                                                                                                                                             
         """
         # WIP: TODO: support other window types and policies                                                                                                                                                                               
+
         if self._config['evictPolicy'] != 'COUNT' or self._config['triggerPolicy'] != 'COUNT':
             raise NotImplementedError("Currently, only windows with eviction policies of type COUNT and trigger policies of type COUNT are supported")
 
-
+        if schema is None:
+            schema = self.stream.oport.schema
+        
         sl = _SourceLocation(_source_info(), "window")
         name = self.topology.graph._requested_name(name, action="window", func=function)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::CCWindow", function, name=name, sl=sl)
         op.addInputPort(outputPort=self.stream.oport, name=self.stream.name)
-        oport = op.addOutputPort(schema=self.stream.oport.schema, name=name)
+        oport = op.addOutputPort(schema=schema, name=name)
 
         op.params['evictConfig'] = self._config['evictConfig']
         op.params['triggerConfig'] = self._config['triggerConfig']
