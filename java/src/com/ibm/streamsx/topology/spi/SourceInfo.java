@@ -45,7 +45,7 @@ public interface SourceInfo {
                 sourceInfo.addProperty("line", caller.getLineNumber());
         }
         if (calledMethod != null)
-            sourceInfo.addProperty("topology.method", calledMethod.getMethodName());
+            sourceInfo.addProperty("api.method", calledMethod.getMethodName());
 
         if (!config.has(SOURCE_LOCATIONS)) {
             config.add(SOURCE_LOCATIONS, new JsonArray());

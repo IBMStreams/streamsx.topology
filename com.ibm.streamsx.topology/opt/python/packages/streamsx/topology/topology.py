@@ -216,8 +216,8 @@ class _SourceLocation(object):
         if self.source_info[2] is not None:
             sl['class'] = self.source_info[2].__name__
         sl['method'] = self.source_info[3]
-        if self.method is not None:
-            sl['topology.method'] = self.method
+        if self.method:
+            sl['api.method'] = self.method
         return sl
 
 class Routing(Enum):
