@@ -16,7 +16,11 @@ sub splToPythonConversionCheck{
         # Python sets must have hashable keys
         # (which excludes Python collection type such as list,map,set)
         # so for now restrict to primitive types)
-        if (SPL::CodeGen::Type::isPrimitive($element_type)) {
+        #
+        # blob is excluded as the value can become
+        # invalid while in a set which will likely break
+        if (SPL::CodeGen::Type::isPrimitive($element_type)
+          && ! SPL::CodeGen::Type::isBlob($element_type)) {
             splToPythonConversionCheck($element_type);
             return;
         }
@@ -26,7 +30,11 @@ sub splToPythonConversionCheck{
         # Python maps must have hashable keys
         # (which excludes Python collection type such as list,map,set)
         # so for now restrict to primitive types)
-        if (SPL::CodeGen::Type::isPrimitive($key_type)) {
+        #
+        # blob is excluded as the value can become
+        # invalid while in a map which will likely break as a key
+        if (SPL::CodeGen::Type::isPrimitive($key_type)
+          && ! SPL::CodeGen::Type::isBlob($key_type)) {
             splToPythonConversionCheck($key_type);
 
            my $value_type = SPL::CodeGen::Type::getValueType($type);
@@ -95,14 +103,22 @@ sub convertToPythonValueFromExpr {
   return "streamsx::topology::pySplValueToPyObject($iv)";
 }
 
-# Check if a type includes blobs in its defintion.
+# Check if a type includes blobs in its definition.
 # Could be just blob, or list<blob> etc.
-# TODO - additional types
+# blob is not supported for map/set
 sub typeHasBlobs {
   my $type = $_[0];
 
   if (SPL::CodeGen::Type::isBlob($type)) {
       return 1;
+  }
+  if (SPL::CodeGen::Type::isList($type)) {
+      my $element_type = SPL::CodeGen::Type::getElementType($type);
+      return typeHasBlobs($element_type);
+  }
+  if (SPL::CodeGen::Type::isMap($type)) {
+      my $value_type = SPL::CodeGen::Type::getValueType($type);
+      return typeHasBlobs($value_type);
   }
 
   return 0;

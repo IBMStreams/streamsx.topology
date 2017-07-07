@@ -72,3 +72,9 @@ def _splpy_release_memoryviews(*args):
     for o in args:
         if isinstance(o, memoryview):
             o.release()
+        elif isinstance(o, list):
+            for e in o:
+                _splpy_release_memoryviews(e)
+        elif isinstance(o, dict):
+            for e in o.items():
+                _splpy_release_memoryviews(e)

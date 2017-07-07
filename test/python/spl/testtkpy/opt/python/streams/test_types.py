@@ -18,6 +18,10 @@ def ToBlob(*s):
     return (s[0].encode('utf-8'),)
 
 @spl.map()
+def ToListBlob(*s):
+    return ([s[0].encode('utf-8')],)
+
+@spl.map()
 class BlobTest:
     """
     Expect blob tuples, need to verify that after
@@ -28,6 +32,35 @@ class BlobTest:
 
     def __call__(self, *tuple):
         v = tuple[0]
+        bs = v.tobytes()
+        if not isinstance(v, memoryview):
+            return ("Expected memory view is" + str(type(v)),)
+
+        if not v.readonly:
+            return "Expected readonly memory view",
+           
+        if self.last:
+            for b in self.last:
+                try:
+                    bs = b.tobytes()
+                    return "Expected released memory view",
+                except ValueError as ve:
+                    pass
+                
+        self.last.append(v)
+        return str(v, 'utf-8'),
+
+@spl.map()
+class ListBlobTest:
+    """
+    Expect list<blob> tuples, need to verify that after
+    the call the previous value cannot be accessed.
+    """
+    def __init__(self):
+        self.last = list()
+
+    def __call__(self, *tuple):
+        v = tuple[0][0]
         bs = v.tobytes()
         if not isinstance(v, memoryview):
             return ("Expected memory view is" + str(type(v)),)
