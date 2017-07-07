@@ -649,7 +649,7 @@ class Stream(object):
         oport = op.addOutputPort()
         return Stream(self.topology, oport)
     
-    def parallel(self, width, routing=Routing.ROUND_ROBIN, func=None):
+    def parallel(self, width, routing=Routing.ROUND_ROBIN, func=None, name=None):
         """
         Parallelizes the stream into `width` parallel channels.
         Tuples are routed to parallel channels such that an even distribution is maintained.
@@ -676,13 +676,19 @@ class Stream(object):
             func: Optional function called when :py:const:`Routing.HASH_PARTITIONED` routing is specified.
                 The function provides an integer value to be used as the hash that determines
                 the tuple channel routing.
+            name (str): The name to display for the parallel region.
 
         Returns:
             Stream: A stream for which subsequent transformations will be executed in parallel.
 
         """
+        if name is None:
+            name = self.name
+            
+        name = self.topology.graph._requested_name(name, action='parallel', func=func)
+
         if routing == None or routing == Routing.ROUND_ROBIN:
-            op2 = self.topology.graph.addOperator("$Parallel$")
+            op2 = self.topology.graph.addOperator("$Parallel$", name=name)
             op2.addInputPort(outputPort=self.oport)
             oport = op2.addOutputPort(width)
             return Stream(self.topology, oport)
@@ -705,7 +711,7 @@ class Stream(object):
                 hash_adder.addInputPort(outputPort=self.oport, name=self.name)
                 parallel_input = hash_adder.addOutputPort(schema=hash_schema)
 
-            parallel_op = self.topology.graph.addOperator("$Parallel$")
+            parallel_op = self.topology.graph.addOperator("$Parallel$", name=name)
             parallel_op.addInputPort(outputPort=parallel_input)
             parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=parallel_input.schema, partitioned_keys=keys)
 
