@@ -59,3 +59,24 @@ class TestSPL(unittest.TestCase):
         tester = Tester(topo)
         tester.contents(bt.stream, data)
         tester.test(self.test_ctxtype, self.test_config)
+
+    def test_map_blob_type(self):
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        data = ['Hello', 'Blob', 'Did', 'you', 'reset' ]
+        s = topo.source(data)
+        s = s.as_string()
+
+        toBlob = op.Map(
+            "com.ibm.streamsx.topology.pytest.pytypes::ToMapBlob",
+            s,
+            'tuple<map<rstring,blob> lb>')
+
+        bt = op.Map(
+            "com.ibm.streamsx.topology.pytest.pytypes::MapBlobTest",
+            toBlob.stream,
+            'tuple<rstring string>')
+         
+        tester = Tester(topo)
+        tester.contents(bt.stream, data)
+        tester.test(self.test_ctxtype, self.test_config)

@@ -76,5 +76,5 @@ def _splpy_release_memoryviews(*args):
             for e in o:
                 _splpy_release_memoryviews(e)
         elif isinstance(o, dict):
-            for e in o.items():
+            for e in o.values():
                 _splpy_release_memoryviews(e)
