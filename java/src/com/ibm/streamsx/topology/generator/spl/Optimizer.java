@@ -22,12 +22,9 @@ import com.google.gson.JsonPrimitive;
  */
 class Optimizer {
 
-    @SuppressWarnings("unused")
-    private final SPLGenerator generator;
     private final JsonObject graph;
 
-    Optimizer(SPLGenerator generator, JsonObject graph) {
-        this.generator = generator;
+    Optimizer(JsonObject graph) {
         this.graph = graph;
     }
 
