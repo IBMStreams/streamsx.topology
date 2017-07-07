@@ -366,6 +366,7 @@ class Topology(object):
         sl = _SourceLocation(_source_info(), "source")
         name = self.graph._requested_name(name, action='source', func=func)
         op = self.graph.addOperator(self.opnamespace+"::Source", func, name=name, sl=sl)
+        op._layout(kind='Source')
         oport = op.addOutputPort(name=name)
         return Stream(self, oport)._make_placeable()
 
@@ -398,12 +399,13 @@ class Topology(object):
         Returns:
             Stream:  A stream whose tuples have been published to the topic by other Streams applications.
         """
-        name = self.graph._requested_name(name, 'subscribe')
+        _name = self.graph._requested_name(name, 'subscribe')
         sl = _SourceLocation(_source_info(), "subscribe")
-        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl, name=name)
+        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl, name=_name)
         oport = op.addOutputPort(schema=schema, name=name)
         subscribeParams = {'topic': topic, 'streamType': schema}
         op.setParameters(subscribeParams)
+        op._layout_group('Subscribe', name if name else _name)
         return Stream(self, oport)
     
 
@@ -444,6 +446,7 @@ class Stream(object):
         name = self.topology.graph._requested_name(name, action="for_each", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
+        op._layout(kind='ForEach')
 
     def sink(self, func, name=None):
         """
@@ -468,6 +471,7 @@ class Stream(object):
         name = self.topology.graph._requested_name(name, action="filter", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
+        op._layout(kind='Filter')
         oport = op.addOutputPort(schema=self.oport.schema, name=name)
         return Stream(self.topology, oport)._make_placeable()
 
@@ -510,7 +514,7 @@ class Stream(object):
             name = ''.join(random.choice('0123456789abcdef') for x in range(16))
 
         if self.oport.schema == CommonSchema.Python:
-            view_stream = self.as_json(force_object=False)
+            view_stream = self.as_json(force_object=False)._layout(hidden=True)
             # colocate map operator with stream that is being viewed.
             self.oport.operator.colocate(view_stream.oport.operator, 'view')
         else:
@@ -563,7 +567,7 @@ class Stream(object):
         if schema is None:
              schema = CommonSchema.Python
      
-        return self._map(func, schema=schema, name=name)
+        return self._map(func, schema=schema, name=name)._layout('Map')
 
     def transform(self, func, name=None):
         """
@@ -598,7 +602,7 @@ class Stream(object):
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
         oport = op.addOutputPort(name=name)
-        return Stream(self.topology, oport)._make_placeable()
+        return Stream(self.topology, oport)._make_placeable()._layout('FlatMap')
     
     def multi_transform(self, func, name=None):
         """
@@ -706,7 +710,7 @@ class Stream(object):
             if func is not None:
                 keys = ['__spl_hash']
                 hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func)
-                hash_adder.layout(hidden=True)
+                hash_adder._layout(hidden=True)
                 hash_schema = self.oport.schema.extend(StreamSchema("tuple<int64 __spl_hash>"))
                 hash_adder.addInputPort(outputPort=self.oport, name=self.name)
                 parallel_input = hash_adder.addOutputPort(schema=hash_schema)
@@ -718,7 +722,7 @@ class Stream(object):
             if func is not None:
                 # use the Functor passthru operator to remove the hash attribute by removing it from output port schema
                 hrop = self.topology.graph.addPassThruOperator()
-                hrop.layout(hidden=True)
+                hrop._layout(hidden=True)
                 hrop.addInputPort(outputPort=parallel_op_port)
                 parallel_op_port = hrop.addOutputPort(schema=self.oport.schema)
 
@@ -871,11 +875,12 @@ class Stream(object):
             self.oport.operator.colocate(schema_change.oport.operator, 'publish')
             return schema_change.publish(topic, schema=schema)
 
-        name = self.topology.graph._requested_name(name, action="publish")
+        _name = self.topology.graph._requested_name(name, action="publish")
         sl = _SourceLocation(_source_info(), "publish")
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=name)
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name)
         op.addInputPort(outputPort=self.oport)
         self.oport.operator.colocate(op, 'publish')
+        op._layout_group('Publish', name if name else _name)
 
     def autonomous(self):
         """
@@ -922,7 +927,7 @@ class Stream(object):
         Returns:
             Stream: Stream containing the string representations of tuples on this stream.
         """
-        return self._change_schema(CommonSchema.String, 'as_string', name)
+        return self._change_schema(CommonSchema.String, 'as_string', name)._layout('AsString')
 
     def as_json(self, force_object=True, name=None):
         """
@@ -957,7 +962,7 @@ class Stream(object):
 
         """
         func = streamsx.topology.runtime._json_force_object if force_object else None
-        return self._change_schema(CommonSchema.Json, 'as_json', name, func)
+        return self._change_schema(CommonSchema.Json, 'as_json', name, func)._layout('AsJson')
 
     def _change_schema(self, schema, action, name=None, func=None):
         """Internal method to change a schema.
@@ -1012,6 +1017,10 @@ class Stream(object):
         if not 'resourceTags' in plc:
             plc['resourceTags'] = set()
         return plc['resourceTags']
+
+    def _layout(self, kind=None, hidden=None):
+        self.oport.operator._layout(kind, hidden)
+        return self
 
 
 class View(object):

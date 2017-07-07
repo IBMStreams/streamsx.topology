@@ -58,6 +58,7 @@ class SPLGraph(object):
         self._views = []
         self._spl_toolkits = []
         self._used_names = {'list', 'tuple', 'int'}
+        self._layout_group_id = 0
 
     def get_views(self):
         return self._views
@@ -132,6 +133,11 @@ class SPLGraph(object):
         self.operators.append(op)
         return op
 
+    def _next_layout_group_id(self):
+        lgi = '__spl_lg_' + str(self._layout_group_id)
+        self._layout_group_id += 1
+        return lgi
+
     def generateSPLGraph(self):
         _graph = {}
         _graph["name"] = self.name
@@ -193,7 +199,7 @@ class _SPLInvocation(object):
 
         self.inputPorts = []
         self.outputPorts = []
-        self._layout = {}
+        self._layout_hints = {}
 
     def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned_keys=None):
         if name is None:
@@ -285,8 +291,8 @@ class _SPLInvocation(object):
         if self.sl is not None:
            _op['sourcelocation'] = self.sl.spl_json()
 
-        if self._layout:
-            _op['layout'] = self._layout
+        if self._layout_hints:
+            _op['layout'] = self._layout_hints
 
         # Callout to allow a ExtensionOperator
         # to augment the JSON
@@ -335,11 +341,21 @@ class _SPLInvocation(object):
             self._placement['explicitColocate'] = colocate_id
         other._placement['explicitColocate'] = colocate_id
 
-    def layout(self, hidden=None, kind=None):
-        if hidden:
-           self._layout['hidden'] = True
+    def _layout(self, kind=None, hidden=None):
         if kind:
-           self._layout['kind'] = str(kind)
+           self._layout_hints['kind'] = str(kind)
+        if hidden:
+           self._layout_hints['hidden'] = True
+
+    def _layout_group(self,kind, name, group_id=None):
+        group = {}
+        if group_id is None:
+            group_id = self.graph._next_layout_group_id()
+        group['id'] = group_id
+        group['name'] = name
+        group['kind'] = kind
+        self._layout_hints['group'] = group
+        return group_id
 
     def _printOperator(self):
         print(self.name+":")
