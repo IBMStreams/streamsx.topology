@@ -77,22 +77,34 @@ class OperatorGenerator {
 
     private static void noteAnnotations(JsonObject op, StringBuilder sb) throws IOException {
 
+        layoutNote(op, sb);
         sourceLocationNote(op, sb);
         portTypesNote(op, sb);
     }
 
+    private static void layoutNote(JsonObject op, StringBuilder sb) {
+        JsonObject layout = object(op, "layout");
+        if (layout != null)
+            appendNoteAnnotation(sb, "__spl_layout", layout);
+    }
+
     private static void sourceLocationNote(JsonObject op, StringBuilder sb) throws IOException {
 
-        JsonArray ja = GsonUtilities.array(op, "sourcelocation");
+        JsonArray ja = array(op, "sourcelocation");
         if (ja == null)
             return;
 
         JsonElement jsource = ja.size() == 1 ? (JsonElement) ja.get(0) : ja;
 
-        sb.append("@spl_note(id=\"__spl_sourcelocation\"");
+        appendNoteAnnotation(sb, "__spl_sourcelocation", jsource);
+    }
+
+    private static void appendNoteAnnotation(StringBuilder sb, String type, Object textObject) {
+        sb.append("@spl_note(id=\"");
+        sb.append(type);
+        sb.append("\"");
         sb.append(", text=");
-        String sourceInfo = jsource.toString();
-        SPLGenerator.stringLiteral(sb, sourceInfo);
+        SPLGenerator.stringLiteral(sb, textObject.toString());
         sb.append(")\n");
     }
 
@@ -104,10 +116,7 @@ class OperatorGenerator {
             String type = GsonUtilities.jstring(output, "type.native");
             if (type == null || type.isEmpty())
                 return;
-            sb.append("@spl_note(id=\"__spl_nativeType_output_" + id[0]++ + "\"");
-            sb.append(", text=");
-            SPLGenerator.stringLiteral(sb, type);
-            sb.append(")\n");
+            appendNoteAnnotation(sb, "__spl_nativeType_output_" + id[0]++, type);
         });
     }
 

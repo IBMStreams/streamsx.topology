@@ -700,6 +700,7 @@ class Stream(object):
             if func is not None:
                 keys = ['__spl_hash']
                 hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func)
+                hash_adder.layout(hidden=True)
                 hash_schema = self.oport.schema.extend(StreamSchema("tuple<int64 __spl_hash>"))
                 hash_adder.addInputPort(outputPort=self.oport, name=self.name)
                 parallel_input = hash_adder.addOutputPort(schema=hash_schema)
@@ -711,6 +712,7 @@ class Stream(object):
             if func is not None:
                 # use the Functor passthru operator to remove the hash attribute by removing it from output port schema
                 hrop = self.topology.graph.addPassThruOperator()
+                hrop.layout(hidden=True)
                 hrop.addInputPort(outputPort=parallel_op_port)
                 parallel_op_port = hrop.addOutputPort(schema=self.oport.schema)
 

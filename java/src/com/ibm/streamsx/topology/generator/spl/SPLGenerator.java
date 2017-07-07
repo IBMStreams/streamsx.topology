@@ -642,8 +642,12 @@ public class SPLGenerator {
         return sb.toString();
     }
 
+    /**
+     * Use single quotes for strings to allow clearer
+     * representation of JSON objects.
+     */
     static void stringLiteral(StringBuilder sb, String value) {
-        sb.append('"');
+        sb.append("'");
 
         // Replace any backslash with an escaped version
         // to stop SPL treating the value as an escape leadin
@@ -653,10 +657,10 @@ public class SPLGenerator {
         // which is \\n as a Java string literal
         value = value.replace("\n", "\\n");
 
-        value = value.replace("\"", "\\\"");
+        value = value.replace("'", "\\'");
 
         sb.append(value);
-        sb.append('"');
+        sb.append("'");
     }
 
     /**

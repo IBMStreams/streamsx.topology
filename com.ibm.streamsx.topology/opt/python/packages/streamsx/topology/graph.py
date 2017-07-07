@@ -193,6 +193,7 @@ class _SPLInvocation(object):
 
         self.inputPorts = []
         self.outputPorts = []
+        self._layout = {}
 
     def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned_keys=None):
         if name is None:
@@ -284,6 +285,9 @@ class _SPLInvocation(object):
         if self.sl is not None:
            _op['sourcelocation'] = self.sl.spl_json()
 
+        if self._layout:
+            _op['layout'] = self._layout
+
         # Callout to allow a ExtensionOperator
         # to augment the JSON
         if hasattr(self, '_ex_op'):
@@ -330,6 +334,12 @@ class _SPLInvocation(object):
             colocate_id = '__spl_' + why + '_' + str(self.index)
             self._placement['explicitColocate'] = colocate_id
         other._placement['explicitColocate'] = colocate_id
+
+    def layout(self, hidden=None, kind=None):
+        if hidden:
+           self._layout['hidden'] = True
+        if kind:
+           self._layout['kind'] = str(kind)
 
     def _printOperator(self):
         print(self.name+":")
