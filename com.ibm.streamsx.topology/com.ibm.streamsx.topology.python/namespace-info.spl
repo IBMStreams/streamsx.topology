@@ -872,6 +872,7 @@ The list may be empty resulting in no tuples being submitted.
 A limited set of SPL types are supported.
 
  * **Primitive types**
+  * `blob` - maps to a Python `memoryview`
   * `boolean` - maps to Python `Boolean`
   * `int8`, `int16`, `int32`, `int64` - maps to Python `int`
   * `uint8`, `uint16`, `uint32`, `uint64` - maps to Python `int`
@@ -880,8 +881,21 @@ A limited set of SPL types are supported.
   * `rstring`, `ustring` - maps to Python `String` - `rstring` values assume UTF-8 encoding
  * **Collection types**
   * `list<T>` where `T` is any supported type. Passed into Python as a list.
-  * `set<T>` where `T` is any supported primitive type. Passed into Python as a set. `T` must be primitive to match Python's requirement that an element of a set is hashable.
-  * `map<K,V>` where `K` is any supported primitive type and `V` is any supported type. Passed into Python as a dictionary.  `K` must be primitive to match Python's requirement that a key of a map is hashable.
+  * `set<T>` where `T` is any supported primitive type except `blob`. Passed into Python as a set. `T` must be primitive to match Python's requirement that an element of a set is hashable.
+  * `map<K,V>` where `K` is any supported primitive type expect `blob` and `V` is any supported type. Passed into Python as a dictionary.  `K` must be primitive to match Python's requirement that a key of a map is hashable.
+
++++ SPL blob handling
+
+A SPL `blob` value is passed into Python as a `memoryview` object to
+avoid copying the contents of the value. The `memoryview` object will
+be released after the callable returns and thus any further use of
+it will throw a `ValueError`. 
+
+Thus if the callable wants to maintain the value after the call it
+must copy the required information from the `memoryview` before returning.
+
+The `memoryview` object may be safely returned by the callable as part
+of a tuple to be submitted.
 
 ++ \@spl decorator options
 \@spl decorators support an number of options.
