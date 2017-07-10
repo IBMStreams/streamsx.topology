@@ -1,0 +1,17 @@
+streamsx.scripts package
+========================
+
+Submodules
+----------
+
+.. toctree::
+
+   streamsx.scripts.streamsx-runner
+
+Module contents
+---------------
+
+.. automodule:: streamsx.scripts
+    :members:
+    :undoc-members:
+    :show-inheritance:
