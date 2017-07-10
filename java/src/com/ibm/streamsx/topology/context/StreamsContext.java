@@ -75,7 +75,7 @@ public interface StreamsContext<T> {
          * <LI> Streaming Analytics REST API </LI>
          * </UL>
          * <BR>
-         * The {@link #ANALYTICS_SERVICE} context submits a topology directly to a
+         * The {@link #STREAMING_ANALYTICS_SERVICE} context submits a topology directly to a
          * Streaming Analytics service.
          * </P>
          * <P>
@@ -201,7 +201,7 @@ public interface StreamsContext<T> {
         /**
          * The topology is submitted to a Streams instance running
          * in Streaming Analytics service on
-         * <a href="http://www.ibm.com/Bluemix‎" target="_blank">IBM Bluemix</a>
+         * <a href="http://www.ibm.com/Bluemix" target="_blank">IBM Bluemix</a>
          * cloud platform.
          * 
          * <P>
@@ -214,7 +214,7 @@ public interface StreamsContext<T> {
         /**
          * The topology is submitted to a Streams instance running
          * in Streaming Analytics service on
-         * <a href="http://www.ibm.com/Bluemix‎" target="_blank">IBM Bluemix</a>
+         * <a href="http://www.ibm.com/Bluemix" target="_blank">IBM Bluemix</a>
          * cloud platform.
          * <P>
          * The returned type for the {@code submit} calls is
