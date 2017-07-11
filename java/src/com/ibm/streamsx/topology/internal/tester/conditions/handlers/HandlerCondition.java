@@ -33,36 +33,4 @@ public abstract class HandlerCondition<R, H extends StreamHandler<Tuple>, U exte
         this.userCondition = userCondition;
         userCondition.setImpl(this);
     }
-    
-    public static void setupHandlersFromConditions(
-            Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers,
-            Map<TStream<?>, Set<UserCondition<?>>> conditions) {
-        
-        for (TStream<?> stream : conditions.keySet()) {
-            Set<UserCondition<?>> streamConditions = conditions.get(stream);
-            
-            Set<StreamHandler<Tuple>> streamHandlers = handlers.get(stream);
-            if (streamHandlers == null)
-                handlers.put(stream, streamHandlers = new HashSet<>());
-            
-            for (UserCondition<?> userCondition : streamConditions)
-                streamHandlers.add(createHandler(userCondition));
-        }
-    }
-    
-    @SuppressWarnings("unchecked")
-    private static StreamHandler<Tuple> createHandler(UserCondition<?> userCondition) {
-        
-        HandlerCondition<?,?,?> handlerCondition;
-        
-        if (userCondition instanceof CounterUserCondition) {
-            handlerCondition = new CounterHandlerCondition((CounterUserCondition) userCondition);           
-        } else if (userCondition instanceof ContentsUserCondition) {
-            handlerCondition = new ContentsHandlerCondition((ContentsUserCondition<Tuple>) userCondition); 
-        }
-        else
-            throw new IllegalStateException();
-        
-        return handlerCondition.handler;
-    }
 }
