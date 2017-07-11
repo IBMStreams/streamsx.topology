@@ -12,7 +12,7 @@ import com.ibm.streamsx.topology.tester.Condition;
  * Under the covers it delegates to a implementation 
  * condition that is created once the job under test is submitted.
  */
-public class UserCondition<R> implements Condition<R> {
+public abstract class UserCondition<R> implements Condition<R> {
     
     private Condition<R> impl;
     private final R noResult;
@@ -44,7 +44,7 @@ public class UserCondition<R> implements Condition<R> {
     }
     
     @Override
-    public String toString() {
+    public final String toString() {
         if (getImpl() != null)
             return getImpl().toString();
         return super.toString();

@@ -78,7 +78,7 @@ public class TupleCollection implements Tester {
 
         streamHandlers.add(handler);
     }
-    private void addCondition(TStream<?> stream, UserCondition<?> condition) {
+    private <T> Condition<T> addCondition(TStream<?> stream, UserCondition<T> condition) {
         Set<UserCondition<?>> streamConditions = conditions.get(stream);
         if (streamConditions == null) {
             streamConditions = new HashSet<>();
@@ -86,6 +86,7 @@ public class TupleCollection implements Tester {
         }
 
         streamConditions.add(condition);
+        return condition;
     }
 
     @Override
@@ -103,70 +104,12 @@ public class TupleCollection implements Tester {
     @Override
     public Condition<Long> tupleCount(TStream<?> stream, final long expectedCount) {
         
-        CounterUserCondition userCondition = new CounterUserCondition(expectedCount, true);
-        
-        addCondition(stream, userCondition);
-        
-        return userCondition;
-        
-        /*
-        final StreamCounter<Tuple> counter = new StreamCounter<Tuple>();
-
-        addHandler(stream, counter);
-
-        return new Condition<Long>() {
-            
-            @Override
-            public Long getResult() {
-                return counter.getTupleCount();
-            }
-
-            @Override
-            public boolean valid() {
-                return counter.getTupleCount() == expectedCount;
-            }
-
-            @Override
-            public String toString() {
-                return "Expected tuple count: " + expectedCount
-                        + " != received: " + counter.getTupleCount();
-            }
-        };
-        */
+        return addCondition(stream, new CounterUserCondition(expectedCount, true));
     }
   
     @Override
-    public Condition<Long> atLeastTupleCount(TStream<?> stream, final long expectedCount) {
-        
-        CounterUserCondition userCondition = new CounterUserCondition(expectedCount, false);
-        
-        addCondition(stream, userCondition);
-        
-        return userCondition;
-        /*
-        final StreamCounter<Tuple> counter = new StreamCounter<Tuple>();
-
-        addHandler(stream, counter);
-
-        return new Condition<Long>() {
-            
-            @Override
-            public Long getResult() {
-                return counter.getTupleCount();
-            }
-
-            @Override
-            public boolean valid() {
-                return counter.getTupleCount() >= expectedCount;
-            }
-
-            @Override
-            public String toString() {
-                return "At least tuple count: " + expectedCount
-                        + ", received: " + counter.getTupleCount();
-            }
-        };
-        */
+    public Condition<Long> atLeastTupleCount(TStream<?> stream, final long expectedCount) {       
+        return addCondition(stream, new CounterUserCondition(expectedCount, false));
     }
     
     @Override
