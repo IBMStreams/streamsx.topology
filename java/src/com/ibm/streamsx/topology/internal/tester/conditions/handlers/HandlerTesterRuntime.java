@@ -17,7 +17,6 @@ import com.ibm.streamsx.topology.internal.tester.TupleCollection;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
-import com.ibm.streamsx.topology.tester.Condition;
 
 /**
  * Tester runtime that uses handlers to validate conditions.
@@ -59,14 +58,19 @@ public abstract class HandlerTesterRuntime extends TesterRuntime {
     @SuppressWarnings("unchecked")
     private static StreamHandler<Tuple> createHandler(UserCondition<?> userCondition) {
         
-        HandlerCondition<?,?,?> handlerCondition;
+        HandlerCondition<?,?,?> handlerCondition = null;
         
         if (userCondition instanceof CounterUserCondition) {
             handlerCondition = new CounterHandlerCondition((CounterUserCondition) userCondition);           
         } else if (userCondition instanceof ContentsUserCondition) {
-            handlerCondition = new ContentsHandlerCondition((ContentsUserCondition<Tuple>) userCondition); 
+            ContentsUserCondition<?> uc = (ContentsUserCondition<?>) userCondition;
+            if (uc.getTupleClass().equals(Tuple.class))
+                handlerCondition = new ContentsHandlerCondition((ContentsUserCondition<Tuple>) userCondition);
+            else if (uc.getTupleClass().equals(String.class))
+                handlerCondition = new StringHandlerCondition((ContentsUserCondition<String>) userCondition);
         }
-        else
+        
+        if (handlerCondition == null)
             throw new IllegalStateException();
         
         return handlerCondition.handler;

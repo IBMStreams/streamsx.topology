@@ -4,12 +4,9 @@
  */
 package com.ibm.streamsx.topology.internal.tester;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,8 +15,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.ibm.streams.flow.handlers.StreamCollector;
-import com.ibm.streams.flow.handlers.StreamCounter;
 import com.ibm.streams.flow.handlers.StreamHandler;
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streams.operator.Tuple;
@@ -131,92 +126,22 @@ public class TupleCollection implements Tester {
             final String... values) {
         
         stream = stream.asType(String.class);
-
-        final StreamCollector<LinkedList<Tuple>, Tuple> tuples = StreamCollector
-                .newLinkedListCollector();
-
-        addHandler(stream, tuples);
-
-        return new Condition<List<String>>() {
-            
-            @Override
-            public List<String> getResult() {
-                List<String> strings = new ArrayList<>(tuples.getTupleCount());
-                synchronized (tuples.getTuples()) {
-                    for (Tuple tuple : tuples.getTuples()) {
-                        strings.add(tuple.getString(0));
-                    }
-                }
-                return strings;
-            }
-
-            @Override
-            public boolean valid() {
-                if (tuples.getTupleCount() != values.length)
-                    return false;
-
-                List<Tuple> sc = tuples.getTuples();
-                for (int i = 0; i < values.length; i++) {
-                    if (!sc.get(i).getString(0).equals(values[i]))
-                        return false;
-                }
-                return true;
-            }
-
-            @Override
-            public String toString() {
-                return "Received Tuples: " + getResult();
-            }
-        };
+        
+        return addCondition(stream, new ContentsUserCondition<String>(String.class, Arrays.asList(values), true));
     }
     
     @Override
     public Condition<List<Tuple>> tupleContents(SPLStream stream,
             final Tuple... values) {
         
-        return addCondition(stream, new ContentsUserCondition<>(Arrays.asList(values), true));
+        return addCondition(stream, new ContentsUserCondition<>(Tuple.class, Arrays.asList(values), true));
     }
 
     @Override
     public Condition<List<String>> stringContentsUnordered(TStream<String> stream,
             String... values) {
-
-        final List<String> sortedValues = Arrays.asList(values);
-        Collections.sort(sortedValues);
-
-        final StreamCollector<LinkedList<Tuple>, Tuple> tuples = StreamCollector
-                .newLinkedListCollector();
-
-        addHandler(stream, tuples);
-
-        return new Condition<List<String>>() {
-            
-            @Override
-            public List<String> getResult() {
-                List<String> strings = new ArrayList<>(tuples.getTupleCount());
-                synchronized (tuples.getTuples()) {
-                    for (Tuple tuple : tuples.getTuples()) {
-                        strings.add(tuple.getString(0));
-                    }
-                }
-                return strings;
-            }
-
-            @Override
-            public boolean valid() {
-
-                List<String> strings =  getResult();
-                if (strings.size() != sortedValues.size())
-                    return false;
-                Collections.sort(strings);
-                return sortedValues.equals(strings);
-            }
-
-            @Override
-            public String toString() {
-                return "Received Tuples: " + getResult();
-            }
-        };
+        
+        return addCondition(stream, new ContentsUserCondition<String>(String.class, Arrays.asList(values), false));
     }
 
     /*

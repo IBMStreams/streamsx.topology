@@ -9,15 +9,20 @@ import java.util.List;
 
 public final class ContentsUserCondition<T> extends UserCondition<List<T>> {
     
+    private final Class<T> clazz;
     private final List<T> expected;
     private final boolean ordered;
     
-    public ContentsUserCondition(List<T> expected, boolean ordered) {
+    public ContentsUserCondition(Class<T> clazz, List<T> expected, boolean ordered) {
         super(Collections.emptyList());
+        this.clazz = clazz;
         this.expected = expected;
         this.ordered = ordered;
     }
     
+    public Class<T> getTupleClass() {
+        return clazz;
+    }
     public boolean isOrdered() {
         return ordered;
     }
@@ -28,4 +33,6 @@ public final class ContentsUserCondition<T> extends UserCondition<List<T>> {
     public String toString() {
         return "Received Tuples: " + getResult();
     }
+    
+    
 }

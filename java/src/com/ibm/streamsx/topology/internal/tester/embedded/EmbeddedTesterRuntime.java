@@ -1,10 +1,9 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017  
+ */
 package com.ibm.streamsx.topology.internal.tester.embedded;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.ibm.streams.flow.declare.OutputPortDeclaration;
@@ -14,10 +13,7 @@ import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
-import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.TupleCollection;
-import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
-import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerTesterRuntime;
 
 /**

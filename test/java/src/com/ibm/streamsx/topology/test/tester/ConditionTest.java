@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.streams.operator.StreamSchema;
@@ -127,5 +126,94 @@ public class ConditionTest extends TestTopology {
 
         assertFalse(contents.toString(), contents.valid());
     }
-     
+    
+    @Test
+    public void testStringContentsGood() throws Exception {
+        final Topology topology = new Topology();
+        TStream<String> source = topology.strings("A", "B", "C", "D");
+
+        Condition<List<String>> contents = topology.getTester().stringContents(source, "A", "B", "C", "D");
+
+        boolean passed = complete(topology.getTester(), contents, 10, TimeUnit.SECONDS);
+        assertTrue(contents.toString(), contents.valid());
+        assertTrue(passed);
+    }
+    @Test
+    public void testStringContentsUnorderedGood() throws Exception {
+        final Topology topology = new Topology();
+        TStream<String> source = topology.strings("A", "B", "C", "D");
+
+        Condition<List<String>> contents = topology.getTester().stringContentsUnordered(source, "C", "D", "A", "B");
+
+        boolean passed = complete(topology.getTester(), contents, 10, TimeUnit.SECONDS);
+        assertTrue(contents.toString(), contents.valid());
+        assertTrue(passed);
+    }
+    @Test
+    public void testStringContentsBad() throws Exception {
+        final Topology topology = new Topology();
+        TStream<String> source = topology.strings("A", "B", "C", "D");
+
+        Condition<List<String>> contents = topology.getTester().stringContents(source, "A", "X", "C", "D");
+
+        boolean passed = complete(topology.getTester(), contents, 10, TimeUnit.SECONDS);
+        assertFalse(contents.toString(), contents.valid());
+        assertFalse(passed);
+    }
+    @Test
+    public void testStringContentsBad2() throws Exception {
+        final Topology topology = new Topology();
+        TStream<String> source = topology.strings("A", "B", "C", "D");
+
+        Condition<List<String>> contents = topology.getTester().stringContents(source, "A", "X", "C", "D", "S");
+
+        boolean passed = complete(topology.getTester(), contents, 10, TimeUnit.SECONDS);
+        assertFalse(contents.toString(), contents.valid());
+        assertFalse(passed);
+    }
+    @Test
+    public void testStringContentsBad3() throws Exception {
+        final Topology topology = new Topology();
+        TStream<String> source = topology.strings("A", "B", "C", "D");
+
+        Condition<List<String>> contents = topology.getTester().stringContents(source, "A", "B", "C");
+
+        boolean passed = complete(topology.getTester(), contents, 10, TimeUnit.SECONDS);
+        assertFalse(contents.toString(), contents.valid());
+        assertFalse(passed);
+    }
+    @Test
+    public void testStringContentsUnorderedBad() throws Exception {
+        final Topology topology = new Topology();
+        TStream<String> source = topology.strings("A", "B", "C", "D");
+
+        Condition<List<String>> contents = topology.getTester().stringContentsUnordered(source, "C", "D", "A", "Y");
+
+        boolean passed = complete(topology.getTester(), contents, 10, TimeUnit.SECONDS);
+        assertFalse(contents.toString(), contents.valid());
+        assertFalse(passed);
+    }
+    
+    @Test
+    public void testStringContentsUnorderedBad2() throws Exception {
+        final Topology topology = new Topology();
+        TStream<String> source = topology.strings("A", "B", "C", "D");
+
+        Condition<List<String>> contents = topology.getTester().stringContentsUnordered(source, "C", "D", "A", "Y", "Z");
+
+        boolean passed = complete(topology.getTester(), contents, 10, TimeUnit.SECONDS);
+        assertFalse(contents.toString(), contents.valid());
+        assertFalse(passed);
+    }
+    @Test
+    public void testStringContentsUnorderedBad3() throws Exception {
+        final Topology topology = new Topology();
+        TStream<String> source = topology.strings("A", "B", "C", "D");
+
+        Condition<List<String>> contents = topology.getTester().stringContentsUnordered(source, "A", "B");
+
+        boolean passed = complete(topology.getTester(), contents, 10, TimeUnit.SECONDS);
+        assertFalse(contents.toString(), contents.valid());
+        assertFalse(passed);
+    }
 }
