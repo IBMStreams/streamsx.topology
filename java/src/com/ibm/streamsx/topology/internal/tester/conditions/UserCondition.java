@@ -44,7 +44,7 @@ public abstract class UserCondition<R> implements Condition<R> {
     }
     
     @Override
-    public final String toString() {
+    public String toString() {
         if (getImpl() != null)
             return getImpl().toString();
         return super.toString();

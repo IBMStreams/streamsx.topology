@@ -92,7 +92,7 @@ public class TCPTesterRuntime extends TesterRuntime {
     }
     
     @Override
-    public void start() {
+    public void start(Object info) {
         assert this.localCollector != null;
         localRunningCollector = localCollector.execute();
     }   

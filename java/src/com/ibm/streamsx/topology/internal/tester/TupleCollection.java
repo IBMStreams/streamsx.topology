@@ -31,8 +31,10 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.internal.test.handlers.StringTupleTester;
+import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
+import com.ibm.streamsx.topology.internal.tester.embedded.EmbeddedTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.tcp.TCPTesterRuntime;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.streams.StringStreams;
@@ -171,39 +173,8 @@ public class TupleCollection implements Tester {
     @Override
     public Condition<List<Tuple>> tupleContents(SPLStream stream,
             final Tuple... values) {
-
-        final StreamCollector<LinkedList<Tuple>, Tuple> tuples = StreamCollector
-                .newLinkedListCollector();
-
-        addHandler(stream, tuples);
-
-        return new Condition<List<Tuple>>() {
-            
-            @Override
-            public List<Tuple> getResult() {
-                return tuples.getTuples();
-            }
-
-            @Override
-            public boolean valid() {
-                if (tuples.getTupleCount() != values.length)
-                    return false;
-
-                synchronized (tuples) {
-                    List<Tuple> sc = tuples.getTuples();
-                    for (int i = 0; i < values.length; i++) {
-                        if (!sc.get(i).equals(values[i]))
-                            return false;
-                    }
-                }
-                return true;
-            }
-
-            @Override
-            public String toString() {
-                return "Received Tuples: " + getResult();
-            }
-        };
+        
+        return addCondition(stream, new ContentsUserCondition<>(Arrays.asList(values), true));
     }
 
     @Override
@@ -253,36 +224,26 @@ public class TupleCollection implements Tester {
      */
 
     public void finalizeGraph(StreamsContext.Type contextType) throws Exception {
-        
-        System.err.println("finalizeGraph:" + handlers.isEmpty() + " cond " + conditions.isEmpty());
-        
+                
         if (handlers.isEmpty() && conditions.isEmpty())
             return;
 
-        switch (contextType) {
-        case EMBEDDED_TESTER:
-            finalizeEmbeddedTester();
-            break;
-        case DISTRIBUTED_TESTER:
-        case STANDALONE_TESTER:
-            synchronized (this) {
+        synchronized (this) {
+            switch (contextType) {
+            case EMBEDDED_TESTER:
+                runtime = new EmbeddedTesterRuntime(this);
+                break;
+            case DISTRIBUTED_TESTER:
+            case STANDALONE_TESTER:
                 runtime = new TCPTesterRuntime(this);
+                break;
+            default: // nothing to do
+                return;
             }
-            runtime.finalizeTester(handlers, conditions);
-            break;
-        default: // nothing to do
-            break;
         }
+        
+        runtime.finalizeTester(handlers, conditions);
     }
-
-
-
-    private void finalizeEmbeddedTester()
-            throws Exception {
-
-    }
-
-
 
     public void setupEmbeddedTestHandlers(JavaTestableGraph tg)
             throws Exception {
@@ -296,8 +257,6 @@ public class TupleCollection implements Tester {
                     BOutputPort outputPort = (BOutputPort) output;
                     tg.registerStreamHandler(outputPort.port(), streamHandler);
                 }
-
-                // tg.registerStreamHandler(stream.getPort(), streamHandler);
             }
         }
     }

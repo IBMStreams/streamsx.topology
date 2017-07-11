@@ -50,12 +50,15 @@ public abstract class HandlerCondition<R, H extends StreamHandler<Tuple>, U exte
         }
     }
     
+    @SuppressWarnings("unchecked")
     private static StreamHandler<Tuple> createHandler(UserCondition<?> userCondition) {
         
         HandlerCondition<?,?,?> handlerCondition;
         
         if (userCondition instanceof CounterUserCondition) {
             handlerCondition = new CounterHandlerCondition((CounterUserCondition) userCondition);           
+        } else if (userCondition instanceof ContentsUserCondition) {
+            handlerCondition = new ContentsHandlerCondition((ContentsUserCondition<Tuple>) userCondition); 
         }
         else
             throw new IllegalStateException();

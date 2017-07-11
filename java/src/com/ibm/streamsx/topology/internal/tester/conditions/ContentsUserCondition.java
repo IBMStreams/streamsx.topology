@@ -24,4 +24,8 @@ public final class ContentsUserCondition<T> extends UserCondition<List<T>> {
     public List<T> getExpected() {
         return expected;
     }
+    @Override
+    public String toString() {
+        return "Received Tuples: " + getResult();
+    }
 }

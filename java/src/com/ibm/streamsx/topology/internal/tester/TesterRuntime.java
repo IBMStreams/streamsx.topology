@@ -33,10 +33,10 @@ public abstract class TesterRuntime {
         return tester().getTopology();
     }
     
-    public abstract void start();
+    public abstract void start(Object info) throws Exception;
 
     public abstract void shutdown() throws Exception;
     
     public abstract void finalizeTester(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers,
-            Map<TStream<?>, Set<UserCondition<?>>> condition) throws Exception;  
+            Map<TStream<?>, Set<UserCondition<?>>> conditions) throws Exception;  
 }

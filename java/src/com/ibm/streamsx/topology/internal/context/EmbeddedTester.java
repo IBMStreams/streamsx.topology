@@ -28,13 +28,16 @@ public class EmbeddedTester extends StreamsContextImpl<JavaTestableGraph> {
 
         app.builder().checkSupportsEmbeddedMode();
         
+        TupleCollection tester = (TupleCollection) app.getTester();
+        if (tester != null)
+            tester.finalizeGraph(getType());
+        
         SubmissionParameterManager.initializeEmbedded(app.builder(), config);
         
         JavaTestableGraph tg = jot.executable(app.graph());
 
-        TupleCollection tester = (TupleCollection) app.getTester();
-        tester.setupEmbeddedTestHandlers(tg);
-
+        if (tester != null)
+            tester.getRuntime().start(tg);
         return tg.execute();
     }
 

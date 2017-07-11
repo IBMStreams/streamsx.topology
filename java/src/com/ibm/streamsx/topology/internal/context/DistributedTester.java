@@ -33,11 +33,11 @@ public class DistributedTester extends DistributedStreamsContext {
     
 
     @Override
-    void preInvoke(AppEntity entity, File bundle) {
+    void preInvoke(AppEntity entity, File bundle) throws Exception {
         Topology app = entity.app;
         if (app != null && app.hasTester()) {
             TesterRuntime trt = ((TupleCollection) app.getTester()).getRuntime();
-            trt.start();
+            trt.start(null);
         }
     }
 }

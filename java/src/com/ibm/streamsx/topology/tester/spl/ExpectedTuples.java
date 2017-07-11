@@ -19,7 +19,7 @@ import com.ibm.streamsx.topology.tester.Tester;
  */
 public class ExpectedTuples {
     
-    private final Tuple[] EMPTY = new Tuple[0];
+    private final static Tuple[] EMPTY = new Tuple[0];
     
     private final StreamSchema schema;
     private final List<Tuple> tuples = new ArrayList<>();
@@ -41,7 +41,7 @@ public class ExpectedTuples {
     }
     
     /**
-     * Get the current of tuples. 
+     * Get the expected tuples. 
      * Modifying the returned list modifies
      * the expected tuples.
      *  
