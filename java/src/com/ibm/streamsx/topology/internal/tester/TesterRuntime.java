@@ -19,13 +19,13 @@ import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
  *
  */
 public abstract class TesterRuntime {
-    private final TupleCollection tester;
+    private final ConditionTesterImpl tester;
     
-    protected TesterRuntime(TupleCollection tester) {
+    protected TesterRuntime(ConditionTesterImpl tester) {
         this.tester = tester;
     }
     
-    protected TupleCollection tester() {
+    protected ConditionTesterImpl tester() {
         return tester;
     }
     

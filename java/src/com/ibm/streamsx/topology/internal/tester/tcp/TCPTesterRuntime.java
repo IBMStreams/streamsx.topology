@@ -30,13 +30,18 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.internal.tester.TestTupleInjector;
-import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
-import com.ibm.streamsx.topology.internal.tester.TupleCollection;
+import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
-import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.ops.TesterSink;
 
+/**
+ * Create a local graph that will collect tuples from the tcp server and connect
+ * them to the handlers using this local operator graph, hence reusing the
+ * existing infrastructure. The graph will contain a single pass-through
+ * operator for any stream under test, the TCP server will inject tuples into
+ * the operator and the handlers are connected to the output.
+ */
 public class TCPTesterRuntime extends HandlerTesterRuntime {
     
     private OperatorGraph collectorGraph;
@@ -50,7 +55,7 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
             .synchronizedMap(new HashMap<Integer, TestTupleInjector>());
 
 
-    public TCPTesterRuntime(TupleCollection tester) {
+    public TCPTesterRuntime(ConditionTesterImpl tester) {
         super(tester);
     }
 

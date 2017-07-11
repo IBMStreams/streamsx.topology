@@ -13,7 +13,7 @@ import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
-import com.ibm.streamsx.topology.internal.tester.TupleCollection;
+import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerTesterRuntime;
 
 /**
@@ -24,7 +24,7 @@ import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerTest
  */
 public class EmbeddedTesterRuntime extends HandlerTesterRuntime {
     
-    public EmbeddedTesterRuntime(TupleCollection tester) {
+    public EmbeddedTesterRuntime(ConditionTesterImpl tester) {
         super(tester);
     }
 

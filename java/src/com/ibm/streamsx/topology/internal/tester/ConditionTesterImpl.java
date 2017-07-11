@@ -37,14 +37,11 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 /**
- * Create a local graph that will collect tuples from the tcp server and connect
- * them to the handlers using this local operator graph, hence reusing the
- * existing infrastructure. The graph will contain a single pass-through
- * operator for any stream under test, the TCP server will inject tuples into
- * the operator and the handlers are connected to the output.
- * 
+ * Collects a set of conditions against a topology
+ * and then allows a TesterRuntime to implement
+ * them against a topology.
  */
-public class TupleCollection implements Tester {
+public class ConditionTesterImpl implements Tester {
 
     private final Topology topology;
     private AtomicBoolean used = new AtomicBoolean();
@@ -53,7 +50,7 @@ public class TupleCollection implements Tester {
     
     private final Map<TStream<?>, Set<UserCondition<?>>> conditions = new HashMap<>();
 
-    public TupleCollection(Topology topology) {
+    public ConditionTesterImpl(Topology topology) {
         this.topology = topology;
     }
 
@@ -67,6 +64,7 @@ public class TupleCollection implements Tester {
      * in.
      */
     private void addHandler(TStream<?> stream, StreamHandler<Tuple> handler) {
+        checkStream(stream);
         Set<StreamHandler<Tuple>> streamHandlers = handlers.get(stream);
         if (streamHandlers == null) {
             streamHandlers = new HashSet<StreamHandler<Tuple>>();
@@ -75,7 +73,15 @@ public class TupleCollection implements Tester {
 
         streamHandlers.add(handler);
     }
+    
+    private void checkStream(TStream<?> stream) {
+        if (stream.topology() != this.getTopology())
+            throw new IllegalStateException();
+    }
+    
+    
     private <T> Condition<T> addCondition(TStream<?> stream, UserCondition<T> condition) {
+        checkStream(stream);
         Set<UserCondition<?>> streamConditions = conditions.get(stream);
         if (streamConditions == null) {
             streamConditions = new HashSet<>();

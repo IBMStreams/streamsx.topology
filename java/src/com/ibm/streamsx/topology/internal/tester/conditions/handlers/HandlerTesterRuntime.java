@@ -13,7 +13,7 @@ import com.ibm.streams.flow.handlers.StreamHandler;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
-import com.ibm.streamsx.topology.internal.tester.TupleCollection;
+import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
@@ -27,7 +27,7 @@ public abstract class HandlerTesterRuntime extends TesterRuntime {
 
 
     
-    protected HandlerTesterRuntime(TupleCollection tester) {
+    protected HandlerTesterRuntime(ConditionTesterImpl tester) {
         super(tester);
     }
     
