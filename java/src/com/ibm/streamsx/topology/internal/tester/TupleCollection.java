@@ -31,6 +31,8 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.internal.test.handlers.StringTupleTester;
+import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
 import com.ibm.streamsx.topology.internal.tester.tcp.TCPTesterRuntime;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.streams.StringStreams;
@@ -51,6 +53,8 @@ public class TupleCollection implements Tester {
     private AtomicBoolean used = new AtomicBoolean();
 
     private final Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers = new HashMap<>();
+    
+    private final Map<TStream<?>, Set<UserCondition<?>>> conditions = new HashMap<>();
 
     public TupleCollection(Topology topology) {
         this.topology = topology;
@@ -74,6 +78,15 @@ public class TupleCollection implements Tester {
 
         streamHandlers.add(handler);
     }
+    private void addCondition(TStream<?> stream, UserCondition<?> condition) {
+        Set<UserCondition<?>> streamConditions = conditions.get(stream);
+        if (streamConditions == null) {
+            streamConditions = new HashSet<>();
+            conditions.put(stream, streamConditions);
+        }
+
+        streamConditions.add(condition);
+    }
 
     @Override
     public <T extends StreamHandler<Tuple>> T splHandler(SPLStream stream,
@@ -84,9 +97,19 @@ public class TupleCollection implements Tester {
         addHandler(stream, handler);
         return handler;
     }
+    
+    
 
     @Override
     public Condition<Long> tupleCount(TStream<?> stream, final long expectedCount) {
+        
+        CounterUserCondition userCondition = new CounterUserCondition(expectedCount, true);
+        
+        addCondition(stream, userCondition);
+        
+        return userCondition;
+        
+        /*
         final StreamCounter<Tuple> counter = new StreamCounter<Tuple>();
 
         addHandler(stream, counter);
@@ -109,10 +132,18 @@ public class TupleCollection implements Tester {
                         + " != received: " + counter.getTupleCount();
             }
         };
+        */
     }
   
     @Override
     public Condition<Long> atLeastTupleCount(TStream<?> stream, final long expectedCount) {
+        
+        CounterUserCondition userCondition = new CounterUserCondition(expectedCount, false);
+        
+        addCondition(stream, userCondition);
+        
+        return userCondition;
+        /*
         final StreamCounter<Tuple> counter = new StreamCounter<Tuple>();
 
         addHandler(stream, counter);
@@ -135,6 +166,7 @@ public class TupleCollection implements Tester {
                         + ", received: " + counter.getTupleCount();
             }
         };
+        */
     }
     
     @Override
@@ -279,7 +311,9 @@ public class TupleCollection implements Tester {
 
     public void finalizeGraph(StreamsContext.Type contextType) throws Exception {
         
-        if (handlers.isEmpty())
+        System.err.println("finalizeGraph:" + handlers.isEmpty() + " cond " + conditions.isEmpty());
+        
+        if (handlers.isEmpty() && conditions.isEmpty())
             return;
 
         switch (contextType) {
@@ -291,7 +325,7 @@ public class TupleCollection implements Tester {
             synchronized (this) {
                 runtime = new TCPTesterRuntime(this);
             }
-            runtime.finalizeTester(handlers);
+            runtime.finalizeTester(handlers, conditions);
             break;
         default: // nothing to do
             break;

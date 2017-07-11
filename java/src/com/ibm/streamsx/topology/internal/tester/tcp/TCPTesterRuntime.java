@@ -32,6 +32,8 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.internal.tester.TestTupleInjector;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.TupleCollection;
+import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerCondition;
 import com.ibm.streamsx.topology.internal.tester.ops.TesterSink;
 
 public class TCPTesterRuntime extends TesterRuntime {
@@ -62,7 +64,8 @@ public class TCPTesterRuntime extends TesterRuntime {
      * @param graphItems
      * @throws Exception
      */
-    public void finalizeTester(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers)
+    public void finalizeTester(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers,
+            Map<TStream<?>, Set<UserCondition<?>>> conditions)
             throws Exception {
 
         addTCPServerAndSink();
@@ -72,9 +75,19 @@ public class TCPTesterRuntime extends TesterRuntime {
             testers.put(stream, new StreamTester(collectorGraph, testerId,
                     stream));
         }
+        for (TStream<?> stream : conditions.keySet()) {
+            if (testers.containsKey(stream))
+                continue;
+            int testerId = connectToTesterSink(stream);
+            testers.put(stream, new StreamTester(collectorGraph, testerId,
+                    stream));
+        }
+        
 
         localCollector = new JavaOperatorTester()
                 .executable(collectorGraph);
+        
+        HandlerCondition.setupHandlersFromConditions(handlers, conditions);
         setupTestHandlers(handlers);
     }
     

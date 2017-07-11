@@ -11,6 +11,7 @@ import com.ibm.streams.flow.handlers.StreamHandler;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
 
 /**
  * Separation of the runtime aspects of a
@@ -36,5 +37,6 @@ public abstract class TesterRuntime {
 
     public abstract void shutdown() throws Exception;
     
-    public abstract void finalizeTester(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers) throws Exception;  
+    public abstract void finalizeTester(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers,
+            Map<TStream<?>, Set<UserCondition<?>>> condition) throws Exception;  
 }
