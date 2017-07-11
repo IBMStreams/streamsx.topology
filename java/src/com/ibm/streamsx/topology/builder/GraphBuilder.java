@@ -77,8 +77,15 @@ public class GraphBuilder extends BJSONObject {
         json().put("parameters", params);
         
         // The version of IBM Streams being used to build
-        // the topology
-        config.put(CFG_STREAMS_VERSION, Product.getVersion().toString());
+        // the topology. When Streams install is not
+        // set we assume we are building against the
+        // Streaming Analytics service.
+        final String pv;
+        if (System.getenv("STREAMS_INSTALL") != null)
+            pv = Product.getVersion().toString();
+        else
+            pv = "4.2.1";
+        config.put(CFG_STREAMS_VERSION, pv);
     }
 
    public BOperatorInvocation addOperator(Class<? extends Operator> opClass,
