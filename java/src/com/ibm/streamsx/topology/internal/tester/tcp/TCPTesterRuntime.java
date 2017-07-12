@@ -30,11 +30,19 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.internal.tester.TestTupleInjector;
-import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
-import com.ibm.streamsx.topology.internal.tester.TupleCollection;
+import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
+import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.ops.TesterSink;
 
-public class TCPTesterRuntime extends TesterRuntime {
+/**
+ * Create a local graph that will collect tuples from the tcp server and connect
+ * them to the handlers using this local operator graph, hence reusing the
+ * existing infrastructure. The graph will contain a single pass-through
+ * operator for any stream under test, the TCP server will inject tuples into
+ * the operator and the handlers are connected to the output.
+ */
+public class TCPTesterRuntime extends HandlerTesterRuntime {
     
     private OperatorGraph collectorGraph;
     private JavaTestableGraph localCollector;
@@ -47,39 +55,37 @@ public class TCPTesterRuntime extends TesterRuntime {
             .synchronizedMap(new HashMap<Integer, TestTupleInjector>());
 
 
-    public TCPTesterRuntime(TupleCollection tester) {
+    public TCPTesterRuntime(ConditionTesterImpl tester) {
         super(tester);
-        // TODO Auto-generated constructor stub
     }
-    
-    
-
-
-    // private SPLOperator testerSinkSplOp;
 
     /**
      * 
      * @param graphItems
      * @throws Exception
      */
-    public void finalizeTester(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers)
+    public void finalizeTester(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers,
+            Map<TStream<?>, Set<UserCondition<?>>> conditions)
             throws Exception {
+        
+        super.finalizeTester(handlers, conditions);
 
         addTCPServerAndSink();
         collectorGraph = OperatorGraphFactory.newGraph();
-        for (TStream<?> stream : handlers.keySet()) {
+        for (TStream<?> stream : this.handlers.keySet()) {
             int testerId = connectToTesterSink(stream);
             testers.put(stream, new StreamTester(collectorGraph, testerId,
                     stream));
-        }
+        }       
 
         localCollector = new JavaOperatorTester()
                 .executable(collectorGraph);
-        setupTestHandlers(handlers);
+        
+        setupTestHandlers();
     }
     
     @Override
-    public void start() {
+    public void start(Object info) {
         assert this.localCollector != null;
         localRunningCollector = localCollector.execute();
     }   
@@ -117,19 +123,6 @@ public class TCPTesterRuntime extends TesterRuntime {
         hostInfo.put("port", testAddr.getPort());
         this.testerSinkOp = topology().builder().addOperator(TesterSink.class,
                 hostInfo);
-
-        /*
-         * 
-         * testerSinkOp = topology.graph().addOperator(TesterSink.class);
-         * 
-         * testerSinkSplOp = topology.splgraph().addOperator(testerSinkOp);
-         * testerSinkOp.setStringParameter("host", testAddr.getHostString());
-         * testerSinkOp.setIntParameter("port", testAddr.getPort());
-         * 
-         * Map<String, Object> params = new HashMap<>(); params.put("host",
-         * testAddr.getHostString()); params.put("port", testAddr.getPort());
-         * testerSinkSplOp.setParameters(params);
-         */
     }
     
     /**
@@ -144,7 +137,7 @@ public class TCPTesterRuntime extends TesterRuntime {
 
 
 
-    private void setupTestHandlers(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers) throws Exception {
+    private void setupTestHandlers() throws Exception {
 
         for (TStream<?> stream : handlers.keySet()) {
             Set<StreamHandler<Tuple>> streamHandlers = handlers.get(stream);

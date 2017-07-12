@@ -4,12 +4,9 @@
  */
 package com.ibm.streamsx.topology.internal.tester;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,8 +15,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.ibm.streams.flow.handlers.StreamCollector;
-import com.ibm.streams.flow.handlers.StreamCounter;
 import com.ibm.streams.flow.handlers.StreamHandler;
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streams.operator.Tuple;
@@ -31,6 +26,10 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.internal.test.handlers.StringTupleTester;
+import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
+import com.ibm.streamsx.topology.internal.tester.embedded.EmbeddedTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.tcp.TCPTesterRuntime;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.streams.StringStreams;
@@ -38,21 +37,20 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 /**
- * Create a local graph that will collect tuples from the tcp server and connect
- * them to the handlers using this local operator graph, hence reusing the
- * existing infrastructure. The graph will contain a single pass-through
- * operator for any stream under test, the TCP server will inject tuples into
- * the operator and the handlers are connected to the output.
- * 
+ * Collects a set of conditions against a topology
+ * and then allows a TesterRuntime to implement
+ * them against a topology.
  */
-public class TupleCollection implements Tester {
+public class ConditionTesterImpl implements Tester {
 
     private final Topology topology;
     private AtomicBoolean used = new AtomicBoolean();
 
     private final Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers = new HashMap<>();
+    
+    private final Map<TStream<?>, Set<UserCondition<?>>> conditions = new HashMap<>();
 
-    public TupleCollection(Topology topology) {
+    public ConditionTesterImpl(Topology topology) {
         this.topology = topology;
     }
 
@@ -66,6 +64,7 @@ public class TupleCollection implements Tester {
      * in.
      */
     private void addHandler(TStream<?> stream, StreamHandler<Tuple> handler) {
+        checkStream(stream);
         Set<StreamHandler<Tuple>> streamHandlers = handlers.get(stream);
         if (streamHandlers == null) {
             streamHandlers = new HashSet<StreamHandler<Tuple>>();
@@ -73,6 +72,24 @@ public class TupleCollection implements Tester {
         }
 
         streamHandlers.add(handler);
+    }
+    
+    private void checkStream(TStream<?> stream) {
+        if (stream.topology() != this.getTopology())
+            throw new IllegalStateException();
+    }
+    
+    
+    private <T> Condition<T> addCondition(TStream<?> stream, UserCondition<T> condition) {
+        checkStream(stream);
+        Set<UserCondition<?>> streamConditions = conditions.get(stream);
+        if (streamConditions == null) {
+            streamConditions = new HashSet<>();
+            conditions.put(stream, streamConditions);
+        }
+
+        streamConditions.add(condition);
+        return condition;
     }
 
     @Override
@@ -84,57 +101,18 @@ public class TupleCollection implements Tester {
         addHandler(stream, handler);
         return handler;
     }
+    
+    
 
     @Override
     public Condition<Long> tupleCount(TStream<?> stream, final long expectedCount) {
-        final StreamCounter<Tuple> counter = new StreamCounter<Tuple>();
-
-        addHandler(stream, counter);
-
-        return new Condition<Long>() {
-            
-            @Override
-            public Long getResult() {
-                return counter.getTupleCount();
-            }
-
-            @Override
-            public boolean valid() {
-                return counter.getTupleCount() == expectedCount;
-            }
-
-            @Override
-            public String toString() {
-                return "Expected tuple count: " + expectedCount
-                        + " != received: " + counter.getTupleCount();
-            }
-        };
+        
+        return addCondition(stream, new CounterUserCondition(expectedCount, true));
     }
   
     @Override
-    public Condition<Long> atLeastTupleCount(TStream<?> stream, final long expectedCount) {
-        final StreamCounter<Tuple> counter = new StreamCounter<Tuple>();
-
-        addHandler(stream, counter);
-
-        return new Condition<Long>() {
-            
-            @Override
-            public Long getResult() {
-                return counter.getTupleCount();
-            }
-
-            @Override
-            public boolean valid() {
-                return counter.getTupleCount() >= expectedCount;
-            }
-
-            @Override
-            public String toString() {
-                return "At least tuple count: " + expectedCount
-                        + ", received: " + counter.getTupleCount();
-            }
-        };
+    public Condition<Long> atLeastTupleCount(TStream<?> stream, final long expectedCount) {       
+        return addCondition(stream, new CounterUserCondition(expectedCount, false));
     }
     
     @Override
@@ -154,123 +132,22 @@ public class TupleCollection implements Tester {
             final String... values) {
         
         stream = stream.asType(String.class);
-
-        final StreamCollector<LinkedList<Tuple>, Tuple> tuples = StreamCollector
-                .newLinkedListCollector();
-
-        addHandler(stream, tuples);
-
-        return new Condition<List<String>>() {
-            
-            @Override
-            public List<String> getResult() {
-                List<String> strings = new ArrayList<>(tuples.getTupleCount());
-                synchronized (tuples.getTuples()) {
-                    for (Tuple tuple : tuples.getTuples()) {
-                        strings.add(tuple.getString(0));
-                    }
-                }
-                return strings;
-            }
-
-            @Override
-            public boolean valid() {
-                if (tuples.getTupleCount() != values.length)
-                    return false;
-
-                List<Tuple> sc = tuples.getTuples();
-                for (int i = 0; i < values.length; i++) {
-                    if (!sc.get(i).getString(0).equals(values[i]))
-                        return false;
-                }
-                return true;
-            }
-
-            @Override
-            public String toString() {
-                return "Received Tuples: " + getResult();
-            }
-        };
+        
+        return addCondition(stream, new ContentsUserCondition<String>(String.class, Arrays.asList(values), true));
     }
     
     @Override
     public Condition<List<Tuple>> tupleContents(SPLStream stream,
             final Tuple... values) {
-
-        final StreamCollector<LinkedList<Tuple>, Tuple> tuples = StreamCollector
-                .newLinkedListCollector();
-
-        addHandler(stream, tuples);
-
-        return new Condition<List<Tuple>>() {
-            
-            @Override
-            public List<Tuple> getResult() {
-                return tuples.getTuples();
-            }
-
-            @Override
-            public boolean valid() {
-                if (tuples.getTupleCount() != values.length)
-                    return false;
-
-                synchronized (tuples) {
-                    List<Tuple> sc = tuples.getTuples();
-                    for (int i = 0; i < values.length; i++) {
-                        if (!sc.get(i).equals(values[i]))
-                            return false;
-                    }
-                }
-                return true;
-            }
-
-            @Override
-            public String toString() {
-                return "Received Tuples: " + getResult();
-            }
-        };
+        
+        return addCondition(stream, new ContentsUserCondition<>(Tuple.class, Arrays.asList(values), true));
     }
 
     @Override
     public Condition<List<String>> stringContentsUnordered(TStream<String> stream,
             String... values) {
-
-        final List<String> sortedValues = Arrays.asList(values);
-        Collections.sort(sortedValues);
-
-        final StreamCollector<LinkedList<Tuple>, Tuple> tuples = StreamCollector
-                .newLinkedListCollector();
-
-        addHandler(stream, tuples);
-
-        return new Condition<List<String>>() {
-            
-            @Override
-            public List<String> getResult() {
-                List<String> strings = new ArrayList<>(tuples.getTupleCount());
-                synchronized (tuples.getTuples()) {
-                    for (Tuple tuple : tuples.getTuples()) {
-                        strings.add(tuple.getString(0));
-                    }
-                }
-                return strings;
-            }
-
-            @Override
-            public boolean valid() {
-
-                List<String> strings =  getResult();
-                if (strings.size() != sortedValues.size())
-                    return false;
-                Collections.sort(strings);
-                return sortedValues.equals(strings);
-            }
-
-            @Override
-            public String toString() {
-                return "Received Tuples: " + getResult();
-            }
-        };
+        
+        return addCondition(stream, new ContentsUserCondition<String>(String.class, Arrays.asList(values), false));
     }
 
     /*
@@ -278,34 +155,26 @@ public class TupleCollection implements Tester {
      */
 
     public void finalizeGraph(StreamsContext.Type contextType) throws Exception {
-        
-        if (handlers.isEmpty())
+                
+        if (handlers.isEmpty() && conditions.isEmpty())
             return;
 
-        switch (contextType) {
-        case EMBEDDED_TESTER:
-            finalizeEmbeddedTester();
-            break;
-        case DISTRIBUTED_TESTER:
-        case STANDALONE_TESTER:
-            synchronized (this) {
+        synchronized (this) {
+            switch (contextType) {
+            case EMBEDDED_TESTER:
+                runtime = new EmbeddedTesterRuntime(this);
+                break;
+            case DISTRIBUTED_TESTER:
+            case STANDALONE_TESTER:
                 runtime = new TCPTesterRuntime(this);
+                break;
+            default: // nothing to do
+                return;
             }
-            runtime.finalizeTester(handlers);
-            break;
-        default: // nothing to do
-            break;
         }
+        
+        runtime.finalizeTester(handlers, conditions);
     }
-
-
-
-    private void finalizeEmbeddedTester()
-            throws Exception {
-
-    }
-
-
 
     public void setupEmbeddedTestHandlers(JavaTestableGraph tg)
             throws Exception {
@@ -319,8 +188,6 @@ public class TupleCollection implements Tester {
                     BOutputPort outputPort = (BOutputPort) output;
                     tg.registerStreamHandler(outputPort.port(), streamHandler);
                 }
-
-                // tg.registerStreamHandler(stream.getPort(), streamHandler);
             }
         }
     }

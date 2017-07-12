@@ -11,6 +11,7 @@ import com.ibm.streams.flow.handlers.StreamHandler;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
 
 /**
  * Separation of the runtime aspects of a
@@ -18,13 +19,13 @@ import com.ibm.streamsx.topology.Topology;
  *
  */
 public abstract class TesterRuntime {
-    private final TupleCollection tester;
+    private final ConditionTesterImpl tester;
     
-    protected TesterRuntime(TupleCollection tester) {
+    protected TesterRuntime(ConditionTesterImpl tester) {
         this.tester = tester;
     }
     
-    protected TupleCollection tester() {
+    protected ConditionTesterImpl tester() {
         return tester;
     }
     
@@ -32,9 +33,10 @@ public abstract class TesterRuntime {
         return tester().getTopology();
     }
     
-    public abstract void start();
+    public abstract void start(Object info) throws Exception;
 
     public abstract void shutdown() throws Exception;
     
-    public abstract void finalizeTester(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers) throws Exception;  
+    public abstract void finalizeTester(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers,
+            Map<TStream<?>, Set<UserCondition<?>>> conditions) throws Exception;  
 }

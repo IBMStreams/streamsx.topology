@@ -10,7 +10,7 @@ import java.util.concurrent.Future;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.tester.StandaloneTesterContextFuture;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
-import com.ibm.streamsx.topology.internal.tester.TupleCollection;
+import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 
 public class StandaloneTester extends StandaloneStreamsContext {
 
@@ -20,11 +20,11 @@ public class StandaloneTester extends StandaloneStreamsContext {
     }
     
     @Override
-    void preInvoke(AppEntity entity, File bundle) {
+    void preInvoke(AppEntity entity, File bundle) throws Exception {
         Topology app = entity.app;
         if (app != null && app.hasTester()) {
-            TesterRuntime trt = ((TupleCollection) app.getTester()).getRuntime();
-            trt.start();
+            TesterRuntime trt = ((ConditionTesterImpl) app.getTester()).getRuntime();
+            trt.start(null);
         }
     }
 
@@ -34,6 +34,6 @@ public class StandaloneTester extends StandaloneStreamsContext {
         if (app == null)
             return future;
         return new StandaloneTesterContextFuture<Integer>(future,
-                ((TupleCollection) app.getTester()).getRuntime());
+                ((ConditionTesterImpl) app.getTester()).getRuntime());
     }
 }

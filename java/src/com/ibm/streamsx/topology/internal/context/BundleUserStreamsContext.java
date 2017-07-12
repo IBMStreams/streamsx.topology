@@ -28,7 +28,7 @@ abstract class BundleUserStreamsContext<T> extends JSONStreamsContext<T> {
         Future<T> future = invoke(entity, bundle);       
         return postInvoke(entity, bundle, future);
     }
-    void preInvoke(AppEntity entity, File bundle) {      
+    void preInvoke(AppEntity entity, File bundle) throws Exception {      
     }
     
     abstract Future<T> invoke(AppEntity entity, File bundle) throws Exception;
