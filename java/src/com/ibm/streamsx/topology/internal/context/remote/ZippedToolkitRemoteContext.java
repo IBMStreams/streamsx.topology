@@ -117,7 +117,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                
         Path manifest = Paths.get(workingDir, "manifest_tk.txt");
         Path mainComp = Paths.get(workingDir, "main_composite.txt");
-        Path makefile = topologyToolkit.resolve(Paths.get("opt", "python", "templates", "common", "Makefile.template"));
+        Path makefile = topologyToolkit.resolve(Paths.get("opt", "remote", "Makefile.template"));
         
         
         paths.put(topologyToolkit, topologyToolkit.getFileName().toString());
