@@ -125,11 +125,12 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
         }
 
         // let's try a fake service name
-        System.out.println("Try a non-existant serivce name ...");
+        System.out.println("Try a non-existant service name ...");
         try {
             @SuppressWarnings("unused")
             StreamingAnalyticsConnection stringConn = StreamingAnalyticsConnection.createInstance(vcapString,
                     "FakeServiceName");
+            fail("Worked with non-existant service name!");
         } catch (IllegalStateException e) {
             // should trigger an IllegalStateException exception here
             System.err.println("Expecting an exception here - FakeServiceName");
@@ -150,6 +151,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
             @SuppressWarnings("unused")
             StreamingAnalyticsConnection fileConn = StreamingAnalyticsConnection.createInstance(tempPath.toString(),
                     serviceName);
+            fail("Worked with non-existant file!");
         } catch (IllegalStateException e) {
             // should trigger an IllegalStateException exception here
             // as the file isn't a file, and we'll throw when trying to act on a json string
@@ -172,6 +174,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
             @SuppressWarnings("unused")
             StreamingAnalyticsConnection fileConn = StreamingAnalyticsConnection.createInstance(tempPath.toString(),
                     serviceName);
+            fail("Worked with bad json!");
         } catch (com.google.gson.JsonSyntaxException e) {
             // should trigger an exception here
             System.err.println("Expecting an exception here - Junk filled file");
@@ -182,6 +185,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
         try {
             @SuppressWarnings("unused")
             StreamingAnalyticsConnection fileConn = StreamingAnalyticsConnection.createInstance(badJson, serviceName);
+            fail("Worked with bad json as string!");
         } catch (com.google.gson.JsonSyntaxException e) {
             // should trigger an exception here
             System.err.println("Expecting an exception here - Bad Json");
