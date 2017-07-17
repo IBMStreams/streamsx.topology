@@ -2,6 +2,8 @@ __pycache__
 *.sab
 *.pyc
 toolkit.xml
+*_cpp.pm
+*_h.pm
 
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.file/DirectoryWatcher/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.file/TextFileReader/*
@@ -18,6 +20,13 @@ com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.java/FunctionTran
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.java/HashAdder/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.java/HashRemover/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.java/PassThrough/*
+
+com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/FlatMap
+com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/ForEach
+com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/HashAdder
+com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/Map
+com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/Source
+
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.testing/TesterSink/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python/Py*/*.pm
 com.ibm.streamsx.topology/impl/nl/*.dat
