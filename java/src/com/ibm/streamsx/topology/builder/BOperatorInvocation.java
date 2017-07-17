@@ -4,9 +4,12 @@
  */
 package com.ibm.streamsx.topology.builder;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND_CLASS;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 
 import java.math.BigDecimal;
@@ -26,6 +29,7 @@ import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 // Union(A,B)
@@ -63,10 +67,9 @@ public class BOperatorInvocation extends BOperator {
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put(MODEL, MODEL_SPL);
-            json().put(LANGUAGE, LANGUAGE_JAVA);
-            json().put("kind", getKind(opClass));
-            json().put("kind.javaclass", opClass.getCanonicalName());
+            setModel(MODEL_SPL, LANGUAGE_JAVA);
+            json().put(KIND, getKind(opClass));
+            json().put(KIND_CLASS, opClass.getCanonicalName());
         }
 
         if (params != null) {
@@ -85,10 +88,8 @@ public class BOperatorInvocation extends BOperator {
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put(MODEL, MODEL_SPL);
-            json().put(LANGUAGE, LANGUAGE_JAVA);
-            json().put("kind", getKind(opClass));
-            json().put("kind.javaclass", opClass.getCanonicalName());
+            json().put(KIND, getKind(opClass));
+            json().put(KIND_CLASS, opClass.getCanonicalName());
         }
 
         if (params != null) {
@@ -98,23 +99,20 @@ public class BOperatorInvocation extends BOperator {
         }
     }
 
-    public BOperatorInvocation(GraphBuilder bt,
+    BOperatorInvocation(GraphBuilder bt,
             Map<String, ? extends Object> params) {
         this(bt, Operator.class, params);
     }
-    public BOperatorInvocation(GraphBuilder bt,
+    BOperatorInvocation(GraphBuilder bt,
             String name,
             Map<String, ? extends Object> params) {
         this(bt, name, Operator.class, params);
     }
-
-    /*
-    public BOperatorInvocation(GraphBuilder bt, String kind,
-            Map<String, ? extends Object> params) {
-        this(bt, Operator.class, params);
-        json().put("kind", kind);
+    
+    public void setModel(String model, String language) {
+        json().put(MODEL, model);
+        json().put(LANGUAGE, language);
     }
-    */
 
     public void setParameter(String name, Object value) {
 

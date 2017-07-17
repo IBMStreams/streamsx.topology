@@ -10,7 +10,9 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_SPL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_VIRTUAL;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAME;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
@@ -241,9 +243,7 @@ public class GraphBuilder extends BJSONObject {
             Map<String, ? extends Object> params) {
         final BOperatorInvocation op = new BOperatorInvocation(this, params);
         op.json().put("kind", kind);
-
-        json().put(MODEL, MODEL_SPL);
-        json().put(LANGUAGE, LANGUAGE_SPL);
+        op.setModel(MODEL_SPL, LANGUAGE_SPL);
 
         ops.add(op);
         return op;
@@ -254,35 +254,10 @@ public class GraphBuilder extends BJSONObject {
         final BOperatorInvocation op = new BOperatorInvocation(this, name, params);
         op.json().put("kind", kind);
         
-        json().put(MODEL, MODEL_SPL);
-        json().put(LANGUAGE, LANGUAGE_SPL);
+        op.setModel(MODEL_SPL, LANGUAGE_SPL);
         
         ops.add(op);
         return op;
-    }
-    
-    /**
-     * @throws IllegalStateException if the topology can't run in 
-     *          StreamsContext.Type.EMBEDDED mode.
-     */
-    public void checkSupportsEmbeddedMode() throws IllegalStateException {
-        for (BOperator op : ops) {
-            if (BVirtualMarker.isVirtualMarker((String) op.json().get("kind")))
-                continue;
-            
-            // note: runtime==null for markers
-            String runtime = (String) op.json().get(OpProperties.MODEL);
-            String language = (String) op.json().get(OpProperties.LANGUAGE);
-            
-            if (!MODEL_SPL.equals(runtime) || !LANGUAGE_JAVA.equals(language)) {
-                    String namespace = (String) json().get(NAMESPACE);
-                    String name = (String) json().get(NAME);
-                    throw new IllegalStateException(
-                            "Topology '"+namespace+"."+name+"'"
-                            + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
-                            + " the topology contains non-Java operator:" + op.json().get("kind"));
-            }
-        }
     }
 
     private Map<String, String> regionMarkers = new HashMap<>();

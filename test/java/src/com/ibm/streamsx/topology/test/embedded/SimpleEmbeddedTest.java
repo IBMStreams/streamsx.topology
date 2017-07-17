@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.test.embedded;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.LinkedList;
@@ -178,10 +179,18 @@ public class SimpleEmbeddedTest extends TestTopology {
         StreamsContext<?> sc = StreamsContextFactory
                 .getStreamsContext(StreamsContext.Type.EMBEDDED);
         assertTrue(!sc.isSupported(topology));
+        try {
+            sc.submit(topology);
+            fail("None supported was submitted");
+        } catch (IllegalStateException e) { /* expected */ }
 
         sc = StreamsContextFactory
                 .getStreamsContext(StreamsContext.Type.EMBEDDED_TESTER);
         assertTrue(!sc.isSupported(topology));
+        try {
+            sc.submit(topology);
+            fail("None supported was submitted");
+        } catch (IllegalStateException e) { /* expected */ }
     }
 
 }

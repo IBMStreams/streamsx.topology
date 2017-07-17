@@ -4,6 +4,10 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor.FUNCTIONAL_LOGIC_PARAM;
 
 import java.io.Serializable;
@@ -26,6 +30,7 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 
@@ -67,6 +72,7 @@ public class JavaFunctional {
         params.put(FUNCTIONAL_LOGIC_PARAM, logicString);
         BOperatorInvocation bop = te.builder().addOperator(name, opClass,
                 params);
+        bop.setModel(MODEL_FUNCTIONAL, LANGUAGE_JAVA);
 
         addDependency(te, bop, logic);
 

@@ -4,6 +4,10 @@
  */
 package com.ibm.streamsx.topology.spl;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +20,7 @@ import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
 
@@ -59,6 +64,7 @@ public class JavaPrimitive {
         BOperatorInvocation op = input.builder().addOperator(
                 getInvocationName(opClass),
                 opClass, params);
+        op.setModel(MODEL_SPL, LANGUAGE_JAVA);
         SourceInfo.setSourceInfo(op, JavaPrimitive.class);
         SPL.connectInputToOperator(input, op);
 
@@ -97,6 +103,7 @@ public class JavaPrimitive {
         BOperatorInvocation op = te.builder().addOperator(
                 getInvocationName(opClass),
                 opClass, params);
+        op.setModel(MODEL_SPL, LANGUAGE_JAVA);
         SourceInfo.setSourceInfo(op, JavaPrimitive.class);
         
         if (inputs != null && !inputs.isEmpty()) {
@@ -132,6 +139,7 @@ public class JavaPrimitive {
         BOperatorInvocation sink = input.builder().addOperator(
                 getInvocationName(opClass),
                 opClass, params);
+        sink.setModel(MODEL_SPL, LANGUAGE_JAVA);
         SourceInfo.setSourceInfo(sink, JavaPrimitive.class);
         SPL.connectInputToOperator(input, sink);
         return new TSinkImpl(input.topology(), sink);
@@ -158,6 +166,7 @@ public class JavaPrimitive {
         BOperatorInvocation source = te.builder().addOperator(
                 getInvocationName(opClass),
                 opClass, params);
+        source.setModel(MODEL_SPL, LANGUAGE_JAVA);
         SourceInfo.setSourceInfo(source, JavaPrimitive.class);
         return new SPLStreamImpl(te, source.addOutput(schema));
     }

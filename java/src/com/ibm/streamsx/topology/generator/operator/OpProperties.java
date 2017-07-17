@@ -13,11 +13,15 @@ public interface OpProperties {
     
     String MODEL_FUNCTIONAL = "functional";
     String MODEL_SPL = "spl";
+    String MODEL_VIRTUAL = "virtual";
     
     String LANGUAGE_JAVA = "java";
     String LANGUAGE_CPP = "cpp";
     String LANGUAGE_PYTHON = "python";
     String LANGUAGE_SPL = "spl";
+    
+    String KIND = "kind";
+    String KIND_CLASS = "kind.javaclass";
     
     /**
      * Boolean top-level parameter indicating
