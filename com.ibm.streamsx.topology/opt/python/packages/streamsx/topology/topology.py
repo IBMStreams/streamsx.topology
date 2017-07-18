@@ -440,17 +440,24 @@ class Stream(object):
             name(str): Name of the stream, defaults to a generated name.
 
         Returns:
-            None
+            streamsx.topology.topology.Sink: Stream termination.
+
+        .. versionchanged:: 1.7
+            Now returns a :py:class:`Sink` instance.
         """
         sl = _SourceLocation(_source_info(), 'for_each')
         name = self.topology.graph._requested_name(name, action='for_each', func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
         op._layout(kind='ForEach')
+        return Sink(op)
 
     def sink(self, func, name=None):
         """
         Equivalent to calling :py:meth:`for_each`.
+        
+        .. deprecated:: 1.7
+            Replaced by :py:meth:`for_each`.
         """
         return self.for_each(func, name)
 
@@ -574,6 +581,9 @@ class Stream(object):
     def transform(self, func, name=None):
         """
         Equivalent to calling :py:meth:``map(func, name)``.
+
+        .. deprecated:: 1.7
+            Replaced by :py:meth:`map`.
         """
         return self.map(func, name)
              
@@ -608,7 +618,10 @@ class Stream(object):
     
     def multi_transform(self, func, name=None):
         """
-        Equivalent to calling the flat_map() function
+        Equivalent to calling :py:meth:`flat_map`.
+
+        .. deprecated:: 1.7
+            Replaced by :py:meth:`flat_map`.
         """
         return self.flat_map(func, name)
 
@@ -815,10 +828,12 @@ class Stream(object):
             name(str): Name of the resulting stream.
                 When `None` defaults to a generated name.
         Returns:
-            None
+            streamsx.topology.topology.Sink: Stream termination.
 
         .. versionadded:: 1.6.1 `tag`, `name` parameters.
 
+        .. versionchanged:: 1.7
+            Now returns a :py:class:`Sink` instance.
         """
         if name is None:
             name = 'print'
@@ -826,7 +841,9 @@ class Stream(object):
         if tag is not None:
             tag = str(tag) + ': '
             fn = lambda v : streamsx.topology.functions.print_flush(tag + str(v))
-        self.for_each(fn, name=name)
+        sp = self.for_each(fn, name=name)
+        sp._op.sl = _SourceLocation(_source_info(), 'print')
+        return sp
 
     def publish(self, topic, schema=None, name=None):
         """
@@ -861,10 +878,14 @@ class Stream(object):
             schema: Schema to publish. Defaults to the schema of this stream.
             name(str): Name of the publish operator, defaults to a generated name.
         Returns:
-            None
+            streamsx.topology.topology.Sink: Stream termination.
 
         .. versionadded:: 1.6.1 `name` parameter.
+
+        .. versionchanged:: 1.7
+            Now returns a :py:class:`Sink` instance.
         """
+        sl = _SourceLocation(_source_info(), 'publish')
         if schema is not None and self.oport.schema.schema() != schema.schema():
             nc = None
             if schema == CommonSchema.Json:
@@ -875,14 +896,16 @@ class Stream(object):
                 raise ValueError(schema)
                
             self.oport.operator.colocate(schema_change.oport.operator, 'publish')
-            return schema_change.publish(topic, schema=schema)
+            sp = schema_change.publish(topic, schema=schema)
+            sp._op.sl = sl
+            return sp
 
         _name = self.topology.graph._requested_name(name, action="publish")
-        sl = _SourceLocation(_source_info(), 'publish')
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name)
         op.addInputPort(outputPort=self.oport)
         self.oport.operator.colocate(op, 'publish')
         op._layout_group('Publish', name if name else _name)
+        return Sink(op)
 
     def autonomous(self):
         """
@@ -1221,3 +1244,19 @@ class Window(object):
         else:
             raise ValueError(when)
         return tw
+
+class Sink(object):
+    """
+    Termination of a `Stream`.
+    
+    A :py:class:`Stream` is terminated by processing that typically
+    sends the tuples to an external system.
+
+    .. note:: A `Stream` may have multiple terminations.
+
+    .. seealso:: :py:meth:`~Stream.for_each`, :py:meth:`~Stream.publish`, :py:meth:`~Stream.print`
+
+    .. versionadded:: 1.7
+    """
+    def __init__(self, op):
+        self._op = op

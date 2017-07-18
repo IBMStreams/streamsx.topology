@@ -4,6 +4,7 @@ import unittest
 import sys
 
 from streamsx.topology.topology import Topology
+from streamsx.topology.schema import CommonSchema
 
 class CallTopo(object):
     def __init__(self):
@@ -29,6 +30,15 @@ class CallTopo(object):
 
     def nosj_sa(self, s):
         return s.as_json()
+
+    def hcae_rof(self, s):
+        return s.for_each(lambda x:None)
+
+    def hsilbup(self, s, schema=None):
+        return s.publish('some/topic', schema)
+
+    def tnirp(self, s):
+        return s.print()
     
 def fn_ecruos(topo):
     return topo.source(['Hello'])
@@ -50,10 +60,22 @@ def fn_gnirts_sa(s):
 
 def fn_nosj_sa(s):
     return s.as_json()
+
+def fn_hcae_rof(s):
+    return s.for_each(lambda x:None)
+
+def fn_hsilbup(s, schema=None):
+    return s.publish('some/topic', schema)
+
+def fn_tnirp(s):
+    return s.print()
     
 class TestSourceLocations(unittest.TestCase):
     def _csl_stream(self, stream, api, meth, cls=None):
         self._csl_op(stream.oport.operator, api, meth, cls)
+
+    def _csl_sink(self, sink, api, meth, cls=None):
+        self._csl_op(sink._op, api, meth, cls)
 
     def _csl_op(self, op, api, meth, cls=None):
         sl = op.sl
@@ -63,6 +85,8 @@ class TestSourceLocations(unittest.TestCase):
         self.assertTrue(api, jsl['line'] > 0)
         if cls:
             self.assertEqual(cls, jsl['class'])
+        else:
+            self.assertNotIn('class', jsl)
 
     def test_class(self):
         topo = Topology()
@@ -89,6 +113,19 @@ class TestSourceLocations(unittest.TestCase):
         st = ct.ebircsbus(topo)
         self._csl_stream(st, 'subscribe', 'ebircsbus', cls='CallTopo')
 
+        e = ct.hcae_rof(s)
+        self._csl_sink(e, 'for_each', 'hcae_rof', cls='CallTopo')
+
+        e = ct.hsilbup(s)
+        self._csl_sink(e, 'publish', 'hsilbup', cls='CallTopo')
+
+        # test with implict schema change
+        e = ct.hsilbup(topo.source([]), schema=CommonSchema.Json)
+        self._csl_sink(e, 'publish', 'hsilbup', cls='CallTopo')
+
+        e = ct.tnirp(s)
+        self._csl_sink(e, 'print', 'tnirp', cls='CallTopo')
+
     def test_fn(self):
         topo = Topology()
 
@@ -112,3 +149,15 @@ class TestSourceLocations(unittest.TestCase):
 
         st = fn_ebircsbus(topo)
         self._csl_stream(st, 'subscribe', 'fn_ebircsbus')
+
+        e = fn_hcae_rof(s)
+        self._csl_sink(e, 'for_each', 'fn_hcae_rof')
+
+        e = fn_hsilbup(s)
+        self._csl_sink(e, 'publish', 'fn_hsilbup')
+
+        e = fn_hsilbup(topo.source([]), schema=CommonSchema.Json)
+        self._csl_sink(e, 'publish', 'fn_hsilbup')
+
+        e = fn_tnirp(s)
+        self._csl_sink(e, 'print', 'fn_tnirp')
