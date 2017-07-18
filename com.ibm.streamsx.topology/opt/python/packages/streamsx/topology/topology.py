@@ -442,8 +442,8 @@ class Stream(object):
         Returns:
             None
         """
-        sl = _SourceLocation(_source_info(), "for_each")
-        name = self.topology.graph._requested_name(name, action="for_each", func=func)
+        sl = _SourceLocation(_source_info(), 'for_each')
+        name = self.topology.graph._requested_name(name, action='for_each', func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
         op._layout(kind='ForEach')
@@ -467,7 +467,7 @@ class Stream(object):
         Returns:
             Stream: A Stream containing tuples that have not been filtered out.
         """
-        sl = _SourceLocation(_source_info(), "filter")
+        sl = _SourceLocation(_source_info(), 'filter')
         name = self.topology.graph._requested_name(name, action="filter", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
@@ -567,7 +567,9 @@ class Stream(object):
         if schema is None:
              schema = CommonSchema.Python
      
-        return self._map(func, schema=schema, name=name)._layout('Map')
+        ms = self._map(func, schema=schema, name=name)._layout('Map')
+        ms.oport.operator.sl = _SourceLocation(_source_info(), 'map')
+        return ms
 
     def transform(self, func, name=None):
         """
@@ -597,7 +599,7 @@ class Stream(object):
         Raises:
             TypeError: if `func` does not return an iterator nor None
         """     
-        sl = _SourceLocation(_source_info(), "flat_map")
+        sl = _SourceLocation(_source_info(), 'flat_map')
         name = self.topology.graph._requested_name(name, action='flat_map', func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
@@ -876,7 +878,7 @@ class Stream(object):
             return schema_change.publish(topic, schema=schema)
 
         _name = self.topology.graph._requested_name(name, action="publish")
-        sl = _SourceLocation(_source_info(), "publish")
+        sl = _SourceLocation(_source_info(), 'publish')
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name)
         op.addInputPort(outputPort=self.oport)
         self.oport.operator.colocate(op, 'publish')
@@ -927,7 +929,9 @@ class Stream(object):
         Returns:
             Stream: Stream containing the string representations of tuples on this stream.
         """
-        return self._change_schema(CommonSchema.String, 'as_string', name)._layout('AsString')
+        sas = self._change_schema(CommonSchema.String, 'as_string', name)._layout('AsString')
+        sas.oport.operator.sl = _SourceLocation(_source_info(), 'as_string')
+        return sas
 
     def as_json(self, force_object=True, name=None):
         """
@@ -962,7 +966,9 @@ class Stream(object):
 
         """
         func = streamsx.topology.runtime._json_force_object if force_object else None
-        return self._change_schema(CommonSchema.Json, 'as_json', name, func)._layout('AsJson')
+        saj = self._change_schema(CommonSchema.Json, 'as_json', name, func)._layout('AsJson')
+        saj.oport.operator.sl = _SourceLocation(_source_info(), 'as_json')
+        return saj
 
     def _change_schema(self, schema, action, name=None, func=None):
         """Internal method to change a schema.
