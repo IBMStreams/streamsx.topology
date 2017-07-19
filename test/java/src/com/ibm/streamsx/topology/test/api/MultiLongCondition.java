@@ -44,4 +44,13 @@ public class MultiLongCondition implements Condition<Long> {
         return conditions.toString();
     }
 
+    @Override
+    public boolean failed() {
+        for (Condition<?> c : conditions) {
+            if (c.failed())
+                return true;
+        }
+        return false;
+    }
+
 }

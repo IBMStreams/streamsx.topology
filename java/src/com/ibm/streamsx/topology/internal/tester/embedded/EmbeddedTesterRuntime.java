@@ -4,7 +4,14 @@
  */
 package com.ibm.streamsx.topology.internal.tester.embedded;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.ibm.streams.flow.declare.OutputPortDeclaration;
 import com.ibm.streams.flow.handlers.StreamHandler;
@@ -13,8 +20,10 @@ import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
+import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerTesterRuntime;
+import com.ibm.streamsx.topology.tester.Condition;
 
 /**
  * Embedded tester that takes the conditions and
@@ -22,7 +31,7 @@ import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerTest
  * application graph.
  *
  */
-public class EmbeddedTesterRuntime extends HandlerTesterRuntime {
+public final class EmbeddedTesterRuntime extends HandlerTesterRuntime {
     
     public EmbeddedTesterRuntime(ConditionTesterImpl tester) {
         super(tester);
@@ -35,7 +44,8 @@ public class EmbeddedTesterRuntime extends HandlerTesterRuntime {
     }
 
     @Override
-    public void shutdown() throws Exception {
+    public void shutdown(Future<?> future) throws Exception {
+        future.cancel(true);
     }
     
     private void setupEmbeddedTestHandlers(JavaTestableGraph tg) throws Exception {
@@ -53,5 +63,16 @@ public class EmbeddedTesterRuntime extends HandlerTesterRuntime {
             }
         }
     }
+    
+    @Override
+    public TestState checkTestState(StreamsContext<?> context, Map<String, Object> config, Future<?> future,
+            Condition<?> endCondition) throws Exception {
 
+        try {
+            future.get(200, MILLISECONDS);
+            return this.testStateFromConditions(true, true);
+        } catch (TimeoutException e) {
+            return TestState.NO_PROGRESS;
+        }
+    }
 }

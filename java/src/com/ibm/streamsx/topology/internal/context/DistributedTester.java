@@ -20,17 +20,6 @@ public class DistributedTester extends DistributedStreamsContext {
     public Type getType() {
         return Type.DISTRIBUTED_TESTER;
     }
-    
-    @Override
-    Future<BigInteger> postSubmit(AppEntity entity, Future<BigInteger> future) throws InterruptedException, ExecutionException {
-        Topology app = entity.app;
-        if (app == null)
-            return future;
-        return new DistributedTesterContextFuture(future.get(),
-                ((ConditionTesterImpl) (app.getTester())).getRuntime());
-    }
-    
-    
 
     @Override
     void preInvoke(AppEntity entity, File bundle) throws Exception {

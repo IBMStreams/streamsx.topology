@@ -35,6 +35,13 @@ public abstract class UserCondition<R> implements Condition<R> {
             return false;
         return getImpl().valid();
     }
+    
+    @Override
+    public final boolean failed() {
+        if (getImpl()  == null)
+            return false;
+        return getImpl().failed();
+    }
 
     @Override
     public final R getResult() {

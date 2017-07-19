@@ -38,6 +38,19 @@ public interface Condition<T> {
     T getResult();
     
     /**
+     * Has the condition failed.
+     * 
+     * Once a condition fails, it can no longer become
+     * valid, for example a {@link Tester#tupleCount(com.ibm.streamsx.topology.TStream, long)}
+     * fails once it the stream has received more tuples than the expected count.
+     * 
+     * @return True if the condition can not become valid, false otherwise.
+     * 
+     * @since 1.7
+     */
+    boolean failed();
+    
+    /**
      * Return a condition that is true if this AND all {@code conditions} are valid.
      * The result is a Boolean that indicates if all conditions is valid.
      * @param conditions Conditions to be ANDed together.
@@ -52,7 +65,7 @@ public interface Condition<T> {
     /**
      * Return a condition that is true if all conditions are valid.
      * The result is a Boolean that indicates if all conditions is valid.
-     * @param conditions Conidtions to be ANDed together.
+     * @param conditions Conditions to be ANDed together.
      * @return Condition that is valid if all {@code conditions} are valid.
      */
     public static Condition<Boolean> all(final Condition<?> ...conditions) {
@@ -65,6 +78,15 @@ public interface Condition<T> {
                         return false;
                 }
                 return true;
+            }
+            
+            @Override
+            public boolean failed() {
+                for (Condition<?> condition : conditions) {
+                    if (condition.failed())
+                        return true;
+                }
+                return false;
             }
 
             @Override

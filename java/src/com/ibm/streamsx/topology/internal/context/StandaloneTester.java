@@ -27,13 +27,4 @@ public class StandaloneTester extends StandaloneStreamsContext {
             trt.start(null);
         }
     }
-
-    @Override
-    Future<Integer> postSubmit(AppEntity entity, Future<Integer> future) {
-        Topology app = entity.app;
-        if (app == null)
-            return future;
-        return new StandaloneTesterContextFuture<Integer>(future,
-                ((ConditionTesterImpl) app.getTester()).getRuntime());
-    }
 }

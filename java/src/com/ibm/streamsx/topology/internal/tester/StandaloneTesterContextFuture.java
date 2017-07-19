@@ -29,7 +29,7 @@ public class StandaloneTesterContextFuture<T> implements Future<T> {
         
         void shutdownTester() {
             try {
-                trt.shutdown();
+                trt.shutdown(null);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

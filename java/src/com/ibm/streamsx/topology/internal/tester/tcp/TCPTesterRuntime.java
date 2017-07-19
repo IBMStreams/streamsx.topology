@@ -4,12 +4,18 @@
  */
 package com.ibm.streamsx.topology.internal.tester.tcp;
 
+import static com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState.FAIL;
+import static com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState.NO_PROGRESS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IoSession;
@@ -29,11 +35,15 @@ import com.ibm.streams.operator.samples.operators.PassThrough;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
-import com.ibm.streamsx.topology.internal.tester.TestTupleInjector;
+import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.context.StreamsContext.Type;
+import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
+import com.ibm.streamsx.topology.internal.tester.TestTupleInjector;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.ops.TesterSink;
+import com.ibm.streamsx.topology.tester.Condition;
 
 /**
  * Create a local graph that will collect tuples from the tcp server and connect
@@ -50,13 +60,15 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
     private TCPTestServer tcpServer;
     private BOperatorInvocation testerSinkOp;
     private final Map<TStream<?>, StreamTester> testers = new HashMap<>();
+    private final StreamsContext.Type contextType;
     
     private Map<Integer, TestTupleInjector> injectors = Collections
             .synchronizedMap(new HashMap<Integer, TestTupleInjector>());
 
 
-    public TCPTesterRuntime(ConditionTesterImpl tester) {
+    public TCPTesterRuntime(StreamsContext.Type contextType, ConditionTesterImpl tester) {
         super(tester);
+        this.contextType = contextType;
     }
 
     /**
@@ -111,9 +123,20 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
         addTesterSink(testAddr);
     }
 
-    public void shutdown() throws Exception {
-        tcpServer.shutdown();
-        localRunningCollector.cancel(true);       
+    @Override
+    public void shutdown(Future<?> future) throws Exception {
+        try {
+            if (contextType == Type.DISTRIBUTED_TESTER) {
+                InvokeCancel cancel = new InvokeCancel((BigInteger) (future.get()));
+                cancel.invoke(false);
+            }
+        } finally {
+            try { tcpServer.shutdown(); }
+                 finally {
+                 try { localRunningCollector.cancel(true); }
+                      finally {future.cancel(true);}
+            }   
+        }
     }
 
     private void addTesterSink(InetSocketAddress testAddr) {
@@ -131,7 +154,6 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
      */
     private int connectToTesterSink(TStream<?> stream) {
         BInputPort inputPort = stream.connectTo(testerSinkOp, true, null);
-        // testerSinkSplOp.addInput(inputPort);
         return inputPort.port().getPortNumber();
     }
 
@@ -153,6 +175,35 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
         }
     }
     
+    @Override
+    public TestState checkTestState(StreamsContext<?> context, Map<String, Object> config, Future<?> future,
+            Condition<?> endCondition) throws Exception {
+        
+        TestState state;
+        if (context.getType() == Type.STANDALONE_TESTER) {
+            state = checkStandaloneTestState(future, endCondition);
+        } else {
+            SECONDS.sleep(1);
+            state = this.testStateFromConditions(false, true);
+        }
+                   
+        return state;
+    }
+
+    private TestState checkStandaloneTestState(Future<?> future, Condition<?> endCondition) throws Exception {
+        try {
+            int rc = (Integer) future.get(1, SECONDS);
+            if (rc != 0)
+                return FAIL;
+            return this.testStateFromConditions(true, true);
+        } catch (TimeoutException e) {
+            if (endCondition.valid()) {
+                return testStateFromConditions(true, true);
+            }
+            return NO_PROGRESS;
+        }
+    }
+
     /**
      * Holds the information in the declared collector graph about the testers
      * so that the handlers can be attached once the graph is executed.

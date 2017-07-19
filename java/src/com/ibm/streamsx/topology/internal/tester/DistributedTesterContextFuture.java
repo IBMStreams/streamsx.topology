@@ -81,7 +81,7 @@ public class DistributedTesterContextFuture implements Future<BigInteger> {
 
     void shutdownTester() {
         try {
-            trt.shutdown();
+            trt.shutdown(null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
