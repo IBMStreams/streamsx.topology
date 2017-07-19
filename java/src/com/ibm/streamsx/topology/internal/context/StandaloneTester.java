@@ -5,12 +5,10 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import java.io.File;
-import java.util.concurrent.Future;
 
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.internal.tester.StandaloneTesterContextFuture;
-import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
+import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 
 public class StandaloneTester extends StandaloneStreamsContext {
 
