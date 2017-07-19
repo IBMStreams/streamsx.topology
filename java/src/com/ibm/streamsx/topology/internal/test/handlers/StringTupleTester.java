@@ -31,6 +31,11 @@ public class StringTupleTester implements StreamHandler<Tuple>, Condition<String
                 firstFailure = tuple;
         }
     }
+    
+    @Override
+    public boolean failed() {
+        return !valid();
+    }
 
     @Override
     public boolean valid() {

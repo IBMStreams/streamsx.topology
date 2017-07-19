@@ -15,6 +15,8 @@ public class ContentsHandlerCondition extends HandlerCondition<List<Tuple>, Stre
     
     public ContentsHandlerCondition(ContentsUserCondition<Tuple> userCondition) {
         super(userCondition, StreamCollector.newLinkedListCollector());
+        
+        assert userCondition.isOrdered();
     }
 
     @Override
@@ -24,8 +26,28 @@ public class ContentsHandlerCondition extends HandlerCondition<List<Tuple>, Stre
 
     @Override
     public boolean valid() {
-        synchronized (handler) {
-            return handler.getTuples().equals(userCondition.getExpected());
+        if (failed())
+            return false;
+               
+        List<Tuple> expected = userCondition.getExpected();
+        List<Tuple> got = getResult();
+        
+        if (expected.equals(got))
+            return true;
+        
+        if (checkIfFailed(got, expected))
+            fail();
+        
+        return false;
+    }
+    
+    static <T> boolean checkIfFailed(List<T> got, List<T> expected) {
+        if (expected.isEmpty())
+            return false;
+        for (T tuple : got) {
+            if (!expected.contains(tuple))
+                return true;
         }
+        return false;
     }
 }

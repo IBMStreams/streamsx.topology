@@ -4,6 +4,10 @@
  */
 package com.ibm.streamsx.topology.internal.tester;
 
+import static com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState.NO_PROGRESS;
+import static com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState.PROGRESS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,7 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.ibm.streams.flow.handlers.StreamHandler;
@@ -26,6 +29,7 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.internal.test.handlers.StringTupleTester;
+import com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
@@ -52,6 +56,10 @@ public class ConditionTesterImpl implements Tester {
 
     public ConditionTesterImpl(Topology topology) {
         this.topology = topology;
+    }
+    
+    public boolean hasTests() {
+        return !handlers.isEmpty() || !conditions.isEmpty();
     }
 
     /*
@@ -166,7 +174,7 @@ public class ConditionTesterImpl implements Tester {
                 break;
             case DISTRIBUTED_TESTER:
             case STANDALONE_TESTER:
-                runtime = new TCPTesterRuntime(this);
+                runtime = new TCPTesterRuntime(contextType, this);
                 break;
             default: // nothing to do
                 return;
@@ -216,30 +224,52 @@ public class ConditionTesterImpl implements Tester {
         long totalWait = unit.toMillis(timeout);
         
         if (context.getType() != Type.EMBEDDED_TESTER)
-            totalWait += TimeUnit.SECONDS.toMillis(30); // allow extra time for execution setup              
+            totalWait += SECONDS.toMillis(30); // allow extra time for execution setup              
         
         Future<?> future = context.submit(topology, config);
         
         final long start = System.currentTimeMillis();
         
-        boolean endConditionValid = false;
-        while ((System.currentTimeMillis() - start) < totalWait) {
-            long wait = Math.min(1000, totalWait);
-            try {
-                future.get(wait, TimeUnit.MILLISECONDS);
-                break;
-            } catch (TimeoutException e) {
-                if (endCondition.valid()) {                   
-                    endConditionValid = true;
+        TestState state = null;
+        boolean seenValid = false;
+        while (state == null || (System.currentTimeMillis() - start) < totalWait) {
+            
+            state = getRuntime().checkTestState(context, config, future, endCondition);
+            
+            switch (state) {
+            case NO_PROGRESS:
+                if (seenValid)
                     break;
-                }
-            }   
+                continue;
+            case PROGRESS:
+                if (seenValid)
+                    break;
+                // delay a timeout since progress is being made
+                totalWait += SECONDS.toMillis(1);
+                continue;
+                
+            case FAIL:
+                break;
+                
+            case VALID:
+                if (seenValid)
+                    break;
+                seenValid = true;
+                // Add one additional check to allow the
+                // condition to become invalid, e.g. expecting 10 tuples
+                // becomes valid but then another tuple arrives
+                state = null;
+                continue;
+
+            }
+            break;
         }
-        if (!future.isDone()) {
-            if (!endConditionValid)
-                Topology.TOPOLOGY_LOGGER.warning(topology.getName() + " timed out waiting for condition");
-            future.cancel(true);
+              
+        if (state == null || state == NO_PROGRESS || state == PROGRESS) {
+            Topology.TOPOLOGY_LOGGER.warning(topology.getName() + " timed out waiting for condition");           
         }
+        
+        getRuntime().shutdown(future);
               
         return endCondition.valid();
     }

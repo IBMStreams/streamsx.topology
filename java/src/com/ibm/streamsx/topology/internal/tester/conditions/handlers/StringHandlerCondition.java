@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.tester.conditions.handlers;
 
+import static com.ibm.streamsx.topology.internal.tester.conditions.handlers.ContentsHandlerCondition.checkIfFailed;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -32,23 +34,36 @@ public class StringHandlerCondition extends HandlerCondition<List<String>, Strea
 
     @Override
     public boolean valid() {
+        if (failed())
+            return false;
+        
         List<String> expected = userCondition.getExpected();
-        if (expected.size() != handler.getTupleCount())
-            return false;
-
         List<String> got = getResult();
-        if (expected.size() != got.size())
-            return false;
         
-        if (userCondition.isOrdered())
-            return expected.equals(got);
+        if (checkIfValid(userCondition.isOrdered(), got, expected))
+            return true;
+                   
+        if (checkIfFailed(got, expected))
+            fail();
         
-        // don't modify the original expected.
-        expected = new ArrayList<>(expected);
-        
-        Collections.sort(expected);
-        Collections.sort(got);
-        
-        return expected.equals(got);
+        return false;
+    }
+    
+    private static boolean checkIfValid(boolean ordered, List<String> got, List<String> expected) {
+
+        if (expected.size() == got.size()) {
+
+            if (!ordered) {
+
+                // don't modify the original expected.
+                expected = new ArrayList<>(expected);
+
+                Collections.sort(expected);
+                Collections.sort(got);
+            }
+            if (expected.equals(got))
+                return true;
+        }
+        return false;
     }
 }

@@ -28,9 +28,14 @@ public class EmbeddedTester extends StreamsContextImpl<JavaTestableGraph> {
 
         app.builder().checkSupportsEmbeddedMode();
         
-        ConditionTesterImpl tester = (ConditionTesterImpl) app.getTester();
-        if (tester != null)
-            tester.finalizeGraph(getType());
+        ConditionTesterImpl tester = null;
+        if (app.hasTester()) {
+            tester = (ConditionTesterImpl) app.getTester();
+            if (tester.hasTests())
+                tester.finalizeGraph(getType());
+            else
+                tester = null;
+        }
         
         SubmissionParameterManager.initializeEmbedded(app.builder(), config);
         

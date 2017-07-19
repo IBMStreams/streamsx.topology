@@ -21,8 +21,18 @@ public class CounterHandlerCondition extends HandlerCondition<Long, StreamCounte
 
     @Override
     public boolean valid() {
-        if (userCondition.isExact())
-            return handler.getTupleCount() == userCondition.getExpected();
+        if (failed())
+            return false;
+        
+        if (userCondition.isExact()) {
+            long count = handler.getTupleCount();
+            if (count > userCondition.getExpected()) {
+                fail();
+                return false;
+            }
+            
+            return count == userCondition.getExpected();
+        }
         
         return handler.getTupleCount() >= userCondition.getExpected();
     }

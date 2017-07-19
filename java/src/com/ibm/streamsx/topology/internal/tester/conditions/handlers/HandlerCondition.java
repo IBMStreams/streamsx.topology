@@ -20,10 +20,19 @@ public abstract class HandlerCondition<R, H extends StreamHandler<Tuple>, U exte
     
     final U userCondition;
     final H handler;
+    private boolean failed;
     
     HandlerCondition(U userCondition, H handler) {
         this.handler = handler;
         this.userCondition = userCondition;
         userCondition.setImpl(this);
+    }
+    
+    @Override
+    public synchronized boolean failed() {
+        return failed;
+    }
+    synchronized void fail() {
+        failed = true;
     }
 }
