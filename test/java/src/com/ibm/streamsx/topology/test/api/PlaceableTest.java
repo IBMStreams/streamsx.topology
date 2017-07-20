@@ -392,7 +392,7 @@ public class PlaceableTest extends TestTopology {
         
         sa = sa.union(sb);
         
-        Condition<List<String>> pes = t.getTester().stringContents(sa, "");
+        Condition<List<String>> pes = t.getTester().stringContents(sa);
         
         Condition<Long> tc = t.getTester().tupleCount(sa, 2);
         

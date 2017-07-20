@@ -44,8 +44,8 @@ public class IsolateTest extends TestTopology {
 
         Tester tester = topology.getTester();
 
-        Condition<List<String>> condss1 = tester.stringContents(ss1, "");
-        Condition<List<String>> condss2 = tester.stringContents(ss2, "");
+        Condition<List<String>> condss1 = tester.stringContents(ss1);
+        Condition<List<String>> condss2 = tester.stringContents(ss2);
 
         Condition<Long> condss1Cnt = tester.tupleCount(ss1, 1);
         Condition<Long> condss2Cnt = tester.tupleCount(ss2, 1);
