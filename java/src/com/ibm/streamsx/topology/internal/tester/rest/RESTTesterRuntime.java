@@ -1,0 +1,121 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017 
+ */
+package com.ibm.streamsx.topology.internal.tester.rest;
+
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static java.util.Objects.requireNonNull;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Future;
+
+import com.google.gson.JsonObject;
+import com.ibm.streams.flow.handlers.StreamHandler;
+import com.ibm.streams.operator.Tuple;
+import com.ibm.streamsx.rest.Job;
+import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
+import com.ibm.streamsx.topology.TSink;
+import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
+import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
+import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
+import com.ibm.streamsx.topology.internal.tester.fns.TupleCount;
+import com.ibm.streamsx.topology.tester.Condition;
+
+public class RESTTesterRuntime extends TesterRuntime {
+    
+    private int id;
+    private final MetricConditionChecker metricsChecker;
+
+    public RESTTesterRuntime(ConditionTesterImpl tester) {
+        super(tester);
+        metricsChecker = new MetricConditionChecker();
+    }
+
+    @Override
+    public void start(Object info) throws Exception {
+        
+        JsonObject deployment = (JsonObject) info;
+        StreamingAnalyticsConnection conn = StreamingAnalyticsConnection.newInstance(deployment);
+        
+        JsonObject submission = jobject(deployment, "submissionResults");
+        requireNonNull(submission);
+        
+        String jobId = jstring(submission, "jobId");
+        
+        Job job = conn.getInstance().getJob(jobId);
+        
+        metricsChecker.setup(job);
+    }
+
+    @Override
+    public void shutdown(Future<?> future) throws Exception {
+        metricsChecker.shutdown();
+    }
+    
+    @Override
+    public void finalizeTester(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers,
+            Map<TStream<?>, Set<UserCondition<?>>> conditions) throws Exception {
+        
+        // REST api does not support handlers.
+        if (!handlers.isEmpty())
+            throw new UnsupportedOperationException();
+        
+        for (TStream<?> stream : conditions.keySet()) {
+            for (UserCondition<?> uc : conditions.get(stream))
+                addConditionToStream(stream, uc);
+        }
+    }
+
+    /**
+     * Add the conditions as for each operators that monitor the
+     * condition and sets metrics.
+     * 
+     * Then create a condition implementation that will monitor the
+     * metrics using the REST api and link it to the user condition.
+     */
+    @SuppressWarnings("unchecked")
+    private void addConditionToStream(TStream<?> stream, UserCondition<?> userCondition) {
+        
+        MetricCondition<?> condition = null;
+        String name = null;
+        
+        if (userCondition instanceof CounterUserCondition) {
+            
+            TStream<Object> os = (TStream<Object>) stream;
+            
+            CounterUserCondition uc = (CounterUserCondition) userCondition;
+            
+            name = "count_" + id++;
+            TupleCount<Object> fn = new TupleCount<Object>(name, uc.getExpected(), uc.isExact());
+            TSink end = os.sink(fn);
+            if (os.isPlaceable())
+                end.colocate(os);
+            
+            condition = new CounterMetricCondition(name, uc);
+            
+        }/* else if (userCondition instanceof ContentsUserCondition) {
+            ContentsUserCondition<?> uc = (ContentsUserCondition<?>) userCondition;
+            if (uc.getTupleClass().equals(Tuple.class))
+                handlerCondition = new ContentsHandlerCondition((ContentsUserCondition<Tuple>) userCondition);
+            else if (uc.getTupleClass().equals(String.class))
+                handlerCondition = new StringHandlerCondition((ContentsUserCondition<String>) userCondition);
+        }*/
+        if (metricsChecker == null)
+            throw new UnsupportedOperationException(userCondition.toString());
+        
+        metricsChecker.addCondition(name, condition);       
+    }
+
+    @Override
+    public TestState checkTestState(StreamsContext<?> context, Map<String, Object> config, Future<?> future,
+            Condition<?> endCondition) throws Exception {
+        return metricsChecker.checkTestState();
+    }
+
+}

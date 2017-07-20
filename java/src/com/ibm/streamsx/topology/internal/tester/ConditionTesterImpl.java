@@ -34,6 +34,7 @@ import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserConditio
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
 import com.ibm.streamsx.topology.internal.tester.embedded.EmbeddedTesterRuntime;
+import com.ibm.streamsx.topology.internal.tester.rest.RESTTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.tcp.TCPTesterRuntime;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.streams.StringStreams;
@@ -176,6 +177,9 @@ public class ConditionTesterImpl implements Tester {
             case STANDALONE_TESTER:
                 runtime = new TCPTesterRuntime(contextType, this);
                 break;
+            case STREAMING_ANALYTICS_SERVICE_TESTER:
+                runtime = new RESTTesterRuntime(this);
+                break;
             default: // nothing to do
                 return;
             }
@@ -235,8 +239,9 @@ public class ConditionTesterImpl implements Tester {
         while (state == null || (System.currentTimeMillis() - start) < totalWait) {
             
             state = getRuntime().checkTestState(context, config, future, endCondition);
-            
             switch (state) {
+            case NOT_READY:
+                continue;
             case NO_PROGRESS:
                 if (seenValid)
                     break;

@@ -23,6 +23,7 @@ import com.ibm.streamsx.topology.tester.Condition;
  */
 public abstract class TesterRuntime {
     public enum TestState {
+        NOT_READY,
         NO_PROGRESS,
         PROGRESS,
         VALID,

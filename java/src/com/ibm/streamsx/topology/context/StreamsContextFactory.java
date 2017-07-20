@@ -12,6 +12,7 @@ import com.ibm.streamsx.topology.internal.context.DistributedTester;
 import com.ibm.streamsx.topology.internal.context.EmbeddedStreamsContext;
 import com.ibm.streamsx.topology.internal.context.EmbeddedTester;
 import com.ibm.streamsx.topology.internal.context.RemoteStreamingAnalyticsServiceStreamsContext;
+import com.ibm.streamsx.topology.internal.context.RemoteStreamingAnalyticsTester;
 import com.ibm.streamsx.topology.internal.context.StandaloneStreamsContext;
 import com.ibm.streamsx.topology.internal.context.StandaloneTester;
 import com.ibm.streamsx.topology.internal.context.ToolkitStreamsContext;
@@ -90,6 +91,9 @@ public class StreamsContextFactory {
             if (System.getenv("STREAMS_INSTALL") == null)
                 return new RemoteStreamingAnalyticsServiceStreamsContext();
             return new AnalyticsServiceStreamsContext(type);
+            
+        case STREAMING_ANALYTICS_SERVICE_TESTER:
+            return new RemoteStreamingAnalyticsTester();
         default:
             throw new IllegalArgumentException("Unknown type:" + type);
         }
