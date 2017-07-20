@@ -39,7 +39,8 @@ import com.ibm.streamsx.topology.spl.SPLStream;
  * is submitted to a tester {@link StreamsContext}, of type
  * {@link com.ibm.streamsx.topology.context.StreamsContext.Type#EMBEDDED_TESTER},
  * {@link com.ibm.streamsx.topology.context.StreamsContext.Type#STANDALONE_TESTER},
- * {@link com.ibm.streamsx.topology.context.StreamsContext.Type#DISTRIBUTED_TESTER}.
+ * {@link com.ibm.streamsx.topology.context.StreamsContext.Type#DISTRIBUTED_TESTER},
+ * {@link com.ibm.streamsx.topology.context.StreamsContext.Type#STREAMING_ANALYTICS_SERVICE_TESTER}.
  * </P>
  * <P>
  * When running a test using {@link com.ibm.streamsx.topology.context.StreamsContext.Type#STANDALONE_TESTER}
@@ -59,6 +60,12 @@ public interface Tester {
 
     /**
      * Adds {@code handler} to capture the output of {@code stream}.
+     * 
+     * <P>
+     * Not supported when testing using
+     * {@link com.ibm.streamsx.topology.context.StreamsContext.Type#STREAMING_ANALYTICS_SERVICE_TESTER STREAMING_ANALYTICS_SERVICE_TESTER}
+     * context.
+     * </P>
      * @param stream Stream to have its tuples captured.
      * @param handler {@code StreamHandler} to capture tuples.
      * @return {@code handler}

@@ -31,7 +31,13 @@ public final class ContentsUserCondition<T> extends UserCondition<List<T>> {
     }
     @Override
     public String toString() {
-        return "Received Tuples: " + getResult();
+        String result;
+        if (getImpl() == null)
+            result = getResult().toString();
+        else
+            result = getImpl().toString();
+        
+        return "Received Tuples: " + result;
     }
     
     

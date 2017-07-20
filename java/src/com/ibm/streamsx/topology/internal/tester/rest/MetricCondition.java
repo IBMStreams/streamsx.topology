@@ -70,7 +70,7 @@ public class MetricCondition<T> implements Condition<T> {
     synchronized void setSeqMetric(Metric seq) {
         this.seq = seq;
     }
-    synchronized void setFailMetric(Metric fail) {
+    synchronized void setFailMetric(Metric fail) {      
         this.fail = fail;
     }
     
@@ -100,9 +100,6 @@ public class MetricCondition<T> implements Condition<T> {
         fail.refresh();
         valid.refresh(); 
         seq.refresh();
-        System.err.println(name + " FAIL:" + fail.getValue());
-        System.err.println(name + " VALID:" + valid.getValue());
-        System.err.println(name + " SEQ:" + seq.getValue());
         
         if (fail.getValue() != 0L) {
             return setState(TesterRuntime.TestState.FAIL);
@@ -118,5 +115,10 @@ public class MetricCondition<T> implements Condition<T> {
             lastSeq = s;
             return setState(TesterRuntime.TestState.PROGRESS);
         }
+    }
+    
+    @Override
+    public String toString() {
+        return "Result not available";
     }
 }

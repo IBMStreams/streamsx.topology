@@ -35,4 +35,9 @@ public abstract class HandlerCondition<R, H extends StreamHandler<Tuple>, U exte
     synchronized void fail() {
         failed = true;
     }
+    
+    @Override
+    public final String toString() {
+        return getResult().toString();
+    }
 }

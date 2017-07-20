@@ -38,30 +38,16 @@ public class MetricConditionChecker {
     }
     
     TesterRuntime.TestState checkTestState() throws IOException, InterruptedException {
-        System.err.println("OVERALL:checkTestState:seenHealthy:" + seenHealthy + " jobid" + job.getId());
-        System.err.println("HEALTH: " + job.getHealth());
-        for (int i = 0; i < 20; i++) {
-            Thread.sleep(200);
-            job.refresh();
-            System.err.println("HEALTH: " + i + ": "+ job.getHealth());
-        }
         if (!seenHealthy) {
             try {
                 job.waitForHealthy(5, TimeUnit.SECONDS);
-                System.err.println("OVERALL:Job Now healthy:" + job.getHealth());
                 seenHealthy = true;
                 findConditionMetrics();
             } catch (TimeoutException te) {
                 return TesterRuntime.TestState.NOT_READY;
             }
         } else {
-            for (int i = 0; i < 20; i++) {            
-                job.refresh();
-                System.err.println("HEALTH_A: " + i + ": "+ job.getHealth());
-                Thread.sleep(200);
-            }
             job.refresh();
-            System.err.println("OVERALL:Job Health:" + job.getHealth());
             if (!"healthy".equals(job.getHealth()))
                 return TestState.FAIL;
         }
@@ -83,7 +69,6 @@ public class MetricConditionChecker {
                
         for (MetricCondition<?> condition : conditions.values()) {
             TestState state = condition.oneCheck();
-            System.err.println("MetricState:" +condition.name + " -- "+ state);
             switch (state) {
             case NOT_READY:
                 return TesterRuntime.TestState.NOT_READY;

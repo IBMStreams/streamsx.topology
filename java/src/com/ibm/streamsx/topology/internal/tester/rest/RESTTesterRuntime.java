@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
 import com.ibm.streams.flow.handlers.StreamHandler;
@@ -20,14 +21,19 @@ import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
+import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
+import com.ibm.streamsx.topology.internal.tester.fns.TupleContents;
 import com.ibm.streamsx.topology.internal.tester.fns.TupleCount;
 import com.ibm.streamsx.topology.tester.Condition;
+import com.ibm.streamsx.topology.tester.Tester;
 
 public class RESTTesterRuntime extends TesterRuntime {
+    
     
     private int id;
     private final MetricConditionChecker metricsChecker;
@@ -84,30 +90,34 @@ public class RESTTesterRuntime extends TesterRuntime {
         
         MetricCondition<?> condition = null;
         String name = null;
+        Consumer<Object> fn = null;
         
         if (userCondition instanceof CounterUserCondition) {
-            
-            TStream<Object> os = (TStream<Object>) stream;
             
             CounterUserCondition uc = (CounterUserCondition) userCondition;
             
             name = "count_" + id++;
-            TupleCount<Object> fn = new TupleCount<Object>(name, uc.getExpected(), uc.isExact());
-            TSink end = os.sink(fn);
-            if (os.isPlaceable())
-                end.colocate(os);
+            fn = new TupleCount<Object>(name, uc.getExpected(), uc.isExact());
+
             
             condition = new CounterMetricCondition(name, uc);
             
-        }/* else if (userCondition instanceof ContentsUserCondition) {
-            ContentsUserCondition<?> uc = (ContentsUserCondition<?>) userCondition;
-            if (uc.getTupleClass().equals(Tuple.class))
-                handlerCondition = new ContentsHandlerCondition((ContentsUserCondition<Tuple>) userCondition);
-            else if (uc.getTupleClass().equals(String.class))
-                handlerCondition = new StringHandlerCondition((ContentsUserCondition<String>) userCondition);
-        }*/
+        } else if (userCondition instanceof ContentsUserCondition) {
+            ContentsUserCondition<Object> uc = (ContentsUserCondition<Object>) userCondition;
+            
+            name = "contents_" + id++;
+            fn = new TupleContents<Object>(name, uc.isOrdered(), uc.getExpected());
+            
+            condition = new MetricCondition<Object>(name, (UserCondition<Object>) userCondition);
+        }
+        
         if (metricsChecker == null)
             throw new UnsupportedOperationException(userCondition.toString());
+        
+        TStream<Object> os = (TStream<Object>) stream;
+        TSink end = os.sink(fn);
+        if (os.isPlaceable())
+            end.colocate(os);
         
         metricsChecker.addCondition(name, condition);       
     }

@@ -25,7 +25,7 @@ public abstract class UserCondition<R> implements Condition<R> {
         this.impl = impl;
     }
     
-    private synchronized Condition<R> getImpl() {
+    synchronized Condition<R> getImpl() {
         return impl;
     }
 
