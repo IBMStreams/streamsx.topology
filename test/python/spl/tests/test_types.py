@@ -30,13 +30,26 @@ class TestSPL(unittest.TestCase):
             s,
             'tuple<blob b>')
 
+        toBlob = op.Map(
+            "com.ibm.streamsx.topology.pysamples.positional::Noop",
+            toBlob.stream,
+            'tuple<blob b>')
+
         bt = op.Map(
             "com.ibm.streamsx.topology.pytest.pytypes::BlobTest",
             toBlob.stream,
-            'tuple<rstring string>')
+            'tuple<rstring string>',
+            {'keep': True})
+
+        bt2 = op.Map(
+            "com.ibm.streamsx.topology.pytest.pytypes::BlobTest",
+            toBlob.stream,
+            'tuple<rstring string>',
+            {'keep': False})
          
         tester = Tester(topo)
         tester.contents(bt.stream, data)
+        self.test_config['topology.keepArtifacts'] = True;
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_list_blob_type(self):

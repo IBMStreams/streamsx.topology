@@ -319,12 +319,26 @@ class SplpyGeneral {
     ** Convert to a SPL blob from a Python bytes object.
     */
     inline void pySplValueFromPyObject(SPL::blob & splv, PyObject * value) {
-      char * bytes = PyBytes_AsString(value);          
+      char * bytes = NULL;
+      long int size = -1;
+
+      if (PyMemoryView_Check(value)) {
+         Py_buffer *buf = PyMemoryView_GET_BUFFER(value);
+         bytes = (char *) buf->buf;
+         size = buf->len;
+      }
+      else
+      {
+          bytes = PyBytes_AsString(value);
+          size = PyBytes_GET_SIZE(value);
+      }
+
       if (bytes == NULL) {
          SPLAPPTRC(L_ERROR, "Python can't convert to SPL blob!", "python");
          throw SplpyGeneral::pythonException("blob");
       }
-      long int size = PyBytes_GET_SIZE(value);
+
+      // This takes a copy of the data.
       splv.setData((const unsigned char *)bytes, size);
     }
 

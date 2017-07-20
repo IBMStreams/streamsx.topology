@@ -25,33 +25,51 @@ def ToListBlob(*s):
 def ToMapBlob(*s):
     return ({"BLOB": s[0].encode('utf-8')},)
 
+def validate_mv_blob(v):
+    if not isinstance(v, memoryview):
+        return ("Expected memory view is" + str(type(v)),)
+    bs = v.tobytes()
+
+    if not v.readonly:
+        return "Expected readonly memory view",
+
+    if v.itemsize != 1:
+        return "Expected readonly memory view",
+
+    return None
+
+def validate_mv_blob_release(l):
+    for b in l:
+        try:
+            bs = b.tobytes()
+            return "Expected released memory view",
+        except ValueError as ve:
+            pass
+    return None
+
 @spl.map()
 class BlobTest:
     """
     Expect blob tuples, need to verify that after
     the call the previous value cannot be accessed.
     """
-    def __init__(self):
+    def __init__(self, keep):
         self.last = list()
+        self.keep = keep
 
     def __call__(self, *tuple):
         v = tuple[0]
-        if not isinstance(v, memoryview):
-            return ("Expected memory view is" + str(type(v)),)
-        bs = v.tobytes()
+        mvc = validate_mv_blob(v)
+        if mvc:
+            return mvc
 
-        if not v.readonly:
-            return "Expected readonly memory view",
-           
-        if self.last:
-            for b in self.last:
-                try:
-                    bs = b.tobytes()
-                    return "Expected released memory view",
-                except ValueError as ve:
-                    pass
-                
-        self.last.append(v)
+        mvc = validate_mv_blob_release(self.last)
+        if mvc:
+            return mvc
+
+        print("BLOB:", v, "Keep?", self.keep, flush=True)
+        if self.keep:
+             self.last.append(v)
         return str(v, 'utf-8'),
 
 @spl.map()
@@ -65,21 +83,14 @@ class ListBlobTest:
 
     def __call__(self, *tuple):
         v = tuple[0][0]
-        if not isinstance(v, memoryview):
-            return ("Expected memory view is" + str(type(v)),)
-        bs = v.tobytes()
+        mvc = validate_mv_blob(v)
+        if mvc:
+            return mvc
 
-        if not v.readonly:
-            return "Expected readonly memory view",
-           
-        if self.last:
-            for b in self.last:
-                try:
-                    bs = b.tobytes()
-                    return "Expected released memory view",
-                except ValueError as ve:
-                    pass
-                
+        mvc = validate_mv_blob_release(self.last)
+        if mvc:
+            return mvc
+
         self.last.append(v)
         return str(v, 'utf-8'),
 
@@ -94,21 +105,14 @@ class MapBlobTest:
 
     def __call__(self, *tuple):
         v = tuple[0]["BLOB"]
-        if not isinstance(v, memoryview):
-            return ("Expected memory view is" + str(type(v)),)
-        bs = v.tobytes()
+        mvc = validate_mv_blob(v)
+        if mvc:
+            return mvc
 
-        if not v.readonly:
-            return "Expected readonly memory view",
-           
-        if self.last:
-            for b in self.last:
-                try:
-                    bs = b.tobytes()
-                    return "Expected released memory view",
-                except ValueError as ve:
-                    pass
-                
+        mvc = validate_mv_blob_release(self.last)
+        if mvc:
+            return mvc
+
         self.last.append(v)
         return str(v, 'utf-8'),
 
