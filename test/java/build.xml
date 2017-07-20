@@ -210,7 +210,7 @@
        <formatter type="xml"/>
        <batchtest todir="${topology.test.dir}">
           <fileset dir="${basedir}/src" 
-          	 excludes="**/samples/*Test.java" >
+          	 excludes="**/samples/*Test.java **/rest/**" >
              <include name="${topology.test.base.pattern}"/>
           </fileset>
        </batchtest>

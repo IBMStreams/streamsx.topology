@@ -194,9 +194,11 @@ public class BOperatorInvocation extends BOperator {
             jsonType = MetaType.FLOAT64.name();
         } else if (value instanceof Boolean) {
             op.setBooleanParameter(name, (Boolean) value);
+            jsonType = MetaType.BOOLEAN.name();
         } else if (value instanceof BigDecimal) {
             op.setBigDecimalParameter(name, (BigDecimal) value);
             jsonValue = value.toString(); // Need to maintain exact value
+            jsonType = MetaType.DECIMAL128.name();
         } else if (value instanceof Enum) {
             op.setCustomLiteralParameter(name, (Enum<?>) value);
             jsonValue = ((Enum<?>) value).name();
@@ -228,8 +230,11 @@ public class BOperatorInvocation extends BOperator {
         JSONObject param = new JSONObject();
         param.put("value", jsonValue);
 
-        if (jsonType != null)
+        if (jsonType != null) {
             param.put("type", jsonType);
+            if (JParamTypes.TYPE_ENUM.equals(jsonType))
+                param.put("enumclass", value.getClass().getCanonicalName());              
+        }
 
         jparams.put(name, param);
     }
