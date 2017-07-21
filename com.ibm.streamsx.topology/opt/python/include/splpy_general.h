@@ -20,6 +20,8 @@
 
 #include "Python.h"
 
+#include "splpy_macro.h"
+
 #include <TopologySplpyResource.h>
 #include <SPL/Runtime/Common/RuntimeException.h>
 #include <SPL/Runtime/Type/Meta/BaseType.h>
@@ -128,6 +130,21 @@ class SplpyGeneral {
 
         return o == none;
     }
+    /**
+      PyMemoryView_Check macro gets reassigned to
+      this function. This is because using it directly
+      leads to a reference to PyMemoryView_Type field
+      in the operator.so which cannot be resolved until
+      after the operator.so is loaded. Since this field
+      is used by its address in the _Check macro we
+      cannot use the weak symbol trick.
+    */
+    static bool checkMemoryView(PyObject * o) {
+        static PyObject * memoryViewTypeAddr = o;
+
+        return ((PyObject *) Py_TYPE(o)) == memoryViewTypeAddr;
+    }
+
     static PyObject * getBool(const bool & value) {
        return PyBool_FromLong(value ? 1 : 0);
      }
@@ -333,7 +350,7 @@ class SplpyGeneral {
           size = PyBytes_GET_SIZE(value);
       }
 
-      if (bytes == NULL) {
+      if (size != 0 && bytes == NULL) {
          SPLAPPTRC(L_ERROR, "Python can't convert to SPL blob!", "python");
          throw SplpyGeneral::pythonException("blob");
       }

@@ -67,7 +67,6 @@ class BlobTest:
         if mvc:
             return mvc
 
-        print("BLOB:", v, "Keep?", self.keep, flush=True)
         if self.keep:
              self.last.append(v)
         return str(v, 'utf-8'),
