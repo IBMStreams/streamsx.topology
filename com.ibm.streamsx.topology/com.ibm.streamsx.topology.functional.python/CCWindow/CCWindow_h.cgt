@@ -28,18 +28,7 @@ public:
   // Tuple processing for non-mutating ports
   void process(Tuple const & tuple, uint32_t port);
 
-  // Window
-  void onWindowTriggerEvent(
-     Window<PyObject *> & window, Window<PyObject *>::PartitionType const& key);
-  
-void afterTupleEvictionEvent(
-     Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
-     Window<PyObject *>::PartitionType const & partition);
-
 private:
-
-
-
 <%
 if ($pyoutstyle eq 'dict') {
 %>
@@ -49,7 +38,6 @@ if ($pyoutstyle eq 'dict') {
     // Members
     // Control for interaction with Python
     SplpyFuncOp *funcop_;
-    SplpyFuncOp *out_funcop;
     
     // Names of input attributes
     PyObject *pyInNames_;
@@ -58,14 +46,9 @@ if ($pyoutstyle eq 'dict') {
     // -1 when cannot pass by ref
     int32_t occ_;
 
-    // Window type
-    typedef SlidingWindow<PyObject *> WindowType;
-
     // Window definition
-    WindowType window_;	       
+    SlidingWindow<PyObject *>  window_;	       
 
-    // Mutex for safe writes to window.
-    Mutex mutex_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
