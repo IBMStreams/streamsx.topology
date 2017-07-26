@@ -20,6 +20,9 @@
 
 #include "Python.h"
 
+#undef PyMemoryView_Check
+#define PyMemoryView_Check(o) SplpyGeneral::checkMemoryView(o)
+
 #include <TopologySplpyResource.h>
 #include <SPL/Runtime/Common/RuntimeException.h>
 #include <SPL/Runtime/Type/Meta/BaseType.h>
