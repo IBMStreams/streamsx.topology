@@ -337,7 +337,7 @@ class SplpyGeneral {
     */
     inline void pySplValueFromPyObject(SPL::blob & splv, PyObject * value) {
       char * bytes = NULL;
-      long int size = -1;
+      Py_ssize_t size = -1;
 
       if (PyMemoryView_Check(value)) {
          Py_buffer *buf = PyMemoryView_GET_BUFFER(value);
@@ -578,6 +578,7 @@ class SplpyGeneral {
 #endif
     }
 
+
     /**
      * Convert a SPL rstring into a Python Unicode string 
      */
@@ -686,6 +687,26 @@ class SplpyGeneral {
     }
 
 /*
+ * A MemoryView from a blob attribute in an SPL schema
+ * just points to the tuple memory. In 3 this is safe
+ * as we release the memory view once process returns
+ * using MemoryViewCleanup RAII.
+ *
+ * In Python2 there is no release to to allow blobs
+ * in schemas we copy the contents.
+ *
+ * We do it this way
+ * rather than in the conversion method as if the schema
+ * is the python object we know we only have a reference
+ * to the memoryview and thus never want to copy.
+ *
+ */
+#if PY_MAJOR_VERSION == 3
+
+#define PYSPL_MEMORY_VIEW_CLEANUP() MemoryViewCleanup pyMvs
+#define PYSPL_MEMORY_VIEW(o) pyMvs.add(o)
+
+/*
  * Maintains any object that is or contains a memory view object.
  * Since the memory being viewed is from the incoming SPL tuple
  * it becomes invalid once the operator process method returns.
@@ -744,6 +765,13 @@ class MemoryViewCleanup {
            return releaser;
         }
 };
+
+#else /* VER == 2 */
+
+#define PYSPL_MEMORY_VIEW_CLEANUP() /* TODO */
+#define PYSPL_MEMORY_VIEW(o) /* TODO */
+
+#endif /* END VER 2/3 */
 
 }}
 

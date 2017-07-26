@@ -239,7 +239,7 @@ sub _attr2Value {
   #
   # Assumes that pyMvs exists set up by py_splTupleCheckForBlobs.cgt
   if (typeHasBlobs($type)) {
-      $get = $get . "pyMvs.add(value);\n";
+      $get = $get . "PYSPL_MEMORY_VIEW(value);\n";
   }
   return $get;
 }

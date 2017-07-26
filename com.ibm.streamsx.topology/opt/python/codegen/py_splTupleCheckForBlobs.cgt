@@ -3,7 +3,7 @@
    for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
       if (typeHasBlobs($itypes[$i])) {
 %>
-   MemoryViewCleanup pyMvs;
+   PYSPL_MEMORY_VIEW_CLEANUP();
 <%
          last;
       }
