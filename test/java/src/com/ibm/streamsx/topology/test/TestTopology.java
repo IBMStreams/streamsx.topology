@@ -75,15 +75,12 @@ public class TestTopology {
     
     @Before
     public void setupConfig() {
-        
-        
-        List<String> vmArgs = new ArrayList<>();
-        config.put(ContextProperties.VMARGS, vmArgs);
-        
-        if (getTesterType() != Type.EMBEDDED_TESTER) {
            
+        if (getTesterType() == Type.STANDALONE_TESTER || getTesterType() == Type.DISTRIBUTED_TESTER) {
+                       
             File agentJar = new File(System.getProperty("user.home"), ".ant/lib/jacocoagent.jar");
             if (agentJar.exists()) {
+                List<String> vmArgs = new ArrayList<>();
                 String now = Long.toHexString(System.currentTimeMillis());
                 String destFile = "jacoco_" + getTesterType().name() + now + ".exec";
      
@@ -93,8 +90,10 @@ public class TestTopology {
                         + "=destfile="
                         + destFile;
                 vmArgs.add(arg);
+                config.put(ContextProperties.VMARGS, vmArgs);
             }
         }
+            
         // Look for a different compiler
         String differentCompile = System.getProperty(ContextProperties.COMPILE_INSTALL_DIR);
         if (differentCompile != null) {

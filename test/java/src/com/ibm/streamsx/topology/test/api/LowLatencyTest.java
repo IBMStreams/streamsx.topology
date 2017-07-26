@@ -150,8 +150,8 @@ public class LowLatencyTest extends TestTopology {
         
         Condition<Long> uCount = tester.tupleCount(all, strs.length);
         
-        Condition<List<String>> contents = tester.stringContents(all, "");
-        Condition<List<String>> s2contents = tester.stringContents(s2, "");
+        Condition<List<String>> contents = tester.stringContents(all);
+        Condition<List<String>> s2contents = tester.stringContents(s2);
 
         complete(tester, uCount, 10, TimeUnit.SECONDS);
 
@@ -223,7 +223,7 @@ public class LowLatencyTest extends TestTopology {
         
         Condition<Long> uCount = tester.tupleCount(s2.filter(new AllowAll<String>()), 1);
         Condition<List<String>> contents = tester.stringContents(
-                s2.filter(new AllowAll<String>()), "");
+                s2.filter(new AllowAll<String>()));
 
         complete(tester, uCount, 10, TimeUnit.SECONDS);
 

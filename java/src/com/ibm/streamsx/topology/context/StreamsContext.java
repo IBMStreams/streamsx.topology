@@ -237,6 +237,13 @@ public interface StreamsContext<T> {
          * </P>
          */
         STREAMING_ANALYTICS_SERVICE,
+        
+        /**
+         * Testing variant of {@link #STREAMING_ANALYTICS_SERVICE}.
+         * 
+         * @since 1.7
+         */
+        STREAMING_ANALYTICS_SERVICE_TESTER,
         ;
     }
 

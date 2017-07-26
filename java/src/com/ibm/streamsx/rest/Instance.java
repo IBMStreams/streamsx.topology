@@ -4,10 +4,13 @@
  */
 package com.ibm.streamsx.rest;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
@@ -116,6 +119,8 @@ public class Instance extends Element {
      * @throws IOException
      */
     public Job getJob(String jobId) throws IOException {
+        requireNonNull(jobId);
+        
         String sGetJobURI = jobs + "/" + jobId;
 
         String sReturn = connection().getResponseString(sGetJobURI);

@@ -35,10 +35,12 @@ public class ConditionTest extends TestTopology {
         Condition<Long> tupleCount = topology.getTester().tupleCount(source, 3);
 
         boolean passed = complete(topology.getTester(), tupleCount, 10, TimeUnit.SECONDS);
-        assertTrue(passed);
 
-        assertTrue(tupleCount.valid());
-        assertEquals(3L, (long) tupleCount.getResult());
+        assertTrue(tupleCount.toString(), tupleCount.valid());
+        assertEquals(tupleCount.toString(), 3L, (long) tupleCount.getResult());
+        assertFalse(tupleCount.failed());
+        
+        assertTrue(passed);
     }
     
     @Test
@@ -48,9 +50,10 @@ public class ConditionTest extends TestTopology {
 
         Condition<Long> tupleCount = topology.getTester().tupleCount(source, 3);
 
-        boolean passed = complete(topology.getTester(), tupleCount, 10, TimeUnit.SECONDS);
-        assertFalse(passed);      
-        assertFalse(tupleCount.valid());
+        boolean passed = complete(topology.getTester(), tupleCount, 10, TimeUnit.SECONDS);             
+        assertFalse(tupleCount.toString(), tupleCount.valid());
+        assertTrue(tupleCount.failed());
+        assertFalse(passed);
     }
     
     @Test
@@ -61,8 +64,10 @@ public class ConditionTest extends TestTopology {
         Condition<Long> tupleCount = topology.getTester().tupleCount(source, 3);
 
         boolean passed = complete(topology.getTester(), tupleCount, 10, TimeUnit.SECONDS);
+
+        assertFalse(tupleCount.toString(), tupleCount.valid());
+        assertFalse(tupleCount.failed());
         assertFalse(passed);
-        assertFalse(tupleCount.valid());
     }
     
     @Test
@@ -80,6 +85,7 @@ public class ConditionTest extends TestTopology {
         assertTrue(tupleCount.toString(), tupleCount.valid());
         assertTrue(tupleCount.toString(), tupleCount.getResult() >= 26);
         assertTrue(passed);
+        assertFalse(tupleCount.failed());
     }
     
     @Test

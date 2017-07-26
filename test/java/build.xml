@@ -159,6 +159,12 @@
      </antcall>
      <fail message="Unittests failed" if="topology.tests.failed"/>
   </target>
+  <target name="unittest.streaminganalytics">
+     <antcall target="unittest.base" inheritAll="no">
+       <param name="topology.test.type" value="STREAMING_ANALYTICS_SERVICE_TESTER"/>
+     </antcall>
+     <fail message="Unittests failed" if="topology.tests.failed"/>
+  </target>
 
   <target name="unittest.base.scala">
     <ant dir="../scala" target="unittest" useNativeBasedir="true" inheritAll="no">

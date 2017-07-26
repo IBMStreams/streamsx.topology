@@ -101,7 +101,7 @@ public class TopologySourceTest extends TestTopology {
         TStream<String> st = StringStreams.toString(timestamps);
         
         Condition<Long> c = topology.getTester().atLeastTupleCount(st, 20);
-        Condition<List<String>> tuples = topology.getTester().stringContents(st, "notused");
+        Condition<List<String>> tuples = topology.getTester().stringContents(st);
 
         long start = System.currentTimeMillis();
         complete(topology.getTester(), c, 30, TimeUnit.SECONDS);
@@ -139,7 +139,7 @@ public class TopologySourceTest extends TestTopology {
                 500, TimeUnit.MILLISECONDS);
         
         Condition<Long> ending = topology.getTester().atLeastTupleCount(ms, 60);
-        Condition<List<String>> tuples = topology.getTester().stringContents(ms, "notused");
+        Condition<List<String>> tuples = topology.getTester().stringContents(ms);
 
         long start = System.currentTimeMillis();
         complete(topology.getTester(), ending, 30, TimeUnit.SECONDS);

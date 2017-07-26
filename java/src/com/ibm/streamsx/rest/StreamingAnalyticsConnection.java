@@ -44,7 +44,7 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
     private StreamingAnalyticsConnection(String userName, String authToken, String url) {
         super(userName, authToken, url);
     }
-
+    
     /**
      * Connection to IBM Streaming Analytics service
      *
@@ -58,12 +58,17 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
     public static StreamingAnalyticsConnection createInstance(String credentialsFile, String serviceName)
             throws IOException {
 
-        JsonObject streamingAnalyticsCredentials = new JsonObject();
+        JsonObject config = new JsonObject();
 
-        streamingAnalyticsCredentials.addProperty(SERVICE_NAME, serviceName);
-        streamingAnalyticsCredentials.addProperty(VCAP_SERVICES, credentialsFile);
+        config.addProperty(SERVICE_NAME, serviceName);
+        config.addProperty(VCAP_SERVICES, credentialsFile);
+        
+        return newInstance(config);
+    }
+        
+    public static StreamingAnalyticsConnection newInstance(JsonObject config) throws IOException{
 
-        JsonObject service = VcapServices.getVCAPService(streamingAnalyticsCredentials);
+        JsonObject service = VcapServices.getVCAPService(config);
 
         JsonObject credential = new JsonObject();
         credential = service.get("credentials").getAsJsonObject();

@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -45,7 +46,7 @@ public class VcapServices {
         String vcapString;
         String vcapContents = null;
 
-        if (rawServices == null) {
+        if (rawServices == null || rawServices.isJsonNull()) {
             // if rawServices is null, then pull from the environment
             vcapString = System.getenv("VCAP_SERVICES");
             if (vcapString == null) {
@@ -86,6 +87,7 @@ public class VcapServices {
      * @throws IOException
      */
     public static JsonObject getVCAPService(JsonObject deploy) throws IOException {
+        
         JsonObject services = getVCAPServices(deploy.get(VCAP_SERVICES));
 
         JsonArray streamsServices = array(services, "streaming-analytics");
