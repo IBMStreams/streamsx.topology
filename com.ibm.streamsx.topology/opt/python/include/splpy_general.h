@@ -20,8 +20,6 @@
 
 #include "Python.h"
 
-#include "splpy_macro.h"
-
 #include <TopologySplpyResource.h>
 #include <SPL/Runtime/Common/RuntimeException.h>
 #include <SPL/Runtime/Type/Meta/BaseType.h>
