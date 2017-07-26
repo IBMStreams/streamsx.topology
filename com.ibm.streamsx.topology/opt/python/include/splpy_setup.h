@@ -82,6 +82,7 @@ class SplpySetup {
         SplpySym::fixSymbols(pydl);
         startPython(pydl);
         setupNone(pydl);
+        setupMemoryViewCheck(pydl);
         runSplSetup(pydl, spl_setup_py_path);
         setupClasses();
         return pydl;
@@ -107,6 +108,26 @@ class SplpySetup {
         if (!in) {
           throw SplpyGeneral::generalException("setup",
                         "Internal error - None handling");
+        }
+    }
+
+    /*
+     *  Load 'PyMemoryView_Type' dynamically for
+     *  our our checkmemoryview.
+     */
+    static void setupMemoryViewCheck(void * pydl) {
+
+        PyObject *mvta = (PyObject *) dlsym(pydl, "PyMemoryView_Type");
+
+        // Call the checkMemoryView passing in none which will
+        // be the first caller (as this is in setup)
+        // and thus set the local pointer to &PyMemoryView_Type
+        bool notmv = SplpyGeneral::checkMemoryView(mvta);
+        if (notmv) {
+          // Since the type of memoryview is a type, not
+          // a memoryview then the call should be false.
+          throw SplpyGeneral::generalException("setup",
+                        "Internal error - Memoryview_Check handling");
         }
     }
 

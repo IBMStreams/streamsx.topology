@@ -77,6 +77,8 @@ void MY_OPERATOR::prepareToShutdown()
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
+ @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
+
    SplpyGIL lock;
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"

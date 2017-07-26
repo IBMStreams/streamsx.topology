@@ -16,7 +16,11 @@ sub splToPythonConversionCheck{
         # Python sets must have hashable keys
         # (which excludes Python collection type such as list,map,set)
         # so for now restrict to primitive types)
-        if (SPL::CodeGen::Type::isPrimitive($element_type)) {
+        #
+        # blob is excluded as the value can become
+        # invalid while in a set which will likely break
+        if (SPL::CodeGen::Type::isPrimitive($element_type)
+          && ! SPL::CodeGen::Type::isBlob($element_type)) {
             splToPythonConversionCheck($element_type);
             return;
         }
@@ -26,7 +30,11 @@ sub splToPythonConversionCheck{
         # Python maps must have hashable keys
         # (which excludes Python collection type such as list,map,set)
         # so for now restrict to primitive types)
-        if (SPL::CodeGen::Type::isPrimitive($key_type)) {
+        #
+        # blob is excluded as the value can become
+        # invalid while in a map which will likely break as a key
+        if (SPL::CodeGen::Type::isPrimitive($key_type)
+          && ! SPL::CodeGen::Type::isBlob($key_type)) {
             splToPythonConversionCheck($key_type);
 
            my $value_type = SPL::CodeGen::Type::getValueType($type);
@@ -53,6 +61,9 @@ sub splToPythonConversionCheck{
       return;
     } 
     elsif(SPL::CodeGen::Type::isTimestamp($type)) {
+      return;
+    }
+    elsif(SPL::CodeGen::Type::isBlob($type)) {
       return;
     }
     elsif (SPL::CodeGen::Type::isComplex32($type) || SPL::CodeGen::Type::isComplex64($type)) {
@@ -92,24 +103,46 @@ sub convertToPythonValueFromExpr {
   return "streamsx::topology::pySplValueToPyObject($iv)";
 }
 
+# Check if a type includes blobs in its definition.
+# Could be just blob, or list<blob> etc.
+# blob is not supported for map/set
+sub typeHasBlobs {
+  my $type = $_[0];
+
+  if (SPL::CodeGen::Type::isBlob($type)) {
+      return 1;
+  }
+  if (SPL::CodeGen::Type::isList($type)) {
+      my $element_type = SPL::CodeGen::Type::getElementType($type);
+      return typeHasBlobs($element_type);
+  }
+  if (SPL::CodeGen::Type::isMap($type)) {
+      my $value_type = SPL::CodeGen::Type::getValueType($type);
+      return typeHasBlobs($value_type);
+  }
+
+  return 0;
+}
+
 #
-# Return a C++ statement converting a input attribute
+# Return a C++ code block converting a input attribute
 # from an SPL input tuple to a Python object and
 # setting it into pyTuple (as a Python Tuple).
-# Assumes a C++ variable pyTuple are defined.
+# Assumes a C++ variable pyTuple is defined.
 #
 sub convertToPythonValueAsTuple {
   my $ituple = $_[0];
   my $i = $_[1];
   my $type = $_[2];
   my $name = $_[3];
-
-  my $getAndConvert = convertAttributeToPythonValue($ituple, $type, $name);
   
-  # Note PyTuple_SET_ITEM steals the reference to the value
-  my $assign =  "    PyTuple_SET_ITEM(pyTuple, $i, $getAndConvert);\n";
+  # starts a C++ block and sets pyValue
+  my $get = _attr2Value($ituple, $type, $name);
 
-  return $get . $assign ;
+  # Note PyTuple_SET_ITEM steals the reference to the value
+  my $assign =  "PyTuple_SET_ITEM(pyTuple, $i, value);\n";
+
+  return $get . $assign . "}\n" ;
 }
 
 # Determine which style of argument is being
@@ -186,6 +219,31 @@ sub splpy_inputtuple2value{
  }
 }
 
+# Starts a block that converts an SPL attribute
+# to the enclosed variable value
+sub _attr2Value {
+  my $ituple = $_[0];
+  my $type = $_[1];
+  my $name = $_[2];
+
+  my $get = '{ PyObject * value = ';
+  $get = $get . convertAttributeToPythonValue($ituple, $type, $name);
+  $get = $get . ";\n";
+
+  # If the attribute has blobs then
+  # save the corresponding memory view objects.
+  # We just save the attribute's Python representation
+  # Typically, it will be a memoryview (from a blob) but
+  # if it's something containing blobs the complete collection
+  # object is passed to Python for release.
+  #
+  # Assumes that pyMvs exists set up by py_splTupleCheckForBlobs.cgt
+  if (typeHasBlobs($type)) {
+      $get = $get . "PYSPL_MEMORY_VIEW(value);\n";
+  }
+  return $get;
+}
+
 #
 # Convert attribute of an SPL tuple to Python
 # and add to a dictionary object.
@@ -203,18 +261,17 @@ sub convertAndAddToPythonDictionaryObject {
   my $name = $_[3];
   my $names = $_[4];
 
-  my $get = '{ PyObject * pyValue = ';
-  $get = $get . convertAttributeToPythonValue($ituple, $type, $name);
-  $get = $get . ";\n";
+  # starts a C++ blockand sets value
+  my $get = _attr2Value($ituple, $type, $name);
 
   # PyTuple_GET_ITEM returns a borrowed reference.
-  $getkey = '{ PyObject * pyDictKey = PyTuple_GET_ITEM(' . $names . ',' . $i . ") ;\n";
+  $getkey = 'PyObject * key = PyTuple_GET_ITEM(' . $names . ',' . $i . ");\n";
 
 # Note PyDict_SetItem does not steal the references to the key and value
-  my $setdict =  "  PyDict_SetItem(pyDict, pyDictKey, pyValue);\n";
-  $setdict =  $setdict . "  Py_DECREF(pyValue);}}\n";
+  my $setdict =  "PyDict_SetItem(pyDict, key, value);\n";
+  $setdict =  $setdict . "Py_DECREF(value);\n";
 
-  return $get . $getkey . $setdict ;
+  return $get . $getkey . $setdict . "}\n" ;
 }
 
 1;

@@ -20,6 +20,8 @@
 
 #include "Python.h"
 
+#include "splpy_macro.h"
+
 #include <TopologySplpyResource.h>
 #include <SPL/Runtime/Common/RuntimeException.h>
 #include <SPL/Runtime/Type/Meta/BaseType.h>
@@ -128,6 +130,21 @@ class SplpyGeneral {
 
         return o == none;
     }
+    /**
+      PyMemoryView_Check macro gets reassigned to
+      this function. This is because using it directly
+      leads to a reference to PyMemoryView_Type field
+      in the operator.so which cannot be resolved until
+      after the operator.so is loaded. Since this field
+      is used by its address in the _Check macro we
+      cannot use the weak symbol trick.
+    */
+    static bool checkMemoryView(PyObject * o) {
+        static PyObject * memoryViewTypeAddr = o;
+
+        return ((PyObject *) Py_TYPE(o)) == memoryViewTypeAddr;
+    }
+
     static PyObject * getBool(const bool & value) {
        return PyBool_FromLong(value ? 1 : 0);
      }
@@ -254,6 +271,11 @@ class SplpyGeneral {
         SPLAPPTRC(L_INFO, "Callable function: " << fn, "python");
         return function;
       }
+    static PyObject * loadFunctionGIL(const std::string & mn, const std::string & fn)
+    {    
+        SplpyGIL lock;
+        return loadFunction(mn, fn);
+    }
 
     /*
      * Import a module, returning the reference to the module.
@@ -314,12 +336,26 @@ class SplpyGeneral {
     ** Convert to a SPL blob from a Python bytes object.
     */
     inline void pySplValueFromPyObject(SPL::blob & splv, PyObject * value) {
-      char * bytes = PyBytes_AsString(value);          
-      if (bytes == NULL) {
+      char * bytes = NULL;
+      Py_ssize_t size = -1;
+
+      if (PyMemoryView_Check(value)) {
+         Py_buffer *buf = PyMemoryView_GET_BUFFER(value);
+         bytes = (char *) buf->buf;
+         size = buf->len;
+      }
+      else
+      {
+          bytes = PyBytes_AsString(value);
+          size = PyBytes_GET_SIZE(value);
+      }
+
+      if (size != 0 && bytes == NULL) {
          SPLAPPTRC(L_ERROR, "Python can't convert to SPL blob!", "python");
          throw SplpyGeneral::pythonException("blob");
       }
-      long int size = PyBytes_GET_SIZE(value);
+
+      // This takes a copy of the data.
       splv.setData((const unsigned char *)bytes, size);
     }
 
@@ -542,6 +578,7 @@ class SplpyGeneral {
 #endif
     }
 
+
     /**
      * Convert a SPL rstring into a Python Unicode string 
      */
@@ -648,6 +685,93 @@ class SplpyGeneral {
         }
         return pySet;
     }
+
+/*
+ * A MemoryView from a blob attribute in an SPL schema
+ * just points to the tuple memory. In 3 this is safe
+ * as we release the memory view once process returns
+ * using MemoryViewCleanup RAII.
+ *
+ * In Python2 there is no release to to allow blobs
+ * in schemas we copy the contents.
+ *
+ * We do it this way
+ * rather than in the conversion method as if the schema
+ * is the python object we know we only have a reference
+ * to the memoryview and thus never want to copy.
+ *
+ */
+#if PY_MAJOR_VERSION == 3
+
+#define PYSPL_MEMORY_VIEW_CLEANUP() MemoryViewCleanup pyMvs
+#define PYSPL_MEMORY_VIEW(o) pyMvs.add(o)
+
+/*
+ * Maintains any object that is or contains a memory view object.
+ * Since the memory being viewed is from the incoming SPL tuple
+ * it becomes invalid once the operator process method returns.
+ * This is an RAII object that will go put of scope at the
+ * end of the process method, resulting in a call into Python
+ * for any memory view object that is still being used or
+ * any object that is a collection holding a memory view.
+ */
+class MemoryViewCleanup {
+   public:
+        MemoryViewCleanup() {
+        }
+        ~MemoryViewCleanup() {
+             SplpyGIL lock;
+
+             Py_ssize_t np = 0;
+
+             // Determine how many items we need
+             // to pass into Python.
+             for (int i = 0; i < mvs_.size(); i++) {
+                 PyObject *mv = mvs_[i];
+                 if (PyMemoryView_Check(mv) && (Py_REFCNT(mv) == 1)) {
+                     // Only we hold a reference to it and it's
+                     // a memory view object, simply decrement 
+                     Py_DECREF(mv);
+                     mvs_[i] = NULL;
+                     continue;
+                 }
+                 np++;
+             }
+
+             if (np != 0) {
+                 Py_ssize_t npi = 0;
+                 PyObject *args = PyTuple_New(np);
+                 for (int i = 0; i < mvs_.size();i++) {
+                     PyObject *mv = mvs_[i];
+                     if (mv != NULL) {
+                         // steals our reference
+                         PyTuple_SET_ITEM(args, npi++, mv);
+                     }
+                 }
+                 PyObject * ret = SplpyGeneral::pyCallObject(releaser(), args);
+                 Py_DECREF(ret);
+             }
+        }
+        void add(PyObject *mv) {
+            Py_INCREF(mv);
+            mvs_.push_back(mv);
+        }
+        
+      private:
+        std::vector<PyObject *> mvs_;
+
+        static PyObject * releaser() {
+           static PyObject * releaser = SplpyGeneral::loadFunctionGIL("streamsx.spl.runtime", "_splpy_release_memoryviews");
+           return releaser;
+        }
+};
+
+#else /* VER == 2 */
+
+#define PYSPL_MEMORY_VIEW_CLEANUP() /* TODO */
+#define PYSPL_MEMORY_VIEW(o) /* TODO */
+
+#endif /* END VER 2/3 */
 
 }}
 

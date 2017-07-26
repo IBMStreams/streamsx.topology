@@ -53,6 +53,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     		  "complex32 c32," +
     		  "complex64 c64," +
     		  "timestamp ts," +
+                  "blob binary," +
     		  "list<rstring> lr," +
     		  "list<int32> li32," +
     		  "list<int64> li64," +

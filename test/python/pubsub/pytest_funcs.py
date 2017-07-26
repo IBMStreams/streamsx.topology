@@ -28,6 +28,7 @@ def remove_complex(v):
    del r['u64']
    del r['lui64']
    del r['ts']
+   del r['binary']
    return r
 
 

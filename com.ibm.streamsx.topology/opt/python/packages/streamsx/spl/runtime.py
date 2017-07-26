@@ -67,3 +67,14 @@ def _splpy_to_tuples(fn, attributes):
            fn._shutdown()
        _to_tuples._shutdown = _shutdown
    return _to_tuples
+
+def _splpy_release_memoryviews(*args):
+    for o in args:
+        if isinstance(o, memoryview):
+            o.release()
+        elif isinstance(o, list):
+            for e in o:
+                _splpy_release_memoryviews(e)
+        elif isinstance(o, dict):
+            for e in o.values():
+                _splpy_release_memoryviews(e)
