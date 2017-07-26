@@ -11,8 +11,12 @@ from streamsx.spl.types import Timestamp
 # Test Source functions
 #------------------------------------------------------------------
 
-def splNamespace():
+def spl_namespace():
     return "com.ibm.streamsx.topology.pytest.pysource"
+
+# Should be ignored (bad namespace)
+def splNamespace():
+    return "453535351&%$="
 
 #
 # Returns a value matching the test schema TEST_ALL_PYTHON_TYPES

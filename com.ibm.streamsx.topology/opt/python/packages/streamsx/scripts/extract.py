@@ -158,9 +158,7 @@ class _Extractor(object):
     # module - module name
     # ops - list of potential operators (functions)
     def _process_operators(self, dynm, module, streams_python_file, ops):
-        print("FILE", streams_python_file)
         for opname, opobj in ops:
-            print("OBJ", opname, opobj)
             if inspect.isbuiltin(opobj):
                 continue
             if opname.startswith('spl'):
@@ -209,7 +207,10 @@ class _Extractor(object):
     # opobj - decorated object defining operator
     #
     def _common_tuple_operator(self, dynm, module, opname, opobj) :        
-        ns = getattr(dynm, 'splNamespace')()   
+        if (not hasattr(dynm, 'spl_namespace')) and hasattr(dynm, 'splNamespace'):
+            ns = getattr(dynm, 'splNamespace')()
+        else:
+            ns = getattr(dynm, 'spl_namespace')()
         print(ns + "::" + opname)
         # Print the summary of the class/function
         _doc = inspect.getdoc(opobj)
