@@ -27,6 +27,7 @@
 	  	toDir="${testtk}"/>
 	  <target name="test.toolkit">
 		   <exec executable="${topology.test.python}" dir="${testtk}" failonerror="true">
+                     <env key="PYTHONPATH" file="${tk.opt}/python/packages"/>
 		     <arg value="${tk}/bin/spl-python-extract.py"/>
 		     <arg value="--directory"/>
 		     <arg value="${testtk}"/>
