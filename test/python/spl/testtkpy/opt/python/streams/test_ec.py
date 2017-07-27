@@ -10,7 +10,7 @@ import pickle
 # Test Execution Context (streamsx.ex) functions
 #------------------------------------------------------------------
 
-def splNamespace():
+def spl_namespace():
     return "com.ibm.streamsx.topology.pytest.pyec"
 
 @spl.filter()

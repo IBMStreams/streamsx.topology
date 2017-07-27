@@ -20,7 +20,7 @@ from streamsx.spl import spl
 
 # Defines the SPL namespace for any functions in this module
 # Multiple modules can map to the same namespace
-def splNamespace():
+def spl_namespace():
     return "com.ibm.streamsx.topology.pysamples.kwargs"
 
 @spl.map()

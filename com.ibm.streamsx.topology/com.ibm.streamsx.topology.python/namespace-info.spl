@@ -448,8 +448,9 @@ of an SPL toolkit.
 Each module must import the `streamsx.spl`
 package which is located in the `opt/packages` directory of this toolkit.
 It contains the decorators use to create SPL operators from Python functions.
-The module must also define a function `splNamespace` that returns a string
+The module must also define a function `spl_namespace` that returns a string
 containing the SPL namespace the operators for that module will be placed in.
+`splNamespace` is also accepted as a function to define the SPL namespace.
 
 For example:
 
@@ -459,7 +460,7 @@ For example:
 
     # Defines the SPL namespace for any functions in this module
     # Multiple modules can map to the same namespace
-    def splNamespace():
+    def spl_namespace():
        return "com.ibm.streamsx.topology.pysamples.mail"
 
 Decorating a Python class produces a stateful SPL operator. The instance fields of the class are the state for the operator. Any parameters to the
@@ -1185,7 +1186,7 @@ Operator to send an e-mail for each tuple using the local SMTP server.
     
     server = smtplib.SMTP('localhost')
 
-    def splNamespace():
+    def spl_namespace():
         return "com.ibm.streamsx.topology.pysamples.mail"
 
     # Decorate this function as a sink operator
