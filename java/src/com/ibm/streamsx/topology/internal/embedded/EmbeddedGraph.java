@@ -25,22 +25,32 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SP
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_VIRTUAL;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAME;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jisEmpty;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static java.util.Objects.requireNonNull;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.ibm.streams.flow.declare.InputPortDeclaration;
 import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.flow.declare.OperatorInvocation;
+import com.ibm.streams.flow.declare.OutputPortDeclaration;
 import com.ibm.streams.operator.Operator;
+import com.ibm.streams.operator.StreamSchema;
+import com.ibm.streams.operator.Type;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
 import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 
 /**
@@ -54,6 +64,10 @@ public class EmbeddedGraph {
     
     private final GraphBuilder builder;
     private OperatorGraph graphDecl;
+    
+    private final Map<String,OutputPortDeclaration> outputPorts = new HashMap<>();
+    private final Map<String,InputPortDeclaration> inputPorts = new HashMap<>();
+    
     
     public static void verifySupported(GraphBuilder builder) {
         new EmbeddedGraph(builder).verifySupported();
@@ -88,6 +102,8 @@ public class EmbeddedGraph {
         graphDecl = OperatorGraphFactory.newGraph();
         
         declareOps();
+        
+        declareConnections();
                 
         return graphDecl;
     }
@@ -119,8 +135,81 @@ public class EmbeddedGraph {
             for (Entry<String, JsonElement> param : params.entrySet())
                 setOpParameter(opDecl, param.getKey(), param.getValue().getAsJsonObject());
         }
+        
+        declareOutputs(opDecl, json.getAsJsonArray("outputs"));
+        declareInputs(opDecl, json.getAsJsonArray("inputs"));
     }
     
+    private void declareOutputs(OperatorInvocation<? extends Operator> opDecl, JsonArray outputs) {
+        if (GsonUtilities.jisEmpty(outputs))
+            return;
+        
+        // Ensure we deal with them in port order.
+        JsonObject[] ports = new JsonObject[outputs.size()];
+        for (JsonElement e : outputs) {
+            JsonObject output = e.getAsJsonObject();
+
+            ports[output.get("index").getAsInt()] = output;
+        }
+        
+        for (JsonObject output : ports) {
+            String name = jstring(output, "name");            
+            StreamSchema schema = Type.Factory.getTupleType(jstring(output, "type")).getTupleSchema();            
+            OutputPortDeclaration port = opDecl.addOutput(name, schema);
+            
+            assert !outputPorts.containsKey(name);
+            outputPorts.put(name, port);
+        }  
+    }
+    private void declareInputs(OperatorInvocation<? extends Operator> opDecl, JsonArray inputs) {
+        if (jisEmpty(inputs))
+            return;
+        
+        // Ensure we deal with them in port order.
+        JsonObject[] ports = new JsonObject[inputs.size()];
+        for (JsonElement e : inputs) {
+            JsonObject input = e.getAsJsonObject();
+
+            ports[input.get("index").getAsInt()] = input;
+        }
+        
+        for (JsonObject input : ports) {
+            String name = jstring(input, "name");            
+            StreamSchema schema = Type.Factory.getTupleType(jstring(input, "type")).getTupleSchema();            
+            InputPortDeclaration port = opDecl.addInput(name, schema);
+            
+            assert !inputPorts.containsKey(name);
+            inputPorts.put(name, port);
+        }  
+    }
+    
+    private void declareConnections() throws Exception {
+        for (BOperator op : builder.getOps())
+            declareOpConnections(op);
+    }
+
+    private void declareOpConnections(BOperator op) {
+        JsonObject json = JSON4JUtilities.gson(op.complete());
+        JsonArray outputs = json.getAsJsonArray("outputs");
+        if (jisEmpty(outputs))
+            return;
+        
+        for (JsonElement e : outputs) {
+            JsonObject output = e.getAsJsonObject();
+            String name = jstring(output, "name");
+            JsonArray conns = output.getAsJsonArray("connections");
+            if (jisEmpty(conns))
+                continue;
+            
+            OutputPortDeclaration port = requireNonNull(outputPorts.get(name));
+            for (JsonElement c : conns) {
+                String iname = c.getAsString();
+                InputPortDeclaration iport = requireNonNull(inputPorts.get(iname));               
+                port.connect(iport);
+            }
+        }     
+    }
+
     /**
      * From a JSON parameter set the operator declaration parameter.
      */

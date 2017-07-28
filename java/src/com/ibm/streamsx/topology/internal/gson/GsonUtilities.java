@@ -84,6 +84,9 @@ public class GsonUtilities {
         return null;
     }
     
+    /**
+     * Return is empty meaning null, JSON null or an empty object.
+     */
     public static boolean jisEmpty(JsonObject object) {
         return object == null || object.isJsonNull() || object.entrySet().isEmpty();
     }
