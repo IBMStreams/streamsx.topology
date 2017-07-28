@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.javaprimitives.JavaOperatorTester;
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streamsx.topology.Topology;
@@ -37,10 +38,10 @@ public class EmbeddedStreamsContext extends
         
         SubmissionParameterManager.initializeEmbedded(app.builder(), config);
         
-        // TODO - actually use EmbeddedGRaph
-        eg.declareGraph();
+        // Declare the mock framework graph.
+        OperatorGraph dg = eg.declareGraph();
         
-        return jot.executable(app.graph()).execute();
+        return jot.executable(dg).execute();
     }
 
     @Override
