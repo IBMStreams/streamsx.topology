@@ -32,17 +32,6 @@ def _topology_tk_dir():
         dir = os.path.dirname(dir)
     return dir
 
-# Directory containing Python packages in com.ibm.streamsx.topology toolkit
-def pythonPackagesDir():
-    return os.path.join(_topology_tk_dir(), 'opt', 'python', 'packages')  
-
-# Append the packages directory for this toolkit into
-# Python path to allow modules in the toolkit being
-# extracted to reference the decorators etc.
-def setup():
-    sys.path.append(pythonPackagesDir())
-
-
 def replaceTokenInFile(file, token, value):
     f = open(file,'r')
     contents = f.read()
@@ -420,7 +409,6 @@ def _extract_from_toolkit():
     Look at all the modules in opt/python/streams (opt/python/streams/*.py)
     and extract any spl decorated function as an operator.
     """
-    setup()
 
     extractor = _Extractor()
 
