@@ -10,6 +10,7 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.flow.declare.InputPortDeclaration;
 import com.ibm.streams.flow.declare.StreamConnection;
+import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.window.StreamWindow;
 
 public class BInputPort extends BInput {
@@ -46,8 +47,15 @@ public class BInputPort extends BInput {
         return json;
     }
 
-    public InputPortDeclaration port() {
+    InputPortDeclaration port() {
         return port;
+    }
+    
+    public StreamSchema schema() {
+        return port().getStreamSchema();
+    }
+    public int index() {
+        return port().getPortNumber();
     }
 
     public BInputPort window(StreamWindow.Type type,
