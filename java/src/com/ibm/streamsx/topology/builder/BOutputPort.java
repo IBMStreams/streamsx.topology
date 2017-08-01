@@ -44,7 +44,7 @@ public class BOutputPort extends BOutput {
         return json;
     }
 
-    public OutputPortDeclaration port() {
+    private OutputPortDeclaration port() {
         return port;
     }
     
