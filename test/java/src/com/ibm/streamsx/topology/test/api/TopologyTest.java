@@ -29,7 +29,6 @@ public class TopologyTest extends TestTopology {
 
     public static void assertFlowElement(Topology f, TopologyElement fe) {
         assertSame(f, fe.topology());
-        assertSame(f.graph(), fe.graph());
     }
 
     @Test
@@ -39,13 +38,11 @@ public class TopologyTest extends TestTopology {
         assertEquals("F123", f.getName());
         assertEquals("com.ibm.streamsx.topology.test.api", f.getNamespace());
         assertSame(f, f.topology());
-        assertNotNull(f.graph());
         
         final Topology f2 = new Topology("NS123", "F456");
         assertEquals("NS123", f2.getNamespace());
         assertEquals("F456", f2.getName());
         assertSame(f2, f2.topology());
-        assertNotNull(f2.graph());
     }
     
     @Test
