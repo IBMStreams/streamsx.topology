@@ -14,6 +14,7 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SP
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -53,8 +54,8 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
 public class BOperatorInvocation extends BOperator {
 
     private final OperatorInvocation<? extends Operator> op;
-    protected List<BInputPort> inputs;
-    protected List<BOutputPort> outputs;
+    private List<BInputPort> inputs;
+    private Map<String, BOutputPort> outputs;
     private final JSONObject jparams = new JSONObject();
 
     public BOperatorInvocation(GraphBuilder bt,
@@ -241,12 +242,13 @@ public class BOperatorInvocation extends BOperator {
 
     public BOutputPort addOutput(StreamSchema schema) {
         if (outputs == null)
-            outputs = new ArrayList<>();
+            outputs = new HashMap<>();
 
         final OutputPortDeclaration port = op.addOutput(schema);
 
         final BOutputPort stream = new BOutputPort(this, port);
-        outputs.add(stream);
+        assert !outputs.containsKey(stream.name());
+        outputs.put(stream.name(), stream);
         return stream;
     }
 
@@ -285,7 +287,7 @@ public class BOperatorInvocation extends BOperator {
 
         if (outputs != null) {
             JSONArray oa = new JSONArray(outputs.size());
-            for (BOutputPort output : outputs) {
+            for (BOutputPort output : outputs.values()) {
                 oa.add(output.complete());
             }
             json.put("outputs", oa);

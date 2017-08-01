@@ -32,6 +32,9 @@ import static java.util.Objects.requireNonNull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -42,9 +45,12 @@ import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.flow.declare.OperatorInvocation;
 import com.ibm.streams.flow.declare.OutputPortDeclaration;
+import com.ibm.streams.flow.javaprimitives.JavaOperatorTester;
+import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Type;
+import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
 import com.ibm.streamsx.topology.builder.JParamTypes;
@@ -64,9 +70,11 @@ public class EmbeddedGraph {
     private final GraphBuilder builder;
     private OperatorGraph graphDecl;
     
+    // map for stream/port name to declared port.
     private final Map<String,OutputPortDeclaration> outputPorts = new HashMap<>();
     private final Map<String,InputPortDeclaration> inputPorts = new HashMap<>();
     
+    private final JavaOperatorTester jot = new JavaOperatorTester();
     
     public static void verifySupported(GraphBuilder builder) {
         new EmbeddedGraph(builder).verifySupported();
@@ -105,6 +113,21 @@ public class EmbeddedGraph {
         declareConnections();
                 
         return graphDecl;
+    }
+    
+    private JavaTestableGraph executionGraph;
+    private Future<JavaTestableGraph> execution;
+    public JavaTestableGraph getExecutionGraph() throws Exception {
+        if (graphDecl == null)
+            declareGraph();
+        if (executionGraph == null)
+            executionGraph = jot.executable(Objects.requireNonNull(graphDecl));
+        return executionGraph;
+    }
+    public Future<JavaTestableGraph> execute() throws Exception {
+        if (execution == null)
+            execution = getExecutionGraph().execute();
+        return execution;
     }
 
     private void declareOps() throws Exception {
@@ -179,9 +202,71 @@ public class EmbeddedGraph {
             
             assert !inputPorts.containsKey(name);
             inputPorts.put(name, port);
+            
+            if (input.has("window"))
+                windowInput(input, port);
         }  
     }
     
+    private void windowInput(JsonObject input, final InputPortDeclaration port) {
+        JsonObject window = input.getAsJsonObject("window");
+        String wt = jstring(window, "type");
+        if (wt == null)
+            return;
+        StreamWindow.Type wtype = StreamWindow.Type.valueOf(wt);
+        
+        switch (wtype) {
+        case NOT_WINDOWED:
+            return;
+        case SLIDING:
+            port.sliding();
+            break;
+        case TUMBLING:
+            port.tumbling();
+            break;
+        }
+        
+        StreamWindow.Policy evictPolicy = StreamWindow.Policy.valueOf(jstring(window, "evictPolicy"));
+        
+        // Eviction
+        switch (evictPolicy) {
+        case COUNT:
+            int ecount = window.get("evictConfig").getAsInt();
+            port.evictCount(ecount);
+            break;
+        case TIME:
+            long etime = window.get("evictConfig").getAsLong();
+            TimeUnit eunit = TimeUnit.valueOf(window.get("evictTimeUnit").getAsString());
+            port.evictTime(etime, eunit);
+            break;
+        default:
+            throw new UnsupportedOperationException(evictPolicy.name());
+        }
+        
+        String stp = jstring(window, "triggerPolicy");      
+        if (stp != null) {
+            StreamWindow.Policy triggerPolicy = StreamWindow.Policy.valueOf(stp);
+            switch (triggerPolicy) {
+            case NONE:
+                break;
+            case COUNT:
+                int tcount = window.get("triggerConfig").getAsInt();
+                port.triggerCount(tcount);
+                break;
+            case TIME:
+                long ttime = window.get("triggerConfig").getAsLong();
+                TimeUnit tunit = TimeUnit.valueOf(window.get("triggerTimeUnit").getAsString());
+                port.triggerTime(ttime, tunit);
+                break;
+            default:
+                throw new UnsupportedOperationException(evictPolicy.name());
+            }
+        }
+        
+        if (window.has("partitioned") && window.get("partitioned").getAsBoolean())
+            port.partitioned();
+    }
+
     private void declareConnections() throws Exception {
         for (BOperator op : builder.getOps())
             declareOpConnections(op);
@@ -287,5 +372,10 @@ public class EmbeddedGraph {
                 "Topology '"+namespace+"."+name+"'"
                 + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
                 + " the topology contains non-Java operator:" + op.json().get(KIND));
+    }
+
+    public OutputPortDeclaration getOutputPort(String name) {
+        OutputPortDeclaration portDecl = outputPorts.get(name); 
+        return Objects.requireNonNull(portDecl);
     }
 }

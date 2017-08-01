@@ -15,12 +15,14 @@ import java.util.concurrent.TimeoutException;
 
 import com.ibm.streams.flow.declare.OutputPortDeclaration;
 import com.ibm.streams.flow.handlers.StreamHandler;
+import com.ibm.streams.flow.javaprimitives.JavaOperatorTester;
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.internal.embedded.EmbeddedGraph;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerTesterRuntime;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -39,8 +41,9 @@ public final class EmbeddedTesterRuntime extends HandlerTesterRuntime {
 
     @Override
     public void start(Object info) throws Exception {
-        JavaTestableGraph tg = (JavaTestableGraph) info;
-        setupEmbeddedTestHandlers(tg);
+        EmbeddedGraph eg = (EmbeddedGraph) info;
+        
+        setupEmbeddedTestHandlers(eg);
     }
 
     @Override
@@ -48,7 +51,9 @@ public final class EmbeddedTesterRuntime extends HandlerTesterRuntime {
         future.cancel(true);
     }
     
-    private void setupEmbeddedTestHandlers(JavaTestableGraph tg) throws Exception {
+    private void setupEmbeddedTestHandlers(EmbeddedGraph eg) throws Exception {
+        
+        final JavaTestableGraph tg = eg.getExecutionGraph();
 
         for (TStream<?> stream : handlers.keySet()) {
             Set<StreamHandler<Tuple>> streamHandlers = handlers.get(stream);
@@ -56,7 +61,9 @@ public final class EmbeddedTesterRuntime extends HandlerTesterRuntime {
             final BOutput output = stream.output();
             if (output instanceof BOutputPort) {
                 final BOutputPort outputPort = (BOutputPort) output;
-                final OutputPortDeclaration portDecl = outputPort.port();
+                final OutputPortDeclaration portDecl = eg.getOutputPort(outputPort.name());
+                
+                // final OutputPortDeclaration portDecl = outputPort.port();
                 for (StreamHandler<Tuple> streamHandler : streamHandlers) {
                     tg.registerStreamHandler(portDecl, streamHandler);
                 }

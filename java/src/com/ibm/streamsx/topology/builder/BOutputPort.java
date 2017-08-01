@@ -47,6 +47,10 @@ public class BOutputPort extends BOutput {
     public OutputPortDeclaration port() {
         return port;
     }
+    
+    public String name() {
+        return port.getName();
+    }
 
     @Override
     public StreamSchema schema() {

@@ -18,7 +18,7 @@ import com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterMana
 public class EmbeddedStreamsContext extends
         StreamsContextImpl<JavaTestableGraph> {
 
-    private final JavaOperatorTester jot = new JavaOperatorTester();
+    
 
     @Override
     public Type getType() {
@@ -41,7 +41,7 @@ public class EmbeddedStreamsContext extends
         // Declare the mock framework graph.
         OperatorGraph dg = eg.declareGraph();
         
-        return jot.executable(dg).execute();
+        return eg.execute();
     }
 
     @Override

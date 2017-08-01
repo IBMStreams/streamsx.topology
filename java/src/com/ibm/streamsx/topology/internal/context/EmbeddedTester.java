@@ -16,8 +16,6 @@ import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 
 public class EmbeddedTester extends StreamsContextImpl<JavaTestableGraph> {
 
-    private final JavaOperatorTester jot = new JavaOperatorTester();
-
     @Override
     public Type getType() {
         return Type.EMBEDDED_TESTER;
@@ -40,15 +38,10 @@ public class EmbeddedTester extends StreamsContextImpl<JavaTestableGraph> {
         }
         
         SubmissionParameterManager.initializeEmbedded(app.builder(), config);
-        
-        // TODO - actually use EmbeddedGRaph
-        eg.declareGraph();
-        
-        JavaTestableGraph tg = jot.executable(app.graph());
-
+                
         if (tester != null)
-            tester.getRuntime().start(tg);
-        return tg.execute();
+            tester.getRuntime().start(eg);
+        return eg.execute();
     }
 
     @Override
