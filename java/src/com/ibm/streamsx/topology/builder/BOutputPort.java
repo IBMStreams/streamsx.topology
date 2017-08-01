@@ -4,20 +4,17 @@
  */
 package com.ibm.streamsx.topology.builder;
 
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streams.flow.declare.OutputPortDeclaration;
-import com.ibm.streams.flow.declare.StreamConnection;
 import com.ibm.streams.operator.StreamSchema;
 
-public class BOutputPort extends BOutput {
+public class BOutputPort extends BOutput implements BPort {
 
     private final BOperatorInvocation op;
     private final OutputPortDeclaration port;
 
     BOutputPort(BOperatorInvocation op, int index, String name, StreamSchema schema) {
         this.op = op;
-        BUtils.addPortInfo(json(), index, name, schema);
+        addPortInfo(index, name, schema);
         this.port = op.op().addOutput(name, schema);
     }
 
@@ -29,27 +26,8 @@ public class BOutputPort extends BOutput {
         return op.builder();
     }
 
-    @Override
-    public JSONObject complete() {
-/*
-        final JSONObject json = json();
-
-        
-        JSONArray conns = new JSONArray();
-        for (StreamConnection c : port().getConnections()) {
-            conns.add(c.getInput().getName());
-        }
-        json.put("connections", conns);
-*/
-        return json();
-    }
-
     private OutputPortDeclaration port() {
         return port;
-    }
-    
-    public String name() {
-        return port.getName();
     }
 
     @Override
@@ -59,8 +37,9 @@ public class BOutputPort extends BOutput {
 
     @Override
     public void connectTo(BInputPort input) {
-        ((JSONArray) (json().get("connections"))).add(input.name());
-        
+        connect(input);
+        input.connect(this);
+               
         input.port().connect(port());
         input.operator().copyRegions(operator());
     }

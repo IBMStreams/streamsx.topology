@@ -13,7 +13,7 @@ import com.ibm.streams.flow.declare.StreamConnection;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.window.StreamWindow;
 
-public class BInputPort extends BInput {
+public class BInputPort extends BInput implements BPort {
 
     private final BOperator op;
     private final InputPortDeclaration port;
@@ -22,7 +22,7 @@ public class BInputPort extends BInput {
         super(op.builder());
         this.op = op;
         
-        BUtils.addPortInfo(json(), index, name, schema);
+        addPortInfo(index, name, schema);
         
         this.port = op.op().addInput(name, schema);
     }
@@ -54,12 +54,6 @@ public class BInputPort extends BInput {
     
     public StreamSchema schema() {
         return port().getStreamSchema();
-    }
-    String name() {
-        return json().get("name").toString();
-    }
-    public int index() {
-        return port().getPortNumber();
     }
 
     public BInputPort window(StreamWindow.Type type,
