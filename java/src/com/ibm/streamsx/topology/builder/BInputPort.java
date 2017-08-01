@@ -18,10 +18,13 @@ public class BInputPort extends BInput {
     private final BOperator op;
     private final InputPortDeclaration port;
 
-    BInputPort(BOperator op, InputPortDeclaration port) {
+    BInputPort(BOperatorInvocation op, int index, String name, StreamSchema schema) {
         super(op.builder());
         this.op = op;
-        this.port = port;
+        
+        BUtils.addPortInfo(json(), index, name, schema);
+        
+        this.port = op.op().addInput(name, schema);
     }
 
     public BOperator operator() {
@@ -35,8 +38,6 @@ public class BInputPort extends BInput {
     public JSONObject complete() {
 
         final JSONObject json = json();
-
-        BUtils.addPortInfo(json, port);
 
         JSONArray conns = new JSONArray();
         for (StreamConnection c : port().getConnections()) {
@@ -53,6 +54,9 @@ public class BInputPort extends BInput {
     
     public StreamSchema schema() {
         return port().getStreamSchema();
+    }
+    String name() {
+        return json().get("name").toString();
     }
     public int index() {
         return port().getPortNumber();

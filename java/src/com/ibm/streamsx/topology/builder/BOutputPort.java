@@ -15,9 +15,10 @@ public class BOutputPort extends BOutput {
     private final BOperatorInvocation op;
     private final OutputPortDeclaration port;
 
-    BOutputPort(BOperatorInvocation op, OutputPortDeclaration port) {
+    BOutputPort(BOperatorInvocation op, int index, String name, StreamSchema schema) {
         this.op = op;
-        this.port = port;
+        BUtils.addPortInfo(json(), index, name, schema);
+        this.port = op.op().addOutput(name, schema);
     }
 
     public BOperatorInvocation operator() {
@@ -30,18 +31,17 @@ public class BOutputPort extends BOutput {
 
     @Override
     public JSONObject complete() {
-
+/*
         final JSONObject json = json();
 
-        BUtils.addPortInfo(json, port);
-
+        
         JSONArray conns = new JSONArray();
         for (StreamConnection c : port().getConnections()) {
             conns.add(c.getInput().getName());
         }
         json.put("connections", conns);
-
-        return json;
+*/
+        return json();
     }
 
     private OutputPortDeclaration port() {
@@ -59,6 +59,8 @@ public class BOutputPort extends BOutput {
 
     @Override
     public void connectTo(BInputPort input) {
+        ((JSONArray) (json().get("connections"))).add(input.name());
+        
         input.port().connect(port());
         input.operator().copyRegions(operator());
     }

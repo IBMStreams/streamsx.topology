@@ -19,9 +19,7 @@ import java.util.Map;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streams.flow.declare.InputPortDeclaration;
 import com.ibm.streams.flow.declare.OperatorInvocation;
-import com.ibm.streams.flow.declare.OutputPortDeclaration;
 import com.ibm.streams.operator.Attribute;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.StreamSchema;
@@ -242,9 +240,9 @@ public class BOperatorInvocation extends BOperator {
         if (outputs == null)
             outputs = new HashMap<>();
 
-        final OutputPortDeclaration port = op.addOutput(schema);
-
-        final BOutputPort stream = new BOutputPort(this, port);
+        final BOutputPort stream = new BOutputPort(this, outputs.size(),
+                this.op().getName() + "_OUT" + outputs.size(),
+                schema);
         assert !outputs.containsKey(stream.name());
         outputs.put(stream.name(), stream);
         return stream;
@@ -262,9 +260,7 @@ public class BOperatorInvocation extends BOperator {
             inputs = new ArrayList<>();
         }
 
-        InputPortDeclaration inputPort = op.addInput(this.op.getName() + "_IN" + inputs.size(),
-                output.schema());
-        input = new BInputPort(this, inputPort);
+        input = new BInputPort(this, inputs.size(), this.op.getName() + "_IN" + inputs.size(), output.schema());
         inputs.add(input);
         output.connectTo(input);
 
