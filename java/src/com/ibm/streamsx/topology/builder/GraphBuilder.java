@@ -23,8 +23,6 @@ import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.OrderedJSONObject;
-import com.ibm.streams.flow.declare.OperatorGraph;
-import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.version.Product;
 import com.ibm.streamsx.topology.function.Consumer;
@@ -48,13 +46,9 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
  * , which can then be used to generate SPL using
  * {@link com.ibm.streamsx.topology.generator.spl.SPLGenerator}.
  * 
- * If the graph only contains Java operators and functional operators, then it
- * may be executed using its {@code OperatorGraph} from {@link #graph()}.
  * 
  */
 public class GraphBuilder extends BJSONObject {
-
-    private final OperatorGraph graph = OperatorGraphFactory.newGraph();
 
     private final List<BOperator> ops = new ArrayList<>();
     
@@ -257,10 +251,6 @@ public class GraphBuilder extends BJSONObject {
 
     public String getRegionMarker(String name) {
         return regionMarkers.get(name);
-    }
-
-    OperatorGraph graph() {
-        return graph;
     }
     
     public JSONObject getConfig() {

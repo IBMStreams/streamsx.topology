@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology;
 
-import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
 
 /**
