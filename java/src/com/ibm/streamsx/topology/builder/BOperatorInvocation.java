@@ -13,7 +13,6 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SP
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +27,6 @@ import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.Supplier;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 // Union(A,B)
@@ -111,6 +109,13 @@ public class BOperatorInvocation extends BOperator {
     public void setModel(String model, String language) {
         json().put(MODEL, model);
         json().put(LANGUAGE, language);
+    }
+    
+    public String name() {
+        return op().getName();
+    }
+    public Class<? extends Operator> operatorClass() {
+        return op().getOperatorClass();
     }
 
     public void setParameter(String name, Object value) {
@@ -243,7 +248,7 @@ public class BOperatorInvocation extends BOperator {
             outputs = new HashMap<>();
 
         final BOutputPort stream = new BOutputPort(this, outputs.size(),
-                this.op().getName() + "_OUT" + outputs.size(),
+                this.name() + "_OUT" + outputs.size(),
                 schema);
         assert !outputs.containsKey(stream.name());
         outputs.put(stream.name(), stream);
@@ -309,7 +314,7 @@ public class BOperatorInvocation extends BOperator {
     // has a 'jar' parameter by calling 
     //
     // op instance of FunctionFunctor
-    public OperatorInvocation<? extends Operator> op() {
+    private OperatorInvocation<? extends Operator> op() {
         return op;
     }
 

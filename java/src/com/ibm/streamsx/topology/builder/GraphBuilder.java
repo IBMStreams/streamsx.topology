@@ -206,7 +206,7 @@ public class GraphBuilder extends BJSONObject {
         op.json().put("kind", virtualMarker.kind());
 
         if (createRegion) {
-            final String regionName = op.op().getName();
+            final String regionName = op.name();
             regionMarkers.put(regionName, virtualMarker.kind());
             op.addRegion(regionName);
         }
@@ -215,7 +215,7 @@ public class GraphBuilder extends BJSONObject {
         BInputPort input = op.inputFrom(output, null);
 
         // Create the output port.
-        return op.addOutput(input.port().getStreamSchema());
+        return op.addOutput(input.schema());
     }
     
     public BOutput addPassThroughOperator(BOutput output) {
@@ -223,7 +223,7 @@ public class GraphBuilder extends BJSONObject {
         // Create the input port that consumes the output
         BInputPort input = op.inputFrom(output, null);
         // Create the output port.
-        return op.addOutput(input.port().getStreamSchema());
+        return op.addOutput(input.schema());
     }
 
     public BOperator addVirtualMarkerOperator(BVirtualMarker kind) {

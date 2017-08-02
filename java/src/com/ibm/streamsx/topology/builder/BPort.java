@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.builder;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
+import com.ibm.streams.operator.Type;
 
 interface BPort {
     
@@ -25,6 +26,12 @@ interface BPort {
     }
     default int index() {
         return ((Number) (json().get("index"))).intValue();
+    }
+    default String _schema() {
+        return json().get("type").toString();
+    }
+    default StreamSchema __schema() {
+        return Type.Factory.getTupleType(_schema()).getTupleSchema();
     }
     
     default void connect(BPort other) {

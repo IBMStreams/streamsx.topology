@@ -214,8 +214,7 @@ public class DependencyResolver {
             for (BOperator op : ops) {
                 if (op instanceof BOperatorInvocation) {
                     BOperatorInvocation bop = (BOperatorInvocation) op;
-                    if (Functional.class.isAssignableFrom(bop.op()
-                            .getOperatorClass())) {
+                    if (Functional.class.isAssignableFrom(bop.operatorClass())) {
                         JSONObject params = (JSONObject) bop.json().get(
                                 "parameters");
                         JSONObject op_jars = (JSONObject) params.get("jar");

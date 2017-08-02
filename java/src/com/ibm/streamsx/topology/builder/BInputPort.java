@@ -6,54 +6,23 @@ package com.ibm.streamsx.topology.builder;
 
 import java.util.concurrent.TimeUnit;
 
-import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streams.flow.declare.InputPortDeclaration;
-import com.ibm.streams.flow.declare.StreamConnection;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.window.StreamWindow;
 
 public class BInputPort extends BInput implements BPort {
 
     private final BOperator op;
-    private final InputPortDeclaration port;
 
     BInputPort(BOperatorInvocation op, int index, String name, StreamSchema schema) {
         super(op.builder());
         this.op = op;
         
         addPortInfo(index, name, schema);
-        
-        this.port = op.op().addInput(name, schema);
     }
 
     public BOperator operator() {
         return op;
-    }
-
-    /**
-     * Add this port information and its connections to output ports, by name.
-     */
-    @Override
-    public JSONObject complete() {
-
-        final JSONObject json = json();
-
-        JSONArray conns = new JSONArray();
-        for (StreamConnection c : port().getConnections()) {
-            conns.add(c.getOutput().getName());
-        }
-        json.put("connections", conns);
-
-        return json;
-    }
-
-    InputPortDeclaration port() {
-        return port;
-    }
-    
-    public StreamSchema schema() {
-        return port().getStreamSchema();
     }
 
     public BInputPort window(StreamWindow.Type type,
@@ -61,30 +30,15 @@ public class BInputPort extends BInput implements BPort {
             StreamWindow.Policy triggerPolicy, Object triggerConfig, TimeUnit triggerTimeUnit,
             boolean partitioned) {
 
-        switch (type) {
-        case NOT_WINDOWED:
-            return this;
-        case SLIDING:
-            port().sliding();
-            break;
-        case TUMBLING:
-            port().tumbling();
-            break;
-        }
-
         final JSONObject winJson = new JSONObject();
         winJson.put("type", type.name());
 
         // Eviction
         switch (evictPolicy) {
         case COUNT:
-            port().evictCount(((Number) evictConfig).intValue());
-            break;
         case TIME:
-            port().evictTime((Long) evictConfig, evictTimeUnit);
             break;
         default:
-            ;
             throw new UnsupportedOperationException(evictPolicy.name());
         }
         winJson.put("evictPolicy", evictPolicy.name());
@@ -95,13 +49,9 @@ public class BInputPort extends BInput implements BPort {
         if (triggerPolicy != null && triggerPolicy != StreamWindow.Policy.NONE) {
             switch (triggerPolicy) {
             case COUNT:
-                port().triggerCount(((Number) triggerConfig).intValue());
-                break;
             case TIME:
-                port().triggerTime((Long) triggerConfig, triggerTimeUnit);
                 break;
             default:
-                ;
                 throw new UnsupportedOperationException(evictPolicy.name());
             }
 
@@ -112,13 +62,16 @@ public class BInputPort extends BInput implements BPort {
         }
 
         if (partitioned) {
-            port().partitioned();
             winJson.put("partitioned", partitioned);
         }
 
         json().put("window", winJson);
 
         return this;
+    }
+    
+    public StreamSchema schema() {
+        return __schema();
     }
     
     /**
