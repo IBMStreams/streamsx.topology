@@ -272,14 +272,16 @@ class _Extractor(object):
          replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", opdoc);
 
     def _create_ip_spldoc(self, opmodel_xml, name, opobj):
-         if (_opstyle(opobj) == 'dictionary'):
-           return """
+         if _opstyle(opobj) == 'dictionary':
+           _p0doc = """
            Tuple attribute values are passed by name to the Python callable using `\*\*kwargs`.
                  """
-         if (_opstyle(opobj) == 'tuple'):
-           return """
+         elif _opstyle(opobj) == 'tuple':
+           _p0doc = """
            Tuple attribute values are passed by position to the Python callable.
                  """
+         else:
+           _p0doc = ''
      
          replaceTokenInFile(opmodel_xml, "__SPLPY__INPORT_0_DESCRIPTION__SPLPY__", _p0doc);
    
