@@ -494,7 +494,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             // hashAdder.json().put("routing", routing.toString());
             BInputPort ip = connectTo(hashAdder, true, null);
 
-            StreamSchema hashSchema = ip.port().getStreamSchema()
+            StreamSchema hashSchema = ip.schema()
                     .extend("int32", "__spl_hash");
             toBeParallelized = hashAdder.addOutput(hashSchema);
             isPartitioned = true;
@@ -513,7 +513,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                     HashRemover.class, null);
             hashRemover.layout().put("hidden", true);
             BInputPort pip = parallelStream.connectTo(hashRemover, true, null);
-            parallelOutput = hashRemover.addOutput(pip.port().getStreamSchema()
+            parallelOutput = hashRemover.addOutput(pip.schema()
                     .remove("__spl_hash"));
         }
 

@@ -25,9 +25,4 @@ public abstract class TopologyItem implements TopologyElement {
     public final GraphBuilder builder() {
         return te.builder();
     }
-
-    @Override
-    public OperatorGraph graph() {
-        return te.graph();
-    }
 }

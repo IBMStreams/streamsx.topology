@@ -19,12 +19,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.ibm.streams.flow.handlers.StreamHandler;
-import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.builder.BOutput;
-import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Predicate;
@@ -186,22 +183,6 @@ public class ConditionTesterImpl implements Tester {
         }
         
         runtime.finalizeTester(handlers, conditions);
-    }
-
-    public void setupEmbeddedTestHandlers(JavaTestableGraph tg)
-            throws Exception {
-
-        for (TStream<?> stream : handlers.keySet()) {
-            Set<StreamHandler<Tuple>> streamHandlers = handlers.get(stream);
-
-            for (StreamHandler<Tuple> streamHandler : streamHandlers) {
-                BOutput output = stream.output();
-                if (output instanceof BOutputPort) {
-                    BOutputPort outputPort = (BOutputPort) output;
-                    tg.registerStreamHandler(outputPort.port(), streamHandler);
-                }
-            }
-        }
     }
     
     private void checkOneUse() {

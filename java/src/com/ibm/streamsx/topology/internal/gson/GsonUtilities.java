@@ -84,6 +84,9 @@ public class GsonUtilities {
         return null;
     }
     
+    /**
+     * Return is empty meaning null, JSON null or an empty object.
+     */
     public static boolean jisEmpty(JsonObject object) {
         return object == null || object.isJsonNull() || object.entrySet().isEmpty();
     }
@@ -120,6 +123,9 @@ public class GsonUtilities {
             return je.getAsBoolean();
         }
         return false;
+    }
+    public static int jint(JsonObject object, String property) {
+        return object.get(property).getAsInt();
     }
     
     public static JsonObject first(Collection<JsonObject> objects) {

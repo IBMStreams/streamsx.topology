@@ -10,17 +10,21 @@ import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.flow.declare.InputPortDeclaration;
 import com.ibm.streams.flow.declare.StreamConnection;
+import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.window.StreamWindow;
 
-public class BInputPort extends BInput {
+public class BInputPort extends BInput implements BPort {
 
     private final BOperator op;
     private final InputPortDeclaration port;
 
-    BInputPort(BOperator op, InputPortDeclaration port) {
+    BInputPort(BOperatorInvocation op, int index, String name, StreamSchema schema) {
         super(op.builder());
         this.op = op;
-        this.port = port;
+        
+        addPortInfo(index, name, schema);
+        
+        this.port = op.op().addInput(name, schema);
     }
 
     public BOperator operator() {
@@ -35,8 +39,6 @@ public class BInputPort extends BInput {
 
         final JSONObject json = json();
 
-        BUtils.addPortInfo(json, port);
-
         JSONArray conns = new JSONArray();
         for (StreamConnection c : port().getConnections()) {
             conns.add(c.getOutput().getName());
@@ -46,8 +48,12 @@ public class BInputPort extends BInput {
         return json;
     }
 
-    public InputPortDeclaration port() {
+    InputPortDeclaration port() {
         return port;
+    }
+    
+    public StreamSchema schema() {
+        return port().getStreamSchema();
     }
 
     public BInputPort window(StreamWindow.Type type,

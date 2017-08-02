@@ -154,7 +154,7 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
      */
     private int connectToTesterSink(TStream<?> stream) {
         BInputPort inputPort = stream.connectTo(testerSinkOp, true, null);
-        return inputPort.port().getPortNumber();
+        return inputPort.index();
     }
 
 

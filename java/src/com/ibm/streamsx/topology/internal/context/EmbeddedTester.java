@@ -10,12 +10,11 @@ import java.util.concurrent.Future;
 import com.ibm.streams.flow.javaprimitives.JavaOperatorTester;
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.internal.embedded.EmbeddedGraph;
 import com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 
 public class EmbeddedTester extends StreamsContextImpl<JavaTestableGraph> {
-
-    private final JavaOperatorTester jot = new JavaOperatorTester();
 
     @Override
     public Type getType() {
@@ -26,7 +25,8 @@ public class EmbeddedTester extends StreamsContextImpl<JavaTestableGraph> {
     public Future<JavaTestableGraph> submit(Topology app,
             Map<String, Object> config) throws Exception {
 
-        app.builder().checkSupportsEmbeddedMode();
+        EmbeddedGraph eg = new EmbeddedGraph(app.builder());
+        eg.verifySupported();
         
         ConditionTesterImpl tester = null;
         if (app.hasTester()) {
@@ -38,18 +38,16 @@ public class EmbeddedTester extends StreamsContextImpl<JavaTestableGraph> {
         }
         
         SubmissionParameterManager.initializeEmbedded(app.builder(), config);
-        
-        JavaTestableGraph tg = jot.executable(app.graph());
-
+                
         if (tester != null)
-            tester.getRuntime().start(tg);
-        return tg.execute();
+            tester.getRuntime().start(eg);
+        return eg.execute();
     }
 
     @Override
     public boolean isSupported(Topology topology) {
         try {
-            topology.builder().checkSupportsEmbeddedMode();
+            EmbeddedGraph.verifySupported(topology.builder());
             return true;
         } catch(IllegalStateException e) {
             return false;

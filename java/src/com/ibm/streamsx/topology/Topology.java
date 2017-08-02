@@ -202,15 +202,6 @@ public class Topology implements TopologyElement {
     }
 
     /**
-     * Get the underlying {@code OperatorGraph}. Internal use only.
-     * <BR>
-     * Not intended to be called by applications, may be removed at any time.
-     */
-    public OperatorGraph graph() {
-        return builder().graph();
-    }
-
-    /**
      * Return this topology.
      * Returns {@code this}.
      */

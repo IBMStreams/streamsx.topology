@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.builder;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND_CLASS;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
@@ -11,14 +13,14 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SP
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streams.flow.declare.InputPortDeclaration;
 import com.ibm.streams.flow.declare.OperatorInvocation;
-import com.ibm.streams.flow.declare.OutputPortDeclaration;
 import com.ibm.streams.operator.Attribute;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.StreamSchema;
@@ -26,6 +28,7 @@ import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 // Union(A,B)
@@ -49,8 +52,8 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
 public class BOperatorInvocation extends BOperator {
 
     private final OperatorInvocation<? extends Operator> op;
-    protected List<BInputPort> inputs;
-    protected List<BOutputPort> outputs;
+    private List<BInputPort> inputs;
+    private Map<String, BOutputPort> outputs;
     private final JSONObject jparams = new JSONObject();
 
     public BOperatorInvocation(GraphBuilder bt,
@@ -63,10 +66,9 @@ public class BOperatorInvocation extends BOperator {
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put(MODEL, MODEL_SPL);
-            json().put(LANGUAGE, LANGUAGE_JAVA);
-            json().put("kind", getKind(opClass));
-            json().put("kind.javaclass", opClass.getCanonicalName());
+            setModel(MODEL_SPL, LANGUAGE_JAVA);
+            json().put(KIND, getKind(opClass));
+            json().put(KIND_CLASS, opClass.getCanonicalName());
         }
 
         if (params != null) {
@@ -85,10 +87,8 @@ public class BOperatorInvocation extends BOperator {
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put(MODEL, MODEL_SPL);
-            json().put(LANGUAGE, LANGUAGE_JAVA);
-            json().put("kind", getKind(opClass));
-            json().put("kind.javaclass", opClass.getCanonicalName());
+            json().put(KIND, getKind(opClass));
+            json().put(KIND_CLASS, opClass.getCanonicalName());
         }
 
         if (params != null) {
@@ -98,23 +98,20 @@ public class BOperatorInvocation extends BOperator {
         }
     }
 
-    public BOperatorInvocation(GraphBuilder bt,
+    BOperatorInvocation(GraphBuilder bt,
             Map<String, ? extends Object> params) {
         this(bt, Operator.class, params);
     }
-    public BOperatorInvocation(GraphBuilder bt,
+    BOperatorInvocation(GraphBuilder bt,
             String name,
             Map<String, ? extends Object> params) {
         this(bt, name, Operator.class, params);
     }
-
-    /*
-    public BOperatorInvocation(GraphBuilder bt, String kind,
-            Map<String, ? extends Object> params) {
-        this(bt, Operator.class, params);
-        json().put("kind", kind);
+    
+    public void setModel(String model, String language) {
+        json().put(MODEL, model);
+        json().put(LANGUAGE, language);
     }
-    */
 
     public void setParameter(String name, Object value) {
 
@@ -196,9 +193,11 @@ public class BOperatorInvocation extends BOperator {
             jsonType = MetaType.FLOAT64.name();
         } else if (value instanceof Boolean) {
             op.setBooleanParameter(name, (Boolean) value);
+            jsonType = MetaType.BOOLEAN.name();
         } else if (value instanceof BigDecimal) {
             op.setBigDecimalParameter(name, (BigDecimal) value);
             jsonValue = value.toString(); // Need to maintain exact value
+            jsonType = MetaType.DECIMAL128.name();
         } else if (value instanceof Enum) {
             op.setCustomLiteralParameter(name, (Enum<?>) value);
             jsonValue = ((Enum<?>) value).name();
@@ -230,20 +229,24 @@ public class BOperatorInvocation extends BOperator {
         JSONObject param = new JSONObject();
         param.put("value", jsonValue);
 
-        if (jsonType != null)
+        if (jsonType != null) {
             param.put("type", jsonType);
+            if (JParamTypes.TYPE_ENUM.equals(jsonType))
+                param.put("enumclass", value.getClass().getCanonicalName());              
+        }
 
         jparams.put(name, param);
     }
 
     public BOutputPort addOutput(StreamSchema schema) {
         if (outputs == null)
-            outputs = new ArrayList<>();
+            outputs = new HashMap<>();
 
-        final OutputPortDeclaration port = op.addOutput(schema);
-
-        final BOutputPort stream = new BOutputPort(this, port);
-        outputs.add(stream);
+        final BOutputPort stream = new BOutputPort(this, outputs.size(),
+                this.op().getName() + "_OUT" + outputs.size(),
+                schema);
+        assert !outputs.containsKey(stream.name());
+        outputs.put(stream.name(), stream);
         return stream;
     }
 
@@ -259,9 +262,7 @@ public class BOperatorInvocation extends BOperator {
             inputs = new ArrayList<>();
         }
 
-        InputPortDeclaration inputPort = op.addInput(this.op.getName() + "_IN" + inputs.size(),
-                output.schema());
-        input = new BInputPort(this, inputPort);
+        input = new BInputPort(this, inputs.size(), this.op.getName() + "_IN" + inputs.size(), output.schema());
         inputs.add(input);
         output.connectTo(input);
 
@@ -282,8 +283,13 @@ public class BOperatorInvocation extends BOperator {
 
         if (outputs != null) {
             JSONArray oa = new JSONArray(outputs.size());
-            for (BOutputPort output : outputs) {
-                oa.add(output.complete());
+            // outputs array in java is in port order.
+            for (int i = 0; i < outputs.size(); i++)
+                oa.add(0); // will be overwritten with port info
+            for (BOutputPort output : outputs.values()) {
+                JSONObject joutput = output.complete();
+                int index = ((Number) (joutput.get("index"))).intValue();
+                oa.set(index, joutput);
             }
             json.put("outputs", oa);
         }

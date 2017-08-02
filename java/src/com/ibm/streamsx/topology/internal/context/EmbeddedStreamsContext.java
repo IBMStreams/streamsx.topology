@@ -8,15 +8,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.javaprimitives.JavaOperatorTester;
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.internal.embedded.EmbeddedGraph;
 import com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager;
 
 public class EmbeddedStreamsContext extends
         StreamsContextImpl<JavaTestableGraph> {
 
-    private final JavaOperatorTester jot = new JavaOperatorTester();
+    
 
     @Override
     public Type getType() {
@@ -31,17 +33,21 @@ public class EmbeddedStreamsContext extends
         
         config = new HashMap<>(config);
 
-        app.builder().checkSupportsEmbeddedMode();
+        EmbeddedGraph eg = new EmbeddedGraph(app.builder());
+        eg.verifySupported();
         
         SubmissionParameterManager.initializeEmbedded(app.builder(), config);
         
-        return jot.executable(app.graph()).execute();
+        // Declare the mock framework graph.
+        OperatorGraph dg = eg.declareGraph();
+        
+        return eg.execute();
     }
 
     @Override
     public boolean isSupported(Topology topology) {
         try {
-            topology.builder().checkSupportsEmbeddedMode();
+            EmbeddedGraph.verifySupported(topology.builder());
             return true;
         } catch(IllegalStateException e) {
             return false;

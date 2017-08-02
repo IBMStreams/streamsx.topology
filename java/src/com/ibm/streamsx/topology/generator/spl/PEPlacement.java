@@ -162,7 +162,6 @@ class PEPlacement {
      *   a) No isolates exist at all in the graph
      *   b) Isolates exist in the whole graph but a disconnected
      *   sub-graph has no isolates. 
-     * @param graph
      */
     private void tagIslandIsolatedRegions(){
         Set<JsonObject> starts = GraphUtilities.findStarts(graph);   

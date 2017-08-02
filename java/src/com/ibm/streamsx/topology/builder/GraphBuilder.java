@@ -6,10 +6,7 @@ package com.ibm.streamsx.topology.builder;
 
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_SPL;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAME;
@@ -30,10 +27,8 @@ import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.declare.OperatorGraphFactory;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.version.Product;
-import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
-import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
@@ -241,9 +236,7 @@ public class GraphBuilder extends BJSONObject {
             Map<String, ? extends Object> params) {
         final BOperatorInvocation op = new BOperatorInvocation(this, params);
         op.json().put("kind", kind);
-
-        json().put(MODEL, MODEL_SPL);
-        json().put(LANGUAGE, LANGUAGE_SPL);
+        op.setModel(MODEL_SPL, LANGUAGE_SPL);
 
         ops.add(op);
         return op;
@@ -254,35 +247,10 @@ public class GraphBuilder extends BJSONObject {
         final BOperatorInvocation op = new BOperatorInvocation(this, name, params);
         op.json().put("kind", kind);
         
-        json().put(MODEL, MODEL_SPL);
-        json().put(LANGUAGE, LANGUAGE_SPL);
+        op.setModel(MODEL_SPL, LANGUAGE_SPL);
         
         ops.add(op);
         return op;
-    }
-    
-    /**
-     * @throws IllegalStateException if the topology can't run in 
-     *          StreamsContext.Type.EMBEDDED mode.
-     */
-    public void checkSupportsEmbeddedMode() throws IllegalStateException {
-        for (BOperator op : ops) {
-            if (BVirtualMarker.isVirtualMarker((String) op.json().get("kind")))
-                continue;
-            
-            // note: runtime==null for markers
-            String runtime = (String) op.json().get(OpProperties.MODEL);
-            String language = (String) op.json().get(OpProperties.LANGUAGE);
-            
-            if (!MODEL_SPL.equals(runtime) || !LANGUAGE_JAVA.equals(language)) {
-                    String namespace = (String) json().get(NAMESPACE);
-                    String name = (String) json().get(NAME);
-                    throw new IllegalStateException(
-                            "Topology '"+namespace+"."+name+"'"
-                            + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
-                            + " the topology contains non-Java operator:" + op.json().get("kind"));
-            }
-        }
     }
 
     private Map<String, String> regionMarkers = new HashMap<>();
@@ -291,7 +259,7 @@ public class GraphBuilder extends BJSONObject {
         return regionMarkers.get(name);
     }
 
-    public OperatorGraph graph() {
+    OperatorGraph graph() {
         return graph;
     }
     
