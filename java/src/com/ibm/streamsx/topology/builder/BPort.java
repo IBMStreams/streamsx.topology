@@ -28,6 +28,7 @@ interface BPort {
     }
     
     default void connect(BPort other) {
+        assert !((JSONArray) (json().get("connections"))).contains(other.name());
         ((JSONArray) (json().get("connections"))).add(other.name());
     }
 }

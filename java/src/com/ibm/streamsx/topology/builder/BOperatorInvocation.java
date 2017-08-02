@@ -13,6 +13,7 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SP
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 // Union(A,B)
@@ -281,8 +283,13 @@ public class BOperatorInvocation extends BOperator {
 
         if (outputs != null) {
             JSONArray oa = new JSONArray(outputs.size());
+            // outputs array in java is in port order.
+            for (int i = 0; i < outputs.size(); i++)
+                oa.add(0); // will be overwritten with port info
             for (BOutputPort output : outputs.values()) {
-                oa.add(output.complete());
+                JSONObject joutput = output.complete();
+                int index = ((Number) (joutput.get("index"))).intValue();
+                oa.set(index, joutput);
             }
             json.put("outputs", oa);
         }

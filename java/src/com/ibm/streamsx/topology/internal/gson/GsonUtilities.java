@@ -124,6 +124,9 @@ public class GsonUtilities {
         }
         return false;
     }
+    public static int jint(JsonObject object, String property) {
+        return object.get(property).getAsInt();
+    }
     
     public static JsonObject first(Collection<JsonObject> objects) {
         return objects.iterator().next();
