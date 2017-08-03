@@ -10,6 +10,7 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.Attribute;
@@ -55,13 +57,13 @@ public class BOperatorInvocation extends BOperator {
         
         this.opClass = opClass;
         this.name =  bt.userSuppliedName(opClass.getSimpleName());
-        json().put("name", name());
+        _json().addProperty("name", name());
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
             setModel(MODEL_SPL, LANGUAGE_JAVA);
-            json().put(KIND, getKind(opClass));
-            json().put(KIND_CLASS, opClass.getCanonicalName());
+            _json().addProperty(KIND, getKind(opClass));
+            _json().addProperty(KIND_CLASS, opClass.getCanonicalName());
         }
 
         if (params != null) {
@@ -77,12 +79,12 @@ public class BOperatorInvocation extends BOperator {
         super(bt);
         this.name = name;
         this.opClass = opClass;
-        json().put("name", name());
+        _json().addProperty("name", name());
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
-            json().put(KIND, getKind(opClass));
-            json().put(KIND_CLASS, opClass.getCanonicalName());
+            _json().addProperty(KIND, getKind(opClass));
+            _json().addProperty(KIND_CLASS, opClass.getCanonicalName());
         }
 
         if (params != null) {
@@ -103,8 +105,8 @@ public class BOperatorInvocation extends BOperator {
     }
     
     public void setModel(String model, String language) {
-        json().put(MODEL, model);
-        json().put(LANGUAGE, language);
+        _json().addProperty(MODEL, model);
+        _json().addProperty(LANGUAGE, language);
     }
     
     public String name() {
@@ -270,12 +272,8 @@ public class BOperatorInvocation extends BOperator {
         return input;
     }
     
-    public JSONObject layout() {
-        JSONObject layout = (JSONObject) json().get("layout");
-        if (layout == null) {
-            json().put("layout", layout = new JSONObject());
-        }
-        return layout;
+    public JsonObject layout() {
+        return objectCreate(_json(), "layout");
     }
 
     @Override

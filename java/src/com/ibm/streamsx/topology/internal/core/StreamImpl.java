@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.logic.Logic.notKeyed;
 import static com.ibm.streamsx.topology.logic.Value.of;
@@ -18,7 +19,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
@@ -41,6 +44,8 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
+import com.ibm.streamsx.topology.internal.functional.operators.ForEach;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionFilter;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionMultiTransform;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSplit;
@@ -56,8 +61,6 @@ import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.spi.Invoker;
-import com.ibm.streamsx.topology.spi.TupleSerializer;
-import com.ibm.streamsx.topology.internal.functional.operators.ForEach;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 
@@ -490,7 +493,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             BOperatorInvocation hashAdder = JavaFunctional.addFunctionalOperator(this,
                     "HashAdder",
                     HashAdder.class, hasher);
-            hashAdder.layout().put("hidden", true);
+            hashAdder.layout().addProperty("hidden", true);
             // hashAdder.json().put("routing", routing.toString());
             BInputPort ip = connectTo(hashAdder, true, null);
 
@@ -503,15 +506,15 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         BOutput parallelOutput = builder().parallel(toBeParallelized, width);
         if (isPartitioned) {
             parallelOutput._json().addProperty("partitioned", true);
-            JSONArray partitionKeys = new JSONArray();
-            partitionKeys.add("__spl_hash");
-            parallelOutput.json().put("partitionedKeys", partitionKeys);
+            JsonArray partitionKeys = new JsonArray();
+            partitionKeys.add(new JsonPrimitive("__spl_hash"));
+            parallelOutput._json().add("partitionedKeys", partitionKeys);
             // Add hash remover
             StreamImpl<T> parallelStream = new StreamImpl<T>(this,
                     parallelOutput, getTupleType());
             BOperatorInvocation hashRemover = builder().addOperator(
                     HashRemover.class, null);
-            hashRemover.layout().put("hidden", true);
+            hashRemover.layout().addProperty("hidden", true);
             BInputPort pip = parallelStream.connectTo(hashRemover, true, null);
             parallelOutput = hashRemover.addOutput(pip.schema()
                     .remove("__spl_hash"));
@@ -688,7 +691,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         if (output() instanceof BOutputPort) {
             BOutputPort port = (BOutputPort) output();
             return !BVirtualMarker.isVirtualMarker(
-                    (String) port.operator().json().get("kind"));
+                    jstring(port.operator()._json(), OpProperties.KIND));
         }
         return false;
     }

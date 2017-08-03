@@ -365,13 +365,14 @@ public class EmbeddedGraph {
     
     private IllegalStateException notSupported(BOperator op) {
         
-        String namespace = (String) builder.json().get(NAMESPACE);
-        String name = (String) builder.json().get(NAME);
+        String namespace = jstring(builder._json(), NAMESPACE);
+        String name = jstring(builder._json(), NAME);
         
         return new IllegalStateException(
                 "Topology '"+namespace+"."+name+"'"
                 + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
-                + " the topology contains non-Java operator:" + op.json().get(KIND));
+                + " the topology contains non-Java operator:" +
+                jstring(op._json(), KIND));
     }
 
     public OutputPortDeclaration getOutputPort(String name) {

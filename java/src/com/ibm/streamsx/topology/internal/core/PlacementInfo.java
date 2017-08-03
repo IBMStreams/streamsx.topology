@@ -186,6 +186,6 @@ class PlacementInfo {
             JSONArray listOfTags = new JSONArray();
             listOfTags.addAll(elementResourceTags);    
             placement.put(PLACEMENT_RESOURCE_TAGS, listOfTags);    
-        } 
+        }
     }
 }
