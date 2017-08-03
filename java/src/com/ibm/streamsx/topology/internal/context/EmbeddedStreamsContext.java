@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 import com.ibm.streams.flow.declare.OperatorGraph;
-import com.ibm.streams.flow.javaprimitives.JavaOperatorTester;
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.embedded.EmbeddedGraph;

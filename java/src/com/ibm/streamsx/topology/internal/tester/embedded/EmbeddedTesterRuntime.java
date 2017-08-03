@@ -5,17 +5,14 @@
 package com.ibm.streamsx.topology.internal.tester.embedded;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.ibm.streams.flow.declare.OutputPortDeclaration;
 import com.ibm.streams.flow.handlers.StreamHandler;
-import com.ibm.streams.flow.javaprimitives.JavaOperatorTester;
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;

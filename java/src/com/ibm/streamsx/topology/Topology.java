@@ -26,7 +26,6 @@ import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.GraphBuilder;

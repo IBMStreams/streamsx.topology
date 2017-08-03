@@ -13,14 +13,12 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SP
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streams.flow.declare.OperatorInvocation;
 import com.ibm.streams.operator.Attribute;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.StreamSchema;
@@ -28,14 +26,7 @@ import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.Supplier;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.tuple.JSONAble;
-
-// Union(A,B)
-//   OpC(A,B)
-//   Union(A,B) --> 
-
-// Parallel
 
 /**
  * JSON representation.
@@ -51,18 +42,20 @@ import com.ibm.streamsx.topology.tuple.JSONAble;
 
 public class BOperatorInvocation extends BOperator {
 
-    private final OperatorInvocation<? extends Operator> op;
     private List<BInputPort> inputs;
     private Map<String, BOutputPort> outputs;
     private final JSONObject jparams = new JSONObject();
+    private final String name;
+    private final Class<? extends Operator> opClass;
 
     public BOperatorInvocation(GraphBuilder bt,
             Class<? extends Operator> opClass,
             Map<String, ? extends Object> params) {
         super(bt);
         
-        op = bt.graph().addOperator(opClass);
-        json().put("name", op.getName());
+        this.opClass = opClass;
+        this.name =  bt.userSuppliedName(opClass.getSimpleName());
+        json().put("name", name());
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
@@ -82,8 +75,9 @@ public class BOperatorInvocation extends BOperator {
             Class<? extends Operator> opClass,           
             Map<String, ? extends Object> params) {
         super(bt);
-        op = bt.graph().addOperator(name, opClass);
-        json().put("name", op.getName());
+        this.name = name;
+        this.opClass = opClass;
+        json().put("name", name());
         json().put("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
@@ -111,6 +105,13 @@ public class BOperatorInvocation extends BOperator {
     public void setModel(String model, String language) {
         json().put(MODEL, model);
         json().put(LANGUAGE, language);
+    }
+    
+    public String name() {
+        return name;
+    }
+    public Class<? extends Operator> operatorClass() {
+        return opClass;
     }
 
     public void setParameter(String name, Object value) {
@@ -166,40 +167,40 @@ public class BOperatorInvocation extends BOperator {
         }
                 
         if (value instanceof String) {
-            op.setStringParameter(name, (String) value);
+            //op.setStringParameter(name, (String) value);
             if (jsonType == null)
                 jsonType = MetaType.RSTRING.name();
         } else if (value instanceof Byte) {
-            op.setByteParameter(name, (Byte) value);
+            //op.setByteParameter(name, (Byte) value);
             if (jsonType == null)
                 jsonType = MetaType.INT8.name();
         } else if (value instanceof Short) {
-            op.setShortParameter(name, (Short) value);
+            //op.setShortParameter(name, (Short) value);
             if (jsonType == null)
                 jsonType = MetaType.INT16.name();
         } else if (value instanceof Integer) {
-            op.setIntParameter(name, (Integer) value);
+            //op.setIntParameter(name, (Integer) value);
             if (jsonType == null)
                 jsonType = MetaType.INT32.name();
         } else if (value instanceof Long) {
-            op.setLongParameter(name, (Long) value);
+            //op.setLongParameter(name, (Long) value);
             if (jsonType == null)
                 jsonType = MetaType.INT64.name();
         } else if (value instanceof Float) {
-            op.setFloatParameter(name, (Float) value);
+            //op.setFloatParameter(name, (Float) value);
             jsonType = MetaType.FLOAT32.name();
         } else if (value instanceof Double) {
-            op.setDoubleParameter(name, (Double) value);
+            //op.setDoubleParameter(name, (Double) value);
             jsonType = MetaType.FLOAT64.name();
         } else if (value instanceof Boolean) {
-            op.setBooleanParameter(name, (Boolean) value);
+            //op.setBooleanParameter(name, (Boolean) value);
             jsonType = MetaType.BOOLEAN.name();
         } else if (value instanceof BigDecimal) {
-            op.setBigDecimalParameter(name, (BigDecimal) value);
+            //op.setBigDecimalParameter(name, (BigDecimal) value);
             jsonValue = value.toString(); // Need to maintain exact value
             jsonType = MetaType.DECIMAL128.name();
         } else if (value instanceof Enum) {
-            op.setCustomLiteralParameter(name, (Enum<?>) value);
+            //op.setCustomLiteralParameter(name, (Enum<?>) value);
             jsonValue = ((Enum<?>) value).name();
             jsonType = JParamTypes.TYPE_ENUM;
         } else if (value instanceof StreamSchema) {
@@ -211,12 +212,12 @@ public class BOperatorInvocation extends BOperator {
             for (String vs : sa)
                 a.add(vs);
             jsonValue = a;
-            op.setStringParameter(name, sa);
+            //op.setStringParameter(name, sa);
         } else if (value instanceof Attribute) {
             Attribute attr = (Attribute) value;
             jsonValue = attr.getName();
             jsonType = JParamTypes.TYPE_ATTRIBUTE;
-            op.setAttributeParameter(name, attr.getName());
+            //op.setAttributeParameter(name, attr.getName());
         } else if (value instanceof JSONObject) {
             JSONObject jo = (JSONObject) value;
             jsonType = (String) jo.get("type");
@@ -243,7 +244,7 @@ public class BOperatorInvocation extends BOperator {
             outputs = new HashMap<>();
 
         final BOutputPort stream = new BOutputPort(this, outputs.size(),
-                this.op().getName() + "_OUT" + outputs.size(),
+                this.name() + "_OUT" + outputs.size(),
                 schema);
         assert !outputs.containsKey(stream.name());
         outputs.put(stream.name(), stream);
@@ -252,7 +253,7 @@ public class BOperatorInvocation extends BOperator {
 
     public BInputPort inputFrom(BOutput output, BInputPort input) {
         if (input != null) {
-            assert input.operator() == this.op;
+            assert input.operator() == this;
             assert inputs != null;
 
             output.connectTo(input);
@@ -262,7 +263,7 @@ public class BOperatorInvocation extends BOperator {
             inputs = new ArrayList<>();
         }
 
-        input = new BInputPort(this, inputs.size(), this.op.getName() + "_IN" + inputs.size(), output.schema());
+        input = new BInputPort(this, inputs.size(), name + "_IN" + inputs.size(), output.schema());
         inputs.add(input);
         output.connectTo(input);
 
@@ -304,15 +305,6 @@ public class BOperatorInvocation extends BOperator {
 
         return json;
     }
-
-    // Needed by the DependencyResolver to determine whether the operator
-    // has a 'jar' parameter by calling 
-    //
-    // op instance of FunctionFunctor
-    public OperatorInvocation<? extends Operator> op() {
-        return op;
-    }
-
    
     private static String getKind(Class<?> opClass) {
         
