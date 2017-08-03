@@ -106,7 +106,7 @@ public class JavaFunctional {
     public static <T> TStream<T> getJavaTStream(TopologyElement te,
             BOperatorInvocation bop, BOutputPort bstream, Type tupleType) {
         if (tupleType != null)
-            bstream.json().put("type.native", tupleType.toString()); // Java 8 should use getTypeName
+            bstream.setNativeType(tupleType);
         addDependency(te, bop, tupleType);
         
         // If the stream is just a Java object as a blob

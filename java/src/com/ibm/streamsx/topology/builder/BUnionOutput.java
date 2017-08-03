@@ -6,7 +6,6 @@ package com.ibm.streamsx.topology.builder;
 
 import java.util.Set;
 
-import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 
 public class BUnionOutput extends BOutput {
@@ -23,16 +22,6 @@ public class BUnionOutput extends BOutput {
 
     public BOperator operator() {
         return op;
-    }
-
-    public GraphBuilder composite() {
-        return op.builder();
-    }
-
-    @Override
-    public JSONObject complete() {
-
-        return json();
     }
 
     @Override

@@ -4,38 +4,45 @@
  */
 package com.ibm.streamsx.topology.builder;
 
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jint;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Type;
 
 interface BPort {
     
-    JSONObject json();
+    JsonObject _json();
     
     default void addPortInfo(int index, String name, StreamSchema schema) {
-        json().put("name", name);
-        json().put("type", schema.getLanguageType());
-        json().put("index", index);
         
-        json().put("connections", new JSONArray());
+        _json().addProperty("name", name);
+        _json().addProperty("type", schema.getLanguageType());
+        _json().addProperty("index", index);
+        
+        _json().add("connections", new JsonArray());
     }
     
     default String name() {
-        return json().get("name").toString();
+        return jstring(_json(), "name");
     }
     default int index() {
-        return ((Number) (json().get("index"))).intValue();
+        return jint(_json(), "index");
     }
     default String _schema() {
-        return json().get("type").toString();
+        return jstring(_json(), "type");
     }
     default StreamSchema __schema() {
         return Type.Factory.getTupleType(_schema()).getTupleSchema();
     }
     
-    default void connect(BPort other) {
-        assert !((JSONArray) (json().get("connections"))).contains(other.name());
-        ((JSONArray) (json().get("connections"))).add(other.name());
+    default void connect(BPort other) {        
+        JsonPrimitive on = new JsonPrimitive(other.name());
+        assert !array(_json(), "connections").contains(on);
+        array(_json(), "connections").add(on);    
     }
 }

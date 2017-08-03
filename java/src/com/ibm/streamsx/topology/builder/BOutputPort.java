@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.builder;
 
+import java.lang.reflect.Type;
+
 import com.ibm.streams.operator.StreamSchema;
 
 public class BOutputPort extends BOutput implements BPort {
@@ -33,5 +35,9 @@ public class BOutputPort extends BOutput implements BPort {
     @Override
     public StreamSchema schema() {
         return __schema();
+    }
+    
+    public void setNativeType(Type tupleType) {
+        _json().addProperty("type.native", tupleType.getTypeName());
     }
 }

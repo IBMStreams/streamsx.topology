@@ -502,7 +502,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 
         BOutput parallelOutput = builder().parallel(toBeParallelized, width);
         if (isPartitioned) {
-            parallelOutput.json().put("partitioned", true);
+            parallelOutput._json().addProperty("partitioned", true);
             JSONArray partitionKeys = new JSONArray();
             partitionKeys.add("__spl_hash");
             parallelOutput.json().put("partitionedKeys", partitionKeys);

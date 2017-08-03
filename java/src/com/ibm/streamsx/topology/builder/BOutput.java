@@ -11,5 +11,4 @@ public abstract class BOutput extends BJSONObject {
     public abstract StreamSchema schema();
 
     public abstract void connectTo(BInputPort port);
-
 }

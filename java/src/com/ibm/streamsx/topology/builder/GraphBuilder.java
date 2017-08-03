@@ -179,7 +179,7 @@ public class GraphBuilder extends BJSONObject {
     public BOutput parallel(BOutput parallelize, Supplier<Integer> width) {
         BOutput parallelOutput = addPassThroughMarker(parallelize, BVirtualMarker.PARALLEL, true);
         if (width.get() != null)
-            parallelOutput.json().put("width", width.get());
+            parallelOutput._json().addProperty("width", width.get());
         else
             parallelOutput.json().put("width", ((JSONAble) width).toJSON());
         return parallelOutput;
