@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.function.Consumer;
 
 public class GsonUtilities {
@@ -24,6 +25,41 @@ public class GsonUtilities {
     
     public static String toJson(JsonElement element) {
         return gson().toJson(element);
+    }
+    
+    /**
+     * Add value to o as property, converting as needed.
+     * Supports JsonElment,String,Number,Boolean, Collection<String,Number,Boolean>
+     */
+    public static void addToObject(JsonObject o, String property, Object value) {
+        if (value instanceof JsonElement)
+            o.add(property, (JsonElement) value);
+        else if (value instanceof String)
+            o.addProperty(property,(String) value);
+        else if (value instanceof Number)
+            o.addProperty(property,(Number) value);
+        else if (value instanceof Boolean)
+            o.addProperty(property,(Boolean) value);
+        else if (value instanceof Collection) {
+            JsonArray sa = new JsonArray();
+            Collection<?> values = (Collection<?>) value;
+            for (Object ov : values) {
+                if (ov instanceof JsonElement)
+                    sa.add((JsonElement) ov);
+                else if (ov instanceof String)
+                    sa.add(new JsonPrimitive((String) value));
+                else if (ov instanceof Number)
+                    sa.add(new JsonPrimitive((Number) value));
+                else if (ov instanceof Boolean)
+                    sa.add(new JsonPrimitive((Boolean) value));
+                else
+                    throw new UnsupportedOperationException("JSON:" + ov.getClass());  
+            }
+            
+            o.add(property, sa);
+        }
+        else
+            throw new UnsupportedOperationException("JSON:" + value.getClass());          
     }
     
     /**

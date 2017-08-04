@@ -55,7 +55,7 @@ public class GraphBuilder extends BJSONObject {
 
     private final List<BOperator> ops = new ArrayList<>();
     
-    private final JSONObject config = new OrderedJSONObject();
+    private final JsonObject config = new JsonObject();
 
     private final JSONObject params = new OrderedJSONObject();
     
@@ -65,7 +65,7 @@ public class GraphBuilder extends BJSONObject {
         _json().addProperty(NAMESPACE, namespace);
         _json().addProperty(NAME, name);
         _json().addProperty("public", true);
-        json().put("config", config);
+        _json().add("config", config);
         json().put("parameters", params);
         
         // The version of IBM Streams being used to build
@@ -77,7 +77,7 @@ public class GraphBuilder extends BJSONObject {
             pv = Product.getVersion().toString();
         else
             pv = "4.2.1";
-        config.put(CFG_STREAMS_VERSION, pv);
+        getConfig().addProperty(CFG_STREAMS_VERSION, pv);
     }
 
    public BOperatorInvocation addOperator(Class<? extends Operator> opClass,
@@ -255,7 +255,7 @@ public class GraphBuilder extends BJSONObject {
         return regionMarkers.get(name);
     }
     
-    public JSONObject getConfig() {
+    public JsonObject getConfig() {
         return config;
     }
 

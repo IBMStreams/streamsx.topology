@@ -12,7 +12,6 @@ import static java.util.Objects.requireNonNull;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,8 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
@@ -42,6 +39,7 @@ import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
 import com.ibm.streamsx.topology.internal.functional.operators.Source;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionPeriodicSource;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.logic.Constants;
 import com.ibm.streamsx.topology.internal.logic.EndlessSupplier;
 import com.ibm.streamsx.topology.internal.logic.LimitedSupplier;
@@ -661,10 +659,10 @@ public class Topology implements TopologyElement {
     }
     
     private void finalizeConfig() {
-        JSONObject jsonConfig = builder().getConfig();
+        JsonObject jsonConfig = builder().getConfig();
         
         for (String key : config.keySet()) {
-            JSONObject cfg = getJSONConfig(jsonConfig, key);            
+            JsonObject cfg = getJSONConfig(jsonConfig, key);            
             addConfig(cfg, key, config.get(key));
         }
     }
@@ -674,15 +672,10 @@ public class Topology implements TopologyElement {
         return key.startsWith(InternalProperties.SPL_PREFIX);
     }
     
-    private JSONObject getJSONConfig(JSONObject jsonConfig, String key) {
+    private JsonObject getJSONConfig(JsonObject jsonConfig, String key) {
         
         if (isSPLConfig(key)) {
-            JSONObject splConfig = (JSONObject) jsonConfig.get("spl");
-            if (splConfig == null) {
-                splConfig = new JSONObject();
-                jsonConfig.put("spl", splConfig);
-                return splConfig;
-            }
+            return GsonUtilities.objectCreate(jsonConfig, "spl");
         }
         return jsonConfig;
     }
@@ -694,26 +687,8 @@ public class Topology implements TopologyElement {
         return null;
     }
     
-    private void addConfig(JSONObject cfg, String key, Object value) {
-        final String jsonKey = jsonConfigName(key);
-                
-        if (value instanceof JSONArtifact) {
-            // Put a JSON object directly
-            cfg.put(jsonKey, value);
-        } else if (value instanceof Collection) {
-            JSONArray sa = new JSONArray();
-            Collection<?> values = (Collection<?>) value;
-            for (Object ov : values) {
-                sa.add(ov);
-            }
-            
-            cfg.put(jsonKey, sa);
-        }
-        else
-        {
-            // try an arbitrary object directly.
-            cfg.put(jsonKey, value);
-        }
+    private void addConfig(JsonObject cfg, String key, Object value) {        
+        GsonUtilities.addToObject(cfg, jsonConfigName(key), value);
     }
 
     /**
@@ -784,12 +759,12 @@ public class Topology implements TopologyElement {
      * @param unit Time unit of {@code period}.
      */
     public void checkpointPeriod(long period, TimeUnit unit) {
-        JSONObject checkpoint = new JSONObject();
-        checkpoint.put("mode", "periodic");
-        checkpoint.put("period", period);
-        checkpoint.put("unit", unit.name());
+        JsonObject checkpoint = new JsonObject();
+        checkpoint.addProperty("mode", "periodic");
+        checkpoint.addProperty("period", period);
+        checkpoint.addProperty("unit", unit.name());
         
-        builder().getConfig().put("checkpoint", checkpoint);
+        builder().getConfig().add("checkpoint", checkpoint);
     }
 
     /**

@@ -20,7 +20,8 @@ import java.util.Map;
 
 import javax.xml.bind.JAXBException;
 
-import com.ibm.json.java.JSONArray;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Type.MetaType;
@@ -31,7 +32,6 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.function.Supplier;
-import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.context.remote.TkInfo;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
@@ -331,9 +331,9 @@ public class SPL {
      */
     public static void addToolkit(TopologyElement te, File toolkitRoot) throws IOException {
             
-        JSONObject tkinfo = newToolkitDepInfo(te);
+        JsonObject tkinfo = newToolkitDepInfo(te);
         
-        tkinfo.put("root", toolkitRoot.getCanonicalPath());
+        tkinfo.addProperty("root", toolkitRoot.getCanonicalPath());
         
         ToolkitInfoModelType infoModel;
         try {
@@ -344,18 +344,18 @@ public class SPL {
         if (infoModel != null) {
             IdentityType tkIdentity = infoModel.getIdentity();
 
-            tkinfo.put("name", tkIdentity.getName());
-            tkinfo.put("version", tkIdentity.getVersion());
+            tkinfo.addProperty("name", tkIdentity.getName());
+            tkinfo.addProperty("version", tkIdentity.getVersion());
         }
     }
     
-    private static JSONObject newToolkitDepInfo(TopologyElement te) {
-        JSONArray tks = (JSONArray) te.topology().getConfig().get(TOOLKITS);
+    private static JsonObject newToolkitDepInfo(TopologyElement te) {
+        JsonArray tks = (JsonArray) te.topology().getConfig().get(TOOLKITS);
         
         if (tks == null) {
-            te.topology().getConfig().put(TOOLKITS, tks = new JSONArray());
+            te.topology().getConfig().put(TOOLKITS, tks = new JsonArray());
         }
-        JSONObject tkinfo = new JSONObject();
+        JsonObject tkinfo = new JsonObject();
         tks.add(tkinfo);
         return tkinfo;
     }
@@ -367,9 +367,9 @@ public class SPL {
      * @param version Version dependency string.
      */
     public static void addToolkitDependency(TopologyElement te, String name, String version) {
-        JSONObject tkinfo = newToolkitDepInfo(te);
-        tkinfo.put("name", name);
-        tkinfo.put("version", version);
+        JsonObject tkinfo = newToolkitDepInfo(te);
+        tkinfo.addProperty("name", name);
+        tkinfo.addProperty("version", version);
     }
 
     /**
