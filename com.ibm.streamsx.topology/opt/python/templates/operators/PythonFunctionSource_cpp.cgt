@@ -18,6 +18,8 @@ using namespace streamsx::topology;
 
  my $module = splpy_Module();
  my $functionName = splpy_FunctionName();
+ my @packages = splpy_Packages();
+ spl_pip_packages($model, \@packages);
 
  my $iport;
  my $itupleType;

@@ -23,6 +23,7 @@ import json
 from pkgutil import extend_path
 import streamsx
 
+
 def __splpy_addDirToPath(dir):
     if os.path.isdir(dir):
         if dir not in sys.path:
@@ -32,6 +33,12 @@ def __splpy_addDirToPath(dir):
             if os.path.isdir(os.path.join(dir, 'streamsx')):
                 streamsx.__path__ = extend_path(streamsx.__path__, streamsx.__name__)
                 
+def add_output_packages(out_dir):
+    py_dir = os.path.join(out_dir, 'etc', 'streamsx.topology', 'python')
+    vdir = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
+    site_pkg = os.path.join(py_dir, 'lib', vdir, 'site-packages')
+    __splpy_addDirToPath(site_pkg)
+
 def setupOperator(dir):
     pydir = os.path.join(dir, 'opt', 'python')
     __splpy_addDirToPath(os.path.join(pydir, 'modules'))

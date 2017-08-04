@@ -337,6 +337,16 @@ class _Extractor(object):
         cfgfile.write('sub splpy_FunctionName {\'' + opname + "\'}\n")
         cfgfile.write('sub splpy_OperatorType {\'' + _optype(opobj).name + "\'}\n")
         self._write_style_info(cfgfile, opobj)
+
+        if hasattr(dynm, 'spl_pip_packages'):
+            pp = getattr(dynm, 'spl_pip_packages')()
+            if not isinstance(pp, list):
+                pp = list(pp)
+        else:
+            pp = []
+
+        cfgfile.write('sub splpy_Packages {(' + ','.join(["'{0}'".format(_) for _ in pp]) + ')}\n')
+
         cfgfile.write("1;\n")
         cfgfile.close()
 
