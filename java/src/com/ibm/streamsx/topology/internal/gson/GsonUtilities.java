@@ -29,7 +29,7 @@ public class GsonUtilities {
     
     /**
      * Add value to o as property, converting as needed.
-     * Supports JsonElment,String,Number,Boolean, Collection<String,Number,Boolean>
+     * Supports JsonElment,String,Number,Boolean, Collection{String,Number,Boolean}
      */
     public static void addToObject(JsonObject o, String property, Object value) {
         if (value instanceof JsonElement)
@@ -47,11 +47,11 @@ public class GsonUtilities {
                 if (ov instanceof JsonElement)
                     sa.add((JsonElement) ov);
                 else if (ov instanceof String)
-                    sa.add(new JsonPrimitive((String) value));
+                    sa.add(new JsonPrimitive((String) ov));
                 else if (ov instanceof Number)
-                    sa.add(new JsonPrimitive((Number) value));
+                    sa.add(new JsonPrimitive((Number) ov));
                 else if (ov instanceof Boolean)
-                    sa.add(new JsonPrimitive((Boolean) value));
+                    sa.add(new JsonPrimitive((Boolean) ov));
                 else
                     throw new UnsupportedOperationException("JSON:" + ov.getClass());  
             }
