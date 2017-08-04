@@ -112,7 +112,7 @@ abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
         addConfigToDeploy(deploy, entity.config);
         
         submission.add(DEPLOY,deploy);
-        submission.add(SUBMISSION_GRAPH, gson(entity.app.builder().complete()));
+        submission.add(SUBMISSION_GRAPH, entity.app.builder()._complete());
         
         entity.submission = submission;
     }

@@ -23,21 +23,16 @@ import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
-import com.ibm.json.java.OrderedJSONObject;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.version.Product;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
-import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
+import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
-import com.ibm.streamsx.topology.tuple.JSONAble;
 
 /**
  * Low-level graph builder. GraphBuilder provides a layer on top of
@@ -58,7 +53,10 @@ public class GraphBuilder extends BJSONObject {
     
     private final JsonObject config = new JsonObject();
 
-    private final JSONObject params = new OrderedJSONObject();
+    /**
+     * Submission parameters.
+     */
+    private final JsonObject params = new JsonObject();
     
     public GraphBuilder(String namespace, String name) {
         super();
@@ -67,7 +65,7 @@ public class GraphBuilder extends BJSONObject {
         _json().addProperty(NAME, name);
         _json().addProperty("public", true);
         _json().add("config", config);
-        json().put("parameters", params);
+        _json().add("parameters", params);
         
         // The version of IBM Streams being used to build
         // the topology. When Streams install is not
@@ -79,6 +77,14 @@ public class GraphBuilder extends BJSONObject {
         else
             pv = "4.2.1";
         getConfig().addProperty(CFG_STREAMS_VERSION, pv);
+    }
+    
+
+    public JSONObject complete() {
+        return super.complete();
+    }
+    public JSONObject json() {
+        throw new IllegalStateException("NO JSON4J!!!!");
     }
 
    public BOperatorInvocation addOperator(Class<? extends Operator> opClass,
@@ -135,14 +141,14 @@ public class GraphBuilder extends BJSONObject {
     
     public boolean isInLowLatencyRegion(BOperator... operators) {
         // handle nested low latency regions
-        JSONObject graph = complete();
+        JsonObject graph = _complete();
         final VisitController visitController =
                 new VisitController(Direction.UPSTREAM);
         final int[] openRegionCount = { 0 };
         for (BOperator operator : operators) {
             JsonObject jop = operator._complete();
             GraphUtilities.visitOnce(visitController,
-                    Collections.singleton(jop), JSON4JUtilities.gson(graph),
+                    Collections.singleton(jop), graph,
                 new Consumer<JsonObject>() {
                     private static final long serialVersionUID = 1L;
                     @Override
@@ -185,9 +191,8 @@ public class GraphBuilder extends BJSONObject {
         if (width.get() != null)
             parallelOutput._json().addProperty("width", width.get());
         else {
-            JSONObject jwidth = ((JSONAble) width).toJSON();
-            JsonObject gwidth = JSON4JUtilities.gson(jwidth);
-            parallelOutput._json().add("width", gwidth);
+            SubmissionParameter<?> spw = (SubmissionParameter<?>) width;
+            parallelOutput._json().add("width", spw.asJSON());
         }
         return parallelOutput;
     }
@@ -299,9 +304,9 @@ public class GraphBuilder extends BJSONObject {
      * @param name the submission parameter name
      * @param jo the SubmissionParameter parameter value object
      */
-    public void createSubmissionParameter(String name, JSONObject jo) {
-        if (params.containsKey(name))
+    public void createSubmissionParameter(String name, JsonObject jo) {
+        if (params.has(name))
             throw new IllegalArgumentException("name is already defined");
-        params.put(name, jo);
+        params.add(name, jo);
     }
 }

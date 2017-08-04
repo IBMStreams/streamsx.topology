@@ -9,18 +9,20 @@ import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARA
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 /**
  * A specification for a value of type {@code T}
  * whose actual value is not defined until topology execution time.
  */
-public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
+public class SubmissionParameter<T> implements Supplier<T> {
     private static final long serialVersionUID = 1L;
     private static final Map<Class<?>,MetaType> toMetaType = new HashMap<>();
     static {
@@ -135,8 +137,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
         return defaultValue;
     }
 
-    @Override
-    public JSONObject toJSON() {
+    public JsonObject asJSON() {
         // meet the requirements of BOperatorInvocation.setParameter()
         // and OperatorGenerator.parameterValue()
         /*
@@ -152,19 +153,19 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
          * }
          * </code></pre>
          */
-        JSONObject jo = new JSONObject();
-        JSONObject jv = new JSONObject();
-        jo.put("type", TYPE_SUBMISSION_PARAMETER);
-        jo.put("value", jv);
-        jv.put("name", name);
-        jv.put("metaType", metaType.name());
+        JsonObject jo = new JsonObject();
+        JsonObject jv = new JsonObject();
+        jo.addProperty("type", TYPE_SUBMISSION_PARAMETER);
+        jo.add("value", jv);
+        jv.addProperty("name", name);
+        jv.addProperty("metaType", metaType.name());
         if (defaultValue != null)
-            jv.put("defaultValue", defaultValue);
+            GsonUtilities.addToObject(jv, "defaultValue", defaultValue);
         return jo;
     }
 
     @Override
     public String toString() {
-        return toJSON().toString();
+        return asJSON().toString();
     }
 }

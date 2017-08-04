@@ -128,7 +128,7 @@ public class SPL {
             String name, Object paramValue, boolean withDefault) {
         SPLValue<?> splValue = createSPLValue(paramValue);
         SubmissionParameter<T> sp = new SubmissionParameter<T>(top, name, splValue.toJSON(), withDefault);
-        top.builder().createSubmissionParameter(name, sp.toJSON());
+        top.builder().createSubmissionParameter(name, sp.asJSON());
         return sp;
     }
     

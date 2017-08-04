@@ -897,7 +897,7 @@ public class Topology implements TopologyElement {
      */
     public <T> Supplier<T> createSubmissionParameter(String name, Class<T> valueClass) {
         SubmissionParameter<T> sp = new SubmissionParameter<T>(this, name, valueClass); 
-        builder().createSubmissionParameter(name, sp.toJSON());
+        builder().createSubmissionParameter(name, sp.asJSON());
         return sp;
     }
 
@@ -915,7 +915,7 @@ public class Topology implements TopologyElement {
      */
     public <T> Supplier<T> createSubmissionParameter(String name, T defaultValue) {
         SubmissionParameter<T> sp = new SubmissionParameter<T>(this, name, defaultValue);
-        builder().createSubmissionParameter(name, sp.toJSON());
+        builder().createSubmissionParameter(name, sp.asJSON());
         return sp;
     }
 
