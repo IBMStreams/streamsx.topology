@@ -28,7 +28,7 @@ public abstract class BJSONObject {
     public JSONObject complete() {
         
         try {
-            JSONObject g = JSON4JUtilities.json4j(_json());
+            JSONObject g = JSON4JUtilities.json4j(_complete());
             for (Object k : g.keySet()) {
                 json().put(k, g.get(k));
                 
@@ -41,5 +41,20 @@ public abstract class BJSONObject {
        
         
         return json();
+    }
+    
+    public JSONObject XXXcomplete() {
+        try {
+            return JSON4JUtilities.json4j(_complete());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public JsonObject _complete() {
+        
+        return _json();
     }
 }

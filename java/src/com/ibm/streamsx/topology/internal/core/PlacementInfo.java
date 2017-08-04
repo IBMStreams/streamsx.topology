@@ -122,8 +122,8 @@ class PlacementInfo {
     /** throw if s1.isolate().filter().colocate(s1) */
     private void disallowColocateIsolatedOpWithParent(Placeable<?> first, Placeable<?> ... toFuse) {
         JSONObject graph = first.builder().complete();
-        JSONObject colocateOp = first.operator().complete();
-        Set<JsonObject> parents = GraphUtilities.getUpstream(JSON4JUtilities.gson(colocateOp), JSON4JUtilities.gson(graph));
+        JsonObject colocateOp = first.operator()._complete();
+        Set<JsonObject> parents = GraphUtilities.getUpstream(colocateOp, JSON4JUtilities.gson(graph));
         if (!parents.isEmpty()) {
             JsonObject isolate = parents.iterator().next();
             String kind = jstring(isolate, "kind");

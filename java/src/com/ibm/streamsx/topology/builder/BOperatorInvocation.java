@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
@@ -96,7 +98,7 @@ public class BOperatorInvocation extends BOperator {
     }
 
     public JSONObject json() {
-        return super.json();
+        throw new IllegalStateException("JSON4J");
     }
     
     BOperatorInvocation(GraphBuilder bt,
@@ -304,6 +306,31 @@ public class BOperatorInvocation extends BOperator {
                 ia.add(input.complete());
             }
             json.put("inputs", ia);
+        }
+
+        return json;
+    }
+    @Override
+    public JsonObject _complete() {
+        final JsonObject json = super._complete();
+
+        if (outputs != null) {
+            JsonArray oa = new JsonArray();
+            // outputs array in java is in port order.
+            for (int i = 0; i < outputs.size(); i++)
+                oa.add(JsonNull.INSTANCE); // will be overwritten with port info
+            for (BOutputPort output : outputs.values())
+                oa.set(output.index(), output._complete());
+            json.add("outputs", oa);
+        }
+
+        if (inputs != null) {
+            JsonArray ia = new JsonArray();
+            for (int i = 0; i < inputs.size(); i++)
+                ia.add(JsonNull.INSTANCE); // will be overwritten with port info
+            for (BInputPort input : inputs)
+                ia.set(input.index(), input._complete());
+            json.add("inputs", ia);
         }
 
         return json;

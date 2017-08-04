@@ -5,8 +5,13 @@
 package com.ibm.streamsx.topology.builder;
 
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.addToObject;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jisEmpty;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * Utility methods for an operator represented as a JSON Object.
@@ -17,25 +22,20 @@ public class JOperator {
     /**
      * Get the config object, returning null if it has not been created.
      */
-    public static JSONObject getConfig(final JSONObject op) {
-        return (JSONObject) op.get(CONFIG);
+    public static JsonObject getConfig(final JsonObject op) {
+        return GsonUtilities.object(op, CONFIG);
     }
     
-    public static boolean hasConfig(final JSONObject op) {
-        JSONObject config = getConfig(op);
-        return config != null && !config.isEmpty();
+    public static boolean hasConfig(final JsonObject op) {
+        return jisEmpty(getConfig(op));
     }
     
     /**
      * Create the config object if it has not already been created.
      * @return A new or existing config object.
      */
-    public static JSONObject createConfig(final JSONObject op) {
-        JSONObject config = getConfig(op);
-        if (config == null)
-            op.put(CONFIG, config = new JSONObject());
-        
-        return config;
+    public static JsonObject createConfig(final JsonObject op) {
+        return GsonUtilities.objectCreate(op, CONFIG);
     }
     
     /**
@@ -50,16 +50,16 @@ public class JOperator {
          * @param key Key within config
          * @param value Value, must be a JSON compatible object.
          */
-        public static void addItem(final JSONObject op, String key, Object value) {
-            createConfig(op).put(key, value);
+        public static void addItem(final JsonObject op, String property, Object value) {
+            addToObject(createConfig(op), property, value);
         }
         
         
         /**
          * Get a config value, returning null if it has not been defined.
          */
-        public static Object getItem(final JSONObject op, String key) {
-            JSONObject config = getConfig(op);
+        public static JsonElement getItem(final JsonObject op, String key) {
+            JsonObject config = getConfig(op);
             if (config == null)
                 return null;
             
@@ -69,38 +69,31 @@ public class JOperator {
         /**
          * Get a Boolean config value, returning null if it has not been defined.
          */
-        public static Boolean getBooleanItem(final JSONObject op, String key) {        
-            return (Boolean) getItem(op, key);
+        public static Boolean getBooleanItem(final JsonObject op, String key) {
+            JsonElement value = getItem(op, key);
+            return value == null ? null : value.getAsBoolean();
         }
         
         /**
          * Get a String config value, returning null if it has not been defined.
          */
-        public static String getStringItem(final JSONObject op, String key) {        
-            return (String) getItem(op, key);
+        public static String getStringItem(final JsonObject op, String key) {        
+            JsonElement value = getItem(op, key);
+            return value == null ? null : value.getAsString();
         }
         
         /**
          * Get a JSON config value, returning null if it has not been defined.
          */
-        public static JSONObject getJSONItem(final JSONObject op, String key) {       
-            return (JSONObject) getItem(op, key);
+        public static JsonObject getJSONItem(final JsonObject op, String key) {       
+            JsonElement value = getItem(op, key);
+            return value == null ? null : value.getAsJsonObject();
         }
         /**
          * Create a JSON config value if it has not already been created.
          */
-        public static JSONObject createJSONItem(final JSONObject op, String key) {
-            JSONObject value = (JSONObject) getItem(op, key);
-            if (value == null) {
-                createConfig(op).put(key, value = new JSONObject());
-            }
-            
-            return value;
+        public static JsonObject createJSONItem(final JsonObject op, String property) {
+            return objectCreate(createConfig(op), property);
         }
     }
-    
-    
-
-    
-
 }

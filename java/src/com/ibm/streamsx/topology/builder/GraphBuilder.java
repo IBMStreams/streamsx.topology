@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
@@ -139,9 +140,9 @@ public class GraphBuilder extends BJSONObject {
                 new VisitController(Direction.UPSTREAM);
         final int[] openRegionCount = { 0 };
         for (BOperator operator : operators) {
-            JSONObject jop = operator.complete();
+            JsonObject jop = operator._complete();
             GraphUtilities.visitOnce(visitController,
-                    Collections.singleton(JSON4JUtilities.gson(jop)), JSON4JUtilities.gson(graph),
+                    Collections.singleton(jop), JSON4JUtilities.gson(graph),
                 new Consumer<JsonObject>() {
                     private static final long serialVersionUID = 1L;
                     @Override
@@ -183,8 +184,11 @@ public class GraphBuilder extends BJSONObject {
         BOutput parallelOutput = addPassThroughMarker(parallelize, BVirtualMarker.PARALLEL, true);
         if (width.get() != null)
             parallelOutput._json().addProperty("width", width.get());
-        else
-            parallelOutput.json().put("width", ((JSONAble) width).toJSON());
+        else {
+            JSONObject jwidth = ((JSONAble) width).toJSON();
+            JsonObject gwidth = JSON4JUtilities.gson(jwidth);
+            parallelOutput._json().add("width", gwidth);
+        }
         return parallelOutput;
     }
 
@@ -258,17 +262,16 @@ public class GraphBuilder extends BJSONObject {
     public JsonObject getConfig() {
         return config;
     }
-
-    @Override
-    public JSONObject complete() {
-        JSONObject json = super.complete();
-        JSONArray oa = new JSONArray(ops.size());
+    
+    public JsonObject _complete() {
+        JsonObject json = super._complete();
+        
+        JsonArray oa = new JsonArray();
+        json.add("operators", oa);
         for (BOperator op : ops) {
-            oa.add(op.complete());
+            oa.add(op._complete());
         }
-
-        json.put("operators", oa);
-
+                
         return json;
     }
 

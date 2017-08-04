@@ -86,18 +86,17 @@ public class EmbeddedGraph {
     
     public void verifySupported() {        
         for (BOperator op : builder.getOps())
-            verifyOp(op);
+            verifyOp(op._complete());
     }
     
-    private boolean verifyOp(BOperator op) {
-        JsonObject json = JSON4JUtilities.gson(op.complete());
+    private boolean verifyOp(JsonObject op) {
         
-        switch (jstring(json, MODEL)) {
+        switch (jstring(op, MODEL)) {
         case MODEL_VIRTUAL:
             return false;
         case MODEL_FUNCTIONAL:
         case MODEL_SPL:
-            if (!LANGUAGE_JAVA.equals(jstring(json, LANGUAGE)))
+            if (!LANGUAGE_JAVA.equals(jstring(op, LANGUAGE)))
                 throw notSupported(op);
             return true;
         default:
@@ -143,9 +142,9 @@ public class EmbeddedGraph {
      */
     @SuppressWarnings("unchecked")
     private void declareOp(BOperator op) throws Exception {
-        JsonObject json = JSON4JUtilities.gson(op.complete());
+        JsonObject json = op._complete();
        
-        if (!verifyOp(op))
+        if (!verifyOp(json))
             return;
         
         String opClassName = jstring(json, KIND_CLASS);
@@ -269,11 +268,10 @@ public class EmbeddedGraph {
 
     private void declareConnections() throws Exception {
         for (BOperator op : builder.getOps())
-            declareOpConnections(op);
+            declareOpConnections(op._complete());
     }
 
-    private void declareOpConnections(BOperator op) {
-        JsonObject json = JSON4JUtilities.gson(op.complete());
+    private void declareOpConnections(JsonObject json) {
         JsonArray outputs = json.getAsJsonArray("outputs");
         if (jisEmpty(outputs))
             return;
@@ -363,7 +361,7 @@ public class EmbeddedGraph {
             throw new IllegalArgumentException("Type for parameter " + name + " is not supported:" +  type);
     }
     
-    private IllegalStateException notSupported(BOperator op) {
+    private IllegalStateException notSupported(JsonObject op) {
         
         String namespace = jstring(builder._json(), NAMESPACE);
         String name = jstring(builder._json(), NAME);
@@ -372,7 +370,7 @@ public class EmbeddedGraph {
                 "Topology '"+namespace+"."+name+"'"
                 + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
                 + " the topology contains non-Java operator:" +
-                jstring(op._json(), KIND));
+                jstring(op, KIND));
     }
 
     public OutputPortDeclaration getOutputPort(String name) {
