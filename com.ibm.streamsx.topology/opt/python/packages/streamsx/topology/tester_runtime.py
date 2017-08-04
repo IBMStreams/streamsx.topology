@@ -33,6 +33,7 @@ class Condition(object):
 
     def __init__(self, name=None):
         self.name = name
+        self._starts_valid = False
         self._valid = False
         self._fail = False
 
@@ -82,7 +83,8 @@ class Condition(object):
         self._metric_valid = self._create_metric("valid", kind='Gauge')
         self._metric_seq = self._create_metric("seq")
         self._metric_fail = self._create_metric("fail", kind='Gauge')
-        pass
+        if self._starts_valid:
+            self.valid = True
 
     def __exit__(self, exc_type, exc_value, traceback):
         if (ec.is_standalone()):
@@ -97,8 +99,7 @@ class _TupleExactCount(Condition):
         super(_TupleExactCount, self).__init__(name)
         self.target = target
         self.count = 0
-        if target == 0:
-            self.valid = True
+        self._starts_valid = target == 0
 
     def __call__(self, tuple):
         self.count += 1
@@ -114,8 +115,7 @@ class _TupleAtLeastCount(Condition):
         super(_TupleAtLeastCount, self).__init__(name)
         self.target = target
         self.count = 0
-        if target == 0:
-            self.valid = True
+        self._starts_valid = target == 0
 
     def __call__(self, tuple):
         self.count += 1

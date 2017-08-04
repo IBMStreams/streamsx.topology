@@ -30,6 +30,25 @@ class TestTester(unittest.TestCase):
         tester.tuple_count(s, 100, exact=False)
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_no_tuples(self):
+        """ Test exact count with zero tuples.
+        """
+        topo = Topology()
+        s = topo.source([])
+        tester = Tester(topo)
+        tester.tuple_count(s, 0)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_at_least_no_tuples(self):
+        """ Test at least count with zero tuples. 
+            (kind of a pointless condition, always true).
+        """
+        topo = Topology()
+        s = topo.source([])
+        tester = Tester(topo)
+        tester.tuple_count(s, 0, exact=False)
+        tester.test(self.test_ctxtype, self.test_config)
+
     def test_checker(self):
         """ Test the per-tuple checker.
         """
