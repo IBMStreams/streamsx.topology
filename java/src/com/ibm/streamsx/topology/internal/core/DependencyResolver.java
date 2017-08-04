@@ -7,6 +7,9 @@ package com.ibm.streamsx.topology.internal.core;
 import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.DEP_JAR_LOC;
 import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.DEP_OP_JAR_LOC;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.arrayCreate;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,6 +26,7 @@ import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.model.PrimitiveOperator;
@@ -219,18 +223,9 @@ public class DependencyResolver {
                 if (op instanceof BOperatorInvocation) {
                     BOperatorInvocation bop = (BOperatorInvocation) op;
                     if (Functional.class.isAssignableFrom(bop.operatorClass())) {
-                        JSONObject params = (JSONObject) bop.json().get(
-                                "parameters");
-                        JSONObject op_jars = (JSONObject) params.get("jar");
-                        if (null == op_jars) {
-                            JSONObject val = new JSONObject();
-                            val.put("value", new JSONArray());
-                            params.put("jar", val);
-                            op_jars = val;
-                        }
-                        JSONArray value = (JSONArray) op_jars.get("value");
+                        JsonArray value = arrayCreate(bop._json(), "parameters", "jar", "value");
                         for (String jar : jars) {
-                            value.add(jar);
+                            value.add(new JsonPrimitive(jar));
                         }
                     }
                 }

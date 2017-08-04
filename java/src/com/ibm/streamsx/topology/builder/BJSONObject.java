@@ -18,7 +18,7 @@ public abstract class BJSONObject {
     /**
      * Provides direct access to the JSON object, which may not be complete.
      */
-    public final JSONObject json() {
+    public JSONObject json() {
         return json;
     }
     public final JsonObject _json() {

@@ -28,6 +28,7 @@ import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 /**
@@ -46,7 +47,7 @@ public class BOperatorInvocation extends BOperator {
 
     private List<BInputPort> inputs;
     private Map<String, BOutputPort> outputs;
-    private final JSONObject jparams = new JSONObject();
+    private final JsonObject jparams = new JsonObject();
     private final String name;
     private final Class<? extends Operator> opClass;
 
@@ -58,7 +59,7 @@ public class BOperatorInvocation extends BOperator {
         this.opClass = opClass;
         this.name =  bt.userSuppliedName(opClass.getSimpleName());
         _json().addProperty("name", name());
-        json().put("parameters", jparams);
+        _json().add("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
             setModel(MODEL_SPL, LANGUAGE_JAVA);
@@ -80,7 +81,7 @@ public class BOperatorInvocation extends BOperator {
         this.name = name;
         this.opClass = opClass;
         _json().addProperty("name", name());
-        json().put("parameters", jparams);
+        _json().add("parameters", jparams);
         
         if (!Operator.class.equals(opClass)) {   
             _json().addProperty(KIND, getKind(opClass));
@@ -94,6 +95,10 @@ public class BOperatorInvocation extends BOperator {
         }
     }
 
+    public JSONObject json() {
+        return super.json();
+    }
+    
     BOperatorInvocation(GraphBuilder bt,
             Map<String, ? extends Object> params) {
         this(bt, Operator.class, params);
@@ -238,7 +243,7 @@ public class BOperatorInvocation extends BOperator {
                 param.put("enumclass", value.getClass().getCanonicalName());              
         }
 
-        jparams.put(name, param);
+        jparams.add(name, JSON4JUtilities.gson(param));
     }
 
     public BOutputPort addOutput(StreamSchema schema) {

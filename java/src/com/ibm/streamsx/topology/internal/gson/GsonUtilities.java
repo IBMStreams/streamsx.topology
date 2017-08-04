@@ -225,6 +225,30 @@ public class GsonUtilities {
     }
     
     /**
+     * Like objectCreate but the last element is created as an array if
+     * it doesn't already exist.
+     */
+    public static JsonArray arrayCreate(JsonObject object, String ...property) {
+        
+        assert property.length > 0;
+        
+        if (property.length > 1) {
+            String[] objprops = new String[property.length - 1];
+            System.arraycopy(property, 0, objprops, 0, objprops.length);
+            object = objectCreate(object, objprops);
+        }
+        
+        String arrayProperty = property[property.length - 1];
+        
+        if (object.has(arrayProperty))
+            return object.getAsJsonArray(arrayProperty);
+        
+        JsonArray array = new JsonArray();
+        object.add(arrayProperty, array);
+        return array;
+    }
+    
+    /**
      * Add all the properties in the {@code source} JSON object into {@code target} JSON object. Existing properties will be overridden.
      * <p>
      * E.g. if {@code target} contains:

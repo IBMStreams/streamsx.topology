@@ -36,6 +36,10 @@ public class BOperator extends BJSONObject {
     public GraphBuilder builder() {
         return bt;
     }
+    
+    public JSONObject json() {
+        return super.json();
+    }
 
     public boolean addRegion(String name) {
         if (regions == null)
