@@ -11,10 +11,7 @@ import java.util.Set;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * JSON representation.
@@ -40,10 +37,6 @@ public class BOperator extends BJSONObject {
 
     public GraphBuilder builder() {
         return bt;
-    }
-    
-    public JSONObject json() {
-        return super.json();
     }
 
     public boolean addRegion(String name) {
@@ -83,16 +76,6 @@ public class BOperator extends BJSONObject {
         return JOperatorConfig.getItem(_json(), key);
     }
 
-    @Override
-    public JSONObject complete() {
-        JSONObject json = super.complete();
-        if (regions != null) {
-            JSONArray ra = new JSONArray();
-            ra.addAll(regions);
-            json.put("regions", ra);
-        }
-        return json;
-    }
     @Override
     public JsonObject _complete() {
         JsonObject json = super._complete();

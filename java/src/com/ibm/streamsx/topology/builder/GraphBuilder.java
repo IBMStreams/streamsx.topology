@@ -23,7 +23,6 @@ import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.version.Product;
 import com.ibm.streamsx.topology.function.Consumer;
@@ -77,14 +76,6 @@ public class GraphBuilder extends BJSONObject {
         else
             pv = "4.2.1";
         getConfig().addProperty(CFG_STREAMS_VERSION, pv);
-    }
-    
-
-    public JSONObject complete() {
-        return super.complete();
-    }
-    public JSONObject json() {
-        throw new IllegalStateException("NO JSON4J!!!!");
     }
 
    public BOperatorInvocation addOperator(Class<? extends Operator> opClass,

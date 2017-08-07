@@ -18,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.flow.handlers.MostRecent;
 import com.ibm.streams.operator.StreamSchema;
@@ -235,7 +237,7 @@ public class SPLOperatorsTest extends TestTopology {
         testOpParams("testSubmissionParamsWithDefault", new OpParamAdder() {
             void put(String opParamName, Object opParamValue) {
                 Supplier<?> sp;
-                if (!(opParamValue instanceof JSONObject))
+                if (!(opParamValue instanceof JsonObject))
                     sp = top.createSubmissionParameter(opParamName, opParamValue);
                 else
                     sp = SPL.createSubmissionParameter(top, opParamName, opParamValue, true);
@@ -251,7 +253,7 @@ public class SPLOperatorsTest extends TestTopology {
         testOpParams("testSubmissionParamsWithoutDefault", new OpParamAdder() {
             void put(String opParamName, Object opParamValue) {
                 Supplier<?> sp;
-                if (!(opParamValue instanceof JSONObject))
+                if (!(opParamValue instanceof JsonObject))
                     sp = top.createSubmissionParameter(opParamName,
                             (Class<?>)opParamValue.getClass());
                 else
@@ -264,29 +266,43 @@ public class SPLOperatorsTest extends TestTopology {
                     submitParams = new HashMap<>();
                     config.put(ContextProperties.SUBMISSION_PARAMS, submitParams);
                 }
-                if (!(opParamValue instanceof JSONObject))
+                if (!(opParamValue instanceof JsonObject))
                     submitParams.put(opParamName, opParamValue);
                 else
-                    submitParams.put(opParamName, pvToStr((JSONObject)opParamValue));
+                    submitParams.put(opParamName, pvToStr((JsonObject)opParamValue));
             }
         });
     }
     
-    private String pvToStr(JSONObject jo) {
+    private String pvToStr(JsonObject jo) {
         // A Client of the API shouldn't find itself in
         // a place to need this.  It's just an artifact of
         // the way these tests are composed plus lack of a 
         // public form of valueToString(SPL.createValue(...)).
 
-        String type = (String) jo.get("type");
+        String type = jo.get("type").getAsString();
         if (!"__spl_value".equals(type))
             throw new IllegalArgumentException("jo " + jo);
-        JSONObject value = (JSONObject) jo.get("value");
-        String metaType = (String) value.get("metaType");
-        Object v = value.get("value");
+        JsonObject value = jo.get("value").getAsJsonObject();
+        String metaType = value.get("metaType").getAsString();
+        JsonElement v = value.get("value");
+        switch (metaType) {
+        case "UINT8":
+            return Integer.toUnsignedString(Byte.toUnsignedInt(v.getAsByte()));
+        case "UINT16":
+            return Integer.toUnsignedString(Short.toUnsignedInt(v.getAsShort()));
+        case "UINT32":
+            return Integer.toUnsignedString(v.getAsInt());
+        case "UINT64":
+            return Long.toUnsignedString(v.getAsLong());
+        default:
+            return v.getAsString();
+        }
+        /*
         if (metaType.startsWith("UINT"))
             return SPLGenerator.unsignedString(v);
         else
             return v.toString();
+            */
     }
 }

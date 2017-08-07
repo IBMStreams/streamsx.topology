@@ -4,8 +4,6 @@
  */
 package com.ibm.streamsx.topology.builder;
 
-import com.ibm.json.java.JSONObject;
-
 public class BInput extends BJSONObject {
 
     private final GraphBuilder builder;
@@ -16,13 +14,5 @@ public class BInput extends BJSONObject {
 
     public GraphBuilder builder() {
         return builder;
-    }
-    
-    public final JSONObject complete() {
-        // ONLY GSON
-        return XXXcomplete();
-    }
-    public JSONObject json() {
-        throw new IllegalStateException("NO JSON4J!!!!");
     }
 }

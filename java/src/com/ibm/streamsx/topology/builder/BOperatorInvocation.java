@@ -10,6 +10,8 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
 import java.math.BigDecimal;
@@ -19,8 +21,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.Attribute;
@@ -30,6 +34,8 @@ import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streams.operator.model.Namespace;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
@@ -124,21 +130,31 @@ public class BOperatorInvocation extends BOperator {
     }
 
     public void setParameter(String name, Object value) {
-
+        
+        if (value == null)
+            throw new IllegalStateException("NULL PARAM:" + name);
+        
+        System.err.println("SET_PARAM:" + name + " " + value + " is SubmissionParameter:" + (value instanceof SubmissionParameter));
+        
+        if (value instanceof SubmissionParameter) {
+            JsonObject svp = ((SubmissionParameter<?>) value).asJSON();
+            /*
+            JsonObject param = new JsonObject();
+            param.add("type", svp.get("type"));
+            param.add("value", svp.get("value"));         
+            */ 
+            jparams.add(name, svp);
+            return;
+        }
+        
         Object jsonValue = value;
         String jsonType = null;
 
-        // Set the value in the OperatorInvocation.
-        
-        if (value instanceof JSONAble) {
-            value = ((JSONAble)value).toJSON();
-        }
-        if (value instanceof JSONObject) {
-            JSONObject jo = ((JSONObject) value);
-            if (jo.get("type") == null || jo.get("value") == null)
-                throw new IllegalArgumentException("Illegal JSONObject " + jo);
-            String type = (String) jo.get("type");
-            Object val = (JSONObject) jo.get("value");
+        if (value instanceof JsonObject) {
+            JsonObject jo = ((JsonObject) value);
+            if (!jo.has("type") || !jo.has("value"))
+                throw new IllegalArgumentException("Illegal JSON object " + jo);
+            String type = jstring(jo, "type");
             if ("__spl_value".equals(type)) {
                 /*
                  * The Value object is
@@ -153,10 +169,12 @@ public class BOperatorInvocation extends BOperator {
                  * </code></pre>
                  */
                 // unwrap and fall through to handling for the wrapped value
-                JSONObject splValue = (JSONObject) val;
+                JsonObject splValue = object(jo, "value");
                 value = splValue.get("value");
                 jsonValue = value;
-                String metaType = (String) splValue.get("metaType");
+                jsonType = jstring(splValue, "metaType");
+                /*
+                String metaType = jstring(splValue, "metaType");
                 if ("USTRING".equals(metaType)
                         || "UINT8".equals(metaType)
                         || "UINT16".equals(metaType)
@@ -164,6 +182,7 @@ public class BOperatorInvocation extends BOperator {
                         || "UINT64".equals(metaType)) {
                     jsonType = metaType;
                 }
+                */
                 // fall through to handle jsonValue as usual 
             }
             else {
@@ -176,40 +195,30 @@ public class BOperatorInvocation extends BOperator {
         }
                 
         if (value instanceof String) {
-            //op.setStringParameter(name, (String) value);
             if (jsonType == null)
                 jsonType = MetaType.RSTRING.name();
         } else if (value instanceof Byte) {
-            //op.setByteParameter(name, (Byte) value);
             if (jsonType == null)
                 jsonType = MetaType.INT8.name();
         } else if (value instanceof Short) {
-            //op.setShortParameter(name, (Short) value);
             if (jsonType == null)
                 jsonType = MetaType.INT16.name();
         } else if (value instanceof Integer) {
-            //op.setIntParameter(name, (Integer) value);
             if (jsonType == null)
                 jsonType = MetaType.INT32.name();
         } else if (value instanceof Long) {
-            //op.setLongParameter(name, (Long) value);
             if (jsonType == null)
                 jsonType = MetaType.INT64.name();
         } else if (value instanceof Float) {
-            //op.setFloatParameter(name, (Float) value);
             jsonType = MetaType.FLOAT32.name();
         } else if (value instanceof Double) {
-            //op.setDoubleParameter(name, (Double) value);
             jsonType = MetaType.FLOAT64.name();
         } else if (value instanceof Boolean) {
-            //op.setBooleanParameter(name, (Boolean) value);
             jsonType = MetaType.BOOLEAN.name();
         } else if (value instanceof BigDecimal) {
-            //op.setBigDecimalParameter(name, (BigDecimal) value);
             jsonValue = value.toString(); // Need to maintain exact value
             jsonType = MetaType.DECIMAL128.name();
         } else if (value instanceof Enum) {
-            //op.setCustomLiteralParameter(name, (Enum<?>) value);
             jsonValue = ((Enum<?>) value).name();
             jsonType = JParamTypes.TYPE_ENUM;
         } else if (value instanceof StreamSchema) {
@@ -217,11 +226,10 @@ public class BOperatorInvocation extends BOperator {
             jsonType = JParamTypes.TYPE_SPLTYPE;
         } else if (value instanceof String[]) {
             String[] sa = (String[]) value;
-            JSONArray a = new JSONArray(sa.length);
+            JsonArray a = new JsonArray();
             for (String vs : sa)
-                a.add(vs);
+                a.add(new JsonPrimitive(vs));
             jsonValue = a;
-            //op.setStringParameter(name, sa);
         } else if (value instanceof Attribute) {
             Attribute attr = (Attribute) value;
             jsonValue = attr.getName();
@@ -231,21 +239,28 @@ public class BOperatorInvocation extends BOperator {
             JSONObject jo = (JSONObject) value;
             jsonType = (String) jo.get("type");
             jsonValue = (JSONObject) jo.get("value");
+        } else if (value instanceof JsonElement) {
+            assert jsonType != null;
         } else {
             throw new IllegalArgumentException("Type for parameter " + name + " is not supported:" +  value.getClass());
         }
-
-        // Set the value as JSON
-        JSONObject param = new JSONObject();
-        param.put("value", jsonValue);
+        
+        // TODO: JSON
+        if (jsonValue instanceof JSONObject)
+            jsonValue = JSON4JUtilities.gson((JSONObject) jsonValue);
+        
+        JsonObject param = new JsonObject();
+        GsonUtilities.addToObject(param, "value", jsonValue);
 
         if (jsonType != null) {
-            param.put("type", jsonType);
+            param.addProperty("type", jsonType);
             if (JParamTypes.TYPE_ENUM.equals(jsonType))
-                param.put("enumclass", value.getClass().getCanonicalName());              
+                param.addProperty("enumclass", value.getClass().getCanonicalName());              
         }
+        
+        System.err.println("ADDDED:" + param);
 
-        jparams.add(name, JSON4JUtilities.gson(param));
+        jparams.add(name, param);
     }
 
     public BOutputPort addOutput(StreamSchema schema) {
@@ -283,33 +298,7 @@ public class BOperatorInvocation extends BOperator {
         return objectCreate(_json(), "layout");
     }
 
-    @Override
-    public JSONObject complete() {
-        final JSONObject json = super.complete();
 
-        if (outputs != null) {
-            JSONArray oa = new JSONArray(outputs.size());
-            // outputs array in java is in port order.
-            for (int i = 0; i < outputs.size(); i++)
-                oa.add(0); // will be overwritten with port info
-            for (BOutputPort output : outputs.values()) {
-                JSONObject joutput = output.complete();
-                int index = ((Number) (joutput.get("index"))).intValue();
-                oa.set(index, joutput);
-            }
-            json.put("outputs", oa);
-        }
-
-        if (inputs != null) {
-            JSONArray ia = new JSONArray(inputs.size());
-            for (BInputPort input : inputs) {
-                ia.add(input.complete());
-            }
-            json.put("inputs", ia);
-        }
-
-        return json;
-    }
     @Override
     public JsonObject _complete() {
         final JsonObject json = super._complete();

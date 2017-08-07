@@ -12,13 +12,4 @@ public abstract class BOutput extends BJSONObject {
     public abstract StreamSchema schema();
 
     public abstract void connectTo(BInputPort port);
-    
-    public final JSONObject complete() {
-        // ONLY GSON
-        return XXXcomplete();
-    }
-    
-    public JSONObject json() {
-        throw new IllegalStateException("NO JSON4J!!!!");
-    }
 }

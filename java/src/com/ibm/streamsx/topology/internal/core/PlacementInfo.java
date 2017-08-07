@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.core;
 
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.ISOLATE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_RESOURCE_TAGS;
@@ -27,6 +28,7 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.context.Placeable;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
@@ -134,8 +136,8 @@ class PlacementInfo {
                 return;
             JsonObject isolateParentOp = parents.iterator().next();
             for (Placeable<?> placeable : toFuse) {
-                JSONObject tgtOp = placeable.operator().complete();
-                if (tgtOp.get("name").equals(jstring(isolateParentOp, "name")))
+                JsonObject tgtOp = placeable.operator()._complete();
+                if (jstring(tgtOp, "name").equals(jstring(isolateParentOp, "name")))
                     throw new IllegalStateException("Illegal to colocate an isolated stream with its parent.");
             }
         }
@@ -179,7 +181,7 @@ class PlacementInfo {
      * Update an element's placement configuration.
      */
     private void updatePlacementJSON(Placeable<?> element) {
-        JsonObject placement = objectCreate(element.operator()._json(), PLACEMENT);
+        JsonObject placement = objectCreate(element.operator()._json(), CONFIG, PLACEMENT);
         placement.addProperty(PLACEMENT_EXPLICIT_COLOCATE_ID, fusingIds.get(element));
         
         Set<String> elementResourceTags = resourceTags.get(element);

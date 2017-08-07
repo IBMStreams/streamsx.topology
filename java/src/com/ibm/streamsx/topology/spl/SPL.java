@@ -22,7 +22,6 @@ import javax.xml.bind.JAXBException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.TSink;
@@ -93,12 +92,12 @@ public class SPL {
      *     not appropriate for {@code metaType}
      */
     public static <T> Object createValue(T value, MetaType metaType) {
-        return new SPLValue<T>(value, metaType).toJSON();
+        return new SPLValue<T>(value, metaType).asJSON();
     }
     
     private static SPLValue<?> createSPLValue(Object paramValue) {
-        if (paramValue instanceof JSONObject) {
-            SPLValue<?> splValue = SPLValue.fromJSON((JSONObject) paramValue);
+        if (paramValue instanceof JsonObject) {
+            SPLValue<?> splValue = SPLValue.fromJSON((JsonObject) paramValue);
             return splValue;
         }            
         throw new IllegalArgumentException("param is not from createValue()");
@@ -127,7 +126,7 @@ public class SPL {
     public static <T> Supplier<T> createSubmissionParameter(Topology top,
             String name, Object paramValue, boolean withDefault) {
         SPLValue<?> splValue = createSPLValue(paramValue);
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(top, name, splValue.toJSON(), withDefault);
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(top, name, splValue.asJSON(), withDefault);
         top.builder().createSubmissionParameter(name, sp.asJSON());
         return sp;
     }
