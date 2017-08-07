@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.builder;
 
-import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 
 public abstract class BOutput extends BJSONObject {

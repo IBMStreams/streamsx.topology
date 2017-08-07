@@ -23,15 +23,11 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.context.Placeable;
-import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 
 /**
  * Manages fusing of Placeables. 

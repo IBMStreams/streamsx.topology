@@ -56,7 +56,6 @@ import com.ibm.streamsx.topology.builder.GraphBuilder;
 import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 
 /**
  * Takes the JSON graph defined by Topology
