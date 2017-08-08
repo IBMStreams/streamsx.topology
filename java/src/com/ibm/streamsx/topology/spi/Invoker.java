@@ -21,10 +21,6 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
-import com.ibm.streamsx.topology.spi.operators.ForEach;
-import com.ibm.streamsx.topology.spi.operators.Pipe;
-import com.ibm.streamsx.topology.spi.operators.Primitive;
-import com.ibm.streamsx.topology.spi.operators.Source;
 
 /**
  * 
@@ -48,7 +44,7 @@ public interface Invoker {
      * 
      * @return Stream produced by the source operator invocation.
      */
-    static <T> TStream<T> invokeSource(Topology topology, Class<? extends Source> opClass, JsonObject config,
+    static <T> TStream<T> invokeSource(Topology topology, String kind, JsonObject config,
             Supplier<Iterable<T>> logic, Type tupleType, TupleSerializer outputSerializer,
             Map<String, Object> parameters) {
         
@@ -57,7 +53,9 @@ public interface Invoker {
         if (outputSerializer != null)
             parameters.put("outputSerializer", serializeLogic(outputSerializer));
 
-        BOperatorInvocation source = JavaFunctional.addFunctionalOperator(topology, jstring(config, "name"), opClass,
+        BOperatorInvocation source = JavaFunctional.addFunctionalOperator(topology,
+                jstring(config, "name"),
+                kind,
                 logic, parameters);
 
         // Extract any source location information from the config.
@@ -78,7 +76,7 @@ public interface Invoker {
      */
     static <T> TSink invokeForEach(
             TStream<T> stream,
-            Class<? extends ForEach> opClass,
+            String kind,
             JsonObject config,
             Consumer<T> logic,
             TupleSerializer tupleSerializer,
@@ -87,7 +85,7 @@ public interface Invoker {
         BOperatorInvocation forEach = JavaFunctional.addFunctionalOperator(
                 stream,
                 jstring(config, "name"),
-                opClass,
+                kind,
                 logic,
                 parameters);
         
@@ -112,7 +110,7 @@ public interface Invoker {
      * @return
      */
     static <T,R> TStream<?> invokePipe(
-            Class<? extends Pipe> opClass,
+            String kind,
             TStream<T> stream,           
             JsonObject config,         
             Consumer<T> logic,
@@ -131,7 +129,8 @@ public interface Invoker {
             parameters.put("outputSerializer", serializeLogic(outputSerializer));
         
         BOperatorInvocation pipe = JavaFunctional.addFunctionalOperator(stream,
-                jstring(config, "name"), opClass,
+                jstring(config, "name"),
+                kind,
                 logic, parameters);
 
         // Extract any source location information from the config.
@@ -156,7 +155,7 @@ public interface Invoker {
      */
     static List<TStream<?>> invokePrimitive(
             TopologyElement te,
-            Class<? extends Primitive> opClass,
+            String kind,
             List<TStream<?>> streams,           
             JsonObject config,         
             ObjIntConsumer<Object> logic,
@@ -195,7 +194,8 @@ public interface Invoker {
         }
         
         BOperatorInvocation primitive = JavaFunctional.addFunctionalOperator(te,
-                jstring(config, "name"), opClass,
+                jstring(config, "name"),
+                kind,
                 logic, parameters);
 
         // Extract any source location information from the config.

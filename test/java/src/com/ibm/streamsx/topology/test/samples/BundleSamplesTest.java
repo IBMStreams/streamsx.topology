@@ -14,6 +14,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.ibm.streamsx.topology.test.TestTopology;
+
 import parallel.ParallelRegexGrep;
 import parallel.PartitionedParallelRegexGrep;
 import simple.Grep;
@@ -21,8 +23,6 @@ import simple.RegexGrep;
 import topic.PublishBeacon;
 import topic.SubscribeBeacon;
 import vwap.Vwap;
-
-import com.ibm.streamsx.topology.test.TestTopology;
 
 public class BundleSamplesTest extends TestTopology {
     

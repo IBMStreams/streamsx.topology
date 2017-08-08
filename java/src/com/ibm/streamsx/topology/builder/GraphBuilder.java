@@ -6,9 +6,11 @@ package com.ibm.streamsx.topology.builder;
 
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND_CLASS;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_SPL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_VIRTUAL;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAME;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
@@ -23,15 +25,15 @@ import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.version.Product;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
+import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
-import com.ibm.streamsx.topology.internal.functional.ops.PassThrough;
 
 /**
  * Low-level graph builder. GraphBuilder provides a layer on top of
@@ -77,25 +79,17 @@ public class GraphBuilder extends BJSONObject {
             pv = "4.2.1";
         getConfig().addProperty(CFG_STREAMS_VERSION, pv);
     }
-
-   public BOperatorInvocation addOperator(Class<? extends Operator> opClass,
-            Map<String, ? extends Object> params) {
-        final BOperatorInvocation op = new BOperatorInvocation(this, opClass,
-                params);
-        ops.add(op);
-         return op;
-    }
    
    private final Map<String,Integer> usedNames = new HashMap<>();
    
    public BOperatorInvocation addOperator(
            String name,
-           Class<? extends Operator> opClass,         
+           String kind,         
            Map<String, ? extends Object> params) {
        
        name = userSuppliedName(name);
        
-       final BOperatorInvocation op = new BOperatorInvocation(this, name, opClass,
+       final BOperatorInvocation op = new BOperatorInvocation(this, name, kind,
                params);
        ops.add(op);
         return op;
@@ -198,9 +192,10 @@ public class GraphBuilder extends BJSONObject {
 
     public BOutput addPassThroughMarker(BOutput output, BVirtualMarker virtualMarker,
             boolean createRegion) {
-        BOperatorInvocation op = addOperator(PassThrough.class, null);
+        BOperatorInvocation op = addOperator(virtualMarker.name(), virtualMarker.kind(), null);
         op._json().addProperty("marker", true);
-        op._json().addProperty(KIND, virtualMarker.kind());
+        op._json().addProperty(KIND_CLASS, JavaFunctionalOps.PASS_CLASS);
+        op.setModel(MODEL_VIRTUAL, LANGUAGE_JAVA);
 
         if (createRegion) {
             final String regionName = op.name();
@@ -212,15 +207,16 @@ public class GraphBuilder extends BJSONObject {
         BInputPort input = op.inputFrom(output, null);
 
         // Create the output port.
-        return op.addOutput(input.schema());
+        return op.addOutput(input._schema());
     }
     
     public BOutput addPassThroughOperator(BOutput output) {
-        BOperatorInvocation op = addOperator(PassThrough.class, null);
+        BOperatorInvocation op = addOperator("Pass", JavaFunctionalOps.PASS_KIND, null);
+        op.setModel(MODEL_SPL, LANGUAGE_JAVA);
         // Create the input port that consumes the output
         BInputPort input = op.inputFrom(output, null);
         // Create the output port.
-        return op.addOutput(input.schema());
+        return op.addOutput(input._schema());
     }
 
     public BOperator addVirtualMarkerOperator(BVirtualMarker kind) {
@@ -231,18 +227,16 @@ public class GraphBuilder extends BJSONObject {
 
     public BOperatorInvocation addSPLOperator(String kind,
             Map<String, ? extends Object> params) {
-        final BOperatorInvocation op = new BOperatorInvocation(this, params);
-        op._json().addProperty(KIND, kind);
-        op.setModel(MODEL_SPL, LANGUAGE_SPL);
-
-        ops.add(op);
-        return op;
+        
+        String name = kind.contains("::") ?
+                kind.substring(kind.lastIndexOf("::" + 2), kind.length()) :
+                    kind;
+         return addSPLOperator(name, kind, params);
     }
     public BOperatorInvocation addSPLOperator(String name, String kind,
             Map<String, ? extends Object> params) {
         name = userSuppliedName(name);
-        final BOperatorInvocation op = new BOperatorInvocation(this, name, params);
-        op._json().addProperty(KIND, kind);       
+        final BOperatorInvocation op = new BOperatorInvocation(this, name, kind, params);      
         op.setModel(MODEL_SPL, LANGUAGE_SPL);
         
         ops.add(op);

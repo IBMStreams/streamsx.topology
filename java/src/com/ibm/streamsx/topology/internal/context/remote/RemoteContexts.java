@@ -1,7 +1,6 @@
 package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

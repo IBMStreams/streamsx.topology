@@ -6,13 +6,11 @@ package com.ibm.streamsx.topology.builder;
 
 import java.lang.reflect.Type;
 
-import com.ibm.streams.operator.StreamSchema;
-
 public class BOutputPort extends BOutput implements BPort {
 
     private final BOperatorInvocation op;
 
-    BOutputPort(BOperatorInvocation op, int index, String name, StreamSchema schema) {
+    BOutputPort(BOperatorInvocation op, int index, String name, String schema) {
         this.op = op;
         addPortInfo(index, name, schema);
     }
@@ -33,8 +31,8 @@ public class BOutputPort extends BOutput implements BPort {
         input.operator().copyRegions(operator());
     }
     @Override
-    public StreamSchema schema() {
-        return __schema();
+    public String _type() {
+        return _schema();
     }
     
     public void setNativeType(Type tupleType) {

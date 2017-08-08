@@ -15,7 +15,6 @@ import java.util.Set;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.types.Blob;
 import com.ibm.streams.operator.types.XML;
-import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 import com.ibm.streamsx.topology.spi.TupleSerializer;
 
 public class Schemas {

@@ -10,14 +10,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
-import vwap.Bargain;
-import vwap.Vwap;
-
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
+
+import vwap.Bargain;
+import vwap.Vwap;
 
 public class VwapTest extends TestTopology {
 

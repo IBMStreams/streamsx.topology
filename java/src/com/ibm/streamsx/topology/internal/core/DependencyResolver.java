@@ -8,8 +8,6 @@ import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteCon
 import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.DEP_OP_JAR_LOC;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.arrayCreate;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,14 +25,10 @@ import java.util.Set;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
-import com.ibm.streamsx.topology.internal.functional.ops.Functional;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 
 /**
@@ -220,13 +214,10 @@ public class DependencyResolver {
         List<BOperator> ops = topology.builder().getOps();
         if(jars.size() != 0){
             for (BOperator op : ops) {
-                if (op instanceof BOperatorInvocation) {
-                    BOperatorInvocation bop = (BOperatorInvocation) op;
-                    if (Functional.class.isAssignableFrom(bop.operatorClass())) {
-                        JsonArray value = arrayCreate(bop._json(), "parameters", "jar", "value");
-                        for (String jar : jars) {
-                            value.add(new JsonPrimitive(jar));
-                        }
+                if (JavaFunctionalOps.isFunctional(op)) {
+                    JsonArray value = arrayCreate(op._json(), "parameters", "jar", "value");
+                    for (String jar : jars) {
+                        value.add(new JsonPrimitive(jar));
                     }
                 }
             }

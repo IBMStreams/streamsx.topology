@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.spl;
 
+import static com.ibm.streamsx.topology.spl.SPLStreamImpl.newSPLStream;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -17,10 +19,10 @@ import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
-import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
+import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionConvertToSPL;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
@@ -105,12 +107,11 @@ public class SPLStreams {
         }
 
         BOperatorInvocation convOp = JavaFunctional.addFunctionalOperator(
-                stream, opName, FunctionConvertToSPL.class, converter);
+                stream, opName, JavaFunctionalOps.CONVERT_SPL_KIND, converter);
         @SuppressWarnings("unused")
         BInputPort inputPort = stream.connectTo(convOp, true, null);
 
-        BOutputPort convertedTuples = convOp.addOutput(schema);
-        return new SPLStreamImpl(stream, convertedTuples);
+        return newSPLStream(stream, convOp, schema);
     }
 
     /**

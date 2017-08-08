@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.spl;
 
+import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.lang.reflect.Type;
@@ -30,8 +32,15 @@ import com.ibm.streamsx.topology.json.JSONStreams.DeserializeJSON;
 
 class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
 
-    public SPLStreamImpl(TopologyElement te, BOutput stream) {
+    private final StreamSchema schema;
+    
+    static SPLStream newSPLStream(TopologyElement te, BOperatorInvocation op, StreamSchema schema) {
+        return new SPLStreamImpl(te, schema, op.addOutput(schema.getLanguageType()));
+    }
+    
+    private SPLStreamImpl(TopologyElement te, StreamSchema schema, BOutput stream) {
         super(te, stream, Tuple.class);
+        this.schema = schema;
     }
 
     @Override
@@ -41,7 +50,7 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
 
     @Override
     public StreamSchema getSchema() {
-        return output().schema();
+        return schema;
     }
 
     @Override
@@ -138,10 +147,10 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     }
     
     protected SPLStream addMatchingOutput(BOperatorInvocation bop, Type tupleType) {
-        return new SPLStreamImpl(this, bop.addOutput(getSchema())); 
+        return new SPLStreamImpl(this, schema, bop.addOutput(getSchema().getLanguageType())); 
     }
     protected SPLStream addMatchingStream(BOutput output) {
-        return new SPLStreamImpl(this, output);
+        return new SPLStreamImpl(this, getStreamSchema(output._type()), output);
     }
     
     @Override

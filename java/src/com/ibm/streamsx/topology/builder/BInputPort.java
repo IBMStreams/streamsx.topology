@@ -7,14 +7,13 @@ package com.ibm.streamsx.topology.builder;
 import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonObject;
-import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.window.StreamWindow;
 
 public class BInputPort extends BInput implements BPort {
 
     private final BOperator op;
 
-    BInputPort(BOperatorInvocation op, int index, String name, StreamSchema schema) {
+    BInputPort(BOperatorInvocation op, int index, String name, String schema) {
         super(op.builder());
         this.op = op;
         
@@ -68,10 +67,6 @@ public class BInputPort extends BInput implements BPort {
         _json().add("window", winJson);
 
         return this;
-    }
-    
-    public StreamSchema schema() {
-        return __schema();
     }
     
     /**

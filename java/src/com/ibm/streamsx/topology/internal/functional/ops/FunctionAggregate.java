@@ -13,7 +13,7 @@ import com.ibm.streamsx.topology.internal.functional.window.ContinuousAggregator
 import com.ibm.streamsx.topology.internal.functional.window.ContinuousAggregatorTimeEvict;
 import com.ibm.streamsx.topology.internal.functional.window.PeriodicAggregator;
 
-@PrimitiveOperator
+@PrimitiveOperator(name="Aggregate")
 @Icons(location16 = "opt/icons/aggregate_16.gif", location32 = "opt/icons/aggregate_32.gif")
 public class FunctionAggregate<T, A> extends FunctionWindow {
     @Override

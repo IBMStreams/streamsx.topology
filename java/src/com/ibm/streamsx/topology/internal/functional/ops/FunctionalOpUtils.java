@@ -10,11 +10,11 @@ import com.ibm.streams.operator.state.CheckpointContext;
 import com.ibm.streams.operator.state.CheckpointContext.Kind;
 import com.ibm.streams.operator.state.ConsistentRegionContext;
 import com.ibm.streamsx.topology.function.FunctionContext;
-import com.ibm.streamsx.topology.internal.messages.Messages;
-import com.ibm.streamsx.topology.spi.TupleSerializer;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 import com.ibm.streamsx.topology.internal.functional.StatelessFunctionalHandler;
+import com.ibm.streamsx.topology.internal.messages.Messages;
+import com.ibm.streamsx.topology.spi.TupleSerializer;
 
 class FunctionalOpUtils {
     

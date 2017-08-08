@@ -5,10 +5,10 @@
 package com.ibm.streamsx.topology.test;
 
 import static com.ibm.streamsx.topology.context.StreamsContextFactory.getStreamsContext;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
-import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.util.ArrayList;

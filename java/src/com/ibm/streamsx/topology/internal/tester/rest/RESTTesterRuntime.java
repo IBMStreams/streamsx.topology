@@ -11,7 +11,6 @@ import static java.util.Objects.requireNonNull;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
-import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
 import com.ibm.streams.flow.handlers.StreamHandler;
@@ -30,7 +29,6 @@ import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
 import com.ibm.streamsx.topology.internal.tester.fns.TupleContents;
 import com.ibm.streamsx.topology.internal.tester.fns.TupleCount;
 import com.ibm.streamsx.topology.tester.Condition;
-import com.ibm.streamsx.topology.tester.Tester;
 
 public class RESTTesterRuntime extends TesterRuntime {
     

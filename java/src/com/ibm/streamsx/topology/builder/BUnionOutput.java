@@ -6,18 +6,16 @@ package com.ibm.streamsx.topology.builder;
 
 import java.util.Set;
 
-import com.ibm.streams.operator.StreamSchema;
-
 public class BUnionOutput extends BOutput {
 
     private final BOperator op;
     private final Set<BOutput> outputs;
-    private final StreamSchema schema;
+    private final String schema;
 
     BUnionOutput(BOperator op, Set<BOutput> outputs) {
         this.op = op;
         this.outputs = outputs;
-        schema = outputs.iterator().next().schema();
+        schema = outputs.iterator().next()._type();
     }
 
     public BOperator operator() {
@@ -25,7 +23,7 @@ public class BUnionOutput extends BOutput {
     }
 
     @Override
-    public StreamSchema schema() {
+    public String _type() {
         return schema;
     }
 

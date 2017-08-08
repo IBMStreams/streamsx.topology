@@ -33,12 +33,11 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.DependencyResolver;
 import com.ibm.streamsx.topology.internal.core.InternalProperties;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
+import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.StreamImpl;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
-import com.ibm.streamsx.topology.internal.functional.operators.Source;
-import com.ibm.streamsx.topology.internal.functional.ops.FunctionPeriodicSource;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.logic.Constants;
 import com.ibm.streamsx.topology.internal.logic.EndlessSupplier;
@@ -274,7 +273,7 @@ public class Topology implements TopologyElement {
         com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(config, getClass());
         config.addProperty("name", opName);
         
-        return invokeSource(this, Source.class, config,
+        return invokeSource(this, JavaFunctionalOps.SOURCE_KIND, config,
                 data, tupleType, null, null);
     }
     
@@ -319,7 +318,7 @@ public class Topology implements TopologyElement {
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
-                FunctionPeriodicSource.class, data, params);
+                JavaFunctionalOps.PERIODIC_MULTI_SOURCE_KIND, data, params);
         SourceInfo.setSourceInfo(bop, getClass());
         return JavaFunctional.addJavaOutput(this, bop, tupleType);
     }

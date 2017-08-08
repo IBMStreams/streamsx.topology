@@ -19,7 +19,7 @@ import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.functional.window.PartitionedSlidingJoin;
 import com.ibm.streamsx.topology.internal.functional.window.SlidingJoin;
 
-@PrimitiveOperator
+@PrimitiveOperator(name="Join")
 @InputPorts({
         @InputPortSet(cardinality = 1, windowingMode = WindowMode.Windowed),
         @InputPortSet(cardinality = 1) })

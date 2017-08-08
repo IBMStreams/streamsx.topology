@@ -12,7 +12,6 @@ import java.util.logging.Logger;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Initializable;
-import com.ibm.streamsx.topology.internal.tester.rest.RESTTesterRuntime;
 import com.ibm.streamsx.topology.tester.Tester;
 
 public abstract class ConditionChecker<T> implements Consumer<T>, Initializable {

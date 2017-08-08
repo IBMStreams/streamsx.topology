@@ -5,11 +5,8 @@
 package com.ibm.streamsx.topology.builder;
 
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND_CLASS;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
@@ -27,11 +24,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.Attribute;
-import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Type.MetaType;
-import com.ibm.streams.operator.model.Namespace;
-import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
@@ -54,65 +48,28 @@ public class BOperatorInvocation extends BOperator {
     private List<BInputPort> inputs;
     private Map<String, BOutputPort> outputs;
     private final JsonObject jparams = new JsonObject();
-    private final String name;
-    private final Class<? extends Operator> opClass;
 
-    public BOperatorInvocation(GraphBuilder bt,
-            Class<? extends Operator> opClass,
-            Map<String, ? extends Object> params) {
-        super(bt);
-        
-        this.opClass = opClass;
-        this.name =  bt.userSuppliedName(opClass.getSimpleName());
-        _json().addProperty("name", name());
-        _json().add("parameters", jparams);
-        
-        if (!Operator.class.equals(opClass)) {   
-            setModel(MODEL_SPL, LANGUAGE_JAVA);
-            _json().addProperty(KIND, getKind(opClass));
-            _json().addProperty(KIND_CLASS, opClass.getCanonicalName());
-        }
-
-        if (params != null) {
-            for (String paramName : params.keySet()) {
-                setParameter(paramName, params.get(paramName));
-            }
-        }
-    }
     public BOperatorInvocation(GraphBuilder bt,
             String name,
-            Class<? extends Operator> opClass,           
+            String kind,           
             Map<String, ? extends Object> params) {
         super(bt);
-        this.name = name;
-        this.opClass = opClass;
-        _json().addProperty("name", name());
+        _json().addProperty("name", name);
         _json().add("parameters", jparams);
-        
-        if (!Operator.class.equals(opClass)) {   
-            _json().addProperty(KIND, getKind(opClass));
-            _json().addProperty(KIND_CLASS, opClass.getCanonicalName());
-        }
+        if (kind != null)
+            _json().addProperty(KIND, kind);
 
         if (params != null) {
             for (String paramName : params.keySet()) {
                 setParameter(paramName, params.get(paramName));
             }
         }
-    }
-
-    public JSONObject json() {
-        throw new IllegalStateException("JSON4J");
     }
     
     BOperatorInvocation(GraphBuilder bt,
-            Map<String, ? extends Object> params) {
-        this(bt, Operator.class, params);
-    }
-    BOperatorInvocation(GraphBuilder bt,
             String name,
             Map<String, ? extends Object> params) {
-        this(bt, name, Operator.class, params);
+        this(bt, name, null, params);
     }
     
     public void setModel(String model, String language) {
@@ -120,20 +77,15 @@ public class BOperatorInvocation extends BOperator {
         _json().addProperty(LANGUAGE, language);
     }
     
-    public String name() {
-        return name;
-    }
-    public Class<? extends Operator> operatorClass() {
-        return opClass;
+    String name() {
+        return jstring(_json(), "name");
     }
 
     public void setParameter(String name, Object value) {
         
         if (value == null)
             throw new IllegalStateException("NULL PARAM:" + name);
-        
-        System.err.println("SET_PARAM:" + name + " " + value + " is SubmissionParameter:" + (value instanceof SubmissionParameter));
-        
+                
         if (value instanceof SubmissionParameter) {
             JsonObject svp = ((SubmissionParameter<?>) value).asJSON();
             /*
@@ -256,12 +208,10 @@ public class BOperatorInvocation extends BOperator {
                 param.addProperty("enumclass", value.getClass().getCanonicalName());              
         }
         
-        System.err.println("ADDDED:" + param);
-
         jparams.add(name, param);
     }
 
-    public BOutputPort addOutput(StreamSchema schema) {
+    public BOutputPort addOutput(String schema) {
         if (outputs == null)
             outputs = new HashMap<>();
 
@@ -285,7 +235,7 @@ public class BOperatorInvocation extends BOperator {
             inputs = new ArrayList<>();
         }
 
-        input = new BInputPort(this, inputs.size(), name + "_IN" + inputs.size(), output.schema());
+        input = new BInputPort(this, inputs.size(), name() + "_IN" + inputs.size(), output._type());
         inputs.add(input);
         output.connectTo(input);
 
@@ -321,32 +271,5 @@ public class BOperatorInvocation extends BOperator {
         }
 
         return json;
-    }
-   
-    private static String getKind(Class<?> opClass) {
-        
-        PrimitiveOperator primitive = opClass.getAnnotation(PrimitiveOperator.class);
-        
-        final String kindName = primitive.name().length() == 0 ?
-                opClass.getSimpleName() : primitive.name();
-        
-        String namespace;
-        if (primitive.namespace().length() != 0)
-            namespace = primitive.namespace();
-        else {
-            Package pkg = opClass.getPackage();
-            if (pkg != null) {
-                Namespace ns = pkg.getAnnotation(Namespace.class);
-                if (ns == null)
-                    namespace = pkg.getName();
-                else
-                    namespace = ns.value();
-            }
-            else {
-                namespace = "";
-            }
-        }
-        
-        return namespace + "::" + kindName;
     }
 }

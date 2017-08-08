@@ -10,6 +10,7 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.TOOLKITS;
+import static com.ibm.streamsx.topology.spl.SPLStreamImpl.newSPLStream;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +30,6 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
-import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.context.remote.TkInfo;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
@@ -176,8 +176,7 @@ public class SPL {
         BOperatorInvocation op = input.builder().addSPLOperator(name, kind, params);
         SourceInfo.setSourceInfo(op, SPL.class);
         SPL.connectInputToOperator(input, op);
-        BOutputPort stream = op.addOutput(outputSchema);
-        return new SPLStreamImpl(input, stream);
+        return newSPLStream(input, op, outputSchema);
     }
     
     /**
@@ -228,7 +227,7 @@ public class SPL {
         
         List<SPLStream> streams = new ArrayList<>(outputSchemas.size());
         for (StreamSchema outputSchema : outputSchemas)
-            streams.add(new SPLStreamImpl(te, op.addOutput(outputSchema)));
+            streams.add(newSPLStream(te, op, outputSchema));
             
         return streams;
     }
@@ -317,9 +316,8 @@ public class SPL {
         BOperatorInvocation splSource = te.builder().addSPLOperator(
                 opNameFromKind(kind), kind, params);
         SourceInfo.setSourceInfo(splSource, SPL.class);
-        BOutputPort stream = splSource.addOutput(schema);
        
-        return new SPLStreamImpl(te, stream);
+        return newSPLStream(te, splSource, schema);
     }
 
     /**
