@@ -29,6 +29,8 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.addAll;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jisEmpty;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
+import static com.ibm.streamsx.topology.spi.builder.Properties.Graph.CONFIG;
+import static com.ibm.streamsx.topology.spi.builder.Properties.Graph.Config.JAVA_OPS;
 import static java.util.Objects.requireNonNull;
 
 import java.util.HashMap;
@@ -86,7 +88,7 @@ public class EmbeddedGraph {
    
     public EmbeddedGraph(GraphBuilder builder)  {
         this.builder = builder;
-        kind2Class = objectCreate(builder._json(), "config", "javaops");
+        kind2Class = objectCreate(builder._json(), CONFIG, JAVA_OPS);
         addAll(kind2Class, JavaFunctionalOps.kind2Class());
     }
     

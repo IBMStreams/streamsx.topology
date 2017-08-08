@@ -24,7 +24,6 @@ import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
-import com.ibm.streamsx.topology.internal.functional.ops.FunctionConvertToSPL;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 
 /**

@@ -15,6 +15,7 @@ import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VER
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAME;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.spi.builder.Properties.Graph.CONFIG;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,7 +29,6 @@ import com.google.gson.JsonObject;
 import com.ibm.streams.operator.version.Product;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
-import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
@@ -65,7 +65,7 @@ public class GraphBuilder extends BJSONObject {
         _json().addProperty(NAMESPACE, namespace);
         _json().addProperty(NAME, name);
         _json().addProperty("public", true);
-        _json().add("config", config);
+        _json().add(CONFIG, config);
         _json().add("parameters", params);
         
         // The version of IBM Streams being used to build

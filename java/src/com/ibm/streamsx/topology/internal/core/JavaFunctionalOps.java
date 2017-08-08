@@ -6,9 +6,6 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BOperator;
 

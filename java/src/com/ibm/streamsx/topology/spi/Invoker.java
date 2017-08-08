@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017  
+ */
 package com.ibm.streamsx.topology.spi;
 
 import static com.ibm.streamsx.topology.internal.functional.ObjectUtils.serializeLogic;
@@ -21,6 +25,7 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
+import com.ibm.streamsx.topology.spi.builder.Properties;
 
 /**
  * 
@@ -29,7 +34,8 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
  * 
  * The config object contains information about the invocation of an operator.
  * 
- * 
+ * If executing in embedded then the JSON graph must be provided with
+ * the mapping of Java primitive kind to Java class in {@link Properties.Graph.Config#JAVA_OPS}.
  */
 public interface Invoker {
     
