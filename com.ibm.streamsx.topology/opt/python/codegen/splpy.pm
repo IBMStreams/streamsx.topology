@@ -284,11 +284,13 @@ sub spl_pip_packages {
 
   my $model = $_[0];
   my $packages = $_[1];
+  my $reqFile = $model->getContext()->getToolkitDirectory()."/opt/python/streams/requirements.txt";
 
-  if (@$packages) {
+  my $needPip = @$packages || -r $reqFile;
+
+  if ($needPip) {
 
     use File::Path qw(make_path);
-    SPL::CodeGen::println("Installing Python packages:" . join(' ', @$packages));
     my $pkgDir = $model->getContext()->getOutputDirectory()."/etc/streamsx.topology/python";
     make_path($pkgDir);
 
@@ -298,30 +300,45 @@ sub spl_pip_packages {
     my $pip = 'pip';
 
     my $rcv2 = `$pip --version`;
-    SPL::CodeGen::println("pip version:" . $rcv);
+    SPL::CodeGen::println("pip version:" . $rcv2);
 
-    my @pipCmd = ($pip, 'install', '--disable-pip-version-check', '--user',
-         '--upgrade');
-    push(@pipCmd, @$packages);
+    my @pipCmd = ($pip, 'install', '--disable-pip-version-check', '--user', '--upgrade');
 
-    SPL::CodeGen::println("Executing pip:" . join(' ', @pipCmd));
+
     print("#if 0\n");
     print("/*\n");
 
     my $pub = $ENV{'PYTHONUSERBASE'};
     $ENV{'PYTHONUSERBASE'} = $pkgDir;
 
-    my $rc = system(@pipCmd);
+    if (-r $reqFile) {
+      SPL::CodeGen::println("Installing Python packages from requirements:");
+      push(@pipCmd, ('--requirement', $reqFile));
+      SPL::CodeGen::println("Executing pip:" . join(' ', @pipCmd));
+      my $rc = system(@pipCmd);
+      if ($rc != 0) {
+        SPL::CodeGen::errorln("pip failed for requirements" . join(' ', @pipCmd));
+      } 
+      pop(@pipCmd);
+      pop(@pipCmd);
+    }
+
+    if (@$packages) {
+      SPL::CodeGen::println("Installing Python packages:" . join(' ', @$packages));
+      push(@pipCmd, @$packages);
+      SPL::CodeGen::println("Executing pip:" . join(' ', @pipCmd));
+      my $rc = system(@pipCmd);
+      if ($rc != 0) {
+        SPL::CodeGen::errorln("pip failed for packages:" . join(' ', @pipCmd));
+      } 
+    }
+
     print("*/\n");
     print("#endif\n");
 
     if ($pub) {
       $ENV{'PYTHONUSERBASE'} = $pub;
     }
-
-    if ($rc != 0) {
-      SPL::CodeGen::errorln("pip failed for packages:" . join(' ', @pipCmd));
-    } 
   }
 }
 
