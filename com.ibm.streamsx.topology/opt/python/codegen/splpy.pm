@@ -283,43 +283,63 @@ sub convertAndAddToPythonDictionaryObject {
 sub spl_pip_packages {
 
   my $model = $_[0];
-  my @packages = $_[1];
+  my $packages = $_[1];
+  my $reqFile = $model->getContext()->getToolkitDirectory()."/opt/python/streams/requirements.txt";
 
-  use File::Path qw(make_path);
-  SPL::CodeGen::println("Installing Python packages:" . join(' ', @packages));
-  my $pkgDir = $model->getContext()->getOutputDirectory()."/etc/streamsx.topology/python";
-  make_path($pkgDir);
+  my $needPip = @$packages || -r $reqFile;
+
+  if ($needPip) {
+
+    use File::Path qw(make_path);
+    my $pkgDir = $model->getContext()->getOutputDirectory()."/etc/streamsx.topology/python";
+    make_path($pkgDir);
 
 # Need pip 9
 # '--upgrade-strategy', 'only-if-needed');
 
-  my $pip = 'pip';
+    my $pip = 'pip';
 
-  my $rcv2 = `pip --version`;
-  SPL::CodeGen::println("pip version:" . $rcv);
+    my $rcv2 = `$pip --version`;
+    SPL::CodeGen::println("pip version:" . $rcv2);
 
-  my @pipCmd = ($pip, 'install', '--disable-pip-version-check', '--user',
-         '--upgrade');
-  push(@pipCmd, @packages);
+    my @pipCmd = ($pip, 'install', '--disable-pip-version-check', '--user', '--upgrade');
 
-  SPL::CodeGen::println("Executing pip:" . join(' ', @pipCmd));
-  print("#if 0\n");
-  print("/*\n");
 
-  my $pub = $ENV{'PYTHONUSERBASE'};
-  $ENV{'PYTHONUSERBASE'} = $pkgDir;
+    print("#if 0\n");
+    print("/*\n");
 
-  my $rc = system(@pipCmd);
-  print("*/\n");
-  print("#endif\n");
+    my $pub = $ENV{'PYTHONUSERBASE'};
+    $ENV{'PYTHONUSERBASE'} = $pkgDir;
 
-  if ($pub) {
+    if (-r $reqFile) {
+      SPL::CodeGen::println("Installing Python packages from requirements:");
+      push(@pipCmd, ('--requirement', $reqFile));
+      SPL::CodeGen::println("Executing pip:" . join(' ', @pipCmd));
+      my $rc = system(@pipCmd);
+      if ($rc != 0) {
+        SPL::CodeGen::errorln("pip failed for requirements" . join(' ', @pipCmd));
+      } 
+      pop(@pipCmd);
+      pop(@pipCmd);
+    }
+
+    if (@$packages) {
+      SPL::CodeGen::println("Installing Python packages:" . join(' ', @$packages));
+      push(@pipCmd, @$packages);
+      SPL::CodeGen::println("Executing pip:" . join(' ', @pipCmd));
+      my $rc = system(@pipCmd);
+      if ($rc != 0) {
+        SPL::CodeGen::errorln("pip failed for packages:" . join(' ', @pipCmd));
+      } 
+    }
+
+    print("*/\n");
+    print("#endif\n");
+
+    if ($pub) {
       $ENV{'PYTHONUSERBASE'} = $pub;
+    }
   }
-
-  if ($rc != 0) {
-     SPL::CodeGen::errorln("pip failed for packages:" . join(' ', @pipCmd));
-  } 
 }
 
 1;
