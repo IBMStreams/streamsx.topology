@@ -22,7 +22,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
 
@@ -142,28 +141,28 @@ public class BOperatorInvocation extends BOperator {
                 
         if (value instanceof String) {
             if (jsonType == null)
-                jsonType = MetaType.RSTRING.name();
+                jsonType = JParamTypes.RSTRING;
         } else if (value instanceof Byte) {
             if (jsonType == null)
-                jsonType = MetaType.INT8.name();
+                jsonType = JParamTypes.INT8;
         } else if (value instanceof Short) {
             if (jsonType == null)
-                jsonType = MetaType.INT16.name();
+                jsonType = JParamTypes.INT16;
         } else if (value instanceof Integer) {
             if (jsonType == null)
-                jsonType = MetaType.INT32.name();
+                jsonType = JParamTypes.INT32;
         } else if (value instanceof Long) {
             if (jsonType == null)
-                jsonType = MetaType.INT64.name();
+                jsonType = JParamTypes.INT64;
         } else if (value instanceof Float) {
-            jsonType = MetaType.FLOAT32.name();
+            jsonType = JParamTypes.FLOAT32;
         } else if (value instanceof Double) {
-            jsonType = MetaType.FLOAT64.name();
+            jsonType = JParamTypes.FLOAT64;
         } else if (value instanceof Boolean) {
-            jsonType = MetaType.BOOLEAN.name();
+            jsonType = JParamTypes.BOOLEAN;
         } else if (value instanceof BigDecimal) {
             jsonValue = value.toString(); // Need to maintain exact value
-            jsonType = MetaType.DECIMAL128.name();
+            jsonType = JParamTypes.DECIMAL128;
         } else if (value instanceof Enum) {
             jsonValue = ((Enum<?>) value).name();
             jsonType = JParamTypes.TYPE_ENUM;

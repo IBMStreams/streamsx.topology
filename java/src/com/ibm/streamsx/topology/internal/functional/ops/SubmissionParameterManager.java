@@ -8,17 +8,19 @@ import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARA
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streams.operator.OperatorContext;
-import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
+import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
@@ -32,7 +34,7 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
  * <p>
  * The submission parameter's {@code Supplier.get()} implementation learns
  * the actual submission parameter value by calling
- * {@link #getValue(String, MetaType)}.
+ * {@link #getValue(String, String)}.
  * <p>
  * The strategy for the manager learning the submission parameter values
  * is as follows.
@@ -53,36 +55,21 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
  * submit configuration's {@link ContextProperties#SUBMISSION_PARAMS} value.
  */
 public class SubmissionParameterManager {
-    private static abstract class Factory {
-        abstract Object valueOf(String s);
-    }
-    private static Map<MetaType,Factory> factories = new HashMap<>();
+
+    private static Map<String,java.util.function.Function<String, ?>> factories = new HashMap<>();
     static {
-        // TODO more
-        factories.put(MetaType.RSTRING, new Factory() {
-            Object valueOf(String s) { return s; } });
-        factories.put(MetaType.USTRING, new Factory() {
-            Object valueOf(String s) { return s; } });
-        factories.put(MetaType.INT8, new Factory() {
-            Object valueOf(String s) { return Byte.valueOf(s); } });
-        factories.put(MetaType.INT16, new Factory() {
-            Object valueOf(String s) { return Short.valueOf(s); } });
-        factories.put(MetaType.INT32, new Factory() {
-            Object valueOf(String s) { return Integer.valueOf(s); } });
-        factories.put(MetaType.INT64, new Factory() {
-            Object valueOf(String s) { return Long.valueOf(s); } });
-        factories.put(MetaType.UINT8, new Factory() {
-            Object valueOf(String s) { return Byte.valueOf(s); } });
-        factories.put(MetaType.UINT16, new Factory() {
-            Object valueOf(String s) { return Short.valueOf(s); } });
-        factories.put(MetaType.UINT32, new Factory() {
-            Object valueOf(String s) { return Integer.valueOf(s); } });
-        factories.put(MetaType.UINT64, new Factory() {
-            Object valueOf(String s) { return Long.valueOf(s); } });
-        factories.put(MetaType.FLOAT32, new Factory() {
-            Object valueOf(String s) { return Float.valueOf(s); } });
-        factories.put(MetaType.FLOAT64, new Factory() {
-            Object valueOf(String s) { return Double.valueOf(s); } });
+        factories.put(JParamTypes.RSTRING, s -> s);
+        factories.put(JParamTypes.USTRING, factories.get(JParamTypes.RSTRING));
+        factories.put(JParamTypes.INT8, s-> Byte.valueOf(s));
+        factories.put(JParamTypes.INT16, s -> Short.valueOf(s));
+        factories.put(JParamTypes.INT32, s -> Integer.valueOf(s));
+        factories.put(JParamTypes.INT64, s -> Long.valueOf(s));
+        factories.put(JParamTypes.UINT8, s -> Integer.valueOf(s).byteValue());
+        factories.put(JParamTypes.UINT16, s-> Integer.valueOf(s).shortValue());
+        factories.put(JParamTypes.UINT32, s-> Long.valueOf(s).intValue());
+        factories.put(JParamTypes.UINT64, s -> new BigInteger(s).longValue());
+        factories.put(JParamTypes.FLOAT32, s -> Float.valueOf(s));
+        factories.put(JParamTypes.FLOAT64, s -> Double.valueOf(s));
     }
     private static final Map<String,String> UNINIT_MAP = Collections.emptyMap();
     /**  map of topology's <spOpParamName, strVal> */
@@ -187,16 +174,16 @@ public class SubmissionParameterManager {
      * @return the parameter's value appropriately typed for metaType.
      *          may be null.
      */
-    public static Object getValue(String spName, MetaType metaType) {
+    public static Object getValue(String spName, String metaType) {
         String value = params.get(spName);
         if (value == null) {
             // System.out.println("SPM.getValue "+spName+" "+metaType+ " params " + params);
             throw new IllegalArgumentException("Unexpected submission parameter name " + spName);
         }
-        Factory factory = factories.get(metaType);
+        Function<String,?> factory = factories.get(metaType);
         if (factory == null)
             throw new IllegalArgumentException("Unhandled MetaType " + metaType);
-        return factory.valueOf(value);
+        return factory.apply(value);
     }
 
 }
