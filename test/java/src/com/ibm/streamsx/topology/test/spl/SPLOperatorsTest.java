@@ -196,9 +196,13 @@ public class SPLOperatorsTest extends TestTopology {
         assertEquals(i32, tuple.getInt("i32"));
         assertEquals(i64, tuple.getLong("i64"));
         assertEquals(ui8, tuple.getByte("ui8"));
+        assertEquals("255", tuple.getString("ui8"));
         assertEquals(ui16, tuple.getShort("ui16"));
+        assertEquals("65534", tuple.getString("ui16"));
         assertEquals(ui32, tuple.getInt("ui32"));
+        assertEquals("4294967293", tuple.getString("ui32"));
         assertEquals(ui64, tuple.getLong("ui64"));
+        assertEquals("18446744073709551612", tuple.getString("ui64"));
         assertEquals(f32, tuple.getFloat("f32"), 0.001);
         assertEquals(f64, tuple.getDouble("f64"), 0.001);
     }
@@ -284,23 +288,6 @@ public class SPLOperatorsTest extends TestTopology {
         JsonObject value = jo.get("value").getAsJsonObject();
         String metaType = value.get("metaType").getAsString();
         JsonElement v = value.get("value");
-        switch (metaType) {
-        case "UINT8":
-            return Integer.toUnsignedString(Byte.toUnsignedInt(v.getAsByte()));
-        case "UINT16":
-            return Integer.toUnsignedString(Short.toUnsignedInt(v.getAsShort()));
-        case "UINT32":
-            return Integer.toUnsignedString(v.getAsInt());
-        case "UINT64":
-            return Long.toUnsignedString(v.getAsLong());
-        default:
-            return v.getAsString();
-        }
-        /*
-        if (metaType.startsWith("UINT"))
-            return SPLGenerator.unsignedString(v);
-        else
-            return v.toString();
-            */
+        return v.getAsString();
     }
 }
