@@ -283,43 +283,46 @@ sub convertAndAddToPythonDictionaryObject {
 sub spl_pip_packages {
 
   my $model = $_[0];
-  my @packages = $_[1];
+  my $packages = $_[1];
 
-  use File::Path qw(make_path);
-  SPL::CodeGen::println("Installing Python packages:" . join(' ', @packages));
-  my $pkgDir = $model->getContext()->getOutputDirectory()."/etc/streamsx.topology/python";
-  make_path($pkgDir);
+  if (@$packages) {
+
+    use File::Path qw(make_path);
+    SPL::CodeGen::println("Installing Python packages:" . join(' ', @$packages));
+    my $pkgDir = $model->getContext()->getOutputDirectory()."/etc/streamsx.topology/python";
+    make_path($pkgDir);
 
 # Need pip 9
 # '--upgrade-strategy', 'only-if-needed');
 
-  my $pip = 'pip';
+    my $pip = 'pip';
 
-  my $rcv2 = `pip --version`;
-  SPL::CodeGen::println("pip version:" . $rcv);
+    my $rcv2 = `$pip --version`;
+    SPL::CodeGen::println("pip version:" . $rcv);
 
-  my @pipCmd = ($pip, 'install', '--disable-pip-version-check', '--user',
+    my @pipCmd = ($pip, 'install', '--disable-pip-version-check', '--user',
          '--upgrade');
-  push(@pipCmd, @packages);
+    push(@pipCmd, @$packages);
 
-  SPL::CodeGen::println("Executing pip:" . join(' ', @pipCmd));
-  print("#if 0\n");
-  print("/*\n");
+    SPL::CodeGen::println("Executing pip:" . join(' ', @pipCmd));
+    print("#if 0\n");
+    print("/*\n");
 
-  my $pub = $ENV{'PYTHONUSERBASE'};
-  $ENV{'PYTHONUSERBASE'} = $pkgDir;
+    my $pub = $ENV{'PYTHONUSERBASE'};
+    $ENV{'PYTHONUSERBASE'} = $pkgDir;
 
-  my $rc = system(@pipCmd);
-  print("*/\n");
-  print("#endif\n");
+    my $rc = system(@pipCmd);
+    print("*/\n");
+    print("#endif\n");
 
-  if ($pub) {
+    if ($pub) {
       $ENV{'PYTHONUSERBASE'} = $pub;
-  }
+    }
 
-  if ($rc != 0) {
-     SPL::CodeGen::errorln("pip failed for packages:" . join(' ', @pipCmd));
-  } 
+    if ($rc != 0) {
+      SPL::CodeGen::errorln("pip failed for packages:" . join(' ', @pipCmd));
+    } 
+  }
 }
 
 1;
