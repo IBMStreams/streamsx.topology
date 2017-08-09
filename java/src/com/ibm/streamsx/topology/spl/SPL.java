@@ -10,6 +10,7 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.TOOLKITS;
+import static com.ibm.streamsx.topology.spl.OpAPIUtil.fixParameters;
 import static com.ibm.streamsx.topology.spl.SPLStreamImpl.newSPLStream;
 
 import java.io.File;
@@ -173,7 +174,7 @@ public class SPL {
             SPLInput input,
             StreamSchema outputSchema, Map<String, ? extends Object> params) {
 
-        BOperatorInvocation op = input.builder().addSPLOperator(name, kind, params);
+        BOperatorInvocation op = input.builder().addSPLOperator(name, kind, fixParameters(params));
         SourceInfo.setSourceInfo(op, SPL.class);
         SPL.connectInputToOperator(input, op);
         return newSPLStream(input, op, outputSchema);
@@ -213,7 +214,7 @@ public class SPL {
             List<StreamSchema> outputSchemas,
             Map<String, ? extends Object> params) {
         
-        BOperatorInvocation op = te.builder().addSPLOperator(name, kind, params);
+        BOperatorInvocation op = te.builder().addSPLOperator(name, kind, fixParameters(params));
         
         SourceInfo.setSourceInfo(op, SPL.class);
         
@@ -282,7 +283,7 @@ public class SPL {
             Map<String, ? extends Object> params) {
 
         BOperatorInvocation op = input.builder().addSPLOperator(name, kind,
-                params);
+                fixParameters(params));
         SourceInfo.setSourceInfo(op, SPL.class);
         SPL.connectInputToOperator(input, op);
         return new TSinkImpl(input.topology(), op);
@@ -314,7 +315,7 @@ public class SPL {
             Map<String, Object> params, StreamSchema schema) {
 
         BOperatorInvocation splSource = te.builder().addSPLOperator(
-                opNameFromKind(kind), kind, params);
+                opNameFromKind(kind), kind, fixParameters(params));
         SourceInfo.setSourceInfo(splSource, SPL.class);
        
         return newSPLStream(te, splSource, schema);
