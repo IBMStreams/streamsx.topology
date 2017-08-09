@@ -4,6 +4,15 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
+import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FILTER_KIND;
+import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FLAT_MAP_KIND;
+import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FOR_EACH_KIND;
+import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.HASH_ADDER_KIND;
+import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.HASH_REMOVER_KIND;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.logic.Logic.notKeyed;
 import static com.ibm.streamsx.topology.logic.Value.of;
@@ -18,8 +27,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONArray;
+import com.google.gson.JsonPrimitive;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streamsx.topology.TSink;
@@ -41,12 +51,7 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
-import com.ibm.streamsx.topology.internal.functional.ops.FunctionFilter;
-import com.ibm.streamsx.topology.internal.functional.ops.FunctionMultiTransform;
-import com.ibm.streamsx.topology.internal.functional.ops.FunctionSplit;
-import com.ibm.streamsx.topology.internal.functional.ops.FunctionTransform;
-import com.ibm.streamsx.topology.internal.functional.ops.HashAdder;
-import com.ibm.streamsx.topology.internal.functional.ops.HashRemover;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
 import com.ibm.streamsx.topology.internal.logic.KeyFunctionHasher;
 import com.ibm.streamsx.topology.internal.logic.Print;
@@ -56,8 +61,6 @@ import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.spi.Invoker;
-import com.ibm.streamsx.topology.spi.TupleSerializer;
-import com.ibm.streamsx.topology.internal.functional.operators.ForEach;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 
@@ -92,7 +95,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
-                FunctionFilter.class, filter);
+                FILTER_KIND, filter);
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
         
@@ -132,7 +135,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         config.addProperty("name", opName);
         com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(config, getClass());
               
-        return Invoker.invokeForEach(this, ForEach.class, config,
+        return Invoker.invokeForEach(this, FOR_EACH_KIND, config,
                 sinker, null, null);
     }
 
@@ -157,7 +160,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
-                FunctionTransform.class, transformer);
+                JavaFunctionalOps.MAP_KIND, transformer);
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         BInputPort inputPort = connectTo(bop, true, null);
         // By default add a queue
@@ -174,7 +177,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
-                FunctionTransform.class, transformer);
+                JavaFunctionalOps.MAP_KIND, transformer);
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         BInputPort inputPort = connectTo(bop, true, null);
         // By default add a queue
@@ -205,7 +208,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         }
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
-                FunctionMultiTransform.class, transformer);
+                opName, FLAT_MAP_KIND, transformer);
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         BInputPort inputPort = connectTo(bop, true, null);
         // By default add a queue
@@ -238,7 +241,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         List<TStream<T>> sourceStreams = new ArrayList<>();
         sourceStreams.addAll(allStreams);
         
-        StreamSchema schema = output().schema();
+        StreamSchema schema = getStreamSchema(output()._type());
         Type tupleType = getTupleType();
 
         // Unwrap all streams so that we do not add the same stream twice
@@ -253,10 +256,10 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             // the type cannot be determined even if
             // it is a type that uses a special schema,
             // E..g TStream<String>.
-            if (!schema.equals(s.output().schema())) {
+            if (!schema.equals(getStreamSchema(s.output()._type()))) {
                 if (s.getTupleClass() != null) {
                     // This stream has the direct schema!
-                    schema = s.output().schema();
+                    schema = getStreamSchema(s.output()._type());
                     assert getTupleClass() == null;
                     tupleType = s.getTupleClass();
                     if (i != 0) {
@@ -272,7 +275,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 } else {     
                     assert tupleType instanceof Class;
                     s = s.asType((Class<T>) tupleType);                 
-                    assert s.output().schema().equals(schema);
+                    assert getStreamSchema(s.output()._type()).equals(schema);
                     sourceStreams.set(i, s);
                 }
             }
@@ -489,32 +492,34 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             
             BOperatorInvocation hashAdder = JavaFunctional.addFunctionalOperator(this,
                     "HashAdder",
-                    HashAdder.class, hasher);
-            hashAdder.layout().put("hidden", true);
+                    HASH_ADDER_KIND, hasher);
+            hashAdder.layout().addProperty("hidden", true);
             // hashAdder.json().put("routing", routing.toString());
             BInputPort ip = connectTo(hashAdder, true, null);
 
-            StreamSchema hashSchema = ip.schema()
+            StreamSchema hashSchema = getStreamSchema(ip._schema())
                     .extend("int32", "__spl_hash");
-            toBeParallelized = hashAdder.addOutput(hashSchema);
+            toBeParallelized = hashAdder.addOutput(hashSchema.getLanguageType());
             isPartitioned = true;
         }
                 
         BOutput parallelOutput = builder().parallel(toBeParallelized, width);
         if (isPartitioned) {
-            parallelOutput.json().put("partitioned", true);
-            JSONArray partitionKeys = new JSONArray();
-            partitionKeys.add("__spl_hash");
-            parallelOutput.json().put("partitionedKeys", partitionKeys);
+            parallelOutput._json().addProperty("partitioned", true);
+            JsonArray partitionKeys = new JsonArray();
+            partitionKeys.add(new JsonPrimitive("__spl_hash"));
+            parallelOutput._json().add("partitionedKeys", partitionKeys);
             // Add hash remover
             StreamImpl<T> parallelStream = new StreamImpl<T>(this,
                     parallelOutput, getTupleType());
             BOperatorInvocation hashRemover = builder().addOperator(
-                    HashRemover.class, null);
-            hashRemover.layout().put("hidden", true);
+                    "HashRemover", HASH_REMOVER_KIND, null);
+            hashRemover.setModel(MODEL_SPL, LANGUAGE_JAVA);
+            
+            hashRemover.layout().addProperty("hidden", true);
             BInputPort pip = parallelStream.connectTo(hashRemover, true, null);
-            parallelOutput = hashRemover.addOutput(pip.schema()
-                    .remove("__spl_hash"));
+            parallelOutput = hashRemover.addOutput(getStreamSchema(pip._schema())
+                    .remove("__spl_hash").getLanguageType());
         }
 
         return addMatchingStream(parallelOutput);
@@ -632,7 +637,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
-                FunctionSplit.class, splitter);
+                JavaFunctionalOps.SPLIT_KIND, splitter);
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
         
@@ -656,7 +661,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         // Is a schema change needed?
         if (Schemas.usesDirectSchema(tupleClass) &&
-                !Schemas.getSPLMappingSchema(tupleClass).equals(output().schema())) {
+                !Schemas.getSPLMappingSchema(tupleClass).equals(getStreamSchema(output()._type()))) {
             return fixDirectSchema(tupleClass);
         }
 
@@ -674,7 +679,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     private TStream<T> fixDirectSchema(Class<T> tupleClass) {
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 "SchemaFix",
-                FunctionTransform.class, identity());
+                JavaFunctionalOps.MAP_KIND, identity());
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
         return JavaFunctional.addJavaOutput(this, bop, tupleClass);
@@ -688,7 +693,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         if (output() instanceof BOutputPort) {
             BOutputPort port = (BOutputPort) output();
             return !BVirtualMarker.isVirtualMarker(
-                    (String) port.operator().json().get("kind"));
+                    jstring(port.operator()._json(), OpProperties.KIND));
         }
         return false;
     }

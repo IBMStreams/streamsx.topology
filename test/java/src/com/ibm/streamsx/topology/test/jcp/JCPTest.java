@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.test.jcp;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.Collections;

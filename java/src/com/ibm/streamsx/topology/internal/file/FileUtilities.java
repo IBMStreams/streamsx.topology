@@ -8,8 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import com.ibm.streamsx.topology.internal.context.remote.ZippedToolkitRemoteContext;
-
 public class FileUtilities {
     
     /**

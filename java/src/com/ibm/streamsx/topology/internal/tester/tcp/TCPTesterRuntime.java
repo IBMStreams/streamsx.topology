@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.tester.tcp;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState.FAIL;
 import static com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState.NO_PROGRESS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -144,8 +146,11 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
         Map<String, Object> hostInfo = new HashMap<>();
         hostInfo.put("host", testAddr.getHostString());
         hostInfo.put("port", testAddr.getPort());
-        this.testerSinkOp = topology().builder().addOperator(TesterSink.class,
+        this.testerSinkOp = topology().builder().addOperator(
+                "TesterTCP" + testAddr.getPort(),
+                TesterSink.KIND,
                 hostInfo);
+        this.testerSinkOp.setModel(MODEL_SPL, LANGUAGE_JAVA);
     }
     
     /**
@@ -220,8 +225,8 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
             this.testerId = testerId;
             OperatorInvocation<PassThrough> operator = graph
                     .addOperator(PassThrough.class);
-            input = operator.addInput(stream.output().schema());
-            output = operator.addOutput(stream.output().schema());
+            input = operator.addInput(stream.output()._type());
+            output = operator.addOutput(stream.output()._type());
         }
     }
 }

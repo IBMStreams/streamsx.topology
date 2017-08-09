@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.JOIN_KIND;
+
 import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +22,6 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
-import com.ibm.streamsx.topology.internal.functional.ops.FunctionAggregate;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionJoin;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
@@ -133,7 +134,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
 
         
         BOperatorInvocation aggOp = JavaFunctional.addFunctionalOperator(this,
-                opName, FunctionAggregate.class, aggregator, getOperatorParams());
+                opName, JavaFunctionalOps.AGGREGATE_KIND, aggregator, getOperatorParams());
         SourceInfo.setSourceInfo(aggOp, WindowDefinition.class);
 
         addInput(aggOp, triggerPolicy, triggerConfig, triggerTimeUnit);
@@ -173,7 +174,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         }
 
         BOperatorInvocation joinOp = JavaFunctional.addFunctionalOperator(this,
-                opName, FunctionJoin.class, joiner, params);
+                opName, JOIN_KIND, joiner, params);
         
         SourceInfo.setSourceInfo(joinOp, WindowDefinition.class);
                

@@ -2,7 +2,6 @@ package com.ibm.streamsx.topology.spi.operators;
 
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.model.SharedLoader;
-import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.ObjIntConsumer;
 import com.ibm.streamsx.topology.internal.functional.ops.AbstractPrimitive;
 import com.ibm.streamsx.topology.spi.FunctionalOperator;

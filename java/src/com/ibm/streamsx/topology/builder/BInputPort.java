@@ -6,15 +6,14 @@ package com.ibm.streamsx.topology.builder;
 
 import java.util.concurrent.TimeUnit;
 
-import com.ibm.json.java.JSONObject;
-import com.ibm.streams.operator.StreamSchema;
+import com.google.gson.JsonObject;
 import com.ibm.streams.operator.window.StreamWindow;
 
 public class BInputPort extends BInput implements BPort {
 
     private final BOperator op;
 
-    BInputPort(BOperatorInvocation op, int index, String name, StreamSchema schema) {
+    BInputPort(BOperatorInvocation op, int index, String name, String schema) {
         super(op.builder());
         this.op = op;
         
@@ -30,8 +29,8 @@ public class BInputPort extends BInput implements BPort {
             StreamWindow.Policy triggerPolicy, Object triggerConfig, TimeUnit triggerTimeUnit,
             boolean partitioned) {
 
-        final JSONObject winJson = new JSONObject();
-        winJson.put("type", type.name());
+        final JsonObject winJson = new JsonObject();
+        winJson.addProperty("type", type.name());
 
         // Eviction
         switch (evictPolicy) {
@@ -41,10 +40,10 @@ public class BInputPort extends BInput implements BPort {
         default:
             throw new UnsupportedOperationException(evictPolicy.name());
         }
-        winJson.put("evictPolicy", evictPolicy.name());
-        winJson.put("evictConfig", evictConfig);
+        winJson.addProperty("evictPolicy", evictPolicy.name());
+        winJson.addProperty("evictConfig", (Number) evictConfig);
         if (evictPolicy == StreamWindow.Policy.TIME)
-            winJson.put("evictTimeUnit", evictTimeUnit.name());
+            winJson.addProperty("evictTimeUnit", evictTimeUnit.name());
 
         if (triggerPolicy != null && triggerPolicy != StreamWindow.Policy.NONE) {
             switch (triggerPolicy) {
@@ -55,23 +54,19 @@ public class BInputPort extends BInput implements BPort {
                 throw new UnsupportedOperationException(evictPolicy.name());
             }
 
-            winJson.put("triggerPolicy", triggerPolicy.name());
-            winJson.put("triggerConfig", triggerConfig);
+            winJson.addProperty("triggerPolicy", triggerPolicy.name());
+            winJson.addProperty("triggerConfig", (Number) triggerConfig);
             if (triggerTimeUnit != null)
-                winJson.put("triggerTimeUnit", triggerTimeUnit.name());
+                winJson.addProperty("triggerTimeUnit", triggerTimeUnit.name());
         }
 
         if (partitioned) {
-            winJson.put("partitioned", partitioned);
+            winJson.addProperty("partitioned", partitioned);
         }
 
-        json().put("window", winJson);
+        _json().add("window", winJson);
 
         return this;
-    }
-    
-    public StreamSchema schema() {
-        return __schema();
     }
     
     /**

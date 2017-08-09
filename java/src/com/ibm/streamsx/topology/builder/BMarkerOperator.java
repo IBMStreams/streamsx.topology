@@ -4,15 +4,19 @@
  */
 package com.ibm.streamsx.topology.builder;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_MARKER;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_VIRTUAL;
 
-public class BMarkerOperator extends BOperator {
+class BMarkerOperator extends BOperator {
 
-    public BMarkerOperator(GraphBuilder bt, BVirtualMarker virtualMarker) {
+    BMarkerOperator(GraphBuilder bt, BVirtualMarker virtualMarker) {
         super(bt);
-        json().put("kind", virtualMarker.kind());
-        json().put("marker", true);
-        json().put(MODEL, MODEL_VIRTUAL);
+        _json().addProperty(KIND, virtualMarker.kind());
+        _json().addProperty("marker", true);
+        _json().addProperty(MODEL, MODEL_VIRTUAL);
+        _json().addProperty(LANGUAGE, LANGUAGE_MARKER);
     }
 }

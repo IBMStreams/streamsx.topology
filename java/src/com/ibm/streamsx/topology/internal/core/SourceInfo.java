@@ -4,17 +4,11 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
-import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
-import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.json4j;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 import static com.ibm.streamsx.topology.spi.SourceInfo.SOURCE_LOCATIONS;
 
-import java.io.IOException;
-
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 
 
 public class SourceInfo {
@@ -43,16 +37,9 @@ public class SourceInfo {
     
     public static void setSourceInfo(BOperatorInvocation bop, Class<?> calledClass) {
                 
-        JsonObject holder = new JsonObject();
-
-        if (bop.json().containsKey(SOURCE_LOCATIONS)) {
-            holder.add(SOURCE_LOCATIONS,
-                    gson((JSONObject) (bop.json().get(SOURCE_LOCATIONS))));
-        }
+        JsonObject holder = objectCreate(bop._json(), SOURCE_LOCATIONS);
         
-        com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(holder, calledClass);
-        
-        setSourceInfo(bop, holder);       
+        com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(holder, calledClass);    
     }
     
     public static void setSourceInfo(BOperatorInvocation bop, JsonObject config) {
@@ -60,13 +47,6 @@ public class SourceInfo {
         if (!config.has(SOURCE_LOCATIONS))
             return;
         
-        JSONObject holder4j;
-        try {
-            holder4j = json4j(config);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        
-        bop.json().put(SOURCE_LOCATIONS, holder4j.get(SOURCE_LOCATIONS));
+        bop._json().add(SOURCE_LOCATIONS, config.get(SOURCE_LOCATIONS));
     }
 }

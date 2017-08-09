@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.START_OP;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
@@ -27,6 +28,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class GraphUtilities {
@@ -62,7 +64,7 @@ public class GraphUtilities {
      * Get the kind of an operator.
      */
     static String kind(JsonObject op) {
-        String kind = jstring(op, "kind");
+        String kind = jstring(op, KIND);
         assert kind != null;
         return kind;
     }
@@ -430,7 +432,7 @@ public class GraphUtilities {
             Set<JsonObject> allOperatorChildren = new HashSet<>();
             List<JsonObject> operatorParents = new ArrayList<>();
             for (JsonObject parent : parents) {
-                if (equalsAny(boundaries, jstring(parent, "kind"))) {
+                if (equalsAny(boundaries, jstring(parent, OpProperties.KIND))) {
                     operatorParents.add(parent);
                     allOperatorChildren.addAll(GraphUtilities.getDownstream(parent,
                             graph));

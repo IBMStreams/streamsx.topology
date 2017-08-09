@@ -21,7 +21,7 @@ import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
-@PrimitiveOperator
+@PrimitiveOperator(name="Split")
 @InputPortSet(cardinality = 1)
 @OutputPortSet(cardinality = -1)
 @Icons(location16 = "opt/icons/split_16.gif", location32 = "opt/icons/split_32.gif")

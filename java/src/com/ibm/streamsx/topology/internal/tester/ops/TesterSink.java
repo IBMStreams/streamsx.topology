@@ -29,6 +29,8 @@ import com.ibm.streamsx.topology.internal.tester.tcp.TestTuple;
 @InputPortSet
 @Libraries("opt/apache-mina-2.0.2/dist/*")
 public class TesterSink extends TupleConsumer {
+    
+    public static final String KIND = "com.ibm.streamsx.topology.testing::TesterSink";
 
     private String host;
     private int port;

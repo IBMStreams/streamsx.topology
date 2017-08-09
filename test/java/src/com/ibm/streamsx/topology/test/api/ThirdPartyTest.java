@@ -4,13 +4,14 @@
  */
 package com.ibm.streamsx.topology.test.api;
 
+import org.junit.Test;
+
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.test.TestTopology;
 
 import ThirdParty.ThirdPartyResource;
-import org.junit.Test;
 
 public class ThirdPartyTest extends TestTopology {
     @Test

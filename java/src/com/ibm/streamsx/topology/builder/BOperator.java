@@ -4,11 +4,13 @@
  */
 package com.ibm.streamsx.topology.builder;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.addToObject;
+
 import java.util.HashSet;
 import java.util.Set;
 
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
 
 /**
@@ -62,7 +64,7 @@ public class BOperator extends BJSONObject {
      * @param value
      */
     public void addConfig(String key, Object value) {       
-        JOperatorConfig.addItem(json(), key, value);    
+        JOperatorConfig.addItem(_json(), key, value);    
     }
     
     /**
@@ -70,17 +72,15 @@ public class BOperator extends BJSONObject {
      * @param key Key of the value.
      * @return The configured value, or null if it has not been set.
      */
-    public Object getConfigItem(String key) {
-        return JOperatorConfig.getItem(json(), key);
+    public JsonElement getConfigItem(String key) {
+        return JOperatorConfig.getItem(_json(), key);
     }
 
     @Override
-    public JSONObject complete() {
-        JSONObject json = super.complete();
-        if (regions != null) {
-            JSONArray ra = new JSONArray();
-            ra.addAll(regions);
-            json.put("regions", ra);
+    public JsonObject _complete() {
+        JsonObject json = super._complete();
+        if (regions != null && !regions.isEmpty()) {
+            addToObject(json, "regions", regions);
         }
         return json;
     }

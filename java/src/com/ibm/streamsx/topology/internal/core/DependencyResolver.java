@@ -6,6 +6,8 @@ package com.ibm.streamsx.topology.internal.core;
 
 import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.DEP_JAR_LOC;
 import static com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext.DEP_OP_JAR_LOC;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.arrayCreate;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,13 +22,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.ibm.json.java.JSONArray;
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
-import com.ibm.streamsx.topology.internal.functional.ops.Functional;
 import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
 
 /**
@@ -184,10 +186,10 @@ public class DependencyResolver {
     public void resolveDependencies()
             throws IOException, URISyntaxException {
         
-        JSONObject graphConfig = topology.builder().getConfig();
-        JSONArray includes = (JSONArray) graphConfig.get("includes");
+        JsonObject graphConfig = topology.builder().getConfig();
+        JsonArray includes = array(graphConfig, "includes");
         if (includes == null)
-            graphConfig.put("includes", includes = new JSONArray());
+            graphConfig.add("includes", includes = new JsonArray());
               
         for (BOperatorInvocation op : operatorToJarDependencies.keySet()) {    
             ArrayList<String> jars = new ArrayList<String>();
@@ -212,22 +214,10 @@ public class DependencyResolver {
         List<BOperator> ops = topology.builder().getOps();
         if(jars.size() != 0){
             for (BOperator op : ops) {
-                if (op instanceof BOperatorInvocation) {
-                    BOperatorInvocation bop = (BOperatorInvocation) op;
-                    if (Functional.class.isAssignableFrom(bop.operatorClass())) {
-                        JSONObject params = (JSONObject) bop.json().get(
-                                "parameters");
-                        JSONObject op_jars = (JSONObject) params.get("jar");
-                        if (null == op_jars) {
-                            JSONObject val = new JSONObject();
-                            val.put("value", new JSONArray());
-                            params.put("jar", val);
-                            op_jars = val;
-                        }
-                        JSONArray value = (JSONArray) op_jars.get("value");
-                        for (String jar : jars) {
-                            value.add(jar);
-                        }
+                if (JavaFunctionalOps.isFunctional(op)) {
+                    JsonArray value = arrayCreate(op._json(), "parameters", "jar", "value");
+                    for (String jar : jars) {
+                        value.add(new JsonPrimitive(jar));
                     }
                 }
             }
@@ -241,7 +231,7 @@ public class DependencyResolver {
         return containsOperator ? DEP_OP_JAR_LOC : DEP_JAR_LOC;
     }
     
-    private String resolveDependency(Path source, boolean containsOperator, JSONArray includes){ 
+    private String resolveDependency(Path source, boolean containsOperator, JsonArray includes){ 
         
         String jarName;
         
@@ -249,22 +239,22 @@ public class DependencyResolver {
             
             File sourceFile = source.toFile();
             
-            JSONObject include = new JSONObject();
+            JsonObject include = new JsonObject();
                  
             // If it's a file, we assume its a jar file.
             if (sourceFile.isFile()) {
                 jarName = source.getFileName().toString();
                 
-                include.put("source", source.toAbsolutePath().toString());
-                include.put("target", depJarRoot(containsOperator));
+                include.addProperty("source", source.toAbsolutePath().toString());
+                include.addProperty("target", depJarRoot(containsOperator));
             } 
             
             else if (sourceFile.isDirectory()) {
                 // Create an entry that will convert the classes dir into a jar file
                 jarName = "classes" + previouslyCopiedDependencies.size() + "_" + sourceFile.getName() + ".jar";
-                include.put("classes", source.toAbsolutePath().toString());
-                include.put("name", jarName);
-                include.put("target", DEP_JAR_LOC);
+                include.addProperty("classes", source.toAbsolutePath().toString());
+                include.addProperty("name", jarName);
+                include.addProperty("target", DEP_JAR_LOC);
             }
             
             else {
@@ -288,10 +278,10 @@ public class DependencyResolver {
     /**
      * Copy the Artifact to the toolkit
      */
-    private void resolveFileDependency(Artifact a, JSONArray includes)  {    	
-        JSONObject include = new JSONObject();
-        include.put("source", a.absPath.toString());
-        include.put("target", a.dstDirName);
+    private void resolveFileDependency(Artifact a, JsonArray includes)  {    	
+        JsonObject include = new JsonObject();
+        include.addProperty("source", a.absPath.toString());
+        include.addProperty("target", a.dstDirName);
         includes.add(include);
    }
 }

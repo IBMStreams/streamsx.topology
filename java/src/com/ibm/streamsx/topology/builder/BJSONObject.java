@@ -4,20 +4,20 @@
  */
 package com.ibm.streamsx.topology.builder;
 
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonObject;
 
 public abstract class BJSONObject {
 
-    private final JSONObject json = new JSONObject();
+    private final JsonObject _json = new JsonObject();
 
     /**
      * Provides direct access to the JSON object, which may not be complete.
      */
-    public JSONObject json() {
-        return json;
+    public final JsonObject _json() {
+        return _json;
     }
-
-    public JSONObject complete() {
-        return json();
+    
+    public JsonObject _complete() {       
+        return _json();
     }
 }

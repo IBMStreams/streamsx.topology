@@ -19,7 +19,7 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
-@PrimitiveOperator
+@PrimitiveOperator(name="Filter")
 @InputPortSet(cardinality = 1)
 @OutputPortSet(cardinality = 1)
 @Icons(location16 = "opt/icons/filter_16.gif", location32 = "opt/icons/filter_32.gif")

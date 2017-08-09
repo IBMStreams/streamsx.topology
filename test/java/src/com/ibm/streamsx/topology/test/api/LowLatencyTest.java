@@ -90,9 +90,8 @@ public class LowLatencyTest extends TestTopology {
         TStream<String> ss2 = ss1.transform(getContainerId()).endLowLatency();
         
         SPLGenerator generator = new SPLGenerator();
-        JSONObject graph = topology.builder().complete();
         
-        JsonObject ggraph = JSON4JUtilities.gson(graph);
+        JsonObject ggraph = topology.builder()._complete();
         generator.generateSPL(ggraph);
         
         GsonUtilities.objectArray(ggraph , "operators", op -> {

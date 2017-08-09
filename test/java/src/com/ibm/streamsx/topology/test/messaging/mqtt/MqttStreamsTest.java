@@ -4,8 +4,8 @@
  */
 package com.ibm.streamsx.topology.test.messaging.mqtt;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;

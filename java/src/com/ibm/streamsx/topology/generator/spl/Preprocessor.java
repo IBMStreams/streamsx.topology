@@ -9,11 +9,10 @@ import static com.ibm.streamsx.topology.builder.BVirtualMarker.ISOLATE;
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.PARALLEL;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.addBefore;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.findOperatorByKind;
-import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

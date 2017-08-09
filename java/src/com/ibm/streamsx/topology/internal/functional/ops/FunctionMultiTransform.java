@@ -18,7 +18,7 @@ import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
-@PrimitiveOperator
+@PrimitiveOperator(name="FlatMap")
 @InputPortSet(cardinality = 1)
 @OutputPortSet(cardinality = 1)
 @Icons(location16 = "opt/icons/functor_16.gif", location32 = "opt/icons/functor_32.gif")

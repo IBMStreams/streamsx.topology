@@ -5,22 +5,23 @@
 package com.ibm.streamsx.topology.internal.core;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonObject;
 import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager;
-import com.ibm.streamsx.topology.tuple.JSONAble;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * A specification for a value of type {@code T}
  * whose actual value is not defined until topology execution time.
  */
-public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
+public class SubmissionParameter<T> implements Supplier<T> {
     private static final long serialVersionUID = 1L;
     private static final Map<Class<?>,MetaType> toMetaType = new HashMap<>();
     static {
@@ -105,15 +106,15 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
      *        When false, the wrapped value's value is ignored.
      */
     @SuppressWarnings("unchecked")
-    public SubmissionParameter(Topology top, String name, JSONObject jvalue, boolean withDefault) {
-        String type = (String) jvalue.get("type");
+    public SubmissionParameter(Topology top, String name, JsonObject jvalue, boolean withDefault) {
+        String type = jstring(jvalue, "type");
         if (!"__spl_value".equals(type))
             throw new IllegalArgumentException("defaultValue");
-        JSONObject value = (JSONObject) jvalue.get("value");
+        JsonObject value = GsonUtilities.object(jvalue, "value");
         this.top = top;
         this.name = name;
         this.defaultValue = withDefault ? (T) value.get("value") : null;
-        this.metaType =  MetaType.valueOf((String) value.get("metaType"));
+        this.metaType =  MetaType.valueOf(jstring(value, "metaType"));
     }
 
     @SuppressWarnings("unchecked")
@@ -135,8 +136,7 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
         return defaultValue;
     }
 
-    @Override
-    public JSONObject toJSON() {
+    public JsonObject asJSON() {
         // meet the requirements of BOperatorInvocation.setParameter()
         // and OperatorGenerator.parameterValue()
         /*
@@ -152,19 +152,19 @@ public class SubmissionParameter<T> implements Supplier<T>, JSONAble {
          * }
          * </code></pre>
          */
-        JSONObject jo = new JSONObject();
-        JSONObject jv = new JSONObject();
-        jo.put("type", TYPE_SUBMISSION_PARAMETER);
-        jo.put("value", jv);
-        jv.put("name", name);
-        jv.put("metaType", metaType.name());
+        JsonObject jo = new JsonObject();
+        JsonObject jv = new JsonObject();
+        jo.addProperty("type", TYPE_SUBMISSION_PARAMETER);
+        jo.add("value", jv);
+        jv.addProperty("name", name);
+        jv.addProperty("metaType", metaType.name());
         if (defaultValue != null)
-            jv.put("defaultValue", defaultValue);
+            GsonUtilities.addToObject(jv, "defaultValue", defaultValue);
         return jo;
     }
 
     @Override
     public String toString() {
-        return toJSON().toString();
+        return asJSON().toString();
     }
 }

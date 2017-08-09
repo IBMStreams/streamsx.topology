@@ -13,7 +13,6 @@ import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_COMPILE_VERSION;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
-import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
@@ -709,36 +708,6 @@ public class SPLGenerator {
         }
         
         sb.append(literal);
-        sb.append(suffix);
-    }
-
-    /**
-     * Append the value with the correct SPL suffix. Integer & Double do not
-     * require a suffix
-     */
-    static void numberLiteral(StringBuilder sb, Number value, String type) {
-        Object val = value;
-        String suffix = "";
-        boolean isUnsignedInt = isUnsignedInt(type); 
-
-        if (value instanceof Byte)
-            suffix = "b";
-        else if (value instanceof Short)
-            suffix = "h";
-        else if (value instanceof Integer) {
-            if (isUnsignedInt)
-                suffix = "w";  // word, meaning 32 bits
-        } else if (value instanceof Long)
-            suffix = "l";
-        else if (value instanceof Float)
-            suffix = "w"; // word, meaning 32 bits
-
-        if (isUnsignedInt) {
-            val = unsignedString(value);
-            suffix = "u" + suffix;
-        }
-
-        sb.append(val);
         sb.append(suffix);
     }
     

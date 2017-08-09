@@ -4,10 +4,14 @@
  */
 package com.ibm.streamsx.topology.spl;
 
-import com.ibm.json.java.JSONObject;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+
+import com.google.gson.JsonObject;
 import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * An implementation private wrapper for values of any SPL type. 
@@ -20,7 +24,7 @@ class SPLValue<T> {
     private final T value;
     private final Type.MetaType metaType;
     
-    public SPLValue(T value, MetaType metaType) {
+    SPLValue(T value, MetaType metaType) {
         this.value = value;
         this.metaType = metaType;
     }
@@ -32,11 +36,11 @@ class SPLValue<T> {
                 || metaType == MetaType.UINT64;
     }
 
-    public T value() {
+    T value() {
         return value;
     }
     
-    public Type.MetaType metaType() {
+    Type.MetaType metaType() {
         return metaType;
     }
     
@@ -48,28 +52,18 @@ class SPLValue<T> {
     }
     
     // throws if jo not produced by toJSON()
-    public static SPLValue<?> fromJSON(JSONObject jo) {
-        String type = (String) jo.get("type");
+    static SPLValue<?> fromJSON(JsonObject jo) {
+        String type = jstring(jo, "type");
         if (!"__spl_value".equals(type))
-            throw new IllegalArgumentException("jo");
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        SPLValue<?> splValue = new SPLValue(getWrappedValue(jo), getMetaType(jo));
+            throw new IllegalArgumentException(jo.toString());
+        JsonObject value = object(jo, "value");
+        SPLValue<?> splValue = new SPLValue<String>(
+                jstring(value, "value"),
+                MetaType.valueOf(jstring(value, "metaType")));
         return splValue;
     }
     
-    private static Object getWrappedValue(JSONObject jo) {
-        JSONObject value = (JSONObject) jo.get("value");
-        Object wrappedValue = value.get("value");
-        return wrappedValue;
-    }
-    
-    private static MetaType getMetaType(JSONObject jo) {
-        JSONObject value = (JSONObject) jo.get("value");
-        String metaType = (String) value.get("metaType");
-        return MetaType.valueOf(metaType);
-    }
-    
-    public JSONObject toJSON() {
+    JsonObject asJSON() {
         // meet the requirements of BOperatorInvocation.setParameter()
         /*
          * The Value object is
@@ -83,12 +77,12 @@ class SPLValue<T> {
          * }
          * </code></pre>
          */
-        JSONObject jo = new JSONObject();
-        JSONObject jv = new JSONObject();
-        jo.put("type", "__spl_value");
-        jo.put("value", jv);
-        jv.put("metaType", metaType.name());
-        jv.put("value", value);
+        JsonObject jo = new JsonObject();
+        JsonObject jv = new JsonObject();
+        jo.addProperty("type", "__spl_value");
+        jo.add("value", jv);
+        jv.addProperty("metaType", metaType.name());
+        GsonUtilities.addToObject(jv, "value", value());
         return jo;
     }
 }

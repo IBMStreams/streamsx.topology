@@ -4,9 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor.FUNCTIONAL_LOGIC_PARAM;
 
@@ -15,13 +13,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.ibm.streams.operator.Operator;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
@@ -30,7 +26,6 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
-import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 
@@ -44,25 +39,27 @@ public class JavaFunctional {
      * Add an operator that executes a Java function (as an instance of a class)
      * for its logic.
      */
+    /*
     public static BOperatorInvocation addFunctionalOperator(TopologyElement te,
-            Class<? extends Operator> opClass, Serializable logic) {
+            String kind, Serializable logic) {
 
         verifySerializable(logic);
         String logicString = ObjectUtils.serializeLogic(logic);
-        BOperatorInvocation bop = te.builder().addOperator(opClass,
+        BOperatorInvocation bop = te.builder().addOperator("FRED", kind,
                 Collections.singletonMap(FUNCTIONAL_LOGIC_PARAM, logicString));
 
         addDependency(te, bop, logic);
 
         return bop;
     }
+    */
     public static BOperatorInvocation addFunctionalOperator(TopologyElement te,
-            String name, Class<? extends Operator> opClass, Serializable logic) {
+            String name, String kind, Serializable logic) {
 
-        return addFunctionalOperator(te, name, opClass, logic, null);
+        return addFunctionalOperator(te, name, kind, logic, null);
     }
     public static BOperatorInvocation addFunctionalOperator(TopologyElement te,
-            String name, Class<? extends Operator> opClass, Serializable logic,
+            String name, String kind, Serializable logic,
             Map<String,Object> params) {
         if (params == null)
             params = new HashMap<>();
@@ -70,8 +67,7 @@ public class JavaFunctional {
         verifySerializable(logic);
         String logicString = ObjectUtils.serializeLogic(logic);        
         params.put(FUNCTIONAL_LOGIC_PARAM, logicString);
-        BOperatorInvocation bop = te.builder().addOperator(name, opClass,
-                params);
+        BOperatorInvocation bop = te.builder().addOperator(name, kind, params);
         bop.setModel(MODEL_FUNCTIONAL, LANGUAGE_JAVA);
 
         addDependency(te, bop, logic);
@@ -94,7 +90,7 @@ public class JavaFunctional {
             BOperatorInvocation bop, Type tupleType) {
         
         StreamSchema mappingSchema = Schemas.getSPLMappingSchema(tupleType);
-        BOutputPort bstream = bop.addOutput(mappingSchema);
+        BOutputPort bstream = bop.addOutput(mappingSchema.getLanguageType());
         
         return getJavaTStream(te, bop, bstream, tupleType);
     }
@@ -106,7 +102,7 @@ public class JavaFunctional {
     public static <T> TStream<T> getJavaTStream(TopologyElement te,
             BOperatorInvocation bop, BOutputPort bstream, Type tupleType) {
         if (tupleType != null)
-            bstream.json().put("type.native", tupleType.toString()); // Java 8 should use getTypeName
+            bstream.setNativeType(tupleType);
         addDependency(te, bop, tupleType);
         
         // If the stream is just a Java object as a blob

@@ -27,17 +27,12 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
-import com.ibm.streamsx.topology.generator.operator.OpProperties;
-import com.ibm.streamsx.topology.internal.graph.GraphKeys;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class PEPlacement {
     

@@ -25,8 +25,12 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SP
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_VIRTUAL;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAME;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.addAll;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jisEmpty;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
+import static com.ibm.streamsx.topology.spi.builder.Properties.Graph.CONFIG;
+import static com.ibm.streamsx.topology.spi.builder.Properties.Graph.Config.JAVA_OPS;
 import static java.util.Objects.requireNonNull;
 
 import java.util.HashMap;
@@ -55,8 +59,9 @@ import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
 import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
+import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 
 /**
  * Takes the JSON graph defined by Topology
@@ -68,6 +73,7 @@ import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 public class EmbeddedGraph {
     
     private final GraphBuilder builder;
+    private final JsonObject kind2Class;
     private OperatorGraph graphDecl;
     
     // map for stream/port name to declared port.
@@ -82,22 +88,25 @@ public class EmbeddedGraph {
    
     public EmbeddedGraph(GraphBuilder builder)  {
         this.builder = builder;
+        kind2Class = objectCreate(builder._json(), CONFIG, JAVA_OPS);
+        addAll(kind2Class, JavaFunctionalOps.kind2Class());
     }
     
     public void verifySupported() {        
         for (BOperator op : builder.getOps())
-            verifyOp(op);
+            verifyOp(op._complete());
     }
     
-    private boolean verifyOp(BOperator op) {
-        JsonObject json = JSON4JUtilities.gson(op.complete());
+    private boolean verifyOp(JsonObject op) {
         
-        switch (jstring(json, MODEL)) {
+        switch (jstring(op, MODEL)) {
         case MODEL_VIRTUAL:
-            return false;
+            if (OpProperties.LANGUAGE_MARKER.equals(jstring(op, LANGUAGE)))
+                return false;
+            // fall through
         case MODEL_FUNCTIONAL:
         case MODEL_SPL:
-            if (!LANGUAGE_JAVA.equals(jstring(json, LANGUAGE)))
+            if (!LANGUAGE_JAVA.equals(jstring(op, LANGUAGE)))
                 throw notSupported(op);
             return true;
         default:
@@ -143,12 +152,15 @@ public class EmbeddedGraph {
      */
     @SuppressWarnings("unchecked")
     private void declareOp(BOperator op) throws Exception {
-        JsonObject json = JSON4JUtilities.gson(op.complete());
+        JsonObject json = op._complete();
        
-        if (!verifyOp(op))
+        if (!verifyOp(json))
             return;
         
         String opClassName = jstring(json, KIND_CLASS);
+        if (opClassName == null) {
+            opClassName = requireNonNull(jstring(kind2Class, jstring(json, OpProperties.KIND)));
+        }
         Class<? extends Operator> opClass = (Class<? extends Operator>) Class.forName(opClassName);
         OperatorInvocation<? extends Operator> opDecl = graphDecl.addOperator(opClass);
         
@@ -178,7 +190,7 @@ public class EmbeddedGraph {
             String name = jstring(output, "name");            
             StreamSchema schema = Type.Factory.getTupleType(jstring(output, "type")).getTupleSchema();            
             OutputPortDeclaration port = opDecl.addOutput(name, schema);
-            
+          
             assert !outputPorts.containsKey(name);
             outputPorts.put(name, port);
         }  
@@ -269,11 +281,10 @@ public class EmbeddedGraph {
 
     private void declareConnections() throws Exception {
         for (BOperator op : builder.getOps())
-            declareOpConnections(op);
+            declareOpConnections(op._complete());
     }
 
-    private void declareOpConnections(BOperator op) {
-        JsonObject json = JSON4JUtilities.gson(op.complete());
+    private void declareOpConnections(JsonObject json) {
         JsonArray outputs = json.getAsJsonArray("outputs");
         if (jisEmpty(outputs))
             return;
@@ -363,15 +374,16 @@ public class EmbeddedGraph {
             throw new IllegalArgumentException("Type for parameter " + name + " is not supported:" +  type);
     }
     
-    private IllegalStateException notSupported(BOperator op) {
+    private IllegalStateException notSupported(JsonObject op) {
         
-        String namespace = (String) builder.json().get(NAMESPACE);
-        String name = (String) builder.json().get(NAME);
+        String namespace = jstring(builder._json(), NAMESPACE);
+        String name = jstring(builder._json(), NAME);
         
         return new IllegalStateException(
                 "Topology '"+namespace+"."+name+"'"
                 + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
-                + " the topology contains non-Java operator:" + op.json().get(KIND));
+                + " the topology contains non-Java operator:" +
+                jstring(op, KIND));
     }
 
     public OutputPortDeclaration getOutputPort(String name) {
