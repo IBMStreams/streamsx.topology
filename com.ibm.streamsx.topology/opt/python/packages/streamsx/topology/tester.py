@@ -240,9 +240,11 @@ class Tester(object):
         if exact:
             name = "ExactCount" + str(len(self._conditions))
             cond = sttrt._TupleExactCount(count, name)
+            cond._desc = "{0} stream expects tuple count equal to {1}.".format(stream.name, count)
         else:
             name = "AtLeastCount" + str(len(self._conditions))
             cond = sttrt._TupleAtLeastCount(count, name)
+            cond._desc = "'{0}' stream expects tuple count of at least {1}.".format(stream.name, count)
         return self.add_condition(stream, cond)
 
     def contents(self, stream, expected, ordered=True):
@@ -259,8 +261,10 @@ class Tester(object):
         name = "StreamContents" + str(len(self._conditions))
         if ordered:
             cond = sttrt._StreamContents(expected, name)
+            cond._desc = "'{0}' stream expects tuple ordered contents: {1}.".format(stream.name, expected)
         else:
             cond = sttrt._UnorderedStreamContents(expected, name)
+            cond._desc = "'{0}' stream expects tuple unordered contents: {1}.".format(stream.name, expected)
         return self.add_condition(stream, cond)
 
     def tuple_check(self, stream, checker):
@@ -422,6 +426,20 @@ class Tester(object):
         else:
             raise NotImplementedError("Tester context type not implemented:", ctxtype)
 
+        if 'conditions' in self.result:
+            for cn,cnr in self.result['conditions'].items():
+                c = self._conditions[cn][1]
+                cdesc = cn
+                if hasattr(c, '_desc'):
+                    cdesc = c._desc
+
+                if 'Fail' == cnr:
+                    _logger.error("Condition: %s : %s", cnr, cdesc)
+                elif 'NotValid' == cnr:
+                    _logger.warning("Condition: %s : %s", cnr, cdesc)
+                elif 'Valid' == cnr:
+                    _logger.info("Condition: %s : %s", cnr, cdesc)
+        
         if assert_on_fail:
             assert passed, "Test failed for topology: " + self.topology.name
         if passed:
