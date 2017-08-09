@@ -29,26 +29,8 @@ class SPLValue<T> {
         this.metaType = metaType;
     }
     
-    private static boolean isUnsignedInt(MetaType metaType) {
-        return metaType == MetaType.UINT8
-                || metaType == MetaType.UINT16
-                || metaType == MetaType.UINT32
-                || metaType == MetaType.UINT64;
-    }
-
-    T value() {
-        return value;
-    }
-    
     Type.MetaType metaType() {
         return metaType;
-    }
-    
-    @Override
-    public String toString() {
-        if (isUnsignedInt(metaType))
-            return SPLGenerator.unsignedString(value);
-        return value.toString();
     }
     
     // throws if jo not produced by toJSON()
@@ -82,7 +64,35 @@ class SPLValue<T> {
         jo.addProperty("type", "__spl_value");
         jo.add("value", jv);
         jv.addProperty("metaType", metaType.name());
-        GsonUtilities.addToObject(jv, "value", value());
+        switch (metaType) {
+        case UINT8:
+            if (value instanceof Byte) {
+                jv.addProperty("value", Integer.toString(Byte.toUnsignedInt((Byte) value)));
+                return jo;
+            }
+            break;
+        case UINT16:
+            if (value instanceof Short) {
+                jv.addProperty("value", Integer.toString(Short.toUnsignedInt((Short) value)));
+                return jo;
+            }
+            break;
+        case UINT32:
+            if (value instanceof Integer) {
+                jv.addProperty("value", Long.toString(Integer.toUnsignedLong((Integer) value)));
+                return jo;
+            }
+            break;
+        case UINT64:
+            if (value instanceof Long) {
+                jv.addProperty("value", Long.toUnsignedString((Long) value));
+                return jo;
+            }
+            break;
+        default:
+            break;
+        }
+        GsonUtilities.addToObject(jv, "value", value);
         return jo;
     }
 }
