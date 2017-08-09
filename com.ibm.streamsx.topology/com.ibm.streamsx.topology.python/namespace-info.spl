@@ -549,13 +549,78 @@ its conversion to a Python tuple.
         "Print each tuple to standard out."
          print(tuple, flush=True)
 
+++ Dependent Python packages
+
+The decorated Python classes and functions used for SPL operators can
+depend on additional Python packages or modules.
+
+Dependent Python packages can either be stored in the toolkit
+or installed using `pip` during SPL compilation.
+
+# Packages & modules stored in the SPL toolkit
+
+These directories in a toolkit are automatically added to the Python search path during execution of an operator.
+ * `opt/python/streams` - Contains modules that define Python callables that will be created as SPL operators
+ * `opt/python/packages` - Root directory for Python [https://docs.python.org/3.4/tutorial/modules.html#packages|packages] hierarchy.
+ * `opt/python/modules` - Arbitrary [https://docs.python.org/3.4/tutorial/modules.html#modules|modules], not defined as a packages.
+
+By default all of these directories are included in the Streams
+application bundle (`sab`) for a compiled application.
+
+Thus any packages or modules stored in those directories are part
+of the toolkit, thus increasing the distribution size of the toolkit.
+
+# Packages installed by pip at SPL compile time
+
+Python packages can be requested to be installed during the SPL
+compilation using `pip install --user`. The packages are installed locally into
+the compliation's output directory, thus becoming part of the
+Streams application bundle (`sab`). The packages will be installed
+from [https://pypi.python.org/pypi|PyPi].
+
+During SPL compilation (`sc`) `pip` must be in the user's PATH.
+
+Any required packages and their dependencies are added to the `sab`
+if they are not globally installed. Thus there is an assumption that
+the compile machines and runtime machines have an identical set of
+globally installed packages. This is guaranteed for the Streaming
+Analytics service on the IBM Bluemix cloud platform.
+
+For example is there was a dependency on `numpy` and `geocoder` and
+`numpy` was globally installed then only `geocoder` would be installed
+into the compliation's output directory (in addition to any dependencies
+`geocoder` has that were not globally installed).
+
+**Tookit wide requirements**
+
+If the file `opt/python/streams/requirements.txt` exists in the
+toolkit then it is taken as a pip requirements file. During
+SPL compilation it will be passed to `pip` using the `-requirement` flag
+for installation of the required packages into the output directory.
+
+See: [https://pip.pypa.io/en/stable/user_guide/#requirements-files]
+
+**Module specific requirements**
+
+A module containing SPL primitive operator decorated clases and functions
+can specify a list of packages (or more precisely
+[https://pip.pypa.io/en/stable/reference/pip_install/#requirement-specifiers|requirement specifiers])
+using the function `spl_pip_packages`.
+
+    # Packages geocoder and python-goehash will be installed
+    # into the sab for the application invoking any operator
+    # in this module unless they are globally installed at
+    # SPL (sc) compile time.
+    def spl_pip_packages():
+        return ['geocoder', 'python-geohash']
+
 ++ Processing SPL tuples in Python
 
 SPL tuples are converted to Python objects and passed to a decorated callable.
 
 # Overview
 
-For each SPL tuple arriving at an input port a Python function is called with
+For each SPL tuple arriving at an input port a Python callable is invoked with
 the SPL tuple converted to Python values suitable for the function call.
 How the tuple is passed is defined by the tuple passing style.
 
@@ -1216,7 +1281,7 @@ To create SPL operators in a toolkit, execute:
 Any Python module in the toolkit's `opt/python/streams` directory will have its decorated classes and functions converted to SPL operators.
 
 These directories in a toolkit are automatically added to the Python search path during execution of an operator.
- * `opt/python/streams` - Contains modules that define Python functions that will be created as SPL operators
+ * `opt/python/streams` - Contains modules that define Python callables that will be created as SPL operators
  * `opt/python/packages` - Root directory for Python [https://docs.python.org/3.4/tutorial/modules.html#packages|packages] hierarchy.
  * `opt/python/modules` - Arbitrary [https://docs.python.org/3.4/tutorial/modules.html#modules|modules], not defined as a packages.
  * `impl/nl` - The directory for the resource files.

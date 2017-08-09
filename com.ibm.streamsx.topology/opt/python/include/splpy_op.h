@@ -36,9 +36,13 @@ class SplpyOp {
 
       {
           pydl_ = SplpySetup::loadCPython(spl_setup_py);
-#if __SPLPY_EC_MODULE_OK
 
           SplpyGIL lock;
+          SPL::rstring outDir(op->getPE().getOutputDirectory());
+          PyObject * pyOutDir = pySplValueToPyObject(outDir);
+          SplpyGeneral::callVoidFunction(
+               "streamsx.topology.runtime", "add_output_packages", pyOutDir, NULL);
+#if __SPLPY_EC_MODULE_OK
           opc_ = PyLong_FromVoidPtr((void*)op);
           if (opc_ == NULL)
               throw SplpyGeneral::pythonException("capsule");
