@@ -9,14 +9,14 @@ import com.ibm.streamsx.topology.internal.context.AnalyticsServiceStreamsContext
 import com.ibm.streamsx.topology.internal.context.BundleStreamsContext;
 import com.ibm.streamsx.topology.internal.context.DistributedStreamsContext;
 import com.ibm.streamsx.topology.internal.context.DistributedTester;
-import com.ibm.streamsx.topology.internal.context.EmbeddedStreamsContext;
-import com.ibm.streamsx.topology.internal.context.EmbeddedTester;
 import com.ibm.streamsx.topology.internal.context.RemoteStreamingAnalyticsServiceStreamsContext;
 import com.ibm.streamsx.topology.internal.context.RemoteStreamingAnalyticsTester;
 import com.ibm.streamsx.topology.internal.context.StandaloneStreamsContext;
 import com.ibm.streamsx.topology.internal.context.StandaloneTester;
 import com.ibm.streamsx.topology.internal.context.ToolkitStreamsContext;
 import com.ibm.streamsx.topology.internal.context.ZippedToolkitStreamsContext;
+import com.ibm.streamsx.topology.internal.embedded.EmbeddedStreamsContext;
+import com.ibm.streamsx.topology.internal.embedded.EmbeddedTester;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**

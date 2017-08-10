@@ -11,7 +11,7 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 
-abstract class StreamsContextImpl<T> implements StreamsContext<T> {
+public abstract class StreamsContextImpl<T> implements StreamsContext<T> {
 
     @Override
     public final Future<T> submit(Topology topology) throws Exception {

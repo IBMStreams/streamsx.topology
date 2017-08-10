@@ -2,14 +2,14 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.internal.context;
+package com.ibm.streamsx.topology.internal.embedded;
 
 import java.util.Map;
 import java.util.concurrent.Future;
 
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.internal.embedded.EmbeddedGraph;
+import com.ibm.streamsx.topology.internal.context.StreamsContextImpl;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 
 public class EmbeddedTester extends StreamsContextImpl<JavaTestableGraph> {

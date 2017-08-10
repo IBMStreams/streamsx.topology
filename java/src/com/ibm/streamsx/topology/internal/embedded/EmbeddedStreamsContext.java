@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.internal.context;
+package com.ibm.streamsx.topology.internal.embedded;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,7 +11,7 @@ import java.util.concurrent.Future;
 import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.internal.embedded.EmbeddedGraph;
+import com.ibm.streamsx.topology.internal.context.StreamsContextImpl;
 
 public class EmbeddedStreamsContext extends
         StreamsContextImpl<JavaTestableGraph> {
