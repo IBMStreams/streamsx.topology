@@ -11,7 +11,7 @@ import com.google.gson.JsonObject;
 public class BInputPort extends BInput implements BPort {
     
     public interface Window {
-        String SLIDING = "SILDING";
+        String SLIDING = "SLIDING";
         
         String NONE_POLICY = "NONE";
         String TIME_POLICY = "TIME";

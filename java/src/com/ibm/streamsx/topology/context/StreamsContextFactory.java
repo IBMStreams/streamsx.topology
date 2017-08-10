@@ -15,8 +15,6 @@ import com.ibm.streamsx.topology.internal.context.StandaloneStreamsContext;
 import com.ibm.streamsx.topology.internal.context.StandaloneTester;
 import com.ibm.streamsx.topology.internal.context.ToolkitStreamsContext;
 import com.ibm.streamsx.topology.internal.context.ZippedToolkitStreamsContext;
-import com.ibm.streamsx.topology.internal.embedded.EmbeddedStreamsContext;
-import com.ibm.streamsx.topology.internal.embedded.EmbeddedTester;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
@@ -35,8 +33,9 @@ public class StreamsContextFactory {
      * 
      * @see StreamsContext.Type#EMBEDDED
      */
+    @SuppressWarnings("unchecked")
     public static StreamsContext<JavaTestableGraph> getEmbedded() {
-        return new EmbeddedStreamsContext();
+        return (StreamsContext<JavaTestableGraph>) newInstance("com.ibm.streamsx.topology.internal.embedded.EmbeddedStreamsContext");
     }
 
     /**
@@ -82,7 +81,7 @@ public class StreamsContextFactory {
         case STANDALONE_TESTER:
             return new StandaloneTester();
         case EMBEDDED_TESTER:
-            return new EmbeddedTester();
+            return newInstance("com.ibm.streamsx.topology.internal.embedded.EmbeddedTester");
         case DISTRIBUTED_TESTER:
             return new DistributedTester();
         
@@ -97,6 +96,19 @@ public class StreamsContextFactory {
         default:
             throw new IllegalArgumentException("Unknown type:" + type);
         }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static StreamsContext<?> newInstance(String contextClassName) {
+        try {
+            Class<StreamsContext<?>> contextClass;
+            contextClass = (Class<StreamsContext<?>>) Class.forName(contextClassName);
+                    
+            return contextClass.newInstance();
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+            throw new IllegalStateException(e);
+        }
+
     }
     
     /**
