@@ -21,7 +21,6 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
-import com.ibm.streamsx.topology.spl.SPLStream;
 
 /**
  * A {@code TStream} is a declaration of a continuous sequence of tuples. A
@@ -648,7 +647,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * For Java streams ({@code TStream<T>}) the declared Java type ({@code T}
      * ) of the stream is an exact match.</LI>
      * <LI>
-     * For {@link SPLStream SPL streams} the {@link SPLStream#getSchema() SPL
+     * For {@link SPLStream SPL streams} the {@link com.ibm.streamsx.topology.spl.SPLStream#getSchema() SPL
      * schema} is an exact match.</LI>
      * </UL>
      * <BR>
@@ -732,7 +731,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * For Java streams ({@code TStream<T>}) the declared Java type ({@code T}
      * ) of the stream is an exact match.</LI>
      * <LI>
-     * For {@link SPLStream SPL streams} the {@link SPLStream#getSchema() SPL
+     * For {@link com.ibm.streamsx.topology.spl.SPLStream SPL streams} the {@link com.ibm.streamsx.topology.spl.SPLStream#getSchema() SPL
      * schema} is an exact match.</LI>
      * </UL>
      * </P>

@@ -57,7 +57,6 @@ import com.ibm.streamsx.topology.internal.logic.KeyFunctionHasher;
 import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
-import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.spi.Invoker;
@@ -397,7 +396,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         
         BOperatorInvocation op;
-        if (Schemas.usesDirectSchema(tupleType)
+        if (ObjectSchemas.usesDirectSchema(tupleType)
                  || ((TStream<T>) this) instanceof SPLStream) {
         	// Don't allow filtering against schemas that Streams
         	// would not allow a filter against.
@@ -660,8 +659,8 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             return this;
         
         // Is a schema change needed?
-        if (Schemas.usesDirectSchema(tupleClass) &&
-                !Schemas.getSPLMappingSchema(tupleClass).equals(getStreamSchema(output()._type()))) {
+        if (ObjectSchemas.usesDirectSchema(tupleClass) &&
+                !ObjectSchemas.getMappingSchema(tupleClass).equals(output()._type())) {
             return fixDirectSchema(tupleClass);
         }
 

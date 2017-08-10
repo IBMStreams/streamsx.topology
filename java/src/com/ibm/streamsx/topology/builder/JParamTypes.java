@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015,2017
+ */
 package com.ibm.streamsx.topology.builder;
 
 import com.google.gson.JsonObject;

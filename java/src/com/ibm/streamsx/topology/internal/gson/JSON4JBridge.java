@@ -16,8 +16,25 @@ import com.google.gson.JsonObject;
  */
 public class JSON4JBridge {
     
-    public static boolean isJson4J(Object o) {
-        return "com.ibm.json.java.JSONObject".equals(o.getClass().getName());
+    private static final Class<?> JSON4J_OBJ_CLASS;
+    
+    static {
+        Class<?> clazz;
+        try {
+            clazz = Class.forName("com.ibm.json.java.JSONObject");
+        } catch (ClassNotFoundException e) {
+            clazz = null;
+        }
+        JSON4J_OBJ_CLASS = clazz;
+    }
+    
+    public static boolean isJson4J(Object obj) {
+        if (JSON4J_OBJ_CLASS != null)
+            return JSON4J_OBJ_CLASS.isInstance(obj);
+        return false;
+    }
+    public static boolean isJson4JClass(Class<?> clazz) {
+        return "com.ibm.json.java.JSONObject".equals(clazz.getName());
     }
      
     public static JsonObject fromJSON4J(Object o) {
