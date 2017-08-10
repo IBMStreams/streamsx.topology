@@ -42,7 +42,7 @@ class SPLWindowImpl extends WindowDefinition<Tuple,Object> implements SPLWindow 
      * Make the passed input port windowed.
      */
     void windowInput(BInputPort inputPort) {
-        inputPort.window(StreamWindow.Type.SLIDING, policy, config, this.timeUnit,
-                triggerPolicy, triggerConfig, triggerTimeUnit, false);
+        inputPort.window(StreamWindow.Type.SLIDING.name(), policy, config, this.timeUnit,
+                triggerPolicy.name(), triggerConfig, triggerTimeUnit, false);
     }
 }

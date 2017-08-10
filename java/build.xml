@@ -33,6 +33,8 @@
   <!-- Compile of classes that do not depend on STREAMS_INSTALL
        to allow local generation of SPL code and submission to
        a build farm.
+              ${cisxt}/spi/*.java
+              ${cisxt}/spi/builder/*.java
    -->
   <property name="cisxt" value="com/ibm/streamsx/topology"/>
   <property name="pure.source"
@@ -42,6 +44,10 @@
               ${cisxt}/context/remote/*.java
               ${cisxt}/internal/context/remote/*.java
               ${cisxt}/internal/streaminganalytics/*.java
+
+              ${cisxt}/jobconfig/*.java
+              ${cisxt}/builder/*.java
+              ${cisxt}/internal/streams/*.java
               "
   />
   <target name="compile.pure" depends="init">

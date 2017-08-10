@@ -18,12 +18,12 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 public class AnalyticsServiceStreamsContext extends
         BundleUserStreamsContext<BigInteger> {
@@ -93,15 +93,15 @@ public class AnalyticsServiceStreamsContext extends
         
         final CloseableHttpClient httpClient = HttpClients.createDefault();
         try {
-            Topology.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Checking status :" + serviceName);
+            Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Checking status :" + serviceName);
             
             RestUtils.checkInstanceStatus(httpClient, service);
             
-            Topology.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Submitting bundle : " + bundle.getName() + " to " + serviceName);
+            Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Submitting bundle : " + bundle.getName() + " to " + serviceName);
             
             JsonObject jcojson = DeployKeys.copyJobConfigOverlays(deploy);
             
-            Topology.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job request:" + jcojson.toString());
+            Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job request:" + jcojson.toString());
 
             JsonObject response = RestUtils.postJob(httpClient, service, bundle, jcojson);
             

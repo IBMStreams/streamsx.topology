@@ -20,7 +20,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 
 import com.google.gson.JsonObject;
-import com.ibm.streams.operator.logging.TraceLevel;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
 
@@ -65,13 +64,13 @@ public class InvokeStandalone {
                 tls = "0";
             else if (tli == Level.ALL.intValue())
                 tls = "5";
-            else if (tli >= TraceLevel.ERROR.intValue())
+            else if (tli >= Level.SEVERE.intValue())
                 tls = "1";
-            else if (tli >= TraceLevel.WARN.intValue())
+            else if (tli >= Level.WARNING.intValue())
                 tls = "2";
-            else if (tli >= TraceLevel.INFO.intValue())
+            else if (tli >= Level.INFO.intValue())
                 tls = "3";
-            else if (tli >= TraceLevel.DEBUG.intValue())
+            else if (tli >= Level.FINE.intValue())
                 tls = "4";
             else
                 tls = "5";

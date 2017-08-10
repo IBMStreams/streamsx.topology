@@ -17,9 +17,6 @@ import java.util.Scanner;
 import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
-import com.ibm.streams.operator.version.Product;
-import com.ibm.streams.operator.version.Version;
-import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
@@ -27,7 +24,7 @@ import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
 
 public class InvokeSubmit {
 
-    static final Logger trace = Topology.STREAMS_LOGGER;
+    static final Logger trace = Util.STREAMS_LOGGER;
 
     private final File bundle;
 
@@ -60,9 +57,7 @@ public class InvokeSubmit {
         // For IBM Streams 4.2 or later use the job config overlay
         // V.R.M.F
         File jcoFile = null;
-        Version ver = Product.getVersion();
-        if (ver.getVersion() > 4 ||
-                (ver.getVersion() ==4 && ver.getRelease() >= 2)) {
+        if (Util.versionAtLeast(4, 2, 0)) {
             jcoFile = fileJobConfig(commands, deploy);
         } else {         
             explicitJobConfig(commands, jobConfig);

@@ -31,6 +31,7 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.internal.streams.Util;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -98,7 +99,7 @@ public class TestTopology {
         String differentCompile = System.getProperty(ContextProperties.COMPILE_INSTALL_DIR);
         if (differentCompile != null) {
             config.put(ContextProperties.COMPILE_INSTALL_DIR, differentCompile);
-            Topology.STREAMS_LOGGER.setLevel(Level.INFO);
+            Util.STREAMS_LOGGER.setLevel(Level.INFO);
         }
     }
     

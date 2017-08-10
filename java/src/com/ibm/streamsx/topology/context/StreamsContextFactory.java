@@ -116,7 +116,7 @@ public class StreamsContextFactory {
      * @since 1.7
      */
     public static String getDefaultDomainId() {
-        return Util.getenv(Util.STREAMS_DOMAIN_ID);
+        return Util.getDefaultDomainId();
     }
     
     /**
@@ -136,7 +136,7 @@ public class StreamsContextFactory {
      * @since 1.7
      */
     public static String getDefaultInstanceId() {
-        return Util.getenv(Util.STREAMS_INSTANCE_ID);
+        return Util.getDefaultInstanceId();
     }
     
     /**

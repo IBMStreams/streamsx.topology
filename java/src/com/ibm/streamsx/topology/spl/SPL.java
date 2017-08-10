@@ -127,7 +127,7 @@ public class SPL {
     public static <T> Supplier<T> createSubmissionParameter(Topology top,
             String name, Object paramValue, boolean withDefault) {
         SPLValue<?> splValue = createSPLValue(paramValue);
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(top, name, splValue.asJSON(), withDefault);
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, splValue.asJSON(), withDefault);
         top.builder().createSubmissionParameter(name, sp.asJSON());
         return sp;
     }

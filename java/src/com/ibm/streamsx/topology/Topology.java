@@ -81,11 +81,6 @@ public class Topology implements TopologyElement {
      */
     public static Logger TOPOLOGY_LOGGER = Logger.getLogger("com.ibm.streamsx.topology");
     
-    /**
-     * Logger used for the interactions with IBM Streams functionality, name {@code com.ibm.streamsx.topology.streams}.
-     */
-    public static Logger STREAMS_LOGGER = Logger.getLogger("com.ibm.streamsx.topology.streams");
-
     private final String namespace;
     private final String name;
 
@@ -895,7 +890,7 @@ public class Topology implements TopologyElement {
      *  or has already been defined. 
      */
     public <T> Supplier<T> createSubmissionParameter(String name, Class<T> valueClass) {
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(this, name, valueClass); 
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, valueClass); 
         builder().createSubmissionParameter(name, sp.asJSON());
         return sp;
     }
@@ -913,7 +908,7 @@ public class Topology implements TopologyElement {
      * @throws IllegalArgumentException if {@code defaultValue} is null
      */
     public <T> Supplier<T> createSubmissionParameter(String name, T defaultValue) {
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(this, name, defaultValue);
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, defaultValue);
         builder().createSubmissionParameter(name, sp.asJSON());
         return sp;
     }

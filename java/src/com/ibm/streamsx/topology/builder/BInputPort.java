@@ -7,9 +7,16 @@ package com.ibm.streamsx.topology.builder;
 import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonObject;
-import com.ibm.streams.operator.window.StreamWindow;
 
 public class BInputPort extends BInput implements BPort {
+    
+    public interface Window {
+        String SLIDING = "SILDING";
+        
+        String NONE_POLICY = "NONE";
+        String TIME_POLICY = "TIME";
+        String COUNT_POLICY = "COUNT";
+    }
 
     private final BOperator op;
 
@@ -24,37 +31,37 @@ public class BInputPort extends BInput implements BPort {
         return op;
     }
 
-    public BInputPort window(StreamWindow.Type type,
-            StreamWindow.Policy evictPolicy, Object evictConfig, TimeUnit evictTimeUnit,
-            StreamWindow.Policy triggerPolicy, Object triggerConfig, TimeUnit triggerTimeUnit,
+    public BInputPort window(String type,
+            String evictPolicy, Object evictConfig, TimeUnit evictTimeUnit,
+            String triggerPolicy, Object triggerConfig, TimeUnit triggerTimeUnit,
             boolean partitioned) {
 
         final JsonObject winJson = new JsonObject();
-        winJson.addProperty("type", type.name());
+        winJson.addProperty("type", type);
 
         // Eviction
         switch (evictPolicy) {
-        case COUNT:
-        case TIME:
+        case Window.COUNT_POLICY:
+        case Window.TIME_POLICY:
             break;
         default:
-            throw new UnsupportedOperationException(evictPolicy.name());
+            throw new UnsupportedOperationException(evictPolicy);
         }
-        winJson.addProperty("evictPolicy", evictPolicy.name());
+        winJson.addProperty("evictPolicy", evictPolicy);
         winJson.addProperty("evictConfig", (Number) evictConfig);
-        if (evictPolicy == StreamWindow.Policy.TIME)
+        if (evictPolicy.equals(Window.TIME_POLICY))
             winJson.addProperty("evictTimeUnit", evictTimeUnit.name());
 
-        if (triggerPolicy != null && triggerPolicy != StreamWindow.Policy.NONE) {
+        if (triggerPolicy != null && !triggerPolicy.equals(Window.NONE_POLICY)) {
             switch (triggerPolicy) {
-            case COUNT:
-            case TIME:
+            case Window.COUNT_POLICY:
+            case Window.TIME_POLICY:
                 break;
             default:
-                throw new UnsupportedOperationException(evictPolicy.name());
+                throw new UnsupportedOperationException(triggerPolicy);
             }
 
-            winJson.addProperty("triggerPolicy", triggerPolicy.name());
+            winJson.addProperty("triggerPolicy", triggerPolicy);
             winJson.addProperty("triggerConfig", (Number) triggerConfig);
             if (triggerTimeUnit != null)
                 winJson.addProperty("triggerTimeUnit", triggerTimeUnit.name());

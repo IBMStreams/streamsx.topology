@@ -10,12 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.ibm.streams.operator.OperatorContext;
-import com.ibm.streamsx.topology.builder.GraphBuilder;
 import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.context.ContextProperties;
-import com.ibm.streamsx.topology.internal.embedded.EmbeddedGraph;
-import com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor;
 
 /**
  * A manager for making a submission parameter Supplier usable
@@ -36,12 +32,12 @@ import com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor;
  * parameter.  The parameter's value consists of all the submission parameters
  * created in the graph.  All functional operators have the same
  * value for this parameter in their OperatorContext.  Functional operators
- * call {@link FunctionFunctor#initializeSubmissionParameters(OperatorContext)}.
+ * call FunctionFunctor.initializeSubmissionParameters(OperatorContext).
  * <p>
  * For EMBEDDED the functional operator's operator context does not have
  * a NAME_SUBMISSION_PARAMS parameter.  Instead the EMBEDDED
  * {@code StreamsContext.submit()} calls
- * {@link EmbeddedGraph#initializeEmbedded(GraphBuilder, Map)}.
+ * EmbeddedGraph#initializeEmbedded(GraphBuilder, Map).
  * The collection of all submission parameters, with optional default values,
  * are learned from the graph and actual values are learned from the
  * submit configuration's {@link ContextProperties#SUBMISSION_PARAMS} value.

@@ -19,9 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
-import com.ibm.json.java.JSONObject;
-import com.ibm.streams.operator.logging.TraceLevel;
+import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.JobProperties;
+import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
@@ -201,8 +201,9 @@ public class JobConfig {
     @SuppressWarnings("unchecked")
     public static JobConfig fromProperties(Map<String,? extends Object> config) {
         if (config.containsKey(CONFIG)) {
-            if (config.get(CONFIG) instanceof JSONObject) {
-                JSONObject json = getConfigEntry(config, CONFIG, JSONObject.class);
+            Object cfg = config.get(CONFIG);
+            if (JSON4JBridge.isJson4J(cfg)) {
+                JsonObject json = JSON4JBridge.fromJSON4J(cfg);
                 return fromJSON(json);
             }
         
@@ -253,22 +254,22 @@ public class JobConfig {
      * Works from a set of individual values in a config
      * and from a JSON config.
      */
-    private static JobConfig fromJSON(JSONObject config) {
+    private static JobConfig fromJSON(JsonObject config) {
         JobConfig jc = new JobConfig();
-        if (config.containsKey("jobName"))
-            jc.setJobName(config.get("jobName").toString());
+        if (config.has("jobName"))
+            jc.setJobName(config.get("jobName").getAsString());
         
-        if (config.containsKey("jobGroup"))
-            jc.setJobGroup(config.get("jobGroup").toString());
+        if (config.has("jobGroup"))
+            jc.setJobGroup(config.get("jobGroup").getAsString());
         
-        if (config.containsKey("dataDirectory"))
-            jc.setDataDirectory(config.get("dataDirectory").toString());
+        if (config.has("dataDirectory"))
+            jc.setDataDirectory(config.get("dataDirectory").getAsString());
         
-        if (config.containsKey("overrideResourceLoadProtection"))
-            jc.setOverrideResourceLoadProtection((Boolean) config.get("overrideResourceLoadProtection"));
+        if (config.has("overrideResourceLoadProtection"))
+            jc.setOverrideResourceLoadProtection(config.get("overrideResourceLoadProtection").getAsBoolean());
 
-        if (config.containsKey("preloadApplicationBundles"))
-            jc.setPreloadApplicationBundles((Boolean) config.get("preloadApplicationBundles"));
+        if (config.has("preloadApplicationBundles"))
+            jc.setPreloadApplicationBundles(config.get("preloadApplicationBundles").getAsBoolean());
         
         return jc;
     }
@@ -280,15 +281,15 @@ public class JobConfig {
             tls = "off";
         else if (tli == Level.ALL.intValue())
             tls = "debug";
-        else if (tli >= TraceLevel.ERROR.intValue())
+        else if (tli >= Level.SEVERE.intValue())
             tls = "error";
-        else if (tli >= TraceLevel.WARN.intValue())
+        else if (tli >= Level.WARNING.intValue())
             tls = "warn";
-        else if (tli >= TraceLevel.INFO.intValue())
+        else if (tli >= Level.INFO.intValue())
             tls = "info";
-        else if (tli >= TraceLevel.DEBUG.intValue())
+        else if (tli >= Level.FINE.intValue())
             tls = "debug";
-        else if (tli >= TraceLevel.TRACE.intValue())
+        else if (tli >= Level.FINEST.intValue())
             tls = "trace";
         else
             tls = "trace";

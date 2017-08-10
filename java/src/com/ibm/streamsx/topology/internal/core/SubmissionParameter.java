@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
@@ -37,7 +36,7 @@ public class SubmissionParameter<T> implements Supplier<T> {
     private final String name;
     private final String metaType;
     private final T defaultValue;
-    private transient final Topology top;
+    private transient boolean declaration;
     private transient T value;
     private transient boolean initialized;
     
@@ -50,15 +49,14 @@ public class SubmissionParameter<T> implements Supplier<T> {
 
     /*
      * A submission time parameter specification without a default value.
-     * @param top the associated topology
      * @param name submission parameter name
      * @param valueClass class object for {@code T}
      * @throws IllegalArgumentException if {@code name} is null or empty
      */
-    public SubmissionParameter(Topology top, String name, Class<T> valueClass) {
+    public SubmissionParameter(String name, Class<T> valueClass) {
         if (name == null || name.trim().isEmpty())
             throw new IllegalArgumentException("name");
-        this.top = top;
+        this.declaration = true;
         this.name = name;
         this.metaType = getMetaType(valueClass);
         this.defaultValue = null;
@@ -66,18 +64,17 @@ public class SubmissionParameter<T> implements Supplier<T> {
 
     /**
      * A submission time parameter specification with a default value.
-     * @param top the associated topology
      * @param name submission parameter name
      * @param defaultValue default value if parameter isn't specified.
      * @throws IllegalArgumentException if {@code name} is null or empty
      * @throws IllegalArgumentException if {@code defaultValue} is null
      */
-    public SubmissionParameter(Topology top, String name, T defaultValue) {
+    public SubmissionParameter(String name, T defaultValue) {
         if (name == null || name.trim().isEmpty())
             throw new IllegalArgumentException("name");
         if (defaultValue == null)
             throw new IllegalArgumentException("defaultValue");
-        this.top = top;
+        this.declaration = true;
         this.name = name;
         this.metaType = getMetaType(defaultValue.getClass());
         this.defaultValue = defaultValue;
@@ -105,12 +102,12 @@ public class SubmissionParameter<T> implements Supplier<T> {
      *        When false, the wrapped value's value is ignored.
      */
     @SuppressWarnings("unchecked")
-    public SubmissionParameter(Topology top, String name, JsonObject jvalue, boolean withDefault) {
+    public SubmissionParameter(String name, JsonObject jvalue, boolean withDefault) {
         String type = jstring(jvalue, "type");
         if (!"__spl_value".equals(type))
             throw new IllegalArgumentException("defaultValue");
         JsonObject value = GsonUtilities.object(jvalue, "value");
-        this.top = top;
+        this.declaration = true;
         this.name = name;
         this.defaultValue = withDefault ? (T) value.get("value") : null;
         this.metaType =  jstring(value, "metaType");
@@ -120,7 +117,7 @@ public class SubmissionParameter<T> implements Supplier<T> {
     @Override
     public T get() {
         if (!initialized) {
-            if (top == null)
+            if (!declaration)
                 value = (T) SubmissionParameterManager.getValue(name, metaType);
             initialized = true;
         }
