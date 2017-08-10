@@ -50,7 +50,7 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
 
         try {
             FunctionalHelper.addLibraries(this, getJar());
-            SubmissionParameterManager.initialize(context);
+            FunctionFunctor.initializeSubmissionParameters(context);
 
             functionContext = new FunctionOperatorContext(context);
             

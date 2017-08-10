@@ -12,7 +12,6 @@ import com.ibm.streams.flow.declare.OperatorGraph;
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.embedded.EmbeddedGraph;
-import com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager;
 
 public class EmbeddedStreamsContext extends
         StreamsContextImpl<JavaTestableGraph> {
@@ -35,7 +34,7 @@ public class EmbeddedStreamsContext extends
         EmbeddedGraph eg = new EmbeddedGraph(app.builder());
         eg.verifySupported();
         
-        SubmissionParameterManager.initializeEmbedded(app.builder(), config);
+        EmbeddedGraph.initializeEmbedded(app.builder(), config);
         
         // Declare the mock framework graph.
         OperatorGraph dg = eg.declareGraph();

@@ -49,7 +49,7 @@ public class FunctionPeriodicSource extends PollingTupleProducer implements Func
         super.initialize(context);
 
         FunctionalHelper.addLibraries(this, getJar());
-        SubmissionParameterManager.initialize(context);
+        FunctionFunctor.initializeSubmissionParameters(context);
         functionContext = new FunctionOperatorContext(context);
         
         output = getOutput(0);

@@ -15,6 +15,7 @@ import static com.ibm.streams.operator.Type.MetaType.UINT64;
 import static com.ibm.streams.operator.Type.MetaType.UINT8;
 import static com.ibm.streams.operator.Type.MetaType.USTRING;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_ATTRIBUTE;
+import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND_CLASS;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
@@ -28,6 +29,7 @@ import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.addAll;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jisEmpty;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 import static com.ibm.streamsx.topology.spi.builder.Properties.Graph.CONFIG;
 import static com.ibm.streamsx.topology.spi.builder.Properties.Graph.Config.JAVA_OPS;
@@ -58,9 +60,11 @@ import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
 import com.ibm.streamsx.topology.builder.JParamTypes;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
+import com.ibm.streamsx.topology.internal.core.SubmissionParameterManager;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
@@ -389,5 +393,59 @@ public class EmbeddedGraph {
     public OutputPortDeclaration getOutputPort(String name) {
         OutputPortDeclaration portDecl = outputPorts.get(name); 
         return Objects.requireNonNull(portDecl);
+    }
+
+    /**
+     * Initialize EMBEDDED submission parameter value information
+     * from topology's graph and StreamsContext.submit() config.
+     * @param builder the topology's builder
+     * @param config StreamsContext.submit() configuration
+     */
+    public synchronized static void initializeEmbedded(GraphBuilder builder,
+            Map<String, Object> config) {
+    
+        // N.B. in an embedded context, within a single JVM/classloader,
+        // multiple topologies can be executed serially as well as concurrently.
+        // TODO handle the concurrent case - e.g., with per-topology-submit
+        // managers.
+        
+        // create map of all submission params used by the topology
+        // and the parameter's string value (initially null for no default)
+        Map<String,String> allsp = new HashMap<>();  // spName, spStrVal
+        
+        JsonObject gparams = GsonUtilities.object(builder._json(), "parameters");
+        if (gparams != null) {
+            for (Entry<String, JsonElement> sp : gparams.entrySet()) {
+                JsonObject param = sp.getValue().getAsJsonObject();
+                if (TYPE_SUBMISSION_PARAMETER.equals(jstring(param, "type"))) {
+                    JsonObject spval = object(param, "value");
+                    allsp.put(sp.getKey(), jstring(spval, "defaultValue"));
+                }
+            }
+        }
+        if (allsp.isEmpty())
+            return;
+        
+        // update values from config
+        @SuppressWarnings("unchecked")
+        Map<String,Object> spValues =
+            (Map<String, Object>) config.get(ContextProperties.SUBMISSION_PARAMS);
+        for (String spName : spValues.keySet()) {
+            if (allsp.containsKey(spName)) {
+                Object val = spValues.get(spName);
+                if (val != null)
+                    val = val.toString();
+                allsp.put(spName, (String)val);
+            }
+        }
+        
+        // failure if any are still undefined
+        for (String spName : allsp.keySet()) {
+            if (allsp.get(spName) == null)
+                throw new IllegalStateException("Submission parameter \""+spName+"\" requires a value but none has been supplied");
+        }
+        
+        // good to go. initialize params
+        SubmissionParameterManager.setValues(allsp);
     }
 }

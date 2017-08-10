@@ -14,7 +14,6 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.function.Supplier;
-import com.ibm.streamsx.topology.internal.functional.ops.SubmissionParameterManager;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
