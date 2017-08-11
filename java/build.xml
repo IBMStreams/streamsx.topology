@@ -99,10 +99,22 @@
 
 
   <target name="jar" depends="compile,jar.core,jar.execute">
+  <manifestclasspath property="jar.classpath" jarfile="${jar}">
+     <classpath>
+       <path refid="tk.classpath"/>
+       <fileset dir="${tk.opt}/slf4j-1.7.5">
+          <include name="*.jar"/>
+       </fileset>
+     </classpath>
+  </manifestclasspath>
     <jar destfile="${jar}" filesonly="true">
        <manifest>
-          <attribute name="Class-Path" value="com.ibm.streamsx.topology.core.jar com.ibm.streamsx.topology.execute.jar}"/>
+          <attribute name="Class-Path" value="${jar.classpath}"/>
        </manifest>
+    <fileset dir="${classes}"/>
+    <fileset dir="${execute.classes}" excludes="**/*$StreamsModel.*"/>
+    <fileset dir="${src}" excludes="com/ibm/streamsx/topology/internal/**"/>
+    <fileset dir="${src}" includes="com/ibm/streamsx/topology/internal/messages/*.properties"/>
     </jar>
   </target>
 

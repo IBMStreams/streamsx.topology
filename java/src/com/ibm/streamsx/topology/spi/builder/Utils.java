@@ -1,4 +1,4 @@
-package com.ibm.streamsx.topology.spi;
+package com.ibm.streamsx.topology.spi.builder;
 
 import java.util.HashMap;
 import java.util.Map;

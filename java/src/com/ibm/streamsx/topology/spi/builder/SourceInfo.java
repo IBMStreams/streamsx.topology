@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016, 2017  
  */
-package com.ibm.streamsx.topology.spi;
+package com.ibm.streamsx.topology.spi.builder;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

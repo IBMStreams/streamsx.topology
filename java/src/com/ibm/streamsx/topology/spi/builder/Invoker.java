@@ -2,11 +2,11 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017  
  */
-package com.ibm.streamsx.topology.spi;
+package com.ibm.streamsx.topology.spi.builder;
 
 import static com.ibm.streamsx.topology.internal.core.ObjectUtils.serializeLogic;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.spi.Utils.copyParameters;
+import static com.ibm.streamsx.topology.spi.builder.Utils.copyParameters;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -25,7 +25,6 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
-import com.ibm.streamsx.topology.spi.builder.Properties;
 import com.ibm.streamsx.topology.spi.runtime.TupleSerializer;
 
 /**

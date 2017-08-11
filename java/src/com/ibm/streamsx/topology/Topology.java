@@ -6,7 +6,7 @@ package com.ibm.streamsx.topology;
 
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.SPL_PREFIX;
 import static com.ibm.streamsx.topology.internal.core.TypeDiscoverer.getTupleName;
-import static com.ibm.streamsx.topology.spi.Invoker.invokeSource;
+import static com.ibm.streamsx.topology.spi.builder.Invoker.invokeSource;
 import static java.util.Objects.requireNonNull;
 
 import java.io.File;
@@ -261,7 +261,7 @@ public class Topology implements TopologyElement {
         }
         
         JsonObject config = new JsonObject();
-        com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(config, getClass());
+        com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(config, getClass());
         config.addProperty("name", opName);
         
         return invokeSource(this, JavaFunctionalOps.SOURCE_KIND, config,

@@ -56,7 +56,7 @@ import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
 import com.ibm.streamsx.topology.logic.Logic;
-import com.ibm.streamsx.topology.spi.Invoker;
+import com.ibm.streamsx.topology.spi.builder.Invoker;
 
 public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
@@ -127,7 +127,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         JsonObject config = new JsonObject();
         config.addProperty("name", opName);
-        com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(config, getClass());
+        com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(config, getClass());
               
         return Invoker.invokeForEach(this, FOR_EACH_KIND, config,
                 sinker, null, null);
