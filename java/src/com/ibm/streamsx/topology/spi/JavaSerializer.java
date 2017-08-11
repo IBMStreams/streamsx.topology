@@ -1,4 +1,4 @@
-package com.ibm.streamsx.topology.internal.spljava;
+package com.ibm.streamsx.topology.spi;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,9 +8,14 @@ import java.io.OutputStream;
 
 import com.ibm.streamsx.topology.spi.TupleSerializer;
 
-public final class JavaSerializer implements TupleSerializer {
+final class JavaSerializer implements TupleSerializer {
         
-    public JavaSerializer() {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    JavaSerializer() {
     }
 
     @Override

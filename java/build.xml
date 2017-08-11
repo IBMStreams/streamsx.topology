@@ -6,6 +6,7 @@
   <import file="../common-build.xml"/>
 
   <property name="src" location="src"/>
+  <property name="execute.src" location="execute/src"/>
   <property name="classes" location="classes"/>
   <property name="jarname" value="com.ibm.streamsx.topology.jar"/>
   <property name="jar" location="${tk.lib}/${jarname}"/>
@@ -71,6 +72,11 @@
        destdir="${classes}"
        classpathref="compile.classpath"
        excludes="${pure.source}"
+       />
+    <javac debug="true" includeantruntime="no"
+       srcdir="${execute.src}" 
+       destdir="${classes}"
+       classpathref="compile.classpath"
        />
     <ant dir="../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
