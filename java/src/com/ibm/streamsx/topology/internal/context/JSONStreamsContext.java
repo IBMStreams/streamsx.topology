@@ -13,7 +13,6 @@ import static com.ibm.streamsx.topology.context.JobProperties.NAME;
 import static com.ibm.streamsx.topology.context.JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION;
 import static com.ibm.streamsx.topology.context.JobProperties.PRELOAD_APPLICATION_BUNDLES;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOY;
-import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
 
 import java.io.File;
 import java.util.Collection;
@@ -28,10 +27,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.context.remote.RemoteContexts;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
+import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 
@@ -84,8 +82,8 @@ abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
     }
     
     @Override
-    public final Future<T> submit(JSONObject submission) throws Exception {
-    	return _submit(new AppEntity(JSON4JUtilities.gson(submission)));
+    public final Future<T> submit(JsonObject submission) throws Exception {
+    	return _submit(new AppEntity(submission));
     }
     
     /**
@@ -117,14 +115,15 @@ abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
     
     @SuppressWarnings("unchecked")
     private static JsonElement convertConfigValue(Object value) {
+
         if (value instanceof Boolean)
             return new JsonPrimitive((Boolean) value); 
         else if (value instanceof Number)
             return new JsonPrimitive((Number) value);
         else if (value instanceof String) {
             return new JsonPrimitive((String) value);
-        } else if (value instanceof JSONObject) {
-            return gson((JSONObject) value);
+        } else if (JSON4JBridge.isJson4J(value)) {
+            return JSON4JBridge.fromJSON4J(value);
         } else if (value instanceof Collection) {
             JsonArray array = new JsonArray();
             for (Object e : (Collection<Object>) value) {
