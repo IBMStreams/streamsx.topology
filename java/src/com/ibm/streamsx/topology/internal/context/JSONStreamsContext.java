@@ -33,19 +33,19 @@ import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 
-abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
+public abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
     
-    static class AppEntity {
-        final Topology app;
-        final Map<String,Object> config;
-        JsonObject submission;
+    public static class AppEntity {
+        public final Topology app;
+        public final Map<String,Object> config;
+        public JsonObject submission;
         
-        AppEntity(Topology app, Map<String,Object> config) throws Exception {
+        public AppEntity(Topology app, Map<String,Object> config) throws Exception {
             this.app = app;
             this.config = config;
             
         }
-        AppEntity(JsonObject submission) {
+        public AppEntity(JsonObject submission) {
             this.app = null;
             this.config = null;
             this.submission = submission;
@@ -60,7 +60,7 @@ abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
         return _submit(new AppEntity(app, new HashMap<>(config)));
     }
     
-    Future<T> _submit(AppEntity entity) throws Exception {
+    protected Future<T> _submit(AppEntity entity) throws Exception {
         preSubmit(entity);
         if (entity.submission == null)
             createSubmission(entity);
@@ -70,13 +70,13 @@ abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
     /**
      * Pre-submit hook when submitting a Topology.
      */
-    void preSubmit(AppEntity entity) {        
+    protected void preSubmit(AppEntity entity) {        
     }
     
     /**
      * Post-submit hook when submitting a Topology.
      */
-    Future<T> postSubmit(AppEntity entity, Future<T> future) throws Exception{
+    protected Future<T> postSubmit(AppEntity entity, Future<T> future) throws Exception{
         RemoteContexts.writeResultsToFile(entity.submission);
         return future;
     }
@@ -91,7 +91,7 @@ abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
      * to allow sharing code between remote (non-install) contexts
      * and product install contexts.
      */
-    abstract Future<T> action(AppEntity entity) throws Exception;
+    protected abstract Future<T> action(AppEntity entity) throws Exception;
     
     /**
      * Create JSON form of the submission from a topology and config.

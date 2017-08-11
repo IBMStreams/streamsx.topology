@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.internal.context;
+package com.ibm.streamsx.topology.internal.context.streams;
 
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
@@ -57,7 +57,7 @@ public class AnalyticsServiceStreamsContext extends
      * information before we attempt anything.
      */
     @Override
-    void preSubmit(AppEntity entity) {
+    protected void preSubmit(AppEntity entity) {
         
             
         try {
@@ -88,9 +88,7 @@ public class AnalyticsServiceStreamsContext extends
         
         final JsonObject service = getVCAPService(deploy);
         final String serviceName = jstring(service, "name");
-              
-        final JsonObject credentials = service.getAsJsonObject("credentials");
-        
+                      
         final CloseableHttpClient httpClient = HttpClients.createDefault();
         try {
             Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Checking status :" + serviceName);

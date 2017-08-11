@@ -24,6 +24,12 @@ import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.streams.InvokeMakeToolkit;
 
+/**
+ * Creates the application toolkit structure and contents.
+ * Including building the toolkit using spl-make-toolkit which
+ * can be overriden by a sub-class.
+ *
+ */
 public class ToolkitStreamsContext extends JSONStreamsContext<File> {
 
 	static final Logger trace = Topology.TOPOLOGY_LOGGER;
@@ -44,7 +50,7 @@ public class ToolkitStreamsContext extends JSONStreamsContext<File> {
     }
     
     @Override
-    Future<File> action(AppEntity entity) throws Exception {
+    protected Future<File> action(AppEntity entity) throws Exception {
         
         JsonObject submission = entity.submission;
         

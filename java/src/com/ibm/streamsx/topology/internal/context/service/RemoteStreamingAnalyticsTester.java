@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
  */
-package com.ibm.streamsx.topology.internal.context;
+package com.ibm.streamsx.topology.internal.context.service;
 
 import java.math.BigInteger;
 import java.util.concurrent.Future;
@@ -19,7 +19,7 @@ public class RemoteStreamingAnalyticsTester extends RemoteStreamingAnalyticsServ
     }
     
     @Override
-    Future<BigInteger> postSubmit(com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity entity,
+    protected Future<BigInteger> postSubmit(com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity entity,
             Future<BigInteger> future) throws Exception {
                 
         Topology app = entity.app;
