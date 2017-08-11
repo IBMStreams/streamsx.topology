@@ -28,7 +28,6 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.internal.core.StreamImpl;
-import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.json.JSONSchemas;
 import com.ibm.streamsx.topology.json.JSONStreams.DeserializeJSON;
 
@@ -99,7 +98,7 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
 
     @Override
     public TStream<String> toStringStream() {
-        if (!Schemas.STRING.equals(getSchema()))
+        if (!SPLSchemas.STRING.equals(getSchema()))
             throw new IllegalStateException(getSchema().getLanguageType());
 
         return new StreamImpl<String>(this, output(), String.class);

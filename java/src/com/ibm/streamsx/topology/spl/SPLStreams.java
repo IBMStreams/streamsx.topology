@@ -187,7 +187,7 @@ public class SPLStreams {
                         v2.setString(0, v1);
                         return v2;
                     }
-                }, Schemas.STRING);
+                }, SPLSchemas.STRING);
     }
 
     /**

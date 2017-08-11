@@ -19,10 +19,10 @@ public class Schemas {
     @SuppressWarnings("unused")
     private static final Schemas forCoverage = new Schemas();
     
-    public static final StreamSchema STRING = getStreamSchema(ObjectSchemas.STRING_SCHEMA);
-    public static final StreamSchema BLOB = getStreamSchema(ObjectSchemas.BLOB_SCHEMA);
-    public static final StreamSchema XML = getStreamSchema(ObjectSchemas.XML_SCHEMA);
-    public static final StreamSchema JAVA_OBJECT = getStreamSchema(ObjectSchemas.JAVA_OBJECT_SCHEMA);
+    static final StreamSchema STRING = getStreamSchema(ObjectSchemas.STRING_SCHEMA);
+    static final StreamSchema BLOB = getStreamSchema(ObjectSchemas.BLOB_SCHEMA);
+    static final StreamSchema XML = getStreamSchema(ObjectSchemas.XML_SCHEMA);
+    static final StreamSchema JAVA_OBJECT = getStreamSchema(ObjectSchemas.JAVA_OBJECT_SCHEMA);
     
     /**
      * Return the SPL schema that will be used at runtime
