@@ -7,29 +7,39 @@
 
   <property name="src" location="src"/>
   <property name="classes" location="classes"/>
+  <property name="runtime.src" location="runtime/src"/>
+  <property name="runtime.classes" location="runtime/classes"/>
   <property name="execute.src" location="execute/src"/>
   <property name="execute.classes" location="execute/classes"/>
   <property name="jarname" value="com.ibm.streamsx.topology.jar"/>
   <property name="jar" location="${tk.lib}/${jarname}"/>
 
   <property name="jar.core" location="${tk.lib}/com.ibm.streamsx.topology.core.jar"/>
+  <property name="jar.runtime" location="${tk.lib}/com.ibm.streamsx.topology.runtime.jar"/>
   <property name="jar.execute" location="${tk.lib}/com.ibm.streamsx.topology.execute.jar"/>
 
   <path id="compile.classpath">
     <path refid="streams.classpath"/>
     <path refid="tk.classpath"/>
+    <path location="${jar.runtime}" />
     <pathelement location="${junit.jar}"/>
   </path>
 
   <path id="compile.execute.tk.classpath">
     <path location="${jar.core}"/>
+    <path location="${jar.runtime}" />
   </path>
+
+  <path id="compile.runtime.classpath">
+  </path>
+
   <path id="compile.execute.classpath">
     <path refid="streams.classpath"/>
     <path refid="compile.execute.tk.classpath"/>
   </path>
 
   <path id="compile.pure.classpath">
+    <path location="${jar.runtime}" />
     <path refid="gson.classpath" />
     <path refid="httpclient.classpath"/>
     <path refid="compress.classpath"/>
@@ -40,6 +50,7 @@
 
   <target name="init">
     <mkdir dir="${classes}"/>
+    <mkdir dir="${runtime.classes}"/>
     <mkdir dir="${execute.classes}"/>
     <mkdir dir="${tk.lib}"/>
   </target>
@@ -53,7 +64,7 @@
   <property name="cisxt" value="com/ibm/streamsx/topology"/>
   <property name="cisxr" value="com/ibm/streamsx/rest"/>
   <property name="pure.source"
-       value="${cisxt}/function/*.java
+       value="
               ${cisxt}/internal/gson/*.java
               ${cisxt}/generator/**
               ${cisxt}/context/remote/*.java
@@ -67,7 +78,7 @@
               ${cisxr}/*.java
               "
   />
-  <target name="compile.pure" depends="init">
+  <target name="compile.pure" depends="init,jar.runtime">
     <javac debug="true" includeantruntime="no"
        srcdir="${src}" 
        destdir="${classes}"
@@ -89,7 +100,16 @@
     <ant dir="../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
 
-  <target name="compile.execute" depends="compile">
+  <target name="compile.runtime" depends="init">
+    <javac debug="true" includeantruntime="no"
+       srcdir="${runtime.src}" 
+       destdir="${runtime.classes}"
+       classpathref="compile.runtime.classpath"
+       />
+  </target>
+
+
+  <target name="compile.execute" depends="jar.runtime">
     <javac debug="true" includeantruntime="no"
        srcdir="${execute.src}" 
        destdir="${execute.classes}"
@@ -97,8 +117,7 @@
        />
   </target>
 
-
-  <target name="jar" depends="compile,jar.core,jar.execute">
+  <target name="jar" depends="compile,jar.core,jar.runtime,jar.execute">
   <manifestclasspath property="jar.classpath" jarfile="${jar}">
      <classpath>
        <path refid="tk.classpath"/>
@@ -112,6 +131,7 @@
           <attribute name="Class-Path" value="${jar.classpath}"/>
        </manifest>
     <fileset dir="${classes}"/>
+    <fileset dir="${runtime.classes}"/>
     <fileset dir="${execute.classes}" excludes="**/*$StreamsModel.*"/>
     <fileset dir="${src}" excludes="com/ibm/streamsx/topology/internal/**"/>
     <fileset dir="${src}" includes="com/ibm/streamsx/topology/internal/messages/*.properties"/>
@@ -137,6 +157,12 @@
     </jar>
   </target>
 
+  <target name="jar.runtime" depends="compile.runtime">
+    <jar destfile="${jar.runtime}" filesonly="true">
+    <fileset dir="${runtime.classes}"/>
+    </jar>
+  </target>
+
   <target name="jar.execute" depends="compile.execute">
   <manifestclasspath property="jar.execute.classpath" jarfile="${jar.execute}">
      <classpath>
@@ -153,6 +179,7 @@
 
   <target name="clean" >
     <delete dir="${classes}"/>
+    <delete dir="${runtime.classes}"/>
     <delete dir="${execute.classes}"/>
     <delete dir="${tk.lib}"/>
   </target>
