@@ -5,7 +5,7 @@
 package com.ibm.streamsx.topology.internal.spljava;
 
 import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
-import static com.ibm.streamsx.topology.internal.functional.ObjectUtils.deserializeLogic;
+import static com.ibm.streamsx.topology.internal.core.ObjectUtils.deserializeLogic;
 
 import java.lang.reflect.Type;
 

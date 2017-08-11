@@ -18,7 +18,6 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionJoin;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
