@@ -1,8 +1,13 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017 
+ */
 package com.ibm.streamsx.topology.internal.core;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SPLTYPE;
 import static com.ibm.streamsx.topology.internal.core.ObjectSchemas.JSON_SCHEMA;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +18,11 @@ import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 
+/**
+ * Provides a bridge between the TStream and SPL/SPLStream world using
+ * SPL classes indirectly to avoid a dependency on the operator api.
+ *
+ */
 public class SPLStreamBridge {
         
     public static <T> TStream<T> subscribe(Topology topology, String topic, Class<T> tupleTypeClass) {
@@ -72,5 +82,16 @@ public class SPLStreamBridge {
                 "Subscribe", "com.ibm.streamsx.topology.topic::SubscribeJava", params);
         
         return new StreamImpl<T>(topology, subscribeOp.addOutput(schema), tupleTypeClass);
+    }
+    
+    static void publishJSON(TStream<?> stream, String topic) {
+        try {
+            Class<?>  jsonStreams = Class.forName("com.ibm.streamsx.topology.json.JSONStreams");
+            Object asSPLStream = jsonStreams.getMethod("toSPL", TStream.class).invoke(null, stream);
+            asSPLStream.getClass().getMethod("publish", String.class, Boolean.TYPE).invoke(asSPLStream, topic, false);
+        } catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+            throw new IllegalStateException(e);
+        }
+        
     }
 }

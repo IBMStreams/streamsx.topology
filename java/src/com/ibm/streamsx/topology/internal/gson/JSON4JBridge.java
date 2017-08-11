@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.gson;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 
 import com.google.gson.JsonObject;
 
@@ -33,8 +34,12 @@ public class JSON4JBridge {
             return JSON4J_OBJ_CLASS.isInstance(obj);
         return false;
     }
-    public static boolean isJson4JClass(Class<?> clazz) {
-        return "com.ibm.json.java.JSONObject".equals(clazz.getName());
+    public static boolean isJson4JClass(Type type) {
+        if (type instanceof Class) {
+            Class<?> clazz = (Class<?>) type;
+            return "com.ibm.json.java.JSONObject".equals(clazz.getName());
+        }
+        return false;
     }
      
     public static JsonObject fromJSON4J(Object o) {

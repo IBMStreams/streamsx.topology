@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
-import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FILTER_KIND;
@@ -30,8 +29,6 @@ import java.util.concurrent.TimeUnit;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.json.java.JSONObject;
-import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
@@ -52,16 +49,14 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
+import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
 import com.ibm.streamsx.topology.internal.logic.KeyFunctionHasher;
 import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
-import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.spi.Invoker;
-import com.ibm.streamsx.topology.spl.SPL;
-import com.ibm.streamsx.topology.spl.SPLStream;
 
 public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
@@ -240,7 +235,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         List<TStream<T>> sourceStreams = new ArrayList<>();
         sourceStreams.addAll(allStreams);
         
-        StreamSchema schema = getStreamSchema(output()._type());
+        String schema = output()._type();
         Type tupleType = getTupleType();
 
         // Unwrap all streams so that we do not add the same stream twice
@@ -255,10 +250,10 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             // the type cannot be determined even if
             // it is a type that uses a special schema,
             // E..g TStream<String>.
-            if (!schema.equals(getStreamSchema(s.output()._type()))) {
+            if (!schema.equals(s.output()._type())) {
                 if (s.getTupleClass() != null) {
                     // This stream has the direct schema!
-                    schema = getStreamSchema(s.output()._type());
+                    schema = s.output()._type();
                     assert getTupleClass() == null;
                     tupleType = s.getTupleClass();
                     if (i != 0) {
@@ -274,7 +269,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 } else {     
                     assert tupleType instanceof Class;
                     s = s.asType((Class<T>) tupleType);                 
-                    assert getStreamSchema(s.output()._type()).equals(schema);
+                    assert s.output()._type().equals(schema);
                     sourceStreams.set(i, s);
                 }
             }
@@ -369,7 +364,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
 
     @Override
-    public void publish(String topic) {
+    public final void publish(String topic) {
     	publish(topic, false);
     }
     
@@ -385,22 +380,19 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     	
     	Type tupleType = getTupleType();
         
-        if (JSONObject.class.equals(tupleType)) {
+        if (JSON4JBridge.isJson4JClass(tupleType)) {
         	filtersNotAllowed(allowFilter);
         	
-            @SuppressWarnings("unchecked")
-            TStream<JSONObject> json = (TStream<JSONObject>) this;
-            JSONStreams.toSPL(json).publish(topic, allowFilter);
+            SPLStreamBridge.publishJSON(this, topic);
             return;
         }
         
         
         BOperatorInvocation op;
-        if (ObjectSchemas.usesDirectSchema(tupleType)
-                 || ((TStream<T>) this) instanceof SPLStream) {
+        if (ObjectSchemas.usesDirectSchema(tupleType)) {
         	// Don't allow filtering against schemas that Streams
         	// would not allow a filter against.
-        	if (String.class != tupleType && !(((TStream<T>) this) instanceof SPLStream))
+        	if (String.class != tupleType)
         		filtersNotAllowed(allowFilter);
         	
             // Publish as a stream consumable by SPL & Java/Scala
@@ -426,7 +418,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             throw new IllegalStateException("A TStream with a tuple type that contains a generic or unknown type cannot be published");
         }
 
-        SourceInfo.setSourceInfo(op, SPL.class);
+        SourceInfo.setSourceInfo(op, StreamImpl.class);
         this.connectTo(op, false, null);
     }
     
@@ -437,7 +429,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
      *  - must not contain wildcard characters
      * @param topic
      */
-    private void checkTopicName(String topic) {
+    protected void checkTopicName(String topic) {
         
         if (topic.isEmpty()
                 || topic.indexOf('\u0000') != -1
@@ -496,9 +488,8 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             // hashAdder.json().put("routing", routing.toString());
             BInputPort ip = connectTo(hashAdder, true, null);
 
-            StreamSchema hashSchema = getStreamSchema(ip._schema())
-                    .extend("int32", "__spl_hash");
-            toBeParallelized = hashAdder.addOutput(hashSchema.getLanguageType());
+            String hashSchema = ObjectSchemas.schemaWithHash(ip._schema());
+            toBeParallelized = hashAdder.addOutput(hashSchema);
             isPartitioned = true;
         }
                 
@@ -516,9 +507,9 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             hashRemover.setModel(MODEL_SPL, LANGUAGE_JAVA);
             
             hashRemover.layout().addProperty("hidden", true);
+            @SuppressWarnings("unused")
             BInputPort pip = parallelStream.connectTo(hashRemover, true, null);
-            parallelOutput = hashRemover.addOutput(getStreamSchema(pip._schema())
-                    .remove("__spl_hash").getLanguageType());
+            parallelOutput = hashRemover.addOutput(output._type());
         }
 
         return addMatchingStream(parallelOutput);

@@ -50,4 +50,19 @@ public abstract class ObjectSchemas {
 
         return JAVA_OBJECT_SCHEMA;
     }
+    
+    private static final String HASH_ATTR_SCHEMA = ", int32 __spl_hash>";
+    
+    static String schemaWithHash(String schema) {
+        switch (schema) {
+        case STRING_SCHEMA:
+        case JAVA_OBJECT_SCHEMA:
+        case BLOB_SCHEMA:
+        case XML_SCHEMA:
+        case JSON_SCHEMA:
+            return schema.replace(">", HASH_ATTR_SCHEMA);
+        default:
+            throw new IllegalStateException(schema);
+        }
+    }
 }
