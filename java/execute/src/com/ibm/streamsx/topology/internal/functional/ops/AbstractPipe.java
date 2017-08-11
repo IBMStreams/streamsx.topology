@@ -14,7 +14,7 @@ import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
-import com.ibm.streamsx.topology.spi.runtime.FunctionalOperator;
+import com.ibm.streamsx.topology.spi.operators.FunctionalOperator;
 
 public abstract class AbstractPipe extends FunctionFunctor implements FunctionalOperator {
     

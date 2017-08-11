@@ -8,7 +8,6 @@ import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSource;
 import com.ibm.streamsx.topology.spi.builder.Invoker;
-import com.ibm.streamsx.topology.spi.runtime.FunctionalOperator;
 
 /**
  * A functional source operator.

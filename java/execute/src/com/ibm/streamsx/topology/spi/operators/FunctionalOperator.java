@@ -1,4 +1,4 @@
-package com.ibm.streamsx.topology.spi.runtime;
+package com.ibm.streamsx.topology.spi.operators;
 
 import java.io.Closeable;
 import java.io.IOException;

@@ -15,7 +15,7 @@ import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.ObjIntConsumer;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
-import com.ibm.streamsx.topology.spi.runtime.FunctionalOperator;
+import com.ibm.streamsx.topology.spi.operators.FunctionalOperator;
 
 public abstract class AbstractPrimitive extends FunctionFunctor implements FunctionalOperator {
     
