@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.spi;
 
-import static com.ibm.streamsx.topology.internal.functional.ObjectUtils.serializeLogic;
+import static com.ibm.streamsx.topology.internal.core.ObjectUtils.serializeLogic;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.spi.Utils.copyParameters;
 

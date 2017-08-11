@@ -13,7 +13,6 @@ import static com.ibm.streamsx.topology.context.JobProperties.NAME;
 import static com.ibm.streamsx.topology.context.JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION;
 import static com.ibm.streamsx.topology.context.JobProperties.PRELOAD_APPLICATION_BUNDLES;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOY;
-import static com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities.gson;
 
 import java.io.File;
 import java.util.Collection;
@@ -28,26 +27,25 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.context.remote.RemoteContexts;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
+import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 
-abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
+public abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
     
-    static class AppEntity {
-        final Topology app;
-        final Map<String,Object> config;
-        JsonObject submission;
+    public static class AppEntity {
+        public final Topology app;
+        public final Map<String,Object> config;
+        public JsonObject submission;
         
-        AppEntity(Topology app, Map<String,Object> config) throws Exception {
+        public AppEntity(Topology app, Map<String,Object> config) throws Exception {
             this.app = app;
             this.config = config;
             
         }
-        AppEntity(JsonObject submission) {
+        public AppEntity(JsonObject submission) {
             this.app = null;
             this.config = null;
             this.submission = submission;
@@ -62,7 +60,7 @@ abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
         return _submit(new AppEntity(app, new HashMap<>(config)));
     }
     
-    Future<T> _submit(AppEntity entity) throws Exception {
+    protected Future<T> _submit(AppEntity entity) throws Exception {
         preSubmit(entity);
         if (entity.submission == null)
             createSubmission(entity);
@@ -72,20 +70,20 @@ abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
     /**
      * Pre-submit hook when submitting a Topology.
      */
-    void preSubmit(AppEntity entity) {        
+    protected void preSubmit(AppEntity entity) {        
     }
     
     /**
      * Post-submit hook when submitting a Topology.
      */
-    Future<T> postSubmit(AppEntity entity, Future<T> future) throws Exception{
+    protected Future<T> postSubmit(AppEntity entity, Future<T> future) throws Exception{
         RemoteContexts.writeResultsToFile(entity.submission);
         return future;
     }
     
     @Override
-    public final Future<T> submit(JSONObject submission) throws Exception {
-    	return _submit(new AppEntity(JSON4JUtilities.gson(submission)));
+    public final Future<T> submit(JsonObject submission) throws Exception {
+    	return _submit(new AppEntity(submission));
     }
     
     /**
@@ -93,7 +91,7 @@ abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
      * to allow sharing code between remote (non-install) contexts
      * and product install contexts.
      */
-    abstract Future<T> action(AppEntity entity) throws Exception;
+    protected abstract Future<T> action(AppEntity entity) throws Exception;
     
     /**
      * Create JSON form of the submission from a topology and config.
@@ -117,14 +115,15 @@ abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
     
     @SuppressWarnings("unchecked")
     private static JsonElement convertConfigValue(Object value) {
+
         if (value instanceof Boolean)
             return new JsonPrimitive((Boolean) value); 
         else if (value instanceof Number)
             return new JsonPrimitive((Number) value);
         else if (value instanceof String) {
             return new JsonPrimitive((String) value);
-        } else if (value instanceof JSONObject) {
-            return gson((JSONObject) value);
+        } else if (JSON4JBridge.isJson4J(value)) {
+            return JSON4JBridge.fromJSON4J(value);
         } else if (value instanceof Collection) {
             JsonArray array = new JsonArray();
             for (Object e : (Collection<Object>) value) {

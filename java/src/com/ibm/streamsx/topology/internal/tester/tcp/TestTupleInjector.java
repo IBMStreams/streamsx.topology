@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.internal.tester;
+package com.ibm.streamsx.topology.internal.tester.tcp;
 
 import java.nio.ByteBuffer;
 
@@ -18,12 +18,12 @@ import com.ibm.streams.operator.encoding.BinaryEncoding;
  * graph where they will get sent to the handlers.
  * 
  */
-public class TestTupleInjector implements StreamHandler<byte[]> {
+class TestTupleInjector implements StreamHandler<byte[]> {
 
     private StreamingOutput<OutputTuple> injectPort;
     private final BinaryEncoding encoding;
 
-    public TestTupleInjector(StreamingOutput<OutputTuple> injectPort) {
+    TestTupleInjector(StreamingOutput<OutputTuple> injectPort) {
         this.injectPort = injectPort;
         encoding = injectPort.getStreamSchema().newNativeBinaryEncoding();
     }

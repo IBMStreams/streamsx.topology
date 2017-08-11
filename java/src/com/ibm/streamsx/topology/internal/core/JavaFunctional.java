@@ -6,7 +6,6 @@ package com.ibm.streamsx.topology.internal.core;
 
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
-import static com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor.FUNCTIONAL_LOGIC_PARAM;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -18,7 +17,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
@@ -26,8 +24,7 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
-import com.ibm.streamsx.topology.internal.functional.ObjectUtils;
-import com.ibm.streamsx.topology.internal.spljava.Schemas;
+import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
 
 /**
  * Maintains the core core for building a topology of Java streams.
@@ -66,7 +63,7 @@ public class JavaFunctional {
 
         verifySerializable(logic);
         String logicString = ObjectUtils.serializeLogic(logic);        
-        params.put(FUNCTIONAL_LOGIC_PARAM, logicString);
+        params.put(FunctionalOpProperties.FUNCTIONAL_LOGIC_PARAM, logicString);
         BOperatorInvocation bop = te.builder().addOperator(name, kind, params);
         bop.setModel(MODEL_FUNCTIONAL, LANGUAGE_JAVA);
 
@@ -89,8 +86,8 @@ public class JavaFunctional {
     public static <T> TStream<T> addJavaOutput(TopologyElement te,
             BOperatorInvocation bop, Type tupleType) {
         
-        StreamSchema mappingSchema = Schemas.getSPLMappingSchema(tupleType);
-        BOutputPort bstream = bop.addOutput(mappingSchema.getLanguageType());
+        String mappingSchema = ObjectSchemas.getMappingSchema(tupleType);
+        BOutputPort bstream = bop.addOutput(mappingSchema);
         
         return getJavaTStream(te, bop, bstream, tupleType);
     }

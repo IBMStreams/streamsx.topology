@@ -7,11 +7,26 @@ package com.ibm.streamsx.topology.spi;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+/**
+ * Add the ability to add source location information to an operator invocation.
+ *
+ */
 public interface SourceInfo {
 
     String SOURCE_LOCATIONS = "sourcelocation";
 
-    static void addSourceInfo(JsonObject config, Class<?> calledClass) {
+    /**
+     * Add source level information to invokeInfo.
+     * 
+     * The current stack is "walked" upwards to find the
+     * last instance of calledClass. The frame including
+     * called class is taken as the 'api.method' while
+     * the caller is taken as user code.
+     * 
+     * @param invokeInfo Object holding operator invoke information.
+     * @param calledClass API implementation class being called.
+     */
+    static void addSourceInfo(JsonObject invokeInfo, Class<?> calledClass) {
 
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
 
@@ -47,10 +62,10 @@ public interface SourceInfo {
         if (calledMethod != null)
             sourceInfo.addProperty("api.method", calledMethod.getMethodName());
 
-        if (!config.has(SOURCE_LOCATIONS)) {
-            config.add(SOURCE_LOCATIONS, new JsonArray());
+        if (!invokeInfo.has(SOURCE_LOCATIONS)) {
+            invokeInfo.add(SOURCE_LOCATIONS, new JsonArray());
         }
-        config.get(SOURCE_LOCATIONS).getAsJsonArray().add(sourceInfo);
+        invokeInfo.get(SOURCE_LOCATIONS).getAsJsonArray().add(sourceInfo);
     }
 
 }

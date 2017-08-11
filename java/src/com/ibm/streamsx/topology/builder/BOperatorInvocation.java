@@ -22,14 +22,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.json.java.JSONObject;
-import com.ibm.streams.operator.Attribute;
-import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 
 /**
  * JSON representation.
@@ -136,7 +130,8 @@ public class BOperatorInvocation extends BOperator {
                 // fall through to handle jsonValue as usual 
             }
             else {
-                // other kinds of JSONObject handled below
+                jparams.add(name, jo);
+                return;
             }
         }
         else if (value instanceof Supplier<?>) {
@@ -146,67 +141,44 @@ public class BOperatorInvocation extends BOperator {
                 
         if (value instanceof String) {
             if (jsonType == null)
-                jsonType = MetaType.RSTRING.name();
+                jsonType = JParamTypes.RSTRING;
         } else if (value instanceof Byte) {
             if (jsonType == null)
-                jsonType = MetaType.INT8.name();
+                jsonType = JParamTypes.INT8;
         } else if (value instanceof Short) {
             if (jsonType == null)
-                jsonType = MetaType.INT16.name();
+                jsonType = JParamTypes.INT16;
         } else if (value instanceof Integer) {
             if (jsonType == null)
-                jsonType = MetaType.INT32.name();
+                jsonType = JParamTypes.INT32;
         } else if (value instanceof Long) {
             if (jsonType == null)
-                jsonType = MetaType.INT64.name();
+                jsonType = JParamTypes.INT64;
         } else if (value instanceof Float) {
-            jsonType = MetaType.FLOAT32.name();
+            jsonType = JParamTypes.FLOAT32;
         } else if (value instanceof Double) {
-            jsonType = MetaType.FLOAT64.name();
+            jsonType = JParamTypes.FLOAT64;
         } else if (value instanceof Boolean) {
-            jsonType = MetaType.BOOLEAN.name();
+            jsonType = JParamTypes.BOOLEAN;
         } else if (value instanceof BigDecimal) {
             jsonValue = value.toString(); // Need to maintain exact value
-            jsonType = MetaType.DECIMAL128.name();
+            jsonType = JParamTypes.DECIMAL128;
         } else if (value instanceof Enum) {
             jsonValue = ((Enum<?>) value).name();
             jsonType = JParamTypes.TYPE_ENUM;
-        } else if (value instanceof StreamSchema) {
-            jsonValue = ((StreamSchema) value).getLanguageType();
-            jsonType = JParamTypes.TYPE_SPLTYPE;
         } else if (value instanceof String[]) {
             String[] sa = (String[]) value;
             JsonArray a = new JsonArray();
             for (String vs : sa)
                 a.add(new JsonPrimitive(vs));
             jsonValue = a;
-        } else if (value instanceof Attribute) {
-            Attribute attr = (Attribute) value;
-            jsonValue = attr.getName();
-            jsonType = JParamTypes.TYPE_ATTRIBUTE;
-            //op.setAttributeParameter(name, attr.getName());
-        } else if (value instanceof JSONObject) {
-            JSONObject jo = (JSONObject) value;
-            jsonType = (String) jo.get("type");
-            jsonValue = (JSONObject) jo.get("value");
         } else if (value instanceof JsonElement) {
             assert jsonType != null;
         } else {
             throw new IllegalArgumentException("Type for parameter " + name + " is not supported:" +  value.getClass());
         }
         
-        // TODO: JSON
-        if (jsonValue instanceof JSONObject)
-            jsonValue = JSON4JUtilities.gson((JSONObject) jsonValue);
-        
-        JsonObject param = new JsonObject();
-        GsonUtilities.addToObject(param, "value", jsonValue);
-
-        if (jsonType != null) {
-            param.addProperty("type", jsonType);
-            if (JParamTypes.TYPE_ENUM.equals(jsonType))
-                param.addProperty("enumclass", value.getClass().getCanonicalName());              
-        }
+        JsonObject param = JParamTypes.create(jsonType, jsonValue);
         
         jparams.add(name, param);
     }

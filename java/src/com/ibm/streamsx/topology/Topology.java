@@ -22,8 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONObject;
-import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.GraphBuilder;
 import com.ibm.streamsx.topology.context.ContextProperties;
@@ -34,8 +32,8 @@ import com.ibm.streamsx.topology.internal.core.DependencyResolver;
 import com.ibm.streamsx.topology.internal.core.InternalProperties;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
+import com.ibm.streamsx.topology.internal.core.SPLStreamBridge;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
-import com.ibm.streamsx.topology.internal.core.StreamImpl;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
@@ -44,11 +42,9 @@ import com.ibm.streamsx.topology.internal.logic.EndlessSupplier;
 import com.ibm.streamsx.topology.internal.logic.LimitedSupplier;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.internal.logic.SingleToIterableSupplier;
-import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.json.JSONSchemas;
 import com.ibm.streamsx.topology.spl.SPL;
-import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.tester.Tester;
 
@@ -81,11 +77,6 @@ public class Topology implements TopologyElement {
      */
     public static Logger TOPOLOGY_LOGGER = Logger.getLogger("com.ibm.streamsx.topology");
     
-    /**
-     * Logger used for the interactions with IBM Streams functionality, name {@code com.ibm.streamsx.topology.streams}.
-     */
-    public static Logger STREAMS_LOGGER = Logger.getLogger("com.ibm.streamsx.topology.streams");
-
     private final String namespace;
     private final String name;
 
@@ -471,35 +462,7 @@ public class Topology implements TopologyElement {
     public <T> TStream<T> subscribe(String topic, Class<T> tupleTypeClass) {
         checkTopicFilter(topic);
         
-        if (JSONObject.class.equals(tupleTypeClass)) {
-            
-            @SuppressWarnings("unchecked")
-            TStream<T> json = (TStream<T>) SPLStreams.subscribe(this, topic, JSONSchemas.JSON).toJSON();
-            return json;
-        }
-        
-        StreamSchema mappingSchema = Schemas.getSPLMappingSchema(tupleTypeClass);
-        
-        SPLStream splImport;
-        
-        // Subscribed as an SPL Stream.
-        if (Schemas.usesDirectSchema(tupleTypeClass)) {
-            splImport = SPLStreams.subscribe(this, topic,
-                    mappingSchema);
-
-        } else {      
-            Map<String, Object> params = new HashMap<>();
-
-            params.put("topic", topic);
-            params.put("class", tupleTypeClass.getName());
-            params.put("streamType", mappingSchema);
-
-            splImport = SPL.invokeSource(this,
-                    "com.ibm.streamsx.topology.topic::SubscribeJava", params,
-                    mappingSchema);
-        }
-
-        return new StreamImpl<T>(this, splImport.output(), tupleTypeClass);
+        return SPLStreamBridge.subscribe(this, topic, tupleTypeClass);
     }
     
     /**
@@ -895,7 +858,7 @@ public class Topology implements TopologyElement {
      *  or has already been defined. 
      */
     public <T> Supplier<T> createSubmissionParameter(String name, Class<T> valueClass) {
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(this, name, valueClass); 
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, valueClass); 
         builder().createSubmissionParameter(name, sp.asJSON());
         return sp;
     }
@@ -913,7 +876,7 @@ public class Topology implements TopologyElement {
      * @throws IllegalArgumentException if {@code defaultValue} is null
      */
     public <T> Supplier<T> createSubmissionParameter(String name, T defaultValue) {
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(this, name, defaultValue);
+        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, defaultValue);
         builder().createSubmissionParameter(name, sp.asJSON());
         return sp;
     }

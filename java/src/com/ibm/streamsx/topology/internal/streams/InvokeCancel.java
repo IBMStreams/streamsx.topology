@@ -10,12 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
 
 public class InvokeCancel {
 
-    static final Logger trace = Topology.STREAMS_LOGGER;
+    static final Logger trace = Util.STREAMS_LOGGER;
 
     private final BigInteger jobId;
     private final String userName;

@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.internal.functional;
+package com.ibm.streamsx.topology.internal.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

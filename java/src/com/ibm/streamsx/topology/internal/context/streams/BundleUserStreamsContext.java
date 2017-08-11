@@ -2,10 +2,12 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.internal.context;
+package com.ibm.streamsx.topology.internal.context.streams;
 
 import java.io.File;
 import java.util.concurrent.Future;
+
+import com.ibm.streamsx.topology.internal.context.JSONStreamsContext;
 
 /**
  * A streams context that uses requires a bundle, so the bundle
@@ -22,7 +24,7 @@ abstract class BundleUserStreamsContext<T> extends JSONStreamsContext<T> {
     }
     
     @Override
-    final Future<T> action(AppEntity entity) throws Exception {
+    protected final Future<T> action(AppEntity entity) throws Exception {
         File bundle = bundler._submit(entity).get();
         preInvoke(entity, bundle);
         Future<T> future = invoke(entity, bundle);       

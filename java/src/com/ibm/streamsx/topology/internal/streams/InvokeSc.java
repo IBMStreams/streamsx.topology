@@ -17,15 +17,12 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
-import com.ibm.streams.operator.version.Product;
-import com.ibm.streams.operator.version.Version;
-import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
 
 public class InvokeSc {
 
-    static final Logger trace = Topology.STREAMS_LOGGER;
+    static final Logger trace = Util.STREAMS_LOGGER;
 
     private Set<File> toolkits = new HashSet<>();
     private final boolean standalone;
@@ -47,9 +44,7 @@ public class InvokeSc {
         // Version 4.2 onwards deprecates standalone compiler option
         // so don't use it to avoid warnings.
         if (Util.getStreamsInstall().equals(installDir)) {
-            Version ver = Product.getVersion();
-            if ((ver.getVersion() == 4 && ver.getRelease() >= 2)
-                || (ver.getVersion() > 4))
+            if (Util.versionAtLeast(4, 2, 0))
                 standalone = false;
         } else {
             // TODO: get version of compile install to be used

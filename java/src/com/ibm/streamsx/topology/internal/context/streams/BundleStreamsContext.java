@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.internal.context;
+package com.ibm.streamsx.topology.internal.context.streams;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.APP_DIR;
 import static com.ibm.streamsx.topology.context.ContextProperties.TOOLKIT_DIR;
@@ -27,6 +27,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.context.ToolkitStreamsContext;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.core.InternalProperties;
 import com.ibm.streamsx.topology.internal.graph.GraphKeys;
@@ -55,7 +56,12 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
     }
     
     @Override
-    Future<File> action(AppEntity entity) throws Exception {
+    public Future<File> _submit(AppEntity entity) throws Exception {
+        return super._submit(entity);
+    }
+    
+    @Override
+    protected Future<File> action(AppEntity entity) throws Exception {
         
         JsonObject submission = entity.submission;
         

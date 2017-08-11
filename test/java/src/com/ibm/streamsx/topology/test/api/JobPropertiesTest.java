@@ -35,6 +35,7 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
+import com.ibm.streamsx.topology.internal.streams.Util;
 import com.ibm.streamsx.topology.spl.JavaPrimitive;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -275,7 +276,7 @@ public class JobPropertiesTest extends TestTopology {
         }
         
         public static ApiLog setup() {
-            Logger logger = Topology.STREAMS_LOGGER;
+            Logger logger = Util.STREAMS_LOGGER;
             Level origLevel = logger.getLevel();
             if (origLevel==null || !logger.isLoggable(Level.INFO))
                 logger.setLevel(Level.INFO);
@@ -285,11 +286,11 @@ public class JobPropertiesTest extends TestTopology {
         }
         
         public Logger getLogger() {
-            return Topology.STREAMS_LOGGER;
+            return Util.STREAMS_LOGGER;
         }
         
         public void cleanup() {
-            Logger logger = Topology.STREAMS_LOGGER;
+            Logger logger = Util.STREAMS_LOGGER;
             logger.removeHandler(this);
             logger.setLevel(origLevel);
         }

@@ -24,8 +24,7 @@ import com.ibm.streamsx.topology.internal.functional.window.SlidingJoin;
         @InputPortSet(cardinality = 1, windowingMode = WindowMode.Windowed),
         @InputPortSet(cardinality = 1) })
 @Icons(location16 = "opt/icons/join_16.gif", location32 = "opt/icons/join_32.gif")
-public class FunctionJoin extends FunctionWindow {
-    public static final String JOIN_KEY_GETTER_PARAM = "joinKeyGetter";
+public class FunctionJoin extends FunctionWindow { 
     
     private SlidingJoin<Object, Object, Object> joiner;
     

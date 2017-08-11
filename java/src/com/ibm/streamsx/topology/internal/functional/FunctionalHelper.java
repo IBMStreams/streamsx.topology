@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.util.logging.Logger;
 
 import com.ibm.streams.operator.AbstractOperator;
+import com.ibm.streamsx.topology.internal.core.ObjectUtils;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 import com.ibm.streamsx.topology.internal.spljava.Schemas;
 

@@ -7,11 +7,11 @@ package com.ibm.streamsx.topology.internal.context;
 import java.util.Collections;
 import java.util.concurrent.Future;
 
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 
-abstract class StreamsContextImpl<T> implements StreamsContext<T> {
+public abstract class StreamsContextImpl<T> implements StreamsContext<T> {
 
     @Override
     public final Future<T> submit(Topology topology) throws Exception {
@@ -28,7 +28,7 @@ abstract class StreamsContextImpl<T> implements StreamsContext<T> {
     }
     
     @Override
-    public Future<T> submit(JSONObject submission) throws Exception {
+    public Future<T> submit(JsonObject submission) throws Exception {
     	throw new UnsupportedOperationException();
     }
 }

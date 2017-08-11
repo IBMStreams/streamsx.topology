@@ -125,7 +125,7 @@ class _BaseSubmitter(object):
             if ConfigParams.FORCE_REMOTE_BUILD in self.config and self.config[ConfigParams.FORCE_REMOTE_BUILD]:
                 submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
             else:
-                submit_class = "com.ibm.streamsx.topology.context.StreamsContextSubmit"
+                submit_class = "com.ibm.streamsx.topology.context.local.StreamsContextSubmit"
             cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
 
         args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]

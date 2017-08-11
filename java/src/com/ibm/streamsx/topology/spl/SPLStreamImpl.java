@@ -9,6 +9,8 @@ import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
@@ -177,6 +179,17 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     @Override
     public SPLStream endParallel() {
         return asSPL(super.endParallel());
+    }
+    
+    @Override
+    public void publish(String topic, boolean allowFilter) {
+        checkTopicName(topic);
+        
+        Map<String,Object> publishParms = new HashMap<>();
+        publishParms.put("topic", topic);
+        publishParms.put("allowFilter", allowFilter);
+        
+        SPL.invokeSink("com.ibm.streamsx.topology.topic::Publish", this, publishParms);
     }
 
     public static class TupleToString implements Function<Tuple, String> {

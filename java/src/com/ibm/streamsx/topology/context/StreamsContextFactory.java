@@ -5,18 +5,12 @@
 package com.ibm.streamsx.topology.context;
 
 import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
-import com.ibm.streamsx.topology.internal.context.AnalyticsServiceStreamsContext;
-import com.ibm.streamsx.topology.internal.context.BundleStreamsContext;
-import com.ibm.streamsx.topology.internal.context.DistributedStreamsContext;
-import com.ibm.streamsx.topology.internal.context.DistributedTester;
-import com.ibm.streamsx.topology.internal.context.EmbeddedStreamsContext;
-import com.ibm.streamsx.topology.internal.context.EmbeddedTester;
-import com.ibm.streamsx.topology.internal.context.RemoteStreamingAnalyticsServiceStreamsContext;
-import com.ibm.streamsx.topology.internal.context.RemoteStreamingAnalyticsTester;
-import com.ibm.streamsx.topology.internal.context.StandaloneStreamsContext;
-import com.ibm.streamsx.topology.internal.context.StandaloneTester;
 import com.ibm.streamsx.topology.internal.context.ToolkitStreamsContext;
 import com.ibm.streamsx.topology.internal.context.ZippedToolkitStreamsContext;
+import com.ibm.streamsx.topology.internal.context.service.RemoteStreamingAnalyticsServiceStreamsContext;
+import com.ibm.streamsx.topology.internal.context.service.RemoteStreamingAnalyticsTester;
+import com.ibm.streamsx.topology.internal.context.streams.AnalyticsServiceStreamsContext;
+import com.ibm.streamsx.topology.internal.context.streams.BundleStreamsContext;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
@@ -35,8 +29,9 @@ public class StreamsContextFactory {
      * 
      * @see StreamsContext.Type#EMBEDDED
      */
+    @SuppressWarnings("unchecked")
     public static StreamsContext<JavaTestableGraph> getEmbedded() {
-        return new EmbeddedStreamsContext();
+        return (StreamsContext<JavaTestableGraph>) newInstance("com.ibm.streamsx.topology.internal.embedded.EmbeddedStreamsContext");
     }
 
     /**
@@ -76,15 +71,15 @@ public class StreamsContextFactory {
         case BUNDLE:
             return new BundleStreamsContext(false, true);
         case STANDALONE:
-            return new StandaloneStreamsContext();
+            return newInstance("com.ibm.streamsx.topology.internal.context.streams.StandaloneStreamsContext");
         case DISTRIBUTED:
-            return new DistributedStreamsContext();
+            return newInstance("com.ibm.streamsx.topology.internal.context.streams.DistributedStreamsContext");
         case STANDALONE_TESTER:
-            return new StandaloneTester();
+            return newInstance("com.ibm.streamsx.topology.internal.context.streams.StandaloneTester");
         case EMBEDDED_TESTER:
-            return new EmbeddedTester();
+            return newInstance("com.ibm.streamsx.topology.internal.embedded.EmbeddedTester");
         case DISTRIBUTED_TESTER:
-            return new DistributedTester();
+            return newInstance("com.ibm.streamsx.topology.internal.context.streams.DistributedTester");
         
         case ANALYTICS_SERVICE:
         case STREAMING_ANALYTICS_SERVICE:
@@ -97,6 +92,19 @@ public class StreamsContextFactory {
         default:
             throw new IllegalArgumentException("Unknown type:" + type);
         }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static StreamsContext<?> newInstance(String contextClassName) {
+        try {
+            Class<StreamsContext<?>> contextClass;
+            contextClass = (Class<StreamsContext<?>>) Class.forName(contextClassName);
+                    
+            return contextClass.newInstance();
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+            throw new IllegalStateException(e);
+        }
+
     }
     
     /**
@@ -116,7 +124,7 @@ public class StreamsContextFactory {
      * @since 1.7
      */
     public static String getDefaultDomainId() {
-        return Util.getenv(Util.STREAMS_DOMAIN_ID);
+        return Util.getDefaultDomainId();
     }
     
     /**
@@ -136,7 +144,7 @@ public class StreamsContextFactory {
      * @since 1.7
      */
     public static String getDefaultInstanceId() {
-        return Util.getenv(Util.STREAMS_INSTANCE_ID);
+        return Util.getDefaultInstanceId();
     }
     
     /**

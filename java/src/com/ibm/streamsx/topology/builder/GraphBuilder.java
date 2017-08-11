@@ -26,7 +26,6 @@ import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.ibm.streams.operator.version.Product;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
@@ -34,6 +33,7 @@ import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
  * Low-level graph builder. GraphBuilder provides a layer on top of
@@ -67,17 +67,9 @@ public class GraphBuilder extends BJSONObject {
         _json().addProperty("public", true);
         _json().add(CONFIG, config);
         _json().add("parameters", params);
-        
-        // The version of IBM Streams being used to build
-        // the topology. When Streams install is not
-        // set we assume we are building against the
-        // Streaming Analytics service.
-        final String pv;
-        if (System.getenv("STREAMS_INSTALL") != null)
-            pv = Product.getVersion().toString();
-        else
-            pv = "4.2.1";
-        getConfig().addProperty(CFG_STREAMS_VERSION, pv);
+
+        getConfig().addProperty(CFG_STREAMS_VERSION, Util.productVersion());
+        ;
     }
    
    private final Map<String,Integer> usedNames = new HashMap<>();

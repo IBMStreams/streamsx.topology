@@ -5,21 +5,28 @@
 package com.ibm.streamsx.topology.internal.streams;
 
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static java.lang.Math.min;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONObject;
-import com.ibm.streamsx.topology.context.StreamsContextFactory;
 
 public class Util {
     public static final String STREAMS_DOMAIN_ID = "STREAMS_DOMAIN_ID";
     public static final String STREAMS_INSTANCE_ID = "STREAMS_INSTANCE_ID";
     private static final String STREAMS_INSTALL = "STREAMS_INSTALL";
     private static String streamsInstall;
+    
+    /**
+     * Logger used for the interactions with IBM Streams functionality, name {@code com.ibm.streamsx.topology.streams}.
+     */
+    public static Logger STREAMS_LOGGER = Logger.getLogger("com.ibm.streamsx.topology.streams"); 
 
     /**
      * Get a valid STREAMS_INSTALL value.
@@ -52,12 +59,6 @@ public class Util {
      * Get a value for Streams install directory, using the value from
      * the config, defaulting to $STREAMS_INSTALL.
      */
-    public static String getStreamsInstall(JSONObject deployConfig, String installKey) {
-        if (deployConfig == null || !deployConfig.containsKey(installKey))
-            return getStreamsInstall();
-        
-        return verifyStreamsInstall(deployConfig.get(installKey).toString());
-    }
     public static String getStreamsInstall(JsonObject deploy, String installKey) {
         if (!deploy.has(installKey))
             return getStreamsInstall();
@@ -84,8 +85,15 @@ public class Util {
      */
     public static void checkInvokeStreamtoolPreconditions() 
             throws IllegalStateException {
-        StreamsContextFactory.getDefaultDomainId();
-        StreamsContextFactory.getDefaultInstanceId();
+        getDefaultDomainId();
+        getDefaultInstanceId();
+    }
+    
+    public static String getDefaultDomainId() {
+        return Util.getenv(Util.STREAMS_DOMAIN_ID);
+    }
+    public static String getDefaultInstanceId() {
+        return Util.getenv(Util.STREAMS_INSTANCE_ID);
     }
  
     /**
@@ -123,4 +131,62 @@ public class Util {
         }
         return cmdsb.toString();
     }
+    
+    // The version of IBM Streams being used to build
+    // the topology. When Streams install is not
+    // set we assume we are building against the
+    // Streaming Analytics service.
+    private final static String SERVICE_VERSION = "4.2.1";
+    public static String productVersion() {
+        if (System.getenv(STREAMS_INSTALL) == null) {
+            // assume Streaming Analytics, version may be newer than
+            // this but this sets the min level.
+            return SERVICE_VERSION;
+        }
+        // This verifies the install.
+        getStreamsInstall();
+        
+        try {
+            Class<?> product = Class.forName("com.ibm.streams.operator.version.Product");
+            
+            return product.getMethod("getVersion").invoke(null).toString();
+
+        } catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public static boolean versionAtLeast(int v, int r, int m) {
+        int[] vers = productVersions();
+        
+        int pv = vers[0];
+        if (pv > v)
+            return true;
+        if (pv < v)
+            return false;
+        
+        // same v
+        int pr = vers[1];
+        if (pr > r)
+            return true;
+        if (pv < r)
+            return false;
+        
+        // same v.r       
+        int pm = vers[2];
+        return pm >= m;
+    }
+    
+    private static int[] productVersions() {
+        String vers = productVersion();
+
+        final String[] vs = vers.toString().split("\\.");
+        System.err.println("DDD_VERSION_SPLIT:" + Arrays.asList(vs));
+        final int[] iv = new int[4];
+        for (int i = 0; i < min(iv.length, vs.length); i++) {
+            iv[i] = Integer.valueOf(vs[i]);
+        }
+        return iv;
+    }
+
 }

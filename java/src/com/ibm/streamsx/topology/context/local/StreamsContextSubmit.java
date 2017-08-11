@@ -2,12 +2,15 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016  
  */
-package com.ibm.streamsx.topology.context;
+package com.ibm.streamsx.topology.context.local;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileReader;
 
-import com.ibm.json.java.JSONObject;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.context.StreamsContextFactory;
 
 /**
  * Given the path of a file containing the JSON representation of a graph,
@@ -22,12 +25,12 @@ public class StreamsContextSubmit {
         
         File JSONFile = new File(JSONPath);
         
-        try (FileInputStream fis= new FileInputStream(JSONFile)) {           
-            JSONObject json = JSONObject.parse(fis);
-            fis.close();
+        try (FileReader fr= new FileReader(JSONFile)) {
+            JsonParser parser = new JsonParser();
+            JsonObject graph = parser.parse(fr).getAsJsonObject();
             
             StreamsContext<?> sc = StreamsContextFactory.getStreamsContext(context);
-            Object rc = sc.submit(json).get();
+            Object rc = sc.submit(graph).get();
             if (rc instanceof Integer)
             	System.exit((Integer) rc);
         }

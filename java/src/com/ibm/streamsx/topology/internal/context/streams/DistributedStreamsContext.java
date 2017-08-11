@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.internal.context;
+package com.ibm.streamsx.topology.internal.context.streams;
 
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
@@ -31,7 +31,7 @@ public class DistributedStreamsContext extends
     }
     
     @Override
-    void preSubmit(AppEntity entity) {
+    protected void preSubmit(AppEntity entity) {
         InvokeSubmit.checkPreconditions();
     }
 

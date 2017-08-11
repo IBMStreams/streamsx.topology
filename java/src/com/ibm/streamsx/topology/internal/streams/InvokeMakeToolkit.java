@@ -12,13 +12,12 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
 
 public class InvokeMakeToolkit {
 
-    static final Logger trace = Topology.STREAMS_LOGGER;
+    static final Logger trace = Util.STREAMS_LOGGER;
 
     private final File toolkitDir;
     private final String installDir;

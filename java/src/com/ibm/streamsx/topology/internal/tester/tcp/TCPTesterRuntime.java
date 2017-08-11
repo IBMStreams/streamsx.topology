@@ -41,7 +41,6 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
-import com.ibm.streamsx.topology.internal.tester.TestTupleInjector;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.ops.TesterSink;

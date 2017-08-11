@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.spl;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND_CLASS;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
+import static com.ibm.streamsx.topology.spl.OpAPIUtil.fixParameters;
 import static com.ibm.streamsx.topology.spl.SPLStreamImpl.newSPLStream;
 
 import java.util.ArrayList;
@@ -64,7 +65,7 @@ public class JavaPrimitive {
 
         BOperatorInvocation op = input.builder().addOperator(
                 getInvocationName(opClass),
-                getKind(opClass), params);
+                getKind(opClass), fixParameters(params));
         op.setModel(MODEL_SPL, LANGUAGE_JAVA);
         op._json().addProperty(KIND_CLASS, opClass.getCanonicalName());
         SourceInfo.setSourceInfo(op, JavaPrimitive.class);
@@ -104,7 +105,7 @@ public class JavaPrimitive {
         
         BOperatorInvocation op = te.builder().addOperator(
                 getInvocationName(opClass),
-                getKind(opClass), params);
+                getKind(opClass), fixParameters(params));
         op.setModel(MODEL_SPL, LANGUAGE_JAVA);
         op._json().addProperty(KIND_CLASS, opClass.getCanonicalName());
         SourceInfo.setSourceInfo(op, JavaPrimitive.class);
@@ -141,7 +142,7 @@ public class JavaPrimitive {
 
         BOperatorInvocation sink = input.builder().addOperator(
                 getInvocationName(opClass),
-                getKind(opClass), params);
+                getKind(opClass), fixParameters(params));
         sink.setModel(MODEL_SPL, LANGUAGE_JAVA);
         sink._json().addProperty(KIND_CLASS, opClass.getCanonicalName());
         SourceInfo.setSourceInfo(sink, JavaPrimitive.class);
@@ -169,7 +170,7 @@ public class JavaPrimitive {
         
         BOperatorInvocation source = te.builder().addOperator(
                 getInvocationName(opClass),
-                getKind(opClass), params);
+                getKind(opClass), fixParameters(params));
         source.setModel(MODEL_SPL, LANGUAGE_JAVA);
         source._json().addProperty(KIND_CLASS, opClass.getCanonicalName());
         SourceInfo.setSourceInfo(source, JavaPrimitive.class);

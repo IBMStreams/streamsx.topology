@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017  
  */
-package com.ibm.streamsx.topology.internal.context;
+package com.ibm.streamsx.topology.internal.context.service;
 
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -13,6 +13,7 @@ import java.util.concurrent.Future;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.context.JSONStreamsContext;
 import com.ibm.streamsx.topology.internal.context.remote.RemoteBuildAndSubmitRemoteContext;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 
@@ -36,7 +37,7 @@ public class RemoteStreamingAnalyticsServiceStreamsContext extends JSONStreamsCo
     }
 
     @Override
-    Future<BigInteger> action(com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity entity) throws Exception {
+    protected Future<BigInteger> action(com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity entity) throws Exception {
         remoteContext.submit(entity.submission).get();
         
         JsonObject results = object(entity.submission, RemoteContext.SUBMISSION_RESULTS);

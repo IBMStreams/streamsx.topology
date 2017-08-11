@@ -6,6 +6,9 @@ package com.ibm.streamsx.topology.internal.functional.ops;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import com.ibm.streams.operator.AbstractOperator;
@@ -16,6 +19,7 @@ import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
+import com.ibm.streamsx.topology.internal.core.SubmissionParameterManager;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 
@@ -27,7 +31,6 @@ import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 @SharedLoader
 public abstract class FunctionFunctor extends AbstractOperator implements Functional, Closeable {
 
-    public static final String FUNCTIONAL_LOGIC_PARAM = FunctionalOpProperties.FUNCTIONAL_LOGIC_PARAM;
     static final Logger trace = Logger.getLogger("com.ibm.streamsx.topology.operators");
     
     @ContextCheck(runtime=false)
@@ -90,7 +93,7 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
             throws Exception {
         super.initialize(context);
         FunctionalHelper.addLibraries(this, getJar());
-        SubmissionParameterManager.initialize(context);
+        FunctionFunctor.initializeSubmissionParameters(context);
         functionContext = new FunctionOperatorContext(context);
     }
     
@@ -115,5 +118,28 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
                 getOperatorContext(), getFunctionContext(), getFunctionalLogic());
         this.logicHandler = handler;
         return handler;
+    }
+
+    /**
+     * Initialize submission parameter value information
+     * from operator context information.
+     * @param context the operator context
+     */
+    public synchronized static void initializeSubmissionParameters(OperatorContext context) {
+        // The TYPE_SPL_SUBMISSION_PARAMS parameter value is the same for
+        // all operator contexts.
+        if (!SubmissionParameterManager.initialized()) {
+            List<String> names = context.getParameterValues(FunctionalOpProperties.NAME_SUBMISSION_PARAM_NAMES);
+            if (names != null && !names.isEmpty()) {
+                List<String> values = context.getParameterValues(FunctionalOpProperties.NAME_SUBMISSION_PARAM_VALUES);
+                Map<String,String> map = new HashMap<>();
+                for (int i = 0; i < names.size(); i++) {
+                    String name = names.get(i);
+                    String value = values.get(i);
+                    map.put(name, value);
+                }
+                SubmissionParameterManager.setValues(map);
+            }
+        }
     }
 }

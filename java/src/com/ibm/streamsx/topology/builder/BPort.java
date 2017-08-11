@@ -13,7 +13,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 interface BPort {
-    
+   
     JsonObject _json();
     
     default void addPortInfo(int index, String name, String schema) {
