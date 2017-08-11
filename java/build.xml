@@ -37,6 +37,7 @@
               ${cisxt}/spi/builder/*.java
    -->
   <property name="cisxt" value="com/ibm/streamsx/topology"/>
+  <property name="cisxr" value="com/ibm/streamsx/rest"/>
   <property name="pure.source"
        value="${cisxt}/function/*.java
               ${cisxt}/internal/gson/*.java
@@ -48,6 +49,8 @@
               ${cisxt}/jobconfig/*.java
               ${cisxt}/builder/*.java
               ${cisxt}/internal/streams/*.java
+
+              ${cisxr}/*.java
               "
   />
   <target name="compile.pure" depends="init">
