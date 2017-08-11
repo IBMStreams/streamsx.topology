@@ -18,8 +18,7 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.internal.functional.ops.FunctionJoin;
-import com.ibm.streamsx.topology.internal.functional.ops.FunctionWindow;
+import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.logic.Identity;
 
@@ -141,7 +140,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     private Map<String,Object> getOperatorParams() {
         Map<String,Object> params = new HashMap<>();
         if (isKeyed())
-            params.put(FunctionWindow.WINDOW_KEY_GETTER_PARAM, ObjectUtils.serializeLogic(keyGetter));
+            params.put(FunctionalOpProperties.WINDOW_KEY_GETTER_PARAM, ObjectUtils.serializeLogic(keyGetter));
         return params;
     }
 
@@ -166,7 +165,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         Map<String, Object> params = getOperatorParams();
         if (isKeyed() && xstreamKey != null) {
             
-            params.put(FunctionJoin.JOIN_KEY_GETTER_PARAM, ObjectUtils.serializeLogic(xstreamKey));
+            params.put(FunctionalOpProperties.JOIN_KEY_GETTER_PARAM, ObjectUtils.serializeLogic(xstreamKey));
         }
 
         BOperatorInvocation joinOp = JavaFunctional.addFunctionalOperator(this,

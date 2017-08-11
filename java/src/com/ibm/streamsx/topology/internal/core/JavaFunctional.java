@@ -6,7 +6,6 @@ package com.ibm.streamsx.topology.internal.core;
 
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
-import static com.ibm.streamsx.topology.internal.functional.ops.FunctionFunctor.FUNCTIONAL_LOGIC_PARAM;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -25,6 +24,7 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
+import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
 
 /**
  * Maintains the core core for building a topology of Java streams.
@@ -63,7 +63,7 @@ public class JavaFunctional {
 
         verifySerializable(logic);
         String logicString = ObjectUtils.serializeLogic(logic);        
-        params.put(FUNCTIONAL_LOGIC_PARAM, logicString);
+        params.put(FunctionalOpProperties.FUNCTIONAL_LOGIC_PARAM, logicString);
         BOperatorInvocation bop = te.builder().addOperator(name, kind, params);
         bop.setModel(MODEL_FUNCTIONAL, LANGUAGE_JAVA);
 

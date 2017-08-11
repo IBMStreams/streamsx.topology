@@ -26,9 +26,7 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 @InputPorts(@InputPortSet(cardinality = 1, windowingMode = WindowMode.Windowed))
 @OutputPorts(@OutputPortSet(cardinality = 1))
 public abstract class FunctionWindow extends FunctionFunctor {
-    
-    public static final String WINDOW_KEY_GETTER_PARAM = "keyGetter";
-    
+        
     private String keyGetter;
 
     private Metric nPartitions;

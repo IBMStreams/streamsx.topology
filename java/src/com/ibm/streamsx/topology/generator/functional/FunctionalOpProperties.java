@@ -13,5 +13,9 @@ public interface FunctionalOpProperties {
     /** The name of the functional operator's actual SPL parameter
      * for the submission parameters values */
     String NAME_SUBMISSION_PARAM_VALUES = "submissionParamValues";
-
+    
+    
+    String JOIN_KEY_GETTER_PARAM = "joinKeyGetter";
+    
+    String WINDOW_KEY_GETTER_PARAM = "keyGetter";
 }
