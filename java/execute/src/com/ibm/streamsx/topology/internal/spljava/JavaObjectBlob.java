@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import com.ibm.streams.operator.types.Blob;
-import com.ibm.streamsx.topology.spi.TupleSerializer;
+import com.ibm.streamsx.topology.spi.runtime.TupleSerializer;
 
 public class JavaObjectBlob implements Blob {
 

@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017  
  */
-package com.ibm.streamsx.topology.spi;
+package com.ibm.streamsx.topology.spi.runtime;
 
 import java.io.IOException;
 import java.io.InputStream;

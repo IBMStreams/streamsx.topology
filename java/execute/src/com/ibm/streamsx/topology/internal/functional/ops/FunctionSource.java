@@ -22,7 +22,7 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
-import com.ibm.streamsx.topology.spi.FunctionalOperator;
+import com.ibm.streamsx.topology.spi.runtime.FunctionalOperator;
 
 public abstract class FunctionSource extends ProcessTupleProducer implements Functional, Closeable, FunctionalOperator {
     

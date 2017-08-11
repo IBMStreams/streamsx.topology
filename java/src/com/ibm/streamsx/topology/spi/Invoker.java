@@ -26,6 +26,7 @@ import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
 import com.ibm.streamsx.topology.spi.builder.Properties;
+import com.ibm.streamsx.topology.spi.runtime.TupleSerializer;
 
 /**
  * 

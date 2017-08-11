@@ -8,7 +8,7 @@ import com.ibm.streams.operator.model.OutputPorts;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.internal.functional.ops.AbstractPipe;
-import com.ibm.streamsx.topology.spi.FunctionalOperator;
+import com.ibm.streamsx.topology.spi.runtime.FunctionalOperator;
 
 /**
  * A functional pipe operator.

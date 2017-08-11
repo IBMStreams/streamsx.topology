@@ -8,7 +8,7 @@ import com.ibm.streams.operator.model.InputPorts;
 import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSink;
-import com.ibm.streamsx.topology.spi.FunctionalOperator;
+import com.ibm.streamsx.topology.spi.runtime.FunctionalOperator;
 
 /**
  * A functional for each (sink) operator.

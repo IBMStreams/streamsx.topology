@@ -1,4 +1,4 @@
-package com.ibm.streamsx.topology.spi;
+package com.ibm.streamsx.topology.spi.runtime;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,7 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 
-import com.ibm.streamsx.topology.spi.TupleSerializer;
+import com.ibm.streamsx.topology.spi.runtime.TupleSerializer;
 
 final class JavaSerializer implements TupleSerializer {
         

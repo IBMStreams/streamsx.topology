@@ -14,7 +14,7 @@ import com.ibm.streamsx.topology.internal.core.ObjectUtils;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.functional.StatelessFunctionalHandler;
 import com.ibm.streamsx.topology.internal.messages.Messages;
-import com.ibm.streamsx.topology.spi.TupleSerializer;
+import com.ibm.streamsx.topology.spi.runtime.TupleSerializer;
 
 class FunctionalOpUtils {
     

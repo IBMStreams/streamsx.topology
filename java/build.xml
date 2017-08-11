@@ -6,15 +6,27 @@
   <import file="../common-build.xml"/>
 
   <property name="src" location="src"/>
-  <property name="execute.src" location="execute/src"/>
   <property name="classes" location="classes"/>
+  <property name="execute.src" location="execute/src"/>
+  <property name="execute.classes" location="execute/classes"/>
   <property name="jarname" value="com.ibm.streamsx.topology.jar"/>
   <property name="jar" location="${tk.lib}/${jarname}"/>
+
+  <property name="jar.core" location="${tk.lib}/com.ibm.streamsx.topology.core.jar"/>
+  <property name="jar.execute" location="${tk.lib}/com.ibm.streamsx.topology.execute.jar"/>
 
   <path id="compile.classpath">
     <path refid="streams.classpath"/>
     <path refid="tk.classpath"/>
     <pathelement location="${junit.jar}"/>
+  </path>
+
+  <path id="compile.execute.tk.classpath">
+    <path location="${jar.core}"/>
+  </path>
+  <path id="compile.execute.classpath">
+    <path refid="streams.classpath"/>
+    <path refid="compile.execute.tk.classpath"/>
   </path>
 
   <path id="compile.pure.classpath">
@@ -28,6 +40,7 @@
 
   <target name="init">
     <mkdir dir="${classes}"/>
+    <mkdir dir="${execute.classes}"/>
     <mkdir dir="${tk.lib}"/>
   </target>
 
@@ -73,18 +86,28 @@
        classpathref="compile.classpath"
        excludes="${pure.source}"
        />
-    <javac debug="true" includeantruntime="no"
-       srcdir="${execute.src}" 
-       destdir="${classes}"
-       classpathref="compile.classpath"
-       />
     <ant dir="../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
 
-  <target name="jar" depends="compile,_jar"/>
+  <target name="compile.execute" depends="compile">
+    <javac debug="true" includeantruntime="no"
+       srcdir="${execute.src}" 
+       destdir="${execute.classes}"
+       classpathref="compile.execute.classpath"
+       />
+  </target>
 
-  <target name="_jar">
-  <manifestclasspath property="jar.classpath" jarfile="${jar}">
+
+  <target name="jar" depends="compile,jar.core,jar.execute">
+    <jar destfile="${jar}" filesonly="true">
+       <manifest>
+          <attribute name="Class-Path" value="com.ibm.streamsx.topology.core.jar com.ibm.streamsx.topology.execute.jar}"/>
+       </manifest>
+    </jar>
+  </target>
+
+  <target name="jar.core">
+  <manifestclasspath property="jar.core.classpath" jarfile="${jar.core}">
      <classpath>
        <path refid="tk.classpath"/>
        <fileset dir="${tk.opt}/slf4j-1.7.5">
@@ -92,9 +115,9 @@
        </fileset>
      </classpath>
   </manifestclasspath>
-    <jar destfile="${jar}" filesonly="true">
+    <jar destfile="${jar.core}" filesonly="true">
        <manifest>
-          <attribute name="Class-Path" value="${jar.classpath}"/>
+          <attribute name="Class-Path" value="${jar.core.classpath}"/>
        </manifest>
     <fileset dir="${classes}"/>
     <fileset dir="${src}" excludes="com/ibm/streamsx/topology/internal/**"/>
@@ -102,8 +125,23 @@
     </jar>
   </target>
 
+  <target name="jar.execute" depends="compile.execute">
+  <manifestclasspath property="jar.execute.classpath" jarfile="${jar.execute}">
+     <classpath>
+       <path refid="compile.execute.tk.classpath"/>
+     </classpath>
+  </manifestclasspath>
+    <jar destfile="${jar.execute}" filesonly="true">
+       <manifest>
+          <attribute name="Class-Path" value="${jar.execute.classpath}"/>
+       </manifest>
+    <fileset dir="${execute.classes}"/>
+    </jar>
+  </target>
+
   <target name="clean" >
     <delete dir="${classes}"/>
+    <delete dir="${execute.classes}"/>
     <delete dir="${tk.lib}"/>
   </target>
 </project>

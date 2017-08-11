@@ -9,7 +9,7 @@ import java.io.IOException;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.types.Blob;
-import com.ibm.streamsx.topology.spi.TupleSerializer;
+import com.ibm.streamsx.topology.spi.runtime.TupleSerializer;
 
 /**
  * Mapping for a Java object as an SPL schema.
