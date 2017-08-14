@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
@@ -74,7 +73,6 @@ public class JavaFunctional {
     
     private static final Set<Class<?>> VIEWABLE_TYPES = new HashSet<>();
     static {
-        VIEWABLE_TYPES.add(Tuple.class);
         VIEWABLE_TYPES.add(String.class);
     }
     
@@ -145,10 +143,13 @@ public class JavaFunctional {
      */
     public static void addDependency(TopologyElement te,
             BOperatorInvocation bop, Type tupleType) {
-        if (Tuple.class.equals(tupleType))
-            return;
-        if (tupleType instanceof Class)
-            te.topology().getDependencyResolver().addJarDependency(bop, (Class<?>) tupleType);
+
+        if (tupleType instanceof Class) {
+            Class<?> tupleClass = (Class<?>) tupleType;
+            if ("com.ibm.streams.operator.Tuple".equals(tupleClass.getName()))
+                return;
+            te.topology().getDependencyResolver().addJarDependency(bop, tupleClass);
+        }
         if (tupleType instanceof ParameterizedType) {
             
             ParameterizedType pt = (ParameterizedType) tupleType;
