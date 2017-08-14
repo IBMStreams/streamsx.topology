@@ -16,7 +16,7 @@ public interface SourceInfo {
     String SOURCE_LOCATIONS = "sourcelocation";
 
     /**
-     * Add source level information to invokeInfo.
+     * Add source level information to invokeInfo as the property {@value SOURCE_LOCATIONS}.
      * 
      * The current stack is "walked" upwards to find the
      * last instance of calledClass. The frame including

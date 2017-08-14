@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 import static com.ibm.streamsx.topology.spi.builder.SourceInfo.SOURCE_LOCATIONS;
 
 import com.google.gson.JsonObject;
@@ -36,10 +35,8 @@ public class SourceInfo {
     
     
     public static void setSourceInfo(BOperatorInvocation bop, Class<?> calledClass) {
-                
-        JsonObject holder = objectCreate(bop._json(), SOURCE_LOCATIONS);
         
-        com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(holder, calledClass);    
+        com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(bop._json(), calledClass);    
     }
     
     public static void setSourceInfo(BOperatorInvocation bop, JsonObject config) {
