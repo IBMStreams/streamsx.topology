@@ -44,8 +44,6 @@ import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.internal.logic.SingleToIterableSupplier;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.json.JSONSchemas;
-import com.ibm.streamsx.topology.spl.SPL;
-import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.tester.Tester;
 
 /**
@@ -457,7 +455,7 @@ public class Topology implements TopologyElement {
      * @return Stream the will contain tuples from matching publishers.
      * 
      * @see TStream#publish(String)
-     * @see SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
+     * @see com.ibm.streamsx.topology.spl.SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
      */
     public <T> TStream<T> subscribe(String topic, Class<T> tupleTypeClass) {
         checkTopicFilter(topic);
@@ -905,8 +903,7 @@ public class Topology implements TopologyElement {
     public void addJobControlPlane() {
         if (!hasJCP) {
             // no inputs, outputs or parameters.
-            SPL.invokeOperator(this, "JCP", "spl.control::JobControlPlane",
-                    Collections.emptyList(), Collections.emptyList(), Collections.emptyMap());
+            builder.addSPLOperator("spl.control::JobControlPlane", Collections.emptyMap());
             hasJCP = true;
         }        
     }

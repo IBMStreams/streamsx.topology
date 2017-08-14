@@ -152,6 +152,7 @@
           <attribute name="Class-Path" value="${jar.core.classpath}"/>
        </manifest>
     <fileset dir="${classes}">
+       <exclude name="com/ibm/streamsx/topology/tuple/*.class"/>
        <exclude name="com/ibm/streamsx/topology/json/JSONStreams$*.class"/>
        <exclude name="com/ibm/streamsx/topology/internal/**/*TopoRuntime.class"/>
     </fileset>
@@ -168,6 +169,7 @@
   <target name="jar.runtime.update" depends="compile,jar.runtime">
     <jar destfile="${jar.runtime}" filesonly="true" update="true">
     <fileset dir="${classes}">
+       <include name="com/ibm/streamsx/topology/tuple/*.class"/>
        <include name="com/ibm/streamsx/topology/json/JSONStreams$*.class"/>
        <include name="com/ibm/streamsx/topology/internal/**/*TopoRuntime.class"/>
     </fileset>

@@ -10,7 +10,6 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import com.google.gson.JsonObject;
 import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.Type.MetaType;
-import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
