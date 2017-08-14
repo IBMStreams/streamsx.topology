@@ -90,7 +90,7 @@
     </copy>
   </target>
 
-  <target name="compile" depends="init,compile.pure">
+  <target name="compile" depends="init,jar.runtime">
     <javac debug="true" includeantruntime="no"
        srcdir="${src}" 
        destdir="${classes}"
@@ -117,7 +117,7 @@
        />
   </target>
 
-  <target name="jar" depends="compile,jar.core,jar.runtime,jar.execute">
+  <target name="jar" depends="compile,jar.core,jar.runtime.update,jar.execute">
   <manifestclasspath property="jar.classpath" jarfile="${jar}">
      <classpath>
        <path refid="tk.classpath"/>
@@ -130,7 +130,7 @@
        <manifest>
           <attribute name="Class-Path" value="${jar.classpath}"/>
        </manifest>
-    <fileset dir="${classes}"/>
+    <fileset dir="${classes}" excludes="**/*$StreamsModel.*"/>
     <fileset dir="${runtime.classes}"/>
     <fileset dir="${execute.classes}" excludes="**/*$StreamsModel.*"/>
     <fileset dir="${src}" excludes="com/ibm/streamsx/topology/internal/**"/>
@@ -151,7 +151,10 @@
        <manifest>
           <attribute name="Class-Path" value="${jar.core.classpath}"/>
        </manifest>
-    <fileset dir="${classes}"/>
+    <fileset dir="${classes}">
+       <exclude name="com/ibm/streamsx/topology/json/JSONStreams$*.class"/>
+       <exclude name="com/ibm/streamsx/topology/internal/**/*TopoRuntime.class"/>
+    </fileset>
     <fileset dir="${src}" excludes="com/ibm/streamsx/topology/internal/**"/>
     <fileset dir="${src}" includes="com/ibm/streamsx/topology/internal/messages/*.properties"/>
     </jar>
@@ -160,6 +163,14 @@
   <target name="jar.runtime" depends="compile.runtime">
     <jar destfile="${jar.runtime}" filesonly="true">
     <fileset dir="${runtime.classes}"/>
+    </jar>
+  </target>
+  <target name="jar.runtime.update" depends="compile,jar.runtime">
+    <jar destfile="${jar.runtime}" filesonly="true" update="true">
+    <fileset dir="${classes}">
+       <include name="com/ibm/streamsx/topology/json/JSONStreams$*.class"/>
+       <include name="com/ibm/streamsx/topology/internal/**/*TopoRuntime.class"/>
+    </fileset>
     </jar>
   </target>
 

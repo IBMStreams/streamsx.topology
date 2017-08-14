@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.internal.core;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SPLTYPE;
 import static com.ibm.streamsx.topology.internal.core.ObjectSchemas.JSON_SCHEMA;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,8 +45,9 @@ public class SPLStreamBridge {
             asJson = JavaFunctional.addFunctionalOperator(
                     topology,
                     "ToJSON",
-                    JavaFunctionalOps.MAP_KIND, Class.forName("com.ibm.streamsx.topology.spl.SPLStreamImpl.JsonString2JSON"));
-        } catch (ClassNotFoundException e) {
+                    JavaFunctionalOps.MAP_KIND,
+                    (Serializable) (Class.forName("com.ibm.streamsx.topology.internal.json4j.JSONTopoRuntime$JsonString2JSON").newInstance()));
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
             throw new IllegalStateException(e);
         }
         
@@ -87,8 +89,9 @@ public class SPLStreamBridge {
     static void publishJSON(TStream<?> stream, String topic) {
         try {
             Class<?>  jsonStreams = Class.forName("com.ibm.streamsx.topology.json.JSONStreams");
+            Class<?>  splStream = Class.forName("com.ibm.streamsx.topology.spl.SPLStream");
             Object asSPLStream = jsonStreams.getMethod("toSPL", TStream.class).invoke(null, stream);
-            asSPLStream.getClass().getMethod("publish", String.class, Boolean.TYPE).invoke(asSPLStream, topic, false);
+            splStream.getMethod("publish", String.class, Boolean.TYPE).invoke(asSPLStream, topic, false);
         } catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
             throw new IllegalStateException(e);
         }

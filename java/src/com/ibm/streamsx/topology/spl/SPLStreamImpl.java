@@ -17,7 +17,6 @@ import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.encoding.CharacterEncoding;
-import com.ibm.streams.operator.encoding.EncodingFactory;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
@@ -28,8 +27,8 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.internal.core.StreamImpl;
+import com.ibm.streamsx.topology.internal.json4j.JSONTopoRuntime;
 import com.ibm.streamsx.topology.json.JSONSchemas;
-import com.ibm.streamsx.topology.json.JSONStreams.DeserializeJSON;
 
 class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
 
@@ -58,32 +57,7 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     public TStream<JSONObject> toJSON() {
         return transform(
                 JSONSchemas.JSON.equals(getSchema()) ?
-                        new JsonString2JSON() : new Tuple2JSON());
-    }
-
-    public static class Tuple2JSON implements Function<Tuple, JSONObject> {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public JSONObject apply(Tuple tuple) {
-            return EncodingFactory
-                    .getJSONEncoding().encodeTuple(tuple);
-        }
-    }
-    
-    /**
-     * Deserialize from tuple<rstring jsonString>
-     *
-     */
-    public static class JsonString2JSON implements Function<Tuple, JSONObject> {
-        private static final long serialVersionUID = 1L;
-        
-        private final DeserializeJSON deserializer = new DeserializeJSON();
-
-        @Override
-        public JSONObject apply(Tuple tuple) {
-            return deserializer.apply(tuple.getString(0));
-        }
+                        new JSONTopoRuntime.JsonString2JSON() : new JSONTopoRuntime.Tuple2JSON());
     }
 
     @Override
