@@ -7,8 +7,8 @@ package com.ibm.streamsx.topology.internal.functional.ops;
 import com.ibm.streams.operator.state.Checkpoint;
 import com.ibm.streams.operator.state.StateHandler;
 import com.ibm.streamsx.topology.function.FunctionContext;
-import com.ibm.streamsx.topology.internal.core.ObjectUtils;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
+import com.ibm.streamsx.topology.internal.logic.ObjectUtils;
 
 class StatefulFunctionalHandler<T> extends FunctionalHandler<T> implements StateHandler {
     

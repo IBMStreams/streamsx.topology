@@ -5,14 +5,14 @@
 package com.ibm.streamsx.topology.internal.spljava;
 
 import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
-import static com.ibm.streamsx.topology.internal.core.ObjectUtils.deserializeLogic;
+import static com.ibm.streamsx.topology.internal.logic.ObjectUtils.deserializeLogic;
 
 import java.lang.reflect.Type;
 
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.types.Blob;
 import com.ibm.streams.operator.types.XML;
-import com.ibm.streamsx.topology.internal.core.ObjectSchemas;
+import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
 import com.ibm.streamsx.topology.spi.runtime.TupleSerializer;
 
 public class Schemas {

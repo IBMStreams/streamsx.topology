@@ -26,7 +26,6 @@
   </path>
 
   <path id="compile.execute.tk.classpath">
-    <path location="${jar.core}"/>
     <path location="${jar.runtime}" />
   </path>
 

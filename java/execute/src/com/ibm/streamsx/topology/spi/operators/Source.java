@@ -7,7 +7,6 @@ import com.ibm.streams.operator.model.SharedLoader;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.ops.FunctionSource;
-import com.ibm.streamsx.topology.spi.builder.Invoker;
 
 /**
  * A functional source operator.
@@ -47,7 +46,7 @@ public abstract class Source extends FunctionSource implements FunctionalOperato
     
     /**
      * Return the equivalent logic that was passed into
-     * {@link Invoker#invokeSource(com.ibm.streamsx.topology.Topology, Class, Supplier, java.util.Map)}.
+     * {@link com.ibm.streamsx.topology.spi.builder.Invoker#invokeSource(com.ibm.streamsx.topology.Topology, Class, Supplier, java.util.Map)}.
      * Note it will not be the same reference as the logic will have been serialized and de-serialized
      * for execution within the Streams context.
      */

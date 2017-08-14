@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017 
  */
-package com.ibm.streamsx.topology.internal.core;
+package com.ibm.streamsx.topology.internal.functional;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -33,7 +33,7 @@ public abstract class ObjectSchemas {
         return false;
     }
     
-    static String getMappingSchema(Type tupleType) {
+    public static String getMappingSchema(Type tupleType) {
         if (tupleType instanceof Class) {
 
             if (String.class.equals(tupleType))
@@ -53,7 +53,7 @@ public abstract class ObjectSchemas {
     
     private static final String HASH_ATTR_SCHEMA = ", int32 __spl_hash>";
     
-    static String schemaWithHash(String schema) {
+    public static String schemaWithHash(String schema) {
         switch (schema) {
         case STRING_SCHEMA:
         case JAVA_OBJECT_SCHEMA:

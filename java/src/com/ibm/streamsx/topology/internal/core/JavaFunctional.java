@@ -23,7 +23,9 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
-import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
+import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
+import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
+import com.ibm.streamsx.topology.internal.logic.ObjectUtils;
 
 /**
  * Maintains the core core for building a topology of Java streams.

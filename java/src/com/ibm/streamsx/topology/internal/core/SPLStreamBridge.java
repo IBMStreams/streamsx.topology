@@ -5,7 +5,7 @@
 package com.ibm.streamsx.topology.internal.core;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SPLTYPE;
-import static com.ibm.streamsx.topology.internal.core.ObjectSchemas.JSON_SCHEMA;
+import static com.ibm.streamsx.topology.internal.functional.ObjectSchemas.JSON_SCHEMA;
 
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
@@ -17,6 +17,7 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.builder.JParamTypes;
+import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 
 /**

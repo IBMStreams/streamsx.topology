@@ -18,8 +18,9 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
+import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
+import com.ibm.streamsx.topology.internal.logic.ObjectUtils;
 import com.ibm.streamsx.topology.logic.Identity;
 
 public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> {

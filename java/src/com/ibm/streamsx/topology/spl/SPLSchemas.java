@@ -7,7 +7,7 @@ package com.ibm.streamsx.topology.spl;
 import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
 
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streamsx.topology.internal.core.ObjectSchemas;
+import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
 import com.ibm.streamsx.topology.json.JSONSchemas;
 
 /**

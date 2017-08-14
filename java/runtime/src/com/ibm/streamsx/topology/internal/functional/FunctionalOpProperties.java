@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
  */
-package com.ibm.streamsx.topology.generator.functional;
+package com.ibm.streamsx.topology.internal.functional;
 
 public interface FunctionalOpProperties {
     String FUNCTIONAL_LOGIC_PARAM = "functionalLogic";

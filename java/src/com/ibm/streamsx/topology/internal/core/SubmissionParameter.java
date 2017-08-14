@@ -13,6 +13,8 @@ import java.util.Map;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.internal.functional.SPLTypes;
+import com.ibm.streamsx.topology.internal.functional.SubmissionParameterManager;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
@@ -23,14 +25,14 @@ public class SubmissionParameter<T> implements Supplier<T> {
     private static final long serialVersionUID = 1L;
     private static final Map<Class<?>,String> toMetaType = new HashMap<>();
     static {
-        toMetaType.put(String.class,    JParamTypes.RSTRING);
-        toMetaType.put(Boolean.class,   JParamTypes.BOOLEAN);
-        toMetaType.put(Byte.class,      JParamTypes.INT8);
-        toMetaType.put(Short.class,     JParamTypes.INT16);
-        toMetaType.put(Integer.class,   JParamTypes.INT32);
-        toMetaType.put(Long.class,      JParamTypes.INT64);
-        toMetaType.put(Float.class,     JParamTypes.FLOAT32);
-        toMetaType.put(Double.class,    JParamTypes.FLOAT64);
+        toMetaType.put(String.class,    SPLTypes.RSTRING);
+        toMetaType.put(Boolean.class,   SPLTypes.BOOLEAN);
+        toMetaType.put(Byte.class,      SPLTypes.INT8);
+        toMetaType.put(Short.class,     SPLTypes.INT16);
+        toMetaType.put(Integer.class,   SPLTypes.INT32);
+        toMetaType.put(Long.class,      SPLTypes.INT64);
+        toMetaType.put(Float.class,     SPLTypes.FLOAT32);
+        toMetaType.put(Double.class,    SPLTypes.FLOAT64);
     }
     
     private final String name;

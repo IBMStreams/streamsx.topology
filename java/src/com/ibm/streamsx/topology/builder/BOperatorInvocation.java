@@ -24,6 +24,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.functional.SPLTypes;
 
 /**
  * JSON representation.
@@ -141,28 +142,28 @@ public class BOperatorInvocation extends BOperator {
                 
         if (value instanceof String) {
             if (jsonType == null)
-                jsonType = JParamTypes.RSTRING;
+                jsonType = SPLTypes.RSTRING;
         } else if (value instanceof Byte) {
             if (jsonType == null)
-                jsonType = JParamTypes.INT8;
+                jsonType = SPLTypes.INT8;
         } else if (value instanceof Short) {
             if (jsonType == null)
-                jsonType = JParamTypes.INT16;
+                jsonType = SPLTypes.INT16;
         } else if (value instanceof Integer) {
             if (jsonType == null)
-                jsonType = JParamTypes.INT32;
+                jsonType = SPLTypes.INT32;
         } else if (value instanceof Long) {
             if (jsonType == null)
-                jsonType = JParamTypes.INT64;
+                jsonType = SPLTypes.INT64;
         } else if (value instanceof Float) {
-            jsonType = JParamTypes.FLOAT32;
+            jsonType = SPLTypes.FLOAT32;
         } else if (value instanceof Double) {
-            jsonType = JParamTypes.FLOAT64;
+            jsonType = SPLTypes.FLOAT64;
         } else if (value instanceof Boolean) {
-            jsonType = JParamTypes.BOOLEAN;
+            jsonType = SPLTypes.BOOLEAN;
         } else if (value instanceof BigDecimal) {
             jsonValue = value.toString(); // Need to maintain exact value
-            jsonType = JParamTypes.DECIMAL128;
+            jsonType = SPLTypes.DECIMAL128;
         } else if (value instanceof Enum) {
             jsonValue = ((Enum<?>) value).name();
             jsonType = JParamTypes.TYPE_ENUM;

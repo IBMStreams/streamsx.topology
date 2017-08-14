@@ -64,7 +64,7 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
-import com.ibm.streamsx.topology.internal.core.SubmissionParameterManager;
+import com.ibm.streamsx.topology.internal.functional.SubmissionParameterManager;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**

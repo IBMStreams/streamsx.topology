@@ -2,16 +2,13 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015  
  */
-package com.ibm.streamsx.topology.internal.core;
+package com.ibm.streamsx.topology.internal.functional;
 
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-
-import com.ibm.streamsx.topology.builder.JParamTypes;
-import com.ibm.streamsx.topology.context.ContextProperties;
 
 /**
  * A manager for making a submission parameter Supplier usable
@@ -40,24 +37,24 @@ import com.ibm.streamsx.topology.context.ContextProperties;
  * EmbeddedGraph#initializeEmbedded(GraphBuilder, Map).
  * The collection of all submission parameters, with optional default values,
  * are learned from the graph and actual values are learned from the
- * submit configuration's {@link ContextProperties#SUBMISSION_PARAMS} value.
+ * submit configuration's {@link com.ibm.streamsx.topology.context.ContextProperties#SUBMISSION_PARAMS} value.
  */
 public class SubmissionParameterManager {
 
     private static Map<String,java.util.function.Function<String, ?>> factories = new HashMap<>();
     static {
-        factories.put(JParamTypes.RSTRING, s -> s);
-        factories.put(JParamTypes.USTRING, factories.get(JParamTypes.RSTRING));
-        factories.put(JParamTypes.INT8, s-> Byte.valueOf(s));
-        factories.put(JParamTypes.INT16, s -> Short.valueOf(s));
-        factories.put(JParamTypes.INT32, s -> Integer.valueOf(s));
-        factories.put(JParamTypes.INT64, s -> Long.valueOf(s));
-        factories.put(JParamTypes.UINT8, s -> Integer.valueOf(s).byteValue());
-        factories.put(JParamTypes.UINT16, s-> Integer.valueOf(s).shortValue());
-        factories.put(JParamTypes.UINT32, s-> Long.valueOf(s).intValue());
-        factories.put(JParamTypes.UINT64, s -> new BigInteger(s).longValue());
-        factories.put(JParamTypes.FLOAT32, s -> Float.valueOf(s));
-        factories.put(JParamTypes.FLOAT64, s -> Double.valueOf(s));
+        factories.put(SPLTypes.RSTRING, s -> s);
+        factories.put(SPLTypes.USTRING, factories.get(SPLTypes.RSTRING));
+        factories.put(SPLTypes.INT8, s-> Byte.valueOf(s));
+        factories.put(SPLTypes.INT16, s -> Short.valueOf(s));
+        factories.put(SPLTypes.INT32, s -> Integer.valueOf(s));
+        factories.put(SPLTypes.INT64, s -> Long.valueOf(s));
+        factories.put(SPLTypes.UINT8, s -> Integer.valueOf(s).byteValue());
+        factories.put(SPLTypes.UINT16, s-> Integer.valueOf(s).shortValue());
+        factories.put(SPLTypes.UINT32, s-> Long.valueOf(s).intValue());
+        factories.put(SPLTypes.UINT64, s -> new BigInteger(s).longValue());
+        factories.put(SPLTypes.FLOAT32, s -> Float.valueOf(s));
+        factories.put(SPLTypes.FLOAT64, s -> Double.valueOf(s));
     }
     private static final Map<String,String> UNINIT_MAP = Collections.emptyMap();
     /**  map of topology's <spOpParamName, strVal> */

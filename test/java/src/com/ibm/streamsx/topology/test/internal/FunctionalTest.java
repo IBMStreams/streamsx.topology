@@ -17,7 +17,7 @@ import java.util.List;
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.function.Supplier;
-import com.ibm.streamsx.topology.internal.core.ObjectUtils;
+import com.ibm.streamsx.topology.internal.logic.ObjectUtils;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 

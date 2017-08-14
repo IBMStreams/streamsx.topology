@@ -4,8 +4,8 @@
  */
 package com.ibm.streamsx.topology.spi.builder;
 
-import static com.ibm.streamsx.topology.internal.core.ObjectUtils.serializeLogic;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.logic.ObjectUtils.serializeLogic;
 import static com.ibm.streamsx.topology.spi.builder.Utils.copyParameters;
 
 import java.lang.reflect.Type;
