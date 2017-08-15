@@ -33,28 +33,9 @@
     <path refid="compile.classpath"/>
   </path>
 
-  <target name="checkJava8">
-      <condition property="isJava8">
-          <or>
-            <equals arg1="${ant.java.version}" arg2="1.8"/>
-            <equals arg1="${ant.java.version}" arg2="1.9"/>
-          </or>
-      </condition>
-      <condition property="notJava8">
-      	<not>
-            <equals arg1="${isJava8}" arg2="true"/>
-      	</not>
-      </condition>
-      <condition property="disableJavadocLint" value="-Xdoclint:none" else="">
-          <or>
-            <equals arg1="${isJava8}" arg2="true"/>
-          </or>
-      </condition>
-  </target>
-
   <target name="all" depends="jar"/>
 
- <target name="init" depends="checkJava8">
+ <target name="init">
     <mkdir dir="${classes}"/>
   </target>
 
@@ -64,24 +45,11 @@
 	   destdir="${classes}"
 	   classpathref="compile.classpath"
 	   includeantruntime="no"
-	   excludes="vwap/**"
 	   />
     <ant dir="../../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
 
-  <target name="compile8" depends="compile" if="isJava8">
-    <javac debug="true" 
-	   srcdir="${basedir}/src" 
-	   destdir="${classes}"
-	   classpathref="compile.classpath"
-	   includeantruntime="no"
-	   source="8"
-	   target="8"
-	   includes="vwap/**"
-	   />
-  </target>
-
-  <target name="jar" depends="compile, compile8">
+  <target name="jar" depends="compile">
     <jar destfile="${jarname}" basedir="${classes}"/>
   </target>
 
@@ -181,9 +149,9 @@
     </java>
   </target>
 
-  <target name="doc" depends="docNo8, docAll" />
+  <target name="doc" depends="docAll" />
 
-  <target name="docAll" depends="checkJava8" if="isJava8">
+  <target name="docAll">
        <mkdir dir="javadoc"/>
        <javadoc destdir="javadoc" classpathref="compile.classpath"
           Overview="src/overview.html"
@@ -192,22 +160,8 @@
           linksource="yes"
           sourcepath="src"
           source="8"
-          additionalparam="${disableJavadocLint}"
+          additionalparam="-Xdoclint:none"
           >
-       </javadoc>
-  </target>
-
-  <target name="docNo8" depends="checkJava8" if="notJava8">
-       <mkdir dir="javadoc"/>
-       <javadoc destdir="javadoc" classpathref="compile.classpath"
-          Overview="src/overview.html"
-          Windowtitle="Java Functional Samples"
-          Footer="streamsx.topology @ IBMStreams GitHub"
-          linksource="yes"
-          source="8"
-          additionalparam="${disableJavadocLint}"
-          >
-        <packageset dir="src" excludes="vwap" /> 
        </javadoc>
   </target>
 

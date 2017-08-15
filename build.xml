@@ -58,7 +58,8 @@
 
   <!-- Release targets !-->
   <path id="javadoc.classpath">
-    <path location="${tk.lib}/com.ibm.streamsx.topology.jar"/>
+    <path location="${tk.lib}/com.ibm.streamsx.topology.api.jar"/>
+    <path location="${tk.lib}/com.ibm.streamsx.topology.runtime.jar"/>
     <path refid="streams.classpath"/>
     <path refid="tk.classpath"/>
     <path location="${junit.jar}"/>
@@ -66,7 +67,7 @@
 
   <target name="release" depends="clean,all,doc,create_release_bundle"/>
 
-  <target name="doc" depends="checkJava8">
+  <target name="doc">
        <mkdir dir="${tk.doc}"/>
        <ant dir="samples/java/functional" target="doc"/>
        <mkdir dir="${tk.doc}/samples/javadoc"/>
@@ -78,7 +79,7 @@
           Windowtitle="Java Application API for IBM Streams"
           Footer="streamsx.topology ${streamsx.topology.version} @ IBMStreams GitHub"
           failonerror="yes"
-          additionalparam="${disableJavadocLint}"
+          additionalparam="-Xdoclint:none"
           >
             <fileset dir="java/src">
                <include name="com/ibm/streamsx/topology/**"/>
@@ -87,6 +88,10 @@
                <exclude name="com/ibm/streamsx/topology/builder/**"/>
                <exclude name="com/ibm/streamsx/topology/generator/**"/>
                <include name="com/ibm/streamsx/rest/**"/>
+            </fileset>
+            <fileset dir="java/runtime/src">
+               <include name="com/ibm/streamsx/topology/**"/>
+               <exclude name="com/ibm/streamsx/topology/internal/**"/>
             </fileset>
        </javadoc>
        <ant dir="toolkit" target="spldoc"/>
