@@ -34,8 +34,9 @@ import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.core.SPLStreamBridge;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
-import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.core.SubmissionParameterFactory;
 import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
+import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.logic.Constants;
 import com.ibm.streamsx.topology.internal.logic.EndlessSupplier;
@@ -856,8 +857,8 @@ public class Topology implements TopologyElement {
      *  or has already been defined. 
      */
     public <T> Supplier<T> createSubmissionParameter(String name, Class<T> valueClass) {
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, valueClass); 
-        builder().createSubmissionParameter(name, sp.asJSON());
+        SubmissionParameter<T> sp = SubmissionParameterFactory.create(name, valueClass); 
+        builder().createSubmissionParameter(name, SubmissionParameterFactory.asJSON(sp));
         return sp;
     }
 
@@ -874,8 +875,8 @@ public class Topology implements TopologyElement {
      * @throws IllegalArgumentException if {@code defaultValue} is null
      */
     public <T> Supplier<T> createSubmissionParameter(String name, T defaultValue) {
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, defaultValue);
-        builder().createSubmissionParameter(name, sp.asJSON());
+        SubmissionParameter<T> sp = SubmissionParameterFactory.create(name, defaultValue);
+        builder().createSubmissionParameter(name, SubmissionParameterFactory.asJSON(sp));
         return sp;
     }
 

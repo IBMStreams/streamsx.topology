@@ -32,7 +32,8 @@ import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
-import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.core.SubmissionParameterFactory;
+import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
@@ -169,7 +170,7 @@ public class GraphBuilder extends BJSONObject {
             parallelOutput._json().addProperty("width", width.get());
         else {
             SubmissionParameter<?> spw = (SubmissionParameter<?>) width;
-            parallelOutput._json().add("width", spw.asJSON());
+            parallelOutput._json().add("width", SubmissionParameterFactory.asJSON(spw));
         }
         return parallelOutput;
     }

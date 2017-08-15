@@ -23,8 +23,9 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.function.Supplier;
-import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.core.SubmissionParameterFactory;
 import com.ibm.streamsx.topology.internal.functional.SPLTypes;
+import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 
 /**
  * JSON representation.
@@ -82,7 +83,7 @@ public class BOperatorInvocation extends BOperator {
             throw new IllegalStateException("NULL PARAM:" + name);
                 
         if (value instanceof SubmissionParameter) {
-            JsonObject svp = ((SubmissionParameter<?>) value).asJSON();
+            JsonObject svp = SubmissionParameterFactory.asJSON((SubmissionParameter<?>) value);
             /*
             JsonObject param = new JsonObject();
             param.add("type", svp.get("type"));

@@ -34,8 +34,9 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.context.remote.TkInfo;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
-import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.core.SubmissionParameterFactory;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
+import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.toolkit.info.IdentityType;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
@@ -127,8 +128,9 @@ public class SPL {
     public static <T> Supplier<T> createSubmissionParameter(Topology top,
             String name, Object paramValue, boolean withDefault) {
         SPLValue<?> splValue = createSPLValue(paramValue);
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, splValue.asJSON(), withDefault);
-        top.builder().createSubmissionParameter(name, sp.asJSON());
+        @SuppressWarnings("unchecked")
+        SubmissionParameter<T> sp = (SubmissionParameter<T>) SubmissionParameterFactory.create(name, splValue.asJSON(), withDefault);
+        top.builder().createSubmissionParameter(name, SubmissionParameterFactory.asJSON(sp));
         return sp;
     }
     

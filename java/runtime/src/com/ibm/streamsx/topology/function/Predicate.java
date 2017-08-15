@@ -15,6 +15,7 @@ import java.io.Serializable;
  * @param <T>
  *            Type of the input to the predicate
  */
+@FunctionalInterface
 public interface Predicate<T> extends Serializable {
     
     /**

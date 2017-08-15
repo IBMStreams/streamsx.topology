@@ -11,6 +11,7 @@ import com.ibm.streams.operator.OperatorContext.ContextCheck;
 import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.StreamingOutput;
 import com.ibm.streams.operator.compile.OperatorContextChecker;
+import com.ibm.streams.operator.model.Libraries;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
@@ -23,6 +24,7 @@ import com.ibm.streamsx.topology.internal.functional.FunctionalHelper;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 @PrimitiveOperator
+@Libraries("lib/com.ibm.streamsx.topology.api.jar")
 @OutputPortSet(cardinality = 1)
 @SharedLoader
 public class FunctionPeriodicSource extends PollingTupleProducer implements Functional {

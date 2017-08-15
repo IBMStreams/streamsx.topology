@@ -14,7 +14,7 @@
   <property name="jarname" value="com.ibm.streamsx.topology.jar"/>
   <property name="jar" location="${tk.lib}/${jarname}"/>
 
-  <property name="jar.core" location="${tk.lib}/com.ibm.streamsx.topology.core.jar"/>
+  <property name="jar.api" location="${tk.lib}/com.ibm.streamsx.topology.api.jar"/>
   <property name="jar.runtime" location="${tk.lib}/com.ibm.streamsx.topology.runtime.jar"/>
   <property name="jar.execute" location="${tk.lib}/com.ibm.streamsx.topology.execute.jar"/>
 
@@ -96,7 +96,6 @@
        classpathref="compile.classpath"
        excludes="${pure.source}"
        />
-    <ant dir="../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
 
   <target name="compile.runtime" depends="init">
@@ -105,6 +104,7 @@
        destdir="${runtime.classes}"
        classpathref="compile.runtime.classpath"
        />
+    <ant dir="../scala" target="all" useNativeBasedir="true" inheritAll="no"/>
   </target>
 
 
@@ -116,7 +116,7 @@
        />
   </target>
 
-  <target name="jar" depends="compile,jar.core,jar.runtime.update,jar.execute">
+  <target name="jar" depends="compile,jar.api,jar.runtime.update,jar.execute">
   <manifestclasspath property="jar.classpath" jarfile="${jar}">
      <classpath>
        <path refid="tk.classpath"/>
@@ -137,23 +137,30 @@
     </jar>
   </target>
 
-  <target name="jar.core">
-  <manifestclasspath property="jar.core.classpath" jarfile="${jar.core}">
+  <target name="jar.api">
+  <manifestclasspath property="jar.api.classpath" jarfile="${jar.api}">
      <classpath>
+       <path location="${jar.runtime}" />
        <path refid="tk.classpath"/>
        <fileset dir="${tk.opt}/slf4j-1.7.5">
           <include name="*.jar"/>
        </fileset>
      </classpath>
   </manifestclasspath>
-    <jar destfile="${jar.core}" filesonly="true">
+    <jar destfile="${jar.api}" filesonly="true">
        <manifest>
-          <attribute name="Class-Path" value="${jar.core.classpath}"/>
+          <attribute name="Class-Path" value="${jar.api.classpath}"/>
        </manifest>
     <fileset dir="${classes}">
+<!--
        <exclude name="com/ibm/streamsx/topology/tuple/*.class"/>
        <exclude name="com/ibm/streamsx/topology/json/JSONStreams$*.class"/>
+       <exclude name="com/ibm/streamsx/topology/spl/SPLStreams$*.class"/>
+       <exclude name="com/ibm/streamsx/topology/spl/SPLStreamImpl$*.class"/>
+       <exclude name="com/ibm/streamsx/topology/streams/*Streams$*.class"/>
+       <exclude name="com/ibm/streamsx/topology/streams/StringStreams.class"/>
        <exclude name="com/ibm/streamsx/topology/internal/**/*TopoRuntime.class"/>
+-->
     </fileset>
     <fileset dir="${src}" excludes="com/ibm/streamsx/topology/internal/**"/>
     <fileset dir="${src}" includes="com/ibm/streamsx/topology/internal/messages/*.properties"/>
@@ -168,9 +175,15 @@
   <target name="jar.runtime.update" depends="compile,jar.runtime">
     <jar destfile="${jar.runtime}" filesonly="true" update="true">
     <fileset dir="${classes}">
+<!--
        <include name="com/ibm/streamsx/topology/tuple/*.class"/>
        <include name="com/ibm/streamsx/topology/json/JSONStreams$*.class"/>
+       <include name="com/ibm/streamsx/topology/spl/SPLStreams$*.class"/>
+       <include name="com/ibm/streamsx/topology/spl/SPLStreamImpl$*.class"/>
+       <include name="com/ibm/streamsx/topology/streams/*Streams$*.class"/>
+       <include name="com/ibm/streamsx/topology/streams/StringStreams.class"/>
        <include name="com/ibm/streamsx/topology/internal/**/*TopoRuntime.class"/>
+-->
     </fileset>
     </jar>
   </target>

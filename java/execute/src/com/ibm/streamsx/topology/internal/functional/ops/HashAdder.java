@@ -15,6 +15,7 @@ import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.model.Icons;
 import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.InputPorts;
+import com.ibm.streams.operator.model.Libraries;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.OutputPorts;
 import com.ibm.streams.operator.model.PrimitiveOperator;
@@ -26,6 +27,7 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
  * attribute to a stream.
  */
 @PrimitiveOperator
+@Libraries("lib/com.ibm.streamsx.topology.api.jar")
 @Icons(location16 = "opt/icons/functor_16.gif", location32 = "opt/icons/functor_32.gif")
 @InputPorts({@InputPortSet(cardinality = 1)})
 @OutputPorts({@OutputPortSet(cardinality = 1)})

@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.functional.ops;
 
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.model.Icons;
+import com.ibm.streams.operator.model.Libraries;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindow.Policy;
@@ -14,6 +15,7 @@ import com.ibm.streamsx.topology.internal.functional.window.ContinuousAggregator
 import com.ibm.streamsx.topology.internal.functional.window.PeriodicAggregator;
 
 @PrimitiveOperator(name="Aggregate")
+@Libraries("lib/com.ibm.streamsx.topology.api.jar")
 @Icons(location16 = "opt/icons/aggregate_16.gif", location32 = "opt/icons/aggregate_32.gif")
 public class FunctionAggregate<T, A> extends FunctionWindow {
     @Override

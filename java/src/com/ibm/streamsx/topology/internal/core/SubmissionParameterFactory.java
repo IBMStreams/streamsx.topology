@@ -9,20 +9,18 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.builder.JParamTypes;
-import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.functional.SPLTypes;
-import com.ibm.streamsx.topology.internal.functional.SubmissionParameterManager;
+import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
- * A specification for a value of type {@code T}
- * whose actual value is not defined until topology execution time.
+ * Utility to split runtime submission parameters from declaration time.
+ *
  */
-public class SubmissionParameter<T> implements Supplier<T> {
-    private static final long serialVersionUID = 1L;
+public class SubmissionParameterFactory {
     private static final Map<Class<?>,String> toMetaType = new HashMap<>();
     static {
         toMetaType.put(String.class,    SPLTypes.RSTRING);
@@ -35,51 +33,18 @@ public class SubmissionParameter<T> implements Supplier<T> {
         toMetaType.put(Double.class,    SPLTypes.FLOAT64);
     }
     
-    private final String name;
-    private final String metaType;
-    private final T defaultValue;
-    private transient boolean declaration;
-    private transient T value;
-    private transient boolean initialized;
-    
+    public static <T> SubmissionParameter<T> create(String name, Class<T> valueClass) {
+        return new SubmissionParameter<T>(name, getMetaType(valueClass), null);
+    }
+    public static <T> SubmissionParameter<T> create(String name, T defaultValue) {
+        Objects.requireNonNull(defaultValue);
+        return new SubmissionParameter<T>(name, getMetaType(defaultValue.getClass()), defaultValue);
+    }
     private static String getMetaType(Class<?> valueClass) {
         String metaType = toMetaType.get(valueClass);
         if (metaType == null)
             throw new IllegalArgumentException("Unhandled valueClass " + valueClass.getCanonicalName());
         return metaType;
-    }
-
-    /*
-     * A submission time parameter specification without a default value.
-     * @param name submission parameter name
-     * @param valueClass class object for {@code T}
-     * @throws IllegalArgumentException if {@code name} is null or empty
-     */
-    public SubmissionParameter(String name, Class<T> valueClass) {
-        if (name == null || name.trim().isEmpty())
-            throw new IllegalArgumentException("name");
-        this.declaration = true;
-        this.name = name;
-        this.metaType = getMetaType(valueClass);
-        this.defaultValue = null;
-    }
-
-    /**
-     * A submission time parameter specification with a default value.
-     * @param name submission parameter name
-     * @param defaultValue default value if parameter isn't specified.
-     * @throws IllegalArgumentException if {@code name} is null or empty
-     * @throws IllegalArgumentException if {@code defaultValue} is null
-     */
-    public SubmissionParameter(String name, T defaultValue) {
-        if (name == null || name.trim().isEmpty())
-            throw new IllegalArgumentException("name");
-        if (defaultValue == null)
-            throw new IllegalArgumentException("defaultValue");
-        this.declaration = true;
-        this.name = name;
-        this.metaType = getMetaType(defaultValue.getClass());
-        this.defaultValue = defaultValue;
     }
     
     /**
@@ -103,38 +68,17 @@ public class SubmissionParameter<T> implements Supplier<T> {
      *        false for one without a default value.
      *        When false, the wrapped value's value is ignored.
      */
-    @SuppressWarnings("unchecked")
-    public SubmissionParameter(String name, JsonObject jvalue, boolean withDefault) {
+    public static SubmissionParameter<Object> create(String name, JsonObject jvalue, boolean withDefault) {
         String type = jstring(jvalue, "type");
         if (!"__spl_value".equals(type))
             throw new IllegalArgumentException("defaultValue");
         JsonObject value = GsonUtilities.object(jvalue, "value");
-        this.declaration = true;
-        this.name = name;
-        this.defaultValue = withDefault ? (T) value.get("value") : null;
-        this.metaType =  jstring(value, "metaType");
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public T get() {
-        if (!initialized) {
-            if (!declaration)
-                value = (T) SubmissionParameterManager.getValue(name, metaType);
-            initialized = true;
-        }
-        return value;
-    }
-   
-    public String getName() {
-        return name;
+        
+        return new SubmissionParameter<Object>(name, jstring(value, "metaType"),
+                withDefault ? value.get("value") : null);
     }
     
-    public T getDefaultValue() {
-        return defaultValue;
-    }
-
-    public JsonObject asJSON() {
+    public static JsonObject asJSON(SubmissionParameter<?> param) {
         // meet the requirements of BOperatorInvocation.setParameter()
         // and OperatorGenerator.parameterValue()
         /*
@@ -154,15 +98,10 @@ public class SubmissionParameter<T> implements Supplier<T> {
         JsonObject jv = new JsonObject();
         jo.addProperty("type", TYPE_SUBMISSION_PARAMETER);
         jo.add("value", jv);
-        jv.addProperty("name", name);
-        jv.addProperty("metaType", metaType);
-        if (defaultValue != null)
-            GsonUtilities.addToObject(jv, "defaultValue", defaultValue);
+        jv.addProperty("name", param.getName());
+        jv.addProperty("metaType", param.getMetaType());
+        if (param.getDefaultValue() != null)
+            GsonUtilities.addToObject(jv, "defaultValue", param.getDefaultValue());
         return jo;
-    }
-
-    @Override
-    public String toString() {
-        return asJSON().toString();
     }
 }
