@@ -6,8 +6,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 
-import com.ibm.streamsx.topology.spi.runtime.TupleSerializer;
-
 final class JavaSerializer implements TupleSerializer {
         
     /**
