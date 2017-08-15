@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.streams;
 
+import java.util.function.Function;
+
 import com.ibm.streamsx.topology.TStream;
 
 /**
@@ -25,7 +27,7 @@ public class StringStreams {
     public static TStream<String> contains(TStream<String> stream,
             final String term) {
 
-        return stream.filter(tuple -> tuple.contains(term));
+        return forceString(stream.filter(tuple -> tuple.contains(term)));
     }
 
     /**
@@ -42,7 +44,14 @@ public class StringStreams {
     public static TStream<String> startsWith(TStream<String> stream,
             final String term) {
 
-        return stream.filter(tuple -> tuple.startsWith(term));
+        return forceString(stream.filter(tuple -> tuple.startsWith(term)));
+    }
+    
+    private static TStream<String> forceString(TStream<String> stream) {
+        stream = stream.asType(String.class);
+        assert stream.getTupleType() == String.class;
+        assert stream.getTupleClass() == String.class;
+        return stream;
     }
 
     /**
@@ -55,6 +64,6 @@ public class StringStreams {
      *         {@code stream}.
      */
     public static <T> TStream<String> toString(TStream<T> stream) {
-        return stream.map(Object::toString);
+        return forceString(stream.map(Object::toString));
     }
 }

@@ -11,6 +11,8 @@ import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FLAT_MAP
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FOR_EACH_KIND;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.HASH_ADDER_KIND;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.HASH_REMOVER_KIND;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jisEmpty;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.logic.Logic.notKeyed;
@@ -51,6 +53,7 @@ import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
 import com.ibm.streamsx.topology.internal.logic.KeyFunctionHasher;
@@ -640,7 +643,9 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         // Is a schema change needed?
         if (ObjectSchemas.usesDirectSchema(tupleClass) &&
                 !ObjectSchemas.getMappingSchema(tupleClass).equals(output()._type())) {
-            return fixDirectSchema(tupleClass);
+            TStream<T> newStream = fixDirectSchema(tupleClass);
+            if (newStream != null)
+                return newStream;
         }
 
         if (output() instanceof BOutputPort) {
@@ -655,6 +660,22 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
     
     private TStream<T> fixDirectSchema(Class<T> tupleClass) {
+        if (output() instanceof BOutputPort) {
+            
+            String schema = output()._type();
+            if (schema.equals(ObjectSchemas.JAVA_OBJECT_SCHEMA)) {
+                
+                
+                // If no connections can just change the schema directly.
+                if (jisEmpty(array(output()._json(), "connections"))) {
+                
+                    String directSchema = ObjectSchemas.getMappingSchema(tupleClass);                   
+                    output()._json().addProperty("type", directSchema);
+                    return null;
+                }
+            }
+        }
+
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 "SchemaFix",
                 JavaFunctionalOps.MAP_KIND, identity());
