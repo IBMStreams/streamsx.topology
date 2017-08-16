@@ -8,8 +8,10 @@ import static java.util.Objects.requireNonNull;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
@@ -97,6 +99,11 @@ class FunctionOperatorContext implements FunctionContext {
             // Final update of the metrics
             updateMetrics();
         }
-
     }
+    
+    @Override
+    public Set<String> getCustomMetricNames() {
+        // TODO Auto-generated method stub
+        return Collections.unmodifiableSet(context.getMetrics().getCustomMetrics().keySet());
+    } 
 }
