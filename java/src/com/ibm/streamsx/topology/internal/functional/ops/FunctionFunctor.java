@@ -107,7 +107,7 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
     
     private AtomicInteger finalMarks = new AtomicInteger();
     @Override
-    public final void processPunctuation(StreamingInput<Tuple> stream, Punctuation mark) throws Exception {
+    public void processPunctuation(StreamingInput<Tuple> stream, Punctuation mark) throws Exception {
         if (mark == Punctuation.FINAL_MARKER) {
             int totalFinals = finalMarks.incrementAndGet();
             if (totalFinals == getOperatorContext().getNumberOfStreamingInputs())

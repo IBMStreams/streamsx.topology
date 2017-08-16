@@ -51,6 +51,7 @@ abstract class FunctionQueueableFunctor extends FunctionFunctor implements Strea
     public final void processPunctuation(StreamingInput<Tuple> port, Punctuation mark)
             throws Exception {
         handler.mark(mark);
+        super.processPunctuation(port, mark);
     }
 
     public int getQueueSize() {
