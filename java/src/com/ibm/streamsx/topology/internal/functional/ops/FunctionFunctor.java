@@ -105,6 +105,10 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
         return functionContext;
     }
     
+    /* Ensure any custom metric collection is completed when the operator
+     * has no more work to do.
+     */
+    
     private AtomicInteger finalMarks = new AtomicInteger();
     @Override
     public void processPunctuation(StreamingInput<Tuple> stream, Punctuation mark) throws Exception {
@@ -113,6 +117,11 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
             if (totalFinals == getOperatorContext().getNumberOfStreamingInputs())
                 functionContext.finalMarkers();
         }
+    }
+    @Override
+    public void allPortsReady() throws Exception {
+        if (getOperatorContext().getNumberOfStreamingInputs() == 0)
+            functionContext.finalMarkers();
     }
     
     @Override
