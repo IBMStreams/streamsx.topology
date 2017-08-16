@@ -41,7 +41,7 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
     private String[] submissionParamValues;
     private StreamingOutput<OutputTuple> output;
      
-    private FunctionContext functionContext;
+    private FunctionOperatorContext functionContext;
     
     @Override
     public final synchronized void initialize(OperatorContext context)
@@ -136,6 +136,7 @@ public abstract class FunctionSource extends ProcessTupleProducer implements Fun
             dataHandler = null;
         }
         output.punctuate(StreamingData.Punctuation.FINAL_MARKER);
+        functionContext.finalMarkers();
     }
     
     @Override
