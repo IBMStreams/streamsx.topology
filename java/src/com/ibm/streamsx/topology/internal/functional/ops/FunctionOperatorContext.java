@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.LongSupplier;
@@ -26,6 +27,7 @@ class FunctionOperatorContext implements FunctionContext {
     private final FunctionContainer container;
     
     private List<Runnable> metrics;
+    private ScheduledFuture<?> metricsGetter;
     
     FunctionOperatorContext( OperatorContext context) {
         this.context = context;
@@ -76,7 +78,7 @@ class FunctionOperatorContext implements FunctionContext {
         if (metrics == null) {
             metrics = new ArrayList<>();
             
-            getScheduledExecutorService().scheduleWithFixedDelay(this::updateMetrics,
+            metricsGetter = getScheduledExecutorService().scheduleWithFixedDelay(this::updateMetrics,
                     1, 1, TimeUnit.SECONDS);
         }
         
@@ -86,5 +88,15 @@ class FunctionOperatorContext implements FunctionContext {
     private void updateMetrics() {
         for (Runnable mu : metrics)
             mu.run();
+    }
+    
+    synchronized void finalMarkers() {
+        if (metricsGetter != null) {
+            metricsGetter.cancel(false);
+            
+            // Final update of the metrics
+            updateMetrics();
+        }
+
     }
 }

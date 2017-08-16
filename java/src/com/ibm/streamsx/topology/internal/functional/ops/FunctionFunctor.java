@@ -9,11 +9,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import com.ibm.streams.operator.AbstractOperator;
 import com.ibm.streams.operator.OperatorContext;
+import com.ibm.streams.operator.StreamingInput;
+import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.OperatorContext.ContextCheck;
+import com.ibm.streams.operator.StreamingData.Punctuation;
 import com.ibm.streams.operator.compile.OperatorContextChecker;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.SharedLoader;
@@ -44,7 +48,7 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
     private String[] submissionParamNames;
     private String[] submissionParamValues;
     
-    private FunctionContext functionContext;
+    private FunctionOperatorContext functionContext;
     
     /**
      * Logic (function) used by this operator,
@@ -99,6 +103,16 @@ public abstract class FunctionFunctor extends AbstractOperator implements Functi
     
     protected FunctionContext getFunctionContext() {
         return functionContext;
+    }
+    
+    private AtomicInteger finalMarks = new AtomicInteger();
+    @Override
+    public final void processPunctuation(StreamingInput<Tuple> stream, Punctuation mark) throws Exception {
+        if (mark == Punctuation.FINAL_MARKER) {
+            int totalFinals = finalMarks.incrementAndGet();
+            if (totalFinals == getOperatorContext().getNumberOfStreamingInputs())
+                functionContext.finalMarkers();
+        }
     }
     
     @Override
