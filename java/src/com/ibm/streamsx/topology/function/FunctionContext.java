@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.function;
 
 import java.net.MalformedURLException;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.LongSupplier;
@@ -206,4 +207,16 @@ public interface FunctionContext {
      * @since 1.7     
      */       
     void createCustomMetric(String name, String description, String kind, LongSupplier value);
+    
+    /**
+     * Get the set of custom metric names created in this context.
+     * 
+     * The set may include additional metrics not created by this function
+     * including metric created by the topology framework.
+     * 
+     * @return The set of custom metric names created in this context.
+     * 
+     * @since 1.7     
+     */
+    Set<String> getCustomMetricNames();
 }
