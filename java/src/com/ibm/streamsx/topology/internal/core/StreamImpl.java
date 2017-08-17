@@ -53,7 +53,6 @@ import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
 import com.ibm.streamsx.topology.internal.logic.KeyFunctionHasher;
@@ -684,9 +683,6 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         return JavaFunctional.addJavaOutput(this, bop, tupleClass);
     }
     
-    /* Placement control */
-    private PlacementInfo placement;
-    
     @Override
     public boolean isPlaceable() {
         if (output() instanceof BOutputPort) {
@@ -703,28 +699,22 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             return ((BOutputPort) output()).operator();
         throw new IllegalStateException("Illegal operation: Placeable.isPlaceable()==false");
     }
-    
-    private PlacementInfo getPlacementInfo() {
-        if (placement == null)
-            placement = PlacementInfo.getPlacementInfo(this);
-        return placement;
-    }
 
     @Override
     public TStream<T> colocate(Placeable<?>... elements) {
-        getPlacementInfo().colocate(this, elements);
+        PlacementInfo.colocate(this, elements);
             
         return this;
     }
 
     @Override
     public TStream<T> addResourceTags(String... tags) {
-        getPlacementInfo().addResourceTags(this, tags);
+        PlacementInfo.addResourceTags(this, tags);
         return this;              
     }
 
     @Override
     public Set<String> getResourceTags() {
-        return getPlacementInfo() .getResourceTags(this);
+        return PlacementInfo.getResourceTags(this);
     }
 }
