@@ -59,18 +59,4 @@
     <path refid="compress.classpath" />
   </path>
 
-  <target name="checkJava8">
-      <condition property="isJava8">
-          <or>
-            <equals arg1="${ant.java.version}" arg2="1.8"/>
-            <equals arg1="${ant.java.version}" arg2="1.9"/>
-          </or>
-      </condition>
-      <condition property="disableJavadocLint" value="-Xdoclint:none" else="">
-          <or>
-            <equals arg1="${isJava8}" arg2="true"/>
-          </or>
-      </condition>
-  </target>
-
 </project>

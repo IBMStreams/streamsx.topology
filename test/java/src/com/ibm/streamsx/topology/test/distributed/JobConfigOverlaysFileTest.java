@@ -99,8 +99,6 @@ public class JobConfigOverlaysFileTest extends TestTopology {
         
         assertTrue(jcos.get("jobConfigOverlays").getAsJsonArray().get(0).isJsonObject());
         
-        System.err.println("DDDD:" + jcos);
-        
         return jcos;
     }
     

@@ -9,50 +9,39 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_RESOURCE_TAGS;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.addToObject;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
-import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.TopologyElement;
+import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * Manages fusing of Placeables. 
  */
 class PlacementInfo {
-
-    private static final Map<Topology, WeakReference<PlacementInfo>> placements = new WeakHashMap<>();
     
-    private int nextFuseId;
-    private final Map<Placeable<?>, String> fusingIds = new HashMap<>();
-    private final Map<Placeable<?>, Set<String>> resourceTags = new HashMap<>();
-      
-    static PlacementInfo getPlacementInfo(TopologyElement te) {
-        
-        PlacementInfo pi; 
-        synchronized(placements) {
-            WeakReference<PlacementInfo> wr = placements.get(te.topology());
-            if (wr == null) {
-                wr = new WeakReference<>(new PlacementInfo());
-                placements.put(te.topology(), wr);
-            }
-            pi = wr.get();
-        }
-        
-        return pi;
+    private static final AtomicLong nextFuseId = new AtomicLong();
+
+    private static boolean hasPlacement(Placeable<?> element) {        
+        return object(element.operator()._json(), CONFIG, PLACEMENT) != null;
+    }
+    private static JsonObject placement(Placeable<?> element) {
+        return objectCreate(element.operator()._json(), CONFIG, PLACEMENT);
     }
     
     /**
@@ -64,7 +53,7 @@ class PlacementInfo {
      *          topologies or if Placeable.isPlaceable()==false.
      */
     
-    synchronized boolean colocate(Placeable<?> first, Placeable<?> ... toFuse) {
+    static boolean colocate(Placeable<?> first, Placeable<?> ... toFuse) {
         
         Set<Placeable<?>> elements = new HashSet<>();
         elements.add(first);
@@ -84,41 +73,57 @@ class PlacementInfo {
         
         disallowColocateInLowLatency(elements);
         disallowColocateIsolatedOpWithParent(first, toFuse);
-        
+            
         String fusingId = null;
         for (Placeable<?> element : elements) {
-            fusingId = fusingIds.get(element);
+            JsonObject placement = placement(element);
+            fusingId = jstring(placement, PLACEMENT_EXPLICIT_COLOCATE_ID);
             if (fusingId != null) {
                 break;
             }
         }
         if (fusingId == null) {
-            fusingId = "__jaa_colocate" + nextFuseId++;
+            fusingId = "__jaa_colocate" + nextFuseId.incrementAndGet();
         }
         
         Set<String> fusedResourceTags = new HashSet<>();
         
+        // Determine the union of all resource tags for the colocated operators
         for (Placeable<?> element : elements) {
-            fusingIds.put(element, fusingId);
-            
-            Set<String> elementResourceTags = resourceTags.get(element);
-            if (elementResourceTags != null) {
-                fusedResourceTags.addAll(elementResourceTags);
-            }            
-            resourceTags.put(element, fusedResourceTags);
-            
-            
+            JsonObject placement = placement(element);
+                       
+            if (placement.has(PLACEMENT_RESOURCE_TAGS)) {
+                addToSet(fusedResourceTags, array(placement, PLACEMENT_RESOURCE_TAGS));
+            }
         }
+        
+        JsonArray fusedResourceTagsJson = setToArray(fusedResourceTags);
         
         // And finally update all the JSON info
         for (Placeable<?> element : elements) {
-             updatePlacementJSON(element);
+            JsonObject placement = placement(element);
+            placement.addProperty(PLACEMENT_EXPLICIT_COLOCATE_ID, fusingId);
+            placement.add(PLACEMENT_RESOURCE_TAGS, fusedResourceTagsJson);
         }
+        
         return true;
     }
     
+    private static void addToSet(Set<String> set, JsonArray array) {
+        for (JsonElement item : array)
+            set.add(item.getAsString());
+    }
+    
+    private static JsonArray setToArray(Set<String> set) {
+        JsonArray array = new JsonArray();
+        for (String item : set)
+            if (!item.isEmpty())
+                array.add(new JsonPrimitive(item));
+        return array;      
+    }
+    
     /** throw if s1.isolate().filter().colocate(s1) */
-    private void disallowColocateIsolatedOpWithParent(Placeable<?> first, Placeable<?> ... toFuse) {
+    private static void disallowColocateIsolatedOpWithParent(Placeable<?> first, Placeable<?> ... toFuse) {
         JsonObject graph = first.builder()._complete();
         JsonObject colocateOp = first.operator()._complete();
         Set<JsonObject> parents = GraphUtilities.getUpstream(colocateOp, graph);
@@ -143,46 +148,76 @@ class PlacementInfo {
     // and low latency regions aren't playing well together
     // i.e., the low latency guarantee is being violated.
     // So disallow that configuration for now.
-    private void disallowColocateInLowLatency(Set<Placeable<?>> elements) {
+    private static void disallowColocateInLowLatency(Set<Placeable<?>> elements) {
         for (Placeable<?> element : elements) {
             BOperatorInvocation op = element.operator();
             if (element.builder().isInLowLatencyRegion(op))
                 throw new IllegalStateException("colocate() is not allowed in a low latency region");
         }
     }
-    
-    synchronized Set<String> getResourceTags(Placeable<?> element) {
-        Set<String> elementResourceTags = resourceTags.get(element);
-        if (elementResourceTags == null) {
+
+    static Set<String> getResourceTags(Placeable<?> element) {
+        
+        if (!hasPlacement(element))
+            return Collections.emptySet(); 
+              
+        JsonObject placement = placement(element);       
+        if (!placement.has(PLACEMENT_RESOURCE_TAGS))
             return Collections.emptySet();
-        }
+        
+        Set<String> elementResourceTags = new HashSet<>();
+        addToSet(elementResourceTags, array(placement, PLACEMENT_RESOURCE_TAGS));
         return Collections.unmodifiableSet(elementResourceTags);
     }
 
-    synchronized void addResourceTags(Placeable<?> element, String ... tags) {
-        Set<String> elementResourceTags = resourceTags.get(element);
-        if (elementResourceTags == null) {
-            elementResourceTags = new HashSet<>();
-            resourceTags.put(element, elementResourceTags);
-        }
-        for (String tag : tags) {
-            if (!tag.isEmpty())
-                elementResourceTags.add(tag);
-        }
+    static void addResourceTags(Placeable<?> element, String ... tags) {
+        if (Objects.requireNonNull(tags).length == 0)
+            return;
         
-        updatePlacementJSON(element);
-    } 
+        Set<String> elementResourceTags = new HashSet<>();
+        elementResourceTags.addAll(Arrays.asList(tags));
+        
+        JsonObject placement = placement(element);
+                
+        if (placement.has(PLACEMENT_RESOURCE_TAGS))            
+            addToSet(elementResourceTags, array(placement, PLACEMENT_RESOURCE_TAGS));
+        
+        
+        if (placement.has(PLACEMENT_EXPLICIT_COLOCATE_ID))
+            findAllColocatedResourceTags(element, jstring(placement, PLACEMENT_EXPLICIT_COLOCATE_ID), elementResourceTags);
+
+        JsonArray resourceTags = setToArray(elementResourceTags);
+        placement.add(PLACEMENT_RESOURCE_TAGS, resourceTags);
+        
+        if (placement.has(PLACEMENT_EXPLICIT_COLOCATE_ID))
+            updateAllColocatedResourceTags(element, jstring(placement, PLACEMENT_EXPLICIT_COLOCATE_ID), resourceTags);      
+    }
     
-    /**
-     * Update an element's placement configuration.
-     */
-    private void updatePlacementJSON(Placeable<?> element) {
-        JsonObject placement = objectCreate(element.operator()._json(), CONFIG, PLACEMENT);
-        placement.addProperty(PLACEMENT_EXPLICIT_COLOCATE_ID, fusingIds.get(element));
-        
-        Set<String> elementResourceTags = resourceTags.get(element);
-        if (elementResourceTags != null && !elementResourceTags.isEmpty()) {
-            addToObject(placement, PLACEMENT_RESOURCE_TAGS, elementResourceTags); 
-        }
+    private static void findAllColocatedResourceTags(Placeable<?> element, String colocateId, Set<String> elementResourceTags) {               
+        JsonObject graph = element.builder()._complete();
+               
+        GsonUtilities.objectArray(graph, "operators", op -> {
+            JsonObject placement = object(op, CONFIG, PLACEMENT);
+            if (placement != null) {
+                if (colocateId.equals(jstring(placement, PLACEMENT_EXPLICIT_COLOCATE_ID))) {
+                    if (placement.has(PLACEMENT_RESOURCE_TAGS))
+                        addToSet(elementResourceTags, array(placement, PLACEMENT_RESOURCE_TAGS));
+                }
+            }
+                
+        });
+    }
+    private static void updateAllColocatedResourceTags(Placeable<?> element, String colocateId, JsonArray resourceTags) {               
+        JsonObject graph = element.builder()._complete();
+               
+        GsonUtilities.objectArray(graph, "operators", op -> {
+            JsonObject placement = object(op, CONFIG, PLACEMENT);
+            if (placement != null) {
+                if (colocateId.equals(jstring(placement, PLACEMENT_EXPLICIT_COLOCATE_ID))) {
+                    placement.add(PLACEMENT_RESOURCE_TAGS, resourceTags);
+                }
+            }
+                
+        });
     }
 }

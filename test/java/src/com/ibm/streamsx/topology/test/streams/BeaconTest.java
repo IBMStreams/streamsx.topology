@@ -21,6 +21,7 @@ import com.ibm.json.java.JSON;
 import com.ibm.json.java.JSONObject;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
@@ -126,6 +127,10 @@ public class BeaconTest extends TestTopology {
     
     @Test
     public void testBeaconTuples() throws Exception {
+        
+        // Tester.stringTupleTester not supported yet.
+        assumeTrue(!isStreamingAnalyticsRun());
+        
         Topology topology = new Topology("testFixedCount");
 
         final int count = new Random().nextInt(1000) + 37;

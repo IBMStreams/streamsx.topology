@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assume.assumeTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +36,8 @@ public class VMArgTest extends TestTopology {
         final Map<String,Object> config = getConfig();
         @SuppressWarnings("unchecked")
         List<String> vmArgs = (List<String>) config.get(ContextProperties.VMARGS);
+        if (vmArgs == null)
+            config.put(ContextProperties.VMARGS, vmArgs = new ArrayList<>());
         vmArgs.add(vmArg);
         
         // config.put(ContextProperties.KEEP_ARTIFACTS, Boolean.TRUE);

@@ -10,7 +10,6 @@ import static java.lang.Math.min;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -181,7 +180,6 @@ public class Util {
         String vers = productVersion();
 
         final String[] vs = vers.toString().split("\\.");
-        System.err.println("DDD_VERSION_SPLIT:" + Arrays.asList(vs));
         final int[] iv = new int[4];
         for (int i = 0; i < min(iv.length, vs.length); i++) {
             iv[i] = Integer.valueOf(vs[i]);

@@ -4,8 +4,6 @@
  */
 package com.ibm.streamsx.topology.functions
 
-import com.ibm.streamsx.topology.Topology
-import com.ibm.streamsx.topology.context.StreamsContextFactory
 import com.ibm.streamsx.topology.function.BiFunction
 import com.ibm.streamsx.topology.function.Consumer
 import com.ibm.streamsx.topology.function.Supplier

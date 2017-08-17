@@ -11,6 +11,8 @@ import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FLAT_MAP
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FOR_EACH_KIND;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.HASH_ADDER_KIND;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.HASH_REMOVER_KIND;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jisEmpty;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.logic.Logic.notKeyed;
@@ -49,6 +51,8 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
+import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
+import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
 import com.ibm.streamsx.topology.internal.logic.KeyFunctionHasher;
@@ -56,7 +60,7 @@ import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
 import com.ibm.streamsx.topology.logic.Logic;
-import com.ibm.streamsx.topology.spi.Invoker;
+import com.ibm.streamsx.topology.spi.builder.Invoker;
 
 public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
@@ -127,7 +131,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         JsonObject config = new JsonObject();
         config.addProperty("name", opName);
-        com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(config, getClass());
+        com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(config, getClass());
               
         return Invoker.invokeForEach(this, FOR_EACH_KIND, config,
                 sinker, null, null);
@@ -514,20 +518,6 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         return addMatchingStream(parallelOutput);
     }
-    
-    static <T> ToIntFunction<T> parallelHasher(final Function<T,?> keyFunction) {
-        return new ToIntFunction<T>() {
-
-            /**
-             * 
-             */
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public int applyAsInt(T tuple) {
-                return keyFunction.apply(tuple).hashCode();
-            }};
-    }
 
     @Override
     public TStream<T> parallel(int width) {
@@ -652,7 +642,9 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         // Is a schema change needed?
         if (ObjectSchemas.usesDirectSchema(tupleClass) &&
                 !ObjectSchemas.getMappingSchema(tupleClass).equals(output()._type())) {
-            return fixDirectSchema(tupleClass);
+            TStream<T> newStream = fixDirectSchema(tupleClass);
+            if (newStream != null)
+                return newStream;
         }
 
         if (output() instanceof BOutputPort) {
@@ -667,6 +659,22 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
     
     private TStream<T> fixDirectSchema(Class<T> tupleClass) {
+        if (output() instanceof BOutputPort) {
+            
+            String schema = output()._type();
+            if (schema.equals(ObjectSchemas.JAVA_OBJECT_SCHEMA)) {
+                
+                
+                // If no connections can just change the schema directly.
+                if (jisEmpty(array(output()._json(), "connections"))) {
+                
+                    String directSchema = ObjectSchemas.getMappingSchema(tupleClass);                   
+                    output()._json().addProperty("type", directSchema);
+                    return null;
+                }
+            }
+        }
+
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 "SchemaFix",
                 JavaFunctionalOps.MAP_KIND, identity());
@@ -674,9 +682,6 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         connectTo(bop, true, null);
         return JavaFunctional.addJavaOutput(this, bop, tupleClass);
     }
-    
-    /* Placement control */
-    private PlacementInfo placement;
     
     @Override
     public boolean isPlaceable() {
@@ -694,28 +699,22 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             return ((BOutputPort) output()).operator();
         throw new IllegalStateException("Illegal operation: Placeable.isPlaceable()==false");
     }
-    
-    private PlacementInfo getPlacementInfo() {
-        if (placement == null)
-            placement = PlacementInfo.getPlacementInfo(this);
-        return placement;
-    }
 
     @Override
     public TStream<T> colocate(Placeable<?>... elements) {
-        getPlacementInfo().colocate(this, elements);
+        PlacementInfo.colocate(this, elements);
             
         return this;
     }
 
     @Override
     public TStream<T> addResourceTags(String... tags) {
-        getPlacementInfo().addResourceTags(this, tags);
+        PlacementInfo.addResourceTags(this, tags);
         return this;              
     }
 
     @Override
     public Set<String> getResourceTags() {
-        return getPlacementInfo() .getResourceTags(this);
+        return PlacementInfo.getResourceTags(this);
     }
 }

@@ -16,9 +16,9 @@ import org.junit.Test;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.internal.spljava.Schemas;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.spl.JavaPrimitive;
+import com.ibm.streamsx.topology.spl.SPLSchemas;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.test.api.JobPropertiesTest.JobPropertiesTestOp;
@@ -80,7 +80,7 @@ public class JobConfigSubmissionTest extends TestTopology {
         Topology topology = newTopology(topologyName);
         topology.addClassDependency(JobPropertiesTestOp.class);
         SPLStream sourceSPL = JavaPrimitive.invokeJavaPrimitiveSource(topology, JobPropertiesTestOp.class,
-                Schemas.STRING, null);
+                SPLSchemas.STRING, null);
         TStream<String> source = sourceSPL.toStringStream();
 
         Condition<Long> end = topology.getTester().tupleCount(source, 4);

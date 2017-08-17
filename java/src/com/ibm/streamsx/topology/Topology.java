@@ -6,7 +6,7 @@ package com.ibm.streamsx.topology;
 
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.SPL_PREFIX;
 import static com.ibm.streamsx.topology.internal.core.TypeDiscoverer.getTupleName;
-import static com.ibm.streamsx.topology.spi.Invoker.invokeSource;
+import static com.ibm.streamsx.topology.spi.builder.Invoker.invokeSource;
 import static java.util.Objects.requireNonNull;
 
 import java.io.File;
@@ -34,8 +34,9 @@ import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.core.SPLStreamBridge;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
-import com.ibm.streamsx.topology.internal.core.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.core.SubmissionParameterFactory;
 import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
+import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.logic.Constants;
 import com.ibm.streamsx.topology.internal.logic.EndlessSupplier;
@@ -44,8 +45,6 @@ import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.internal.logic.SingleToIterableSupplier;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.json.JSONSchemas;
-import com.ibm.streamsx.topology.spl.SPL;
-import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.tester.Tester;
 
 /**
@@ -261,7 +260,7 @@ public class Topology implements TopologyElement {
         }
         
         JsonObject config = new JsonObject();
-        com.ibm.streamsx.topology.spi.SourceInfo.addSourceInfo(config, getClass());
+        com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(config, getClass());
         config.addProperty("name", opName);
         
         return invokeSource(this, JavaFunctionalOps.SOURCE_KIND, config,
@@ -457,7 +456,7 @@ public class Topology implements TopologyElement {
      * @return Stream the will contain tuples from matching publishers.
      * 
      * @see TStream#publish(String)
-     * @see SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
+     * @see com.ibm.streamsx.topology.spl.SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
      */
     public <T> TStream<T> subscribe(String topic, Class<T> tupleTypeClass) {
         checkTopicFilter(topic);
@@ -858,8 +857,8 @@ public class Topology implements TopologyElement {
      *  or has already been defined. 
      */
     public <T> Supplier<T> createSubmissionParameter(String name, Class<T> valueClass) {
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, valueClass); 
-        builder().createSubmissionParameter(name, sp.asJSON());
+        SubmissionParameter<T> sp = SubmissionParameterFactory.create(name, valueClass); 
+        builder().createSubmissionParameter(name, SubmissionParameterFactory.asJSON(sp));
         return sp;
     }
 
@@ -876,8 +875,8 @@ public class Topology implements TopologyElement {
      * @throws IllegalArgumentException if {@code defaultValue} is null
      */
     public <T> Supplier<T> createSubmissionParameter(String name, T defaultValue) {
-        SubmissionParameter<T> sp = new SubmissionParameter<T>(name, defaultValue);
-        builder().createSubmissionParameter(name, sp.asJSON());
+        SubmissionParameter<T> sp = SubmissionParameterFactory.create(name, defaultValue);
+        builder().createSubmissionParameter(name, SubmissionParameterFactory.asJSON(sp));
         return sp;
     }
 
@@ -905,8 +904,7 @@ public class Topology implements TopologyElement {
     public void addJobControlPlane() {
         if (!hasJCP) {
             // no inputs, outputs or parameters.
-            SPL.invokeOperator(this, "JCP", "spl.control::JobControlPlane",
-                    Collections.emptyList(), Collections.emptyList(), Collections.emptyMap());
+            builder.addSPLOperator("spl.control::JobControlPlane", Collections.emptyMap());
             hasJCP = true;
         }        
     }

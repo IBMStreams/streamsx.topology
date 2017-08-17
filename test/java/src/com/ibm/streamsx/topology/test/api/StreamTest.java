@@ -334,7 +334,7 @@ public class StreamTest extends TestTopology {
     @Test
     public void testFunctionContextNonDistributed() throws Exception {
         
-        assumeTrue(getTesterType() != Type.DISTRIBUTED_TESTER);
+        assumeTrue(getTesterType() == Type.STANDALONE_TESTER || getTesterType() == Type.EMBEDDED_TESTER);
         
         Topology t = newTopology();
         TStream<Map<String, Object>> values = BeaconStreams.single(t).transform(new ExtractFunctionContext());

@@ -45,6 +45,8 @@ com.ibm.streamsx.topology/lib/
 com.ibm.streamsx.topology/license/
 com.ibm.streamsx.topology/opt/icons/
 java/classes/
+java/execute/classes/
+java/runtime/classes/
 samples/java/functional/classes/
 samples/java/functional/functionalsamples.jar
 /.project

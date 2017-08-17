@@ -11,6 +11,7 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.arrayCreate;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,7 +26,6 @@ import java.util.Set;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
@@ -105,7 +105,7 @@ public class DependencyResolver {
     }
     
     public void addClassDependency(Class<?> clazz){
-        boolean containsOperator = false;
+        
         CodeSource source = clazz.getProtectionDomain().getCodeSource();
         if (source == null)
             return;
@@ -115,7 +115,16 @@ public class DependencyResolver {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
-        containsOperator = clazz.isAnnotationPresent(PrimitiveOperator.class);
+        
+        boolean containsOperator = false;
+        try {
+            @SuppressWarnings("unchecked")
+            Class<? extends Annotation> primOpClass =
+                    (Class<? extends Annotation>) Class.forName("com.ibm.streams.operator.model.PrimitiveOperator");
+            containsOperator  = clazz.isAnnotationPresent(primOpClass);
+        } catch (ClassNotFoundException e) {
+            containsOperator = false;
+        }
             
         addGlobalDependency(absolutePath, containsOperator);
     }

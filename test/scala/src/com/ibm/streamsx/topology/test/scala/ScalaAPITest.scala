@@ -121,6 +121,6 @@ class ScalaAPITest extends TestTopology {
       
      completeAndValidate(channel0, 10, "Emma is 20", "Jane is 20")
 
-     assertTrue(channel1Condition.getResult().toString(), channel1Condition.valid());
+     assertTrue(channel1Condition.toString(), channel1Condition.valid());
   }
 }

@@ -4,8 +4,10 @@
  */
 package com.ibm.streamsx.topology.spl;
 
+import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
+
 import com.ibm.streams.operator.StreamSchema;
-import com.ibm.streamsx.topology.internal.spljava.Schemas;
+import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
 import com.ibm.streamsx.topology.json.JSONSchemas;
 
 /**
@@ -21,21 +23,21 @@ public interface SPLSchemas {
      * {@code TStream<String>} streams. Consists of a single
      * attribute of type {@code rstring string}.
      */
-    StreamSchema STRING = Schemas.STRING;
+    StreamSchema STRING = getStreamSchema(ObjectSchemas.STRING_SCHEMA);
     
     /**
      * SPL schema used by
      * {@code TStream<com.ibm.streams.operator.types.XML> streams}.
      * Consists of a single attribute of type {@code xml document}.
      */
-    StreamSchema XML = Schemas.XML;
+    StreamSchema XML = getStreamSchema(ObjectSchemas.XML_SCHEMA);
     
     /**
      * SPL schema used by
      * {@code TStream<com.ibm.streams.operator.types.Blob>} streams.
      * Consists of a single attribute of type {@code blob binary}.
      */
-    StreamSchema BLOB = Schemas.BLOB;
+    StreamSchema BLOB = getStreamSchema(ObjectSchemas.BLOB_SCHEMA);
     
     /**
      * SPL schema used to publish and subscribe to 

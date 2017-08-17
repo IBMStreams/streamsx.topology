@@ -56,7 +56,7 @@
   </target>
 
   <target name="compile" depends="init" if="env.SCALA_HOME">
-    <scalac srcdir="${src}" target="jvm-1.7" addparams="-usemanifestcp"
+    <scalac srcdir="${src}" target="jvm-1.8" addparams="-usemanifestcp"
                 destdir="${classes}"
                             classpathref="compile.classpath">
     </scalac>

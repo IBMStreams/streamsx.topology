@@ -38,10 +38,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.context.ContextProperties;
-import com.ibm.streamsx.topology.generator.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
+import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.spi.builder.SourceInfo;
 
 class OperatorGenerator {
 
@@ -90,7 +91,7 @@ class OperatorGenerator {
 
     private static void sourceLocationNote(JsonObject op, StringBuilder sb) throws IOException {
 
-        JsonArray ja = array(op, "sourcelocation");
+        JsonArray ja = array(op, SourceInfo.SOURCE_LOCATIONS);
         if (ja == null)
             return;
 

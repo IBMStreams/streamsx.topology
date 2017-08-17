@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.test.file;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -16,6 +17,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
@@ -28,6 +30,12 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 public class FileStreamsTest extends TestTopology {
+    
+    @Before
+    public void checkLocalFiles() {
+        // Can't access the files on Bluemix
+        assumeTrue(!isStreamingAnalyticsRun());
+    }
 
     /**
      * Test that directory watcher creates the correct output.

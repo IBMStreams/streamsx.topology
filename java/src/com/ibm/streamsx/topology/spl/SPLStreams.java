@@ -24,7 +24,6 @@ import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
-import com.ibm.streamsx.topology.internal.spljava.Schemas;
 
 /**
  * Utilities for SPL attribute schema streams.
@@ -187,7 +186,7 @@ public class SPLStreams {
                         v2.setString(0, v1);
                         return v2;
                     }
-                }, Schemas.STRING);
+                }, SPLSchemas.STRING);
     }
 
     /**

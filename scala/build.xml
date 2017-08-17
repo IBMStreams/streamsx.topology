@@ -9,7 +9,7 @@
   <property name="scala-library.jar"
             value="${scala.home}/lib/scala-library.jar"/>
   <property name="src" location="src"/>
-  <property name="classes" location="../java/classes"/>
+  <property name="classes" location="../java/runtime/classes"/>
 
   <path id="compile.classpath">
     <path refid="streams.classpath"/>
@@ -40,7 +40,7 @@
   </target>
 
   <target name="compile" depends="init" if="env.SCALA_HOME">
-    <scalac srcdir="${src}" target="jvm-1.7" addparams="-usemanifestcp"
+    <scalac srcdir="${src}" target="jvm-1.8" addparams="-usemanifestcp"
                 destdir="${classes}"
                             classpathref="compile.classpath">
     </scalac>

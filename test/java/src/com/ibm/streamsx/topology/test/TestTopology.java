@@ -142,6 +142,9 @@ public class TestTopology {
     public boolean isMainRun() {
         return getTesterType() == Type.EMBEDDED_TESTER;
     }
+    public boolean isStreamingAnalyticsRun() {
+        return getTesterType() == Type.STREAMING_ANALYTICS_SERVICE_TESTER;
+    }
     
     public Map<String,Object> getConfig() {
         return config;

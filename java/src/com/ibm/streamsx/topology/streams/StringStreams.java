@@ -4,9 +4,9 @@
  */
 package com.ibm.streamsx.topology.streams;
 
+import java.util.function.Function;
+
 import com.ibm.streamsx.topology.TStream;
-import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.function.Predicate;
 
 /**
  * Utilities for streams containing {@code String} tuples.
@@ -27,15 +27,7 @@ public class StringStreams {
     public static TStream<String> contains(TStream<String> stream,
             final String term) {
 
-        return stream.filter(new Predicate<String>() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public boolean test(String v1) {
-                return v1.contains(term);
-            }
-        });
+        return forceString(stream.filter(tuple -> tuple.contains(term)));
     }
 
     /**
@@ -52,15 +44,14 @@ public class StringStreams {
     public static TStream<String> startsWith(TStream<String> stream,
             final String term) {
 
-        return stream.filter(new Predicate<String>() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public boolean test(String v1) {
-                return v1.startsWith(term);
-            }
-        });
+        return forceString(stream.filter(tuple -> tuple.startsWith(term)));
+    }
+    
+    private static TStream<String> forceString(TStream<String> stream) {
+        stream = stream.asType(String.class);
+        assert stream.getTupleType() == String.class;
+        assert stream.getTupleClass() == String.class;
+        return stream;
     }
 
     /**
@@ -73,16 +64,6 @@ public class StringStreams {
      *         {@code stream}.
      */
     public static <T> TStream<String> toString(TStream<T> stream) {
-        TStream<String> toString = stream.transform(new Function<T, String>() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public String apply(T tuple) {
-                return tuple.toString();
-            }
-        });
-        
-        return toString;
+        return forceString(stream.map(Object::toString));
     }
 }
