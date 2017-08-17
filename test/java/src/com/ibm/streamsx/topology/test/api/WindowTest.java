@@ -165,14 +165,7 @@ public class WindowTest extends TestTopology {
 
         TStream<StockPrice> source = f.constants(Arrays.asList(PRICES)).asType(StockPrice.class);        
 
-        TStream<StockPrice> aggregate = source.last(2).key(new Function<StockPrice,String>() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public String apply(StockPrice v) {
-                return v.getKey();
-            }}).aggregate(new AveragePrice());
+        TStream<StockPrice> aggregate = source.last(2).key(StockPrice::getKey).aggregate(new AveragePrice());
         
         return aggregate;
     }
