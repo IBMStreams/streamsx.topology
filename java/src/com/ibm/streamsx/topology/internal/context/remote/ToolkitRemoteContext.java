@@ -99,8 +99,6 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
     @Override
     public Future<File> _submit(JsonObject submission) throws Exception {
         JsonObject deploy = deploy(submission);
-        if (deploy == null)
-            submission.add(SUBMISSION_DEPLOY, deploy = new JsonObject());
         
         addSelectDeployToGraphConfig(submission);
         

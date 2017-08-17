@@ -12,6 +12,7 @@ import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.gson;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,10 +35,11 @@ public interface DeployKeys {
     String DEPLOY = "deploy";
     
     /**
-     * Get deploy object from submission.
+     * Get deploy object from submission,
+     * creating it if it does not exist.
      */
     static JsonObject deploy(JsonObject submission) {
-        return object(submission, DEPLOY);
+        return objectCreate(submission, DEPLOY);
     }
     static boolean keepArtifacts(JsonObject submission) {;
         return jboolean(deploy(submission), KEEP_ARTIFACTS);

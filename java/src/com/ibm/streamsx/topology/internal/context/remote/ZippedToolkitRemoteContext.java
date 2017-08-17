@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CONFIG;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.graph;
@@ -31,6 +32,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
@@ -54,6 +56,22 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     
     @Override
     public Future<File> _submit(JsonObject submission) throws Exception {
+        
+        JsonObject deploy = deploy(submission);
+        
+        // Ensure the code archive is assembled in
+        // a clean directory to avoid multiple runs
+        // overwriting each other.
+        if (!deploy.has(ContextProperties.TOOLKIT_DIR)) {
+            Path bundleBuildDir = Files
+                    .createTempDirectory(Paths.get(""), "ca").toAbsolutePath();
+            
+            Path toolkitDir = Files
+                    .createTempDirectory(bundleBuildDir, "tk");
+            
+            deploy.addProperty(ContextProperties.TOOLKIT_DIR, toolkitDir.toString());
+        }
+              
         final File toolkitRoot = super._submit(submission).get();
         return createCodeArchive(toolkitRoot, submission);
     }
@@ -80,15 +98,18 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         String name = splAppName(graph);
 
         Path zipFilePath = Paths.get(folder.toAbsolutePath().toString() + ".zip");
-        String workingDir = zipFilePath.getParent().toString();
+        Path workingPath = zipFilePath.getParent();
         
         Path topologyToolkit = TkInfo.getTopologyToolkitRoot().getAbsoluteFile().toPath();  
         
         // Paths to copy into the toolkit
         Map<Path, String> paths = new HashMap<>();
         
+        Path manifest = workingPath.resolve("manifest_tk.txt");
+        Path mainComp = workingPath.resolve("main_composite.txt");
+        
         // tkManifest is the list of toolkits contained in the archive
-        try (PrintWriter tkManifest = new PrintWriter("manifest_tk.txt", "UTF-8")) {
+        try (PrintWriter tkManifest = new PrintWriter(manifest.toFile(), "UTF-8")) {
             tkManifest.println(tkName);
             tkManifest.println("com.ibm.streamsx.topology");
             
@@ -107,15 +128,12 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         
         // mainComposite is a string of the namespace and the main composite.
         // This is used by the Makefile
-        try (PrintWriter mainComposite = new PrintWriter("main_composite.txt", "UTF-8")) {
+        try (PrintWriter mainComposite = new PrintWriter(mainComp.toFile(), "UTF-8")) {
             mainComposite.print(namespace + "::" + name);
         }
                
-        Path manifest = Paths.get(workingDir, "manifest_tk.txt");
-        Path mainComp = Paths.get(workingDir, "main_composite.txt");
         Path makefile = topologyToolkit.resolve(Paths.get("opt", "remote", "Makefile.template"));
-        
-        
+               
         paths.put(topologyToolkit, topologyToolkit.getFileName().toString());
         paths.put(manifest, "manifest_tk.txt");
         paths.put(mainComp, "main_composite.txt");
