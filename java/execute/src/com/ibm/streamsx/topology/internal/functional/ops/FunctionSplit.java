@@ -15,7 +15,6 @@ import com.ibm.streams.operator.StreamingOutput;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.model.Icons;
 import com.ibm.streams.operator.model.InputPortSet;
-import com.ibm.streams.operator.model.Libraries;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.ToIntFunction;
@@ -23,7 +22,6 @@ import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
 @PrimitiveOperator(name="Split")
-@Libraries("lib/com.ibm.streamsx.topology.api.jar")
 @InputPortSet(cardinality = 1)
 @OutputPortSet(cardinality = -1)
 @Icons(location16 = "opt/icons/split_16.gif", location32 = "opt/icons/split_32.gif")

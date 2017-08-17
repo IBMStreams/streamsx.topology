@@ -14,19 +14,15 @@
   <property name="jarname" value="com.ibm.streamsx.topology.jar"/>
   <property name="jar" location="${tk.lib}/${jarname}"/>
 
-  <property name="jar.api" location="${tk.lib}/com.ibm.streamsx.topology.api.jar"/>
-  <property name="jar.runtime" location="${tk.lib}/com.ibm.streamsx.topology.runtime.jar"/>
-  <property name="jar.execute" location="${tk.lib}/com.ibm.streamsx.topology.execute.jar"/>
-
   <path id="compile.classpath">
     <path refid="streams.classpath"/>
     <path refid="tk.classpath"/>
-    <path location="${jar.runtime}" />
+    <path location="${runtime.classes}" />
     <pathelement location="${junit.jar}"/>
   </path>
 
   <path id="compile.execute.tk.classpath">
-    <path location="${jar.runtime}" />
+    <path location="${runtime.classes}" />
   </path>
 
   <path id="compile.runtime.classpath">
@@ -38,7 +34,7 @@
   </path>
 
   <path id="compile.pure.classpath">
-    <path location="${jar.runtime}" />
+    <path location="${runtime.classes}" />
     <path refid="gson.classpath" />
     <path refid="httpclient.classpath"/>
     <path refid="compress.classpath"/>
@@ -77,7 +73,7 @@
               ${cisxr}/*.java
               "
   />
-  <target name="compile.pure" depends="init,jar.runtime">
+  <target name="compile.pure" depends="init,compile.runtime">
     <javac debug="true" includeantruntime="no"
        srcdir="${src}" 
        destdir="${classes}"
@@ -89,7 +85,7 @@
     </copy>
   </target>
 
-  <target name="compile" depends="init,jar.runtime">
+  <target name="compile" depends="init,compile.runtime,compile.execute">
     <javac debug="true" includeantruntime="no"
        srcdir="${src}" 
        destdir="${classes}"
@@ -108,7 +104,7 @@
   </target>
 
 
-  <target name="compile.execute" depends="jar.runtime">
+  <target name="compile.execute" depends="compile.runtime">
     <javac debug="true" includeantruntime="no"
        srcdir="${execute.src}" 
        destdir="${execute.classes}"
@@ -116,7 +112,7 @@
        />
   </target>
 
-  <target name="jar" depends="compile,jar.api,jar.runtime.update,jar.execute">
+  <target name="jar" depends="compile">
   <manifestclasspath property="jar.classpath" jarfile="${jar}">
      <classpath>
        <path refid="tk.classpath"/>
@@ -129,76 +125,11 @@
        <manifest>
           <attribute name="Class-Path" value="${jar.classpath}"/>
        </manifest>
-    <fileset dir="${classes}" excludes="**/*$StreamsModel.*"/>
     <fileset dir="${runtime.classes}"/>
-    <fileset dir="${execute.classes}" excludes="**/*$StreamsModel.*"/>
-    <fileset dir="${src}" excludes="com/ibm/streamsx/topology/internal/**"/>
-    <fileset dir="${src}" includes="com/ibm/streamsx/topology/internal/messages/*.properties"/>
-    </jar>
-  </target>
-
-  <target name="jar.api">
-  <manifestclasspath property="jar.api.classpath" jarfile="${jar.api}">
-     <classpath>
-       <path location="${jar.runtime}" />
-       <path refid="tk.classpath"/>
-       <fileset dir="${tk.opt}/slf4j-1.7.5">
-          <include name="*.jar"/>
-       </fileset>
-     </classpath>
-  </manifestclasspath>
-    <jar destfile="${jar.api}" filesonly="true">
-       <manifest>
-          <attribute name="Class-Path" value="${jar.api.classpath}"/>
-       </manifest>
-    <fileset dir="${classes}">
-<!--
-       <exclude name="com/ibm/streamsx/topology/tuple/*.class"/>
-       <exclude name="com/ibm/streamsx/topology/json/JSONStreams$*.class"/>
-       <exclude name="com/ibm/streamsx/topology/spl/SPLStreams$*.class"/>
-       <exclude name="com/ibm/streamsx/topology/spl/SPLStreamImpl$*.class"/>
-       <exclude name="com/ibm/streamsx/topology/streams/*Streams$*.class"/>
-       <exclude name="com/ibm/streamsx/topology/streams/StringStreams.class"/>
-       <exclude name="com/ibm/streamsx/topology/internal/**/*TopoRuntime.class"/>
--->
-    </fileset>
-    <fileset dir="${src}" excludes="com/ibm/streamsx/topology/internal/**"/>
-    <fileset dir="${src}" includes="com/ibm/streamsx/topology/internal/messages/*.properties"/>
-    </jar>
-  </target>
-
-  <target name="jar.runtime" depends="compile.runtime">
-    <jar destfile="${jar.runtime}" filesonly="true">
-    <fileset dir="${runtime.classes}"/>
-    </jar>
-  </target>
-  <target name="jar.runtime.update" depends="compile,jar.runtime">
-    <jar destfile="${jar.runtime}" filesonly="true" update="true">
-    <fileset dir="${classes}">
-<!--
-       <include name="com/ibm/streamsx/topology/tuple/*.class"/>
-       <include name="com/ibm/streamsx/topology/json/JSONStreams$*.class"/>
-       <include name="com/ibm/streamsx/topology/spl/SPLStreams$*.class"/>
-       <include name="com/ibm/streamsx/topology/spl/SPLStreamImpl$*.class"/>
-       <include name="com/ibm/streamsx/topology/streams/*Streams$*.class"/>
-       <include name="com/ibm/streamsx/topology/streams/StringStreams.class"/>
-       <include name="com/ibm/streamsx/topology/internal/**/*TopoRuntime.class"/>
--->
-    </fileset>
-    </jar>
-  </target>
-
-  <target name="jar.execute" depends="compile.execute">
-  <manifestclasspath property="jar.execute.classpath" jarfile="${jar.execute}">
-     <classpath>
-       <path refid="compile.execute.tk.classpath"/>
-     </classpath>
-  </manifestclasspath>
-    <jar destfile="${jar.execute}" filesonly="true">
-       <manifest>
-          <attribute name="Class-Path" value="${jar.execute.classpath}"/>
-       </manifest>
+    <fileset dir="${classes}"/>
     <fileset dir="${execute.classes}"/>
+    <fileset dir="${src}" excludes="com/ibm/streamsx/topology/internal/**"/>
+    <fileset dir="${src}" includes="com/ibm/streamsx/topology/internal/messages/*.properties"/>
     </jar>
   </target>
 

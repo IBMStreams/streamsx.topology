@@ -12,7 +12,6 @@ import com.ibm.streams.operator.model.Icons;
 import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.InputPortSet.WindowMode;
 import com.ibm.streams.operator.model.InputPorts;
-import com.ibm.streams.operator.model.Libraries;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streams.operator.window.StreamWindow;
@@ -21,7 +20,6 @@ import com.ibm.streamsx.topology.internal.functional.window.PartitionedSlidingJo
 import com.ibm.streamsx.topology.internal.functional.window.SlidingJoin;
 
 @PrimitiveOperator(name="Join")
-@Libraries("lib/com.ibm.streamsx.topology.api.jar")
 @InputPorts({
         @InputPortSet(cardinality = 1, windowingMode = WindowMode.Windowed),
         @InputPortSet(cardinality = 1) })

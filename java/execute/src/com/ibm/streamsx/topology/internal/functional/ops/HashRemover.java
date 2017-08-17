@@ -10,12 +10,10 @@ import com.ibm.streams.operator.StreamingInput;
 import com.ibm.streams.operator.StreamingOutput;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.model.InputPortSet;
-import com.ibm.streams.operator.model.Libraries;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 
 @PrimitiveOperator(description = "Passes all input unchanged from its input port to its output port, but removes the __spl_hash, the second attribute.")
-@Libraries("lib/com.ibm.streamsx.topology.api.jar")
 @InputPortSet(cardinality = 1)
 @OutputPortSet(cardinality = 1)
 public class HashRemover extends FunctionFunctor {

@@ -58,7 +58,7 @@
 
   <!-- Release targets !-->
   <path id="javadoc.classpath">
-    <path location="${tk.lib}/com.ibm.streamsx.topology.api.jar"/>
+    <path location="${jar}"/>
     <path location="${tk.lib}/com.ibm.streamsx.topology.runtime.jar"/>
     <path refid="streams.classpath"/>
     <path refid="tk.classpath"/>
