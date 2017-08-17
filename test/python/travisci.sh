@@ -12,7 +12,7 @@ echo JAVA_HOME=$JAVA_HOME
 
 cd $TRAVIS_BUILD_DIR/java
 export STREAMS_INSTALL=/dev/null
-ant compile.pure _jar
+ant compile.pure
 
 exit 0
 
