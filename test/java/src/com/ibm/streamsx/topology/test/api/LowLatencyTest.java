@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
 import com.google.gson.JsonObject;
-import com.ibm.json.java.JSONObject;
 import com.ibm.streams.operator.PERuntime;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
@@ -37,7 +36,6 @@ import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.internal.json4j.JSON4JUtilities;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -45,10 +43,11 @@ import com.ibm.streamsx.topology.tester.Tester;
 
 public class LowLatencyTest extends TestTopology {
     @Test
-    public void simpleLowLatencyTest() throws Exception{
+    public void testSimpleLowLatency() throws Exception{
         assumeTrue(SC_OK);
         assumeTrue(isMainRun());
-        Topology topology = newTopology("lowLatencyTest");
+        
+        Topology topology = newTopology();
 
         // Construct topology
         TStream<String> ss = topology.strings("hello");
@@ -60,10 +59,11 @@ public class LowLatencyTest extends TestTopology {
     }
     
     @Test
-    public void multipleRegionLowLatencyTest() throws Exception{
+    public void testMultipleRegionLowLatency() throws Exception{
         assumeTrue(SC_OK);
         assumeTrue(isMainRun());
-        Topology topology = newTopology("lowLatencyTest");
+        
+        Topology topology = newTopology();
 
         // Construct topology
         TStream<String> ss = topology.strings("hello")
@@ -80,9 +80,10 @@ public class LowLatencyTest extends TestTopology {
     }
     
     @Test
-    public void threadedPortTest() throws Exception{
+    public void testThreadedPort() throws Exception{
         assumeTrue(isMainRun());
-        Topology topology = newTopology("lowLatencyTest");
+        
+        Topology topology = newTopology();
 
         // Construct topology
         TStream<String> ss = topology.strings("hello").lowLatency();
@@ -113,6 +114,8 @@ public class LowLatencyTest extends TestTopology {
     
     @Test
     public void testLowLatencySplit() throws Exception {
+        // Uses Condition.getResult - not supported.
+        assumeTrue(!isStreamingAnalyticsRun());
         
         // lowLatency().split() is an interesting case because split()
         // has >1 oports.
@@ -185,7 +188,9 @@ public class LowLatencyTest extends TestTopology {
     }
     
     @Test
-    public void nestedTest() throws Exception {
+    public void testNested() throws Exception {
+        // Uses Condition.getResult - not supported.
+        assumeTrue(!isStreamingAnalyticsRun());
         
         // ensure nested low latency yields all fns in the same container
         

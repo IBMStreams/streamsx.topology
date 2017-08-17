@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.test.json;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -14,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.ibm.json.java.JSON;
@@ -46,6 +48,12 @@ public class JSONStreamsTest extends TestTopology {
             + "      {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}\n"
             + "    ]\n" + "  }\n" + "}}";
 
+    @Before
+    public void checkLocalFiles() {
+        // Uses a StreamHandler to test - not yet supported.
+        assumeTrue(!isStreamingAnalyticsRun());
+    }
+    
     /**
      * Convert an example JSON as a String back to a String through JSON
      * deserialization and serialization.
@@ -94,7 +102,7 @@ public class JSONStreamsTest extends TestTopology {
 
     @Test
     public void testModifyingJson() throws Exception {
-        final Topology t = new Topology("SimpleJson");
+        final Topology t = new Topology();
 
         final JSONObject value = new JSONObject();
         value.put("question",QUESTION);
