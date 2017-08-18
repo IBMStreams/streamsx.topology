@@ -271,6 +271,9 @@ public class WindowTest extends TestTopology {
      */
     @Test
     public void testPeriodicAggregateLastSeconds() throws Exception {
+        // Uses Condition.getResult
+        assumeTrue(!isStreamingAnalyticsRun());
+        
         final Topology t = newTopology();
         TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);
         

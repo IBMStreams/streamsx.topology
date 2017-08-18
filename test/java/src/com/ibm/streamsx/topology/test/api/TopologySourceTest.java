@@ -95,6 +95,9 @@ public class TopologySourceTest extends TestTopology {
     
     @Test
     public void testPeriodicSource() throws Exception {
+        // Uses Condition.getResult()
+        assumeTrue(!isStreamingAnalyticsRun());
+        
         Topology topology = newTopology();
 
         TStream<Long> timestamps = topology.periodicSource(new PeriodicSourceTester(), 500, TimeUnit.MILLISECONDS);
@@ -133,6 +136,9 @@ public class TopologySourceTest extends TestTopology {
     
     @Test
     public void testPeriodicMultiSource() throws Exception {
+        // Uses Condition.getResult()
+        assumeTrue(!isStreamingAnalyticsRun());
+        
         Topology topology = newTopology();
 
         TStream<String> ms = topology.periodicMultiSource(new PeriodicMultiSourceTester(),

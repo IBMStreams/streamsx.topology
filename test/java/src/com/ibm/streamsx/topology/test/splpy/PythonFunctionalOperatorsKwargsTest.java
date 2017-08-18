@@ -34,7 +34,8 @@ public class PythonFunctionalOperatorsKwargsTest extends TestTopology {
         assumeSPLOk();
         
         assumeTrue(getTesterContext().getType() == StreamsContext.Type.STANDALONE_TESTER
-        		|| getTesterContext().getType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+        		|| getTesterContext().getType() == StreamsContext.Type.DISTRIBUTED_TESTER
+        		|| isStreamingAnalyticsRun());
     }
     
     @Test

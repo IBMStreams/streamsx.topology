@@ -45,7 +45,7 @@ public class PublishSubscribeTest extends TestTopology {
 
     @Before
     public void checkIsDistributed() {
-        assumeTrue(getTesterType() == Type.DISTRIBUTED_TESTER);
+        assumeTrue(getTesterType() == Type.DISTRIBUTED_TESTER || isStreamingAnalyticsRun());
     }
 
     @Test
