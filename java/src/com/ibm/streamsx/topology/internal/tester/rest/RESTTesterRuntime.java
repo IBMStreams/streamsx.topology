@@ -25,7 +25,9 @@ import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.StringPredicateUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
+import com.ibm.streamsx.topology.internal.tester.fns.StringPredicateChecker;
 import com.ibm.streamsx.topology.internal.tester.fns.TupleContents;
 import com.ibm.streamsx.topology.internal.tester.fns.TupleCount;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -106,6 +108,11 @@ public class RESTTesterRuntime extends TesterRuntime {
             name = "contents_" + id++;
             fn = new TupleContents<Object>(name, uc.isOrdered(), uc.getExpected());
             
+            condition = new MetricCondition<Object>(name, (UserCondition<Object>) userCondition);
+        } else if (userCondition instanceof StringPredicateUserCondition) {
+            StringPredicateUserCondition uc = (StringPredicateUserCondition) userCondition;
+            name = "stringChecker_" + id++;
+            fn = new StringPredicateChecker(name, uc.getPredicate());
             condition = new MetricCondition<Object>(name, (UserCondition<Object>) userCondition);
         }
         

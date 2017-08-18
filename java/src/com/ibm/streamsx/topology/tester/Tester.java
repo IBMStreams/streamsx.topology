@@ -160,6 +160,15 @@ public interface Tester {
      */
     Condition<List<String>> stringContentsUnordered(TStream<String> stream, String... values);
     
+    /**
+     * Return a condition that evaluates if every tuple on {@code stream}
+     * evaluates to {@code true} with {@tester}.
+     * 
+     * @param stream Stream to be tested.
+     * @param tester Predicate that will be executed against each tuple.
+     * @return Condition whose result is the first tuple to fail the condition
+     * (when the result is available).
+     */
     Condition<String> stringTupleTester(TStream<String> stream, Predicate<String> tester);
     
     /**

@@ -2,15 +2,14 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016  
  */
-package com.ibm.streamsx.topology.internal.test.handlers;
+package com.ibm.streamsx.topology.internal.tester.conditions.handlers;
 
 import com.ibm.streams.flow.handlers.StreamHandler;
 import com.ibm.streams.operator.StreamingData.Punctuation;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.function.Predicate;
-import com.ibm.streamsx.topology.tester.Condition;
 
-public class StringTupleTester implements StreamHandler<Tuple>, Condition<String>{ 
+public class StringTupleTester implements StreamHandler<Tuple> { 
     
     private final Predicate<String> tester;
     private String firstFailure;
@@ -32,18 +31,7 @@ public class StringTupleTester implements StreamHandler<Tuple>, Condition<String
         }
     }
     
-    @Override
-    public boolean failed() {
-        return !valid();
-    }
-
-    @Override
-    public boolean valid() {
-        return firstFailure == null;
-    }
-
-    @Override
-    public String getResult() {
+    public String firstFailure() {
         return firstFailure;
     }
 

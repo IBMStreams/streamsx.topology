@@ -23,6 +23,7 @@ import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.StringPredicateUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
 
 /**
@@ -81,6 +82,8 @@ public abstract class HandlerTesterRuntime extends TesterRuntime {
                 handlerCondition = new ContentsHandlerCondition((ContentsUserCondition<Tuple>) userCondition);
             else if (uc.getTupleClass().equals(String.class))
                 handlerCondition = new StringHandlerCondition((ContentsUserCondition<String>) userCondition);
+        } else if (userCondition instanceof StringPredicateUserCondition) {
+            handlerCondition = new StringPredicateHandlerCondition((StringPredicateUserCondition) userCondition);
         }
         
         if (handlerCondition == null)
@@ -118,7 +121,7 @@ public abstract class HandlerTesterRuntime extends TesterRuntime {
                         
                         lastConditionState.put(counter, result);
                     } else if (condition instanceof ContentsUserCondition) {
-                        ContentsUserCondition<?> contents = (ContentsUserCondition) condition;
+                        ContentsUserCondition<?> contents = (ContentsUserCondition<?>) condition;
                         if (!contents.getExpected().isEmpty()) {
                             long result = contents.getResult().size();
                             Long last = lastConditionState.get(contents);

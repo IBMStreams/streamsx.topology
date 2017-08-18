@@ -25,11 +25,12 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Predicate;
-import com.ibm.streamsx.topology.internal.test.handlers.StringTupleTester;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.StringPredicateUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.handlers.StringTupleTester;
 import com.ibm.streamsx.topology.internal.tester.embedded.EmbeddedTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.rest.RESTTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.tcp.TCPTesterRuntime;
@@ -128,9 +129,8 @@ public class ConditionTesterImpl implements Tester {
     @Override
     public Condition<String> stringTupleTester(TStream<String> stream,
             Predicate<String> tester) {
-        StringTupleTester stt = new StringTupleTester(tester);
-        addHandler(stream, stt);
-        return stt;
+        
+        return addCondition(stream, new StringPredicateUserCondition(tester));
     }
     
     @Override

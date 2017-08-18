@@ -519,13 +519,13 @@ public class Topology implements TopologyElement {
      * @throws Exception
      */
     public void finalizeGraph(StreamsContext.Type contextType) throws Exception {
+        
+        if (hasTester())
+            tester.finalizeGraph(contextType);
 
         dependencyResolver.resolveDependencies();
         
         finalizeConfig();
-        
-        if (hasTester())
-           tester.finalizeGraph(contextType);
     }
     
     /**
