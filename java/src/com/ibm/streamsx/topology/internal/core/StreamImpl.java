@@ -129,11 +129,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             opName = getTupleName() + "Sink";
         }
         
-        JsonObject config = new JsonObject();
-        config.addProperty("name", opName);
-        com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(config, getClass());
+        JsonObject invokeInfo = new JsonObject();
+        invokeInfo.addProperty("name", opName);
+        com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(invokeInfo, getClass());
               
-        return Invoker.invokeForEach(this, FOR_EACH_KIND, config,
+        return Invoker.invokeForEach(this, FOR_EACH_KIND, invokeInfo,
                 sinker, null, null);
     }
 

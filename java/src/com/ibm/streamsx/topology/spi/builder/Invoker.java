@@ -44,13 +44,13 @@ public interface Invoker {
      * 
      * @param topology Topology the operator will be invoked in.
      * @param opClass Java functional operator class.
-     * @param config Operator configuration.
+     * @param invokeInfo Operator invocation information.
      * @param logic Functional logic.
      * @param parameters Additional SPL operator parameters. 
      * 
      * @return Stream produced by the source operator invocation.
      */
-    static <T> TStream<T> invokeSource(Topology topology, String kind, JsonObject config,
+    static <T> TStream<T> invokeSource(Topology topology, String kind, JsonObject invokeInfo,
             Supplier<Iterable<T>> logic, Type tupleType, TupleSerializer outputSerializer,
             Map<String, Object> parameters) {
         
@@ -60,12 +60,12 @@ public interface Invoker {
             parameters.put("outputSerializer", serializeLogic(outputSerializer));
 
         BOperatorInvocation source = JavaFunctional.addFunctionalOperator(topology,
-                jstring(config, "name"),
+                jstring(invokeInfo, "name"),
                 kind,
                 logic, parameters);
 
         // Extract any source location information from the config.
-        SourceInfo.setSourceInfo(source, config);
+        SourceInfo.setInvocationInfo(source, invokeInfo);
 
         return JavaFunctional.addJavaOutput(topology, source, tupleType);
     }
@@ -74,7 +74,7 @@ public interface Invoker {
      * Invoke a functional for each operator consuming a single stream.
      * @param stream Stream to be consumed.
      * @param opClass Java functional operator class.
-     * @param config Operator configuration.
+     * @param invokeInfo Operator invocation information.
      * @param logic Functional logic.
      * @param tupleSerializer How tuples are serialized.
      * @param parameters Additional SPL operator parameters.
@@ -83,20 +83,20 @@ public interface Invoker {
     static <T> TSink invokeForEach(
             TStream<T> stream,
             String kind,
-            JsonObject config,
+            JsonObject invokeInfo,
             Consumer<T> logic,
             TupleSerializer tupleSerializer,
             Map<String,Object> parameters) {
         
         BOperatorInvocation forEach = JavaFunctional.addFunctionalOperator(
                 stream,
-                jstring(config, "name"),
+                jstring(invokeInfo, "name"),
                 kind,
                 logic,
                 parameters);
         
-        // Extract any source location information from the config.
-        SourceInfo.setSourceInfo(forEach, config);
+        // Extract any source location information from the invokeInfo.
+        SourceInfo.setInvocationInfo(forEach, invokeInfo);
 
         stream.connectTo(forEach, true, null);
         
@@ -109,7 +109,7 @@ public interface Invoker {
      * 
      * @param streams
      * @param opClass
-     * @param config
+     * @param config Operator invocation information.
      * @param logic
      * @param tupleTypes
      * @param tupleSerializers
@@ -140,7 +140,7 @@ public interface Invoker {
                 logic, parameters);
 
         // Extract any source location information from the config.
-        SourceInfo.setSourceInfo(pipe, config);
+        SourceInfo.setInvocationInfo(pipe, config);
         
         stream.connectTo(pipe, true, null);
         
@@ -153,7 +153,7 @@ public interface Invoker {
      * 
      * @param streams
      * @param opClass
-     * @param config
+     * @param invokeInfo Operator invocation information.
      * @param logic
      * @param tupleTypes
      * @param tupleSerializers
@@ -163,7 +163,7 @@ public interface Invoker {
             TopologyElement te,
             String kind,
             List<TStream<?>> streams,           
-            JsonObject config,         
+            JsonObject invokeInfo,         
             ObjIntConsumer<Object> logic,
             List<Type> tupleTypes,
             List<TupleSerializer> inputSerializers,
@@ -200,12 +200,12 @@ public interface Invoker {
         }
         
         BOperatorInvocation primitive = JavaFunctional.addFunctionalOperator(te,
-                jstring(config, "name"),
+                jstring(invokeInfo, "name"),
                 kind,
                 logic, parameters);
 
         // Extract any source location information from the config.
-        SourceInfo.setSourceInfo(primitive, config);
+        SourceInfo.setInvocationInfo(primitive, invokeInfo);
         
         for (TStream<?> stream : streams)
             stream.connectTo(primitive, true, null);
