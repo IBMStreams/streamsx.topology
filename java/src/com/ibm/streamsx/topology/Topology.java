@@ -259,11 +259,11 @@ public class Topology implements TopologyElement {
             opName = getTupleName(tupleType) + opName;
         }
         
-        JsonObject config = new JsonObject();
-        com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(config, getClass());
-        config.addProperty("name", opName);
+        JsonObject invokeInfo = new JsonObject();
+        com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(invokeInfo, getClass());
+        invokeInfo.addProperty("name", opName);
         
-        return invokeSource(this, JavaFunctionalOps.SOURCE_KIND, config,
+        return invokeSource(this, JavaFunctionalOps.SOURCE_KIND, invokeInfo,
                 data, tupleType, null, null);
     }
     

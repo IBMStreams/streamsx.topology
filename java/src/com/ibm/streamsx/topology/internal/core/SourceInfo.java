@@ -33,17 +33,18 @@ public class SourceInfo {
         return null;
     }
     
-    
     public static void setSourceInfo(BOperatorInvocation bop, Class<?> calledClass) {
         
         com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(bop._json(), calledClass);    
     }
     
-    public static void setSourceInfo(BOperatorInvocation bop, JsonObject config) {
+    private final static String[] INVOKE_INFO_KEYS = {SOURCE_LOCATIONS, "layout"};
+    
+    public static void setInvocationInfo(BOperatorInvocation bop, JsonObject invokeInfo) {
         
-        if (!config.has(SOURCE_LOCATIONS))
-            return;
-        
-        bop._json().add(SOURCE_LOCATIONS, config.get(SOURCE_LOCATIONS));
+        for (String key : INVOKE_INFO_KEYS) {
+            if (invokeInfo.has(key))
+                bop._json().add(key, invokeInfo.get(key));
+        }
     }
 }
