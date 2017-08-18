@@ -16,7 +16,7 @@ class CounterMetricCondition extends MetricCondition<Long> {
     @Override
     public Long getResult() {
         if (getState() == TestState.NOT_READY)
-            return -77L;
+            return -1L;
         
         return lastSeq;
     }
