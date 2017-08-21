@@ -83,7 +83,8 @@ public class StreamsContextFactory {
         
         case ANALYTICS_SERVICE:
         case STREAMING_ANALYTICS_SERVICE:
-            if (System.getenv("STREAMS_INSTALL") == null)
+            String si = System.getenv("STREAMS_INSTALL");
+            if (si == null || si.isEmpty())
                 return new RemoteStreamingAnalyticsServiceStreamsContext();
             return new AnalyticsServiceStreamsContext(type);
             
