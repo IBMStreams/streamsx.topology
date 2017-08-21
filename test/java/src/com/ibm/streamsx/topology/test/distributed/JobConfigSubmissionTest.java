@@ -69,6 +69,9 @@ public class JobConfigSubmissionTest extends TestTopology {
     
     private List<String> testItDirect(String topologyName, JobConfig config)
             throws Exception {
+        
+        // Uses a Java primitive operator directly.
+        assumeTrue(hasStreamsInstall());
 
         // JobConfig only apply to DISTRIBUTED submit
         assumeTrue(isDistributedOrService());
