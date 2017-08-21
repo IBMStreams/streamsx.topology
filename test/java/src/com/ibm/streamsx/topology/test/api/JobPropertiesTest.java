@@ -116,6 +116,8 @@ public class JobPropertiesTest extends TestTopology {
     
     private List<String> testItDirect(String topologyName, String propName, Object value)
             throws Exception {
+        // Primitive op has direct dependency on Java Operator API
+        assumeTrue(hasStreamsInstall());
 
         // JobProperties only apply to DISTRIBUTED submit
         assumeTrue(isDistributedOrService());
@@ -138,6 +140,9 @@ public class JobPropertiesTest extends TestTopology {
     
     private void testIt(String topologyName, String propName, Object value)
             throws Exception {
+        
+        // tests by running streamtool submitjob
+        assumeTrue(hasStreamsInstall());
 
         // JobProperties only apply to DISTRIBUTED submit
         assumeTrue(isDistributedOrService());
