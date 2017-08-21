@@ -28,7 +28,6 @@ import com.ibm.streams.operator.types.ValueFactory;
 import com.ibm.streams.operator.types.XML;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.spl.SPLSchemas;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
@@ -45,7 +44,7 @@ public class PublishSubscribeTest extends TestTopology {
 
     @Before
     public void checkIsDistributed() {
-        assumeTrue(getTesterType() == Type.DISTRIBUTED_TESTER || isStreamingAnalyticsRun());
+        assumeTrue(isDistributedOrService());
     }
 
     @Test
@@ -107,6 +106,8 @@ public class PublishSubscribeTest extends TestTopology {
     
     @Test
     public void testPublishBlob() throws Exception {
+        // Requires Blob class
+        assumeTrue(hasStreamsInstall());
            
         TStream<Blob> blobs = source().transform(
                 v -> ValueFactory.newBlob(v.getBytes(StandardCharsets.UTF_8))).asType(Blob.class);
@@ -130,6 +131,10 @@ public class PublishSubscribeTest extends TestTopology {
         complete(t.getTester(), atLeast, 30, TimeUnit.SECONDS);
         
         assertTrue(atLeast.valid());
+        
+        // Can't get results from the Condition.
+        if (isStreamingAnalyticsRun())
+            return;
 
         List<String> result = subTuples.getResult();
         assertFalse(result.isEmpty());
@@ -145,6 +150,9 @@ public class PublishSubscribeTest extends TestTopology {
     
     @Test
     public void testPublishXML() throws Exception {
+        // Requires XML class
+        assumeTrue(hasStreamsInstall());
+        
         TStream<String> source = source();
         
         source = source.transform(

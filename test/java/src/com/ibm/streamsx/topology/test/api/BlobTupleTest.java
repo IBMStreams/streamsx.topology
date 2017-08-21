@@ -6,10 +6,12 @@ package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ibm.streams.operator.types.Blob;
@@ -21,6 +23,12 @@ import com.ibm.streamsx.topology.test.TestTopology;
 
 @SuppressWarnings("serial")
 public class BlobTupleTest extends TestTopology {
+    
+    @BeforeClass
+    public static void checkHasStreamsInstall() {
+        // Requires Java Operator types
+        assumeTrue(hasStreamsInstall());
+    }
    
     @Test
     public void testConstant() throws Exception {

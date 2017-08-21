@@ -16,7 +16,6 @@ import org.junit.Test;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
@@ -33,12 +32,8 @@ public class PublishSubscribeSPLTest extends TestTopology {
 
     @Before
     public void checkIsDistributed() {
-        assumeTrue(getTesterType() == Type.DISTRIBUTED_TESTER);
+        assumeTrue(isDistributedOrService());
     }
-
-
-    
-
 
     /**
      * Test that with publish allow filter set to false

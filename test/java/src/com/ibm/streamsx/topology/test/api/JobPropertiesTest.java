@@ -33,7 +33,6 @@ import com.ibm.streams.operator.samples.patterns.ProcessTupleProducer;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.JobProperties;
-import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.streams.Util;
 import com.ibm.streamsx.topology.spl.JavaPrimitive;
 import com.ibm.streamsx.topology.spl.SPLSchemas;
@@ -119,8 +118,7 @@ public class JobPropertiesTest extends TestTopology {
             throws Exception {
 
         // JobProperties only apply to DISTRIBUTED submit
-        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
-        assumeTrue(SC_OK);
+        assumeTrue(isDistributedOrService());
         
         getConfig().put(propName, value);
 
@@ -142,8 +140,7 @@ public class JobPropertiesTest extends TestTopology {
             throws Exception {
 
         // JobProperties only apply to DISTRIBUTED submit
-        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
-        assumeTrue(SC_OK);
+        assumeTrue(isDistributedOrService());
         
         // Full verification of the override or preload properties isn't practical
         // or really necessary for our API.  Streams doesn't provide any way to

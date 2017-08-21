@@ -15,7 +15,6 @@ import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.spl.JavaPrimitive;
 import com.ibm.streamsx.topology.spl.SPLSchemas;
@@ -72,8 +71,7 @@ public class JobConfigSubmissionTest extends TestTopology {
             throws Exception {
 
         // JobConfig only apply to DISTRIBUTED submit
-        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
-        assumeTrue(SC_OK);
+        assumeTrue(isDistributedOrService());
         
         config.addToConfig(getConfig());
 

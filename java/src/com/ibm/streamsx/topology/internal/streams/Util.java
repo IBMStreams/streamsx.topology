@@ -137,7 +137,8 @@ public class Util {
     // Streaming Analytics service.
     private final static String SERVICE_VERSION = "4.2.1";
     public static String productVersion() {
-        if (System.getenv(STREAMS_INSTALL) == null) {
+        String si = System.getenv(STREAMS_INSTALL);
+        if (si == null || si.isEmpty()) {
             // assume Streaming Analytics, version may be newer than
             // this but this sets the min level.
             return SERVICE_VERSION;
