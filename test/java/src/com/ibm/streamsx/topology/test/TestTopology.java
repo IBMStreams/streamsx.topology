@@ -254,6 +254,17 @@ public class TestTopology {
      * Only run a test at a specific minimum version or higher.
      */
     protected void checkMinimumVersion(String reason, int... vrmf) {
+        if (!hasStreamsInstall()) {
+            // must be at least 4.2
+            if (vrmf.length >= 2) {
+                if (vrmf[0] == 4) {
+                    assumeTrue(2 >= vrmf[1]);
+                    return;
+                }
+            }
+            fail("Invalid version supplied!");
+        }
+        
         switch (vrmf.length) {
         case 2:
             assumeTrue((Product.getVersion().getVersion() > vrmf[0])
@@ -276,8 +287,10 @@ public class TestTopology {
         if (!hasStreamsInstall()) {
             // must be at least 4.2
             if (vrmf.length >= 2) {
-                if (vrmf[0] == 4)
+                if (vrmf[0] == 4) {
                     assumeTrue(vrmf[1] >= 2);
+                    return;
+                }
             }
         }
         
@@ -300,13 +313,21 @@ public class TestTopology {
      */
     protected void skipVersion(String reason, int ...vrmf) {
         
+        if (!hasStreamsInstall()) {
+            // must be at least 4.2
+            if (vrmf.length == 2) {
+                if (vrmf[0] == 4) {
+                    assumeTrue(vrmf[1] != 2);
+                    return;
+                }          
+            }
+            fail("Invalid version supplied!");
+        }
+        
         switch (vrmf.length) {
-        case 4:
-            assumeTrue(Product.getVersion().getFix() != vrmf[3]);
-        case 3:
-            assumeTrue(Product.getVersion().getMod() != vrmf[2]);
         case 2:
-            assumeTrue(Product.getVersion().getRelease() != vrmf[1]);
+            assumeTrue(Product.getVersion().getVersion() != vrmf[0]
+                    && Product.getVersion().getRelease() != vrmf[1]);
         case 1:
             assumeTrue(Product.getVersion().getVersion() != vrmf[0]);
             break;
