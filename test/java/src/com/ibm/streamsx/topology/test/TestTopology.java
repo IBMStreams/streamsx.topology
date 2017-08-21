@@ -134,6 +134,10 @@ public class TestTopology {
     public boolean isEmbedded() {
         return getTesterType() == Type.EMBEDDED_TESTER;
     }
+    
+    public boolean isDistributedOrService() {
+        return isStreamingAnalyticsRun() || getTesterType() == Type.DISTRIBUTED_TESTER; 
+    }
 
     /**
      * The main run of tests will be with EMBEDDED_TESTER This allows tests to
@@ -144,6 +148,10 @@ public class TestTopology {
     }
     public boolean isStreamingAnalyticsRun() {
         return getTesterType() == Type.STREAMING_ANALYTICS_SERVICE_TESTER;
+    }
+    public static boolean hasStreamsInstall() {
+        String si = System.getenv("STREAMS_INSTALL");
+        return si != null && !si.isEmpty();
     }
     
     public Map<String,Object> getConfig() {
@@ -264,6 +272,15 @@ public class TestTopology {
      * Only run a test at a specific maximum version or lower.
      */
     protected void checkMaximumVersion(String reason, int... vrmf) {
+        
+        if (!hasStreamsInstall()) {
+            // must be at least 4.2
+            if (vrmf.length >= 2) {
+                if (vrmf[0] == 4)
+                    assumeTrue(vrmf[1] >= 2);
+            }
+        }
+        
         switch (vrmf.length) {
         case 2:
             assumeTrue((Product.getVersion().getVersion() < vrmf[0])

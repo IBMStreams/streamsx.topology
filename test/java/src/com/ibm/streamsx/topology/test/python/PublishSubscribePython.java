@@ -31,7 +31,7 @@ abstract class PublishSubscribePython extends TestTopology {
 
     @Before
     public void checkIsDistributed() {
-        assumeTrue(getTesterType() == Type.DISTRIBUTED_TESTER);
+        assumeTrue(getTesterType() == Type.DISTRIBUTED_TESTER || isStreamingAnalyticsRun());
     }
     
     Path genPythonToolkit(String module) throws IOException, InterruptedException {

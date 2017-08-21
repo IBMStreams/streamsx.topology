@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ibm.json.java.JSON;
@@ -36,6 +37,11 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tuple.JSONAble;
 
 public class JSONStreamsTest extends TestTopology {
+    @BeforeClass
+    public static void checkHasStreamsInstall() {
+        // Requires IBM JSON4J
+        assumeTrue(hasStreamsInstall());
+    }
     
     private static final String QUESTION =
             "What is the answer to life, the universe & everything?";

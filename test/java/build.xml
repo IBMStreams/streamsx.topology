@@ -64,14 +64,19 @@
     <pathelement location="${topology.install.compile}/lib/com.ibm.streams.operator.samples.jar"/>
   </path>
 
-  <path id="test.classpath">
+  <path id="test.base.classpath">
     <pathelement location="${jarname}" />
     <pathelement location="${topology.toolkit.jar}" />
     <pathelement location="resources/ThirdPartyResource.jar"/>
     <pathelement location="resources/classes/ThirdParty"/>
     <pathelement location="${testtk.java}/bin"/>
+  </path>
+
+  <path id="test.classpath">
+    <path refid="test.base.classpath"/>
     <path refid="streams.classpath"/>
   </path>
+
   <path id="test.sample.classpath">
     <pathelement location="${topology.samples.jar}"/>
     <path refid="test.classpath"/>
@@ -141,19 +146,19 @@
      <fail message="Unittests failed" if="topology.tests.failed"/>
   </target>
 
-  <target name="unittest.main">
+  <target name="unittest.main" depends="jar">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="EMBEDDED_TESTER"/>
      </antcall>
   </target>
 
-  <target name="unittest.standalone">
+  <target name="unittest.standalone" depends="jar">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="STANDALONE_TESTER"/>
      </antcall>
   </target>
 
-  <target name="unittest.distributed">
+  <target name="unittest.distributed" depends="jar">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="DISTRIBUTED_TESTER"/>
      </antcall>
@@ -162,6 +167,15 @@
   <target name="unittest.streaminganalytics">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="STREAMING_ANALYTICS_SERVICE_TESTER"/>
+     </antcall>
+     <fail message="Unittests failed" if="topology.tests.failed"/>
+  </target>
+
+  <target name="unittest.streaminganalytics.remote">
+     <antcall target="unittest.base" inheritAll="no">
+       <param name="topology.test.type" value="STREAMING_ANALYTICS_SERVICE_TESTER"/>
+       <reference refid="test.base.classpath" torefid="test.classpath"/>
+       <param name="streams.install" value=""/>
      </antcall>
      <fail message="Unittests failed" if="topology.tests.failed"/>
   </target>
@@ -179,7 +193,7 @@
   -->
   <property name="topology.test.base.pattern" value="**/*Test.java"/>
 
-  <target name="unittest.base" depends="jar,unittest.base.scala">
+  <target name="unittest.base" depends="">
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
      <mkdir dir="${topology.test.dir}"/>
@@ -192,6 +206,7 @@
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
            threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
+       <env key="STREAMS_INSTALL" value="${streams.install}"/>
        <env key="PYTHONHOME" value="${topology.test.python.prefix}"/>
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>
@@ -220,6 +235,7 @@
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes"
            threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
+       <env key="STREAMS_INSTALL" value="${streams.install}"/>
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>
        <sysproperty key="topology.test.type" value="${topology.test.type}"/>
        <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>

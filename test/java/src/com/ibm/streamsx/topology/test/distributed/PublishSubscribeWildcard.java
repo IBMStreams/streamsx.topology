@@ -17,7 +17,6 @@ import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 
@@ -32,7 +31,7 @@ public class PublishSubscribeWildcard extends TestTopology {
 
     @Before
     public void checkIsDistributed() {
-        assumeTrue(getTesterType() == Type.DISTRIBUTED_TESTER);
+        assumeTrue(isDistributedOrService());
     }
     
     @Test
