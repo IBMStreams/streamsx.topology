@@ -24,8 +24,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -39,7 +42,9 @@ import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 
 public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     
-	private final boolean keepBuildArchive;
+
+
+    private final boolean keepBuildArchive;
 
 	public ZippedToolkitRemoteContext() {
         this.keepBuildArchive = false;
@@ -97,10 +102,16 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
 
         Path zipFilePath = Paths.get(folder.toAbsolutePath().toString() + ".zip");
         
-        Path topologyToolkit = TkInfo.getTopologyToolkitRoot().getAbsoluteFile().toPath();  
+        final Path topologyToolkit = TkInfo.getTopologyToolkitRoot().getAbsoluteFile().toPath(); 
+        final String topologyToolkitName = topologyToolkit.getFileName().toString();
         
-        // Paths to copy into the toolkit
+        // Paths to completely copy into the code archive
         Map<Path, String> paths = new HashMap<>();
+        
+        // Paths to completely copy into the code archive
+        Map<Path,String> toolkits = new HashMap<>();
+        toolkits.put(folder, tkName);
+        toolkits.put(topologyToolkit, topologyToolkitName);
         
         // Avoid multiple concurrent executions overwriting files.
         Path manifestTmp = Files.createTempFile("manifest_tk", "txt");
@@ -109,7 +120,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         // tkManifest is the list of toolkits contained in the archive
         try (PrintWriter tkManifest = new PrintWriter(manifestTmp.toFile(), "UTF-8")) {
             tkManifest.println(tkName);
-            tkManifest.println("com.ibm.streamsx.topology");
+            tkManifest.println(topologyToolkitName);
             
             JsonObject configSpl = object(graph, CONFIG, "spl");
             if (configSpl != null) {
@@ -118,7 +129,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                             File tkRoot = new File(jstring(tk, "root"));
                             String tkRootName = tkRoot.getName();
                             tkManifest.println(tkRootName);
-                            paths.put(tkRoot.toPath(), tkRootName);
+                            toolkits.put(tkRoot.toPath(), tkRootName);
                             }
                         );
             }
@@ -131,15 +142,13 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         }
                
         Path makefile = topologyToolkit.resolve(Paths.get("opt", "remote", "Makefile.template"));
-               
-        paths.put(topologyToolkit, topologyToolkit.getFileName().toString());
+                      
         paths.put(manifestTmp, "manifest_tk.txt");
         paths.put(mainCompTmp, "main_composite.txt");
         paths.put(makefile, "Makefile");
-        paths.put(folder, folder.getFileName().toString());
         
         try {
-            addAllToZippedArchive(paths, zipFilePath);
+            addAllToZippedArchive(toolkits, paths, zipFilePath);
         } finally {
             manifestTmp.toFile().delete();
             mainCompTmp.toFile().delete();
@@ -149,48 +158,99 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     }
     
     
-    private static void addAllToZippedArchive(Map<Path, String> starts, Path zipFilePath) throws IOException {
+    private static void addAllToZippedArchive(Map<Path, String> toolkits, Map<Path, String> starts, Path zipFilePath) throws IOException {
         try (ZipArchiveOutputStream zos = new ZipArchiveOutputStream(zipFilePath.toFile())) {
+            for (Path tk : toolkits.keySet()) {
+                final String rootEntryName = toolkits.get(tk);
+                Files.walkFileTree(tk, new ToolkitCopy(zos, rootEntryName, tk));
+            }
             for (Path start : starts.keySet()) {
                 final String rootEntryName = starts.get(start);
-                Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        // Skip pyc files.
-                        if (file.getFileName().toString().endsWith(".pyc"))
-                            return FileVisitResult.CONTINUE;
-                        
-                        String entryName = rootEntryName;
-                        String relativePath = start.relativize(file).toString();
-                        // If empty, file is the start file.
-                        if(!relativePath.isEmpty()){                          
-                            entryName = entryName + "/" + relativePath;
-                        }
-                        // Zip uses forward slashes
-                        entryName = entryName.replace(File.separatorChar, '/');
-                        
-                        ZipArchiveEntry entry = new ZipArchiveEntry(file.toFile(), entryName);
-                        if (Files.isExecutable(file))
-                            entry.setUnixMode(0100770);
-                        else
-                            entry.setUnixMode(0100660);
-
-                        zos.putArchiveEntry(entry);
-                        Files.copy(file, zos);
-                        zos.closeArchiveEntry();
-                        return FileVisitResult.CONTINUE;
-                    }
-
-                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                        final String dirName = dir.getFileName().toString();
-                        // Don't include pyc files or .toolkit 
-                        if (dirName.equals("__pycache__"))
-                            return FileVisitResult.SKIP_SUBTREE;
-                        
-                        // Zip format does not require directory entries
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
+                Files.walkFileTree(start, new FullCopy(zos, rootEntryName, start));
             }
         }
     }
+    
+    /**
+     * Copy a complete folder/file into the code archive.
+     */
+    private static class FullCopy extends SimpleFileVisitor<Path> {
+        private final ZipArchiveOutputStream zos;
+        private final String rootEntryName;
+        final Path start;
+
+        FullCopy(ZipArchiveOutputStream zos, String rootEntryName, Path start) {
+            this.zos = zos;
+            this.rootEntryName = rootEntryName;
+            this.start = start;
+        }
+
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            // Skip pyc files.
+            if (file.getFileName().toString().endsWith(".pyc"))
+                return FileVisitResult.CONTINUE;
+            
+            String entryName = rootEntryName;
+            String relativePath = start.relativize(file).toString();
+            // If empty, file is the start file.
+            if(!relativePath.isEmpty()){                          
+                entryName = entryName + "/" + relativePath;
+            }
+            // Zip uses forward slashes
+            entryName = entryName.replace(File.separatorChar, '/');
+            
+            ZipArchiveEntry entry = new ZipArchiveEntry(file.toFile(), entryName);
+            if (Files.isExecutable(file))
+                entry.setUnixMode(0100770);
+            else
+                entry.setUnixMode(0100660);
+
+            zos.putArchiveEntry(entry);
+            Files.copy(file, zos);
+            zos.closeArchiveEntry();
+            return FileVisitResult.CONTINUE;
+        }
+
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+            final String dirName = dir.getFileName().toString();
+            // Don't include pyc files or .toolkit 
+            if (dirName.equals("__pycache__"))
+                return FileVisitResult.SKIP_SUBTREE;
+            
+            // Zip format does not require directory entries
+            return FileVisitResult.CONTINUE;
+        }
+    }
+    
+    /**
+     * Top-level toolkit directories not to include in a build archive.
+     */
+    private static final Set<String> TK_EXCLUDES = new HashSet<>(
+            Arrays.asList("doc", "output", "samples"));
+    
+    /**
+     * Copy a toolkit into a code archive, skipping any directories
+     * not expected to be part of a build archive.
+     *
+     */
+    private static class ToolkitCopy extends FullCopy {
+
+        ToolkitCopy(ZipArchiveOutputStream zos, String rootEntryName, Path start) {
+            super(zos, rootEntryName, start);
+        }
+        
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+            FileVisitResult r = super.preVisitDirectory(dir, attrs);
+            if (r == FileVisitResult.SKIP_SUBTREE)
+                return r;
+            final String dirName = dir.getFileName().toString();
+            if (TK_EXCLUDES.contains(dirName)) {
+                if (dir.getParent().equals(start))
+                    return FileVisitResult.SKIP_SUBTREE;
+            }
+            return r;
+        }
+    }
+
 }
