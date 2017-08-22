@@ -116,7 +116,7 @@ public class StreamTest extends TestTopology {
                 "its fleece was white as snow");
         assertStream(topology, source);
 
-        TStream<String> words = source.multiTransform(splitWords());
+        TStream<String> words = source.flatMap(splitWords());
         
         completeAndValidate(words, 10, "mary", "had",
                 "a", "little", "lamb", "its", "fleece", "was", "white", "as",

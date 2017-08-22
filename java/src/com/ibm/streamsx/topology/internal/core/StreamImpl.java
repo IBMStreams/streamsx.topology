@@ -122,11 +122,16 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
-    public TSink sink(Consumer<T> sinker) {
+    public final TSink sink(Consumer<T> sinker) {
+        return forEach(sinker);
+    }
+    
+    @Override
+    public final TSink forEach(Consumer<T> action) {
         
-        String opName = sinker.getClass().getSimpleName();
+        String opName = action.getClass().getSimpleName();
         if (opName.isEmpty()) {
-            opName = getTupleName() + "Sink";
+            opName = getTupleName() + "ForEach";
         }
         
         JsonObject invokeInfo = new JsonObject();
@@ -134,7 +139,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(invokeInfo, getClass());
               
         return Invoker.invokeForEach(this, FOR_EACH_KIND, invokeInfo,
-                sinker, null, null);
+                action, null, null);
     }
 
     @Override
@@ -192,16 +197,21 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer) {
-        
-        return _multiTransform(transformer,
-                TypeDiscoverer.determineStreamTypeNested(Function.class, 1, Iterable.class, transformer));
+        return flatMap(transformer);
     }
     
-    private <U> TStream<U> _multiTransform(Function<T, Iterable<U>> transformer, Type tupleType) {
+    @Override
+    public <U> TStream<U> flatMap(Function<T, Iterable<U>> mapper) {
+        
+        return _flatMap(mapper,
+                TypeDiscoverer.determineStreamTypeNested(Function.class, 1, Iterable.class, mapper));
+    }
+    
+    private <U> TStream<U> _flatMap(Function<T, Iterable<U>> transformer, Type tupleType) {
     
         String opName = transformer.getClass().getSimpleName();
         if (opName.isEmpty()) {
-            opName = TypeDiscoverer.getTupleName(tupleType) + "MultiTransform" +
+            opName = TypeDiscoverer.getTupleName(tupleType) + "FlatMap" +
                         getTupleName();                
         }
 
@@ -288,7 +298,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public TSink print() {
-        return sink(new Print<T>());
+        return forEach(new Print<T>());
     }
 
     @Override

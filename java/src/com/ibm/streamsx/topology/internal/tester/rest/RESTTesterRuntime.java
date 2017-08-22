@@ -120,7 +120,7 @@ public class RESTTesterRuntime extends TesterRuntime {
             throw new UnsupportedOperationException(userCondition.toString());
         
         TStream<Object> os = (TStream<Object>) stream;
-        TSink end = os.sink(fn);
+        TSink end = os.forEach(fn);
         if (os.isPlaceable())
             end.colocate(os);
         

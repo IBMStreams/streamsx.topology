@@ -93,7 +93,7 @@ public class ParallelTest extends TestTopology {
                 TStream.Routing.HASH_PARTITIONED);
         out2 = out2.transform(randomStringProducer("region2")).endParallel();
 
-        TStream<String> numRegions = out2.multiTransform(uniqueStringCounter(800,
+        TStream<String> numRegions = out2.flatMap(uniqueStringCounter(800,
                 "region"));
 
         Tester tester = topology.getTester();
@@ -126,7 +126,7 @@ public class ParallelTest extends TestTopology {
                 TStream.Routing.HASH_PARTITIONED);
         out2 = out2.transform(randomStringProducer("region2")).endParallel();
 
-        TStream<String> numRegions = out2.multiTransform(uniqueStringCounter(1600,
+        TStream<String> numRegions = out2.flatMap(uniqueStringCounter(1600,
                 "region"));
 
         Tester tester = topology.getTester();
