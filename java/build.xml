@@ -85,7 +85,7 @@
     </copy>
   </target>
 
-  <target name="compile" depends="init,compile.runtime,compile.execute">
+  <target name="compile" depends="compile.pure,compile.execute">
     <javac debug="true" includeantruntime="no"
        srcdir="${src}" 
        destdir="${classes}"
