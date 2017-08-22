@@ -185,10 +185,8 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                         // Don't include pyc files or .toolkit 
                         if (dirName.equals("__pycache__"))
                             return FileVisitResult.SKIP_SUBTREE;
-                                                
-                        ZipArchiveEntry dirEntry = new ZipArchiveEntry(dir.toFile(), rootEntryName + "/" + start.relativize(dir).toString().replace(File.separatorChar, '/') + "/");
-                        zos.putArchiveEntry(dirEntry);
-                        zos.closeArchiveEntry();
+                        
+                        // Zip format does not require directory entries
                         return FileVisitResult.CONTINUE;
                     }
                 });
