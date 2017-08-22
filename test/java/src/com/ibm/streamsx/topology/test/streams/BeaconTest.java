@@ -127,7 +127,8 @@ public class BeaconTest extends TestTopology {
     @Test
     public void testBeaconTuples() throws Exception {
         
-        
+        // Uses IBM JSON4J
+        assumeTrue(hasStreamsInstall());       
 
         final int count = new Random().nextInt(1000) + 37;
 

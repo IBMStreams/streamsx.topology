@@ -32,6 +32,9 @@ public class PublishSubscribeSPLTest extends TestTopology {
 
     @Before
     public void checkIsDistributed() {
+        // Uses the SPL part of the topology api
+        assumeTrue(hasStreamsInstall());
+        
         assumeTrue(isDistributedOrService());
     }
 
