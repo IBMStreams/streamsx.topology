@@ -63,11 +63,9 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         // a clean directory to avoid multiple runs
         // overwriting each other.
         if (!deploy.has(ContextProperties.TOOLKIT_DIR)) {
-            Path bundleBuildDir = Files
-                    .createTempDirectory(Paths.get(""), "ca").toAbsolutePath();
             
             Path toolkitDir = Files
-                    .createTempDirectory(bundleBuildDir, "tk");
+                    .createTempDirectory(Paths.get(""), "tk");
             
             deploy.addProperty(ContextProperties.TOOLKIT_DIR, toolkitDir.toString());
         }
@@ -98,18 +96,18 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         String name = splAppName(graph);
 
         Path zipFilePath = Paths.get(folder.toAbsolutePath().toString() + ".zip");
-        Path workingPath = zipFilePath.getParent();
         
         Path topologyToolkit = TkInfo.getTopologyToolkitRoot().getAbsoluteFile().toPath();  
         
         // Paths to copy into the toolkit
         Map<Path, String> paths = new HashMap<>();
         
-        Path manifest = workingPath.resolve("manifest_tk.txt");
-        Path mainComp = workingPath.resolve("main_composite.txt");
+        // Avoid multiple concurrent executions overwriting files.
+        Path manifestTmp = Files.createTempFile("manifest_tk", "txt");
+        Path mainCompTmp = Files.createTempFile("main_composite", "txt");
         
         // tkManifest is the list of toolkits contained in the archive
-        try (PrintWriter tkManifest = new PrintWriter(manifest.toFile(), "UTF-8")) {
+        try (PrintWriter tkManifest = new PrintWriter(manifestTmp.toFile(), "UTF-8")) {
             tkManifest.println(tkName);
             tkManifest.println("com.ibm.streamsx.topology");
             
@@ -128,21 +126,24 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         
         // mainComposite is a string of the namespace and the main composite.
         // This is used by the Makefile
-        try (PrintWriter mainComposite = new PrintWriter(mainComp.toFile(), "UTF-8")) {
+        try (PrintWriter mainComposite = new PrintWriter(mainCompTmp.toFile(), "UTF-8")) {
             mainComposite.print(namespace + "::" + name);
         }
                
         Path makefile = topologyToolkit.resolve(Paths.get("opt", "remote", "Makefile.template"));
                
         paths.put(topologyToolkit, topologyToolkit.getFileName().toString());
-        paths.put(manifest, "manifest_tk.txt");
-        paths.put(mainComp, "main_composite.txt");
+        paths.put(manifestTmp, "manifest_tk.txt");
+        paths.put(mainCompTmp, "main_composite.txt");
         paths.put(makefile, "Makefile");
         paths.put(folder, folder.getFileName().toString());
         
-        addAllToZippedArchive(paths, zipFilePath);  
-        manifest.toFile().delete();
-        mainComp.toFile().delete();
+        try {
+            addAllToZippedArchive(paths, zipFilePath);
+        } finally {
+            manifestTmp.toFile().delete();
+            mainCompTmp.toFile().delete();
+        }
         
         return zipFilePath;
     }
@@ -184,10 +185,8 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                         // Don't include pyc files or .toolkit 
                         if (dirName.equals("__pycache__"))
                             return FileVisitResult.SKIP_SUBTREE;
-                                                
-                        ZipArchiveEntry dirEntry = new ZipArchiveEntry(dir.toFile(), rootEntryName + "/" + start.relativize(dir).toString().replace(File.separatorChar, '/') + "/");
-                        zos.putArchiveEntry(dirEntry);
-                        zos.closeArchiveEntry();
+                        
+                        // Zip format does not require directory entries
                         return FileVisitResult.CONTINUE;
                     }
                 });
