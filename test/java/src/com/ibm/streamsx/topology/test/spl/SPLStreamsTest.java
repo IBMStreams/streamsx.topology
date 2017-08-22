@@ -38,15 +38,22 @@ import com.ibm.streamsx.topology.tester.Tester;
 
 public class SPLStreamsTest extends TestTopology {
     
-    public static final StreamSchema TEST_SCHEMA =
-            Type.Factory.getStreamSchema("tuple<int32 id, int32 vi, int64 vl>");
+    public static final StreamSchema TEST_SCHEMA;
     
     public static final Tuple[] TEST_TUPLES = new Tuple[4];
     static {
+        if (!hasStreamsInstall()) {
+            TEST_SCHEMA = null;
+        } else {
+        
+        TEST_SCHEMA =
+                Type.Factory.getStreamSchema("tuple<int32 id, int32 vi, int64 vl>");
+                
         TEST_TUPLES[0] = TEST_SCHEMA.getTuple(new Object[] {0, 321, 34535L});
         TEST_TUPLES[1] = TEST_SCHEMA.getTuple(new Object[] {1, 235, 43675232L});
         TEST_TUPLES[2] = TEST_SCHEMA.getTuple(new Object[] {2, 321, 654932L});
         TEST_TUPLES[3] = TEST_SCHEMA.getTuple(new Object[] {3, 32525, 82343L});
+        }
     }
     
     public static SPLStream testTupleStream(Topology topology) {
