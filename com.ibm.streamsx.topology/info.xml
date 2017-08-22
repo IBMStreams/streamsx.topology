@@ -59,8 +59,7 @@ See the documentation under [namespace:com.ibm.streamsx.topology.python|com.ibm.
     </messageSet>
   </resources>
   <sabFiles>
-    <exclude path="opt/httpcomponents-client-4.3.6/**"/>
-    <exclude path="opt/apache-commons/commons-compress-1.7.jar"/>
+    <exclude path="opt/client/**"/>
     <exclude path="opt/icons/**"/>
     <exclude path="opt/python/codegen/**"/>
     <exclude path="opt/python/include/**"/>

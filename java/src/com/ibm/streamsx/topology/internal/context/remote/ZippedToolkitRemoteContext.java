@@ -141,7 +141,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
             mainComposite.print(namespace + "::" + name);
         }
                
-        Path makefile = topologyToolkit.resolve(Paths.get("opt", "remote", "Makefile.template"));
+        Path makefile = topologyToolkit.resolve(Paths.get("opt", "client", "remote", "Makefile.template"));
                       
         paths.put(manifestTmp, "manifest_tk.txt");
         paths.put(mainCompTmp, "main_composite.txt");
@@ -248,6 +248,15 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
             if (TK_EXCLUDES.contains(dirName)) {
                 if (dir.getParent().equals(start))
                     return FileVisitResult.SKIP_SUBTREE;
+            }
+            
+            // Skip opt/client
+            if ("client".equals(dirName)) {
+                Path possibleOpt = dir.getParent();
+                if ("opt".equals(possibleOpt.getFileName().toString())) {
+                    if (possibleOpt.getParent().equals(start))
+                        return FileVisitResult.SKIP_SUBTREE;
+                }
             }
             return r;
         }
