@@ -40,7 +40,7 @@
     <pathelement location="${streams.install}/ext/lib/JSON4J.jar" />
   </path>
   <path id="httpclient.classpath">
-        <fileset dir="${tk.opt}/httpcomponents-client-4.3.6/lib">
+        <fileset dir="${tk.opt}/client/httpcomponents-client-4.3.6/lib">
            <include name="*.jar" />
         </fileset>
   </path>
@@ -49,7 +49,7 @@
   </path>
 
   <path id="compress.classpath">
-    <pathelement location="${tk.opt}/apache-commons/commons-compress-1.7.jar"/>
+    <pathelement location="${tk.opt}/client/apache-commons/commons-compress-1.7.jar"/>
   </path>
 
   <path id="tk.classpath">
