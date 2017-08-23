@@ -512,7 +512,7 @@ class Stream(object):
         sl = _SourceLocation(_source_info(), 'filter')
         _name = self.topology.graph._requested_name(name, action="filter", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl)
-        op.addInputPort(outputPort=self.oport, name=self._name)
+        op.addInputPort(outputPort=self.oport, name=self.name)
         op._layout(kind='Filter')
         oport = op.addOutputPort(schema=self.oport.schema, name=_name)
         return Stream(self.topology, oport)._make_placeable()
