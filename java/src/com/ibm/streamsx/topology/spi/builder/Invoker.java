@@ -43,9 +43,11 @@ public interface Invoker {
      * Invoke a functional source operator that generates a single stream.
      * 
      * @param topology Topology the operator will be invoked in.
-     * @param opClass Java functional operator class.
+     * @param kind Java functional operator kind.
      * @param invokeInfo Operator invocation information.
      * @param logic Functional logic.
+     * @param tupleType Type of tuples for the returned stream.
+     * @param outputSerializer How output tuples are serialized.
      * @param parameters Additional SPL operator parameters. 
      * 
      * @return Stream produced by the source operator invocation.
@@ -73,12 +75,12 @@ public interface Invoker {
     /**
      * Invoke a functional for each operator consuming a single stream.
      * @param stream Stream to be consumed.
-     * @param opClass Java functional operator class.
+     * @param kind Java functional operator kind.
      * @param invokeInfo Operator invocation information.
      * @param logic Functional logic.
      * @param tupleSerializer How tuples are serialized.
      * @param parameters Additional SPL operator parameters.
-     * @return
+     * @return Sink for the terminating logic.
      */
     static <T> TSink invokeForEach(
             TStream<T> stream,
@@ -107,18 +109,20 @@ public interface Invoker {
      * Invoke a functional map operator consuming a single
      * input stream and producing a single output stream.
      * 
-     * @param streams
-     * @param opClass
-     * @param config Operator invocation information.
-     * @param logic
-     * @param tupleTypes
-     * @param tupleSerializers
-     * @return
+     * @param kind Java functional operator kind.
+     * @param stream Single input stream.
+     * @param invokeInfo Operator invocation information.
+     * @param logic Logic performed against each tuple.
+     * @param tupleType Type of tuples for the returned stream.
+     * @param inputSerializer How input tuples are serialized.
+     * @param outputSerializer How output tuples are serialized.
+     * 
+     * @return Stream produced by the pipe operator.
      */
     static <T,R> TStream<?> invokePipe(
             String kind,
             TStream<T> stream,           
-            JsonObject config,         
+            JsonObject invokeInfo,         
             Consumer<T> logic,
             Type tupleType,
             TupleSerializer inputSerializer,
@@ -135,12 +139,12 @@ public interface Invoker {
             parameters.put("outputSerializer", serializeLogic(outputSerializer));
         
         BOperatorInvocation pipe = JavaFunctional.addFunctionalOperator(stream,
-                jstring(config, "name"),
+                jstring(invokeInfo, "name"),
                 kind,
                 logic, parameters);
 
         // Extract any source location information from the config.
-        SourceInfo.setInvocationInfo(pipe, config);
+        SourceInfo.setInvocationInfo(pipe, invokeInfo);
         
         stream.connectTo(pipe, true, null);
         
@@ -151,13 +155,17 @@ public interface Invoker {
      * Invoke a functional operator consuming an arbitrary number of
      * input streams and producing an arbitrary number of output streams.
      * 
-     * @param streams
-     * @param opClass
+     * @param te Topology element.
+     * @param kind Java functional operator kind.
+     * @param streams Input streams.
      * @param invokeInfo Operator invocation information.
-     * @param logic
-     * @param tupleTypes
-     * @param tupleSerializers
-     * @return
+     * @param logic Logic to invoke for each input tuple.
+     * @param tupleTypes Tuple types for the output stream.
+     * @param inputSerializers How input tuples are serialized.
+     * @param outputSerializers How output tuples are serialized.
+     * @param parameters Parameters for the operator invocation.
+     * 
+     * @return Streams produced by the primitive operator.
      */
     static List<TStream<?>> invokePrimitive(
             TopologyElement te,

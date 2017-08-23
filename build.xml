@@ -58,8 +58,7 @@
 
   <!-- Release targets !-->
   <path id="javadoc.classpath">
-    <path location="${jar}"/>
-    <path location="${tk.lib}/com.ibm.streamsx.topology.runtime.jar"/>
+    <path location="${tk.lib}/com.ibm.streamsx.topology.jar"/>
     <path refid="streams.classpath"/>
     <path refid="tk.classpath"/>
     <path location="${junit.jar}"/>
