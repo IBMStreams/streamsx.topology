@@ -183,7 +183,7 @@ public class JobConfigOverlaysFileTest extends TestTopology {
         
         // Just a simple graph, which won't be executed.
         Topology topology = newTopology("testNoConfig");
-        topology.constants(Collections.emptyList()).isolate().sink(tuple -> {});
+        topology.constants(Collections.emptyList()).isolate().forEach(tuple -> {});
         
         sab = bundler().submit(topology).get();
         JsonObject jcos = assertSabGetJcos(topology);

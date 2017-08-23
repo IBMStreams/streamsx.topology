@@ -233,7 +233,7 @@ public class JSONStreams {
      */
     public static TStream<JSONObject> flattenArray(TStream<JSONObject> stream,
             final String arrayKey, final String... additionalKeys) {
-        return stream.multiTransform(
+        return stream.flatMap(
                 new Function<JSONObject, Iterable<JSONObject>>() {
                     private static final long serialVersionUID = 1L;
 

@@ -28,7 +28,7 @@ import com.ibm.streamsx.topology.function.UnaryOperator;
  * {@link Topology}. <BR>
  * Generic methods on this interface provide the ability to
  * {@link #filter(Predicate) filter}, {@link #transform(Function)
- * transform} or {@link #sink(Consumer) sink} this declared stream using a
+ * transform} or {@link #forEach(Consumer) sink} this declared stream using a
  * function. <BR>
  * Utility methods in the {@code com.ibm.streams.topology.streams} package
  * provide specific source streams, or transformations on streams with specific
@@ -325,10 +325,10 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     TStream<T> modify(UnaryOperator<T> modifier);
 
     /**
-     * Declare a new stream that transforms tuples from this stream into one or
+     * Declare a new stream that maps tuples from this stream into one or
      * more (or zero) tuples of a different type {@code U}. For each tuple
      * {@code t} on this stream, the returned stream will contain all non-null tuples in
-     * the {@code Iterator<U>} that is the result of {@code transformer.apply(t)}.
+     * the {@code Iterator<U>} that is the result of {@code mapper.apply(t)}.
      * Tuples will be added to the returned stream in the order the iterator
      * returns them.
      * 
@@ -359,17 +359,30 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * 
      * </P>
      * 
-     * @param transformer
-     *            Transformation logic to be executed against each tuple.     
-     * @return Stream that will contain tuples of type {@code U} transformed from this
+     * @param mapper
+     *            Mapper logic to be executed against each tuple.     
+     * @return Stream that will contain tuples of type {@code U} mapped from this
+     *         stream's tuples.
+     *         
+     * @since 1.7
+     */
+    <U> TStream<U> flatMap(Function<T, Iterable<U>> mapper);
+    
+    /**
+     * Declare a new stream that maps tuples from this stream into one or
+     * more (or zero) tuples of a different type {@code U}.
+     * <P>
+     * This function is equivalent to {@link #flatMap(Function)}.
+     * </P>
+     * @param transformer Mapper logic to be executed against each tuple.  
+     * @return Stream that will contain tuples of type {@code U} mapped from this
      *         stream's tuples.
      */
     <U> TStream<U> multiTransform(Function<T, Iterable<U>> transformer);
-    
-    
+      
     /**
      * Sink (terminate) this stream. For each tuple {@code t} on this stream
-     * {@link Consumer#accept(Object) sinker.accept(t)} will be called. This is
+     * {@link Consumer#accept(Object) action.accept(t)} will be called. This is
      * typically used to send information to external systems, such as databases
      * or dashboards.
      * <P>
@@ -379,7 +392,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * <pre>
      * <code>
      * TStream&lt;String> values = ...
-     * values.sink(new Consumer<String>() {
+     * values.forEach(new Consumer<String>() {
      *             
      *             &#64;Override
      *             public void accept(String tuple) {
@@ -392,8 +405,20 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * 
      * </P>
      * 
-     * @param sinker
-     *            Logic to be executed against each tuple on this stream.
+     * @param action
+     *            Action to be executed against each tuple on this stream.
+     * @return the sink element
+     * 
+     * @since 1.7
+     */
+    TSink forEach(Consumer<T> action);
+        
+    /**
+     * Terminate this stream.
+     * <P>
+     * This function is equivalent to {@link #forEach(Consumer)}.
+     * </P>
+     * @param sinker Action to be executed against each tuple on this stream.
      * @return the sink element
      */
     TSink sink(Consumer<T> sinker);
@@ -900,7 +925,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * </pre>
      * {@code myParallelStream} will be printed to output in parallel. In other
      * words, a parallel sink is created by calling {@link #parallel(int)} and 
-     * creating a sink operation (such as {@link TStream#sink(Consumer)}). <b>
+     * creating a sink operation (such as {@link TStream#forEach(Consumer)}). <b>
      * It is not necessary to invoke {@link #endParallel()} on parallel sinks.</b>
      * <br><br>
      * Limitations of parallel() are as follows: <br>

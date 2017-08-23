@@ -81,7 +81,7 @@ public class FileStreamsTest extends TestTopology {
         // of files.
         
         addStartupDelay(BeaconStreams.single(t))
-                    .sink(createFiles(files, repeat));
+                    .forEach(createFiles(files, repeat));
 
         Tester tester = t.getTester();
         Condition<Long> expectedCount = tester.tupleCount(fileNames,

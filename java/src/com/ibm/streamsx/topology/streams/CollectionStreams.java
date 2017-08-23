@@ -47,12 +47,12 @@ public class CollectionStreams {
      * @return Flattened stream.
      */
     public static <C extends Collection<T>, T> TStream<T> flatten(TStream<C> stream) {
-        return stream.multiTransform(new FlattenCollection<C, T>());
+        return stream.flatMap(new FlattenCollection<C, T>());
     }
     
     
     public static <M extends Map<K,V>, K, V> TStream<SimpleImmutableEntry<K,V>> flattenMap(TStream<M> stream) {
-        return stream.multiTransform(new FlattenMap<M, K, V>());
+        return stream.flatMap(new FlattenMap<M, K, V>());
     }
     
     public static class FlattenMap <M extends Map<K,V>, K, V> implements Function<M, Iterable<SimpleImmutableEntry<K,V>>> {

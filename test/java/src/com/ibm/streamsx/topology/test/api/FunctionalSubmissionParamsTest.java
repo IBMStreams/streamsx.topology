@@ -199,7 +199,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         TStream<Integer> xformedD = s.transform(functionFn(someIntD, 2));
         
         // TStream.multiTransform
-        TStream<Integer> multiXformed = s.multiTransform(functionIterableFn(someInt, 1));
+        TStream<Integer> multiXformed = s.flatMap(functionIterableFn(someInt, 1));
         TStream<Integer> multiXformedD = s.multiTransform(functionIterableFn(someIntD, 2));
 
         // TStream.join
@@ -210,7 +210,7 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
         
         // TStream.sink
         s.sink(sinkerFn(someInt, 1));
-        s.sink(sinkerFn(someIntD, 2));
+        s.forEach(sinkerFn(someIntD, 2));
 
         // TStream.split
         List<TStream<Integer>> split = s.split(2,toIntFn(someInt, 1));
