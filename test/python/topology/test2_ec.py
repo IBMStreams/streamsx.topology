@@ -3,12 +3,18 @@
 import unittest
 import sys
 import itertools
+import tempfile
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 import streamsx.ec as ec
 
 import test_vers
+
+def read_config_file(name):
+    path = os.path.join(ec.get_application_directory(), 'etc', name)
+    with open(path, encoding='utf-8') as f:
+        return f.read()
 
 class EcSource(object):
     def __init__(self, val):
@@ -93,6 +99,27 @@ class TestEc(unittest.TestCase):
       tester.contents(s, [''])
       tester.test(self.test_ctxtype, self.test_config)
 
+  def test_app_dir(self):
+      fn = None
+      with tempfile.NamedTemporaryFile(delete=False) as temp:
+          temp.write("SomeConfig".encode('utf-8'))
+          temp.flush()
+          fn = temp.name
+
+      topo = Topology()
+      topo.add_file_dependency(temp.name, 'etc')
+
+      s = topo.source(['A'])
+      s = s.filter(lambda x : os.path.isdir(ec.get_application_directory()))
+      bfn = os.path.basename(fn)
+      s = s.map(lambda x : read_config_file(bfn))
+
+      tester = Tester(topo)
+      tester.contents(s, ['SomeConfig'])
+      tester.test(self.test_ctxtype, self.test_config)
+
+      os.remove(fn)
+      
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestDistributedEc(TestEc):
   def setUp(self):
