@@ -46,7 +46,7 @@ public class LayoutInfo {
      * 
      * All operator invocations in a topology within the same {@code id}
      * will be shown as a single operator invocation in the Streams console.
-     * The name and kind of the invocation are taken from {@code name} and {@kind}.
+     * The name and kind of the invocation are taken from {@code name} and {@code kind}.
      * 
      * @param invokeInfo Operator invocation information.
 

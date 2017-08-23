@@ -162,7 +162,7 @@ public interface Tester {
     
     /**
      * Return a condition that evaluates if every tuple on {@code stream}
-     * evaluates to {@code true} with {@tester}.
+     * evaluates to {@code true} with {@code tester}.
      * 
      * @param stream Stream to be tested.
      * @param tester Predicate that will be executed against each tuple.
