@@ -107,7 +107,7 @@ class TestEc(unittest.TestCase):
           fn = temp.name
 
       topo = Topology()
-      topo.add_file_dependency('etc', temp.name)
+      topo.add_file_dependency(temp.name, 'etc')
 
       s = topo.source(['A'])
       s = s.filter(lambda x : os.path.isdir(ec.get_application_directory()))

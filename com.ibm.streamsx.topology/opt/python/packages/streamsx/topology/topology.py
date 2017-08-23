@@ -405,7 +405,7 @@ class Topology(object):
         op._layout_group('Subscribe', name if name else _name)
         return Stream(self, oport)
 
-    def add_file_dependency(self, location, path):
+    def add_file_dependency(self, path, location):
         """
         Add a file or directory dependency into an Streams application bundle.
 
@@ -425,8 +425,8 @@ class Topology(object):
         being available at runtime at the path `application directory`/etc/conf.properties.
         
         Args:
-            location(str): Location of the file in the bundle.
             path(str):  Path of the file on the local system.
+            location(str): Location of the file in the bundle relative to the application directory.
 
         .. versionadded:: 1.7
         """
