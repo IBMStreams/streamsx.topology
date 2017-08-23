@@ -305,6 +305,7 @@ class Topology(object):
           raise ValueError("Python version not supported.")
         self.include_packages = set() 
         self.exclude_packages = set() 
+        self._files = dict()
         if "Anaconda" in sys.version:
             import streamsx.topology.condapkgs
             self.exclude_packages.update(streamsx.topology.condapkgs._CONDA_PACKAGES)
@@ -312,10 +313,6 @@ class Topology(object):
         self.exclude_packages.update(streamsx.topology._deppkgs._DEP_PACKAGES)
         
         self.graph = graph.SPLGraph(self, name, namespace)
-        if files is not None:
-            self.files = files
-        else:
-            self.files = []
 
     @property
     def name(self):
@@ -407,8 +404,45 @@ class Topology(object):
         op.setParameters(subscribeParams)
         op._layout_group('Subscribe', name if name else _name)
         return Stream(self, oport)
-    
 
+    def add_file_dependency(self, location, path):
+        """
+        Add a file or directory dependency into an Streams application bundle.
+
+        Ensures that the file or directory at `path` on the local system
+        will be available at runtime.
+
+        The file will be copied and made available relative to the
+        application directory. Location determines where the file
+        is relative to the application directory. Two values for
+        location are supported `etc` and `opt`.
+
+        The copy is made during the submit call thus the contents of
+        the file or directory must remain availble until submit returns.
+
+        For example calling `add_file_dependency('etc', '/tmp/conf.properties')`
+        will result in contents of the local file `conf.properties`
+        being available at runtime at the path `application directory`/etc/conf.properties.
+        
+        Args:
+            location(str): Location of the file in the bundle.
+            path(str):  Path of the file on the local system.
+
+        .. versionadded:: 1.7
+        """
+        if location not in {'etc', 'opt'}:
+            raise ValueError(location)
+
+        if not os.path.isfile(path) and not os.path.isdir(path):
+            raise ValueError(path)
+
+        path = os.path.abspath(path)
+
+        if location not in self._files:
+             self._files[location] = [path]
+        else:
+             self._files[location].append(path)
+     
 class Stream(object):
     """
     The Stream class is the primary abstraction within a streaming application. It represents a potentially infinite 

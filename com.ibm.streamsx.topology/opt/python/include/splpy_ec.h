@@ -68,6 +68,11 @@ static PyObject * __splpy_ec_is_standalone(PyObject *self, PyObject *notused) {
    return streamsx::topology::SplpyGeneral::getBool(stand);
 }
 
+static PyObject * __splpy_ec_get_application_directory(PyObject *self, PyObject *notused) {
+   return streamsx::topology::pySplValueToPyObject(
+           SPL::ProcessingElement::pe().getApplicationDirectory());
+}
+
 static PyObject * __splpy_ec_get_app_config(PyObject *self, PyObject *pyname) {
 
    SPL::rstring name;
@@ -178,6 +183,8 @@ static PyMethodDef __splpy_ec_methods[] = {
          "Increment metric value."},
     {"metric_set", __splpy_ec_metric_set, METH_O,
          "Set metric value."},
+    {"get_application_directory", __splpy_ec_get_application_directory, METH_NOARGS,
+         "Get the application directory."},
     {NULL, NULL, 0, NULL}
 };
 

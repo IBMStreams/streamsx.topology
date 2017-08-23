@@ -121,6 +121,17 @@ def is_standalone():
     _check()
     return _ec.is_standalone()
 
+def get_application_directory():
+    """Get the application directory.
+
+    Returns:
+        str: The application directory.
+
+    .. versionadded:: 1.7
+    """
+    _check()
+    return _ec.get_application_directory()
+
 def get_application_configuration(name):
     """Get a named application configuration.
 
