@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -707,5 +708,14 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public Set<String> getResourceTags() {
         return PlacementInfo.getResourceTags(this);
+    }
+    
+    @Override
+    public TStream<T> invocationName(String name) {
+        if (!isPlaceable())
+            throw new IllegalStateException();
+        
+        builder().renameOp(operator(), Objects.requireNonNull(name));
+        return this;
     }
 }

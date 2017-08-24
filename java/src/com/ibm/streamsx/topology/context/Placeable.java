@@ -64,5 +64,63 @@ public interface Placeable<T extends Placeable<T>> extends TopologyElement {
      */
     Set<String> getResourceTags();
     
+    /**
+     * Return the invocation name of this element. 
+     * This name is unique within the context of its topology.
+     * By default an element has a unique generated invocation name
+     * 
+     * @return Current invocation name if {@link #isPlaceable()} is {@code true}
+     * otherwise {@code null}.
+     * 
+     * @see #invocationName(String)
+     * 
+     * @since 1.7
+     */
+    default String getInvocationName() {
+        return isPlaceable() ? operator().name() : null;
+    }
+    
+    /**
+     * Set the invocation name of this placeable.
+     * 
+     * Allows an invocation name to be assigned to this placeable.
+     * The name is visible in the Streams console for a running job
+     * and is associated with the logic for this placeable.
+     * <P>
+     * Names must be unique within a topology, if this name
+     * is already in use then the '{@code name_N'} will be used
+     * where {@code N} is a number that makes the name unique
+     * within the topology.
+     * </P>
+     * <P>
+     * For example the invocation for sending alerts as SMS (text)
+     * messages could be named as <em>SMSAlerts</em>:
+     * <pre>
+     * <code>
+     * TStream&lt;Alert&gt; alerts = ...
+     * 
+     * alerts.forEach(Alert::sendAsTextMsg).<B>name("SMSAlerts")</B>; 
+     * </code>
+     * </pre>
+     * </P>
+     * <P>
+     * Note that {@code name} will eventually resolve into an identifier for
+     * an operator name and/or a stream name. Identifiers are limited
+     * to ASCII characters, thus {@code name} will be modified at code
+     * generation time if it cannot be represented as an identifier.
+     * </P>
+     *
+     * @param name Name to assigned.
+     * 
+     * @return This.
+     * 
+     * @throws IllegalStateException {@link #isPlaceable()} returns {@code false}.
+     * 
+     * @see #getInvocationName()
+     * 
+     * @since 1.7
+     */
+    T invocationName(String name);
+    
     BOperatorInvocation operator(); 
 }

@@ -22,6 +22,7 @@ import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig;
+import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -163,6 +164,15 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
         publishParms.put("allowFilter", allowFilter);
         
         SPL.invokeSink("com.ibm.streamsx.topology.topic::Publish", this, publishParms);
+    }
+    
+    @Override
+    public SPLStream colocate(Placeable<?>... elements) {
+        return asSPL(super.colocate(elements));
+    }
+    @Override
+    public SPLStream invocationName(String name) {
+        return asSPL(super.invocationName(name));
     }
 
     public static class TupleToString implements Function<Tuple, String> {

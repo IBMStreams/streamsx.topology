@@ -47,11 +47,9 @@ public class BOperatorInvocation extends BOperator {
     private final JsonObject jparams = new JsonObject();
 
     public BOperatorInvocation(GraphBuilder bt,
-            String name,
             String kind,           
             Map<String, ? extends Object> params) {
         super(bt);
-        _json().addProperty("name", name);
         _json().add("parameters", jparams);
         if (kind != null)
             _json().addProperty(KIND, kind);
@@ -64,9 +62,8 @@ public class BOperatorInvocation extends BOperator {
     }
     
     BOperatorInvocation(GraphBuilder bt,
-            String name,
             Map<String, ? extends Object> params) {
-        this(bt, name, null, params);
+        this(bt, null, params);
     }
     
     public void setModel(String model, String language) {

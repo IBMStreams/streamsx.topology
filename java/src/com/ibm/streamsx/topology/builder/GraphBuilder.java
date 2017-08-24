@@ -77,17 +77,25 @@ public class GraphBuilder extends BJSONObject {
    
     public BOperatorInvocation addOperator(String name, String kind, Map<String, ? extends Object> params) {
 
-        String uniqueName = userSuppliedName(name);
-
-        final BOperatorInvocation op = new BOperatorInvocation(this, uniqueName, kind, params);
+        final BOperatorInvocation op = new BOperatorInvocation(this, kind, params);
         ops.add(op);
+        
+        renameOp(op, name);
+        return op;
+    }
+    
+    public void renameOp(BOperatorInvocation op, String name) {
+        if (name.isEmpty())
+            return;
+
+        String uniqueName = userSuppliedName(name);
 
         if (!uniqueName.equals(name)) {
             JsonObject nameMap = new JsonObject();
             nameMap.addProperty(uniqueName, name);
             op.layout().add("names", nameMap);
         }
-        return op;
+        op._json().addProperty("name", uniqueName);
     }
    
    String userSuppliedName(String name) {
@@ -230,9 +238,9 @@ public class GraphBuilder extends BJSONObject {
     }
     public BOperatorInvocation addSPLOperator(String name, String kind,
             Map<String, ? extends Object> params) {
-        name = userSuppliedName(name);
-        final BOperatorInvocation op = new BOperatorInvocation(this, name, kind, params);      
+        final BOperatorInvocation op = new BOperatorInvocation(this, kind, params);      
         op.setModel(MODEL_SPL, LANGUAGE_SPL);
+        renameOp(op, name);
         
         ops.add(op);
         return op;
