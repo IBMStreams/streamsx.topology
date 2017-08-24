@@ -4,8 +4,6 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 import static com.ibm.streamsx.topology.spi.builder.SourceInfo.SOURCE_LOCATIONS;
 
 import com.google.gson.JsonObject;

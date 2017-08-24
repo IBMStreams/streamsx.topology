@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -73,7 +74,7 @@ public class BOperatorInvocation extends BOperator {
         _json().addProperty(LANGUAGE, language);
     }
     
-    String name() {
+    public String name() {
         return jstring(_json(), "name");
     }
 
@@ -186,11 +187,22 @@ public class BOperatorInvocation extends BOperator {
     }
 
     public BOutputPort addOutput(String schema) {
+        return addOutput(schema, Optional.empty());
+    }
+    
+    public BOutputPort addOutput(String schema, Optional<String> name) {
+    
         if (outputs == null)
             outputs = new HashMap<>();
-
+        
+        String _name;
+        if (name.isPresent())
+            _name = name.get();
+        else
+            _name = this.name() + "_OUT" + outputs.size();
+        
         final BOutputPort stream = new BOutputPort(this, outputs.size(),
-                this.name() + "_OUT" + outputs.size(),
+                _name,
                 schema);
         assert !outputs.containsKey(stream.name());
         outputs.put(stream.name(), stream);

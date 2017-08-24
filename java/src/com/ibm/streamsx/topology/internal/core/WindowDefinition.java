@@ -124,18 +124,14 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         }
         
         String opName = LogicUtils.functionName(aggregator);
-        if (opName.isEmpty()) {
-            opName = TypeDiscoverer.getTupleName(getTupleType()) + "Aggregate";
-        }
 
-        
         BOperatorInvocation aggOp = JavaFunctional.addFunctionalOperator(this,
                 opName, JavaFunctionalOps.AGGREGATE_KIND, aggregator, getOperatorParams());
         SourceInfo.setSourceInfo(aggOp, WindowDefinition.class);
 
         addInput(aggOp, triggerPolicy, triggerConfig, triggerTimeUnit);
 
-        return JavaFunctional.addJavaOutput(this, aggOp, aggregateType);
+        return JavaFunctional.addJavaOutput(this, aggOp, aggregateType, true);
     }
     
     private Map<String,Object> getOperatorParams() {
@@ -159,9 +155,6 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
             BiFunction<U, List<T>, J> joiner, java.lang.reflect.Type tupleType) {
         
         String opName = LogicUtils.functionName(joiner);
-        if (opName.isEmpty()) {
-            opName = TypeDiscoverer.getTupleName(getTupleType()) + "Join";
-        }
 
         Map<String, Object> params = getOperatorParams();
         if (isKeyed() && xstreamKey != null) {
@@ -180,7 +173,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         @SuppressWarnings("unused")
         BInputPort input1 = xstream.connectTo(joinOp, true, null);
 
-        return JavaFunctional.addJavaOutput(this, joinOp, tupleType);
+        return JavaFunctional.addJavaOutput(this, joinOp, tupleType, true);
 
     }
     

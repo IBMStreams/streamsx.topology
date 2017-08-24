@@ -15,6 +15,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.ibm.streamsx.topology.TStream;
@@ -84,10 +85,11 @@ public class JavaFunctional {
      * type.
      */
     public static <T> TStream<T> addJavaOutput(TopologyElement te,
-            BOperatorInvocation bop, Type tupleType) {
+            BOperatorInvocation bop, Type tupleType, boolean singlePort)  {
         
         String mappingSchema = ObjectSchemas.getMappingSchema(tupleType);
-        BOutputPort bstream = bop.addOutput(mappingSchema);
+        BOutputPort bstream = bop.addOutput(mappingSchema,
+                singlePort ? Optional.of(bop.name()) : Optional.empty());
         
         return getJavaTStream(te, bop, bstream, tupleType);
     }
