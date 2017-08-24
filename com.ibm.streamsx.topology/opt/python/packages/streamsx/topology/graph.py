@@ -352,11 +352,20 @@ class _SPLInvocation(object):
             self._placement['explicitColocate'] = colocate_id
         other._placement['explicitColocate'] = colocate_id
 
-    def _layout(self, kind=None, hidden=None):
+    def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
         if kind:
            self._layout_hints['kind'] = str(kind)
         if hidden:
            self._layout_hints['hidden'] = True
+        if name:
+            self._layout_map_name(name, orig_name)
+
+
+    def _layout_map_name(self, name, orig_name):
+        if orig_name and name != orig_name:
+            if 'names' not in self._layout_hints:
+                self._layout_hints['names'] = dict()
+            self._layout_hints['names'][name] = orig_name
 
     def _layout_group(self,kind, name, group_id=None):
         group = {}

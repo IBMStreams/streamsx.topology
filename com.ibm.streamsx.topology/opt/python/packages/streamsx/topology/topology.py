@@ -364,7 +364,7 @@ class Topology(object):
         sl = _SourceLocation(_source_info(), "source")
         _name = self.graph._requested_name(_name, action='source', func=func)
         op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl)
-        op._layout(kind='Source')
+        op._layout(kind='Source', name=_name, orig_name=name)
         oport = op.addOutputPort(name=_name)
         return Stream(self, oport)._make_placeable()
 
@@ -404,6 +404,7 @@ class Topology(object):
         subscribeParams = {'topic': topic, 'streamType': schema}
         op.setParameters(subscribeParams)
         op._layout_group('Subscribe', name if name else _name)
+        op.layout_map_name(_name, name)
         return Stream(self, oport)
 
     def add_file_dependency(self, path, location):
@@ -484,7 +485,7 @@ class Stream(object):
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        op._layout(kind='ForEach')
+        op._layout(kind='ForEach', name=_name, orig_name=name)
         return Sink(op)
 
     def sink(self, func, name=None):
@@ -513,7 +514,7 @@ class Stream(object):
         _name = self.topology.graph._requested_name(name, action="filter", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        op._layout(kind='Filter')
+        op._layout(kind='Filter', name=_name, orig_name=name)
         oport = op.addOutputPort(schema=self.oport.schema, name=_name)
         return Stream(self.topology, oport)._make_placeable()
 
@@ -522,6 +523,7 @@ class Stream(object):
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=_name)
         op.addInputPort(outputPort=self.oport, name=self.name)
         oport = op.addOutputPort(schema=schema, name=_name)
+        op._layout(name=_name, orig_name=name)
         return Stream(self.topology, oport)._make_placeable()
 
     def view(self, buffer_time = 10.0, sample_size = 10000, name=None, description=None, start=False):
@@ -649,7 +651,7 @@ class Stream(object):
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
         oport = op.addOutputPort(name=_name)
-        return Stream(self.topology, oport)._make_placeable()._layout('FlatMap')
+        return Stream(self.topology, oport)._make_placeable()._layout('FlatMap', name=_name, orig_name=name)
     
     def multi_transform(self, func, name=None):
         """
@@ -1085,8 +1087,8 @@ class Stream(object):
             plc['resourceTags'] = set()
         return plc['resourceTags']
 
-    def _layout(self, kind=None, hidden=None):
-        self.oport.operator._layout(kind, hidden)
+    def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
+        self.oport.operator._layout(kind, hidden, name, orig_name)
         return self
 
 
