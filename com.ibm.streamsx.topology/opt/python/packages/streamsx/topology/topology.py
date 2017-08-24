@@ -1041,7 +1041,7 @@ class Stream(object):
         if func is None:
             func = streamsx.topology.functions.identity
 
-        name = _name
+        _name = name
         if _name is None:
             _name = action 
         css = self._map(func, schema, name=_name)
