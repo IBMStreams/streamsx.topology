@@ -75,18 +75,20 @@ public class GraphBuilder extends BJSONObject {
    
    private final Map<String,Integer> usedNames = new HashMap<>();
    
-   public BOperatorInvocation addOperator(
-           String name,
-           String kind,         
-           Map<String, ? extends Object> params) {
-       
-       name = userSuppliedName(name);
-       
-       final BOperatorInvocation op = new BOperatorInvocation(this, name, kind,
-               params);
-       ops.add(op);
+    public BOperatorInvocation addOperator(String name, String kind, Map<String, ? extends Object> params) {
+
+        String uniqueName = userSuppliedName(name);
+
+        final BOperatorInvocation op = new BOperatorInvocation(this, uniqueName, kind, params);
+        ops.add(op);
+
+        if (!uniqueName.equals(name)) {
+            JsonObject nameMap = new JsonObject();
+            nameMap.addProperty(uniqueName, name);
+            op.layout().add("names", nameMap);
+        }
         return op;
-   }
+    }
    
    String userSuppliedName(String name) {
        if (usedNames.containsKey(name)) {

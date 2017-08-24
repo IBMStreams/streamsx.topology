@@ -157,7 +157,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 
         String opName = transformer.getClass().getSimpleName();
         if (opName.isEmpty()) {
-            opName = TypeDiscoverer.getTupleName(tupleType) + "Transform" +
+            opName = TypeDiscoverer.getTupleName(tupleType) + "Map" +
                         getTupleName();                
         }
 
