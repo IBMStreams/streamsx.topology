@@ -36,7 +36,7 @@ public class PEOutputPort extends Element {
     @Expose
     private String transportType;
 
-    static final List<PEOutputPort> getOutputPortList(StreamsConnection sc, String outputPortList) {
+    static final List<PEOutputPort> getOutputPortList(StreamsConnectionImpl sc, String outputPortList) {
         List<PEOutputPort> opList;
         try {
             PEOutputPortArray opArray = gson.fromJson(outputPortList, PEOutputPortArray.class);

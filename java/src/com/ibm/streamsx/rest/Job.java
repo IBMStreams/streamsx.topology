@@ -77,13 +77,13 @@ public class Job extends Element {
     @Expose
     private String views;
 
-    static final Job create(StreamsConnection sc, String gsonJobString) {
+    static final Job create(StreamsConnectionImpl sc, String gsonJobString) {
         Job job = gson.fromJson(gsonJobString, Job.class);
         job.setConnection(sc);
         return job;
     }
 
-    static final List<Job> getJobList(StreamsConnection sc, String gsonJobList) {
+    static final List<Job> getJobList(StreamsConnectionImpl sc, String gsonJobList) {
         List<Job> jList;
         JobArray jobsArray;
         try {

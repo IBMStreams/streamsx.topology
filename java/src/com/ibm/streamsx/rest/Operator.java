@@ -49,7 +49,7 @@ public class Operator extends Element {
     @Expose
     private String restid;
 
-    static final List<Operator> getOperatorList(StreamsConnection sc, String operatorsList) {
+    static final List<Operator> getOperatorList(StreamsConnectionImpl sc, String operatorsList) {
         List<Operator> opList;
         try {
             OperatorArray opArray = gson.fromJson(operatorsList, OperatorArray.class);

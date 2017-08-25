@@ -35,7 +35,7 @@ public class Metric extends Element {
     @Expose
     private long value;
 
-    static final List<Metric> getMetricList(StreamsConnection sc, String uri) throws IOException {
+    static final List<Metric> getMetricList(StreamsConnectionImpl sc, String uri) throws IOException {
         
         String metricsList = sc.getResponseString(uri);
         List<Metric> mList;

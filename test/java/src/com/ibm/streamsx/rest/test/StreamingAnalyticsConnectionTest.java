@@ -22,6 +22,7 @@ import org.junit.Test;
 import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
+import com.ibm.streamsx.rest.StreamsConnectionFactory;
 
 public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
 
@@ -36,7 +37,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
             assumeNotNull(serviceName, vcapServices);
 
             testType = "STREAMING_ANALYTICS_SERVICE";
-            connection = StreamingAnalyticsConnection.createInstance(vcapServices, serviceName);
+            connection = StreamsConnectionFactory.createStreamingAnalyticsConnection(vcapServices, serviceName);
         }
     }
 
@@ -101,7 +102,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
             // we have a file, let's convert to a String and re-try
             vcapString = new String(Files.readAllBytes(Paths.get(existingVCAP)), StandardCharsets.UTF_8);
 
-            StreamingAnalyticsConnection stringConn = StreamingAnalyticsConnection.createInstance(vcapString,
+            StreamingAnalyticsConnection stringConn = StreamsConnectionFactory.createStreamingAnalyticsConnection(vcapString,
                     serviceName);
             instances = stringConn.getInstances();
             assertEquals(1, instances.size());
@@ -115,7 +116,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
             Files.write(tempPath, existingVCAP.getBytes(StandardCharsets.UTF_8));
             tempFile.deleteOnExit();
 
-            StreamingAnalyticsConnection fileConn = StreamingAnalyticsConnection.createInstance(tempPath.toString(),
+            StreamingAnalyticsConnection fileConn = StreamsConnectionFactory.createStreamingAnalyticsConnection(tempPath.toString(),
                     serviceName);
 
             instances = fileConn.getInstances();
@@ -128,7 +129,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
         System.out.println("Try a non-existant service name ...");
         try {
             @SuppressWarnings("unused")
-            StreamingAnalyticsConnection stringConn = StreamingAnalyticsConnection.createInstance(vcapString,
+            StreamingAnalyticsConnection stringConn = StreamsConnectionFactory.createStreamingAnalyticsConnection(vcapString,
                     "FakeServiceName");
             fail("Worked with non-existant service name!");
         } catch (IllegalStateException e) {
@@ -149,7 +150,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
 
         try {
             @SuppressWarnings("unused")
-            StreamingAnalyticsConnection fileConn = StreamingAnalyticsConnection.createInstance(tempPath.toString(),
+            StreamingAnalyticsConnection fileConn = StreamsConnectionFactory.createStreamingAnalyticsConnection(tempPath.toString(),
                     serviceName);
             fail("Worked with non-existant file!");
         } catch (IllegalStateException e) {
@@ -172,7 +173,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
 
         try {
             @SuppressWarnings("unused")
-            StreamingAnalyticsConnection fileConn = StreamingAnalyticsConnection.createInstance(tempPath.toString(),
+            StreamingAnalyticsConnection fileConn = StreamsConnectionFactory.createStreamingAnalyticsConnection(tempPath.toString(),
                     serviceName);
             fail("Worked with bad json!");
         } catch (com.google.gson.JsonSyntaxException e) {
@@ -184,7 +185,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
         // use bad json as a string
         try {
             @SuppressWarnings("unused")
-            StreamingAnalyticsConnection fileConn = StreamingAnalyticsConnection.createInstance(badJson, serviceName);
+            StreamingAnalyticsConnection fileConn = StreamsConnectionFactory.createStreamingAnalyticsConnection(badJson, serviceName);
             fail("Worked with bad json as string!");
         } catch (com.google.gson.JsonSyntaxException e) {
             // should trigger an exception here

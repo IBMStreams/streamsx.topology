@@ -13,6 +13,7 @@ import com.ibm.streamsx.rest.Metric;
 import com.ibm.streamsx.rest.Operator;
 import com.ibm.streamsx.rest.OutputPort;
 import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
+import com.ibm.streamsx.rest.StreamsConnectionFactory;
 
 /**
  * Sample code to show how to access a Streaming Analytics Instance through the
@@ -43,7 +44,7 @@ public class StreamingAnalyticsConnectionSample {
         System.out.println(serviceName);
 
         try {
-            StreamingAnalyticsConnection sClient = StreamingAnalyticsConnection.createInstance(credentials,
+            StreamingAnalyticsConnection sClient = StreamsConnectionFactory.createStreamingAnalyticsConnection(credentials,
                     serviceName);
 
             Instance instance = sClient.getInstance();

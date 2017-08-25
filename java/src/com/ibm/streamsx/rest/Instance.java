@@ -73,13 +73,13 @@ public class Instance extends Element {
     @Expose
     private String views;
 
-    static final Instance create(final StreamsConnection sc, String gsonInstance) {
+    static final Instance create(final StreamsConnectionImpl sc, String gsonInstance) {
         Instance instance = gson.fromJson(gsonInstance, Instance.class);
         instance.setConnection(sc);
         return instance;
     }
 
-    final static List<Instance> getInstanceList(StreamsConnection sc, String instanceGSONList) {
+    final static List<Instance> getInstanceList(StreamsConnectionImpl sc, String instanceGSONList) {
         List<Instance> iList;
         try {
             InstancesArray iArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()

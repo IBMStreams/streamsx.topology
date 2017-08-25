@@ -30,6 +30,7 @@ import com.ibm.streamsx.rest.PEOutputPort;
 import com.ibm.streamsx.rest.ProcessingElement;
 import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.rest.StreamsConnectionFactory;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
@@ -95,10 +96,8 @@ public class StreamsConnectionTest {
             assumeNotNull(instanceName, instancePassword);
 
             String restUrl = "https://localhost:" + streamsPort + "/streams/rest/resources";
-            connection = StreamsConnection.createInstance(userName, instancePassword, restUrl);
-
             // for localhost, need to disable security
-            connection.allowInsecureHosts(true);
+            connection = StreamsConnectionFactory.createStreamsConnection(userName, instancePassword, restUrl, true);
         }
     }
 
@@ -124,8 +123,7 @@ public class StreamsConnectionTest {
 
         // send in wrong url
         String badUrl = "https://localhost:" + sPort + "/streams/re";
-        StreamsConnection badConn = StreamsConnection.createInstance(iName, iPassword, badUrl);
-        badConn.allowInsecureHosts(true);
+        StreamsConnection badConn = StreamsConnectionFactory.createStreamsConnection(iName, iPassword, badUrl, true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {
@@ -134,8 +132,7 @@ public class StreamsConnectionTest {
 
         // send in url too long
         String badURL = "https://localhost:" + sPort + "/streams/rest/resourcesTooLong";
-        badConn = StreamsConnection.createInstance(iName, iPassword, badURL);
-        badConn.allowInsecureHosts(true);
+        badConn = StreamsConnectionFactory.createStreamsConnection(iName, iPassword, badURL, true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {
@@ -144,8 +141,7 @@ public class StreamsConnectionTest {
 
         // send in bad iName
         String restUrl = "https://localhost:" + sPort + "/streams/rest/resources";
-        badConn = StreamsConnection.createInstance("fakeName", iPassword, restUrl);
-        badConn.allowInsecureHosts(true);
+        badConn = StreamsConnectionFactory.createStreamsConnection("fakeName", iPassword, restUrl, true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {
@@ -153,8 +149,7 @@ public class StreamsConnectionTest {
         }
 
         // send in wrong password
-        badConn = StreamsConnection.createInstance(iName, "badPassword", restUrl);
-        badConn.allowInsecureHosts(true);
+        badConn = StreamsConnectionFactory.createStreamsConnection(iName, "badPassword", restUrl, true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {
