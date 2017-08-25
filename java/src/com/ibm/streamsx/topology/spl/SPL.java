@@ -179,7 +179,7 @@ public class SPL {
         BOperatorInvocation op = input.builder().addSPLOperator(name, kind, fixParameters(params));
         SourceInfo.setSourceInfo(op, SPL.class);
         SPL.connectInputToOperator(input, op);
-        return newSPLStream(input, op, outputSchema);
+        return newSPLStream(input, op, outputSchema, true);
     }
     
     /**
@@ -230,7 +230,7 @@ public class SPL {
         
         List<SPLStream> streams = new ArrayList<>(outputSchemas.size());
         for (StreamSchema outputSchema : outputSchemas)
-            streams.add(newSPLStream(te, op, outputSchema));
+            streams.add(newSPLStream(te, op, outputSchema, outputSchemas.size() == 1));
             
         return streams;
     }
@@ -320,7 +320,7 @@ public class SPL {
                 opNameFromKind(kind), kind, fixParameters(params));
         SourceInfo.setSourceInfo(splSource, SPL.class);
        
-        return newSPLStream(te, splSource, schema);
+        return newSPLStream(te, splSource, schema, true);
     }
 
     /**

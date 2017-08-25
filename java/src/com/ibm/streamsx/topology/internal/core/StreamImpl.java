@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -56,6 +57,7 @@ import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
 import com.ibm.streamsx.topology.internal.logic.KeyFunctionHasher;
+import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
@@ -86,10 +88,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     @Override
     public TStream<T> filter(Predicate<T> filter) {
-        String opName = filter.getClass().getSimpleName();
-        if (opName.isEmpty()) {
-            opName = getTupleName() + "Filter";         
-        }
+        String opName = LogicUtils.functionName(filter);
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
@@ -101,7 +100,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
     
     protected TStream<T> addMatchingOutput(BOperatorInvocation bop, Type tupleType) {
-        return JavaFunctional.addJavaOutput(this, bop, tupleType);
+        return JavaFunctional.addJavaOutput(this, bop, tupleType, true);
     }
     protected TStream<T> addMatchingStream(BOutput output) {
         return new StreamImpl<T>(this, output, getTupleType());
@@ -129,10 +128,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public final TSink forEach(Consumer<T> action) {
         
-        String opName = action.getClass().getSimpleName();
-        if (opName.isEmpty()) {
-            opName = getTupleName() + "ForEach";
-        }
+        String opName = LogicUtils.functionName(action);
         
         JsonObject invokeInfo = new JsonObject();
         invokeInfo.addProperty("name", opName);
@@ -155,11 +151,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     private <U> TStream<U> _transform(Function<T, U> transformer, Type tupleType) {
                 
-        String opName = transformer.getClass().getSimpleName();
-        if (opName.isEmpty()) {
-            opName = TypeDiscoverer.getTupleName(tupleType) + "Transform" +
-                        getTupleName();                
-        }
+        String opName = LogicUtils.functionName(transformer);
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
@@ -168,15 +160,12 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         BInputPort inputPort = connectTo(bop, true, null);
         // By default add a queue
         inputPort.addQueue(true);
-        return JavaFunctional.addJavaOutput(this, bop, tupleType);
+        return JavaFunctional.addJavaOutput(this, bop, tupleType, true);
     }
     
     private TStream<T> _modify(UnaryOperator<T> transformer, Type tupleType) {
         
-        String opName = transformer.getClass().getSimpleName();
-        if (opName.isEmpty()) {
-            opName = getTupleName() + "Modify";
-        }
+        String opName = LogicUtils.functionName(transformer);
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
@@ -209,11 +198,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     private <U> TStream<U> _flatMap(Function<T, Iterable<U>> transformer, Type tupleType) {
     
-        String opName = transformer.getClass().getSimpleName();
-        if (opName.isEmpty()) {
-            opName = TypeDiscoverer.getTupleName(tupleType) + "FlatMap" +
-                        getTupleName();                
-        }
+        String opName = LogicUtils.functionName(transformer);
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName, FLAT_MAP_KIND, transformer);
@@ -222,7 +207,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         // By default add a queue
         inputPort.addQueue(true);
 
-        return JavaFunctional.addJavaOutput(this, bop, tupleType);
+        return JavaFunctional.addJavaOutput(this, bop, tupleType, true);
     }
 
     @Override
@@ -620,10 +605,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         List<TStream<T>> l = new ArrayList<>(n);
         
-        String opName = splitter.getClass().getSimpleName();
-        if (opName.isEmpty()) {
-            opName = getTupleName() + "Split";         
-        }
+        String opName = LogicUtils.functionName(splitter);
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
@@ -633,7 +615,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         Type outputType = refineType(ToIntFunction.class, 0, splitter);
         for (int i = 0; i < n; i++) {
-            TStream<T> splitOutput = JavaFunctional.addJavaOutput(this, bop, outputType);
+            TStream<T> splitOutput = JavaFunctional.addJavaOutput(this, bop, outputType, false);
             l.add(splitOutput);
         }
 
@@ -690,7 +672,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 JavaFunctionalOps.MAP_KIND, identity());
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
-        return JavaFunctional.addJavaOutput(this, bop, tupleClass);
+        return JavaFunctional.addJavaOutput(this, bop, tupleClass, true);
     }
     
     @Override
@@ -726,5 +708,14 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public Set<String> getResourceTags() {
         return PlacementInfo.getResourceTags(this);
+    }
+    
+    @Override
+    public TStream<T> invocationName(String name) {
+        if (!isPlaceable())
+            throw new IllegalStateException();
+        
+        builder().renameOp(operator(), Objects.requireNonNull(name));
+        return this;
     }
 }

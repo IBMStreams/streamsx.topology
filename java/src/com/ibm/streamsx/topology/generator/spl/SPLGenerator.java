@@ -519,10 +519,11 @@ public class SPLGenerator {
      * name.
      * 
      * This is a one way mapping, we only need to provide a name that is a
-     * unique mapping of the input.
+     * unique and consistent mapping of the input.
      * 
      * @param name
-     * @return A string which can be a valid SPL stream name.
+     * @return A string which can be a valid SPL stream name. If name is valid
+     * as an SPL identifier then it is returned (same reference).
      */
     public static String getSPLCompatibleName(String name) {
 

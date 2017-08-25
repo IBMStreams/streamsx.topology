@@ -75,18 +75,28 @@ public class GraphBuilder extends BJSONObject {
    
    private final Map<String,Integer> usedNames = new HashMap<>();
    
-   public BOperatorInvocation addOperator(
-           String name,
-           String kind,         
-           Map<String, ? extends Object> params) {
-       
-       name = userSuppliedName(name);
-       
-       final BOperatorInvocation op = new BOperatorInvocation(this, name, kind,
-               params);
-       ops.add(op);
+    public BOperatorInvocation addOperator(String name, String kind, Map<String, ? extends Object> params) {
+
+        final BOperatorInvocation op = new BOperatorInvocation(this, kind, params);
+        ops.add(op);
+        
+        renameOp(op, name);
         return op;
-   }
+    }
+    
+    public void renameOp(BOperatorInvocation op, String name) {
+        if (name.isEmpty())
+            return;
+
+        String uniqueName = userSuppliedName(name);
+
+        if (!uniqueName.equals(name)) {
+            JsonObject nameMap = new JsonObject();
+            nameMap.addProperty(uniqueName, name);
+            op.layout().add("names", nameMap);
+        }
+        op._json().addProperty("name", uniqueName);
+    }
    
    String userSuppliedName(String name) {
        if (usedNames.containsKey(name)) {
@@ -228,9 +238,9 @@ public class GraphBuilder extends BJSONObject {
     }
     public BOperatorInvocation addSPLOperator(String name, String kind,
             Map<String, ? extends Object> params) {
-        name = userSuppliedName(name);
-        final BOperatorInvocation op = new BOperatorInvocation(this, name, kind, params);      
+        final BOperatorInvocation op = new BOperatorInvocation(this, kind, params);      
         op.setModel(MODEL_SPL, LANGUAGE_SPL);
+        renameOp(op, name);
         
         ops.add(op);
         return op;

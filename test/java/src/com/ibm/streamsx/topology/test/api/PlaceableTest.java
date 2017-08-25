@@ -69,6 +69,8 @@ public class PlaceableTest extends TestTopology {
     
     private void testSimpleTags(Placeable<?> s) {
         
+        assertNotNull(s.getInvocationName());
+        
         assertTrue(s.getResourceTags().isEmpty());
         
         s.addResourceTags();
@@ -214,6 +216,26 @@ public class PlaceableTest extends TestTopology {
         testFuseThenTag(s1, s2.print());
     }
     
+    @Test
+    public void testSplit() {
+        assumeTrue(isMainRun());
+        Topology t = newTopology();        
+        TStream<String> s = t.strings("3");
+        List<TStream<String>> splits = s.split(3, x -> 0);
+        
+        splits.get(0).addResourceTags("tag1");
+        for (TStream<String> l : splits) {
+            assertEquals(1, l.getResourceTags().size());
+            assertTrue(l.getResourceTags().contains("tag1"));
+        } 
+        splits.get(2).addResourceTags("tag921");
+        for (TStream<String> l : splits) {
+            assertEquals(2, l.getResourceTags().size());
+            assertTrue(l.getResourceTags().contains("tag1"));
+            assertTrue(l.getResourceTags().contains("tag921"));
+        } 
+    }
+    
     private void testFuseThenTag(Placeable<?> s1, Placeable<?> s2) {
         
         assertTrue(s1.getResourceTags().isEmpty());
@@ -280,8 +302,11 @@ public class PlaceableTest extends TestTopology {
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
         
-        assertFalse(s1.union(s2).isPlaceable());
+        TStream<String> su = s1.union(s2);
+        assertFalse(su.isPlaceable());
         assertFalse(s1.isolate().isPlaceable());
+        
+        assertNull(su.getInvocationName());
         
         TStream<String> sp = s1.parallel(3);
         assertFalse(sp.isPlaceable());
