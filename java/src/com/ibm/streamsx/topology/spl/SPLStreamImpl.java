@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
@@ -35,8 +36,11 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
 
     private final StreamSchema schema;
     
-    static SPLStream newSPLStream(TopologyElement te, BOperatorInvocation op, StreamSchema schema) {
-        return new SPLStreamImpl(te, schema, op.addOutput(schema.getLanguageType()));
+    static SPLStream newSPLStream(TopologyElement te, BOperatorInvocation op, StreamSchema schema,
+            boolean singleOutput) {
+        return new SPLStreamImpl(te, schema,
+                op.addOutput(schema.getLanguageType(),
+                        singleOutput ? Optional.of(op.name()) : Optional.empty()));
     }
     
     private SPLStreamImpl(TopologyElement te, StreamSchema schema, BOutput stream) {

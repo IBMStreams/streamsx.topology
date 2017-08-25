@@ -23,7 +23,7 @@ import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
-import com.ibm.streamsx.topology.internal.core.TypeDiscoverer;
+import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 
 /**
  * Utilities for SPL attribute schema streams.
@@ -99,17 +99,14 @@ public class SPLStreams {
             BiFunction<T, OutputTuple, OutputTuple> converter,
             StreamSchema schema) {
         
-        String opName = converter.getClass().getSimpleName();
-        if (opName.isEmpty()) {
-            opName = "SPLConvert" +  TypeDiscoverer.getTupleName(stream.getTupleType());
-        }
+        String opName = LogicUtils.functionName(converter);
 
         BOperatorInvocation convOp = JavaFunctional.addFunctionalOperator(
                 stream, opName, JavaFunctionalOps.CONVERT_SPL_KIND, converter);
         @SuppressWarnings("unused")
         BInputPort inputPort = stream.connectTo(convOp, true, null);
 
-        return newSPLStream(stream, convOp, schema);
+        return newSPLStream(stream, convOp, schema, true);
     }
 
     /**
