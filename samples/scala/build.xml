@@ -17,6 +17,9 @@
   <available file="${os.tk.lib}/${tk.jarname}"
              property="tk.lib"
              value="${os.tk.lib}/${tk.jarname}"/>
+  <available file="${os.tk.lib}/${tk.jarname}"
+             property="tk.opt"
+             value="${os.tk.lib}/../opt"/>
   <property name="tk.lib"
      location="${streams.install}/toolkits/${tk.lib.gen}/${tk.jarname}"/>
   <property name="tk.opt"
