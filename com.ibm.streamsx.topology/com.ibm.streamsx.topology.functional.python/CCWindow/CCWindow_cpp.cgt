@@ -125,7 +125,18 @@ print splpy_inputtuple2value($pystyle);
       }
       // Anything ASCII is also Pickle (Python 2 default format)
       else if (fmt <= STREAMSX_TPP_PICKLE) {
+      	  // This is a pickled value. Need to depickle it.
           python_value = pySplValueToPyObject(value);
+
+	  // Create a tuple to pass to the depickling wrapper function.	  
+	  PyObject * pyTuple;
+          pyTuple = PyTuple_New(2);
+          PyTuple_SET_ITEM(pyTuple, 0, python_value);
+          Py_INCREF(python_value);
+          PyTuple_SET_ITEM(pyTuple, 1, python_value);
+
+	  // Depickle the tuple.
+	  python_value = streamsx::topology::pyCallTupleFunc(spl_in_object_out->callable(), pyTuple);
       }
   <%} else {%>
       python_value = streamsx::topology::Splpy::pyTupleMap(spl_in_object_out->callable(), value);
