@@ -122,6 +122,7 @@ class TestPending(unittest.TestCase):
 
 class TestPendingCompileOnly(unittest.TestCase):
 
+    @unittest.skipIf("STREAMS_INSTALL" not in os.environ, "STREAMS_INSTALL not set")
     def test_pure_loop(self):
         topo = Topology()
 
