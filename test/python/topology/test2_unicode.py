@@ -13,18 +13,6 @@ import streamsx.ec as ec
 
 import test_vers
 
-class view_name_source(object):
-    """A class which wraps a StreamsConnection object and returns the view name
-    """
-    def __init__(self, sc):
-        self.sc = sc
-
-    def __call__(self):
-        instance = self.sc.get_instance(id=ec.instance_id())
-        job = instance.get_job(id=ec.job_id())
-        for view in job.get_views():
-            yield view.name
-
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestUnicode(unittest.TestCase):
     def setUp(self):
@@ -65,18 +53,22 @@ class TestUnicode(unittest.TestCase):
             return self.skipTest("Skipping unicode view tests for standalone.")
         view_names = ["®®®®", "™¬⊕⇔"]
         topo = Topology()
-        view_name_stream = topo.source(view_name_source(self.sc))
 
         view0 = topo.source(["hello"]).view(name=view_names[0])
-        view1 = topo.source(["hello"]).view(name=view_names[1])
+        view1 = topo.source(["view!"]).view(name=view_names[1])
 
-        tester = Tester(topo)
-        tester.contents(view_name_stream, view_names, ordered=False)
+        self.tester = Tester(topo)
+        self.tester.local_check = self._check_view_names
 
-        # For running Bluemix tests, the username & password need a default value of None
-        username = getattr(self, "username", None)
-        password = getattr(self, "password", None)
-        tester.test(self.test_ctxtype, self.test_config, username=username, password=password)
+        self.tester.test(self.test_ctxtype, self.test_config)
+
+    def _check_view_names(self):
+        job = self.tester.submission_result.job
+        view_names = []
+        for view in job.get_views():
+            view_names.append(view.name)
+        self.assertIn("®®®®", view_names)
+        self.assertIn("™¬⊕⇔", view_names)
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestDistributedUnicode(TestUnicode):
