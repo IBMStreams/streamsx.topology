@@ -16,6 +16,7 @@ from builtins import *
 import collections
 import enum
 import io
+import itertools
 import token
 import tokenize
 
@@ -49,8 +50,8 @@ class _SchemaParser(object):
     def _parse_error(self, token):
         raise SyntaxError("Invalid schema:" + self.schema + " token " + str(token))
 
-    def _req_op(self, tokens, which):
-        token = next(tokens)
+    def _req_op(self, which):
+        token = next(self.tokens)
         if token[0] != tokenize.OP or which != token[1]:
             self._parse_error(token)
 
@@ -59,21 +60,21 @@ class _SchemaParser(object):
         schema = schema.replace('<<', ' < < ')
 
         ios = io.StringIO(schema).readline
-        tokens = tokenize.generate_tokens(ios)
-        self._parse_tuple(self._type, next(tokens), tokens)
-        endtoken = next(tokens)
+        self.tokens = tokenize.generate_tokens(ios)
+        self._parse_tuple(self._type, next(self.tokens))
+        endtoken = next(self.tokens)
         if not endtoken[0] == token.ENDMARKER:
             self._parse_error(endtoken)
         return self._type
 
-    def _parse_tuple(self, _type, token, tokens):
+    def _parse_tuple(self, _type, token):
         if token[0] != tokenize.NAME or 'tuple' != token[1]:
             self._parse_error(token)
-        self._req_op(tokens, '<')
+        self._req_op('<')
     
         token = None
         while True:
-            token = next(tokens)
+            token = next(self.tokens)
             if token[0] == tokenize.OP:
                 if token[1] == ',':
                     continue
@@ -82,54 +83,73 @@ class _SchemaParser(object):
                 self._parse_error(token)
 
             if token[0] == tokenize.NAME:
-                self._parse_attribute_type(_type, token, tokens)
+                self._parse_attribute_type(_type, token)
                 continue
 
             self._parse_error(token)
 
-    def _parse_type(self, attr_type, tokens):
+    def _parse_type(self, attr_type):
         if attr_type[0] != tokenize.NAME:
             self._parse_error(attr_type)
 
         if 'tuple' == attr_type[1]:
             nested_tuple = []
-            self._parse_tuple(nested_tuple, attr_type, tokens)
+            self._parse_tuple(nested_tuple, attr_type)
             return ('tuple', nested_tuple)
 
         if 'map' == attr_type[1]:
-            self._req_op(tokens, '<')
-            key_type = self._parse_type(next(tokens), tokens)
-            self._req_op(tokens, ',')
-            value_type = self._parse_type(next(tokens), tokens)
-            self._req_op(tokens, '>')
-            return ('map', (key_type, value_type))
+            self._req_op('<')
+            key_type = self._parse_type(next(self.tokens))
+            self._req_op(',')
+            value_type = self._parse_type(next(self.tokens))
+            self._req_op('>')
+            bound = self._parse_optional_bounded()
+            return ('map', (key_type, value_type), bound)
             
         if attr_type[1] in _SchemaParser._SPL_PRIMITIVE_TYPES:
+            if attr_type[1] == 'rstring':
+                bound = self._parse_optional_bounded()
+                if bound is not None:
+                    return 'rstring' + bound
             return attr_type[1]
 
         if attr_type[1] in _SchemaParser._SPL_COLLECTION_TYPES:
-            self._req_op(tokens, '<')
-            element_type = self._parse_type(next(tokens), tokens)
-            self._req_op(tokens, '>')
-            return (attr_type[1], element_type)
+            self._req_op('<')
+            element_type = self._parse_type(next(self.tokens))
+            self._req_op('>')
+            bound = self._parse_optional_bounded()
+            return (attr_type[1], element_type, bound)
 
         self._parse_error(attr_type)
 
-    def _parse_attribute_type(self, _type, attr_type, tokens):
+    def _parse_attribute_type(self, _type, attr_type):
         if attr_type[0] != tokenize.NAME:
             self._parse_error(attr_type)
 
-        attr_type = self._parse_type(attr_type, tokens)
+        attr_type = self._parse_type(attr_type)
 
-        attr = (attr_type, self._parse_attribute_name(tokens))
+        attr = (attr_type, self._parse_attribute_name())
         _type.append(attr)
 
-    def _parse_attribute_name(self, tokens):
-        attr_name = next(tokens)
+    def _parse_attribute_name(self):
+        attr_name = next(self.tokens)
         if attr_name[0] != tokenize.NAME:
             self._parse_error(attr_name)
         return attr_name[1]
 
+    def _parse_optional_bounded(self):
+        token = next(self.tokens)
+        if token[0] == tokenize.OP and '[' == token[1]:
+            bound_info = next(self.tokens)
+            if bound_info[0] != tokenize.NUMBER:
+                self._parse_error(bound_info)
+            bound = str(int(bound_info[0]))
+            self._req_op(']')
+            return bound
+        else:
+            # push back the token
+            self.tokens = itertools.chain([token], self.tokens)
+            return None
 
 def _stream_schema(schema):
     if isinstance(schema, StreamSchema):
