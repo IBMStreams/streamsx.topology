@@ -116,6 +116,13 @@ class TestSchema(unittest.TestCase):
             p = _SchemaParser(schema)
             p._parse()
 
+    def test_bounded_schema(self):
+        s = _sch.StreamSchema('tuple<rstring[1] a, boolean alert>')
+        s = _sch.StreamSchema('tuple<map<int32,rstring>[8] a>')
+        s = _sch.StreamSchema('tuple<list<int32>[100] a>')
+        s = _sch.StreamSchema('tuple<set<list<int32>[9]>[100] a>')
+
+
     def test_named_schema(self):
         s = _sch.StreamSchema('tuple<int32 a, boolean alert>')
 
