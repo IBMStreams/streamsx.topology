@@ -80,5 +80,20 @@ class TestPythonWindowing(unittest.TestCase):
         tester.contents(s, [1962, 1717, 1784, 1764, 1906, 1923, 1947])
         tester.test(self.test_ctxtype, self.test_config)
 
+
+    # Windowing doesn't currently support the 'dict' type.
+    @unittest.expectedFailure
+    def test_DictInputWindow(self):
+        topo = Topology()
+        s = topo.source([1,2,3,4])
+        s = s.map(lambda x: ('a', x), schema = "tuple<rstring a, int32 b>")
+
+        # Canned aggregate
+        s = s.last(3).trigger(4).aggregate(lambda x: 0),
+                                           
+        tester = Tester(topo)
+        tester.test(self.test_ctxtype, self.test_config)
+
+
 if __name__ == '__main__':
     unittest.main()

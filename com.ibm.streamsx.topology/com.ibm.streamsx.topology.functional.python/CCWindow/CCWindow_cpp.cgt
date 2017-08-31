@@ -8,9 +8,15 @@ using namespace streamsx::topology;
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 @include "../pyspltuple.cgt"
+
+
 <%
  # Select the Python wrapper function
  my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
+
+ if (($pystyle eq 'dict') || ($pyoutstyle eq 'dict')) {
+    SPL::CodeGen::exitln("Dictionary input and output not supported.");
+ }
  
  my $in_pywrapfunc =  $pystyle . '_in__object_out';
  my $out_pywrapfunc=  'pickle_in__' . $pyoutstyle . '_out';
@@ -151,6 +157,8 @@ print splpy_inputtuple2value($pystyle);
       }
   <%} else {%>
       	{
+	    // If the tuple is not a pickled object, or a reference, convert it to a PyObject
+	    // using pySplProcessTuple
 	    SplpyGIL lock;
             python_value = streamsx::topology::pySplProcessTuple(spl_in_object_out, value);
 	} // End SplpyGIL lock
