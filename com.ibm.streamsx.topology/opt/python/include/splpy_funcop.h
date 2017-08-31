@@ -39,14 +39,6 @@ class SplpyFuncOp : public SplpyOp {
          loadAndWrapCallable(wrapfn);
       }
 
-    SplpyFuncOp(SPL::Operator * op, const std::string & wrapfn,
-		const std::string & module, const std::string & function) :
-         SplpyOp(op, "/opt/python/packages/streamsx/topology")
-      {
-         addAppPythonPackages();
-         loadAndWrapCallable(wrapfn, module, function);
-      }
- 
       ~SplpyFuncOp() {
       }
 
