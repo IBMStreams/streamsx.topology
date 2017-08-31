@@ -1312,8 +1312,8 @@ class Window(object):
         if schema is None:
             schema = self.stream.oport.schema
         
-        sl = _SourceLocation(_source_info(), "window")
-        name = self.topology.graph._requested_name(name, action="window", func=function)
+        sl = _SourceLocation(_source_info(), "aggregate")
+        name = self.topology.graph._requested_name(name, action="aggregate", func=function)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::CCWindow", function, name=name, sl=sl)
         op.addInputPort(outputPort=self.stream.oport, name=self.stream.name)
         oport = op.addOutputPort(schema=schema, name=name)
