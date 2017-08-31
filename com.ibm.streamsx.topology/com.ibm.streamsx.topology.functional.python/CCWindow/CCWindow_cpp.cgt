@@ -12,8 +12,6 @@ using namespace streamsx::topology;
  # Select the Python wrapper function
  my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
  
- # Temporary, until more input types are supported. At the moment, only pass by reference types 
- # are supported.
  my $in_pywrapfunc =  $pystyle . '_in__object_out';
  my $out_pywrapfunc=  'pickle_in__' . $pyoutstyle . '_out';
 %>
