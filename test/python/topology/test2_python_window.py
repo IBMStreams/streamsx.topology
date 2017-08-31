@@ -55,11 +55,10 @@ class TestPythonWindowing(unittest.TestCase):
         # Used to prevent pass by ref for the source
         f = s.filter(lambda x: True)
 
-        s = s.last(3).trigger(1).aggregate(lambda x: int(sum([int(s) for s in x])/len(x)),
-                                           schema = CommonSchema.Python)
-
+        s = s.last(3).trigger(4).aggregate(lambda x: int(sum([int(s) for s in x])/len(x)),
+                                           schema = CommonSchema.Python)        
         tester = Tester(topo)
-        tester.contents(s, [1,2,3,5])
+        tester.contents(s, [5])
         tester.test(self.test_ctxtype, self.test_config)
 
 
