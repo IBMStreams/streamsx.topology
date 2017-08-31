@@ -404,7 +404,6 @@ class Topology(object):
         subscribeParams = {'topic': topic, 'streamType': schema}
         op.setParameters(subscribeParams)
         op._layout_group('Subscribe', name if name else _name)
-        op.layout_map_name(_name, name)
         return Stream(self, oport)
 
     def add_file_dependency(self, path, location):
