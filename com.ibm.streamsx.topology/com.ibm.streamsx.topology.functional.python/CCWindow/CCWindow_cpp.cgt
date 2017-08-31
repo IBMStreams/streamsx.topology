@@ -64,7 +64,6 @@ MY_OPERATOR::MY_OPERATOR() :
 %>
 
     funcop_ = new SplpyFuncOp(this, out_wrapfn);
-    //spl_in_object_out = new SplpyFuncOp(this, in_wrapfn, functions_module, identity_function);
 
     // spl_in_object_out points to the wrapped identity function used to convert incoming tuples to 
     // Python objects.
@@ -151,10 +150,10 @@ print splpy_inputtuple2value($pystyle);
 	  } // End SplpyGIL lock
       }
   <%} else {%>
-      {
-          SplpyGIL lock;
-          python_value = streamsx::topology::SplpyGeneral::pyCallObject(spl_in_object_out, value);
-      } // End SplpyGIL lock
+      	{
+	    SplpyGIL lock;
+            python_value = streamsx::topology::pySplProcessTuple(spl_in_object_out, value);
+	} // End SplpyGIL lock
   <%}%>
 
 
@@ -197,13 +196,20 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
 
 <%if ($pyoutstyle eq 'dict') {%>
   {
-  PyObject * ret = streamsx::topology::SplpyGeneral::pyCallObject(funcop_->callable(), value);
+  {
+  SplpyGIL lock;
+
+  PyObject * pyTuple;
+  pyTuple = PyTuple_New(1);
+  PyTuple_SET_ITEM(pyTuple, 0, value);
+  PyObject * ret = streamsx::topology::SplpyGeneral::pyCallObject(funcop_->callable(), pyTuple);
   if (streamsx::topology::SplpyGeneral::isNone(ret)){
      return;
   }
 
   fromPythonToPort0(ret, otuple);
   Py_DECREF(ret);
+  }
   }
   
 <% } else { %>
