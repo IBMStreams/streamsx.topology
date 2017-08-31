@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.topology module &mdash; streamsx 1.7a1 documentation</title>
+  <title>streamsx.topology.topology module &mdash; streamsx 1.7b1 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.7a1 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.7b1 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -377,6 +377,26 @@ being in different processing elements.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="streamsx.topology.topology.Sink">
+<em class="property">class </em><code class="descclassname">streamsx.topology.topology.</code><code class="descname">Sink</code><span class="sig-paren">(</span><em>op</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Sink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Termination of a <cite>Stream</cite>.</p>
+<p>A <a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><code class="xref py py-class docutils literal"><span class="pre">Stream</span></code></a> is terminated by processing that typically
+sends the tuples to an external system.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A <cite>Stream</cite> may have multiple terminations.</p>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#streamsx.topology.topology.Stream.for_each" title="streamsx.topology.topology.Stream.for_each"><code class="xref py py-meth docutils literal"><span class="pre">for_each()</span></code></a>, <a class="reference internal" href="#streamsx.topology.topology.Stream.publish" title="streamsx.topology.topology.Stream.publish"><code class="xref py py-meth docutils literal"><span class="pre">publish()</span></code></a>, <a class="reference internal" href="#streamsx.topology.topology.Stream.print" title="streamsx.topology.topology.Stream.print"><code class="xref py py-meth docutils literal"><span class="pre">print()</span></code></a></p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.7.</span></p>
+</div>
+</dd></dl>
+
+<dl class="class">
 <dt id="streamsx.topology.topology.Stream">
 <em class="property">class </em><code class="descclassname">streamsx.topology.topology.</code><code class="descname">Stream</code><span class="sig-paren">(</span><em>topology</em>, <em>oport</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
@@ -596,11 +616,17 @@ the returned stream.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Stream termination.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink">streamsx.topology.topology.Sink</a></p>
 </td>
 </tr>
 </tbody>
 </table>
+<div class="versionchanged">
+<p><span class="versionmodified">Changed in version 1.7: </span>Now returns a <a class="reference internal" href="#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink"><code class="xref py py-class docutils literal"><span class="pre">Sink</span></code></a> instance.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -710,7 +736,10 @@ a structured stream.</p>
 <dl class="method">
 <dt id="streamsx.topology.topology.Stream.multi_transform">
 <code class="descname">multi_transform</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.multi_transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Equivalent to calling the flat_map() function</p>
+<dd><p>Equivalent to calling <a class="reference internal" href="#streamsx.topology.topology.Stream.flat_map" title="streamsx.topology.topology.Stream.flat_map"><code class="xref py py-meth docutils literal"><span class="pre">flat_map()</span></code></a>.</p>
+<div class="deprecated">
+<p><span class="versionmodified">Deprecated since version 1.7: </span>Replaced by <a class="reference internal" href="#streamsx.topology.topology.Stream.flat_map" title="streamsx.topology.topology.Stream.flat_map"><code class="xref py py-meth docutils literal"><span class="pre">flat_map()</span></code></a>.</p>
+</div>
 </dd></dl>
 
 <dl class="attribute">
@@ -787,13 +816,19 @@ When <cite>None</cite> defaults to a generated name.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Stream termination.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink">streamsx.topology.topology.Sink</a></p>
 </td>
 </tr>
 </tbody>
 </table>
 <div class="versionadded">
 <p><span class="versionmodified">New in version 1.6.1: </span><cite>tag</cite>, <cite>name</cite> parameters.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified">Changed in version 1.7: </span>Now returns a <a class="reference internal" href="#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink"><code class="xref py py-class docutils literal"><span class="pre">Sink</span></code></a> instance.</p>
 </div>
 </dd></dl>
 
@@ -831,13 +866,19 @@ and
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Stream termination.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink">streamsx.topology.topology.Sink</a></p>
 </td>
 </tr>
 </tbody>
 </table>
 <div class="versionadded">
 <p><span class="versionmodified">New in version 1.6.1: </span><cite>name</cite> parameter.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified">Changed in version 1.7: </span>Now returns a <a class="reference internal" href="#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink"><code class="xref py py-class docutils literal"><span class="pre">Sink</span></code></a> instance.</p>
 </div>
 </dd></dl>
 
@@ -880,12 +921,18 @@ cannot be modified.</p>
 <dt id="streamsx.topology.topology.Stream.sink">
 <code class="descname">sink</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.sink" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to calling <a class="reference internal" href="#streamsx.topology.topology.Stream.for_each" title="streamsx.topology.topology.Stream.for_each"><code class="xref py py-meth docutils literal"><span class="pre">for_each()</span></code></a>.</p>
+<div class="deprecated">
+<p><span class="versionmodified">Deprecated since version 1.7: </span>Replaced by <a class="reference internal" href="#streamsx.topology.topology.Stream.for_each" title="streamsx.topology.topology.Stream.for_each"><code class="xref py py-meth docutils literal"><span class="pre">for_each()</span></code></a>.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
 <dt id="streamsx.topology.topology.Stream.transform">
 <code class="descname">transform</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to calling :py:meth:<code class="docutils literal"><span class="pre">map(func,</span> <span class="pre">name)</span></code>.</p>
+<div class="deprecated">
+<p><span class="versionmodified">Deprecated since version 1.7: </span>Replaced by <a class="reference internal" href="#streamsx.topology.topology.Stream.map" title="streamsx.topology.topology.Stream.map"><code class="xref py py-meth docutils literal"><span class="pre">map()</span></code></a>.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -975,6 +1022,38 @@ When compiling the application using Anaconda this set is pre-loaded with Python
 <p class="last">Package names in <cite>include_packages</cite> take precedence over package names in <cite>exclude_packages</cite>.</p>
 </dd>
 </dl>
+<dl class="method">
+<dt id="streamsx.topology.topology.Topology.add_file_dependency">
+<code class="descname">add_file_dependency</code><span class="sig-paren">(</span><em>path</em>, <em>location</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.add_file_dependency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a file or directory dependency into an Streams application bundle.</p>
+<p>Ensures that the file or directory at <cite>path</cite> on the local system
+will be available at runtime.</p>
+<p>The file will be copied and made available relative to the
+application directory. Location determines where the file
+is relative to the application directory. Two values for
+location are supported <cite>etc</cite> and <cite>opt</cite>.</p>
+<p>The copy is made during the submit call thus the contents of
+the file or directory must remain availble until submit returns.</p>
+<p>For example calling <cite>add_file_dependency(&#8216;etc&#8217;, &#8216;/tmp/conf.properties&#8217;)</cite>
+will result in contents of the local file <cite>conf.properties</cite>
+being available at runtime at the path <cite>application directory</cite>/etc/conf.properties.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> (<em>str</em>) &#8211; Path of the file on the local system.</li>
+<li><strong>location</strong> (<em>str</em>) &#8211; Location of the file in the bundle relative to the application directory.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.7.</span></p>
+</div>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="streamsx.topology.topology.Topology.name">
 <code class="descname">name</code><a class="headerlink" href="#streamsx.topology.topology.Topology.name" title="Permalink to this definition">¶</a></dt>
@@ -1196,7 +1275,7 @@ duration of the window.</td>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.7a1',
+            VERSION:'1.7b1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

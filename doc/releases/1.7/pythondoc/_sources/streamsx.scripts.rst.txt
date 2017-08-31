@@ -6,7 +6,8 @@ Submodules
 
 .. toctree::
 
-   streamsx.scripts.streamsx-runner
+   streamsx.scripts.extract
+   streamsx.scripts.runner
 
 Module contents
 ---------------

@@ -1,7 +1,0 @@
-streamsx.scripts.streamsx-runner module
-=======================================
-
-.. automodule:: streamsx.scripts.streamsx-runner
-    :members:
-    :undoc-members:
-    :show-inheritance:
