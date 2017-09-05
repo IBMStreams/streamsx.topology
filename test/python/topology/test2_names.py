@@ -22,8 +22,10 @@ class TestNames(unittest.TestCase):
      """
      topo = Topology(name='<module>', namespace='<ipython-input-1-e300f4c6abce>')
      hw = topo.source(["Hello", "Tester"])
+     s = hw.filter(lambda x : True, name = "One.A")
+     s = s.filter(lambda x : True, name = "Two.A")
      tester = Tester(topo)
-     tester.contents(hw, ["Hello", "Tester"])
+     tester.contents(s, ["Hello", "Tester"])
      tester.test(self.test_ctxtype, self.test_config)
 
   def test_UnicodeTopoNames(self):
