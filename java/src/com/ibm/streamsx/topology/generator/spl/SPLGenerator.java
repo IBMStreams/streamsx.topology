@@ -163,11 +163,11 @@ public class SPLGenerator {
             String iput = jstring(graph, "inputName");
             String oput = jstring(graph, "outputName");
 
-            iput = splBasename(iput);
+            iput = getSPLCompatibleName(iput);
             compBuilder.append("(input " + iput);
             
             if(oput != null && !oput.isEmpty()){
-                oput = splBasename(oput);
+                oput = getSPLCompatibleName(oput);
                 compBuilder.append("; output " + oput);
             }
               compBuilder.append(")");
@@ -550,19 +550,6 @@ public class SPLGenerator {
         }
 
         return sb.toString();
-    }
-
-    static String basename(String name) {
-        int i = name.lastIndexOf('.');
-        if (i == -1)
-            return name;
-
-        return name.substring(i + 1);
-
-    }
-
-    static String splBasename(String name) {
-        return getSPLCompatibleName(basename(name));
     }
     
     /**
