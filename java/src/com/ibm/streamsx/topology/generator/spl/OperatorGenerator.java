@@ -14,7 +14,7 @@ import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLI
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_NOT_WINDOWED;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_SLIDING;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_TUMBLING;
-import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
+import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.stringLiteral;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_TAG_MAPPING;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
@@ -124,7 +124,7 @@ class OperatorGenerator {
      *          on exit:  {id:original}
      */
     private static void layoutMapName(final JsonObject layout, final String name) {
-        final String id = splBasename(name);
+        final String id = getSPLCompatibleName(name);
         if (id == name) // yes - reference comparison
             return;
         
@@ -212,7 +212,7 @@ class OperatorGenerator {
                 String parallelInputPortName = jstring(op, "parallelInputPortName");
                 JsonArray partitionKeys = op.get("partitionedKeys").getAsJsonArray();
 
-                parallelInputPortName = splBasename(parallelInputPortName);
+                parallelInputPortName = getSPLCompatibleName(parallelInputPortName);
                 sb.append(", partitionBy=[{port=");
                 sb.append(parallelInputPortName);
                 sb.append(", attributes=[");
@@ -275,7 +275,7 @@ class OperatorGenerator {
             }
 
             String name = jstring(output, "name");
-            name = splBasename(name);
+            name = getSPLCompatibleName(name);
 
             if (!first.get()) {
                 sb.append("; ");
@@ -298,7 +298,7 @@ class OperatorGenerator {
 
         if (!singlePortSingleName) {
             String name = jstring(op, "name");
-            name = splBasename(name);
+            name = getSPLCompatibleName(name);
 
             sb.append("as ");
             sb.append(name);
@@ -339,12 +339,12 @@ class OperatorGenerator {
             stringArray(input, "connections", name -> {
                 if (!firstStream.getAndSet(false))
                     sb.append(", ");
-                sb.append(splBasename(name));
+                sb.append(getSPLCompatibleName(name));
             });
 
             if (!singleName) {
                 sb.append(" as ");
-                sb.append(splBasename(portName));
+                sb.append(getSPLCompatibleName(portName));
             }
         });
 
@@ -369,7 +369,7 @@ class OperatorGenerator {
                 sb.append("  window\n");
 
             sb.append("    ");
-            sb.append(splBasename(jstring(input, "name")));
+            sb.append(getSPLCompatibleName(jstring(input, "name")));
             sb.append(":");
             switch (type) {
             case TYPE_SLIDING:
@@ -548,7 +548,7 @@ class OperatorGenerator {
 
             StringBuilder assignsSb = new StringBuilder();
             String name = jstring(output, "name");
-            name = splBasename(name);
+            name = getSPLCompatibleName(name);
             assignsSb.append(name);
             assignsSb.append(":\n");
 
