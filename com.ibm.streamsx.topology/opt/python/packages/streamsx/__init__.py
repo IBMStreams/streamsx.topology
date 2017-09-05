@@ -11,6 +11,9 @@ Module that allows the definition and execution of streaming
 applications implemented in Python.
 Applications use Python code to process tuples and tuples are Python objects.
 
+SPL operators may also be invoked from Python applications to allow
+use of existing IBM Streams toolkits.
+
 See :py:mod:`streamsx.topology`
 
 Python functions as SPL operators
