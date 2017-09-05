@@ -181,6 +181,46 @@ class StreamSchema(object) :
 
     represents a schema with three attributes suitable for a sensor reading.
 
+    The complete list of supported types are:
+
+    ============================  ======================================  =====================
+    Type                          Description                             Python representation
+
+    ============================  ======================================  =====================
+    ``boolean``                   True or False                           ``bool``
+    ``int8``                      8-bit signed integer                    ``int``
+    ``int16``                     16-bit signed integer                   ``int``
+    ``int32``                     32-bit signed integer                   ``int``
+    ``int64``                     64-bit signed integer                   ``int``
+    ``uint8``                     8-bit unsigned integer                  ``int``
+    ``uint16``                    16-bit unsigned integer                 ``int``
+    ``uint32``                    32-bit unsigned integer                 ``int``
+    ``uint64``                    64-bit unsigned integer                 ``int``
+    ``float32``                   32-bit binary floating point            ``float``
+    ``float64``                   64-bit binary floating point            ``float``
+    ``complex32``                 complex using `float32` values          ``complex``
+    ``complex64``                 complex using `float64` values          ``complex``
+    ``timestamp``                 Timestamp with nanosecond resolution    :py:class:`~streamsx.spl.types.Timestamp`
+    ``rstring``                   Character string (UTF-8 encoded)        ``str`` (``unicode`` 2.7)
+    ``rstring[N]``                Bounded string (UTF-8 encoded)          ``str`` (``unicode`` 2.7)
+    ``ustring``                   Character string (UTF-16 encoded)       ``str`` (``unicode`` 2.7)
+    ``blob``                      Sequence of bytes                       ``memoryview``
+    ``list<T>``                   List with elements of type `T`          ``list``
+    ``list<T>[N]``                Bounded list, limted to N elements      ``list``
+    ``set<T>``                    Set with elements of type `T`           ``set``
+    ``set<T>[N]``                 Bounded set, limted to N elements       ``set``
+    ``map<K,V>``                  Map with typed keys and values          ``dict``
+    ``map<K,V>[N]``               Bounded map, limted to N pairs          ``dict``
+ 
+    ``enum{id [,...]}``           Enumeration                             Not supported
+    ``decimal32``                 32-bit decimal floating point           Not supported
+    ``decimal64``                 64-bit decimal floating point           Not supported
+    ``xml``                       XML value                               Not supported
+    ``tuple<type name [, ...]>``  Nested tuple                            Not supported
+    ============================  ======================================  =====================
+
+    When a type is not supported in Python it can only be used in a schema used for streams produced and consumed by invocation of SPL operators.
+
     A `StreamSchema` can be created by passing a string of the
     for ``tuple<...>`` or by passing the name of an SPL type from
     an SPL toolkit, for example ``com.ibm.streamsx.transportation.vehicle::VehicleLocation``.

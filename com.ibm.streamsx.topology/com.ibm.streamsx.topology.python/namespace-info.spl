@@ -128,7 +128,7 @@ Functions to create topologies and streams.
     complex32,complex64 : complex
     rstring : str
     ustring : str
-    boolean : boolean
+    boolean : bool
     list : list
     map : dictionary
 
@@ -939,7 +939,7 @@ A limited set of SPL types are supported.
 
  * **Primitive types**
   * `blob` - maps to a Python `memoryview`
-  * `boolean` - maps to Python `Boolean`
+  * `boolean` - maps to Python `bool`
   * `int8`, `int16`, `int32`, `int64` - maps to Python `int`
   * `uint8`, `uint16`, `uint32`, `uint64` - maps to Python `int`
   * `float32`, `float64` - maps to Python `float`
