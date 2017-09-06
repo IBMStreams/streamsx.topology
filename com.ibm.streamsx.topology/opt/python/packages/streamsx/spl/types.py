@@ -79,7 +79,7 @@ class Timestamp(object):
         Returns:
             float: time in seconds since the epoch.
         """
-        return self.seconds + (self.nanoseconds / 100000000000.0)
+        return self.seconds + (self.nanoseconds / 1000000000.0)
 
     def datetime(self):
         """
