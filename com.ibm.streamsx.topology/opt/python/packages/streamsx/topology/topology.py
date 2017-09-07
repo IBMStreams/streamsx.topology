@@ -417,17 +417,27 @@ class Topology(object):
         application directory. Location determines where the file
         is relative to the application directory. Two values for
         location are supported `etc` and `opt`.
+        The runtime path relative to application directory is returned.
 
         The copy is made during the submit call thus the contents of
         the file or directory must remain availble until submit returns.
 
-        For example calling `add_file_dependency('etc', '/tmp/conf.properties')`
+        For example calling
+        ``add_file_dependency('/tmp/conf.properties', 'etc')``
         will result in contents of the local file `conf.properties`
-        being available at runtime at the path `application directory`/etc/conf.properties.
+        being available at runtime at the path `application directory`/etc/conf.properties. This call returns ``etc/conf.properties``.
+
+        Python callables can determine the application directory at
+        runtime with :py:func:`~streamsx.ec.get_application_directory`.
+        For example the path above at runtime is
+        ``os.path.join(streamsx.ec.get_application_directory(), 'etc', 'conf.properties')``
         
         Args:
             path(str):  Path of the file on the local system.
             location(str): Location of the file in the bundle relative to the application directory.
+
+        Returns:
+            str: Path relative to application directory that can be joined at runtime with ``get_application_directory``.
 
         .. versionadded:: 1.7
         """
@@ -443,6 +453,7 @@ class Topology(object):
              self._files[location] = [path]
         else:
              self._files[location].append(path)
+        return location + '/' + os.path.basename(path)
      
 class Stream(object):
     """
