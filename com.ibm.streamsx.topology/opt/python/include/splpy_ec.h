@@ -69,8 +69,8 @@ static PyObject * __splpy_ec_is_standalone(PyObject *self, PyObject *notused) {
 }
 
 static PyObject * __splpy_ec_get_application_directory(PyObject *self, PyObject *notused) {
-   return streamsx::topology::pySplValueToPyObject(
-           SPL::ProcessingElement::pe().getApplicationDirectory());
+   const SPL::rstring adrs(SPL::ProcessingElement::pe().getApplicationDirectory());
+   return streamsx::topology::pySplValueToPyObject(adrs);
 }
 
 static PyObject * __splpy_ec_get_app_config(PyObject *self, PyObject *pyname) {

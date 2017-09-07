@@ -18,6 +18,7 @@
 #ifndef __SPL__SPLPY_GENERAL_H
 #define __SPL__SPLPY_GENERAL_H
 
+#include <sstream>
 #include "Python.h"
 
 #undef PyMemoryView_Check
@@ -26,6 +27,7 @@
 #include <TopologySplpyResource.h>
 #include <SPL/Runtime/Common/RuntimeException.h>
 #include <SPL/Runtime/Type/Meta/BaseType.h>
+#include <SPL/Runtime/Function/SPLFunctions.h>
 #include <SPL/Runtime/ProcessingElement/PE.h>
 #include <SPL/Runtime/Operator/Port/OperatorPort.h>
 #include <SPL/Runtime/Operator/Port/OperatorInputPort.h>
@@ -176,6 +178,10 @@ class SplpyGeneral {
     static PyObject * timestampClass(PyObject *tsc) {
         static PyObject * tsClass = tsc;
         return tsClass;
+    }
+    static PyObject * decimalClass(PyObject *dsc) {
+        static PyObject * decClass = dsc;
+        return decClass;
     }
     /**
      * streamsx.spl.types._get_timestamp_tuple
@@ -471,6 +477,26 @@ class SplpyGeneral {
             (int32_t) PyLong_AsLong(PyTuple_GET_ITEM(tst, 2)));
     }
 
+    // decimal
+    inline void pySplValueFromPyObject(SPL::decimal32 & splv, PyObject *value) {
+        SPL::rstring rs;
+        pySplValueFromPyObject(rs, value);
+        std::istringstream is(rs);
+        SPL::deserializeWithNanAndInfs(is, splv);
+    }
+    inline void pySplValueFromPyObject(SPL::decimal64 & splv, PyObject *value) {
+        SPL::rstring rs;
+        pySplValueFromPyObject(rs, value);
+        std::istringstream is(rs);
+        SPL::deserializeWithNanAndInfs(is, splv);
+    }
+    inline void pySplValueFromPyObject(SPL::decimal128 & splv, PyObject *value) {
+        SPL::rstring rs;
+        pySplValueFromPyObject(rs, value);
+        std::istringstream is(rs);
+        SPL::deserializeWithNanAndInfs(is, splv);
+    }
+
     // complex
     inline void pySplValueFromPyObject(SPL::complex32 & splv, PyObject * value) {
         splv = SPL::complex32(
@@ -604,6 +630,62 @@ class SplpyGeneral {
     }
     inline PyObject * pySplValueToPyObject(const SPL::complex64 & value) {
        return PyComplex_FromDoubles(value.real(), value.imag());
+    }
+
+    /**
+     *  Convert decimal values by first converting to strings
+     *  and then creating Python decimal.Decimal instance.
+     */
+    inline PyObject * _pySplDecStringToPyDecimal(const std::stringstream & buf)
+    {
+        SPL::rstring decString(buf.str());
+
+        PyObject * pyDecString = pySplValueToPyObject(decString);
+
+        PyObject * pyTuple = PyTuple_New(1);
+        PyTuple_SET_ITEM(pyTuple, 0, pyDecString);
+
+        return SplpyGeneral::pyCallObject(
+                 SplpyGeneral::decimalClass(NULL),
+                 pyTuple
+               );
+    }
+    inline PyObject * pySplValueToPyObject(const SPL::decimal32 & value) {
+
+        // Number of decimal32 digits (7) minus 1 to account
+        // for the single digit written before the decimal point
+        // in scientific notation
+        // www.cplusplus.com/reference/ios/scientific
+        std::stringstream buf;
+        buf.setf(std::ios::scientific, std::ios::floatfield);
+        buf.precision(7 - 1);
+        buf << value;
+
+        return _pySplDecStringToPyDecimal(buf);
+    }
+    inline PyObject * pySplValueToPyObject(const SPL::decimal64 & value) {
+        // Number of decimal64 digits (16) minus 1 to account
+        // for the single digit written before the decimal point
+        // in scientific notation
+        // www.cplusplus.com/reference/ios/scientific
+        std::stringstream buf;
+        buf.setf(std::ios::scientific, std::ios::floatfield);
+        buf.precision(16 - 1);
+        buf << value;
+
+        return _pySplDecStringToPyDecimal(buf);
+    }
+    inline PyObject * pySplValueToPyObject(const SPL::decimal128 & value) {
+        // Number of decimal128 digits (34) minus 1 to account
+        // for the single digit written before the decimal point
+        // in scientific notation
+        // www.cplusplus.com/reference/ios/scientific
+        std::stringstream buf;
+        buf.setf(std::ios::scientific, std::ios::floatfield);
+        buf.precision(34 - 1);
+        buf << value;
+
+        return _pySplDecStringToPyDecimal(buf);
     }
 
     inline PyObject * pySplValueToPyObject(const SPL::boolean & value) {

@@ -137,6 +137,8 @@ class SplpySetup {
           SplpyGeneral::loadFunction("streamsx.spl.types", "Timestamp"));
        SplpyGeneral::timestampGetter(
           SplpyGeneral::loadFunction("streamsx.spl.types", "_get_timestamp_tuple"));
+       SplpyGeneral::decimalClass(
+          SplpyGeneral::loadFunction("decimal", "Decimal"));
    }
 
   private:
