@@ -106,12 +106,13 @@ class TestEc(unittest.TestCase):
           temp.flush()
           fn = temp.name
 
+      bfn = os.path.basename(fn)
       topo = Topology()
-      topo.add_file_dependency(temp.name, 'etc')
+      rtpath = topo.add_file_dependency(temp.name, 'etc')
+      self.assertEqual('etc/' + bfn, rtpath)
 
       s = topo.source(['A'])
       s = s.filter(lambda x : os.path.isdir(ec.get_application_directory()))
-      bfn = os.path.basename(fn)
       s = s.map(lambda x : read_config_file(bfn))
 
       tester = Tester(topo)
