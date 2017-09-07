@@ -11,6 +11,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,9 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     		  "rstring r," +
     		  "complex32 c32," +
     		  "complex64 c64," +
+                  "decimal32 d32," +
+                  "decimal64 d64," +
+                  "decimal128 d128," +
     		  "timestamp ts," +
                   "blob binary," +
     		  "list<rstring> lr," +
@@ -164,7 +168,10 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         complete(tester, expectedCount, 60, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.getResult().toString(), expectedCount.valid());
-        assertEquals(viaSPLResult.getResult(), viaPythonResult.getResult());
+        List<Tuple> viaspl = viaSPLResult.getResult();
+        List<Tuple> viapython = viaPythonResult.getResult();
+        for (int i = 0; i < viaspl.size(); i++)
+            assertEquals(viaspl.get(i), viapython.get(i));
     }
     
     static final StreamSchema TEST_SCHEMA_SF =
@@ -395,6 +402,10 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         
         assertEquals(((Complex) r1.getObject("c64")).getReal(), -35346.234, 0.1);
         assertEquals(((Complex) r1.getObject("c64")).getImaginary(), 952524.93, 0.1);
+        
+        assertEquals(r1.getBigDecimal("d32"), new BigDecimal("3.459876E72"));
+        assertEquals(r1.getBigDecimal("d64"), new BigDecimal("4.515716038731674E-307"));
+        assertEquals(r1.getBigDecimal("d128"), new BigDecimal("1.085059319410602846995696978141388E+5922"));
 
         // Timestamp Timestamp(781959759, 9320, 76)
         assertEquals(781959759L, r1.getTimestamp("ts").getSeconds());
