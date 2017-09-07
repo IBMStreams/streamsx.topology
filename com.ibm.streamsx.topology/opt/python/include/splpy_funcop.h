@@ -38,9 +38,11 @@ class SplpyFuncOp : public SplpyOp {
          addAppPythonPackages();
          loadAndWrapCallable(wrapfn);
       }
- 
+
       ~SplpyFuncOp() {
       }
+
+
 
   private:
 
@@ -78,6 +80,23 @@ class SplpyFuncOp : public SplpyOp {
              setopc();
 #endif
           }
+
+          setCallable(SplpyGeneral::callFunction(
+               "streamsx.topology.runtime", wrapfn, appCallable, NULL));
+      }
+
+
+      /**
+       * Load and wrap the callable that will be invoked
+       * by the operator.
+      */
+      void loadAndWrapCallable(const std::string & wrapfn, const std::string & module,
+			       const std::string & function) {
+          SplpyGIL lock;
+
+          // pointer to the application function
+	  PyObject * appCallable =
+             SplpyGeneral::loadFunction(module, function);
 
           setCallable(SplpyGeneral::callFunction(
                "streamsx.topology.runtime", wrapfn, appCallable, NULL));
