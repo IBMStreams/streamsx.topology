@@ -38,6 +38,7 @@ class _SchemaParser(object):
                          'int8', 'int16', 'int32', 'int64',
                          'float32', 'float64',
                          'complex32', 'complex64',
+                         'decimal32', 'decimal64', 'decimal128',
                          'rstring', 'ustring',
                          'timestamp', 'blob', 'xml'}
 
@@ -198,6 +199,9 @@ class StreamSchema(object) :
     ``uint64``                    64-bit unsigned integer                 ``int``
     ``float32``                   32-bit binary floating point            ``float``
     ``float64``                   64-bit binary floating point            ``float``
+    ``decimal32``                 32-bit decimal floating point           ``decimal.Decimal``
+    ``decimal64``                 64-bit decimal floating point           ``decimal.Decimal``
+    ``decimal128``                128-bit decimal floating point          ``decimal.Decimal``
     ``complex32``                 complex using `float32` values          ``complex``
     ``complex64``                 complex using `float64` values          ``complex``
     ``timestamp``                 Timestamp with nanosecond resolution    :py:class:`~streamsx.spl.types.Timestamp`
@@ -213,8 +217,6 @@ class StreamSchema(object) :
     ``map<K,V>[N]``               Bounded map, limted to N pairs          ``dict``
  
     ``enum{id [,...]}``           Enumeration                             Not supported
-    ``decimal32``                 32-bit decimal floating point           Not supported
-    ``decimal64``                 64-bit decimal floating point           Not supported
     ``xml``                       XML value                               Not supported
     ``tuple<type name [, ...]>``  Nested tuple                            Not supported
     ============================  ======================================  =====================
