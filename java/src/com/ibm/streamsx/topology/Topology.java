@@ -900,7 +900,7 @@ public class Topology implements TopologyElement {
     public void addJobControlPlane() {
         if (!hasJCP) {
             // no inputs, outputs or parameters.
-            builder.addSPLOperator("spl.control::JobControlPlane", Collections.emptyMap());
+            builder.addSPLOperator("JobControlPlane", "spl.control::JobControlPlane", Collections.emptyMap());
             hasJCP = true;
         }        
     }
