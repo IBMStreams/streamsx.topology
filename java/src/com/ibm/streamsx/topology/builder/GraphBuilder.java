@@ -228,14 +228,6 @@ public class GraphBuilder extends BJSONObject {
         return op;
     }
 
-    public BOperatorInvocation addSPLOperator(String kind,
-            Map<String, ? extends Object> params) {
-        
-        String name = kind.contains("::") ?
-                kind.substring(kind.lastIndexOf("::" + 2), kind.length()) :
-                    kind;
-         return addSPLOperator(name, kind, params);
-    }
     public BOperatorInvocation addSPLOperator(String name, String kind,
             Map<String, ? extends Object> params) {
         final BOperatorInvocation op = new BOperatorInvocation(this, kind, params);      
