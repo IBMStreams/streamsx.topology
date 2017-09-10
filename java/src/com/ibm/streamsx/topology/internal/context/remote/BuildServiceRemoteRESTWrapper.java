@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.copyJobConfigOverlays;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -49,7 +50,10 @@ class BuildServiceRemoteRESTWrapper {
 	void remoteBuildAndSubmit(JsonObject submission, File archive) throws ClientProtocolException, IOException {
 	    JsonObject deploy = DeployKeys.deploy(submission);
 	    JsonObject graph = object(submission, "graph");
-	    String graphBuildName = jstring(graph, "name");
+	    // Use the SPL compatible form of the name to ensure
+	    // that any strange characters in the name provided by
+	    // the user are not rejected by the build service.
+	    String graphBuildName = splAppName(graph);
 	    
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		try {

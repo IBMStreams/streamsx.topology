@@ -21,6 +21,9 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -518,38 +521,47 @@ public class SPLGenerator {
      * an SPL stream name (which just supports ASCII) and returns a valid SPL
      * name.
      * 
+     * In addition since an operator name maps to a file name (with .cpp etc. suffixes)
+     * we limit the name to a reasonable length. Any name that cannot be represented
+     * as ASCII in under 80 characters is mapped to a MD5 representation of
+     * the name.
+     * 
      * This is a one way mapping, we only need to provide a name that is a
      * unique and consistent mapping of the input.
      * 
+     * Use of MD5 means hashing and thus a really small chance of collisions
+     * for different names.
+     * 
+     * Since the true (user) name can be set in a SPL note annotation
+     * and displayed by the console, having a "meaningless" name is
+     * not so much of an issue.
+     * 
      * @param name
      * @return A string which can be a valid SPL stream name. If name is valid
-     * as an SPL identifier then it is returned (same reference).
+     * as an SPL identifier and less than 80 chars then it is returned (same reference).
      */
+    private static final int NAME_LEN = 80;
     public static String getSPLCompatibleName(String name) {
 
-        if (name.matches("^[a-zA-Z0-9_]+$"))
+        if (name.length() <= NAME_LEN && name.matches("^[a-zA-Z_][a-zA-Z0-9_]+$"))
             return name;
-
-        StringBuilder sb = new StringBuilder(name.length());
-        for (int i = 0; i < name.length(); i++) {
-            char c = name.charAt(i);
-            if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z')
-                    || (c >= 'A' && c <= 'Z')) {
-                sb.append(c);
-                continue;
-            }
-            if (c == '_') {
-                sb.append("__");
-                continue;
-            }
-            sb.append("_u");
-            String code = Integer.toHexString(c);
-            if (code.length() < 4)
-                sb.append("000".substring(code.length() - 1));
-            sb.append(code);
+        
+        final byte[] original = name.getBytes(StandardCharsets.UTF_8);
+        return "__spl_" + md5Name(original);
+    }
+    public static String md5Name(byte[] original) {
+        try {
+            
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            StringBuilder sb = new StringBuilder(32);
+            for (byte b : md.digest(original))
+                sb.append(String.format("%02x", b));
+                      
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            // Java is required to have MD5
+            throw new RuntimeException(e);
         }
-
-        return sb.toString();
     }
     
     /**
