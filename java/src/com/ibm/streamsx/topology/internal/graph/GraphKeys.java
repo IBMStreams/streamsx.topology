@@ -103,12 +103,10 @@ public interface GraphKeys {
             if (ns != null) {
                 StringBuilder nsb = new StringBuilder();
                 StringTokenizer st = new StringTokenizer(ns, ".");
-                String lastElement = null;
                 while (st.hasMoreTokens()) {
                     if (nsb.length() != 0)
                         nsb.append(".");
-                    lastElement = st.nextToken();
-                    nsb.append(getSPLCompatibleName(lastElement));
+                    nsb.append(getSPLCompatibleName(st.nextToken()));
                 }
                 ns = nsb.toString();
                 // Account for the full app name being > 255 (with a margin)
