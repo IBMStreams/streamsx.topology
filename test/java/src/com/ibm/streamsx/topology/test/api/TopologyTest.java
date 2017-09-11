@@ -15,6 +15,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
@@ -24,6 +26,7 @@ import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.test.TestTopology;
+import com.ibm.streamsx.topology.tester.Condition;
 
 public class TopologyTest extends TestTopology {
 
@@ -98,7 +101,64 @@ public class TopologyTest extends TestTopology {
         source.print();
         checkPrintEmbedded(f, "a", "b", "c");
     }
+    
+    private static String largeString(String base, final int len) {
+        StringBuilder sb = new StringBuilder(len);
+        sb.append(base);
+        while (sb.length() < len)
+            sb.append("0123456789".substring(0, Math.min(10, len-sb.length())));
+        assert len == sb.length();
+        
+        return sb.toString();
+    }
+    @Test
+    public void testLongNames() throws Exception {
+        // 255 is max file name size.
+        // 4 is the length of the '.spl'
+        String ns = largeString("myns", 255);
+        String appname = largeString("myApp", 255 - 5);
+        final Topology topo = newTopology(ns, appname);
+        
+        TStream<String> source = topo.strings("a", "b", "c");
+        Condition<List<String>> ec = topo.getTester().stringContents(source, "a", "b", "c");
+        complete(topo.getTester(), ec, 10, TimeUnit.SECONDS);
+    }
+    
+    /**
+     * Test a combination of namespace and name being larger than 255.
+     */
+    @Test
+    public void testLongNamespaceAndNames() throws Exception {
 
+        String ns = largeString("a", 50);
+        for (int i = 0; i < 4; i++)
+            ns = ns.concat(largeString(".b", 60));
+        String appname = largeString("myApp", 40);
+        final Topology topo = newTopology(ns, appname);
+        
+        TStream<String> source = topo.strings("a", "b", "c");
+        Condition<List<String>> ec = topo.getTester().stringContents(source, "a", "b", "c");
+        complete(topo.getTester(), ec, 10, TimeUnit.SECONDS);
+    }
+    @Test
+    public void testBadChars() throws Exception {
+
+        final Topology topo = newTopology("<>{}", "<>{}");
+        
+        TStream<String> source = topo.strings("a", "b", "c");
+        Condition<List<String>> ec = topo.getTester().stringContents(source, "a", "b", "c");
+        complete(topo.getTester(), ec, 10, TimeUnit.SECONDS);
+    }
+    
+    @Test
+    public void testUnicodeNames() throws Exception {
+
+        final Topology topo = newTopology("com.树倒猢狲散.早起的鳥兒有蟲吃", "良药苦口");
+        
+        TStream<String> source = topo.strings("a", "b", "c");
+        Condition<List<String>> ec = topo.getTester().stringContents(source, "a", "b", "c");
+        complete(topo.getTester(), ec, 10, TimeUnit.SECONDS);
+    }
     public static void checkPrintEmbedded(Topology f, String... strings)
             throws Exception {
 
