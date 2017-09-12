@@ -16,6 +16,14 @@ Streams can handle very high data throughput rates, millions of events or messag
 With this API Python developers can build streaming applications that can be executed using IBM Streams,
 including the processing being distributed across multiple computing resources (hosts or machines) for scalability.
 
+Creating Applications
+#####################
+
+Applications are created by declaring a flow graph contained
+in a :py:class:`~Topology` instance.
+
+For details see :py:mod:`streamsx.topology.topology`.
+
 Microservices
 #############
 
@@ -110,10 +118,6 @@ types (schemas) can be subscribed to by any Streams application.
 import logging
 
 
-class _NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-
 _debug = logging.getLogger('streamsx.topology.internal')
-_debug.addHandler(_NullHandler())
+_debug.addHandler(logging.NullHandler())
 _debug.setLevel(logging.CRITICAL)

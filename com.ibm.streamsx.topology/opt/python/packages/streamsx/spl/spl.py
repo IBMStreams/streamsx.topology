@@ -132,6 +132,13 @@ Example of using ``__enter__`` and ``__exit__`` to open and close a file::
             if self.file is not None:
                 self.file.close()
 
+Application log and trace
+-------------------------
+
+IBM Streams provides application trace and log services which are
+accesible through standard Python loggers from the `logging` module.
+
+See :ref:`streams_app_log_trc`.
 
 Python functions as SPL operators
 =================================

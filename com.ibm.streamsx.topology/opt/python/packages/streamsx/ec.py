@@ -27,6 +27,54 @@ as a single PE (process) outside of a Streams instance.
 
 Standalone is typically used for ad-hoc testing of an application.
 
+.. _streams_app_log_trc:
+
+Application log and trace
+-------------------------
+
+IBM Streams provides application trace and log services.
+
+Application log
+===============
+
+The `Streams application log` service is for application logging, where logging is defined as the recording of serviceability information pertaining to application or operator events. The purpose of logging is to provide an administrator with enough information to do problem determination for items they can potentially control. In general, very few events are logged in the normal running scenario of an application or operator. Events pertinent to the failure or partial failure of application runtime scenarios should be logged. 
+
+When running in distributed or standalone the `com.ibm.streams.log` logger has a handler that records messages to the `Streams application log` service. The level of the logger and its handler are set to the configured application log level at PE start up.
+
+This logger and handler discard any message with level below `INFO` (20).
+
+Python application code can log a message suitable for an administrator by using
+the `com.ibm.streams.log` logger or a child logger that has ``logger.propagate`` evaulating to ``True``. Example of logging a file exception::
+
+    try:
+        import numpy
+    except ImportError as e:
+        logging.getLogger('com.ibm.streams.log').error(e)
+        raise
+
+Application code must not modify the `com.ibm.streams.log` logger, if additional handlers or different levels are required a child logger should be used.
+
+Application trace
+=================
+
+The `Streams application trace` service is for application tracing, where tracing is defined as the recording of application or operator internal events and data. The purpose of tracing is to allow application or operator developers to debug their applications or operators. 
+
+When running in distributed or standalone the root logger has a handler that records messages to the `Streams application trace` service. The level of the logger and its handler are set to the configured application trace level at PE start up.
+
+Python application code can trace a message using
+the root logger or a child logger that has ``logger.propagate`` evaulating to ``True``. Example of logging a trace message::
+
+    trace = logging.getLogger(__name__)
+  
+    ...
+
+        trace.info("Threshold set to %f", val)
+
+Any existing logging performed by modules will automatically become
+Streams trace messages if the application is using the `logging` package.
+
+Application code must not modify the root logger, if additional handlers or different levels are required a child logger should be used.
+
 Execution Context
 -----------------
 This module (`streamsx.exec`) provides access to the execution
@@ -48,6 +96,7 @@ import enum
 import pickle
 import threading
 import importlib
+import logging
 import sys
 
 try:
@@ -408,3 +457,45 @@ def _callable_exit_clean(callable):
     if hasattr(callable, '__enter__') and hasattr(callable, '__exit__'):
         callable.__exit__(None, None, None)
 
+#
+# Application Trace & Log
+#
+class _AppHandler(logging.Handler):
+    def __init__(self, lvl, fn):
+        super(_AppHandler, self).__init__(lvl)
+        self._emit_to_streams = fn
+
+    def createLock(self):
+        # Locking handled by Streams runtime
+        self.lock = None
+
+    def emit(self, record):
+        pylvl = record.levelno
+        aspects = 'python'
+        if record.module:
+            aspects = aspects + ',' + str(record.module)
+        lineno = record.lineno if isinstance(record.lineno, int) else -1
+        self._emit_to_streams((pylvl, record.getMessage(), aspects,
+              record.funcName, record.filename, lineno))
+
+_ROOT_LOGGER = None
+_STREAMS_LOG = None
+
+def _setup():
+    if _is_supported():
+        trc_lvl = _ec._app_trc_level()
+        # Python does not have the concept of OFF
+        if trc_lvl == 0:
+            trc_lvl = logging.CRITICAL
+        _ROOT_LOGGER = logging.getLogger()
+        _ROOT_LOGGER.addHandler(_AppHandler(trc_lvl, _ec._app_trc));
+        _ROOT_LOGGER.setLevel(trc_lvl)
+
+        log_lvl = _ec._app_log_level()
+        # Python does not have the concept of OFF
+        if log_lvl == 0:
+            log_lvl = logging.CRITICAL
+        _STREAMS_LOG = logging.getLogger('com.ibm.streams.log')
+        _STREAMS_LOG.propagate = False
+        _STREAMS_LOG.addHandler(_AppHandler(log_lvl, _ec._app_log));
+        _STREAMS_LOG.setLevel(log_lvl)

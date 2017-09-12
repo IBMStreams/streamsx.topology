@@ -146,6 +146,14 @@ Thus if a stream is consumed by two map and one filter callables in the same PE 
 
 Applications cannot rely on pass-by reference,  it is a performance optimization that can be made in some situations when stream connections are within a PE.
 
+Application log and trace
+=========================
+
+IBM Streams provides application trace and log services which are
+accesible through standard Python loggers from the `logging` module.
+
+See :ref:`streams_app_log_trc`.
+
 SPL operators
 =============
 
