@@ -6,6 +6,8 @@
     </description>
 	
 	<property name="testtk" location="spl/testtkpy"/>
+	<property name="testtk_pip_op" location="spl/testtkpy_pip_op"/>
+	<property name="testtk_pip_tk" location="spl/testtkpy_pip_toolkit"/>
 	<property name="topology" location="topology"/>
         <property name="test.dir" location="unittests"/>
 
@@ -36,6 +38,20 @@
              <arg value="--make-operator"/>
 	     <arg value="-i"/>
 	     <arg value="${testtk}"/>
+	   </exec>
+           <exec executable="${topology.test.python}" dir="${testtk_pip_op}" failonerror="true">
+             <env key="PYTHONPATH" file="${tk.opt}/python/packages"/>
+	     <arg value="${tk}/bin/spl-python-extract.py"/>
+             <arg value="--directory"/>
+             <arg value="${testtk_pip_op}"/>
+             <arg value="--make-toolkit"/>
+	   </exec>
+           <exec executable="${topology.test.python}" dir="${testtk_pip_tk}" failonerror="true">
+             <env key="PYTHONPATH" file="${tk.opt}/python/packages"/>
+	     <arg value="${tk}/bin/spl-python-extract.py"/>
+             <arg value="--directory"/>
+             <arg value="${testtk_pip_tk}"/>
+             <arg value="--make-toolkit"/>
 	   </exec>
 	   </target>
 
