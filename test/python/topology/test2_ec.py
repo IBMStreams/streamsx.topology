@@ -28,10 +28,10 @@ def _log_msg_direct(level):
 
 def _trc_msg(msg):
     logger = logging.getLogger()
-    logger.critical("Critical:" + msg)
+    logger.critical("Critical:%s", msg)
     logger.error("Error:" + msg)
     logger.warning("Warning:" + msg)
-    logger.info("Info:" + msg)
+    logger.info("Info:%s")
     logger.debug("Debug:" + msg)
     ctl = logger.getEffectiveLevel()
     print("Current Root logger Trace level:", ctl, logging.getLevelName(ctl), flush=True)
