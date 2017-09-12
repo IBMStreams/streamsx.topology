@@ -30,15 +30,14 @@ class TestPipInstalls(unittest.TestCase):
     """
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
-        #Tester.setup_standalone(self)
 
     def test_verify_no_pint(self):
         """ Verify pint is not installed on the service """
         topo = Topology()
         s = topo.source(down_a_pint_source)
-        #tester = Tester(topo)
-        #tester.contents(s, ['NoPintsForYou'])
-        #tester.test(self.test_ctxtype, self.test_config)
+        tester = Tester(topo)
+        tester.contents(s, ['NoPintsForYou'])
+        tester.test(self.test_ctxtype, self.test_config)
 
     def test_verify_operator_pip_install(self):
         """ Verify pint is installed by the operator module """
