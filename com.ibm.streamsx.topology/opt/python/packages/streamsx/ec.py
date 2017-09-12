@@ -48,6 +48,7 @@ import enum
 import pickle
 import threading
 import importlib
+import logging
 import sys
 
 try:
@@ -408,3 +409,45 @@ def _callable_exit_clean(callable):
     if hasattr(callable, '__enter__') and hasattr(callable, '__exit__'):
         callable.__exit__(None, None, None)
 
+#
+# Application Trace & Log
+#
+class _AppHandler(logging.Handler):
+    def __init__(self, lvl, fn):
+        super(_AppHandler, self).__init__(lvl)
+        self._emit_to_streams = fn
+
+    def createLock(self):
+        # Locking handled by Streams runtime
+        self.lock = None
+
+    def emit(self, record):
+        pylvl = record.levelno
+        aspects = 'python'
+        if record.module:
+            aspects = aspects + ',' + str(record.module)
+        lineno = record.lineno if isinstance(record.lineno, int) else -1
+        self._emit_to_streams((pylvl, record.getMessage(), aspects,
+              record.funcName, record.filename, lineno))
+
+_ROOT_LOGGER = None
+_STREAMS_LOG = None
+
+def _setup():
+    if _is_supported():
+        trc_lvl = _ec._app_trc_level()
+        # Python does not have the concept of OFF
+        if trc_lvl == 0:
+            trc_lvl = logging.CRITICAL
+        _ROOT_LOGGER = logging.getLogger()
+        _ROOT_LOGGER.addHandler(_AppHandler(trc_lvl, _ec._app_trc));
+        _ROOT_LOGGER.setLevel(trc_lvl)
+
+        log_lvl = _ec._app_log_level()
+        # Python does not have the concept of OFF
+        if log_lvl == 0:
+            log_lvl = logging.CRITICAL
+        _STREAMS_LOG = logging.getLogger('com.ibm.streams.log')
+        _STREAMS_LOG.propagate = False
+        _STREAMS_LOG.addHandler(_AppHandler(log_lvl, _ec._app_log));
+        _STREAMS_LOG.setLevel(log_lvl)
