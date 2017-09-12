@@ -27,6 +27,54 @@ as a single PE (process) outside of a Streams instance.
 
 Standalone is typically used for ad-hoc testing of an application.
 
+.. _streams_app_log_trc:
+
+Application log and trace
+-------------------------
+
+IBM Streams provides application trace and log services.
+
+Application log
+===============
+
+The `Streams application log` service is for application logging, where logging is defined as the recording of serviceability information pertaining to application or operator events. The purpose of logging is to provide an administrator with enough information to do problem determination for items they can potentially control. In general, very few events are logged in the normal running scenario of an application or operator. Events pertinent to the failure or partial failure of application runtime scenarios should be logged. 
+
+When running in distributed or standalone the `com.ibm.streams.log` logger has a handler that records messages to the `Streams application log` service. The level of the logger and its handler are set to the configured application log level at PE start up.
+
+This logger and handler discard any message with level below `INFO` (20).
+
+Python application code can log a message suitable for an administrator by using
+the `com.ibm.streams.log` logger or a child logger that has ``logger.propagate`` evaulating to ``True``. Example of logging a file exception::
+
+    try:
+        import numpy
+    except ImportError as e:
+        logging.getLogger('com.ibm.streams.log').error(e)
+        raise
+
+Application code must not modify the `com.ibm.streams.log` logger, if additional handlers or different levels are required a child logger should be used.
+
+Application trace
+=================
+
+The `Streams application trace` service is for application tracing, where tracing is defined as the recording of application or operator internal events and data. The purpose of tracing is to allow application or operator developers to debug their applications or operators. 
+
+When running in distributed or standalone the root logger has a handler that records messages to the `Streams application trace` service. The level of the logger and its handler are set to the configured application trace level at PE start up.
+
+Python application code can trace a message using
+the root logger or a child logger that has ``logger.propagate`` evaulating to ``True``. Example of logging a trace message::
+
+    trace = logging.getLogger(__name__)
+  
+    ...
+
+        trace.info("Threshold set to %f", val)
+
+Any existing logging performed by modules will automatically become
+Streams trace messages if the application is using the `logging` package.
+
+Application code must not modify the root logger, if additional handlers or different levels are required a child logger should be used.
+
 Execution Context
 -----------------
 This module (`streamsx.exec`) provides access to the execution
