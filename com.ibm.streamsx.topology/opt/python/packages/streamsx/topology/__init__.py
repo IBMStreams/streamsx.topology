@@ -110,10 +110,6 @@ types (schemas) can be subscribed to by any Streams application.
 import logging
 
 
-class _NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-
 _debug = logging.getLogger('streamsx.topology.internal')
-_debug.addHandler(_NullHandler())
+_debug.addHandler(logging.NullHandler())
 _debug.setLevel(logging.CRITICAL)

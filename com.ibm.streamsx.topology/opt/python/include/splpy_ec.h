@@ -85,6 +85,107 @@ static PyObject * __splpy_ec_get_app_config(PyObject *self, PyObject *pyname) {
    return streamsx::topology::SplpyGeneral::getBool(false);
 }
 
+static PyObject * __splpy_ec_app_trc(PyObject *self, PyObject *args) {
+   PyObject *pylevel = PyTuple_GET_ITEM(args, 0);
+
+   int pylvl = (int) PyLong_AsLong(pylevel);
+   int lvl = L_TRACE;
+   if (pylvl >= 40)
+      lvl = L_ERROR;
+   else if (pylvl >= 30)
+      lvl = L_WARN;
+   else if (pylvl >= 20)
+      lvl = L_INFO;
+   else if (pylvl >= 10)
+      lvl = L_DEBUG;
+
+   int ilvl = Distillery::debug::EXTERNAL_DEBUG_LEVEL_MAP_TO_INTERNAL[lvl];
+   if (ilvl <= Distillery::debug::app_trace_level) {
+       PyObject *pymsg = PyTuple_GET_ITEM(args, 1);
+       PyObject *pyaspects = PyTuple_GET_ITEM(args, 2);
+       PyObject *pyfile = PyTuple_GET_ITEM(args, 3);
+       PyObject *pyfunc = PyTuple_GET_ITEM(args, 4);
+       PyObject *pyline = PyTuple_GET_ITEM(args, 5);
+
+       Distillery::debug::write_appmsg(ilvl,
+          SPL::splAppTrcAspect(streamsx::topology::pyRstringFromPyObject(pyaspects)),
+          streamsx::topology::pyRstringFromPyObject(pyfunc),
+          streamsx::topology::pyRstringFromPyObject(pyfile),
+          (int) PyLong_AsLong(pyline),
+          streamsx::topology::pyRstringFromPyObject(pymsg));
+   }
+ 
+   // Any return is going to be ignored (maybe)
+   // so return an existing object with its reference bumped
+   Py_INCREF(pylevel);
+   return pylevel;
+}
+static PyObject * __splpy_ec_app_trc_level(PyObject *self, PyObject *notused) {
+   int ilvl = Distillery::debug::app_trace_level;
+   int pylvl = 0; // NOTSET
+   if (ilvl == Distillery::debug::EXTERNAL_DEBUG_LEVEL_MAP_TO_INTERNAL[L_ERROR])
+       pylvl = 40; // ERROR 
+   else if (ilvl == Distillery::debug::EXTERNAL_DEBUG_LEVEL_MAP_TO_INTERNAL[L_WARN])
+       pylvl = 30; // WARNING 
+   else if (ilvl == Distillery::debug::EXTERNAL_DEBUG_LEVEL_MAP_TO_INTERNAL[L_INFO])
+       pylvl = 20; // INFO 
+   else if (ilvl == Distillery::debug::EXTERNAL_DEBUG_LEVEL_MAP_TO_INTERNAL[L_DEBUG])
+       pylvl = 10; // DEBUG 
+   else if (ilvl == Distillery::debug::EXTERNAL_DEBUG_LEVEL_MAP_TO_INTERNAL[L_TRACE])
+       pylvl = 10; // DEBUG 
+
+   return PyLong_FromLong(pylvl);
+}
+
+static PyObject * __splpy_ec_app_log(PyObject *self, PyObject *args) {
+   PyObject *pylevel = PyTuple_GET_ITEM(args, 0);
+
+   int pylvl = (int) PyLong_AsLong(pylevel);
+   int lvl = L_OFF;
+   if (pylvl >= 40)
+      lvl = L_ERROR;
+   else if (pylvl >= 30)
+      lvl = L_WARN;
+   else if (pylvl >= 20)
+      lvl = L_INFO;
+
+   if (lvl != L_OFF) {
+
+     int ilvl = Distillery::debug::EXTERNAL_DEBUG_LEVEL_MAP_TO_INTERNAL[lvl];
+     if (ilvl <= Distillery::debug::logger_level) {
+       PyObject *pymsg = PyTuple_GET_ITEM(args, 1);
+       PyObject *pyaspects = PyTuple_GET_ITEM(args, 2);
+       PyObject *pyfile = PyTuple_GET_ITEM(args, 3);
+       PyObject *pyfunc = PyTuple_GET_ITEM(args, 4);
+       PyObject *pyline = PyTuple_GET_ITEM(args, 5);
+
+       Distillery::debug::write_log(ilvl,
+          SPL::splAppLogAspect(streamsx::topology::pyRstringFromPyObject(pyaspects)),
+          streamsx::topology::pyRstringFromPyObject(pyfunc),
+          streamsx::topology::pyRstringFromPyObject(pyfile),
+          (int) PyLong_AsLong(pyline),
+          streamsx::topology::pyRstringFromPyObject(pymsg));
+     }
+   }
+ 
+   // Any return is going to be ignored (maybe)
+   // so return an existing object with its reference bumped
+   Py_INCREF(pylevel);
+   return pylevel;
+}
+static PyObject * __splpy_ec_app_log_level(PyObject *self, PyObject *notused) {
+   int ilvl = Distillery::debug::logger_level;
+   int pylvl = 0; // NOTSET
+   if (ilvl == Distillery::debug::EXTERNAL_DEBUG_LEVEL_MAP_TO_INTERNAL[L_ERROR])
+       pylvl = 40; // ERROR 
+   else if (ilvl == Distillery::debug::EXTERNAL_DEBUG_LEVEL_MAP_TO_INTERNAL[L_WARN])
+       pylvl = 30; // WARNING 
+   else if (ilvl == Distillery::debug::EXTERNAL_DEBUG_LEVEL_MAP_TO_INTERNAL[L_INFO])
+       pylvl = 20; // INFO 
+
+   return PyLong_FromLong(pylvl);
+}
+
 // Operator functions
 static PyObject * __splpy_ec_channel(PyObject *self, PyObject *opc) {
    return PyLong_FromLong(__splpy_ec_opcontext(opc).getChannel());
@@ -167,6 +268,14 @@ static PyMethodDef __splpy_ec_methods[] = {
          "Return if execution context is standalone."},
     {"get_application_configuration", __splpy_ec_get_app_config, METH_O,
          "Get application configuration."},
+    {"_app_trc", __splpy_ec_app_trc, METH_O,
+         "Application trace."},
+    {"_app_trc_level", __splpy_ec_app_trc_level, METH_NOARGS,
+         "Application trace level."},
+    {"_app_log", __splpy_ec_app_log, METH_O,
+         "Application log."},
+    {"_app_log_level", __splpy_ec_app_log_level, METH_NOARGS,
+         "Application log level."},
     {"channel", __splpy_ec_channel, METH_O,
          "Return the global parallel channel."},
     {"local_channel", __splpy_ec_local_channel, METH_O,
