@@ -23,8 +23,6 @@
 #include "splpy_ec_api.h"
 
 #include <SPL/Runtime/Operator/ParameterValue.h>
-#include <SPL/Runtime/Operator/OperatorContext.h>
-#include <SPL/Runtime/Operator/Operator.h>
 
 namespace streamsx {
   namespace topology {

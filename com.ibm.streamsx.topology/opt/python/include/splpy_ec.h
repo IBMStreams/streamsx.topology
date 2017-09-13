@@ -27,7 +27,6 @@
 #if __SPLPY_EC_MODULE_OK
 
 #include <SPL/Runtime/ProcessingElement/ProcessingElement.h>
-#include <SPL/Runtime/Operator/OperatorContext.h>
 #include <SPL/Runtime/Operator/OperatorMetrics.h>
 #include <SPL/Runtime/Common/Metric.h>
 #include <SPL/Runtime/Function/UtilFunctions.h>
