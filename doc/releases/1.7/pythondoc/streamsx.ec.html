@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.ec module &mdash; streamsx 1.7b1 documentation</title>
+  <title>streamsx.ec module &mdash; streamsx 1.7b2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.7b1 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.7b2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -88,6 +88,11 @@
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#distributed">Distributed</a></li>
 <li><a class="reference internal" href="#standalone">Standalone</a></li>
+<li><a class="reference internal" href="#application-log-and-trace">Application log and trace</a><ul>
+<li><a class="reference internal" href="#application-log">Application log</a></li>
+<li><a class="reference internal" href="#application-trace">Application trace</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#execution-context">Execution Context</a></li>
 </ul>
 </li>
@@ -158,6 +163,43 @@ resources (hosts) in the Streams instance.</p>
 <p>Standalone is a mode where the complete application is run
 as a single PE (process) outside of a Streams instance.</p>
 <p>Standalone is typically used for ad-hoc testing of an application.</p>
+</div>
+<div class="section" id="application-log-and-trace">
+<span id="streams-app-log-trc"></span><h2>Application log and trace<a class="headerlink" href="#application-log-and-trace" title="Permalink to this headline">¶</a></h2>
+<p>IBM Streams provides application trace and log services.</p>
+<div class="section" id="application-log">
+<h3>Application log<a class="headerlink" href="#application-log" title="Permalink to this headline">¶</a></h3>
+<p>The <cite>Streams application log</cite> service is for application logging, where logging is defined as the recording of serviceability information pertaining to application or operator events. The purpose of logging is to provide an administrator with enough information to do problem determination for items they can potentially control. In general, very few events are logged in the normal running scenario of an application or operator. Events pertinent to the failure or partial failure of application runtime scenarios should be logged.</p>
+<p>When running in distributed or standalone the <cite>com.ibm.streams.log</cite> logger has a handler that records messages to the <cite>Streams application log</cite> service. The level of the logger and its handler are set to the configured application log level at PE start up.</p>
+<p>This logger and handler discard any message with level below <cite>INFO</cite> (20).</p>
+<p>Python application code can log a message suitable for an administrator by using
+the <cite>com.ibm.streams.log</cite> logger or a child logger that has <code class="docutils literal"><span class="pre">logger.propagate</span></code> evaulating to <code class="docutils literal"><span class="pre">True</span></code>. Example of logging a file exception:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">numpy</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;com.ibm.streams.log&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">raise</span>
+</pre></div>
+</div>
+<p>Application code must not modify the <cite>com.ibm.streams.log</cite> logger, if additional handlers or different levels are required a child logger should be used.</p>
+</div>
+<div class="section" id="application-trace">
+<h3>Application trace<a class="headerlink" href="#application-trace" title="Permalink to this headline">¶</a></h3>
+<p>The <cite>Streams application trace</cite> service is for application tracing, where tracing is defined as the recording of application or operator internal events and data. The purpose of tracing is to allow application or operator developers to debug their applications or operators.</p>
+<p>When running in distributed or standalone the root logger has a handler that records messages to the <cite>Streams application trace</cite> service. The level of the logger and its handler are set to the configured application trace level at PE start up.</p>
+<p>Python application code can trace a message using
+the root logger or a child logger that has <code class="docutils literal"><span class="pre">logger.propagate</span></code> evaulating to <code class="docutils literal"><span class="pre">True</span></code>. Example of logging a trace message:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">trace</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="o">...</span>
+
+    <span class="n">trace</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Threshold set to </span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Any existing logging performed by modules will automatically become
+Streams trace messages if the application is using the <cite>logging</cite> package.</p>
+<p>Application code must not modify the root logger, if additional handlers or different levels are required a child logger should be used.</p>
+</div>
 </div>
 <div class="section" id="execution-context">
 <h2>Execution Context<a class="headerlink" href="#execution-context" title="Permalink to this headline">¶</a></h2>
@@ -479,7 +521,7 @@ parallel region has been replicated due to nesting.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.7b1',
+            VERSION:'1.7b2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

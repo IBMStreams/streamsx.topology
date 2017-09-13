@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology package &mdash; streamsx 1.7b1 documentation</title>
+  <title>streamsx.topology package &mdash; streamsx 1.7b2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.7b1 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.7b2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -88,6 +88,7 @@
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 <li><a class="reference internal" href="#module-streamsx.topology">Module contents</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#creating-applications">Creating Applications</a></li>
 <li><a class="reference internal" href="#microservices">Microservices</a><ul>
 <li><a class="reference internal" href="#publish-subscribe-overview">Publish-subscribe overview</a></li>
 </ul>
@@ -160,6 +161,7 @@
 <li class="toctree-l3"><a class="reference internal" href="streamsx.topology.topology.html#stateful-operations">Stateful operations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="streamsx.topology.topology.html#initialization-and-shutdown">Initialization and shutdown</a></li>
 <li class="toctree-l3"><a class="reference internal" href="streamsx.topology.topology.html#tuple-semantics">Tuple semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="streamsx.topology.topology.html#application-log-and-trace">Application log and trace</a></li>
 <li class="toctree-l3"><a class="reference internal" href="streamsx.topology.topology.html#spl-operators">SPL operators</a></li>
 </ul>
 </li>
@@ -180,6 +182,12 @@ analyze and correlate information as it arrives from thousands of real-time sour
 Streams can handle very high data throughput rates, millions of events or messages per second.
 With this API Python developers can build streaming applications that can be executed using IBM Streams,
 including the processing being distributed across multiple computing resources (hosts or machines) for scalability.</p>
+</div>
+<div class="section" id="creating-applications">
+<h3>Creating Applications<a class="headerlink" href="#creating-applications" title="Permalink to this headline">¶</a></h3>
+<p>Applications are created by declaring a flow graph contained
+in a <code class="xref py py-class docutils literal"><span class="pre">Topology</span></code> instance.</p>
+<p>For details see <a class="reference internal" href="streamsx.topology.topology.html#module-streamsx.topology.topology" title="streamsx.topology.topology"><code class="xref py py-mod docutils literal"><span class="pre">streamsx.topology.topology</span></code></a>.</p>
 </div>
 <div class="section" id="microservices">
 <h3>Microservices<a class="headerlink" href="#microservices" title="Permalink to this headline">¶</a></h3>
@@ -295,7 +303,7 @@ types (schemas) can be subscribed to by any Streams application.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.7b1',
+            VERSION:'1.7b2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

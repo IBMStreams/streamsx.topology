@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.topology module &mdash; streamsx 1.7b1 documentation</title>
+  <title>streamsx.topology.topology module &mdash; streamsx 1.7b2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.7b1 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.7b2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -93,6 +93,7 @@
 <li><a class="reference internal" href="#stateful-operations">Stateful operations</a></li>
 <li><a class="reference internal" href="#initialization-and-shutdown">Initialization and shutdown</a></li>
 <li><a class="reference internal" href="#tuple-semantics">Tuple semantics</a></li>
+<li><a class="reference internal" href="#application-log-and-trace">Application log and trace</a></li>
 <li><a class="reference internal" href="#spl-operators">SPL operators</a></li>
 </ul>
 </li>
@@ -273,6 +274,12 @@ Initialization at runtime, such as opening connections, occurs through the <code
 <li>Using copy/deepcopy when returning a value that will be submitted to a stream.</li>
 </ul>
 <p>Applications cannot rely on pass-by reference,  it is a performance optimization that can be made in some situations when stream connections are within a PE.</p>
+</div>
+<div class="section" id="application-log-and-trace">
+<h3>Application log and trace<a class="headerlink" href="#application-log-and-trace" title="Permalink to this headline">¶</a></h3>
+<p>IBM Streams provides application trace and log services which are
+accesible through standard Python loggers from the <cite>logging</cite> module.</p>
+<p>See <a class="reference internal" href="streamsx.ec.html#streams-app-log-trc"><span class="std std-ref">Application log and trace</span></a>.</p>
 </div>
 <div class="section" id="spl-operators">
 <h3>SPL operators<a class="headerlink" href="#spl-operators" title="Permalink to this headline">¶</a></h3>
@@ -1031,20 +1038,32 @@ will be available at runtime.</p>
 <p>The file will be copied and made available relative to the
 application directory. Location determines where the file
 is relative to the application directory. Two values for
-location are supported <cite>etc</cite> and <cite>opt</cite>.</p>
+location are supported <cite>etc</cite> and <cite>opt</cite>.
+The runtime path relative to application directory is returned.</p>
 <p>The copy is made during the submit call thus the contents of
 the file or directory must remain availble until submit returns.</p>
-<p>For example calling <cite>add_file_dependency(&#8216;etc&#8217;, &#8216;/tmp/conf.properties&#8217;)</cite>
+<p>For example calling
+<code class="docutils literal"><span class="pre">add_file_dependency('/tmp/conf.properties',</span> <span class="pre">'etc')</span></code>
 will result in contents of the local file <cite>conf.properties</cite>
-being available at runtime at the path <cite>application directory</cite>/etc/conf.properties.</p>
+being available at runtime at the path <cite>application directory</cite>/etc/conf.properties. This call returns <code class="docutils literal"><span class="pre">etc/conf.properties</span></code>.</p>
+<p>Python callables can determine the application directory at
+runtime with <a class="reference internal" href="streamsx.ec.html#streamsx.ec.get_application_directory" title="streamsx.ec.get_application_directory"><code class="xref py py-func docutils literal"><span class="pre">get_application_directory()</span></code></a>.
+For example the path above at runtime is
+<code class="docutils literal"><span class="pre">os.path.join(streamsx.ec.get_application_directory(),</span> <span class="pre">'etc',</span> <span class="pre">'conf.properties')</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>path</strong> (<em>str</em>) &#8211; Path of the file on the local system.</li>
 <li><strong>location</strong> (<em>str</em>) &#8211; Location of the file in the bundle relative to the application directory.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Path relative to application directory that can be joined at runtime with <code class="docutils literal"><span class="pre">get_application_directory</span></code>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
 </td>
 </tr>
 </tbody>
@@ -1275,7 +1294,7 @@ duration of the window.</td>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.7b1',
+            VERSION:'1.7b2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

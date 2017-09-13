@@ -22,7 +22,7 @@
 <div class="body refbody">
 <div class="section">
 <p class="p">
-<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.7.1.beta</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$6.html">Creating SPL Operators from Python code</a> &gt; Supported SPL types</p>
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.7.2.beta</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$6.html">Creating SPL Operators from Python code</a> &gt; Supported SPL types</p>
 
 </div>
 
@@ -37,7 +37,7 @@
 <ul class="ul">
 <li class="li"> <tt class="ph tt">blob</tt> - maps to a Python <tt class="ph tt">memoryview</tt></li>
 
-<li class="li"> <tt class="ph tt">boolean</tt> - maps to Python <tt class="ph tt">Boolean</tt></li>
+<li class="li"> <tt class="ph tt">boolean</tt> - maps to Python <tt class="ph tt">bool</tt></li>
 
 <li class="li"> <tt class="ph tt">int8</tt>, <tt class="ph tt">int16</tt>, <tt class="ph tt">int32</tt>, <tt class="ph tt">int64</tt> - maps to Python <tt class="ph tt">int</tt></li>
 
@@ -45,9 +45,13 @@
 
 <li class="li"> <tt class="ph tt">float32</tt>, <tt class="ph tt">float64</tt> - maps to Python <tt class="ph tt">float</tt></li>
 
+<li class="li"> <tt class="ph tt">decimal32</tt>, <tt class="ph tt">decimal64</tt>, <tt class="ph tt">decimal128</tt> - maps to Python <tt class="ph tt">decimal.Decimal</tt></li>
+
 <li class="li"> <tt class="ph tt">complex32</tt>, <tt class="ph tt">complex64</tt> - maps to Python <tt class="ph tt">complex</tt></li>
 
 <li class="li"> <tt class="ph tt">rstring</tt>, <tt class="ph tt">ustring</tt> - maps to Python <tt class="ph tt">String</tt> - <tt class="ph tt">rstring</tt> values assume UTF-8 encoding</li>
+
+<li class="li"> <tt class="ph tt">timestamp</tt> - maps to Python <tt class="ph tt">streamsx.spl.type.Timestamp</tt></li>
 
 </ul>
 </li>

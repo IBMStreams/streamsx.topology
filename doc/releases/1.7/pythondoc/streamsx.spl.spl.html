@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.spl.spl module &mdash; streamsx 1.7b1 documentation</title>
+  <title>streamsx.spl.spl module &mdash; streamsx 1.7b2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.7b1 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.7b2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -90,6 +90,7 @@
 <li><a class="reference internal" href="#id1">Overview</a></li>
 <li><a class="reference internal" href="#operator-state">Operator state</a></li>
 <li><a class="reference internal" href="#operator-initialization-shutdown">Operator initialization &amp; shutdown</a></li>
+<li><a class="reference internal" href="#application-log-and-trace">Application log and trace</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#python-functions-as-spl-operators">Python functions as SPL operators</a></li>
@@ -282,6 +283,12 @@ in order to support stateful operator restart &amp; checkpointing in the future.
             <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="application-log-and-trace">
+<h3>Application log and trace<a class="headerlink" href="#application-log-and-trace" title="Permalink to this headline">¶</a></h3>
+<p>IBM Streams provides application trace and log services which are
+accesible through standard Python loggers from the <cite>logging</cite> module.</p>
+<p>See <a class="reference internal" href="streamsx.ec.html#streams-app-log-trc"><span class="std std-ref">Application log and trace</span></a>.</p>
 </div>
 </div>
 <div class="section" id="python-functions-as-spl-operators">
@@ -842,7 +849,7 @@ is submitted to the output port.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.7b1',
+            VERSION:'1.7b2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
