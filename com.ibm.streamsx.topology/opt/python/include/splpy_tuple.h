@@ -17,7 +17,6 @@
 #define __SPL__SPLPY_TUPLE_H
 
 #include "splpy_general.h"
-#include <SPL/Runtime/Common/RuntimeException.h>
 
 /**
  * Structure representing a SPL tuple containing a PyObject * pointer.
