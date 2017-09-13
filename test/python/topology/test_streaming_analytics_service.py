@@ -5,6 +5,7 @@ import unittest
 import os
 import json
 import sys
+import tempfile
 
 from streamsx.topology.topology import *
 from streamsx.topology import schema
@@ -22,12 +23,23 @@ def build_simple_app(name):
 class TestStreamingAnalytics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.delete_file = None
         cls.vcap_services = os.environ.pop('VCAP_SERVICES', None)
+        if not cls.vcap_services.startswith('/'):
+            # VCAP_SERVICES is JSON, not a file, create a temp file
+            fd, tp = tempfile.mkstemp(suffix='.json', prefix='vcap', text=True)
+            os.write(fd, cls.vcap_services.encode('utf-8'))
+            os.close(fd)
+            cls.vcap_services = tp
+            cls.delete_file = tp
+          
         cls.service_name = os.environ.pop('STREAMING_ANALYTICS_SERVICE_NAME', None)
     @classmethod
     def tearDownClass(cls):
         if cls.vcap_services is not None:
             os.environ['VCAP_SERVICES'] = cls.vcap_services
+            if cls.delete_file:
+                os.remove(cls.delete_file)
         if cls.service_name is not None:
             os.environ['STREAMING_ANALYTICS_SERVICE_NAME'] = cls.service_name
 
