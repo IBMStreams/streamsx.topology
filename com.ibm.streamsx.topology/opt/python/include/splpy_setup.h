@@ -267,11 +267,6 @@ class SplpySetup {
           _SPLPyEval_InitThreads();
           _SPLPyEval_SaveThread();
 
-#if __SPLPY_EC_MODULE_OK
-          SplpyGIL lock;
-          SplpyGeneral::callVoidFunction("streamsx.ec", "_setup", NULL, NULL);
-#endif
-
         } else {
           SPLAPPTRC(L_DEBUG, "Python runtime already started", "python");
         }
@@ -304,6 +299,10 @@ class SplpySetup {
           throw SplpyGeneral::pythonException("splpy_setup.py");
         }
         SPLAPPTRC(L_DEBUG, "Python script splpy_setup.py ran ok.", "python");
+
+#if __SPLPY_EC_MODULE_OK
+        SplpyGeneral::callVoidFunction("streamsx.ec", "_setup", NULL, NULL);
+#endif
     }
 };
 
