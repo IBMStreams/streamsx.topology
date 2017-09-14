@@ -1,5 +1,7 @@
 import unittest
 
+import test_vers
+
 from streamsx.topology.topology import *
 from streamsx.topology.schema import CommonSchema
 from streamsx.topology.tester import Tester
@@ -12,6 +14,7 @@ class Person(object):
     def rough_birth_year(self):
         return time.localtime().tm_year - self.age;
 
+@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestPythonWindowing(unittest.TestCase):
     def setUp(self):
         Tester.setup_standalone(self)

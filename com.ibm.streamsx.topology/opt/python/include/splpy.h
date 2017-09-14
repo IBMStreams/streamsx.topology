@@ -29,15 +29,6 @@
 #include <memory>
 #include <TopologySplpyResource.h>
 
-#include <SPL/Runtime/Common/RuntimeException.h>
-#include <SPL/Runtime/Type/Meta/BaseType.h>
-#include <SPL/Runtime/ProcessingElement/PE.h>
-#include <SPL/Runtime/Operator/Port/OperatorPort.h>
-#include <SPL/Runtime/Operator/Port/OperatorInputPort.h>
-#include <SPL/Runtime/Operator/Port/OperatorOutputPort.h>
-#include <SPL/Runtime/Operator/OperatorContext.h>
-#include <SPL/Runtime/Operator/Operator.h>
-
 /**
  * Functionality for executing Python within IBM Streams.
  */
