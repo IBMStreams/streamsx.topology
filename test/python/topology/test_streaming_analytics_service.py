@@ -25,7 +25,7 @@ class TestStreamingAnalytics(unittest.TestCase):
     def setUpClass(cls):
         cls.delete_file = None
         cls.vcap_services = os.environ.pop('VCAP_SERVICES', None)
-        if not cls.vcap_services.startswith('/'):
+        if cls.vcap_services and not cls.vcap_services.startswith('/'):
             # VCAP_SERVICES is JSON, not a file, create a temp file
             fd, tp = tempfile.mkstemp(suffix='.json', prefix='vcap', text=True)
             os.write(fd, cls.vcap_services.encode('utf-8'))
