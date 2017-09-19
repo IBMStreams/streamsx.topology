@@ -10,6 +10,7 @@ import streamsx.topology.schema as _sch
 _PRIMITIVES = ['boolean', 'blob', 'int8', 'int16', 'int32', 'int64',
                  'uint8', 'uint16', 'uint32', 'uint64',
                  'float32', 'float64',
+                 'decimal32', 'decimal64', 'decimal128',
                  'complex32', 'complex64',
                  'timestamp', 'xml'
                ]
@@ -79,12 +80,21 @@ class TestSchema(unittest.TestCase):
                   p._parse()
                   self.assertEqual(1, len(p._type))
                   self.assertIsInstance(p._type[0][0], tuple)
+                  self.assertEqual(p._type[0][0][0], ctyp)
+                  self.assertEqual(p._type[0][0][1], etyp)
                   self.assertEqual('c', p._type[0][1])
 
-    def test_collections(self):
+    def test_map(self):
         typ = 'map<int32, complex64>'
         p = _SchemaParser('tuple<' + typ + ' m>')
         p._parse()
+        self.assertEqual(1, len(p._type))
+        self.assertIsInstance(p._type[0][0], tuple)
+        self.assertEqual(p._type[0][0][0], 'map')
+        self.assertIsInstance(p._type[0][0][1], tuple)
+        self.assertEqual(p._type[0][0][1][0], 'int32')
+        self.assertEqual(p._type[0][0][1][1], 'complex64')
+        self.assertEqual('m', p._type[0][1])
 
     def test_nested_tuple(self):
       p = _SchemaParser('tuple<int32 a, tuple<int64 b, complex32 c, float32 d> e>')
