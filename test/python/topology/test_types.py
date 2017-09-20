@@ -45,15 +45,6 @@ class TestTypes(unittest.TestCase):
       self.assertIsInstance(dt, datetime.datetime)
 
       self.assertIsNone(dt.tzinfo)
-      ts = Timestamp(1496576905, 888000000, 0)
-      
-  def test_TimestampToDatetime(self):
-      # 2017-06-04 11:48:25.008880
-      ts = Timestamp(1496576905, 888000000, 0)
-      dt = ts.datetime()
-      self.assertIsInstance(dt, datetime.datetime)
-
-      self.assertIsNone(dt.tzinfo)
 
       self.assertEqual(2017, dt.year)
       self.assertEqual(6, dt.month)
