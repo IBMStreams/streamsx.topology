@@ -194,6 +194,12 @@ class _JSONInTupleOut(_FunctionalCallable):
         rv =  self._callable(json.loads(tuple))
         return _verify_tuple(rv)
 
+
+class _JSONInJSONOut(_FunctionalCallable):
+    def __call__(self, tuple):
+        rv = self._callable(json.loads(tuple))
+        return _json_object_out(rv)
+
 ##
 ## Set of functions that wrap the application's Python callable
 ## with a function that correctly handles the input and output
@@ -374,6 +380,7 @@ string_in__object_out = object_in__object_out
 string_in__object_iter = object_in__object_iter
 string_in__pickle_out = object_in__pickle_out
 string_in__pickle_iter = object_in__pickle_iter
+string_in__string_out = object_in__object_out
 string_in__json_out = object_in__json_out
 string_in__dict_out = object_in__dict_out
 string_in = object_in
@@ -383,6 +390,7 @@ json_in__object_iter = _JSONInObjectIter
 json_in__pickle_out = _JSONInPickleOut
 json_in__pickle_iter = _JSONInPickleIter
 json_in__string_out = _JSONInStringOut
+json_in__json_out = _JSONInJSONOut
 json_in__dict_out = _JSONInTupleOut
 json_in = _JSONInObjectOut
 
