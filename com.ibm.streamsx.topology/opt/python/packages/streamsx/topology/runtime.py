@@ -349,6 +349,7 @@ class _JSONInObjectIter(_ObjectInObjectIter):
         return super(_JSONInObjectIter, self).__call__(json.loads(tuple))
 
 
+<<<<<<< HEAD
 # Variables used by SPL Python operators to create specific wrapper function.
 #
 # Source: source_style
@@ -402,3 +403,5 @@ dict_in__string_out = object_in__object_out
 dict_in__json_out = object_in__json_out
 dict_in__dict_out = object_in__dict_out
 dict_in = object_in
+
+tuple_in = object_in

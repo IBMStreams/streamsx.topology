@@ -21,6 +21,24 @@ import token
 import tokenize
 
 
+def is_common(schema):
+    """
+    Is `schema` an common schema
+    Args:
+        schema: Scheme to test.
+
+    Returns:
+        bool: ``True`` if schema is a common schema, otherwise ``False``.
+
+    """
+    if isinstance(schema, StreamSchema):
+        return schema.schema() in _SCHEMA_COMMON
+    if isinstance(schema, CommonSchema):
+        return True
+    if isinstance(schema, str):
+        return is_common(StreamSchema(schema))
+    raise TypeError()
+
 # Parses a schema of the form 'tuple<...>'
 # _parse returns a list of the schema attributes,
 # each attribute is a python tuple of:
@@ -165,6 +183,16 @@ def _attribute_names(types):
         names.append(attr[1])
     return names
 
+_SCHEMA_PYTHON_OBJECT = 'tuple<blob __spl_po>'
+_SCHEMA_STRING = 'tuple<rstring string>'
+_SCHEMA_JSON = 'tuple<rstring jsonString>'
+_SCHEMA_BINARY = 'tuple<blob binary>' # not yet supported
+_SCHEMA_XML = 'tuple<xml document>' # not yet supported
+
+_SCHEMA_COMMON = frozenset([_SCHEMA_PYTHON_OBJECT, _SCHEMA_JSON, _SCHEMA_STRING, _SCHEMA_BINARY, _SCHEMA_XML])
+
+_SCHEMA_COMMON_STYLES = {_SCHEMA_PYTHON_OBJECT:object, _SCHEMA_STRING: str, _SCHEMA_JSON: dict, _SCHEMA_BINARY:None, _SCHEMA_XML: None }
+
 class StreamSchema(object) :
     """Defines a schema for a structured stream.
 
@@ -247,10 +275,11 @@ class StreamSchema(object) :
         schema = schema.strip()
         self.__spl_type = not schema.startswith("tuple<")
         self.__schema=schema
-        self.__nt = None
         if not self.__spl_type:
             parser = _SchemaParser(schema)
             self._types = parser._parse()
+
+        self._style = self._default_style()
             
     def _set(self, schema):
         """Set a schema from another schema"""
@@ -260,6 +289,77 @@ class StreamSchema(object) :
         else:
             self.__spl_type = schema.__spl_type
             self.__schema = schema.__schema
+
+    @property
+    def style(self):
+        """Style stream tuples will be passed into a callable.
+
+        For the common schemas the style is fixed as:
+            * ``CommonSchema.Python`` - ``object`` - Stream tuples are arbitrary objects.
+            * ``CommonSchema.String`` - ``str`` - Stream tuples are strings.
+            * ``CommonSchema.Json`` - ``dict`` - Stream tuples are a ``dict`` that represents the JSON object.
+
+        For a structured schema the supported styles are:
+            * ``dict`` - Stream tuples are passed as a ``dict`` with the key being the attribute name and
+                and the value the attribute value. This is the default.
+                * E.g. with a schema of ``tuple<rsting id, float32 value>`` a value is passed as
+                    ``{'id':'TempSensor', 'value':20.3}``.
+            * ``tuple`` - Stream tuples are passed as a ``tuple`` with the value being the attributes
+                value in order. A schema is set to pass stream tuples as tuples using :py:meth:`as_tuple`.
+                * E.g. with a schema of ``tuple<rsting id, float32 value>`` a value is passed as
+                    ``('TempSensor', 20.3)``.
+
+
+        Structured schemas may be changed to pass the stream tuple as a ``tuple`` using
+
+        Returns:
+            type: Class of tuples that will be passed into callables.
+        """
+        return self._style
+
+    def _default_style(self):
+        if self.__spl_type:
+            return dict
+        return _SCHEMA_COMMON_STYLES[self.schema()] if is_common(self) else dict
+
+    def _copy(self, style=None):
+        if style is None:
+            return self
+        if self._style == style:
+            return self
+        # Cannot change style of common schemas
+        if is_common(self):
+            return self
+        c = StreamSchema(self.schema())
+        c._style = style
+        return c
+
+    def as_tuple(self):
+        """
+        Create a structured schema that will pass stream tuples into callables as ``tuple`` instances.
+
+        If this instance represents a common schema then it will be returned
+        without modification. Stream tuples with common schemas are always passed according
+        to their definition.
+
+        Returns:
+            StreamSchema: Schema passing stream tuples as ``tuple`` if allowed.
+        """
+        return self._copy(tuple)
+
+    def as_dict(self):
+        """
+        Create a structured schema that will pass stream tuples into callables as ``dict`` instances.
+        This allows a return to the default calling style for a structured schema.
+
+        If this instance represents a common schema then it will be returned
+        without modification. Stream tuples with common schemas are always passed according
+        to their definition.
+
+        Returns:
+            StreamSchema: Schema passing stream tuples as ``dict`` if allowed.
+        """
+        return self._copy(dict)
 
     def schema(self):
         """Private method. May be removed at any time."""
@@ -307,19 +407,19 @@ class StreamSchema(object) :
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    _NAMED_SCHEMAS = {}
+    @staticmethod
+    def _fnop_style(schema, op, name):
+        """Set an operator's parameter representing the style of this schema."""
+        if is_common(schema):
+            return
+        if schema.style == tuple:
+            ntp = 'tuple'
+        elif schema.style == dict:
+            ntp = 'dict'
+        else:
+            return
+        op.params[name] = ntp
 
-    def _namedtuple(self):
-        """WIP - Gets a named tuple that matches the schema."""
-        if self.__nt is not None:
-            return self.__nt
-        if self in StreamSchema._NAMED_SCHEMAS:
-             return StreamSchema._NAMED_SCHEMAS[self]
-
-        name = "Structured"
-        self.__nt = collections.namedtuple(name, _attribute_names(self._types))
-        StreamSchema._NAMED_SCHEMAS[self] = self.__nt
-        return self.__nt
 
 @enum.unique
 class CommonSchema(enum.Enum):
@@ -338,7 +438,7 @@ class CommonSchema(enum.Enum):
      * :py:const:`Binary` - Stream contains binary tuples.
      * :py:const:`XML` - Stream contains XML documents.
     """
-    Python = StreamSchema("tuple<blob __spl_po>")
+    Python = StreamSchema(_SCHEMA_PYTHON_OBJECT)
     """
     Stream where each tuple is a Python object. Each object
     must be picklable to allow execution in a distributed
@@ -347,7 +447,7 @@ class CommonSchema(enum.Enum):
 
     Python streams can only be used by Python applications.
     """
-    Json = StreamSchema("tuple<rstring jsonString>")
+    Json = StreamSchema(_SCHEMA_JSON)
     """
     Stream where each tuple is logically a JSON object.
 
@@ -364,7 +464,7 @@ class CommonSchema(enum.Enum):
     then it will be converted to a JSON object with a single key `payload`
     containing the value.
     """
-    String = StreamSchema("tuple<rstring string>")
+    String = StreamSchema(_SCHEMA_STRING)
     """
     Stream where each tuple is a string.
 
@@ -376,13 +476,13 @@ class CommonSchema(enum.Enum):
 
     Python objects are converted to strings using ``str(obj)``.
     """
-    Binary = StreamSchema("tuple<blob binary>")
+    Binary = StreamSchema(_SCHEMA_BINARY)
     """
     Stream where each tuple is a binary object (sequence of bytes).
 
     .. warning:: `Binary` is not yet supported for Python applications.
     """
-    XML = StreamSchema("tuple<xml document>")
+    XML = StreamSchema(_SCHEMA_XML)
     """
     Stream where each tuple is an XML document.
 

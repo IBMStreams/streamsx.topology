@@ -368,7 +368,7 @@ class Topology(object):
             if _name is None:
                 _name = type(func).__name__
             func = streamsx.topology.functions._IterableInstance(func)
-        
+
         sl = _SourceLocation(_source_info(), "source")
         _name = self.graph._requested_name(_name, action='source', func=func)
         op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl)
@@ -503,6 +503,7 @@ class Stream(object):
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
+        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='ForEach', name=_name, orig_name=name)
         return Sink(op)
 
@@ -627,7 +628,7 @@ class Stream(object):
             a structured stream.
         """
         if schema is None:
-             schema = CommonSchema.Python
+            schema = CommonSchema.Python
      
         ms = self._map(func, schema=schema, name=name)._layout('Map')
         ms.oport.operator.sl = _SourceLocation(_source_info(), 'map')
@@ -1202,7 +1203,7 @@ class PendingStream(object):
         def __init__(self, topology):
             self.topology = topology
             self._marker = topology.graph.addOperator(kind="$Pending$")
-            self._pending_schema = StreamSchema('<pending')
+            self._pending_schema = StreamSchema('<pending>')
 
             self.stream = Stream(topology, self._marker.addOutputPort(schema=self._pending_schema))
 

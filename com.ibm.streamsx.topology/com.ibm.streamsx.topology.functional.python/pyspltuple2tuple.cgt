@@ -1,0 +1,21 @@
+
+// process the attributes in the spl tuple
+// into a python tuple object
+<%
+# Fix up names for blobs script
+my $inputAttrs2Py = $pynumattrs;
+my @itypes = @pyatypes;
+%>
+@include "../opt/python/codegen/py_splTupleCheckForBlobs.cgt"
+
+  PyObject *value = 0;
+  {
+  SplpyGIL locktuple;
+  PyObject * pyTuple = PyTuple_New(<%=$pynumattrs%>);
+<%
+     for (my $i = 0; $i < $pynumattrs; ++$i) {
+         print convertAndAddToPythonTupleObject("ip", $i, $pyatypes[$i], $pyanames[$i]);
+     }
+%>
+  value = pyTuple;
+  }

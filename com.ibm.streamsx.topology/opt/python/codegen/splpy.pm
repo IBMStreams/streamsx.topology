@@ -277,6 +277,30 @@ sub convertAndAddToPythonDictionaryObject {
   return $get . $getkey . $setdict . "}\n" ;
 }
 
+#
+# Convert attribute of an SPL tuple to Python
+# and add to a tuple object.
+#
+# ituple - C++ expression of the tuple
+# i  - Attribute index
+# type - spl type
+# name - attribute name
+# names - PyObject * pointing to Python tuple containing attribute names.
+
+sub convertAndAddToPythonTupleObject {
+  my $ituple = $_[0];
+  my $i = $_[1];
+  my $type = $_[2];
+  my $name = $_[3];
+
+  # starts a C++ blockand sets value
+  my $get = _attr2Value($ituple, $type, $name);
+
+  my $settuple =  "PyTuple_SET_ITEM(pyTuple, $i, value);\n";
+
+  return $get . $settuple . "}\n" ;
+}
+
 ## Execute pip to install packages in the
 ## applications output directory under
 ## /etc/streamsx.topology/python
