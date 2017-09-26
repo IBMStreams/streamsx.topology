@@ -408,4 +408,11 @@ dict_in__json_out = object_in__json_out
 dict_in__dict_out = object_in__dict_out
 dict_in = object_in
 
+tuple_in__object_out = object_in__object_out
+tuple_in__object_iter = object_in__object_iter
+tuple_in__pickle_out = object_in__pickle_out
+tuple_in__pickle_iter = object_in__pickle_iter
+tuple_in__string_out = object_in__object_out
+tuple_in__json_out = object_in__json_out
+tuple_in__dict_out = object_in__dict_out
 tuple_in = object_in
