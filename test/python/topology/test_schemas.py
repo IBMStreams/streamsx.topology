@@ -5,6 +5,7 @@ import random
 import collections
 import sys
 
+from streamsx.topology.topology import Topology, Routing
 from streamsx.topology.schema import _SchemaParser
 import streamsx.topology.schema as _sch
 _PRIMITIVES = ['boolean', 'blob', 'int8', 'int16', 'int32', 'int64',
@@ -135,3 +136,69 @@ class TestSchema(unittest.TestCase):
         self.assertFalse(t.alert)
         self.assertEqual(345, t[0])
         self.assertFalse(t[1])
+
+class TestKeepSchema(unittest.TestCase):
+    """
+    Testing that schemas are maintained through various transforms.
+    We test items have the same schema, we don't actually run any apps.
+    """
+
+    def test_keep_schema_python(self):
+        topo = Topology()
+        s = topo.source([])
+        self._check_kept(s)
+
+    def test_keep_schema_string(self):
+        topo = Topology()
+        s = topo.source([]).as_string()
+        self._check_kept(s)
+
+    def test_keep_schema_json(self):
+        topo = Topology()
+        s = topo.source([]).as_json()
+        self._check_kept(s)
+
+    def test_keep_schema_schema(self):
+        topo = Topology()
+        s = topo.source([]).map(lambda x : x, schema='tuple<rstring a, int32 b>')
+        self._check_kept(s)
+
+    def _check_kept(self, s):
+       # Stream.oport.schema is an internal api
+       s1 = s.low_latency()
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.filter(lambda t : True)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s.end_low_latency()
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.filter(lambda t : True)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.isolate()
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+
+       s1 = s1.parallel(width=2)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.filter(lambda t : True)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.end_parallel()
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+
+       s1 = s1.parallel(width=2, routing=Routing.ROUND_ROBIN)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.filter(lambda t : True)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.end_parallel()
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+
+       s1 = s1.parallel(width=2, routing=Routing.HASH_PARTITIONED, func=hash)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.filter(lambda t : True)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.end_parallel()
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+
+       s1 = s1.filter(lambda t : True)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+
+       s2 = s.union({s1})
+       self.assertEqual(s.oport.schema, s2.oport.schema)
