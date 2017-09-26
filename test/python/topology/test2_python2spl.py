@@ -29,6 +29,24 @@ class TestPython2SPL(unittest.TestCase):
         tester.contents(st, [{'x':1}, {'x':2}, {'x':3}])
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_object_to_string(self):
+        topo = Topology()
+        s = topo.source([93,'hello',True])
+        st = s.map(lambda x : x, schema=CommonSchema.String)
+
+        tester = Tester(topo)
+        tester.contents(st, ['93','hello','True'])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_object_to_json(self):
+        topo = Topology()
+        s = topo.source([{'a': 7}, {'b': 8}, {'c': 9}])
+        st = s.map(lambda x: x, schema=CommonSchema.Json)
+
+        tester = Tester(topo)
+        tester.contents(st, [{'a': 7}, {'b': 8}, {'c': 9}])
+        tester.test(self.test_ctxtype, self.test_config)
+
     def test_string_to_schema(self):
         topo = Topology()
         s = topo.source(['a', 'b', 'c']).as_string()
@@ -36,6 +54,24 @@ class TestPython2SPL(unittest.TestCase):
 
         tester = Tester(topo)
         tester.contents(st, [{'y':'astruct!'}, {'y':'bstruct!'}, {'y':'cstruct!'}])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_string_to_string(self):
+        topo = Topology()
+        s = topo.source([False, 'b', 19]).as_string()
+        st = s.map(lambda x: x + '3', schema=CommonSchema.String)
+
+        tester = Tester(topo)
+        tester.contents(st, ['False3', 'b3', '193'])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_string_to_json(self):
+        topo = Topology()
+        s = topo.source(['a', 79, 'c']).as_string()
+        st = s.map(lambda x: x if x == 'c' else {'v': x + 'd'}, schema=CommonSchema.Json)
+
+        tester = Tester(topo)
+        tester.contents(st, [{'v': 'ad'}, {'v': '79d'}, 'c'])
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_json_to_schema(self):
@@ -47,13 +83,51 @@ class TestPython2SPL(unittest.TestCase):
         tester.contents(st, [{'y':'a', 'x':7}, {'y':'b', 'x':8}, {'y':'c', 'x':9}])
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_json_to_string(self):
+        topo = Topology()
+        s = topo.source([{'a': True}, {'a': 8}, {'a': 'third'}]).as_json()
+        st = s.map(lambda x : x['a'], schema=CommonSchema.String)
+
+        tester = Tester(topo)
+        tester.contents(st, ['True', '8', 'third'])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_json_to_json(self):
+        topo = Topology()
+        s = topo.source([{'a': True}, {'a': 8}, {'a': 'third'}]).as_json()
+        st = s.map(lambda x : {'yy': x['a']}, schema=CommonSchema.Json)
+
+        tester = Tester(topo)
+        tester.contents(st, [{'yy': True}, {'yy': 8}, {'yy': 'third'}])
+        tester.test(self.test_ctxtype, self.test_config)
+
     def test_dict_to_schema(self):
         topo = Topology()
         s = topo.source([{'a':7}, {'b':8}, {'c':9}]).as_json()
         st = s.map(lambda x : (next(iter(x)), x[next(iter(x))]), schema='tuple<rstring y, int32 x>')
-
         st = st.map(lambda x : (x['y'], x['x']+3), schema='tuple<rstring id, int32 value>')
 
         tester = Tester(topo)
         tester.contents(st, [{'id':'a', 'value':10}, {'id':'b', 'value':11}, {'id':'c', 'value':12}])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_dict_to_string(self):
+        topo = Topology()
+        s = topo.source([{'a':7}, {'b':8}, {'c':9}]).as_json()
+        st = s.map(lambda x : (next(iter(x)), x[next(iter(x))]), schema='tuple<rstring y, int32 x>')
+
+        st = st.map(lambda x : (x['y'], x['x']+20), schema=CommonSchema.String)
+
+        tester = Tester(topo)
+        tester.contents(st, ["('a', 27)", "('b', 28)", "('c', 29)"])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_dict_to_json(self):
+        topo = Topology()
+        s = topo.source([{'a':7}, {'b':8}, {'c':9}]).as_json()
+        st = s.map(lambda x: (next(iter(x)), x[next(iter(x))]), schema='tuple<rstring y, int32 x>')
+        st = st.map(lambda x: x, schema=CommonSchema.Json)
+
+        tester = Tester(topo)
+        tester.contents(st, [{'y': 'a', 'x': 7}, {'y':'b', 'x': 8}, {'y':'c', 'x': 9}])
         tester.test(self.test_ctxtype, self.test_config)
