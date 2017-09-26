@@ -240,6 +240,11 @@ class _JSONInJSONOut(_FunctionalCallable):
 ##          they are mapped to the object versions, e.g.
 ##          string_in == dict_in == object_in
 ##
+## tuple - Object is an SPL schema passed as a regular Python tuple. The
+##         order of the Python tuple values matches the order of
+##         attributes in the schema. Upon return a tuple is expected
+##         like the dict style.
+##
 
 ## The wrapper functions also ensure the correct context is set up for streamsx.ec
 ## and the __enter__/__exit__ methods are called.
