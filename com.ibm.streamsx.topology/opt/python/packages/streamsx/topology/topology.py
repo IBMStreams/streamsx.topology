@@ -690,7 +690,7 @@ class Stream(object):
         op = self.topology.graph.addOperator("$Isolate$")
         # does the addOperator above need the packages
         op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
     def low_latency(self):
@@ -707,7 +707,7 @@ class Stream(object):
         # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
         # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
         op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
     def end_low_latency(self):
@@ -720,7 +720,7 @@ class Stream(object):
         """
         op = self.topology.graph.addOperator("$EndLowLatency$")
         op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
     
     def parallel(self, width, routing=Routing.ROUND_ROBIN, func=None, name=None):
@@ -765,7 +765,7 @@ class Stream(object):
         if routing == None or routing == Routing.ROUND_ROBIN:
             op2 = self.topology.graph.addOperator("$Parallel$", name=_name)
             op2.addInputPort(outputPort=self.oport)
-            oport = op2.addOutputPort(width)
+            oport = op2.addOutputPort(width, schema=self.oport.schema)
             return Stream(self.topology, oport)
         elif routing == Routing.HASH_PARTITIONED:
 
@@ -814,10 +814,10 @@ class Stream(object):
             if (lastOp.kind == "$Union$"):
                 pto = self.topology.graph.addPassThruOperator()
                 pto.addInputPort(outputPort=self.oport)
-                outport = pto.addOutputPort()
+                outport = pto.addOutputPort(schema=self.oport.schema)
         op = self.topology.graph.addOperator("$EndParallel$")
         op.addInputPort(outputPort=outport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         endP = Stream(self.topology, oport)
         return endP
 
@@ -869,7 +869,7 @@ class Stream(object):
         op.addInputPort(outputPort=self.oport)
         for stream in streamSet:
             op.addInputPort(outputPort=stream.oport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
     def print(self, tag=None, name=None):
