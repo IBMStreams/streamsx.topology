@@ -1312,7 +1312,7 @@ class Window(object):
         """Declares a function or callable to aggregate the contents of 
         the window when it is triggered.
         
-        The supplied function is passed a list containing the contents 
+        The supplied function is passed an iterable containing the contents 
         of the window. The return values of the function are passed as
         the tuples on the returned `stream`. For example, a window that
         calculates a moving average of the last  10 tuples could be 
