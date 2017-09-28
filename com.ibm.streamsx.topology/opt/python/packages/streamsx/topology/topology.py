@@ -1328,7 +1328,7 @@ class Window(object):
             raise NotImplementedError("Currently, only windows with eviction policies of type COUNT and trigger policies of type COUNT are supported")
 
         if schema is None:
-            schema = self.stream.oport.schema
+            schema = CommonSchema.Python
         
         sl = _SourceLocation(_source_info(), "aggregate")
         name = self.topology.graph._requested_name(name, action="aggregate", func=function)
