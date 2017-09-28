@@ -90,19 +90,11 @@ void MY_OPERATOR::prepareToShutdown()
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
-  IPort0Type const &ip = static_cast<IPort0Type const &>(tuple);
-
-<%
-print splpy_inputtuple2value($pystyle);
-%>
+@include "../pyspltuple2value.cgt"
   
   std::vector<OPort0Type> output_tuples; 
   
   {
-<%if ($pystyle eq 'dict') {%>
-@include "../pyspltuple2dict.cgt"
-<%}%>
-
     SplpyGIL lock;
 
     PyObject * pyIterator = streamsx::topology::pySplProcessTuple(funcop_->callable(), value);

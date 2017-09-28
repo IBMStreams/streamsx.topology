@@ -19,6 +19,11 @@
 
  # determine which input tuple style is being used
 
- my $pystyle = splpy_tuplestyle($model->getInputPortAt(0));
+ my $pystyle = $model->getParameterByName("pyStyle");
+ if ($pystyle) {
+     $pystyle = substr $pystyle->getValueAt(0)->getSPLExpression(), 1, -1;
+ } else {
+     $pystyle = splpy_tuplestyle($model->getInputPortAt(0));
+ }
 %>
 

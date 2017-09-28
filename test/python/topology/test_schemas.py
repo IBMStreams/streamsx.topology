@@ -134,6 +134,7 @@ class TestSchema(unittest.TestCase):
         s = _sch.StreamSchema('tuple<set<list<int32>[9]>[100] a>')
 
 
+    @unittest.skip
     def test_named_schema(self):
         s = _sch.StreamSchema('tuple<int32 a, boolean alert>')
 
@@ -146,6 +147,48 @@ class TestSchema(unittest.TestCase):
         self.assertFalse(t.alert)
         self.assertEqual(345, t[0])
         self.assertFalse(t[1])
+
+    def test_common_styles(self):
+        """ Test that common schemas cannot have their style changed"""
+        s = _sch.CommonSchema.Python
+        st = s.value.as_tuple()
+        self.assertIs(s.value, st)
+
+        s = _sch.CommonSchema.String
+        st = s.value.as_tuple()
+        self.assertIs(s.value, st)
+
+        s = _sch.CommonSchema.Json
+        st = s.value.as_tuple()
+        self.assertIs(s.value, st)
+
+        s = _sch.CommonSchema.Binary
+        st = s.value.as_tuple()
+        self.assertIs(s.value, st)
+
+        s = _sch.CommonSchema.XML
+        st = s.value.as_tuple()
+        self.assertIs(s.value, st)
+
+    def test_styles(self):
+        s = _sch.StreamSchema('tuple<int32 a, boolean alert>')
+        self.assertEqual(dict, s.style)
+        st = s.as_tuple()
+        self.assertIsNot(s, st)
+        self.assertEqual(tuple, st.style)
+
+        sd = s.as_dict()
+        self.assertIs(s, sd)
+        self.assertEqual(dict, sd.style)
+
+        sd2 = st.as_dict()
+        self.assertIsNot(st, sd2)
+        self.assertEqual(dict, sd2.style)
+
+        self.assertEqual(object, _sch.CommonSchema.Python.value.style)
+        self.assertEqual(str, _sch.CommonSchema.String.value.style)
+        self.assertEqual(dict, _sch.CommonSchema.Json.value.style)
+
 
 class TestKeepSchema(unittest.TestCase):
     """
