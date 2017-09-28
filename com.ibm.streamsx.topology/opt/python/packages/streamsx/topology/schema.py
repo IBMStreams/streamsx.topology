@@ -37,7 +37,7 @@ def is_common(schema):
         return True
     if isinstance(schema, str):
         return is_common(StreamSchema(schema))
-    raise TypeError()
+    return False
 
 # Parses a schema of the form 'tuple<...>'
 # _parse returns a list of the schema attributes,
