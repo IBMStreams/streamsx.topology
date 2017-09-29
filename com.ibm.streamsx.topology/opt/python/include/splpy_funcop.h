@@ -84,22 +84,6 @@ class SplpyFuncOp : public SplpyOp {
       }
 
 
-      /**
-       * Load and wrap the callable that will be invoked
-       * by the operator.
-      */
-      void loadAndWrapCallable(const std::string & wrapfn, const std::string & module,
-			       const std::string & function) {
-          SplpyGIL lock;
-
-          // pointer to the application function
-	  PyObject * appCallable =
-             SplpyGeneral::loadFunction(module, function);
-
-          setCallable(SplpyGeneral::callFunction(
-               "streamsx.topology.runtime", wrapfn, appCallable, NULL));
-      }
-
       /*
        *  Add any packages in the application directory
        *  to the Python path. The application directory
