@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolkitInfoModel
+  xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo"
+  xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common">
+  <identity>
+    <name>tk17</name>
+    <description>Automatic generated toolkit description file.</description>
+    <version>1.0.0</version>
+    <requiredProductVersion>4.0.1.0</requiredProductVersion>
+  </identity>
+  <dependencies/>
+  <resources>
+    <messageSet name="TopologySplpyResource">
+      <lang default="true">en_US/TopologySplpyResource.xlf</lang>
+      <lang>de_DE/TopologySplpyResource.xlf</lang>
+      <lang>es_ES/TopologySplpyResource.xlf</lang>
+      <lang>fr_FR/TopologySplpyResource.xlf</lang>
+      <lang>it_IT/TopologySplpyResource.xlf</lang>
+      <lang>ja_JP/TopologySplpyResource.xlf</lang>
+      <lang>ko_KR/TopologySplpyResource.xlf</lang>
+      <lang>pt_BR/TopologySplpyResource.xlf</lang>
+      <lang>ru_RU/TopologySplpyResource.xlf</lang>
+      <lang>zh_CN/TopologySplpyResource.xlf</lang>
+      <lang>zh_TW/TopologySplpyResource.xlf</lang>
+    </messageSet>
+  </resources>
+</toolkitInfoModel>
