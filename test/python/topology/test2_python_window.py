@@ -34,21 +34,25 @@ class TestPythonWindowing(unittest.TestCase):
         
         # Check the averages of the values of the Json objects
         s = s.map(lambda x: x, schema = CommonSchema.Json)
-        s = s.last(3).trigger(1).aggregate(lambda x: int(sum([sum([s[k] for k in s]) for s in x])/len(x)))
+        s = s.last(3).trigger(1).aggregate(lambda tuples: [[set(tup.keys()), sum(tup.values())] for tup in tuples],
+                                           schema = CommonSchema.Python)
         
         tester = Tester(topo)
-        tester.contents(s, [1,3,5])
+        tester.contents(s, [ [[{'a'},1]],
+                             [[{'a'},1], [{'c','b'}, 5]],
+                             [[{'a'},1], [{'c','b'}, 5], [{'d','e'}, 9]]
+                           ])
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_StringInputCountCountWindow(self):
         topo = Topology()
         s = topo.source(['1','3','5','7'])
         s = s.map(lambda x: x, schema = CommonSchema.String)
-        s = s.last(3).trigger(1).aggregate(lambda x: int(sum([int(s) for s in x])/len(x)),
+        s = s.last(3).trigger(1).aggregate(lambda tuples: ''.join(tuples),
                                            schema = CommonSchema.Python)
 
         tester = Tester(topo)
-        tester.contents(s, [1,2,3,5])
+        tester.contents(s, ['1','13','135','357'])
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_NotByRefWindow(self):
