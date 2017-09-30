@@ -62,10 +62,10 @@ def _splpy_to_tuples(fn, attributes):
              lt.append(ev)
          return lt
       return value
-   if hasattr(fn, '_shutdown'):
-       def _shutdown():
-           fn._shutdown()
-       _to_tuples._shutdown = _shutdown
+   if hasattr(fn, '_splpy_shutdown'):
+       def _splpy_shutdown():
+           fn._splpy_shutdown()
+       _to_tuples._splpy_shutdown = _splpy_shutdown
    return _to_tuples
 
 def _splpy_release_memoryviews(*args):

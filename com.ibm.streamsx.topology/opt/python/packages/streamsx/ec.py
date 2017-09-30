@@ -442,8 +442,8 @@ def _get_opc(obj):
         raise AssertionError("InternalError")
 
 def _shutdown_op(callable):
-    if hasattr(callable, '_shutdown'):
-        callable._shutdown()
+    if hasattr(callable, '_splpy_shutdown'):
+        callable._splpy_shutdown()
 
 def _callable_enter(callable):
     """Called at initialization time.
