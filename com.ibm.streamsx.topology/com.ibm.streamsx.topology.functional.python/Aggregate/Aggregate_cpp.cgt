@@ -188,14 +188,14 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
     PyObject *items;
     {
     SplpyGIL lock;
-    items = PyTuple_New(std::distance(content.begin(), content.end()));
+    items = PyList_New(std::distance(content.begin(), content.end()));
     unsigned int idx = 0;
     for(WindowType::DataType::iterator it=content.begin(); it!=content.end(); ++it) {
         PyObject *item = *it;
 	// The tuple steals a reference, increment such that the window can maintain a copy
 	// once the tuple is deleted.
 	Py_INCREF(item);
-	PyTuple_SET_ITEM(items, idx, item);
+	PyList_SET_ITEM(items, idx, item);
 	++idx;
     }
     }
