@@ -177,7 +177,7 @@ except (ImportError,NameError):
 
 import random
 from streamsx.topology import graph
-from streamsx.topology.schema import StreamSchema, CommonSchema
+from streamsx.topology.schema import StreamSchema, CommonSchema, _SCHEMA_PENDING
 import streamsx.topology.functions
 import streamsx.topology.runtime
 import json
@@ -1207,7 +1207,7 @@ class PendingStream(object):
         def __init__(self, topology):
             self.topology = topology
             self._marker = topology.graph.addOperator(kind="$Pending$")
-            self._pending_schema = StreamSchema('<pending>')
+            self._pending_schema = StreamSchema(_SCHEMA_PENDING)
 
             self.stream = Stream(topology, self._marker.addOutputPort(schema=self._pending_schema))
 
@@ -1226,7 +1226,7 @@ class PendingStream(object):
             # Update the pending schema to the actual schema
             # Any downstream filters that took the reference
             # will be automatically updated to the correct schema
-            self._pending_schema._set(stream.oport.schema)
+            self._pending_schema._set(self.stream.oport.schema)
 
             # Mark the operator with the pending stream
             # a start point for graph travesal

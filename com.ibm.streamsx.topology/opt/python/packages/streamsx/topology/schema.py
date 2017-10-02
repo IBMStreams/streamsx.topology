@@ -39,6 +39,10 @@ def is_common(schema):
         return is_common(StreamSchema(schema))
     return False
 
+_SCHEMA_PENDING = '<pending>'
+def _is_pending(schema):
+    return isinstance(schema, StreamSchema) and schema.schema() == _SCHEMA_PENDING
+
 # Parses a schema of the form 'tuple<...>'
 # _parse returns a list of the schema attributes,
 # each attribute is a python tuple of:
@@ -286,9 +290,11 @@ class StreamSchema(object) :
         if isinstance(schema, CommonSchema):
             self.__spl_type = False
             self.__schema = schema.schema()
+            self._style = self._default_style()
         else:
             self.__spl_type = schema.__spl_type
             self.__schema = schema.__schema
+            self._style = schema._style
 
     @property
     def style(self):
@@ -411,8 +417,12 @@ class StreamSchema(object) :
     def _fnop_style(schema, op, name):
         """Set an operator's parameter representing the style of this schema."""
         if is_common(schema):
+            if name in op.params:
+                del op.params[name]
             return
-        if schema.style == tuple:
+        if _is_pending(schema):
+            ntp = 'pending'
+        elif schema.style == tuple:
             ntp = 'tuple'
         elif schema.style == dict:
             ntp = 'dict'
