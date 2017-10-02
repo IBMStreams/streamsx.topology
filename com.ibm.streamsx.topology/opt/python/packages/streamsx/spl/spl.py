@@ -594,28 +594,19 @@ def _wrapforsplop(optype, wrapped, style, docpy):
 
         _valid_identifier(wrapped.__name__)
 
-        class _op_class(object):
+        class _op_class(wrapped):
 
             __doc__ = wrapped.__doc__
+
             @functools.wraps(wrapped.__init__)
             def __init__(self,*args,**kwargs):
-                self.__splpy_instance = wrapped(*args,**kwargs)
+                super(_op_class, self).__init__(*args,**kwargs)
                 if ec._is_supported():
-                    ec._save_opc(self.__splpy_instance)
-                ec._callable_enter(self.__splpy_instance)
+                    ec._save_opc(self)
+                ec._callable_enter(self)
 
-            if hasattr(wrapped, "__call__"):
-                @functools.wraps(wrapped.__call__)
-                def __call__(self, *args,**kwargs):
-                    return self.__splpy_instance.__call__(*args, **kwargs)
-
-            if hasattr(wrapped, "__iter__"):
-                @functools.wraps(wrapped.__iter__)
-                def __iter__(self):
-                    return self.__splpy_instance.__iter__()
-
-            def _shutdown(self):
-                ec._callable_exit_clean(self.__splpy_instance)
+            def _splpy_shutdown(self):
+                ec._callable_exit_clean(self)
 
         _op_class.__wrapped__ = wrapped
         # _op_class.__doc__ = wrapped.__doc__
@@ -630,12 +621,21 @@ def _wrapforsplop(optype, wrapped, style, docpy):
 
     _valid_identifier(wrapped.__name__)
 
-    @functools.wraps(wrapped)
-    def _op_fn(*args, **kwargs):
-        return wrapped(*args, **kwargs)
+    #fnstyle =
+
+    #if fnstyle == 'tuple':
+    #    @functools.wraps(wrapped)
+    #    def _op_fn(*args):
+    #        return wrapped(args)
+    #else:
+    #    @functools.wraps(wrapped)
+    #    def _op_fn(*args, **kwargs):
+    #       return wrapped(*args, **kwargs)
+    _op_fn = wrapped
+
     _op_fn.__splpy_optype = optype
     _op_fn.__splpy_callable = 'function'
-    _op_fn.__splpy_style = _define_style(wrapped, wrapped, style)
+    _op_fn.__splpy_style = _define_style(_op_fn, _op_fn, style)
     _op_fn.__splpy_file = inspect.getsourcefile(wrapped)
     _op_fn.__splpy_docpy = docpy
     return _op_fn

@@ -105,7 +105,7 @@ class _FunctionalCallable(object):
         """
         return self._callable(tuple)
 
-    def _shutdown(self):
+    def _splpy_shutdown(self):
         if self._cls:
             ec._callable_exit_clean(self._callable)
 
