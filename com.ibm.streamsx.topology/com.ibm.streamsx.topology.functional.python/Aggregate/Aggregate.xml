@@ -103,7 +103,7 @@
     <inputPorts>
       <inputPortSet>
         <tupleMutationAllowed>false</tupleMutationAllowed>
-        <windowingMode>NonWindowed</windowingMode>
+        <windowingMode>Windowed</windowingMode>
         <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
         <cardinality>1</cardinality>
         <optional>false</optional>
