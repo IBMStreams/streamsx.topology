@@ -426,7 +426,7 @@ class Tester(object):
         else:
             raise NotImplementedError("Tester context type not implemented:", ctxtype)
 
-        if 'conditions' in self.result:
+        if self.result.get('conditions'):
             for cn,cnr in self.result['conditions'].items():
                 c = self._conditions[cn][1]
                 cdesc = cn
@@ -499,7 +499,7 @@ class Tester(object):
 
         self.result['submission_result'] = self.submission_result
         cc._canceljob(self.result)
-        if self.local_check_exception is not None:
+        if hasattr(self, 'local_check_exception') and self.local_check_exception is not None:
             raise self.local_check_exception
         return self.result['passed']
 
@@ -553,11 +553,12 @@ class _ConditionChecker(object):
     # if the job became healthy, False if not.
     def _wait_for_healthy(self):
         while (self.waits * self.delay) < self.timeout:
-            if self.__check_job_health():
+            if self._check_job_health():
                 self.waits = 0
                 return True
             time.sleep(self.delay)
             self.waits += 1
+        self._check_job_health(verbose=True)
         return False
 
     def _complete(self):
@@ -586,7 +587,7 @@ class _ConditionChecker(object):
             self.job.cancel(force=not result['passed'])
 
     def __check_once(self):
-        if not self.__check_job_health():
+        if not self._check_job_health(verbose=True):
             return _ConditionChecker._UNHEALTHY
         cms = self._get_job_metrics()
         valid = True
@@ -632,9 +633,22 @@ class _ConditionChecker(object):
 
         return (valid, fail, progress, condition_states)
 
-    def __check_job_health(self):
+    def _check_job_health(self, verbose=False):
         self.job.refresh()
-        return self.job.health == 'healthy'
+        if self.job.health != 'healthy':
+            if verbose:
+                _logger.error("Job %s health:%s", self.job.name, self.job.health)
+            return False
+        for pe in self.job.get_pes():
+            if pe.launchCount != 1:
+                if verbose:
+                    _logger.error("PE %s launch count > 1: %s", pe.id, pe.launchCount)
+                return False
+            if pe.health != 'healthy':
+                if verbose:
+                    _logger.error("PE %s health: %s", pe.id, pe.health)
+                return False
+        return True
 
     def _find_job(self):
         instance = self._sc.get_instance(id=self._instance_id)
