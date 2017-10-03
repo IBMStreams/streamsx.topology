@@ -1338,7 +1338,7 @@ class Window(object):
         sl = _SourceLocation(_source_info(), "aggregate")
         name = self.topology.graph._requested_name(name, action="aggregate", func=function)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=name, sl=sl)
-        op.addInputPort(outputPort=self.stream.oport, name=self.stream.name)
+        op.addInputPort(outputPort=self.stream.oport, name=self.stream.name, window_config=self._config)
         oport = op.addOutputPort(schema=schema, name=name)
 
         op.params['evictConfig'] = self._config['evictConfig']
