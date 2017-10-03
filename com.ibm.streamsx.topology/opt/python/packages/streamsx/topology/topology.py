@@ -1297,6 +1297,9 @@ class Window(object):
         tw = Window(self.stream, self._config['type'])
         tw._config['evictPolicy'] = self._config['evictPolicy']
         tw._config['evictConfig'] = self._config['evictConfig']
+        if self._config['evictPolicy'] == 'TIME':
+            tw._config['evictTimeUnit'] = 'MILLISECONDS'
+
         if isinstance(when, datetime.timedelta):
             tw._config['triggerPolicy'] = 'TIME'
             tw._config['triggerConfig'] = int(when.total_seconds() * 1000.0)
@@ -1327,7 +1330,7 @@ class Window(object):
         Returns: 
             Stream: A `Stream` of the returned values of the supplied function.                                                                                                                                                             
         """
-        # WIP: TODO: support other window types and policies                                                                                                                                                                               
+        # WIP: TODO: support other window types and policies                                                                                                                                                    
 
         if self._config['evictPolicy'] != 'COUNT' or self._config['triggerPolicy'] != 'COUNT':
             raise NotImplementedError("Currently, only windows with eviction policies of type COUNT and trigger policies of type COUNT are supported")
@@ -1340,10 +1343,6 @@ class Window(object):
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=name, sl=sl)
         op.addInputPort(outputPort=self.stream.oport, name=self.stream.name, window_config=self._config)
         oport = op.addOutputPort(schema=schema, name=name)
-
-        op.params['evictConfig'] = self._config['evictConfig']
-        op.params['triggerConfig'] = self._config['triggerConfig']
-
 
         return Stream(self.topology, oport)
 

@@ -37,24 +37,6 @@
     <parameters>
       <allowAny>false</allowAny>
       <parameter>
-        <name>evictConfig</name>
-        <description>The maximum number of tuples in the window.</description>
-        <optional>false</optional>
-        <rewriteAllowed>true</rewriteAllowed>
-        <expressionMode>AttributeFree</expressionMode>
-        <type>int32</type>
-        <cardinality>1</cardinality>
-      </parameter>
-      <parameter>
-	<name>triggerConfig</name>
-        <description>The number of tuples before the aggregation function is triggered.</description>
-        <optional>false</optional>
-        <rewriteAllowed>true</rewriteAllowed>
-        <expressionMode>AttributeFree</expressionMode>
-        <type>int32</type>
-        <cardinality>1</cardinality>
-      </parameter>
-      <parameter>
         <name>toolkitDir</name>
         <description>Toolkit the operator was invoked from.</description>
         <optional>false</optional>
