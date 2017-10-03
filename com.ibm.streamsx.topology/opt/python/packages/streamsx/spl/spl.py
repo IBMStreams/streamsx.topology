@@ -544,11 +544,12 @@ else:
   raise ValueError("Python version not supported.")
 ############################################
 
-_OperatorType = Enum('_OperatorType', 'Ignore Source Sink Pipe Filter')
+_OperatorType = Enum('_OperatorType', 'Ignore Source Sink Pipe Filter Primitive')
 _OperatorType.Source.spl_template = 'PythonFunctionSource'
 _OperatorType.Pipe.spl_template = 'PythonFunctionPipe'
 _OperatorType.Sink.spl_template = 'PythonFunctionSink'
 _OperatorType.Filter.spl_template = 'PythonFunctionFilter'
+_OperatorType.Primitive.spl_template = 'PythonPrimitive'
 
 _SPL_KEYWORDS = {'graph', 'stream', 'public', 'composite', 'input', 'output', 'type', 'config', 'logic',
                  'window', 'param', 'onTuple', 'onPunct', 'onProcess', 'state', 'stateful', 'mutable',
@@ -860,3 +861,33 @@ class for_each:
 
     def __call__(self, wrapped):
         return _wrapforsplop(_OperatorType.Sink, wrapped, self.style, self.docpy)
+
+
+class primitive_operator(object):
+    """
+    Decorator that creates an SPL operator from a class.
+
+    WIP: Initial state is just the creation of an operator
+    with no inputs or outputs.
+
+    An SPL operator with an arbitrary number of input and
+    output ports (TODO: port handling).
+
+    Args:
+       style: How an SPL tuple is passed into Python function, see  :ref:`spl-tuple-to-python`.
+       docpy: Copy Python docstrings into SPL operator model for SPLDOC.
+
+    """
+    def __init__(self, style=None, docpy=True):
+        self.style = style
+        self.docpy = docpy
+    def __call__(self, wrapped):
+        if not inspect.isclass(wrapped):
+            raise TypeError('A class is required:' + str(wrapped))
+
+        _valid_identifier(wrapped.__name__)
+
+        cls = _wrapforsplop(_OperatorType.Primitive, wrapped, self.style, self.docpy)
+
+        return cls
+

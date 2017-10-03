@@ -1,0 +1,53 @@
+/*
+ * # Licensed Materials - Property of IBM
+ * # Copyright IBM Corp. 2015,2016
+ */
+
+#include "splpy.h"
+#include "splpy_pyop.h"
+
+using namespace streamsx::topology;
+
+<%SPL::CodeGen::implementationPrologue($model);%>
+
+<%
+ my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.__splpy/common/";
+
+ require "splpy_operator.pm";
+ require $cmnDir."/splpy.pm";
+
+ my $module = splpy_Module();
+ my $functionName = splpy_FunctionName();
+ my @packages = splpy_Packages();
+ spl_pip_packages($model, \@packages);
+%>
+
+// Constructor
+MY_OPERATOR::MY_OPERATOR() :
+    pyop_(NULL)
+{
+   PyObject * callable;
+@include  "../../opt/.__splpy/common/py_constructor.cgt"
+
+   pyop_->setCallable(callable);
+}
+
+// Destructor
+MY_OPERATOR::~MY_OPERATOR() 
+{
+   SplpyGIL lock;
+   delete pyop_;
+}
+
+// Notify pending shutdown
+void MY_OPERATOR::prepareToShutdown() 
+{
+    pyop_->prepareToShutdown();
+}
+
+// Tuple processing for non-mutating ports
+void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
+{
+}
+
+<%SPL::CodeGen::implementationEpilogue($model);%>
