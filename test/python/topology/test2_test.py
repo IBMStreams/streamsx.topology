@@ -79,14 +79,17 @@ class TestTester(unittest.TestCase):
         self.my_local_called = True
 
     def test_bad_pe(self):
+        """Test a failure in a PE is caught as a test failure"""
         topo = Topology()
         s = topo.source(rands)
         # intentional addition of a string with an int
         # to cause a PE failure
         s = s.map(lambda t : t + 'a string')
-        self.tester = Tester(topo)
-        self.tester.tuple_count(s, 100, exact=False)
-        self.tester.test(self.test_ctxtype, self.test_config)
+        tester = Tester(topo)
+        tester.tuple_count(s, 0, exact=False)
+        tp = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
+        self.assertFalse(tp)
+
    
 
    
