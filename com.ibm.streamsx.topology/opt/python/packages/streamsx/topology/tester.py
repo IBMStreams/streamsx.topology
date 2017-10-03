@@ -49,11 +49,30 @@ Here is a simple example that tests a filter correctly only passes tuples with v
 
 A stream may have any number of conditions and any number of streams may be tested.
 
-A py:meth:`~Tester.local_check` is supported where a method of the
+A :py:meth:`~Tester.local_check` is supported where a method of the
 unittest class is executed once the job becomes healthy. This performs
 checks from the context of the Python unittest class, such as
 checking external effects of the application or using the REST api to
 monitor the application.
+
+A test fails-fast if any of the following occur:
+    * Any condition fails. E.g. a tuple failing a :py:meth:`~Tester.tuple_check`.
+    * The :py:meth:`~Tester.local_check` (if set) raises an error.
+    * The job for the test:
+        * Fails to become healthy.
+        * Becomes unhealthy during the test run.
+        * Any processing element (PE) within the job restarts.
+
+A test timeouts if it does not fail but its conditions do not become valid.
+The timeout is not fixed as an absolute test run time, but as a time since "progress"
+was made. This can allow tests to pass when healthy runs are run in a constrained
+environment that slows execution. For example with a tuple count condition of ten,
+progress is indicated by tuples arriving on a stream, so that as long as gaps
+between tuples are within the timeout period the test remains running until ten tuples appear.
+
+.. note:: The test timeout value is not configurable.
+
+
 
 .. warning::
     Python 3.5 and Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
