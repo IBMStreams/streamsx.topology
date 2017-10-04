@@ -137,7 +137,7 @@ class TestSchema(unittest.TestCase):
         s = _sch.StreamSchema('tuple<set<list<int32>[9]>[100] a>')
 
 
-    @unittest.skip
+    @unittest.skip("not yet supported")
     def test_named_schema(self):
         s = _sch.StreamSchema('tuple<int32 a, boolean alert>')
 
