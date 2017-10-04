@@ -1318,9 +1318,10 @@ class Window(object):
         Upon a window trigger, the supplied function is passed a list containing 
         the contents of the window: ``function(items)``. The order of the window 
         items in the list are the order in which they were each received by the 
-        window. The return values of the function are passed as the tuples on 
-        the returned `stream`. For example, a window that calculates a moving
-        average of the last 10 tuples could be written as follows::
+        window. If the function's return value is not `None` then the result will
+        be submitted as a tuple on the returned stream. If the return value is 
+        `None` then no tuple submission will occur. For example, a window that 
+        calculates a moving average of the last 10 tuples could be written as follows::
         
             win = s.last(10).trigger(1)
             moving_averages = win.aggregate(lambda tuples: sum(tuples)/len(tuples))
