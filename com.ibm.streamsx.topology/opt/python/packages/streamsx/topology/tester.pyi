@@ -1,7 +1,7 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
-from typing import Any, Calable, Dict, List
+from typing import Any, Callable, Dict, List
 
 import unittest
 
