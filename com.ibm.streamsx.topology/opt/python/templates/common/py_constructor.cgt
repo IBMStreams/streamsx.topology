@@ -48,10 +48,8 @@
      // At this point callable is the callable class object
      // we call it to create an instance of the class
      // (which itself is callable)
-     PyObject *tmp_instance = PyObject_Call(callable, empty_tuple, param_dict);
+     PyObject *tmp_instance = SplpyGeneral::pyObject_Call(callable, empty_tuple, param_dict);
      Py_DECREF(callable);
-     Py_DECREF(empty_tuple);
-     Py_DECREF(param_dict);
      if (tmp_instance == NULL) {
          SPLAPPTRC(L_ERROR, "Fatal error: cannot create instance of class " << "<%=$functionName%>" << " in module " << "<%=$module%>", "python");
          throw SplpyGeneral::pythonException("<%=$module%>");
