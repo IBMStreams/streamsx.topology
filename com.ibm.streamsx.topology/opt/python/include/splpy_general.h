@@ -169,6 +169,25 @@ class SplpyGeneral {
     }
 
     /**
+     * Utility method to call PyObject_Call(callable_object, args, kw)
+     * 
+     * Does not check for PyObject_Call returning null,
+     * the return from PyObject_Call is directly returned.
+     *
+     * Steals the reference to args and kw
+     */
+    static PyObject *pyObject_Call(PyObject *callable_object, PyObject *args, PyObject *kw) {
+      PyObject *ret  = PyObject_Call(callable_object, args, kw);
+      Py_DECREF(args);
+      if (kw != NULL)
+          Py_DECREF(kw);
+     
+      return ret;
+    }
+
+    
+
+    /**
      * Class object for streamsx.spl.types.Timestamp.
      * First call is through setup to set the
      * static variable.
