@@ -189,6 +189,20 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(str, _sch.CommonSchema.String.value.style)
         self.assertEqual(dict, _sch.CommonSchema.Json.value.style)
 
+        snt = s.as_tuple(named='Alert')
+        self.assertIsNot(s, snt)
+        self.assertTrue(issubclass(snt.style, tuple))
+        self.assertTrue(hasattr(snt.style, '_fields'))
+        self.assertTrue(hasattr(snt.style, '_splpy_namedtuple'))
+        self.assertTrue('Alert', snt.style._splpy_namedtuple)
+
+        tv = snt.style(23, True)
+        self.assertEqual(23, tv[0])
+        self.assertEqual(23, tv.a)
+        self.assertTrue(tv[1])
+        self.assertTrue(tv.alert)
+        
+
 
 class TestKeepSchema(unittest.TestCase):
     """

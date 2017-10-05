@@ -22,8 +22,10 @@ import collections
 import enum
 import io
 import itertools
+import sys
 import token
 import tokenize
+
 
 
 def is_common(schema):
@@ -43,6 +45,9 @@ def is_common(schema):
     if isinstance(schema, str):
         return is_common(StreamSchema(schema))
     return False
+
+def _is_namedtuple(cls):
+    return cls != tuple and issubclass(cls, tuple) and hasattr(cls, '_fields')
 
 _SCHEMA_PENDING = '<pending>'
 def _is_pending(schema):
@@ -348,19 +353,75 @@ class StreamSchema(object) :
         c._style = style
         return c
 
-    def as_tuple(self):
+    def _make_named_tuple(self, name):
+        if self.__spl_type:
+            return tuple
+        if name == True:
+            name = 'StreamSchemaNamedTuple'
+        fields = []
+        if sys.version_info.major == 2 or True:
+            for attr in self._types:
+                fields.append(attr[1])
+
+            nt = collections.namedtuple(name, fields)
+
+        nt._splpy_namedtuple = name
+        return nt
+
+    def as_tuple(self, named=None):
         """
         Create a structured schema that will pass stream tuples into callables as ``tuple`` instances.
 
         If this instance represents a common schema then it will be returned
-        without modification. Stream tuples with common schemas are always passed according
-        to their definition.
+        without modification. Stream tuples with common schemas are
+        always passed according to their definition.
+
+        **Passing as tuple**
+
+        When `named` evaluates to ``False`` then each stream tuple will
+        be passed as a ``tuple``. For example with a structured schema
+        of ``tuple<rstring id, float64 value>`` a value is passed as
+        ``('TempSensor', 27.4)`` and access to the first attribute
+        is ``t[0]`` and the second as ``t[1]`` where ``t`` represents
+        the passed value..
+
+        **Passing as named tuple**
+
+        When `named` is ``True`` or a ``str`` then each stream tuple will
+        be passed as a named tuple. For example with a structured schema
+        of ``tuple<rstring id, float64 value>`` a value is passed as
+        ``('TempSensor', 27.4)`` and access to the first attribute
+        is ``t.id`` (or ``t[0]``) and the second as ``t.value`` (``t[1]``)
+        where ``t`` represents the passed value.
+
+        With Python 2.7 the named tuple class is created from
+        `collections.namedtuple`.
+
+        With Python 3 the named tuple class is created from
+        `typing.NamedTuple` and includes type hints according
+        to the attribute types of the structured schema.
+
+        It is not guaranteed that the class of the namedtuple is the
+        same for all callables processing tuples with the same
+        structured schema, only that the tuple is a named tuple
+        with the correct field names.
+
+        Args:
+            named: Pass stream tuples as a named tuple.
+                If not set then stream tuples are passed as
+                instances of ``tuple``.
 
         Returns:
             StreamSchema: Schema passing stream tuples as ``tuple`` if allowed.
 
         .. versionadded:: 1.8
         """
+        if not named:
+            return self._copy(tuple)
+
+        if named == True or isinstance(named, str):
+            return self._copy(self._make_named_tuple(name=named))
+
         return self._copy(tuple)
 
     def as_dict(self):
@@ -438,6 +499,8 @@ class StreamSchema(object) :
             ntp = 'tuple'
         elif schema.style == dict:
             ntp = 'dict'
+        elif _is_namedtuple(schema.style) and schema.style.hasattr('_splpy_namedtuple'):
+            ntp = 'namedtuple'
         else:
             return
         op.params[name] = ntp
