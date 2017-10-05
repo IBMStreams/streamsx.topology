@@ -3,11 +3,7 @@
    // SPL Tuples and submits them.
    // Returns if the Python function returns None.
 
-    PyObject * pyReturnVar = PyObject_Call(pyop_->callable(), pyTuple, pyDict);
-
-    Py_DECREF(pyTuple);
-    if (pyDict != NULL)
-        Py_DECREF(pyDict);
+    PyObject * pyReturnVar = SplpyGeneral::pyObject_Call(pyop_->callable(), pyTuple, pyDict);
 
     if (pyReturnVar == NULL) {
         SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");

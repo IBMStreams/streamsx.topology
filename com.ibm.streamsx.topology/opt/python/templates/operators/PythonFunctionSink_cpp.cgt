@@ -85,9 +85,8 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
   
-    PyObject * pyReturnNone = PyObject_CallObject(pyop_->callable(), pyTuple);
+    PyObject * pyReturnNone = SplpyGeneral::pyObject_Call(pyop_->callable(), pyTuple, pyDict);
 
-    Py_DECREF(pyTuple);
     if (pyReturnNone == NULL) {
         SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
         throw SplpyGeneral::pythonException("<%=$functionName%>");
