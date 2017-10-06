@@ -536,6 +536,9 @@ class Tester(object):
             self.local_check_value = None
             self.local_check_exception = e
 
+# Stop nose from seeing tha Tester.test is a test (#1266)
+Tester.__test__ = False
+
 #######################################
 # Internal functions
 #######################################
