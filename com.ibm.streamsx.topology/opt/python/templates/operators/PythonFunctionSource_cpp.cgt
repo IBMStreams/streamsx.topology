@@ -22,10 +22,6 @@ using namespace streamsx::topology;
  spl_pip_packages($model, \@packages);
 
  my $iport;
- my $itupleType;
- my @inames;
- my @itypes;
- my $ituple;
  
   my $oport = $model->getOutputPortAt(0);
   my $otupleType = $oport->getSPLTupleType();

@@ -202,17 +202,17 @@ sub splpy_tuplestyle{
 # represents the value to be passed into the Python function
 #
 sub splpy_inputtuple2value{
- my ($pystyle) = @_;
+ my ($pystyle, $iport) = @_;
  if ($pystyle eq 'pickle') {
-  return 'SPL::blob const & value = ip.get___spl_po();';
+  return 'SPL::blob const & value = ' . $iport->getCppTupleName() . '.get___spl_po();';
  }
 
  if ($pystyle eq 'string') {
-  return 'SPL::rstring const & value = ip.get_string();';
+  return 'SPL::rstring const & value = ' . $iport->getCppTupleName() . '.get_string();';
  }
  
  if ($pystyle eq 'json') {
-  return 'SPL::rstring const & value = ip.get_jsonString();';
+  return 'SPL::rstring const & value = ' . $iport->getCppTupleName() . '.get_jsonString();';
  }
 
  if ($pystyle eq 'dict') {

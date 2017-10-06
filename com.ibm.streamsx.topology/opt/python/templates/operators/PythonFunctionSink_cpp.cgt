@@ -25,8 +25,6 @@ using namespace streamsx::topology;
  
  my $iport = $model->getInputPortAt(0);
  my $itupleType = $iport->getSPLTupleType();
- my @inames = SPL::CodeGen::Type::getAttributeNames($itupleType);
- my @itypes = SPL::CodeGen::Type::getAttributeTypes($itupleType);
 
  my $inputAttrs2Py = $iport->getNumberOfAttributes();
  if ($fixedParam != -1) {
