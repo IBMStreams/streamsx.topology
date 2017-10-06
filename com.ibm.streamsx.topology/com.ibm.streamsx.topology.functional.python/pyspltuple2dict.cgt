@@ -1,11 +1,13 @@
-
-// process the attributes in the spl tuple
-// into a python dictionary object
 <%
-# Fix up names for blobs script
-my $inputAttrs2Py = $pynumattrs;
-my @itypes = @pyatypes;
+# Takes the input SPL tuple and converts it to
+# as a dict to be passed to a Python functional operator
+#
+# Leaves the C++ variable value set to a PyObject * dict.
+
+# Variables that need to be set:
+# $iport - input port 
 %>
+
 @include "../opt/python/codegen/py_splTupleCheckForBlobs.cgt"
 
   PyObject *value = 0;
@@ -13,8 +15,9 @@ my @itypes = @pyatypes;
   SplpyGIL lockdict;
   PyObject * pyDict = PyDict_New();
 <%
-     for (my $i = 0; $i < $pynumattrs; ++$i) {
-         print convertAndAddToPythonDictionaryObject("ip", $i, $pyatypes[$i], $pyanames[$i], 'pyInNames_');
+     for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
+         my $la = $iport->getAttributeAt($i);
+         print convertAndAddToPythonDictionaryObject($iport->getCppTupleName(), $i, $la->getSPLType(), $la->getName(), 'pyInNames_');
      }
 %>
   value = pyDict;

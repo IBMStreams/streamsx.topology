@@ -54,7 +54,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 <%if ($pystyle eq 'dict' || $pystyle eq 'tuple') {%>
 
   OPort0Type otuple;
-  otuple.assignFrom(ip, false);
+  otuple.assignFrom(<%=$iport->getCppTupleName()%>, false);
   otuple.set___spl_hash(streamsx::topology::Splpy::pyTupleHash(funcop_->callable(), value));
 
 <%} else { %>
