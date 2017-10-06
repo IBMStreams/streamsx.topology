@@ -1335,11 +1335,6 @@ class Window(object):
         Returns: 
             Stream: A `Stream` of the returned values of the supplied function.                                                                                                                                                             
         """
-        # WIP: TODO: support other window types and policies                                                                                                                                                    
-
-        if self._config['evictPolicy'] != 'COUNT' or self._config['triggerPolicy'] != 'COUNT':
-            raise NotImplementedError("Currently, only windows with eviction policies of type COUNT and trigger policies of type COUNT are supported")
-
         if schema is None:
             schema = CommonSchema.Python
         
