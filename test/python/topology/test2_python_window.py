@@ -125,8 +125,7 @@ class TestPythonWindowing(unittest.TestCase):
         
         # Check the averages of the values of the Json objects
         s = s.map(lambda x: x, schema = CommonSchema.Json)
-        s = s.last(3).trigger(1).aggregate(lambda tuples: [[set(tup.keys()), sum(tup.values())] for tup in tuples],
-                                           schema = CommonSchema.Python)
+        s = s.last(3).trigger(1).aggregate(lambda tuples: [[set(tup.keys()), sum(tup.values())] for tup in tuples])
         
         tester = Tester(topo)
         tester.contents(s, [ [[{'a'},1]],
@@ -139,8 +138,7 @@ class TestPythonWindowing(unittest.TestCase):
         topo = Topology()
         s = topo.source(['1','3','5','7'])
         s = s.map(lambda x: x, schema = CommonSchema.String)
-        s = s.last(3).trigger(1).aggregate(lambda tuples: ''.join(tuples),
-                                           schema = CommonSchema.Python)
+        s = s.last(3).trigger(1).aggregate(lambda tuples: ''.join(tuples))
 
         tester = Tester(topo)
         tester.contents(s, ['1','13','135','357'])
@@ -153,8 +151,7 @@ class TestPythonWindowing(unittest.TestCase):
         # Used to prevent pass by ref for the source
         f = s.filter(lambda x: True)
 
-        s = s.last(3).trigger(4).aggregate(lambda x: int(sum([int(s) for s in x])/len(x)),
-                                           schema = CommonSchema.Python)        
+        s = s.last(3).trigger(4).aggregate(lambda x: int(sum([int(s) for s in x])/len(x)))        
         tester = Tester(topo)
         tester.contents(s, [5])
         tester.test(self.test_ctxtype, self.test_config)
