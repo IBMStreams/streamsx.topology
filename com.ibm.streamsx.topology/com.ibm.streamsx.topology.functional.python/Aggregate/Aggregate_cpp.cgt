@@ -29,7 +29,7 @@ using namespace streamsx::topology;
  my $out_pywrapfunc=  'object_in__' . $pyoutstyle . '_out';
 %>
 
-#define SPLPY_TUPLE_AGGREGATE(f, v, r, occ) \
+#define SPLPY_AGGREGATE(f, v, r, occ) \
     streamsx::topology::Splpy::pyTupleMap(f, v, r)
 
 // Constructor
@@ -60,8 +60,8 @@ MY_OPERATOR::MY_OPERATOR() :
         my $pybyrefwrapfunc = 'object_in__object_out';
 %>
 
-#undef SPLPY_TUPLE_AGGREGATE
-#define SPLPY_TUPLE_AGGREGATE(f, v, r, occ) \
+#undef SPLPY_AGGREGATE
+#define SPLPY_AGGREGATE(f, v, r, occ) \
     streamsx::topology::Splpy::pyTupleMapByRef(f, v, r, occ)
 
     if (!this->getOutputPortAt(0).isConnectedToAPEOutputPort()) {
@@ -219,7 +219,7 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
   
 <% } else { %>
 
-  if (SPLPY_TUPLE_AGGREGATE(funcop_->callable(), value,
+  if (SPLPY_AGGREGATE(funcop_->callable(), value,
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_))
 
 <%}%>{
