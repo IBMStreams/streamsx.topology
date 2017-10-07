@@ -26,7 +26,7 @@ using namespace streamsx::topology;
  }
  
  my $in_pywrapfunc =  $pystyle . '_in__object_out';
- my $out_pywrapfunc=  'pickle_in__' . $pyoutstyle . '_out';
+ my $out_pywrapfunc=  'object_in__' . $pyoutstyle . '_out';
 %>
 
 #define SPLPY_TUPLE_MAP(f, v, r, occ) \
@@ -57,7 +57,7 @@ MY_OPERATOR::MY_OPERATOR() :
  if ($oc) {
     my $occ = $oc->getValueAt(0)->getSPLExpression();
     if ($occ > 0) {
-        my $pybyrefwrapfunc = 'pickle_in__object_out';
+        my $pybyrefwrapfunc = 'object_in__object_out';
 %>
 
 #undef SPLPY_TUPLE_MAP

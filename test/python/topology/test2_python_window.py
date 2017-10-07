@@ -98,7 +98,6 @@ class TestPythonWindowing(unittest.TestCase):
         topo = Topology()
         s = topo.source(TimeCounter(iterations = 10))
         s = s.last(1).trigger(datetime.timedelta(seconds=aggregate_period)).aggregate(TriggerDiff())
-        s.print()
         tester = Tester(topo)
         tester.tuple_check(s, lambda val: within_tolerance(val, tolerance, aggregate_period))
         tester.test(self.test_ctxtype, self.test_config)
