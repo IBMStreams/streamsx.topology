@@ -69,7 +69,6 @@ class TupleTimespanCheck(object):
 
     def __call__(self, items):
         mark = time.time() - self.span
-        print([item[1]-mark for item in items])
         return all([mark < item[1] for item in items])
             
 # Given a value, a tolerance, and the expected value, return true iff the value is
