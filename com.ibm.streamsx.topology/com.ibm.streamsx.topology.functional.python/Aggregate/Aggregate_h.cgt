@@ -51,6 +51,10 @@ if ($pyoutstyle eq 'dict') {
     // Names of input attributes
     PyObject *pyInNames_;
 
+    <% if (($pystyle eq 'pickle') || ($pystyle eq 'json')) { %>
+    PyObject *loads;
+    <% } %>
+
     // Number of output connections when passing by ref
     // -1 when cannot pass by ref
     int32_t occ_;
