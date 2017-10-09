@@ -866,9 +866,22 @@ class for_each:
 
 class input_port(object):
     _count = 0
-    def __init__(self, style=None, docpy=True):
+    def __init__(self, style=None):
+        """Declare an instance method as a the tuple processor
+        for an input port.
+
+        Instance methods within a class decorated using
+        `spl.primitive_operator` declare input ports by
+        decorating methods with this decorator.
+
+        The order of the methods within the class define
+        the order of the ports, so the first port is
+        the first method decorated with `input_port`.
+
+        .. versionadded:: 1.8
+        """
         self._style = style
-        self._docpy = docpy
+
     def __call__(self, wrapped):
         wrapped._splpy_input_port_seq = input_port._count
         wrapped._splpy_input_port_config = self
@@ -878,22 +891,24 @@ class input_port(object):
 
 
 class primitive_operator(object):
-    """
-    Decorator that creates an SPL operator from a class.
-
-    WIP: Initial state is just the creation of an operator
-    with no inputs or outputs.
-
-    An SPL operator with an arbitrary number of input and
-    output ports (TODO: port handling).
-
-    Args:
-       style: How an SPL tuple is passed into Python function, see  :ref:`spl-tuple-to-python`.
-       docpy: Copy Python docstrings into SPL operator model for SPLDOC.
-
-    """
     def __init__(self, docpy=True):
         self._docpy = docpy
+        """
+        Decorator that creates an SPL primitive operator from a class.
+
+        WIP: Initial state is just the creation of an operator
+        with inputs but no outputs.
+
+        An SPL operator with an arbitrary number of input and
+        output ports (TODO: output port handling).
+
+        Args:
+           style: How an SPL tuple is passed into Python function, see  :ref:`spl-tuple-to-python`.
+           docpy: Copy Python docstrings into SPL operator model for SPLDOC.
+
+        .. versionadded:: 1.8
+        """
+
     def __call__(self, wrapped):
         if not inspect.isclass(wrapped):
             raise TypeError('A class is required:' + str(wrapped))

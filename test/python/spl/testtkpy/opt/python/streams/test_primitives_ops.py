@@ -41,6 +41,30 @@ class SingleInputPort(object):
 
     @spl.input_port()
     def my_only_port(self, *t):
-        print("SELF", self, flush=True)
-        print("tuple", t, flush=True)
-        self.cm.value = t[0]
+        self.cm.value = t[0] + 17
+
+@spl.primitive_operator()
+class MultiInputPort(object):
+    def __init__(self):
+        pass
+
+    def __enter__(self):
+        import streamsx.ec as ec
+        self.cm0 = ec.CustomMetric(self, 'MIP_METRIC_0')
+        self.cm1 = ec.CustomMetric(self, 'MIP_METRIC_1')
+        self.cm2 = ec.CustomMetric(self, 'MIP_METRIC_2')
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
+
+    @spl.input_port()
+    def port0(self, *t):
+        self.cm0.value = t[0] + 17
+
+    @spl.input_port()
+    def port1(self, *t):
+        self.cm1.value = t[0] + 34
+
+    @spl.input_port()
+    def port2(self, *t):
+        self.cm2.value = t[0] + 51

@@ -39,12 +39,11 @@ MY_OPERATOR::MY_OPERATOR() :
 <% if ($model->getNumberOfInputPorts() != 0) { %>
 
    SplpyGIL lock;
+   // callFunction takes a reference.
+   Py_INCREF(callable);
    pyinputfns_ = SplpyGeneral::callFunction(
              "streamsx.spl.runtime", "_splpy_primitive_input_fns",
              callable, NULL);   
-/*
-   pyinputfns_ = PyObject_GetAttrString(callable, "_splpy_input_ports");
-*/
    if (pyinputfns_ == NULL)
        throw SplpyGeneral::pythonException("<%=$functionName%>");
 
@@ -69,20 +68,28 @@ void MY_OPERATOR::prepareToShutdown()
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
-<% if ($model->getNumberOfInputPorts() != 0) {
+<%
+for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
 
-my $iport = $model->getInputPortAt(0);
-my $inputAttrs2Py = $iport->getNumberOfAttributes();
+  my $iport = $model->getInputPortAt($p);
+  my $inputAttrs2Py = $iport->getNumberOfAttributes();
+
+  if ($model->getNumberOfInputPorts() > 1) {
+%>
+      if (port == <%=$p%>)
+<%
+  }
 
 %>
-
+ {
+ // Code block for a single port
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
 
     SplpyGIL lock;
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
 
-    PyObject *fn = PyList_GET_ITEM(pyinputfns_, (Py_ssize_t) port);
+    PyObject *fn = PyList_GET_ITEM(pyinputfns_, (Py_ssize_t) <%=$p%>);
     PyObject * pyReturnVar = SplpyGeneral::pyObject_Call(fn, pyTuple, pyDict);
 
     if (pyReturnVar == NULL) {
@@ -90,6 +97,10 @@ my $inputAttrs2Py = $iport->getNumberOfAttributes();
         throw SplpyGeneral::pythonException("<%=$functionName%>");
     }
     Py_DECREF(pyReturnVar);
+
+    return;
+ }
+
 <%}%>
 }
 
