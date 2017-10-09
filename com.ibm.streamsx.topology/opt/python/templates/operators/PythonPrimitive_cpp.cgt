@@ -16,20 +16,39 @@ using namespace streamsx::topology;
  require "splpy_operator.pm";
  require $cmnDir."/splpy.pm";
 
- my $module = splpy_Module();
- my $functionName = splpy_FunctionName();
  my @packages = splpy_Packages();
  spl_pip_packages($model, \@packages);
+
+ my $module = splpy_Module();
+ my $functionName = splpy_FunctionName();
+
+ my $paramStyle = splpy_ParamStyle();
+ $paramStyle = 'tuple';
 %>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
-    pyop_(NULL)
+    pyop_(NULL),
+    pyinputfns_(NULL)
 {
    PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
 
    pyop_->setCallable(callable);
+
+<% if ($model->getNumberOfInputPorts() != 0) { %>
+
+   SplpyGIL lock;
+   pyinputfns_ = SplpyGeneral::callFunction(
+             "streamsx.spl.runtime", "_splpy_primitive_input_fns",
+             callable, NULL);   
+/*
+   pyinputfns_ = PyObject_GetAttrString(callable, "_splpy_input_ports");
+*/
+   if (pyinputfns_ == NULL)
+       throw SplpyGeneral::pythonException("<%=$functionName%>");
+
+<% } %>
 }
 
 // Destructor
@@ -37,6 +56,8 @@ MY_OPERATOR::~MY_OPERATOR()
 {
    SplpyGIL lock;
    delete pyop_;
+   if (pyinputfns_ != NULL)
+       Py_DECREF(pyinputfns_);
 }
 
 // Notify pending shutdown
@@ -48,6 +69,28 @@ void MY_OPERATOR::prepareToShutdown()
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
+<% if ($model->getNumberOfInputPorts() != 0) {
+
+my $iport = $model->getInputPortAt(0);
+my $inputAttrs2Py = $iport->getNumberOfAttributes();
+
+%>
+
+ @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
+
+    SplpyGIL lock;
+
+ @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
+
+    PyObject *fn = PyList_GET_ITEM(pyinputfns_, (Py_ssize_t) port);
+    PyObject * pyReturnVar = SplpyGeneral::pyObject_Call(fn, pyTuple, pyDict);
+
+    if (pyReturnVar == NULL) {
+        SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
+        throw SplpyGeneral::pythonException("<%=$functionName%>");
+    }
+    Py_DECREF(pyReturnVar);
+<%}%>
 }
 
 <%SPL::CodeGen::implementationEpilogue($model);%>

@@ -27,3 +27,20 @@ class NoPorts(object):
     def __exit__(self, exc_type, exc_value, traceback):
         pass
    
+@spl.primitive_operator()
+class SingleInputPort(object):
+    def __init__(self):
+        pass
+
+    def __enter__(self):
+        import streamsx.ec as ec
+        self.cm = ec.CustomMetric(self, 'SIP_METRIC')
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
+
+    @spl.input_port()
+    def my_only_port(self, *t):
+        print("SELF", self, flush=True)
+        print("tuple", t, flush=True)
+        self.cm.value = t[0]

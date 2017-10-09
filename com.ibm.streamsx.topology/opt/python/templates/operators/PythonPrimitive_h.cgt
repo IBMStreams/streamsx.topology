@@ -27,6 +27,8 @@ public:
 private:
   // Members
     SplpyPyOp *pyop_;
+
+    PyObject *pyinputfns_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

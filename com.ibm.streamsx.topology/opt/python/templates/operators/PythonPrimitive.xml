@@ -35,7 +35,7 @@ __SPLPY__DESCRIPTION__SPLPY__
       __SPLPY__PARAMETERS__SPLPY__
     </parameters>
     <inputPorts>
-<!-- __SPLPY__INPORTS__SPLPY__ -->
+__SPLPY__INPORTS__SPLPY__
     </inputPorts>
     <outputPorts>
     </outputPorts>
