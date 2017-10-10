@@ -77,8 +77,16 @@ static PyObject * __splpy_ec_get_app_config(PyObject *self, PyObject *pyname) {
    SPL::rstring name;
    streamsx::topology::pySplValueFromPyObject(name, pyname);
 
+   int rc;
    SPL::map<SPL::rstring, SPL::rstring> properties;
-   if (SPL::Functions::Utility::getApplicationConfiguration(properties, name) ==  0)
+
+   Py_BEGIN_ALLOW_THREADS
+
+   rc = SPL::Functions::Utility::getApplicationConfiguration(properties, name);
+
+   Py_END_ALLOW_THREADS
+
+   if (rc == 0)
        return streamsx::topology::pySplValueToPyObject(properties);
 
    return streamsx::topology::SplpyGeneral::getBool(false);
@@ -106,12 +114,22 @@ static PyObject * __splpy_ec_app_trc(PyObject *self, PyObject *args) {
        PyObject *pyfunc = PyTuple_GET_ITEM(args, 4);
        PyObject *pyline = PyTuple_GET_ITEM(args, 5);
 
+       const SPL::rstring &aspects = streamsx::topology::pyRstringFromPyObject(pyaspects);
+       const SPL::rstring &func  = streamsx::topology::pyRstringFromPyObject(pyfunc);
+       const SPL::rstring &file  = streamsx::topology::pyRstringFromPyObject(pyfile);
+       const SPL::rstring &msg  = streamsx::topology::pyRstringFromPyObject(pymsg);
+       int line = (int) PyLong_AsLong(pyline);
+
+       Py_BEGIN_ALLOW_THREADS
+
        Distillery::debug::write_appmsg(ilvl,
-          SPL::splAppTrcAspect(streamsx::topology::pyRstringFromPyObject(pyaspects)),
-          streamsx::topology::pyRstringFromPyObject(pyfunc),
-          streamsx::topology::pyRstringFromPyObject(pyfile),
-          (int) PyLong_AsLong(pyline),
-          streamsx::topology::pyRstringFromPyObject(pymsg));
+          SPL::splAppTrcAspect(aspects),
+          func,
+          file,
+          line,
+          msg);
+
+       Py_END_ALLOW_THREADS
    }
  
    // Any return is going to be ignored (maybe)
@@ -158,12 +176,21 @@ static PyObject * __splpy_ec_app_log(PyObject *self, PyObject *args) {
        PyObject *pyfunc = PyTuple_GET_ITEM(args, 4);
        PyObject *pyline = PyTuple_GET_ITEM(args, 5);
 
+       const SPL::rstring &aspects = streamsx::topology::pyRstringFromPyObject(pyaspects);
+       const SPL::rstring &func  = streamsx::topology::pyRstringFromPyObject(pyfunc);
+       const SPL::rstring &file  = streamsx::topology::pyRstringFromPyObject(pyfile);
+       const SPL::rstring &msg  = streamsx::topology::pyRstringFromPyObject(pymsg);
+       int line = (int) PyLong_AsLong(pyline);
+
+       Py_BEGIN_ALLOW_THREADS
+
        Distillery::debug::write_log(ilvl,
-          SPL::splAppLogAspect(streamsx::topology::pyRstringFromPyObject(pyaspects)),
-          streamsx::topology::pyRstringFromPyObject(pyfunc),
-          streamsx::topology::pyRstringFromPyObject(pyfile),
-          (int) PyLong_AsLong(pyline),
-          streamsx::topology::pyRstringFromPyObject(pymsg));
+          SPL::splAppLogAspect(aspects),
+          func,
+          file,
+          line,
+          msg);
+       Py_END_ALLOW_THREADS
      }
    }
  
@@ -216,10 +243,19 @@ static PyObject * __splpy_ec_create_custom_metric(PyObject *self, PyObject *args
    
    SPL::Metric::Kind kind = static_cast<SPL::Metric::Kind>(PyLong_AsLong(pykind));
 
-   SPL::Metric & cm = metrics.createCustomMetric(name, desc, kind);
-   cm.setValue(PyLong_AsLong(pyvalue));
+   int64_t value = PyLong_AsLong(pyvalue);
 
-   return PyLong_FromVoidPtr(reinterpret_cast<void *>(&cm));
+   void * cmptr = NULL;
+
+   Py_BEGIN_ALLOW_THREADS
+
+   SPL::Metric &cm = metrics.createCustomMetric(name, desc, kind);
+   cm.setValue(value);
+   cmptr = reinterpret_cast<void *>(&cm);
+
+   Py_END_ALLOW_THREADS
+
+   return PyLong_FromVoidPtr(cmptr);
 }
 static PyObject * __splpy_ec_metric_get(PyObject *self, PyObject *pymptr){
    SPL::Metric * cm = reinterpret_cast<SPL::Metric *>(PyLong_AsVoidPtr(pymptr));

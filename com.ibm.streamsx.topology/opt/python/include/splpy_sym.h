@@ -71,10 +71,14 @@ typedef double (*__splpy_d_p_fp)(PyObject *);
 
 typedef PyGILState_STATE (*__splpy_gil_v_fp)(void);
 typedef void (*__splpy_v_gil_fp)(PyGILState_STATE);
+typedef PyThreadState * (*__splpy_ts_v_fp)(void);
+typedef void (*__splpy_v_ts_fp)(PyThreadState *);
 
 extern "C" {
   static __splpy_gil_v_fp __spl_fp_PyGILState_Ensure;
   static __splpy_v_gil_fp __spl_fp_PyGILState_Release;
+  static __splpy_ts_v_fp __spl_fp_PyEval_SaveThread;
+  static __splpy_v_ts_fp __spl_fp_PyEval_RestoreThread;
 
   static PyGILState_STATE __spl_fi_PyGILState_Ensure() {
      return __spl_fp_PyGILState_Ensure();
@@ -82,9 +86,18 @@ extern "C" {
   static void __spl_fi_PyGILState_Release(PyGILState_STATE state) {
      __spl_fp_PyGILState_Release(state);
   }
+  static PyThreadState * __spl_fi_PyEval_SaveThread() {
+     return __spl_fp_PyEval_SaveThread();
+  }
+  static void __spl_fi_PyEval_RestoreThread(PyThreadState * state) {
+     __spl_fp_PyEval_RestoreThread(state);
+  }
+
 };
 #pragma weak PyGILState_Ensure = __spl_fi_PyGILState_Ensure
 #pragma weak PyGILState_Release = __spl_fi_PyGILState_Release
+#pragma weak PyEval_SaveThread = __spl_fi_PyEval_SaveThread
+#pragma weak PyEval_RestoreThread = __spl_fi_PyEval_RestoreThread
 
 /*
  * String handling
@@ -433,6 +446,8 @@ class SplpySym {
 
      __SPLFIX(PyGILState_Ensure, __splpy_gil_v_fp);
      __SPLFIX(PyGILState_Release, __splpy_v_gil_fp);
+     __SPLFIX(PyEval_SaveThread, __splpy_ts_v_fp);
+     __SPLFIX(PyEval_RestoreThread, __splpy_v_ts_fp);
 
      __SPLFIX(PyObject_Str, __splpy_p_p_fp);
 
