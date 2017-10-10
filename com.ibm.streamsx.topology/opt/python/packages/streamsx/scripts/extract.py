@@ -51,9 +51,6 @@ def _optype(opobj):
 def _opfile(opobj):
     return opobj._splpy_file
 
-def _opstyle(opobj):
-    return opobj._splpy_style
-
 def _opcallable(opobj):
     return opobj._splpy_callable
 
@@ -288,11 +285,11 @@ class _Extractor(object):
          replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", opdoc);
 
     def _create_ip_spldoc(self, opmodel_xml, name, opobj):
-         if _opstyle(opobj) == 'dictionary':
+         if opobj._splpy_style == 'dictionary':
            _p0doc = """
            Tuple attribute values are passed by name to the Python callable using `\*\*kwargs`.
                  """
-         elif _opstyle(opobj) == 'tuple':
+         elif opobj._splpy_style == 'tuple':
            _p0doc = """
            Tuple attribute values are passed by position to the Python callable.
                  """
@@ -328,7 +325,7 @@ class _Extractor(object):
         
             sig = _inspect.signature(opfn)
             fixedCount = 0
-            if _opstyle(opobj) == 'tuple':
+            if opobj._splpy_style == 'tuple':
                 pmds = sig.parameters
                 itpmds = iter(pmds)
                 # Skip 'self' for classes
@@ -345,8 +342,14 @@ class _Extractor(object):
                      if param.kind == _inspect.Parameter.VAR_KEYWORD:
                          break
 
+            if isinstance(opobj._splpy_style, list):
+                pm_style = '(' + ','.join(["'{0}'".format(_) for _ in opobj._splpy_style]) + ')'
+            else:
+                pm_style = "'" + opobj._splpy_style + "'"
+             
+
             cfgfile.write('sub splpy_FixedParam { \''+ str(fixedCount)   + "\'}\n")
-            cfgfile.write('sub splpy_ParamStyle { \''+ str(_opstyle(opobj))   + "\'}\n")
+            cfgfile.write('sub splpy_ParamStyle {'+ pm_style + '}\n')
  
 
     # Write out the configuration for the operator

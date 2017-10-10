@@ -62,8 +62,8 @@ class MultiInputPort(object):
         self.cm0.value = t[0] + 17
 
     @spl.input_port()
-    def port1(self, *t):
-        self.cm1.value = t[0] + 34
+    def port1(self, **t):
+        self.cm1.value = t['v'] + 34
 
     @spl.input_port()
     def port2(self, *t):

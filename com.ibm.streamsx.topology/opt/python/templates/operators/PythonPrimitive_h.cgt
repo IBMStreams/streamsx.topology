@@ -28,7 +28,13 @@ private:
   // Members
     SplpyPyOp *pyop_;
 
+
+<%if ($model->getNumberOfInputPorts() != 0) {%>
     PyObject *pyinputfns_;
+    PyObject *pyInNames_; // port 0
+<%  for (my $p = 1; $p < $model->getNumberOfInputPorts(); $p++) { %>
+    PyObject *pyInNames_<%=$p%>;
+<%}}%>
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
