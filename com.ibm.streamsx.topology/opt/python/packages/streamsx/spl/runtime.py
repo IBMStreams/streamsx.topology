@@ -78,3 +78,15 @@ def _splpy_release_memoryviews(*args):
         elif isinstance(o, dict):
             for e in o.values():
                 _splpy_release_memoryviews(e)
+
+def _splpy_primitive_input_fns(obj):
+    """Convert the list of class input functions to be
+        instance functions against obj.
+        Used by @spl.primitive_operator SPL cpp template.
+    """
+    ofns = list()
+    for fn in obj._splpy_input_ports:
+        ofns.append(getattr(obj, fn.__name__))
+    return ofns
+    
+

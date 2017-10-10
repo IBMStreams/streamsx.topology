@@ -19,11 +19,19 @@ class TestPrimitives(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
 
+    def _get_metric(self, name):
+        job = self.tester.submission_result.job
+        ops = job.get_operators()
+        self.assertEqual(1, len(ops))
+        ms = ops[0].get_metrics(name=name)
+        self.assertEqual(1, len(ms))
+        m = ms[0]
+        self.assertEqual(name, m.name)
+        return m 
+
     def _noports_check(self):
         job = self.tester.submission_result.job
-        import time
         ops = job.get_operators()
-        print(ops, flush=True)
         self.assertEqual(1, len(ops))
         ms = ops[0].get_metrics(name='NP_mymetric')
         self.assertEqual(1, len(ms))
@@ -39,4 +47,88 @@ class TestPrimitives(unittest.TestCase):
 
         self.tester = Tester(topo)
         self.tester.local_check = self._noports_check
+        self.tester.test(self.test_ctxtype, self.test_config)
+
+    def _single_input_port_check(self):
+        job = self.tester.submission_result.job
+        top = None
+        for op in job.get_operators():
+            if op.name == 'SIP_OP':
+                top = op
+                break
+        self.assertIsNot(None, top)
+
+        ms = top.get_metrics(name='SIP_METRIC')
+        self.assertEqual(1, len(ms))
+        m = ms[0]
+        self.assertEqual('SIP_METRIC', m.name)
+
+        import time
+        for i in range(10):
+            if m.value == 1060:
+                break
+            time.sleep(1.0)
+            m = top.get_metrics(name='SIP_METRIC')[0]
+        self.assertEqual(1060, m.value)
+
+    def test_single_input_ports(self):
+        """Operator with one input port"""
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        s = topo.source([1043])
+        s = s.map(lambda x : (x,), schema='tuple<uint64 v>')
+        bop = op.Sink("com.ibm.streamsx.topology.pytest.pyprimitives::SingleInputPort", s, name="SIP_OP")
+
+        self.tester = Tester(topo)
+        self.tester.local_check = self._single_input_port_check
+        self.tester.test(self.test_ctxtype, self.test_config)
+
+    def _multi_input_port_check(self):
+        job = self.tester.submission_result.job
+        top = None
+        for op in job.get_operators():
+            if op.name == 'MIP_OP':
+                top = op
+                break
+        self.assertIsNot(None, top)
+
+        ms = top.get_metrics(name='MIP_METRIC_0')
+        self.assertEqual(1, len(ms))
+        m0 = ms[0]
+        self.assertEqual('MIP_METRIC_0', m0.name)
+
+        ms = top.get_metrics(name='MIP_METRIC_1')
+        self.assertEqual(1, len(ms))
+        m1 = ms[0]
+        self.assertEqual('MIP_METRIC_1', m1.name)
+
+        ms = top.get_metrics(name='MIP_METRIC_2')
+        self.assertEqual(1, len(ms))
+        m2 = ms[0]
+        self.assertEqual('MIP_METRIC_2', m2.name)
+
+        import time
+        for i in range(10):
+            if m0.value == 9081 and m1.value == 379 and m2.value == -899:
+                break
+            time.sleep(1.0)
+            m0 = top.get_metrics(name='MIP_METRIC_0')[0]
+            m1 = top.get_metrics(name='MIP_METRIC_1')[0]
+            m2 = top.get_metrics(name='MIP_METRIC_2')[0]
+
+        self.assertEqual(9054 + 17, m0.value)
+        self.assertEqual(345 + 34, m1.value)
+        self.assertEqual(-953 + 51, m2.value)
+
+    def test_multi_input_ports(self):
+        """Operator with three input ports"""
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        s0 = topo.source([9054]).map(lambda x : (x,), schema='tuple<uint64 v>')
+        s1 = topo.source([345]).map(lambda x : (x,), schema='tuple<int64 v>')
+        s2 = topo.source([-953]).map(lambda x : (x,), schema='tuple<int32 v>')
+        bop = op.Invoke(topo, "com.ibm.streamsx.topology.pytest.pyprimitives::MultiInputPort", [s0,s1,s2], name="MIP_OP")
+
+        self.tester = Tester(topo)
+        self.tester.local_check = self._multi_input_port_check
         self.tester.test(self.test_ctxtype, self.test_config)

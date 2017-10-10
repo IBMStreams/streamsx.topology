@@ -611,11 +611,12 @@ def _wrapforsplop(optype, wrapped, style, docpy):
 
         _op_class.__wrapped__ = wrapped
         # _op_class.__doc__ = wrapped.__doc__
-        _op_class.__splpy_optype = optype
-        _op_class.__splpy_callable = 'class'
-        _op_class.__splpy_style = _define_style(wrapped, wrapped.__call__, style)
-        _op_class.__splpy_file = inspect.getsourcefile(wrapped)
-        _op_class.__splpy_docpy = docpy
+        _op_class._splpy_optype = optype
+        _op_class._splpy_callable = 'class'
+        if hasattr(wrapped, '__call__'):
+            _op_class._splpy_style = _define_style(wrapped, wrapped.__call__, style)
+        _op_class._splpy_file = inspect.getsourcefile(wrapped)
+        _op_class._splpy_docpy = docpy
         return _op_class
     if not inspect.isfunction(wrapped):
         raise TypeError('A function or callable class is required')
@@ -634,11 +635,11 @@ def _wrapforsplop(optype, wrapped, style, docpy):
     #       return wrapped(*args, **kwargs)
     _op_fn = wrapped
 
-    _op_fn.__splpy_optype = optype
-    _op_fn.__splpy_callable = 'function'
-    _op_fn.__splpy_style = _define_style(_op_fn, _op_fn, style)
-    _op_fn.__splpy_file = inspect.getsourcefile(wrapped)
-    _op_fn.__splpy_docpy = docpy
+    _op_fn._splpy_optype = optype
+    _op_fn._splpy_callable = 'function'
+    _op_fn._splpy_style = _define_style(_op_fn, _op_fn, style)
+    _op_fn._splpy_file = inspect.getsourcefile(wrapped)
+    _op_fn._splpy_docpy = docpy
     return _op_fn
 
 # define the SPL tuple passing style based
@@ -831,8 +832,8 @@ def ignore(wrapped):
     @functools.wraps(wrapped)
     def _ignore(*args, **kwargs):
         return wrapped(*args, **kwargs)
-    _ignore.__splpy_optype = _OperatorType.Ignore
-    _ignore.__splpy_file = inspect.getsourcefile(wrapped)
+    _ignore._splpy_optype = _OperatorType.Ignore
+    _ignore._splpy_file = inspect.getsourcefile(wrapped)
     return _ignore
 
 # Defines a function as a sink operator
@@ -863,31 +864,71 @@ class for_each:
         return _wrapforsplop(_OperatorType.Sink, wrapped, self.style, self.docpy)
 
 
+class input_port(object):
+    _count = 0
+    def __init__(self, style=None):
+        """Declare an instance method as a the tuple processor
+        for an input port.
+
+        Instance methods within a class decorated using
+        `spl.primitive_operator` declare input ports by
+        decorating methods with this decorator.
+
+        The order of the methods within the class define
+        the order of the ports, so the first port is
+        the first method decorated with `input_port`.
+
+        .. versionadded:: 1.8
+        """
+        self._style = style
+
+    def __call__(self, wrapped):
+        wrapped._splpy_input_port_seq = input_port._count
+        wrapped._splpy_input_port_config = self
+        wrapped._splpy_style = self._style
+        input_port._count += 1
+        return wrapped
+
+
 class primitive_operator(object):
-    """
-    Decorator that creates an SPL operator from a class.
+    def __init__(self, docpy=True):
+        self._docpy = docpy
+        """
+        Decorator that creates an SPL primitive operator from a class.
 
-    WIP: Initial state is just the creation of an operator
-    with no inputs or outputs.
+        WIP: Initial state is just the creation of an operator
+        with inputs but no outputs.
 
-    An SPL operator with an arbitrary number of input and
-    output ports (TODO: port handling).
+        An SPL operator with an arbitrary number of input and
+        output ports (TODO: output port handling).
 
-    Args:
-       style: How an SPL tuple is passed into Python function, see  :ref:`spl-tuple-to-python`.
-       docpy: Copy Python docstrings into SPL operator model for SPLDOC.
+        Args:
+           style: How an SPL tuple is passed into Python function, see  :ref:`spl-tuple-to-python`.
+           docpy: Copy Python docstrings into SPL operator model for SPLDOC.
 
-    """
-    def __init__(self, style=None, docpy=True):
-        self.style = style
-        self.docpy = docpy
+        .. versionadded:: 1.8
+        """
+
     def __call__(self, wrapped):
         if not inspect.isclass(wrapped):
             raise TypeError('A class is required:' + str(wrapped))
 
         _valid_identifier(wrapped.__name__)
 
-        cls = _wrapforsplop(_OperatorType.Primitive, wrapped, self.style, self.docpy)
+        cls = _wrapforsplop(_OperatorType.Primitive, wrapped, None, self._docpy)
+
+        inputs = dict()
+        for fname, fn in inspect.getmembers(wrapped, inspect.isfunction):
+            if hasattr(fn, '_splpy_input_port_seq'):
+                inputs[fn._splpy_input_port_seq] = fn
+
+        cls._splpy_input_ports = []
+        for seq in sorted(inputs.keys()):
+            fn = inputs[seq]
+            fn._splpy_input_port_id = len(cls._splpy_input_ports)
+            fn._splpy_style = _define_style(wrapped, fn, fn._splpy_style)
+
+            cls._splpy_input_ports.append(fn)
 
         return cls
 

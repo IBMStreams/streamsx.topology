@@ -44,21 +44,21 @@ def replaceTokenInFile(file, token, value):
     f.close()
 
 def _optype(opobj):
-    if hasattr(opobj, '__splpy_optype'):
-        return opobj.__splpy_optype
+    if hasattr(opobj, '_splpy_optype'):
+        return opobj._splpy_optype
     return None
 
 def _opfile(opobj):
-    return opobj.__splpy_file
+    return opobj._splpy_file
 
 def _opstyle(opobj):
-    return opobj.__splpy_style
+    return opobj._splpy_style
 
 def _opcallable(opobj):
-    return opobj.__splpy_callable
+    return opobj._splpy_callable
 
 def _opdoc(opobj):
-    return opobj.__splpy_docpy
+    return opobj._splpy_docpy
 
 _INFO_XML_TEMPLATE="""<?xml version="1.0" encoding="UTF-8"?>
 <toolkitInfoModel
@@ -109,6 +109,19 @@ _OP_PARAM_TEMPLATE ="""
   <type></type>
   <cardinality>1</cardinality>
  </parameter>"""
+
+_OP_INPUT_PORT_SET_TEMPLATE ="""
+      <inputPortSet>
+        <description>
+__SPLPY__INPORT_DESCRIPTION__SPLPY__
+        </description>
+        <tupleMutationAllowed>false</tupleMutationAllowed>
+        <windowingMode>NonWindowed</windowingMode>
+        <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
+        <cardinality>1</cardinality>
+        <optional>false</optional>
+      </inputPortSet>
+"""
 
 
 
@@ -244,7 +257,10 @@ class _Extractor(object):
          replaceTokenInFile(opmodel_xml, "__SPLPY__MINOR_VERSION__SPLPY__", str(sys.version_info[1]));
          self._create_op_parameters(opmodel_xml, name, funcTuple)
          self._create_op_spldoc(opmodel_xml, name, funcTuple)
-         self._create_ip_spldoc(opmodel_xml, name, funcTuple)
+         if cgtbase == 'PythonPrimitive':
+             self._create_primitive(opmodel_xml, name, funcTuple)
+         else:
+             self._create_ip_spldoc(opmodel_xml, name, funcTuple)
 
     ## Create SPL doc entries in the Operator model xml file.
     ##
@@ -284,6 +300,22 @@ class _Extractor(object):
            _p0doc = ''
      
          replaceTokenInFile(opmodel_xml, "__SPLPY__INPORT_0_DESCRIPTION__SPLPY__", _p0doc);
+
+    def _create_primitive(self, opmodel_xml, name, cls):
+        # input ports
+        if cls._splpy_input_ports:
+            ipd = ''
+            for portfn in cls._splpy_input_ports:
+                tip = _OP_INPUT_PORT_SET_TEMPLATE
+                fndoc = inspect.getdoc(portfn)
+                if not fndoc:
+                    fndoc = portfn.__name__
+                tip = tip.replace('__SPLPY__INPORT_DESCRIPTION__SPLPY__', fndoc)
+                ipd += tip
+        else:
+            ipd = "<!-- no input ports -->"
+
+        replaceTokenInFile(opmodel_xml, "__SPLPY__INPORTS__SPLPY__", ipd);
    
     # Write information about the Python function parameters.
     #
