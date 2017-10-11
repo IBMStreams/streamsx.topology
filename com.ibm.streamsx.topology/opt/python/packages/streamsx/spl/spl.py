@@ -923,12 +923,14 @@ class primitive_operator(object):
                 inputs[fn._splpy_input_port_seq] = fn
 
         cls._splpy_input_ports = []
+        cls._splpy_style = []
         for seq in sorted(inputs.keys()):
             fn = inputs[seq]
             fn._splpy_input_port_id = len(cls._splpy_input_ports)
             fn._splpy_style = _define_style(wrapped, fn, fn._splpy_style)
 
             cls._splpy_input_ports.append(fn)
+            cls._splpy_style.append(fn._splpy_style)
 
         return cls
 

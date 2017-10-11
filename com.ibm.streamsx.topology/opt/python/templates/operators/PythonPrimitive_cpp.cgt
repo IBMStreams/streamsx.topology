@@ -21,15 +21,17 @@ using namespace streamsx::topology;
 
  my $module = splpy_Module();
  my $functionName = splpy_FunctionName();
-
- my $paramStyle = splpy_ParamStyle();
- $paramStyle = 'tuple';
 %>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
-    pyop_(NULL),
-    pyinputfns_(NULL)
+    pyop_(NULL)
+<%if ($model->getNumberOfInputPorts() != 0) {%>
+    ,pyinputfns_(NULL),
+    pyInNames_(NULL)
+<%  for (my $p = 1; $p < $model->getNumberOfInputPorts(); $p++) { %>
+    , pyInNames_<%=$p%>(NULL)
+<%}}%>
 {
    PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
@@ -39,6 +41,25 @@ MY_OPERATOR::MY_OPERATOR() :
 <% if ($model->getNumberOfInputPorts() != 0) { %>
 
    SplpyGIL lock;
+
+<%
+
+my @portParamStyles = splpy_ParamStyle();
+
+for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
+
+my $paramStyle = @portParamStyles[$p];
+
+my $ppn = "";
+if ($p >= 1) {
+   $ppn = $p;
+}
+
+if ($paramStyle eq 'dictionary') { %>
+      pyInNames_<%=$ppn%> = streamsx::topology::Splpy::pyAttributeNames(
+               getInputPortAt(<%=$p%>));
+<%}}%>
+
    // callFunction takes a reference.
    Py_INCREF(callable);
    pyinputfns_ = SplpyGeneral::callFunction(
@@ -55,8 +76,16 @@ MY_OPERATOR::~MY_OPERATOR()
 {
    SplpyGIL lock;
    delete pyop_;
+
+<%if ($model->getNumberOfInputPorts() != 0) {%>
    if (pyinputfns_ != NULL)
        Py_DECREF(pyinputfns_);
+   if (pyInNames_ != NULL)
+       Py_DECREF(pyInNames_);
+<%  for (my $p = 1; $p < $model->getNumberOfInputPorts(); $p++) { %>
+   if (pyInNames_<%=$p%> != NULL)
+       Py_DECREF(pyInNames_<%=$p%>);
+<%}}%>
 }
 
 // Notify pending shutdown
@@ -65,14 +94,17 @@ void MY_OPERATOR::prepareToShutdown()
     pyop_->prepareToShutdown();
 }
 
-// Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
 <%
+if ($model->getNumberOfInputPorts() != 0) {
+my @portParamStyles = splpy_ParamStyle();
+
 for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
 
   my $iport = $model->getInputPortAt($p);
   my $inputAttrs2Py = $iport->getNumberOfAttributes();
+  my $paramStyle = @portParamStyles[$p];
 
   if ($model->getNumberOfInputPorts() > 1) {
 %>
@@ -101,7 +133,7 @@ for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
     return;
  }
 
-<%}%>
+<%}}%>
 }
 
 <%SPL::CodeGen::implementationEpilogue($model);%>
