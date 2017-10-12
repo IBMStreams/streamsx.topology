@@ -12,7 +12,9 @@
   }
 %>
  
-void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple <%=$itypeparam%>) {
+void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple <%=$itypeparam%>) {
+
+  <%=$oport->getCppTupleType()%> otuple;
 
   Py_ssize_t frs = PyTuple_GET_SIZE(pyTuple); 
     
@@ -66,4 +68,8 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=
 <%
 }
  %>
+
+  Py_BEGIN_ALLOW_THREADS
+  submit(otuple, <%=$oport->getIndex()%>);
+  Py_END_ALLOW_THREADS
 }

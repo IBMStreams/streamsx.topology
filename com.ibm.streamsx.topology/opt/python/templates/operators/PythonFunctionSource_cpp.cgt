@@ -93,19 +93,13 @@ void MY_OPERATOR::process(uint32_t idx)
 {
   while(!getPE().getShutdownRequested()) {
 
-    std::vector<OPort0Type> output_tuples;  
-    {
-      // Don't hold the lock across submission
+      // GIL is released across submission
       SplpyGIL lock;
 
       PyObject *pyTuple = PyTuple_New(0);
       PyObject *pyDict = NULL;
 
 @include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
-    }
- 
-    for(int i = 0; i < output_tuples.size();i++)
-       submit(output_tuples[i], 0);   
   }
 }
 
