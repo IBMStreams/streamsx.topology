@@ -132,3 +132,25 @@ class TestPrimitives(unittest.TestCase):
         self.tester = Tester(topo)
         self.tester.local_check = self._multi_input_port_check
         self.tester.test(self.test_ctxtype, self.test_config)
+
+class TestPrimitives2(unittest.TestCase):
+    def setUp(self):
+        Tester.setup_standalone(self)
+
+    @unittest.expectedFailure
+    def test_single_output_port(self):
+        """Operator with single output port."""
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+
+        s = topo.source([9237, -24])
+        s = s.map(lambda x : (x,), schema='tuple<uint64 v>')
+
+        bop = op.Map("com.ibm.streamsx.topology.pytest.pyprimitives::SingleOutputPort", s)
+
+        r = bop.stream
+    
+        self.tester = Tester(topo)
+        self.tester.tuple_count(s, 2)
+        self.tester.contents(s, [{'v':9237}, {'v',-24}])
+        self.tester.test(self.test_ctxtype, self.test_config)

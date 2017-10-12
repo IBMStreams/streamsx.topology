@@ -4,7 +4,6 @@
  */
 
 #include "splpy.h"
-#include "splpy_pyop.h"
 
 using namespace streamsx::topology;
 
@@ -134,6 +133,10 @@ for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
  }
 
 <%}}%>
+}
+
+void MY_OPERATOR::convertAndSubmit(uint32_t port, PyObject *data) {
+   fprintf(stderr, "Submit to %d from operator\n", port);
 }
 
 <%SPL::CodeGen::implementationEpilogue($model);%>

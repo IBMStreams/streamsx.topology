@@ -9,7 +9,7 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
-class MY_OPERATOR : public MY_BASE_OPERATOR 
+class MY_OPERATOR : public MY_BASE_OPERATOR, public SplpyPrimitiveOp
 {
 public:
   // Constructor
@@ -23,6 +23,8 @@ public:
 
   // Tuple processing for non-mutating ports
   void process(Tuple const & tuple, uint32_t port);
+
+  void convertAndSubmit(uint32_t port, PyObject *data);
 
 private:
   // Members

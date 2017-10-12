@@ -108,17 +108,35 @@ _OP_PARAM_TEMPLATE ="""
  </parameter>"""
 
 _OP_INPUT_PORT_SET_TEMPLATE ="""
-      <inputPortSet>
-        <description>
-__SPLPY__INPORT_DESCRIPTION__SPLPY__
-        </description>
-        <tupleMutationAllowed>false</tupleMutationAllowed>
-        <windowingMode>NonWindowed</windowingMode>
-        <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
-        <cardinality>1</cardinality>
-        <optional>false</optional>
-      </inputPortSet>
+<inputPortSet>
+  <description>
+                                    __SPLPY__INPORT_DESCRIPTION__SPLPY__
+  </description>
+  <tupleMutationAllowed>false</tupleMutationAllowed>
+  <windowingMode>NonWindowed</windowingMode>
+  <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
+  <cardinality>1</cardinality>
+  <optional>false</optional>
+</inputPortSet>
 """
+
+_OP_OUTPUT_PORT_SET_TEMPLATE ="""
+<outputPortSet>
+  <description>
+    __SPLPY__OUTPORT_DESCRIPTION__SPLPY__
+  </description>
+  <expressionMode>Nonexistent</expressionMode>
+  <autoAssignment>false</autoAssignment>
+  <completeAssignment>false</completeAssignment>
+  <rewriteAllowed>true</rewriteAllowed>
+  <windowPunctuationOutputMode>Preserving</windowPunctuationOutputMode>
+  <windowPunctuationInputPort>0</windowPunctuationInputPort>
+  <tupleMutationAllowed>false</tupleMutationAllowed>
+  <cardinality>1</cardinality>
+  <optional>false</optional>
+</outputPortSet>
+"""
+
 
 
 
@@ -311,8 +329,17 @@ class _Extractor(object):
                 ipd += tip
         else:
             ipd = "<!-- no input ports -->"
-
         replaceTokenInFile(opmodel_xml, "__SPLPY__INPORTS__SPLPY__", ipd);
+
+        # output ports
+        if cls._splpy_output_ports:
+            opd = ''
+            for portfn in cls._splpy_input_ports:
+                top = _OP_OUTPUT_PORT_SET_TEMPLATE
+                opd += top
+        else:
+            opd = "<!-- no output ports -->"
+        replaceTokenInFile(opmodel_xml, "__SPLPY__OUTPORTS__SPLPY__", opd);
    
     # Write information about the Python function parameters.
     #

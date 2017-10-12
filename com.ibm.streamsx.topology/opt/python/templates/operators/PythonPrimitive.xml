@@ -38,6 +38,7 @@ __SPLPY__DESCRIPTION__SPLPY__
 __SPLPY__INPORTS__SPLPY__
     </inputPorts>
     <outputPorts>
+__SPLPY__OUTPORTS__SPLPY__
     </outputPorts>
   </cppOperatorModel>
 </operatorModel>
