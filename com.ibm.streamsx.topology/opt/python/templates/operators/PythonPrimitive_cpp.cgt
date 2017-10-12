@@ -135,6 +135,16 @@ for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
 <%}}%>
 }
 
+// Create member functions that convert Python tuple to SPL tuple
+// for each port.
+<%
+for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) {
+    my $oport = $model->getOutputPortAt($p);
+    my $iport = undef;
+%>
+@include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
+<% } %>
+
 void MY_OPERATOR::convertAndSubmit(uint32_t port, PyObject *tuple_) {
    fprintf(stderr, "Submit to %d from operator\n", port);
 }
