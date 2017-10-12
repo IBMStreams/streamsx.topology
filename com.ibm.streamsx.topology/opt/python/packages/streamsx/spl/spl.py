@@ -872,11 +872,11 @@ class PrimitiveOperator(object):
 
     .. versionadded:: 1.8
     """
-    def submit(self, port_id, t):
+    def submit(self, port_id, tuple_):
         """Submit a tuple to the output port.
         """
         port_index = self._splpy_output_ports[port_id]
-        ec._submit(self, port_index, data)
+        ec._submit(self, port_index, tuple_)
 
 
 class input_port(object):

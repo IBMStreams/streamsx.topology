@@ -457,9 +457,9 @@ def _callable_exit_clean(callable):
     if hasattr(callable, '__enter__') and hasattr(callable, '__exit__'):
         callable.__exit__(None, None, None)
 
-def _submit(primitive, port_index, data):
+def _submit(primitive, port_index, tuple_):
     """Internal method to submit a tuple"""
-    args = (_get_opc(primitive), port_index, data)
+    args = (_get_opc(primitive), port_index, tuple_)
     _ec._submit(args)
 
 #

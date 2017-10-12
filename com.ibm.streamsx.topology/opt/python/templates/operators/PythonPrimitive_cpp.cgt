@@ -135,7 +135,7 @@ for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
 <%}}%>
 }
 
-void MY_OPERATOR::convertAndSubmit(uint32_t port, PyObject *data) {
+void MY_OPERATOR::convertAndSubmit(uint32_t port, PyObject *tuple_) {
    fprintf(stderr, "Submit to %d from operator\n", port);
 }
 

@@ -24,7 +24,7 @@ public:
   // Tuple processing for non-mutating ports
   void process(Tuple const & tuple, uint32_t port);
 
-  void convertAndSubmit(uint32_t port, PyObject *data);
+  void convertAndSubmit(uint32_t port, PyObject *tuple_);
 
 private:
   // Members

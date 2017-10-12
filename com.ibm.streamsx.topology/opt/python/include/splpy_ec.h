@@ -44,7 +44,7 @@ class SplpyPrimitiveOp
 {
     public:
         virtual ~SplpyPrimitiveOp() {} 
-        virtual void convertAndSubmit(uint32_t port, PyObject *data) = 0;
+        virtual void convertAndSubmit(uint32_t port, PyObject *tuple_) = 0;
 };
 
 }}
@@ -312,7 +312,7 @@ static PyObject * __splpy_ec_metric_set(PyObject *self, PyObject *args){
 static PyObject * __splpy_ec_submit(PyObject *self, PyObject *args) {
    PyObject *opc = PyTuple_GET_ITEM(args, 0);
    PyObject *pyport = PyTuple_GET_ITEM(args, 1);
-   PyObject *pydata = PyTuple_GET_ITEM(args, 2);
+   PyObject *pytuple = PyTuple_GET_ITEM(args, 2);
 
    void * opptr = PyLong_AsVoidPtr(opc);
    SPL::Operator *op = reinterpret_cast<SPL::Operator*>(opptr);
@@ -320,7 +320,7 @@ static PyObject * __splpy_ec_submit(PyObject *self, PyObject *args) {
 
    uint32_t port = (uint32_t) PyLong_AsLong(pyport);
 
-   op2->convertAndSubmit(port, pydata);
+   op2->convertAndSubmit(port, pytuple);
 
    // Any return is going to be ignored
    // so return an existing object with its reference bumped
