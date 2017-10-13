@@ -155,3 +155,22 @@ class TestPrimitivesOutputs(unittest.TestCase):
         self.tester.tuple_count(s, 2)
         self.tester.contents(s, [{'v':9237}, {'v':-24}])
         self.tester.test(self.test_ctxtype, self.test_config)
+
+    def test_multi_output_ports(self):
+        """Operator with multiple output port."""
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+
+        s = topo.source([9237, -24])
+        s = s.map(lambda x : (x,), schema='tuple<int64 v>')
+
+        bop = op.Invoke(topo, "com.ibm.streamsx.topology.pytest.pyprimitives::MultiOutputPorts", s, schemas=['tuple<int64 v1>', 'tuple<int32 v2>', 'tuple<int16 v3>'])
+
+        r = bop.outputs
+    
+        self.tester = Tester(topo)
+        self.tester.tuple_count(s, 2)
+        self.tester.contents(r[0], [{'v1':9237}, {'v1':-24}])
+        self.tester.contents(r[1], [{'v2':9237+921}, {'v2':-24+921}])
+        self.tester.contents(r[2], [{'v3':9237-407}, {'v3':-24-407}])
+        self.tester.test(self.test_ctxtype, self.test_config)

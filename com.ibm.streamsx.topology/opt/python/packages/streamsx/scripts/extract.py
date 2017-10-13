@@ -334,7 +334,7 @@ class _Extractor(object):
         # output ports
         if cls._splpy_output_ports:
             opd = ''
-            for portfn in cls._splpy_input_ports:
+            for portfn in cls._splpy_output_ports:
                 top = _OP_OUTPUT_PORT_SET_TEMPLATE
                 opd += top
         else:

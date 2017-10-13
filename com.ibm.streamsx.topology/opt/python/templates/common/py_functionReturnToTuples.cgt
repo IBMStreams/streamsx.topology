@@ -26,4 +26,5 @@
 
     pySubmitTuplesPort<%=$oport->getIndex()%>(pyReturnVar <%=$ituplearg%>);
 
+    Py_DECREF(pyReturnVar);
 <%}%>
