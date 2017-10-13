@@ -9,7 +9,6 @@ using namespace streamsx::topology;
 
 @include "../pyspltuple.cgt"
 
-
 <%
 
 # Configure Windowing
@@ -17,15 +16,13 @@ using namespace streamsx::topology;
  my $window = $inputPort->getWindow();
  my $windowCppInitializer = SPL::CodeGen::getWindowCppInitializer($window,"PyObject *");
 
-
  # Select the Python wrapper function
  my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
 
- if (($pystyle eq 'dict') || ($pyoutstyle eq 'dict')) {
+ if (($pystyle eq 'dict') || ($pyoutstyle eq 'dict') || ($pystyle eq 'tuple')) {
     SPL::CodeGen::exitln("Dictionary input and output not supported.");
  }
  
- my $in_pywrapfunc =  $pystyle . '_in__object_out';
  my $out_pywrapfunc=  'object_in__' . $pyoutstyle . '_out';
 %>
 
@@ -36,17 +33,14 @@ using namespace streamsx::topology;
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
    pyInNames_(NULL),
+   loads(NULL),
    occ_(-1),
    window_(<%=$windowCppInitializer%>)
 {
     window_.registerOnWindowTriggerHandler(this);
     window_.registerAfterTupleEvictionHandler(this);
 
-    const char * in_wrapfn = "<%=$in_pywrapfunc%>";
     const char * out_wrapfn = "<%=$out_pywrapfunc%>";
-    const char * functions_module = "streamsx.topology.functions";
-    const char * identity_function = "identity";
-
 <%
 # If occ parameter is positive then pass-by-ref is possible
 # Generate code to allow pass by ref but only use when
@@ -75,24 +69,32 @@ MY_OPERATOR::MY_OPERATOR() :
 %>
 
     funcop_ = new SplpyFuncOp(this, out_wrapfn);
-
-    // spl_in_object_out points to the wrapped identity function used to convert incoming tuples to 
-    // Python objects.
+    
+    // Obtain the function that loads the tuple's value in process()
     {
-        SplpyGIL lock;
-        spl_in_object_out = SplpyGeneral::loadFunction(functions_module, identity_function);
-        spl_in_object_out = SplpyGeneral::callFunction("streamsx.topology.runtime", in_wrapfn, spl_in_object_out, NULL);
+    SplpyGIL lock;
+    <%if ($pystyle eq 'pickle'){%>
+    loads = SplpyGeneral::loadFunction("pickle", "loads");
+    <% } elsif ($pystyle eq 'json'){ %>
+    loads = SplpyGeneral::loadFunction("json", "loads");
+    <% } %>
     }
+
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
   delete funcop_;
+
+  <% if (($pystyle eq 'json') || ($pystyle eq 'pickle')) {%>
   {
       SplpyGIL lock;
-      Py_DECREF(spl_in_object_out);
+      if (loads != NULL){
+      	 Py_DECREF(loads);
+      }
   }
+  <% } %>
 }
 
 // Notify pending shutdown
@@ -108,7 +110,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
   PyObject *python_value;
 
-// If the input style is pickle,
+  // If the input style is pickle,
 
   // None of the streamsx::topology methods in this scope grab the lock
   // so we need to do it here.
@@ -128,25 +130,31 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 	      SplpyGIL lock; 
               python_value = pySplValueToPyObject(value);
 
-	      // Create a tuple to pass to the depickling wrapper function.	  
-	      PyObject * pyTuple;
-              pyTuple = PyTuple_New(2);
-              PyTuple_SET_ITEM(pyTuple, 0, python_value);
-              Py_INCREF(python_value);
-              PyTuple_SET_ITEM(pyTuple, 1, python_value);
-
 	      // Depickle the tuple.
-	      python_value = streamsx::topology::SplpyGeneral::pyCallObject(spl_in_object_out, pyTuple);
+	      PyObject *tup = PyTuple_New(1);
+	      PyTuple_SET_ITEM(tup, 0, python_value);
+   	      python_value = SplpyGeneral::pyCallObject(loads, tup);
+
 	  } // End SplpyGIL lock
       }
-  <%} else {%>
-      	{
-	    // If the tuple is not a pickled object, or a reference, convert it to a PyObject
-	    // using pySplProcessTuple
-	    SplpyGIL lock;
-            python_value = streamsx::topology::pySplProcessTuple(spl_in_object_out, value);
-	} // End SplpyGIL lock
-  <%}%>
+  <% } elsif ($pystyle eq 'string'){%>
+      {
+	  SplpyGIL lock;
+          python_value = pySplValueToPyObject(value);
+      }
+  <% } elsif ($pystyle eq 'json'){%>
+      {
+      	  SplpyGIL lock;
+          python_value = pySplValueToPyObject(value);
+	  PyObject *tup = PyTuple_New(1);
+	  PyTuple_SET_ITEM(tup, 0, python_value);
+	  python_value = SplpyGeneral::pyCallObject(loads, tup);
+      }
+  
+ <% } else{
+	  SPL::CodeGen::exitln($pystyle . " is an unsupported input type.");      
+    }
+ %>
 
 
   window_.insert(python_value);

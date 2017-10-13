@@ -130,6 +130,7 @@ class TestPythonWindowing(unittest.TestCase):
                              [[{'a'},1], [{'c','b'}, 5]],
                              [[{'a'},1], [{'c','b'}, 5], [{'d','e'}, 9]]
                            ])
+
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_StringInputCountCountWindow(self):
