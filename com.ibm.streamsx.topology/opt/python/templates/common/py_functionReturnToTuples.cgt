@@ -26,10 +26,7 @@
 
 if (PyTuple_Check(pyReturnVar))
 {
-  OPort0Type otuple;    
-  fromPythonToPort<%=$oport->getIndex()%>(pyReturnVar, otuple <%=$ituplearg%>);
-  output_tuples.push_back(otuple);
-
+  fromPythonToPort<%=$oport->getIndex()%>(pyReturnVar <%=$ituplearg%>);
 }
 else if (PyList_Check(pyReturnVar))
 {
@@ -45,9 +42,7 @@ else if (PyList_Check(pyReturnVar))
              "Fatal error: function must return a Python Tuple or a Python List: <%=$functionName%>");
      }
      
-     OPort0Type otuple;
-     fromPythonToPort<%=$oport->getIndex()%>(ltuple, otuple <%=$ituplearg%>);
-     output_tuples.push_back(otuple);
+     fromPythonToPort<%=$oport->getIndex()%>(ltuple <%=$ituplearg%>);
    }
 }
 else {

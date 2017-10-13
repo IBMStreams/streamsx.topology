@@ -38,7 +38,7 @@ private:
     PyObject *pyInNames_;
     PyObject *pyOutNames_;
 
-    void fromPythonToPort0(PyObject * pyTuple, <%=$oport->getCppTupleType()%> & otuple, <%=$iport->getCppTupleType()%> const & ituple);
+    void fromPythonToPort0(PyObject * pyTuple, <%=$iport->getCppTupleType()%> const & ituple);
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

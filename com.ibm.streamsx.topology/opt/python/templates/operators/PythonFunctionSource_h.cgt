@@ -36,7 +36,7 @@ private:
     SplpyPyOp *pyop_;
     PyObject *pyOutNames_;
 
-    void fromPythonToPort0(PyObject * pyTuple, <%=$oport->getCppTupleType()%> & otuple);
+    void fromPythonToPort0(PyObject * pyTuple);
 
 }; 
 
