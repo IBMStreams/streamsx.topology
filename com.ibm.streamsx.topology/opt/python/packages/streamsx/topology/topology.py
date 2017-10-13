@@ -1311,7 +1311,7 @@ class Window(object):
             raise ValueError(when)
         return tw
 
-    def aggregate(self, function, name=None, schema = None):
+    def aggregate(self, function, name=None):
         """Aggregates the contents of the window when the window is
         triggered.
         
@@ -1335,8 +1335,7 @@ class Window(object):
         Returns: 
             Stream: A `Stream` of the returned values of the supplied function.                                                                                                                                                             
         """
-        if schema is None:
-            schema = CommonSchema.Python
+        schema = CommonSchema.Python
         
         sl = _SourceLocation(_source_info(), "aggregate")
         name = self.topology.graph._requested_name(name, action="aggregate", func=function)
