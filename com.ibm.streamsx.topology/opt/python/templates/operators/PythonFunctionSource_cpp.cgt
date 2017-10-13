@@ -104,6 +104,7 @@ void MY_OPERATOR::process(uint32_t idx)
 }
 
 // Create member function that converts Python tuple to SPL tuple
+@include  "../../opt/.__splpy/common/py_valueToTuples.cgt"
 @include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
 
 <%SPL::CodeGen::implementationEpilogue($model);%>

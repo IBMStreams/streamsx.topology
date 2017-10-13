@@ -1,6 +1,6 @@
 /*
  * # Licensed Materials - Property of IBM
- * # Copyright IBM Corp. 2015  
+ * # Copyright IBM Corp. 2017
  */
 
 #include "splpy_pyop.h"
@@ -34,7 +34,8 @@ private:
 <% for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) {
     my $oport = $model->getOutputPortAt($p);
 %>
-  void fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple);
+  void pySubmitTuplesPort<%=$oport->getIndex()%>(PyObject * value);
+  void fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple);
 <%}%>
 
 

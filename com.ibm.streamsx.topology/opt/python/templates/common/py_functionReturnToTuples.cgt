@@ -2,6 +2,13 @@
    // converts the returned value into
    // SPL Tuples and submits them.
    // Returns if the Python function returns None.
+<%
+{
+  my $ituplearg = "";
+  if (defined $iport) {
+     $ituplearg = ", " . $iport->getCppTupleName();
+  }
+%>
 
     PyObject * pyReturnVar = SplpyGeneral::pyObject_Call(pyop_->callable(), pyTuple, pyDict);
 
@@ -17,37 +24,6 @@
          return;
     }
 
-<%
-  my $ituplearg = "";
-  if (defined $iport) {
-     $ituplearg = ", " . $iport->getCppTupleName();
-  }
-%>
+    pySubmitTuplesPort<%=$oport->getIndex()%>(pyReturnVar <%=$ituplearg%>);
 
-if (PyTuple_Check(pyReturnVar))
-{
-  fromPythonToPort<%=$oport->getIndex()%>(pyReturnVar <%=$ituplearg%>);
-}
-else if (PyList_Check(pyReturnVar))
-{
-
-   /* Logic for if a list of tuples is returned */
-   Py_ssize_t tc = PyList_GET_SIZE(pyReturnVar);
-   for (Py_ssize_t k = 0; k < tc; k++){    
-     PyObject *ltuple = PyList_GET_ITEM(pyReturnVar, k);
-     if (SplpyGeneral::isNone(ltuple))
-         continue;
-     if(!PyTuple_Check(ltuple)){    
-        throw SplpyGeneral::generalException("<%=$functionName%>",
-             "Fatal error: function must return a Python Tuple or a Python List: <%=$functionName%>");
-     }
-     
-     fromPythonToPort<%=$oport->getIndex()%>(ltuple <%=$ituplearg%>);
-   }
-}
-else {
-  throw SplpyGeneral::generalException("<%=$functionName%>",
-     "Fatal error: function must return a Python Tuple or a Python List: <%=$functionName%>");
-}
-
-Py_DECREF(pyReturnVar);
+<%}%>

@@ -1,6 +1,6 @@
 /*
  * # Licensed Materials - Property of IBM
- * # Copyright IBM Corp. 2015,2016
+ * # Copyright IBM Corp. 2017
  */
 
 #include "splpy.h"
@@ -142,11 +142,15 @@ for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) {
     my $oport = $model->getOutputPortAt($p);
     my $iport = undef;
 %>
+@include  "../../opt/.__splpy/common/py_valueToTuples.cgt"
 @include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
 <% } %>
 
 void MY_OPERATOR::convertAndSubmit(uint32_t port, PyObject *tuple_) {
-   fprintf(stderr, "Submit to %d from operator\n", port);
+<% for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) { %>
+     if (port == <%=$p%>)
+         pySubmitTuplesPort<%=$p%>(tuple_);
+<%}%>
 }
 
 <%SPL::CodeGen::implementationEpilogue($model);%>
