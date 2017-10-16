@@ -36,7 +36,6 @@ private:
     SplpyPyOp *pyop_;
 
     PyObject *pyInNames_;
-    PyObject *pyOutNames_;
 
     void pySubmitTuplesPort0(PyObject * value, <%=$iport->getCppTupleType()%> const & ituple);
     void fromPythonToPort0(PyObject * pyTuple, <%=$iport->getCppTupleType()%> const & ituple);

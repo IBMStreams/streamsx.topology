@@ -31,8 +31,7 @@ using namespace streamsx::topology;
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
-   pyop_(NULL),
-   pyOutNames_(NULL)
+   pyop_(NULL)
 {
    PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
@@ -46,17 +45,16 @@ MY_OPERATOR::MY_OPERATOR() :
              "streamsx.spl.runtime", "_splpy_iter_source",
              callable, NULL);   
 
-     pyOutNames_ = Splpy::pyAttributeNames(getOutputPortAt(0));
+     PyObject *pyOutNames = Splpy::pyAttributeNames(getOutputPortAt(0));
 
      // Now create the wrapper function that converts
      // other types returned by the user's function
      // (e.g. dictionaries) to Python tuples as the
      // decorated operators only handle tuples to
      // simplify the generated code.
-     Py_INCREF(pyOutNames_); // callFunction steals the reference
      callable = SplpyGeneral::callFunction(
              "streamsx.spl.runtime", "_splpy_to_tuples",
-             callable, pyOutNames_);   
+             callable, pyOutNames);   
 
      pyop_->setCallable(callable);
    }
@@ -65,11 +63,6 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-   {
-   SplpyGIL lock;
-   if (pyOutNames_)
-      Py_DECREF(pyOutNames_);
-   }
    delete pyop_;
 }
 
