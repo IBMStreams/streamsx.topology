@@ -79,6 +79,7 @@ MY_OPERATOR::~MY_OPERATOR()
    SplpyGIL lock;
    if (pyInNames_)
       Py_DECREF(pyInNames_);
+   }
 
    delete pyop_;
 }
