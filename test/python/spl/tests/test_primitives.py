@@ -71,7 +71,7 @@ class TestPrimitives(unittest.TestCase):
             m = top.get_metrics(name='SIP_METRIC')[0]
         self.assertEqual(1060, m.value)
 
-    def test_single_input_ports(self):
+    def test_single_input_port(self):
         """Operator with one input port"""
         topo = Topology()
         streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
@@ -173,4 +173,23 @@ class TestPrimitivesOutputs(unittest.TestCase):
         self.tester.contents(r[0], [{'v1':9237}, {'v1':-24}])
         self.tester.contents(r[1], [{'v2':9237+921}, {'v2':-24+921}])
         self.tester.contents(r[2], [{'v3':9237-407}, {'v3':-24-407}])
+        self.tester.test(self.test_ctxtype, self.test_config)
+
+    def test_dict_output_ports(self):
+        """Operator with multiple output port submitting dict objects."""
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+
+        s = topo.source([9237, -24])
+        s = s.map(lambda x : (x,x*2,x+4), schema='tuple<int64 d, int64 e, int64 f>')
+
+        bop = op.Invoke(topo, "com.ibm.streamsx.topology.pytest.pyprimitives::DictOutputPorts", s, schemas=['tuple<int64 d, int64 e, int64 f>']*2)
+
+        r = bop.outputs
+    
+        self.tester = Tester(topo)
+        self.tester.tuple_count(r[0], 2)
+        self.tester.tuple_count(r[1], 4)
+        self.tester.contents(r[0], [{'d':9237, 'e':(9237*2), 'f':9237+4}, {'d':-24, 'e':(-24*2), 'f':-24+4}])
+        self.tester.contents(r[1], [{'d':9237+7, 'f':(9237*2)+777, 'e':9237+4+77}, {'d':9237, 'e':(9237*2), 'f':9237+4}, {'d':-24+7, 'f':(-24*2)+777, 'e':-24+4+77}, {'d':-24, 'e':(-24*2), 'f':-24+4}])
         self.tester.test(self.test_ctxtype, self.test_config)
