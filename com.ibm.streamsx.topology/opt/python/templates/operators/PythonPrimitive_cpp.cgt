@@ -43,10 +43,21 @@ MY_OPERATOR::MY_OPERATOR() :
 <%
 
 my @portParamStyles = splpy_ParamStyle();
+my @portFixedParam = splpy_FixedParam();
 
 for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
 
+my $iport = $model->getInputPortAt($p);
+
 my $paramStyle = @portParamStyles[$p];
+my $fixedParam = @portFixedParam[$p];
+
+if ($fixedParam != -1) {
+    if ($fixedParam > $iport->getNumberOfAttributes()) {
+       SPL::CodeGen::exitln('%s requires at least %i attributes in input port %i but schema is %s',
+           $model->getContext()->getKind(), $fixedParam, $iport->getIndex(), $iport->getSPLTupleType());
+ }
+}
 
 my $ppn = "";
 if ($p >= 1) {
@@ -111,12 +122,17 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 <%
 if ($model->getNumberOfInputPorts() != 0) {
 my @portParamStyles = splpy_ParamStyle();
+my @portFixedParam = splpy_FixedParam();
 
 for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
 
   my $iport = $model->getInputPortAt($p);
-  my $inputAttrs2Py = $iport->getNumberOfAttributes();
   my $paramStyle = @portParamStyles[$p];
+  my $fixedParam = @portFixedParam[$p];
+  my $inputAttrs2Py = $iport->getNumberOfAttributes();
+  if ($fixedParam != -1) {
+    $inputAttrs2Py = $fixedParam;
+  }
 
   if ($model->getNumberOfInputPorts() > 1) {
 %>

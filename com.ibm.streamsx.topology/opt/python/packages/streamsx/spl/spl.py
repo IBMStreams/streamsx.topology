@@ -615,7 +615,7 @@ def _wrapforsplop(optype, wrapped, style, docpy):
         _op_class._splpy_callable = 'class'
         if hasattr(wrapped, '__call__'):
             _op_class._splpy_style = _define_style(wrapped, wrapped.__call__, style)
-            _op_class._splpy_fixed_count = _define_fixed(_op_class)
+            _op_class._splpy_fixed_count = _define_fixed(_op_class, _op_class.__call__)
         _op_class._splpy_file = inspect.getsourcefile(wrapped)
         _op_class._splpy_docpy = docpy
         return _op_class
@@ -639,7 +639,7 @@ def _wrapforsplop(optype, wrapped, style, docpy):
     _op_fn._splpy_optype = optype
     _op_fn._splpy_callable = 'function'
     _op_fn._splpy_style = _define_style(_op_fn, _op_fn, style)
-    _op_fn._splpy_fixed_count = _define_fixed(_op_fn)
+    _op_fn._splpy_fixed_count = _define_fixed(_op_fn, _op_fn)
     _op_fn._splpy_file = inspect.getsourcefile(wrapped)
     _op_fn._splpy_docpy = docpy
     return _op_fn
@@ -716,12 +716,10 @@ def _define_style(wrapped, fn, style):
          raise TypeError("Not yet implemented!")
     return style
 
-def _define_fixed(callable_):
+def _define_fixed(wrapped, callable_):
     """For the callable see how many positional parameters are required"""
-    is_class = inspect.isclass(callable_)
-    style = callable_._splpy_style
-    if is_class:
-        callable_ = callable_.__call__
+    is_class = inspect.isclass(wrapped)
+    style = callable_._splpy_style if hasattr(callable_, '_splpy_style') else wrapped._splpy_style
 
     fixed_count = 0
     if style == 'tuple':
@@ -974,7 +972,7 @@ class primitive_operator(object):
             fn = inputs[seq]
             fn._splpy_input_port_id = len(cls._splpy_input_ports)
             fn._splpy_style = _define_style(wrapped, fn, fn._splpy_style)
-            fn._splpy_fixed_count = _define_fixed(fn)
+            fn._splpy_fixed_count = _define_fixed(cls, fn)
 
             cls._splpy_input_ports.append(fn)
             cls._splpy_style.append(fn._splpy_style)
