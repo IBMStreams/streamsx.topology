@@ -41,8 +41,6 @@ class SingleInputPort(object):
 
     @spl.input_port()
     def my_only_port(self, *t):
-        import streamsx.ec as ec
-        ec._submit(self, 92, 'fref')
         self.cm.value = t[0] + 17
 
 @spl.primitive_operator()
@@ -90,3 +88,13 @@ class MultiOutputPorts(spl.PrimitiveOperator):
         self.submit(1, t)
         self.submit(2, (t[0] + 921,))
         self.submit(3, (t[0] - 407,))
+
+@spl.primitive_operator(output_ports=['A', 'B'])
+class DictOutputPorts(spl.PrimitiveOperator):
+    def __init__(self):
+        pass
+
+    @spl.input_port()
+    def port0(self, **tuple_):
+        self.submit('A', tuple_)
+        self.submit('B', [{'d':tuple_['d'] + 7, 'e':tuple_['f'] + 77, 'f':tuple_['e'] + 777}, tuple_],)

@@ -38,9 +38,8 @@ MY_OPERATOR::MY_OPERATOR() :
    pyop_->setCallable(callable);
 
 <% if ($model->getNumberOfInputPorts() != 0) { %>
-
+{
    SplpyGIL lock;
-
 <%
 
 my @portParamStyles = splpy_ParamStyle();
@@ -64,10 +63,24 @@ if ($paramStyle eq 'dictionary') { %>
    pyinputfns_ = SplpyGeneral::callFunction(
              "streamsx.spl.runtime", "_splpy_primitive_input_fns",
              callable, NULL);   
-   if (pyinputfns_ == NULL)
-       throw SplpyGeneral::pythonException("<%=$functionName%>");
+}
 
 <% } %>
+
+<% if ($model->getNumberOfOutputPorts() != 0) { %>
+{
+   // Setup the conversion of of submitted values (e.g. dict->tuple)
+   SplpyGIL lock;
+   PyObject *pyOutNames = PyTuple_New(<%=$model->getNumberOfOutputPorts()%>);
+   for (int p = 0; p < <%=$model->getNumberOfOutputPorts()%>; p++) {
+        PyTuple_SET_ITEM(pyOutNames, p, Splpy::pyAttributeNames(getOutputPortAt(p)));
+   }
+   SplpyGeneral::callVoidFunction(
+             "streamsx.spl.runtime", "_splpy_primitive_output_attrs",
+             callable, pyOutNames);   
+
+}
+<%}%>
 }
 
 // Destructor
