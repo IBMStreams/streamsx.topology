@@ -40,29 +40,18 @@ def _splpy_convert_tuple(attributes):
     with the value by position.
     Return function handles tuple,dict,list[tuple|dict|None],None
     """ 
-    attr_count = len(attributes)
-    attr_map = dict()
-    for idx, name in enumerate(attributes):
-        attr_map[name] = idx
-    def _dict_to_tuple(tuple_):
-        if isinstance(tuple_, dict):
-            to_assign = set.intersection(set(tuple_.keys()), attributes) 
-            tl = [None] * attr_count
-            for name in to_assign:
-                tl[attr_map[name]] = tuple_[name]
-            return tuple(tl)
-        return tuple_
+    attributes = tuple(attributes)
 
     def _to_tuples(tuple_):
         if isinstance(tuple_, tuple):
             return tuple_
         if isinstance(tuple_, dict):
-            return _dict_to_tuple(tuple_)
+            return tuple(tuple_.get(name, None) for name in attributes)
         if isinstance(tuple_, list):
             lt = list()
             for ev in tuple_:
                 if isinstance(ev, dict):
-                    ev = _dict_to_tuple(ev)
+                    ev = tuple(ev.get(name, None) for name in attributes)
                 lt.append(ev)
             return lt
         return tuple_
