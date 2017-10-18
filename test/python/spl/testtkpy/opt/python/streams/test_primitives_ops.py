@@ -108,3 +108,18 @@ class InputByPosition(spl.PrimitiveOperator):
     @spl.input_port(style='position')
     def port0(self, a, b):
         self.submit('A', (a,b+89,-92))
+
+import threading
+@spl.primitive_operator(output_ports=['A'])
+class OutputOnly(spl.PrimitiveOperator):
+    def __init__(self, count):
+        self.count = count
+
+    def all_ports_ready(self):
+        self.submitter = threading.Thread(target=self.submit_some)
+        self.submitter.start()
+        return self.submitter.join
+
+    def submit_some(self):
+        for i in range(self.count):
+            self.submit('A', (i+501,))

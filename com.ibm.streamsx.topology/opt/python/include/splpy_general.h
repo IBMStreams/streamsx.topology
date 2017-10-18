@@ -156,11 +156,12 @@ class SplpyGeneral {
      * Utility method to call an object
      * passing in a tuple of arguments.
      * 
-     * Steals the reference the the tuple.
+     * Steals the reference the the args (which may be NULL).
      */
-    static PyObject *pyCallObject(PyObject *pyclass, PyObject *args) {
-      PyObject *ret  = PyObject_CallObject(pyclass, args);
-      Py_DECREF(args);
+    static PyObject *pyCallObject(PyObject *callable_object, PyObject *args) {
+      PyObject *ret  = PyObject_CallObject(callable_object, args);
+      if (args != NULL)
+          Py_DECREF(args);
       if (ret == NULL) {
          throw SplpyGeneral::pythonException("pyCallObject");
       }

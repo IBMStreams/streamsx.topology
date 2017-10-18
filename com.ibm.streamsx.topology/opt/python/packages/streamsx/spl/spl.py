@@ -901,9 +901,58 @@ class PrimitiveOperator(object):
     """
     def submit(self, port_id, tuple_):
         """Submit a tuple to the output port.
+
+        Args:
+             port_id: Identifier of the port specified in the
+                  `output_ports` parameter of the `@spl.primitive_operator`
+                  decorator.
+             tuple_: Tuple (or tuples) to be submitted to the output port.
         """
         port_index = self._splpy_output_ports[port_id]
         ec._submit(self, port_index, tuple_)
+
+    def all_ports_ready(self):
+        """Notifcation that the operator can submit tuples.
+
+        Called when the primitive operator can submit tuples
+        using :py:meth:`submit`. An operator must not submit
+        tuples until this method is called or until a port
+        processing method is called.
+
+        Any implementation must not block. A typical use
+        is to start threads that submit tuples.
+
+        An implementation must return a value that allows
+        the SPL runtime to determine when an operator completes.
+        An operator completes, and finalizes its output ports
+        when:
+            * All input ports (if any) have been finalized.
+            * All background processing is complete.
+
+        The return from ``all_ports_ready`` defines when
+        background processing, such as threads started by
+        ``all_ports_ready``, is complete. The value is one of:
+            * A value that evaluates to `False` - No background processing exists.
+            * A value that evaluates to `True` - Background processing exists and never completes. E.g. a source operator that processes real time events.
+            * A callable - Background processing is complete when the callable returns. The SPL runtime invokes the callable once (passing no arguments) when the method returns background processing is assumed to be complete.
+
+        For example if an implementation starts a single thread then `Thread.join` is returned to complete the operator when the thread completes::
+
+            def all_ports_ready(self):
+                submitter = threading.Thread(target=self._find_and_submit_data)
+                submitter.start()
+                return submitter.join
+
+            def _find_and_submit_data(self):
+                ...
+
+        Returns:
+            Value indicating active background processing.
+        
+
+        This method implementation does nothing and returns ``None``.
+        """
+        return None
 
 
 class input_port(object):

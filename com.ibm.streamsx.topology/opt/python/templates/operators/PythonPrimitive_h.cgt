@@ -12,23 +12,20 @@ using namespace streamsx::topology;
 class MY_OPERATOR : public MY_BASE_OPERATOR, public SplpyPrimitiveOp
 {
 public:
-  // Constructor
   MY_OPERATOR();
 
-  // Destructor
   virtual ~MY_OPERATOR(); 
 
-  // Notify pending shutdown
+  void allPortsReady();
+  void process(uint32_t idx);
+
   void prepareToShutdown(); 
 
-  // Tuple processing for non-mutating ports
   void process(Tuple const & tuple, uint32_t port);
 
   void convertAndSubmit(uint32_t port, PyObject *tuple_);
 
-
 private:
-  // Members
     SplpyPyOp *pyop_;
 
 <% for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) {
