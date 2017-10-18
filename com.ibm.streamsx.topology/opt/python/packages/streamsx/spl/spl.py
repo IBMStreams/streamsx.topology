@@ -863,6 +863,21 @@ class for_each:
     def __call__(self, wrapped):
         return _wrapforsplop(_OperatorType.Sink, wrapped, self.style, self.docpy)
 
+class PrimitiveOperator(object):
+    """Primitive operator super class.
+    Classes decorated with `@spl.primitive_operator` must extend
+    this class if they have one or more output ports. This class
+    provides the `submit` method to submit tuples to specified
+    otuput port.
+
+    .. versionadded:: 1.8
+    """
+    def submit(self, port_id, tuple_):
+        """Submit a tuple to the output port.
+        """
+        port_index = self._splpy_output_ports[port_id]
+        ec._submit(self, port_index, tuple_)
+
 
 class input_port(object):
     _count = 0
@@ -891,8 +906,9 @@ class input_port(object):
 
 
 class primitive_operator(object):
-    def __init__(self, docpy=True):
+    def __init__(self, output_ports=None,docpy=True):
         self._docpy = docpy
+        self._output_ports = output_ports
         """
         Decorator that creates an SPL primitive operator from a class.
 
@@ -903,7 +919,7 @@ class primitive_operator(object):
         output ports (TODO: output port handling).
 
         Args:
-           style: How an SPL tuple is passed into Python function, see  :ref:`spl-tuple-to-python`.
+           output_ports: List of identifiers for output ports.
            docpy: Copy Python docstrings into SPL operator model for SPLDOC.
 
         .. versionadded:: 1.8
@@ -931,6 +947,11 @@ class primitive_operator(object):
 
             cls._splpy_input_ports.append(fn)
             cls._splpy_style.append(fn._splpy_style)
+
+        cls._splpy_output_ports = dict()
+        if self._output_ports:
+            for i in range(len(self._output_ports)):
+                cls._splpy_output_ports[self._output_ports[i]] = i
 
         return cls
 

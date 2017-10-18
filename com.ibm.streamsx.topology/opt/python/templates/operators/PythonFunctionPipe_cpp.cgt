@@ -113,6 +113,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 }
 
 // Create member function that converts Python tuple to SPL tuple
+@include  "../../opt/.__splpy/common/py_valueToTuples.cgt"
 @include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
 
 // Punctuation processing

@@ -17,8 +17,6 @@
 #ifndef __SPL__SPLPY_PYOP_H
 #define __SPL__SPLPY_PYOP_H
 
-#include "splpy_general.h"
-#include "splpy_setup.h"
 #include "splpy_op.h"
 
 namespace streamsx {

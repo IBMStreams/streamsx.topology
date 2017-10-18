@@ -1,6 +1,6 @@
 /*
  * # Licensed Materials - Property of IBM
- * # Copyright IBM Corp. 2015  
+ * # Copyright IBM Corp. 2017
  */
 
 #include "splpy_pyop.h"
@@ -9,7 +9,7 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
-class MY_OPERATOR : public MY_BASE_OPERATOR 
+class MY_OPERATOR : public MY_BASE_OPERATOR, public SplpyPrimitiveOp
 {
 public:
   // Constructor
@@ -24,9 +24,19 @@ public:
   // Tuple processing for non-mutating ports
   void process(Tuple const & tuple, uint32_t port);
 
+  void convertAndSubmit(uint32_t port, PyObject *tuple_);
+
+
 private:
   // Members
     SplpyPyOp *pyop_;
+
+<% for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) {
+    my $oport = $model->getOutputPortAt($p);
+%>
+  void pySubmitTuplesPort<%=$oport->getIndex()%>(PyObject * value);
+  void fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple);
+<%}%>
 
 
 <%if ($model->getNumberOfInputPorts() != 0) {%>

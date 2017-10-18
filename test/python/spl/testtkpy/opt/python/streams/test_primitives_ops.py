@@ -41,6 +41,8 @@ class SingleInputPort(object):
 
     @spl.input_port()
     def my_only_port(self, *t):
+        import streamsx.ec as ec
+        ec._submit(self, 92, 'fref')
         self.cm.value = t[0] + 17
 
 @spl.primitive_operator()
@@ -68,3 +70,23 @@ class MultiInputPort(object):
     @spl.input_port()
     def port2(self, *t):
         self.cm2.value = t[0] + 51
+
+@spl.primitive_operator(output_ports=['A'])
+class SingleOutputPort(spl.PrimitiveOperator):
+    def __init__(self):
+        pass
+
+    @spl.input_port()
+    def port0(self, *t):
+        self.submit('A', t)
+
+@spl.primitive_operator(output_ports=[1,2,3])
+class MultiOutputPorts(spl.PrimitiveOperator):
+    def __init__(self):
+        pass
+
+    @spl.input_port()
+    def port0(self, *t):
+        self.submit(1, t)
+        self.submit(2, (t[0] + 921,))
+        self.submit(3, (t[0] - 407,))
