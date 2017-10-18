@@ -193,3 +193,20 @@ class TestPrimitivesOutputs(unittest.TestCase):
         self.tester.contents(r[0], [{'d':9237, 'e':(9237*2), 'f':9237+4}, {'d':-24, 'e':(-24*2), 'f':-24+4}])
         self.tester.contents(r[1], [{'d':9237+7, 'f':(9237*2)+777, 'e':9237+4+77}, {'d':9237, 'e':(9237*2), 'f':9237+4}, {'d':-24+7, 'f':(-24*2)+777, 'e':-24+4+77}, {'d':-24, 'e':(-24*2), 'f':-24+4}])
         self.tester.test(self.test_ctxtype, self.test_config)
+
+    def test_input_by_position(self):
+        """Operator with input by position"""
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+
+        s = topo.source([3642, -393])
+        s = s.map(lambda x : (x,x*2,x+4), schema='tuple<int64 d, int64 e, int64 f>')
+
+        bop = op.Map("com.ibm.streamsx.topology.pytest.pyprimitives::InputByPosition", s)
+
+        r = bop.stream
+    
+        self.tester = Tester(topo)
+        self.tester.tuple_count(r, 2)
+        self.tester.contents(r, [{'d':3642, 'e':(3642*2)+89, 'f':-92}, {'d':-393, 'e':(-393*2)+89, 'f':-92}])
+        self.tester.test(self.test_ctxtype, self.test_config)

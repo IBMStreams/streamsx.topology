@@ -98,3 +98,13 @@ class DictOutputPorts(spl.PrimitiveOperator):
     def port0(self, **tuple_):
         self.submit('A', tuple_)
         self.submit('B', [{'d':tuple_['d'] + 7, 'e':tuple_['f'] + 77, 'f':tuple_['e'] + 777}, tuple_],)
+
+
+@spl.primitive_operator(output_ports=['A'])
+class InputByPosition(spl.PrimitiveOperator):
+    def __init__(self):
+        pass
+
+    @spl.input_port(style='position')
+    def port0(self, a, b):
+        self.submit('A', (a,b+89,-92))

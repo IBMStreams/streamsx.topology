@@ -344,39 +344,19 @@ class _Extractor(object):
     # Write information about the Python function parameters.
     #
     def _write_style_info(self, cfgfile, opobj):
-            is_class = inspect.isclass(opobj)
-            if is_class:
-                opfn = opobj.__call__
-            else:
-                opfn = opobj
-        
-            sig = _inspect.signature(opfn)
-            fixedCount = 0
-            if opobj._splpy_style == 'tuple':
-                pmds = sig.parameters
-                itpmds = iter(pmds)
-                # Skip 'self' for classes
-                if is_class:
-                    next(itpmds)
-                
-                for pn in itpmds:
-                     param = pmds[pn]
-                     if param.kind == _inspect.Parameter.POSITIONAL_OR_KEYWORD:
-                         fixedCount += 1
-                     if param.kind == _inspect.Parameter.VAR_POSITIONAL:
-                         fixedCount = -1
-                         break
-                     if param.kind == _inspect.Parameter.VAR_KEYWORD:
-                         break
 
             if isinstance(opobj._splpy_style, list):
                 pm_style = '(' + ','.join(["'{0}'".format(_) for _ in opobj._splpy_style]) + ')'
             else:
                 pm_style = "'" + opobj._splpy_style + "'"
-             
-
-            cfgfile.write('sub splpy_FixedParam { \''+ str(fixedCount)   + "\'}\n")
             cfgfile.write('sub splpy_ParamStyle {'+ pm_style + '}\n')
+             
+            if isinstance(opobj._splpy_fixed_count, list):
+                pm_fixed = '(' + ','.join(["'{0}'".format(_) for _ in opobj._splpy_fixed_count]) + ')'
+            else:
+                pm_fixed = "'" + str(opobj._splpy_fixed_count) + "'"
+
+            cfgfile.write('sub splpy_FixedParam { '+ pm_fixed + "}\n")
  
 
     # Write out the configuration for the operator
