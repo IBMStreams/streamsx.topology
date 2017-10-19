@@ -82,9 +82,10 @@ def _verify_tuple(rv):
 
 import inspect
 class _FunctionalCallable(object):
-    def __init__(self, callable):
+    def __init__(self, callable, attributes=None):
         self._callable = _get_callable(callable)
         self._cls = False
+        self._attributes = attributes
 
         if callable is not self._callable:
             is_cls = not inspect.isfunction(self._callable)
@@ -266,8 +267,8 @@ class _JSONInJSONOut(_FunctionalCallable):
 # repeatably by a source operator returning
 # the next tuple in its pickled form
 class _IterablePickleOut(_FunctionalCallable):
-    def __init__(self, callable):
-        super(_IterablePickleOut, self).__init__(callable)
+    def __init__(self, callable, attributes=None):
+        super(_IterablePickleOut, self).__init__(callable, attributes)
         self._it = iter(self._callable())
 
     def __call__(self):
@@ -280,8 +281,8 @@ class _IterablePickleOut(_FunctionalCallable):
             return None
 
 class _IterableObjectOut(_FunctionalCallable):
-    def __init__(self, callable):
-        super(_IterableObjectOut, self).__init__(callable)
+    def __init__(self, callable, attributes=None):
+        super(_IterableObjectOut, self).__init__(callable, attributes)
         self._it = iter(self._callable())
 
     def __call__(self):
