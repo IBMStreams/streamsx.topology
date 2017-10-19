@@ -484,7 +484,7 @@ def _extract_from_toolkit():
 
     for mf in glob.glob(os.path.join(tk_streams, '*.py')):
         print('Checking ', mf, 'for operators')
-        (name, suffix, mode, mtype)  = inspect.getmoduleinfo(mf)
+        name  = inspect.getmodulename(mf)
         dynm = imp.load_source(name, mf)
         streams_python_file = inspect.getsourcefile(dynm)
         extractor._process_operators(dynm, name, streams_python_file, inspect.getmembers(dynm, inspect.isfunction))
