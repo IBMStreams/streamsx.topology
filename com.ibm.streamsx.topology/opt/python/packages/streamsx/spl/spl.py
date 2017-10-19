@@ -1020,24 +1020,29 @@ class PrimitiveOperator(object):
 
 
 class input_port(object):
+    """Declare an input port and its processor method.
+
+    Instance methods within a class decorated by
+    :py:class:`spl.primitive_operator <primitive_operator>` declare
+    input ports by decorating methods with this decorator.
+
+    Each tuple arriving on the input port will result in a call
+    to the processor method passing the stream tuple converted to
+    a Python representation depending on the style. The style is
+    determined by the method signature or the `style` parameter,
+    see  :ref:`spl-tuple-to-python`.
+
+    The order of the methods within the class define
+    the order of the ports, so the first port is
+    the first method decorated with `input_port`.
+
+    Args:
+        style: How the SPL tuple is passed into the method, see  :ref:`spl-tuple-to-python`.
+
+    .. versionadded:: 1.8
+    """
     _count = 0
     def __init__(self, style=None):
-        """Declare an instance method as a the tuple processor
-        for an input port.
-
-        Instance methods within a class decorated using
-        :py:class:`spl.primitive_operator <primitive_operator>` declare input ports by
-        decorating methods with this decorator.
-
-        The order of the methods within the class define
-        the order of the ports, so the first port is
-        the first method decorated with `input_port`.
-
-        Args:
-            style: How the SPL tuple is passed into the method, see  :ref:`spl-tuple-to-python`.
-
-        .. versionadded:: 1.8
-        """
         self._style = style
 
     def __call__(self, wrapped):

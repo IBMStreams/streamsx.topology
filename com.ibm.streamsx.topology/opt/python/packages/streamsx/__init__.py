@@ -5,8 +5,10 @@
 Python APIs for use with IBM® Streaming Analytics service on
 IBM Bluemix® cloud platform and on-premises IBM Streams.
 
+**********************************
 Python Application API for Streams
-----------------------------------
+**********************************
+
 Module that allows the definition and execution of streaming
 applications implemented in Python.
 Applications use Python code to process tuples and tuples are Python objects.
@@ -16,8 +18,10 @@ use of existing IBM Streams toolkits.
 
 See :py:mod:`~streamsx.topology`
 
+******************************
 SPL primitive Python operators
-------------------------------
+******************************
+
 SPL primitive Python operators provide the ability
 to perform tuple processing using Python in an SPL application.
 
@@ -29,18 +33,21 @@ analytics supported by Streams.
 
 See :py:mod:`streamsx.spl.spl`
 
+***********************
 Streams Python REST API
------------------------
+***********************
+
 Module that allows interaction with an running Streams instance or
 service through HTTPS REST APIs.
 
 See :py:mod:`streamsx.rest`
 
+********************
 Streams Python Setup
---------------------
+********************
 
 Streaming Analytics service
-+++++++++++++++++++++++++++
+===========================
 
 The service instance has Anaconda 4.1 installed with Python 3.5 as the
 runtime environment and has **PYTHONHOME** application environment variable
@@ -50,7 +57,7 @@ Any streaming applications using Python must use Python 3.5 when
 submitted to the service instance.
 
 IBM Streams on-premises
-+++++++++++++++++++++++
+=======================
 
 For a distributed cluster running Streams Python 2.7 or Python 3.5 may
 be used.
