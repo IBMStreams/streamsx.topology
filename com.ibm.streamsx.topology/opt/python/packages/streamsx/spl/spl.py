@@ -1102,7 +1102,7 @@ class primitive_operator(object):
                  elif customer_score >= self.near_match:
                      self.submit('NEAR_MATCH', tuple_)
 
-            def score(self, **customer)
+            def score(self, **customer):
                 # Actual model scoring omitted
                 score = ...
                 return score
