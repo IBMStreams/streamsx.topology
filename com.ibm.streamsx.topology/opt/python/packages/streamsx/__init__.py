@@ -16,10 +16,13 @@ use of existing IBM Streams toolkits.
 
 See :py:mod:`~streamsx.topology`
 
-Python functions as SPL operators
----------------------------------
-A Python function or class can be simply turned into an SPL primitive operator
-to allow tuple processing using Python in an SPL application.
+SPL primitive Python operators
+------------------------------
+SPL primitive Python operators provide the ability
+to perform tuple processing using Python in an SPL application.
+
+A Python function or class is simply turned into an SPL primitive operator
+through provided decorators.
 
 SPL (Streams Processing Language) is a domain specific language for streaming
 analytics supported by Streams.

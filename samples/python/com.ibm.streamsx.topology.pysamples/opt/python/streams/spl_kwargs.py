@@ -33,8 +33,8 @@ class DeltaFilter:
 
     # Signature has **kwargs parameter which fixes the
     # SPL tuple parameter passing style to be dictionary
-    def __call__(self, **tuple):
-        value = tuple["value"]
+    def __call__(self, **tuple_):
+        value = tuple_['value']
         if self.last_value is not None:
             if abs(value - self.last_value) <= self.delta:
                 self.last_value = value
@@ -52,8 +52,8 @@ class ContainsFilter:
     def __init__(self, term):
         self.term = term;
 
-    def __call__(self, **tuple):
-        for s in tuple.values():
+    def __call__(self, **tuple_):
+        for s in tuple_.values():
             if self.term in str(s):
                 return True
         return False
