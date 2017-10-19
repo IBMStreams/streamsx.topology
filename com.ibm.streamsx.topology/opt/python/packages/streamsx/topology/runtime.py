@@ -73,12 +73,14 @@ def _get_callable(f):
             return ci
     raise TypeError("Class is not callable" + type(ci))
 
-def _verify_tuple(rv):
-    if rv is None:
-        return None
-    if isinstance(rv, tuple):
-        return rv
-    raise TypeError("Function must return a tuple")
+def _verify_tuple(tuple_, attributes):
+    if isinstance(tuple_, tuple) or tuple_ is None:
+        return tuple_
+
+    if isinstance(tuple_, dict):
+        return tuple(tuple_.get(name, None) for name in attributes)
+   
+    raise TypeError("Function must return a tuple, dict or None:" + str(type(tuple_)))
 
 import inspect
 class _FunctionalCallable(object):
@@ -146,12 +148,12 @@ class _PickleInTupleOut(_FunctionalCallable):
         if pm is not None:
             t = pickle.loads(tuple_)
         rv =  self._callable(tuple_)
-        return _verify_tuple(rv)
+        return _verify_tuple(rv, self._attributes)
 
 class _ObjectInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_):
         rv =  self._callable(tuple_)
-        return _verify_tuple(rv)
+        return _verify_tuple(rv, self._attributes)
 
 class _ObjectInPickleOut(_FunctionalCallable):
     def __call__(self, tuple_):
@@ -199,7 +201,7 @@ class _JSONInStringOut(_FunctionalCallable):
 class _JSONInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_):
         rv =  self._callable(json.loads(tuple_))
-        return _verify_tuple(rv)
+        return _verify_tuple(rv, self._attributes)
 
 
 class _JSONInJSONOut(_FunctionalCallable):
@@ -237,9 +239,12 @@ class _JSONInJSONOut(_FunctionalCallable):
 ##          to be passed directly to the Python application function.
 ##          For output the function return is expecting a Python
 ##          tuple with the values in the correct order for the
-##          the SPL schema. Missing values (not enough fields in
-##          the Python tuple or set to None are set the the SPL
-##          attribute type default.
+##          the SPL schema or a dict that will be mapped to a tuple.
+##          Missing values (not enough fields in the Python tuple
+##          or set to None are set the the SPL attribute type default.
+##          Really for output 'dict' means structured schema and the
+##          classes use 'TupleOut' as they return a Python tuple to
+##          the primitive operators.
 ##
 ## object - Object is a Python object passed directly into/ from the callable
 ##          Used when passing by ref. In addition since from the Python
