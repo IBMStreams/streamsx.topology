@@ -210,3 +210,18 @@ class TestPrimitivesOutputs(unittest.TestCase):
         self.tester.tuple_count(r, 2)
         self.tester.contents(r, [{'d':3642, 'e':(3642*2)+89, 'f':-92}, {'d':-393, 'e':(-393*2)+89, 'f':-92}])
         self.tester.test(self.test_ctxtype, self.test_config)
+
+    def test_only_output_port(self):
+        """Operator with single output port and no inputs."""
+        count = 106
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+
+        bop = op.Source(topo, "com.ibm.streamsx.topology.pytest.pyprimitives::OutputOnly", schema='tuple<int64 c>', params={'count':count})
+
+        r = bop.stream
+    
+        self.tester = Tester(topo)
+        self.tester.tuple_count(r, count)
+        self.tester.contents(r, list({'c':i+501} for i in range(count)))
+        self.tester.test(self.test_ctxtype, self.test_config)

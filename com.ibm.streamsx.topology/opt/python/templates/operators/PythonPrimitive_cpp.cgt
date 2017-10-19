@@ -94,6 +94,58 @@ if ($paramStyle eq 'dictionary') { %>
 <%}%>
 }
 
+void MY_OPERATOR::allPortsReady()
+{
+    createThreads(1);
+}
+
+/**
+  Call the Python class's all_ports_ready method
+  if it exists and use the return to block for
+  completion of outstanding work. If this
+  operator has no output ports then it will
+  complete when this function (thread) returns.
+*/
+void MY_OPERATOR::process(uint32_t idx)
+{
+   if (getPE().getShutdownRequested())
+       return;
+
+   PyObject *blocker = NULL;
+
+   {
+     SplpyGIL lock;
+
+     Py_INCREF(pyop_->callable());
+     blocker = SplpyGeneral::callFunction(
+             "streamsx.spl.runtime", "_splpy_all_ports_ready",
+             pyop_->callable(), NULL);
+
+     bool callable = (bool) PyCallable_Check(blocker);
+     if (!callable) {
+         int has_background_work = PyObject_IsTrue(blocker);
+         Py_DECREF(blocker);
+         blocker = NULL;
+         
+         if (has_background_work == 0)
+             return;
+     }
+   }
+
+   if (blocker == NULL) {
+       getPE().blockUntilShutdownRequest();
+   } else {
+       if (getPE().getShutdownRequested())
+           return;
+
+       SplpyGIL lock;
+
+       PyObject *rv = SplpyGeneral::pyCallObject(blocker, NULL);
+       Py_DECREF(rv);
+       Py_DECREF(blocker);
+   }
+}
+
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {

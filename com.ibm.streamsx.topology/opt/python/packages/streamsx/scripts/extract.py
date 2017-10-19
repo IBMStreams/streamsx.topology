@@ -129,8 +129,7 @@ _OP_OUTPUT_PORT_SET_TEMPLATE ="""
   <autoAssignment>false</autoAssignment>
   <completeAssignment>false</completeAssignment>
   <rewriteAllowed>true</rewriteAllowed>
-  <windowPunctuationOutputMode>Preserving</windowPunctuationOutputMode>
-  <windowPunctuationInputPort>0</windowPunctuationInputPort>
+  <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
   <tupleMutationAllowed>false</tupleMutationAllowed>
   <cardinality>1</cardinality>
   <optional>false</optional>

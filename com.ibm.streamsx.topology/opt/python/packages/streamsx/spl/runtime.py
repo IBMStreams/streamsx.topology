@@ -101,3 +101,8 @@ def _splpy_primitive_output_attrs(callable_, port_attributes):
     callable_._splpy_conv_fns = conv_fns
 
 
+def _splpy_all_ports_ready(callable_):
+    """Call all_ports_ready for a primitive operator."""
+    if hasattr(type(callable_), 'all_ports_ready'):
+        return callable_.all_ports_ready()
+    return None
