@@ -28,10 +28,10 @@ class SelectCustomers:
         customer_score = self.score(tuple_)
         if customer_score >= self.match:
             self.submit('MATCH', tuple_)
-        elif prospect_score >= self.near_match:
+        elif customer_score >= self.near_match:
             self.submit('NEAR_MATCH', tuple_)
 
-    def score(**prospect):
+    def score(self, **customer):
         # Real scoring omitted
         score = random.random()
         return score
