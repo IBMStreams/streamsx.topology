@@ -1329,11 +1329,10 @@ class Window(object):
         Args:
             function: The function which aggregates the contents of the window
             name(str): The name of the returned stream. Defaults to a generated name.
-            schema(StreamSchema): Schema of the resulting stream.
-            
 
         Returns: 
             Stream: A `Stream` of the returned values of the supplied function.                                                                                                                                                             
+        .. versionadded:: 1.8
         """
         schema = CommonSchema.Python
         
