@@ -115,7 +115,7 @@ class _FunctionalCallable(object):
 class _PickleInObjectOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
         if pm is not None:
-            tuple = pickle.loads(tuple_)
+            tuple_ = pickle.loads(tuple_)
         return self._callable(tuple_)
 
 class _PickleInPickleOut(_FunctionalCallable):
@@ -137,7 +137,7 @@ class _PickleInJSONOut(_FunctionalCallable):
 class _PickleInStringOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
         if pm is not None:
-            tuple = pickle.loads(tuple_)
+            tuple_ = pickle.loads(tuple_)
         rv =  self._callable(tuple_)
         if rv is None:
             return None
@@ -146,7 +146,7 @@ class _PickleInStringOut(_FunctionalCallable):
 class _PickleInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
         if pm is not None:
-            t = pickle.loads(tuple_)
+            tuple_ = pickle.loads(tuple_)
         rv =  self._callable(tuple_)
         return _verify_tuple(rv, self._attributes)
 
@@ -200,7 +200,7 @@ class _JSONInStringOut(_FunctionalCallable):
 
 class _JSONInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_):
-        rv =  self._callable(json.loads(tuple_))
+        rv = self._callable(json.loads(tuple_))
         return _verify_tuple(rv, self._attributes)
 
 
