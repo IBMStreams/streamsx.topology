@@ -1,0 +1,7 @@
+streamsx.rest_errors module
+===========================
+
+.. automodule:: streamsx.rest_errors
+    :members:
+    :undoc-members:
+    :show-inheritance:
