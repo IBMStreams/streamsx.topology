@@ -76,8 +76,14 @@ class SplpyFuncOp : public SplpyOp {
 #endif
           }
 
+          PyObject *extraArg = NULL;
+          if (op()->getNumberOfOutputPorts() == 1) {
+              extraArg = streamsx::topology::Splpy::pyAttributeNames(
+               op()->getOutputPortAt(0));
+          }
+
           setCallable(SplpyGeneral::callFunction(
-               "streamsx.topology.runtime", wrapfn, appCallable, NULL));
+               "streamsx.topology.runtime", wrapfn, appCallable, extraArg));
       }
 
 

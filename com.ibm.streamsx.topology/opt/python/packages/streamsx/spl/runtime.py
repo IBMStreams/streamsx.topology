@@ -39,8 +39,7 @@ def _splpy_convert_tuple(attributes):
     be submitted as dict objects into Python tuples
     with the value by position.
     Return function handles tuple,dict,list[tuple|dict|None],None
-    """ 
-    attributes = tuple(attributes)
+    """
 
     def _to_tuples(tuple_):
         if isinstance(tuple_, tuple):

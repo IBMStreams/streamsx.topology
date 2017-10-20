@@ -73,18 +73,21 @@ def _get_callable(f):
             return ci
     raise TypeError("Class is not callable" + type(ci))
 
-def _verify_tuple(rv):
-    if rv is None:
-        return None
-    if isinstance(rv, tuple):
-        return rv
-    raise TypeError("Function must return a tuple")
+def _verify_tuple(tuple_, attributes):
+    if isinstance(tuple_, tuple) or tuple_ is None:
+        return tuple_
+
+    if isinstance(tuple_, dict):
+        return tuple(tuple_.get(name, None) for name in attributes)
+   
+    raise TypeError("Function must return a tuple, dict or None:" + str(type(tuple_)))
 
 import inspect
 class _FunctionalCallable(object):
-    def __init__(self, callable):
+    def __init__(self, callable, attributes=None):
         self._callable = _get_callable(callable)
         self._cls = False
+        self._attributes = attributes
 
         if callable is not self._callable:
             is_cls = not inspect.isfunction(self._callable)
@@ -99,105 +102,111 @@ class _FunctionalCallable(object):
 
         ec._clear_opc()
 
-    def __call__(self, tuple):
+    def __call__(self, tuple_):
         """Default callable implementation
         Just calls the callable directly.
         """
-        return self._callable(tuple)
+        return self._callable(tuple_)
 
     def _splpy_shutdown(self):
         if self._cls:
             ec._callable_exit_clean(self._callable)
 
 class _PickleInObjectOut(_FunctionalCallable):
-    def __call__(self, tuple, pm=None):
+    def __call__(self, tuple_, pm=None):
         if pm is not None:
-            tuple = pickle.loads(tuple)
-        return self._callable(tuple)
+            tuple_ = pickle.loads(tuple_)
+        return self._callable(tuple_)
 
 class _PickleInPickleOut(_FunctionalCallable):
-    def __call__(self, tuple, pm=None):
+    def __call__(self, tuple_, pm=None):
         if pm is not None:
-            tuple = pickle.loads(tuple)
-        rv =  self._callable(tuple)
+            tuple_ = pickle.loads(tuple_)
+        rv =  self._callable(tuple_)
         if rv is None:
             return None
         return pickle.dumps(rv)
 
 class _PickleInJSONOut(_FunctionalCallable):
-    def __call__(self, tuple, pm=None):
+    def __call__(self, tuple_, pm=None):
         if pm is not None:
-            tuple = pickle.loads(tuple)
-        rv =  self._callable(tuple)
+            tuple_ = pickle.loads(tuple_)
+        rv =  self._callable(tuple_)
         return _json_object_out(rv)
 
 class _PickleInStringOut(_FunctionalCallable):
-    def __call__(self, tuple, pm=None):
+    def __call__(self, tuple_, pm=None):
         if pm is not None:
-            tuple = pickle.loads(tuple)
-        rv =  self._callable(tuple)
+            tuple_ = pickle.loads(tuple_)
+        rv =  self._callable(tuple_)
         if rv is None:
             return None
         return str(rv)
 
 class _PickleInTupleOut(_FunctionalCallable):
-    def __call__(self, t, pm=None):
+    def __call__(self, tuple_, pm=None):
         if pm is not None:
-            t = pickle.loads(t)
-        rv =  self._callable(t)
-        return _verify_tuple(rv)
+            tuple_ = pickle.loads(tuple_)
+        rv =  self._callable(tuple_)
+        return _verify_tuple(rv, self._attributes)
 
 class _ObjectInTupleOut(_FunctionalCallable):
-    def __call__(self, t):
-        rv =  self._callable(t)
-        return _verify_tuple(rv)
+    def __call__(self, tuple_):
+        rv =  self._callable(tuple_)
+        return _verify_tuple(rv, self._attributes)
 
 class _ObjectInPickleOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(tuple)
+    def __call__(self, tuple_):
+        rv =  self._callable(tuple_)
         if rv is None:
             return None
         return pickle.dumps(rv)
+
 
 class _ObjectInStringOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(tuple)
+    def __call__(self, tuple_):
+        rv =  self._callable(tuple_)
         if rv is None:
             return None
         return str(rv)
 
+
 class _ObjectInJSONOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(tuple)
+    def __call__(self, tuple_):
+        rv =  self._callable(tuple_)
         return _json_object_out(rv)
 
+
 class _JSONInObjectOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        return self._callable(json.loads(tuple))
+    def __call__(self, tuple_):
+        return self._callable(json.loads(tuple_))
+
 
 class _JSONInPickleOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(json.loads(tuple))
+    def __call__(self, tuple_):
+        rv =  self._callable(json.loads(tuple_))
         if rv is None:
             return None
         return pickle.dumps(rv)
 
+
 class _JSONInStringOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(json.loads(tuple))
+    def __call__(self, tuple_):
+        rv =  self._callable(json.loads(tuple_))
         if rv is None:
             return None
         return str(rv)
 
+
 class _JSONInTupleOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(json.loads(tuple))
-        return _verify_tuple(rv)
+    def __call__(self, tuple_):
+        rv = self._callable(json.loads(tuple_))
+        return _verify_tuple(rv, self._attributes)
 
 
 class _JSONInJSONOut(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv = self._callable(json.loads(tuple))
+    def __call__(self, tuple_):
+        rv = self._callable(json.loads(tuple_))
         return _json_object_out(rv)
 
 ##
@@ -230,9 +239,12 @@ class _JSONInJSONOut(_FunctionalCallable):
 ##          to be passed directly to the Python application function.
 ##          For output the function return is expecting a Python
 ##          tuple with the values in the correct order for the
-##          the SPL schema. Missing values (not enough fields in
-##          the Python tuple or set to None are set the the SPL
-##          attribute type default.
+##          the SPL schema or a dict that will be mapped to a tuple.
+##          Missing values (not enough fields in the Python tuple
+##          or set to None are set the the SPL attribute type default.
+##          Really for output 'dict' means structured schema and the
+##          classes use 'TupleOut' as they return a Python tuple to
+##          the primitive operators.
 ##
 ## object - Object is a Python object passed directly into/ from the callable
 ##          Used when passing by ref. In addition since from the Python
@@ -260,30 +272,30 @@ class _JSONInJSONOut(_FunctionalCallable):
 # repeatably by a source operator returning
 # the next tuple in its pickled form
 class _IterablePickleOut(_FunctionalCallable):
-    def __init__(self, callable):
-        super(_IterablePickleOut, self).__init__(callable)
+    def __init__(self, callable, attributes=None):
+        super(_IterablePickleOut, self).__init__(callable, attributes)
         self._it = iter(self._callable())
 
     def __call__(self):
         try:
             while True:
-                tuple = next(self._it)
-                if not tuple is None:
-                    return pickle.dumps(tuple)
+                tuple_ = next(self._it)
+                if not tuple_ is None:
+                    return pickle.dumps(tuple_)
         except StopIteration:
             return None
 
 class _IterableObjectOut(_FunctionalCallable):
-    def __init__(self, callable):
-        super(_IterableObjectOut, self).__init__(callable)
+    def __init__(self, callable, attributes=None):
+        super(_IterableObjectOut, self).__init__(callable, attributes)
         self._it = iter(self._callable())
 
     def __call__(self):
         try:
             while True:
-                tuple = next(self._it)
-                if not tuple is None:
-                    return tuple
+                tuple_ = next(self._it)
+                if not tuple_ is None:
+                    return tuple_
         except StopIteration:
             return None
 
@@ -320,38 +332,43 @@ class _PickleIterator(_ObjectIterator):
 # Used by FlatMap (flat_map)
 
 class _ObjectInPickleIter(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(tuple)
+    def __call__(self, tuple_):
+        rv =  self._callable(tuple_)
         if rv is None:
             return None
         return _PickleIterator(rv)
 
+
 class _ObjectInObjectIter(_FunctionalCallable):
-    def __call__(self, tuple):
-        rv =  self._callable(tuple)
+    def __call__(self, tuple_):
+        rv =  self._callable(tuple_)
         if rv is None:
             return None
         return _ObjectIterator(rv)
 
+
 class _PickleInPickleIter(_ObjectInPickleIter):
-    def __call__(self, tuple, pm=None):
+    def __call__(self, tuple_, pm=None):
         if pm is not None:
-            tuple = pickle.loads(tuple)
-        return super(_PickleInPickleIter, self).__call__(tuple)
+            tuple_ = pickle.loads(tuple_)
+        return super(_PickleInPickleIter, self).__call__(tuple_)
+
 
 class _PickleInObjectIter(_ObjectInObjectIter):
-    def __call__(self, tuple, pm=None):
+    def __call__(self, tuple_, pm=None):
         if pm is not None:
-            tuple = pickle.loads(tuple)
-        return super(_PickleInObjectIter, self).__call__(tuple)
+            tuple_ = pickle.loads(tuple_)
+        return super(_PickleInObjectIter, self).__call__(tuple_)
+
 
 class _JSONInPickleIter(_ObjectInPickleIter):
-    def __call__(self, tuple):
-        return super(_JSONInPickleIter, self).__call__(json.loads(tuple))
+    def __call__(self, tuple_):
+        return super(_JSONInPickleIter, self).__call__(json.loads(tuple_))
+
 
 class _JSONInObjectIter(_ObjectInObjectIter):
-    def __call__(self, tuple):
-        return super(_JSONInObjectIter, self).__call__(json.loads(tuple))
+    def __call__(self, tuple_):
+        return super(_JSONInObjectIter, self).__call__(json.loads(tuple_))
 
 
 # Variables used by SPL Python operators to create specific wrapper function.
