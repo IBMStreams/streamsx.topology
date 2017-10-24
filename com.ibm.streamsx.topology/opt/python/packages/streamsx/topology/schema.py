@@ -256,7 +256,7 @@ class StreamSchema(object) :
     When a type is not supported in Python it can only be used in a schema used for streams produced and consumed by invocation of SPL operators.
 
     A `StreamSchema` can be created by passing a string of the
-    for ``tuple<...>`` or by passing the name of an SPL type from
+    form ``tuple<...>`` or by passing the name of an SPL type from
     an SPL toolkit, for example ``com.ibm.streamsx.transportation.vehicle::VehicleLocation``.
 
     Attribute names must start with an ASCII letter or underscore, followed by ASCII letters, digits, or underscores.
@@ -270,7 +270,8 @@ class StreamSchema(object) :
     for example as the return from the function invoked in a 
     :py:meth:`~streamsx.topology.topology.Stream.map` with the
     `schema` parameter set, it must be:
-         * A Python tuple. Attributes are set by position, with the first attribute being the value at index 0 in the Python tuple. If a value does not exist (the tuple has less values than the structured schema) or is set to `None` then the attribute has its default value, zero, false, empty list or string etc.
+         * A Python `dict`. Attributes are set by name using value in the dict for the name. If a value does not exist (the name does not exist as a key) or is set to `None` then the attribute has its default value, zero, false, empty list or string etc.
+         * A Python `tuple`. Attributes are set by position, with the first attribute being the value at index 0 in the Python `tuple`. If a value does not exist (the tuple has less values than the structured schema) or is set to `None` then the attribute has its default value, zero, false, empty list or string etc.
 
     Args:
         schema(str): Schema definition. Either a schema definition or the name of an SPL type.
@@ -320,6 +321,8 @@ class StreamSchema(object) :
 
         Returns:
             type: Class of tuples that will be passed into callables.
+
+        .. versionadded:: 1.8
         """
         return self._style
 
@@ -350,6 +353,8 @@ class StreamSchema(object) :
 
         Returns:
             StreamSchema: Schema passing stream tuples as ``tuple`` if allowed.
+
+        .. versionadded:: 1.8
         """
         return self._copy(tuple)
 
@@ -364,6 +369,8 @@ class StreamSchema(object) :
 
         Returns:
             StreamSchema: Schema passing stream tuples as ``dict`` if allowed.
+
+        .. versionadded:: 1.8
         """
         return self._copy(dict)
 
