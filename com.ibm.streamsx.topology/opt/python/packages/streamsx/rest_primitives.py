@@ -433,7 +433,7 @@ class Job(_ResourceElement):
         path = os.path.join(path, name)
         try:
             logfile = open(path, 'w+b')
-            for chunk in logs.iter_content(chunk_size=1024):
+            for chunk in logs.iter_content(chunk_size=1024*64):
                 if chunk:
                     logfile.write(chunk)
             logfile.close()
