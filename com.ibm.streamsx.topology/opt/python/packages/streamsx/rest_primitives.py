@@ -4,6 +4,7 @@
 import logging
 import requests
 import queue
+import os
 import threading
 import time
 import json
@@ -139,6 +140,10 @@ class _StreamsRestClient(object):
     def make_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
         return self.session.get(url).json()
+
+    def make_raw_request(self, url):
+        logger.debug('Beginning a REST request to: ' + url)
+        return self.session.get(url)
 
     def __str__(self):
         return pformat(self.__dict__)
@@ -395,6 +400,46 @@ class Job(_ResourceElement):
         >>> print (jobs[0].health)
         healthy
     """
+    def get_application_trace(self, path=None, name=None):
+        """Retrieves the application log and saves it to the specified path with the given name as a tar file.
+
+        If logs are retrieved with the same path and name as previously retrieved logs, the prior logs will be
+        overwritten.
+
+        Attributes:
+            path (str): a valid directory in which to save the application log output. Defaults to current dir.
+            name (str): the filename of the created tar file. Defaults to '<job name>_app_logs.tar'.
+
+         Returns:
+            str: the path to the application logs tar file.
+         """
+        logger.debug("Retrieving application logs from: " + self.applicationLogTrace)
+        logs = self.rest_client.make_raw_request(self.applicationLogTrace)
+        
+        if name is None:
+            name = self.name
+
+        name = name + "_app_logs.tar"
+        
+        if path is None:
+            path = os.getcwd()
+
+        path = path + "/" + name
+        try:
+            logfile = open(path, 'w+b')
+            logfile.write(logs.content)
+            logfile.close()
+        except IOError as e:
+            logger.error("IOError({0}) writing application log files: {1}".format(e.errno, e.strerror))
+            raise e
+        except Exception:
+            logger.error("Error while writing application log files")
+            raise e
+
+        return path
+            
+        
+
     def get_views(self, name=None):
         """Get the list of :py:class:`View` elements associated with this job.
 
