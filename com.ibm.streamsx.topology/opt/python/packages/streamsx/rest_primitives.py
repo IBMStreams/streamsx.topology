@@ -145,6 +145,10 @@ class _StreamsRestClient(object):
         logger.debug('Beginning a REST request to: ' + url)
         return self.session.get(url)
 
+    def make_raw_streaming_request(self, url):
+        logger.debug('Beginning a REST request to: ' + url)
+        return self.session.get(url, stream=True)
+
     def __str__(self):
         return pformat(self.__dict__)
 
@@ -400,7 +404,7 @@ class Job(_ResourceElement):
         >>> print (jobs[0].health)
         healthy
     """
-    def get_application_trace(self, path=None, name=None):
+    def get_application_logs(self, path=None, prefix=None):
         """Retrieves the application log and saves it to the specified path with the given name as a tar file.
 
         If logs are retrieved with the same path and name as previously retrieved logs, the prior logs will be
@@ -408,38 +412,39 @@ class Job(_ResourceElement):
 
         Attributes:
             path (str): a valid directory in which to save the application log output. Defaults to current dir.
-            name (str): the filename of the created tar file. Defaults to a name based on the job name.
+            prefix (str): the prefix of the filename of the created tar file. Defaults to a prefix based on the job name.
 
          Returns:
             str: the path to the application logs tar file.
          """
         logger.debug("Retrieving application logs from: " + self.applicationLogTrace)
-        logs = self.rest_client.make_raw_request(self.applicationLogTrace)
+        logs = self.rest_client.make_raw_streaming_request(self.applicationLogTrace)
         
-        if name is None:
+        if prefix is None:
             # Take the job name and remove colons (colons confuse the unix 'tar' command)
-            name = ''.join(self.name.split(':'))
-
-        name = name + "_app_logs.tar"
+            prefix = ''.join(self.name.split(':'))
+            
+        prefix = prefix + "_" + self.id
+        name = prefix + "_app_logs.tar"
         
         if path is None:
             path = os.getcwd()
 
-        path = path + "/" + name
+        path = os.path.join(path, name)
         try:
             logfile = open(path, 'w+b')
-            logfile.write(logs.content)
+            for chunk in logs.iter_content(chunk_size=1024):
+                if chunk:
+                    logfile.write(chunk)
             logfile.close()
         except IOError as e:
             logger.error("IOError({0}) writing application log files: {1}".format(e.errno, e.strerror))
             raise e
-        except Exception:
+        except Exception as e:
             logger.error("Error while writing application log files")
             raise e
 
-        return path
-            
-        
+        return path                    
 
     def get_views(self, name=None):
         """Get the list of :py:class:`View` elements associated with this job.
