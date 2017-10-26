@@ -408,7 +408,7 @@ class Job(_ResourceElement):
 
         Attributes:
             path (str): a valid directory in which to save the application log output. Defaults to current dir.
-            name (str): the filename of the created tar file. Defaults to '<job name>_app_logs.tar'.
+            name (str): the filename of the created tar file. Defaults to a name based on the job name.
 
          Returns:
             str: the path to the application logs tar file.
@@ -417,7 +417,8 @@ class Job(_ResourceElement):
         logs = self.rest_client.make_raw_request(self.applicationLogTrace)
         
         if name is None:
-            name = self.name
+            # Take the job name and remove colons (colons confuse the unix 'tar' command)
+            name = ''.join(self.name.split(':'))
 
         name = name + "_app_logs.tar"
         
