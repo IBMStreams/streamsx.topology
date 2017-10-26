@@ -601,22 +601,22 @@ class Stream(object):
 
     def map(self, func, name=None, schema=None):
         """
-        Maps each tuple from this stream into 0 or 1 tuples.
+        Maps each tuple from this stream into 0 or 1 stream tuples.
 
         For each tuple on this stream ``result = func(tuple)`` is called.
         If `result` is not `None` then the result will be submitted
         as a tuple on the returned stream. If `result` is `None` then
         no tuple submission will occur.
 
-        By default the submitted tuple is `result` without modification
+        By default the submitted tuple is ``result`` without modification
         resulting in a stream of pickable Python objects. Setting the
         `schema` parameter changes the type of the stream and
-        modifies each `result` before submission.
+        modifies each ``result`` before submission.
 
-        * :py:const:`~streamsx.topology.schema.CommonSchema.Python` - The defaullt:  `result` is submitted.
+        * :py:const:`~streamsx.topology.schema.CommonSchema.Python` - The default:  `result` is submitted.
         * :py:const:`~streamsx.topology.schema.CommonSchema.String` - A stream of strings: ``str(result)`` is submitted.
         * :py:const:`~streamsx.topology.schema.CommonSchema.Json` - A stream of JSON objects: ``result`` must be convertable to a JSON object using `json` package.
-        * :py:const:`~streamsx.topology.schema.StreamSchema` - A structured stream. `result` must be a (Python) tuple. Each attribute in the structured tuple is set by position from `result`. If the value in `result` is `None` or not present then the attribute has the default value for its type.
+        * :py:const:`~streamsx.topology.schema.StreamSchema` - A structured stream. `result` must be a `dict` or (Python) `tuple`. When a `dict` is returned the outgoing stream tuple attributes are set by name, when a `tuple` is returned stream tuple attributes are set by position.
 
         Args:
             func: A callable that takes a single parameter for the tuple.
@@ -628,6 +628,7 @@ class Stream(object):
 
         .. versionadded:: 1.7 `schema` argument added to allow conversion to
             a structured stream.
+        .. versionadded:: 1.8 Support for submitting `dict` objects as stream tuples to a structured stream (in addition to existing support for `tuple` objects).
         """
         if schema is None:
             schema = CommonSchema.Python
