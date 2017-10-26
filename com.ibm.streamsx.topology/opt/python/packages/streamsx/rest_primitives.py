@@ -405,7 +405,8 @@ class Job(_ResourceElement):
         healthy
     """
     def get_application_logs(self, path=None, prefix=None):
-        """Retrieves the application logs and saves them to the specified path with the given name as a tar file.
+        """Retrieves the application log and trace files of the job and saves them as a tar file to the specified path
+        with the given name.
 
         If logs are retrieved with the same path and name as previously retrieved logs, the prior logs will be
         overwritten.
