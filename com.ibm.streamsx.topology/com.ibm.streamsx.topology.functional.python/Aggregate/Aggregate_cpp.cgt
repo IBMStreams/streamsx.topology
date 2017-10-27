@@ -199,6 +199,7 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){  
      submit(otuple, 0);
   }
+  submit(Punctuation::WindowMarker, 0);
 }
 
 // ##################################
