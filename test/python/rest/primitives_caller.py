@@ -43,7 +43,6 @@ def _fetch_from_job(tc, job):
 
     # Presently, application logs can only be fetched from the Stream Analytics Service
     else:
-        print("Running application logs test")
         logs = job.get_application_logs()
         tc.assertTrue(os.path.isfile(logs))
         os.remove(logs)
