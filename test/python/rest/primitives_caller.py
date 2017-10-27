@@ -1,4 +1,5 @@
 from streamsx.rest_primitives import *
+import os
 
 def check_instance(tc, instance):
     """Basic test of calls against an instance, assumed there is
@@ -39,6 +40,13 @@ def _fetch_from_job(tc, job):
     # See issue 952
     if tc.test_ctxtype != 'STREAMING_ANALYTICS_SERVICE':
         _check_non_empty_list(tc, job.get_resource_allocations(), ResourceAllocation)
+
+    # Presently, application logs can only be fetched from the Stream Analytics Service
+    else:
+        print("Running application logs test")
+        logs = job.get_application_logs()
+        tc.assertTrue(os.path.isfile(logs))
+        os.remove(logs)
 
     _check_list(tc, job.get_pe_connections(), PEConnection)
 
