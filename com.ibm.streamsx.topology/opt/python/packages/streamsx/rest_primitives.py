@@ -433,11 +433,10 @@ class Job(_ResourceElement):
 
         path = os.path.join(path, name)
         try:
-            logfile = open(path, 'w+b')
-            for chunk in logs.iter_content(chunk_size=1024*64):
-                if chunk:
-                    logfile.write(chunk)
-            logfile.close()
+            with open(path, 'w+b') as logfile:
+                for chunk in logs.iter_content(chunk_size=1024*64):
+                    if chunk:
+                        logfile.write(chunk)
         except IOError as e:
             logger.error("IOError({0}) writing application log files: {1}".format(e.errno, e.strerror))
             raise e
