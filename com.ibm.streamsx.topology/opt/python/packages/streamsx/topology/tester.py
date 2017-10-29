@@ -465,6 +465,7 @@ class Tester(object):
             _logger.info("Test topology %s passed for context:%s", self.topology.name, ctxtype)
         else:
             _logger.error("Test topology %s failed for context:%s", self.topology.name, ctxtype)
+            
         return passed
 
     def _standalone_test(self, config):
@@ -491,6 +492,7 @@ class Tester(object):
             return False
         return self._distributed_wait_for_result()
 
+
     def _streaming_analytics_test(self, ctxtype, config):
         sjr = stc.submit(ctxtype, self.topology, config)
         self.submission_result = sjr
@@ -502,9 +504,9 @@ class Tester(object):
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to Streaming Analytics instance")
             return False
-        return self._distributed_wait_for_result()
+        return self._distributed_wait_for_result(ctxtype)
 
-    def _distributed_wait_for_result(self):
+    def _distributed_wait_for_result(self, ctxtype):
 
         cc = _ConditionChecker(self, self.streams_connection, self.submission_result)
         # Wait for the job to be healthy before calling the local check.
@@ -517,10 +519,20 @@ class Tester(object):
             self.result = cc._end(False, _ConditionChecker._UNHEALTHY)
 
         self.result['submission_result'] = self.submission_result
+
+        if not self.result['passed']:
+            self._fetch_application_logs(ctxtype)
+
         cc._canceljob(self.result)
         if hasattr(self, 'local_check_exception') and self.local_check_exception is not None:
             raise self.local_check_exception
         return self.result['passed']
+
+    def _fetch_application_logs(self, ctxtype):
+        # Fetch the logs if submitting to a Streaming Analytics Service
+        if stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype:
+            application_logs = self.submission_result.job.get_application_logs()
+            _logger.info("Application logs have been fetched to " + application_logs)                
 
     def _start_local_check(self):
         self.local_check_exception = None
