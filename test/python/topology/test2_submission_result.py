@@ -45,3 +45,14 @@ class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
 
         tester.local_check = self._correct_job_ids
         tester.test(self.test_ctxtype, self.test_config)
+
+    @unittest.expectedFailure
+    def test_fetch_logs_on_failure(self):
+        topo = Topology("fetch_logs_on_failure")
+        s = topo.source(["foo"])
+
+        tester = Tester(topo)
+        # Causes test to fail
+        tester.contents(s, ["bar"])
+
+        tester.test(self.test_ctxtype, self.test_config)
