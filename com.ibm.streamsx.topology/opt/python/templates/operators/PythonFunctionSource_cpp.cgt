@@ -22,10 +22,6 @@ using namespace streamsx::topology;
  spl_pip_packages($model, \@packages);
 
  my $iport;
- my $itupleType;
- my @inames;
- my @itypes;
- my $ituple;
  
   my $oport = $model->getOutputPortAt(0);
   my $otupleType = $oport->getSPLTupleType();
@@ -35,8 +31,7 @@ using namespace streamsx::topology;
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
-   pyop_(NULL),
-   pyOutNames_(NULL)
+   pyop_(NULL)
 {
    PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
@@ -50,17 +45,16 @@ MY_OPERATOR::MY_OPERATOR() :
              "streamsx.spl.runtime", "_splpy_iter_source",
              callable, NULL);   
 
-     pyOutNames_ = Splpy::pyAttributeNames(getOutputPortAt(0));
+     PyObject *pyOutNames = Splpy::pyAttributeNames(getOutputPortAt(0));
 
      // Now create the wrapper function that converts
      // other types returned by the user's function
      // (e.g. dictionaries) to Python tuples as the
      // decorated operators only handle tuples to
      // simplify the generated code.
-     Py_INCREF(pyOutNames_); // callFunction steals the reference
      callable = SplpyGeneral::callFunction(
              "streamsx.spl.runtime", "_splpy_to_tuples",
-             callable, pyOutNames_);   
+             callable, pyOutNames);   
 
      pyop_->setCallable(callable);
    }
@@ -69,11 +63,6 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-   {
-   SplpyGIL lock;
-   if (pyOutNames_)
-      Py_DECREF(pyOutNames_);
-   }
    delete pyop_;
 }
 
@@ -97,23 +86,18 @@ void MY_OPERATOR::process(uint32_t idx)
 {
   while(!getPE().getShutdownRequested()) {
 
-    std::vector<OPort0Type> output_tuples;  
-    {
-      // Don't hold the lock across submission
+      // GIL is released across submission
       SplpyGIL lock;
 
       PyObject *pyTuple = PyTuple_New(0);
       PyObject *pyDict = NULL;
 
 @include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
-    }
- 
-    for(int i = 0; i < output_tuples.size();i++)
-       submit(output_tuples[i], 0);   
   }
 }
 
 // Create member function that converts Python tuple to SPL tuple
+@include  "../../opt/.__splpy/common/py_valueToTuples.cgt"
 @include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
 
 <%SPL::CodeGen::implementationEpilogue($model);%>

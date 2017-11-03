@@ -22,8 +22,10 @@ class TestNames(unittest.TestCase):
      """
      topo = Topology(name='<module>', namespace='<ipython-input-1-e300f4c6abce>')
      hw = topo.source(["Hello", "Tester"])
+     s = hw.filter(lambda x : True, name = "One.A")
+     s = s.filter(lambda x : True, name = "Two.A")
      tester = Tester(topo)
-     tester.contents(hw, ["Hello", "Tester"])
+     tester.contents(s, ["Hello", "Tester"])
      tester.test(self.test_ctxtype, self.test_config)
 
   def test_UnicodeTopoNames(self):
@@ -39,6 +41,27 @@ class TestNames(unittest.TestCase):
      tester = Tester(topo)
      tester.contents(hw, ["Hello", "Tester"])
      tester.test(self.test_ctxtype, self.test_config)
+
+  def test_LongTopoNames(self):
+     """ Test long topo names
+     """
+     n = 'abcd8' # * 30
+     ns = 'def9' #* 100
+     topo = Topology(name=n, namespace=ns)
+
+     self.assertEqual(n, topo.name)
+     self.assertEqual(ns, topo.namespace)
+     hw = topo.source(["Hello", "Tester"], name='sourceabc')
+     hw = hw.filter(lambda x : True, name='a'*255)
+     hw = hw.filter(lambda x : True, name='你好'*100)
+     hw = hw.filter(lambda x : True, name='你好')
+     tester = Tester(topo)
+     tester.contents(hw, ["Hello", "Tester"])
+     tester.test(self.test_ctxtype, self.test_config)
+
+class TestCloudNames(TestNames):
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)
 
 class TestContextNames(unittest.TestCase):
     def test_expected_values(self):

@@ -71,7 +71,7 @@ public class JavaPrimitive {
         SourceInfo.setSourceInfo(op, JavaPrimitive.class);
         SPL.connectInputToOperator(input, op);
 
-        return newSPLStream(input, op, outputSchema);
+        return newSPLStream(input, op, outputSchema, true);
     }
     
     /**
@@ -120,7 +120,7 @@ public class JavaPrimitive {
         
         List<SPLStream> streams = new ArrayList<>(outputSchemas.size());
         for (StreamSchema outputSchema : outputSchemas)
-            streams.add(newSPLStream(te, op, outputSchema));
+            streams.add(newSPLStream(te, op, outputSchema, outputSchemas.size() == 1));
             
         return streams;
     }
@@ -174,7 +174,7 @@ public class JavaPrimitive {
         source.setModel(MODEL_SPL, LANGUAGE_JAVA);
         source._json().addProperty(KIND_CLASS, opClass.getCanonicalName());
         SourceInfo.setSourceInfo(source, JavaPrimitive.class);
-        return newSPLStream(te, source, schema);
+        return newSPLStream(te, source, schema, true);
     }
     
     

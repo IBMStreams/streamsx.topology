@@ -69,7 +69,7 @@ public interface Invoker {
         // Extract any source location information from the config.
         SourceInfo.setInvocationInfo(source, invokeInfo);
 
-        return JavaFunctional.addJavaOutput(topology, source, tupleType);
+        return JavaFunctional.addJavaOutput(topology, source, tupleType, true);
     }
     
     /**
@@ -148,7 +148,7 @@ public interface Invoker {
         
         stream.connectTo(pipe, true, null);
         
-        return JavaFunctional.addJavaOutput(stream, pipe, tupleType);
+        return JavaFunctional.addJavaOutput(stream, pipe, tupleType, true);
     }
     
     /**
@@ -223,7 +223,8 @@ public interface Invoker {
         if (tupleTypes != null) {       
             outputs = new ArrayList<>(tupleTypes.size());
             for (Type tupleType : tupleTypes) {
-                outputs.add(JavaFunctional.addJavaOutput(te, primitive, tupleType));
+                outputs.add(JavaFunctional.addJavaOutput(te, primitive, tupleType,
+                        tupleTypes.size() == 1));
             }
         }
            

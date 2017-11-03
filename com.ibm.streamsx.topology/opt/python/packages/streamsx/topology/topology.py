@@ -146,6 +146,14 @@ Thus if a stream is consumed by two map and one filter callables in the same PE 
 
 Applications cannot rely on pass-by reference,  it is a performance optimization that can be made in some situations when stream connections are within a PE.
 
+Application log and trace
+=========================
+
+IBM Streams provides application trace and log services which are
+accesible through standard Python loggers from the `logging` module.
+
+See :ref:`streams_app_log_trc`.
+
 SPL operators
 =============
 
@@ -169,7 +177,7 @@ except (ImportError,NameError):
 
 import random
 from streamsx.topology import graph
-from streamsx.topology.schema import StreamSchema, CommonSchema
+from streamsx.topology.schema import StreamSchema, CommonSchema, _SCHEMA_PENDING
 import streamsx.topology.functions
 import streamsx.topology.runtime
 import json
@@ -351,20 +359,21 @@ class Topology(object):
         Returns:
             Stream: A stream whose tuples are the result of the iterable obtained from `func`.
         """
+        _name = name
         if inspect.isroutine(func):
             pass
         elif callable(func):
             pass
         else:
-            if name is None:
-                name = type(func).__name__
+            if _name is None:
+                _name = type(func).__name__
             func = streamsx.topology.functions._IterableInstance(func)
-        
+
         sl = _SourceLocation(_source_info(), "source")
-        name = self.graph._requested_name(name, action='source', func=func)
-        op = self.graph.addOperator(self.opnamespace+"::Source", func, name=name, sl=sl)
-        op._layout(kind='Source')
-        oport = op.addOutputPort(name=name)
+        _name = self.graph._requested_name(_name, action='source', func=func)
+        op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl)
+        op._layout(kind='Source', name=_name, orig_name=name)
+        oport = op.addOutputPort(name=_name)
         return Stream(self, oport)._make_placeable()
 
     def subscribe(self, topic, schema=CommonSchema.Python, name=None):
@@ -399,7 +408,7 @@ class Topology(object):
         _name = self.graph._requested_name(name, 'subscribe')
         sl = _SourceLocation(_source_info(), "subscribe")
         op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl, name=_name)
-        oport = op.addOutputPort(schema=schema, name=name)
+        oport = op.addOutputPort(schema=schema, name=_name)
         subscribeParams = {'topic': topic, 'streamType': schema}
         op.setParameters(subscribeParams)
         op._layout_group('Subscribe', name if name else _name)
@@ -416,17 +425,27 @@ class Topology(object):
         application directory. Location determines where the file
         is relative to the application directory. Two values for
         location are supported `etc` and `opt`.
+        The runtime path relative to application directory is returned.
 
         The copy is made during the submit call thus the contents of
         the file or directory must remain availble until submit returns.
 
-        For example calling `add_file_dependency('etc', '/tmp/conf.properties')`
+        For example calling
+        ``add_file_dependency('/tmp/conf.properties', 'etc')``
         will result in contents of the local file `conf.properties`
-        being available at runtime at the path `application directory`/etc/conf.properties.
+        being available at runtime at the path `application directory`/etc/conf.properties. This call returns ``etc/conf.properties``.
+
+        Python callables can determine the application directory at
+        runtime with :py:func:`~streamsx.ec.get_application_directory`.
+        For example the path above at runtime is
+        ``os.path.join(streamsx.ec.get_application_directory(), 'etc', 'conf.properties')``
         
         Args:
             path(str):  Path of the file on the local system.
             location(str): Location of the file in the bundle relative to the application directory.
+
+        Returns:
+            str: Path relative to application directory that can be joined at runtime with ``get_application_directory``.
 
         .. versionadded:: 1.7
         """
@@ -442,6 +461,7 @@ class Topology(object):
              self._files[location] = [path]
         else:
              self._files[location].append(path)
+        return location + '/' + os.path.basename(path)
      
 class Stream(object):
     """
@@ -480,10 +500,11 @@ class Stream(object):
             Now returns a :py:class:`Sink` instance.
         """
         sl = _SourceLocation(_source_info(), 'for_each')
-        name = self.topology.graph._requested_name(name, action='for_each', func=func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=name, sl=sl)
+        _name = self.topology.graph._requested_name(name, action='for_each', func=func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        op._layout(kind='ForEach')
+        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        op._layout(kind='ForEach', name=_name, orig_name=name)
         return Sink(op)
 
     def sink(self, func, name=None):
@@ -509,18 +530,21 @@ class Stream(object):
             Stream: A Stream containing tuples that have not been filtered out.
         """
         sl = _SourceLocation(_source_info(), 'filter')
-        name = self.topology.graph._requested_name(name, action="filter", func=func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=name, sl=sl)
+        _name = self.topology.graph._requested_name(name, action="filter", func=func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        op._layout(kind='Filter')
-        oport = op.addOutputPort(schema=self.oport.schema, name=name)
+        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        op._layout(kind='Filter', name=_name, orig_name=name)
+        oport = op.addOutputPort(schema=self.oport.schema, name=_name)
         return Stream(self.topology, oport)._make_placeable()
 
     def _map(self, func, schema, name=None):
-        name = self.topology.graph._requested_name(name, action="map", func=func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=name)
+        _name = self.topology.graph._requested_name(name, action="map", func=func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=_name)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        oport = op.addOutputPort(schema=schema, name=name)
+        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        oport = op.addOutputPort(schema=schema, name=_name)
+        op._layout(name=_name, orig_name=name)
         return Stream(self.topology, oport)._make_placeable()
 
     def view(self, buffer_time = 10.0, sample_size = 10000, name=None, description=None, start=False):
@@ -577,22 +601,22 @@ class Stream(object):
 
     def map(self, func, name=None, schema=None):
         """
-        Maps each tuple from this stream into 0 or 1 tuples.
+        Maps each tuple from this stream into 0 or 1 stream tuples.
 
         For each tuple on this stream ``result = func(tuple)`` is called.
         If `result` is not `None` then the result will be submitted
         as a tuple on the returned stream. If `result` is `None` then
         no tuple submission will occur.
 
-        By default the submitted tuple is `result` without modification
+        By default the submitted tuple is ``result`` without modification
         resulting in a stream of pickable Python objects. Setting the
         `schema` parameter changes the type of the stream and
-        modifies each `result` before submission.
+        modifies each ``result`` before submission.
 
-        * :py:const:`~streamsx.topology.schema.CommonSchema.Python` - The defaullt:  `result` is submitted.
+        * :py:const:`~streamsx.topology.schema.CommonSchema.Python` - The default:  `result` is submitted.
         * :py:const:`~streamsx.topology.schema.CommonSchema.String` - A stream of strings: ``str(result)`` is submitted.
         * :py:const:`~streamsx.topology.schema.CommonSchema.Json` - A stream of JSON objects: ``result`` must be convertable to a JSON object using `json` package.
-        * :py:const:`~streamsx.topology.schema.StreamSchema` - A structured stream. `result` must be a (Python) tuple. Each attribute in the structured tuple is set by position from `result`. If the value in `result` is `None` or not present then the attribute has the default value for its type.
+        * :py:const:`~streamsx.topology.schema.StreamSchema` - A structured stream. `result` must be a `dict` or (Python) `tuple`. When a `dict` is returned the outgoing stream tuple attributes are set by name, when a `tuple` is returned stream tuple attributes are set by position.
 
         Args:
             func: A callable that takes a single parameter for the tuple.
@@ -604,9 +628,10 @@ class Stream(object):
 
         .. versionadded:: 1.7 `schema` argument added to allow conversion to
             a structured stream.
+        .. versionadded:: 1.8 Support for submitting `dict` objects as stream tuples to a structured stream (in addition to existing support for `tuple` objects).
         """
         if schema is None:
-             schema = CommonSchema.Python
+            schema = CommonSchema.Python
      
         ms = self._map(func, schema=schema, name=name)._layout('Map')
         ms.oport.operator.sl = _SourceLocation(_source_info(), 'map')
@@ -644,11 +669,12 @@ class Stream(object):
             TypeError: if `func` does not return an iterator nor None
         """     
         sl = _SourceLocation(_source_info(), 'flat_map')
-        name = self.topology.graph._requested_name(name, action='flat_map', func=func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=name, sl=sl)
+        _name = self.topology.graph._requested_name(name, action='flat_map', func=func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        oport = op.addOutputPort(name=name)
-        return Stream(self.topology, oport)._make_placeable()._layout('FlatMap')
+        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        oport = op.addOutputPort(name=_name)
+        return Stream(self.topology, oport)._make_placeable()._layout('FlatMap', name=_name, orig_name=name)
     
     def multi_transform(self, func, name=None):
         """
@@ -669,7 +695,7 @@ class Stream(object):
         op = self.topology.graph.addOperator("$Isolate$")
         # does the addOperator above need the packages
         op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
     def low_latency(self):
@@ -686,7 +712,7 @@ class Stream(object):
         # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
         # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
         op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
     def end_low_latency(self):
@@ -699,7 +725,7 @@ class Stream(object):
         """
         op = self.topology.graph.addOperator("$EndLowLatency$")
         op.addInputPort(outputPort=self.oport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
     
     def parallel(self, width, routing=Routing.ROUND_ROBIN, func=None, name=None):
@@ -735,15 +761,16 @@ class Stream(object):
             Stream: A stream for which subsequent transformations will be executed in parallel.
 
         """
-        if name is None:
-            name = self.name
+        _name = name
+        if _name is None:
+            _name = self.name
             
-        name = self.topology.graph._requested_name(name, action='parallel', func=func)
+        _name = self.topology.graph._requested_name(name, action='parallel', func=func)
 
         if routing == None or routing == Routing.ROUND_ROBIN:
-            op2 = self.topology.graph.addOperator("$Parallel$", name=name)
+            op2 = self.topology.graph.addOperator("$Parallel$", name=_name)
             op2.addInputPort(outputPort=self.oport)
-            oport = op2.addOutputPort(width)
+            oport = op2.addOutputPort(width, schema=self.oport.schema)
             return Stream(self.topology, oport)
         elif routing == Routing.HASH_PARTITIONED:
 
@@ -762,9 +789,10 @@ class Stream(object):
                 hash_adder._layout(hidden=True)
                 hash_schema = self.oport.schema.extend(StreamSchema("tuple<int64 __spl_hash>"))
                 hash_adder.addInputPort(outputPort=self.oport, name=self.name)
+                StreamSchema._fnop_style(self.oport.schema, hash_adder, 'pyStyle')
                 parallel_input = hash_adder.addOutputPort(schema=hash_schema)
 
-            parallel_op = self.topology.graph.addOperator("$Parallel$", name=name)
+            parallel_op = self.topology.graph.addOperator("$Parallel$", name=_name)
             parallel_op.addInputPort(outputPort=parallel_input)
             parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=parallel_input.schema, partitioned_keys=keys)
 
@@ -792,10 +820,10 @@ class Stream(object):
             if (lastOp.kind == "$Union$"):
                 pto = self.topology.graph.addPassThruOperator()
                 pto.addInputPort(outputPort=self.oport)
-                outport = pto.addOutputPort()
+                outport = pto.addOutputPort(schema=self.oport.schema)
         op = self.topology.graph.addOperator("$EndParallel$")
         op.addInputPort(outputPort=outport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         endP = Stream(self.topology, oport)
         return endP
 
@@ -847,7 +875,7 @@ class Stream(object):
         op.addInputPort(outputPort=self.oport)
         for stream in streamSet:
             op.addInputPort(outputPort=stream.oport)
-        oport = op.addOutputPort()
+        oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
     def print(self, tag=None, name=None):
@@ -869,13 +897,14 @@ class Stream(object):
         .. versionchanged:: 1.7
             Now returns a :py:class:`Sink` instance.
         """
-        if name is None:
-            name = 'print'
+        _name = name
+        if _name is None:
+            _name = 'print'
         fn = streamsx.topology.functions.print_flush
         if tag is not None:
             tag = str(tag) + ': '
             fn = lambda v : streamsx.topology.functions.print_flush(tag + str(v))
-        sp = self.for_each(fn, name=name)
+        sp = self.for_each(fn, name=_name)
         sp._op.sl = _SourceLocation(_source_info(), 'print')
         return sp
 
@@ -930,7 +959,7 @@ class Stream(object):
                 raise ValueError(schema)
                
             self.oport.operator.colocate(schema_change.oport.operator, 'publish')
-            sp = schema_change.publish(topic, schema=schema)
+            sp = schema_change.publish(topic, schema=schema, name=name)
             sp._op.sl = sl
             return sp
 
@@ -1036,9 +1065,10 @@ class Stream(object):
         if func is None:
             func = streamsx.topology.functions.identity
 
-        if name is None:
-            name = action 
-        css = self._map(func, schema, name=name)
+        _name = name
+        if _name is None:
+            _name = action 
+        css = self._map(func, schema, name=_name)
         self.oport.operator.colocate(css.oport.operator, action)
         return css
 
@@ -1081,8 +1111,8 @@ class Stream(object):
             plc['resourceTags'] = set()
         return plc['resourceTags']
 
-    def _layout(self, kind=None, hidden=None):
-        self.oport.operator._layout(kind, hidden)
+    def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
+        self.oport.operator._layout(kind, hidden, name, orig_name)
         return self
 
 
@@ -1178,7 +1208,7 @@ class PendingStream(object):
         def __init__(self, topology):
             self.topology = topology
             self._marker = topology.graph.addOperator(kind="$Pending$")
-            self._pending_schema = StreamSchema('<pending')
+            self._pending_schema = StreamSchema(_SCHEMA_PENDING)
 
             self.stream = Stream(topology, self._marker.addOutputPort(schema=self._pending_schema))
 
@@ -1197,7 +1227,7 @@ class PendingStream(object):
             # Update the pending schema to the actual schema
             # Any downstream filters that took the reference
             # will be automatically updated to the correct schema
-            self._pending_schema._set(stream.oport.schema)
+            self._pending_schema._set(self.stream.oport.schema)
 
             # Mark the operator with the pending stream
             # a start point for graph travesal
@@ -1268,6 +1298,9 @@ class Window(object):
         tw = Window(self.stream, self._config['type'])
         tw._config['evictPolicy'] = self._config['evictPolicy']
         tw._config['evictConfig'] = self._config['evictConfig']
+        if self._config['evictPolicy'] == 'TIME':
+            tw._config['evictTimeUnit'] = 'MILLISECONDS'
+
         if isinstance(when, datetime.timedelta):
             tw._config['triggerPolicy'] = 'TIME'
             tw._config['triggerConfig'] = int(when.total_seconds() * 1000.0)
@@ -1278,6 +1311,41 @@ class Window(object):
         else:
             raise ValueError(when)
         return tw
+
+    def aggregate(self, function, name=None):
+        """Aggregates the contents of the window when the window is
+        triggered.
+        
+        Upon a window trigger, the supplied function is passed a list containing 
+        the contents of the window: ``function(items)``. The order of the window 
+        items in the list are the order in which they were each received by the 
+        window. If the function's return value is not `None` then the result will
+        be submitted as a tuple on the returned stream. If the return value is 
+        `None` then no tuple submission will occur. For example, a window that 
+        calculates a moving average of the last 10 tuples could be written as follows::
+        
+            win = s.last(10).trigger(1)
+            moving_averages = win.aggregate(lambda tuples: sum(tuples)/len(tuples))
+            
+        Args:
+            function: The function which aggregates the contents of the window
+            name(str): The name of the returned stream. Defaults to a generated name.
+
+        Returns: 
+            Stream: A `Stream` of the returned values of the supplied function.                                                                                                                                                             
+        .. versionadded:: 1.8
+        """
+        schema = CommonSchema.Python
+        
+        sl = _SourceLocation(_source_info(), "aggregate")
+        name = self.topology.graph._requested_name(name, action="aggregate", func=function)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=name, sl=sl)
+        op.addInputPort(outputPort=self.stream.oport, name=self.stream.name, window_config=self._config)
+        oport = op.addOutputPort(schema=schema, name=name)
+
+        return Stream(self.topology, oport)
+
+
 
 class Sink(object):
     """

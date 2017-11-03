@@ -120,6 +120,9 @@ public class TestTopology {
      */
     protected static Topology newTopology(String name) {
         return new Topology(name + "_" + topoCounter.getAndIncrement() + "_" + baseName);
+    }  
+    protected static Topology newTopology(String ns, String name) {
+        return new Topology(ns, name + "_" + topoCounter.getAndIncrement() + "_" + baseName);
     }   
 
     /**

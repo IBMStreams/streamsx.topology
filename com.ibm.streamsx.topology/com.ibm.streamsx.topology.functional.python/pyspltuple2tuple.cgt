@@ -1,0 +1,23 @@
+<%
+# Takes the input SPL tuple and converts it to
+# as a tuple to be passed to a Python functional operator
+#
+# Leaves the C++ variable value set to a PyObject * dict.
+
+# Variables that need to be set:
+# $iport - input port 
+%>
+@include "../opt/python/codegen/py_splTupleCheckForBlobs.cgt"
+
+  PyObject *value = 0;
+  {
+  SplpyGIL locktuple;
+  PyObject * pyTuple = PyTuple_New(<%=$inputAttrs2Py%>);
+<%
+     for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
+         my $la = $iport->getAttributeAt($i);
+         print convertAndAddToPythonTupleObject($iport->getCppTupleName(), $i, $la->getSPLType(), $la->getName());
+     }
+%>
+  value = pyTuple;
+  }

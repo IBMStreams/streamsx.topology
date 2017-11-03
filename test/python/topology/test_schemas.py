@@ -5,11 +5,13 @@ import random
 import collections
 import sys
 
+from streamsx.topology.topology import Topology, Routing
 from streamsx.topology.schema import _SchemaParser
 import streamsx.topology.schema as _sch
 _PRIMITIVES = ['boolean', 'blob', 'int8', 'int16', 'int32', 'int64',
                  'uint8', 'uint16', 'uint32', 'uint64',
                  'float32', 'float64',
+                 'decimal32', 'decimal64', 'decimal128',
                  'complex32', 'complex64',
                  'timestamp', 'xml'
                ]
@@ -79,12 +81,21 @@ class TestSchema(unittest.TestCase):
                   p._parse()
                   self.assertEqual(1, len(p._type))
                   self.assertIsInstance(p._type[0][0], tuple)
+                  self.assertEqual(p._type[0][0][0], ctyp)
+                  self.assertEqual(p._type[0][0][1], etyp)
                   self.assertEqual('c', p._type[0][1])
 
-    def test_collections(self):
+    def test_map(self):
         typ = 'map<int32, complex64>'
         p = _SchemaParser('tuple<' + typ + ' m>')
         p._parse()
+        self.assertEqual(1, len(p._type))
+        self.assertIsInstance(p._type[0][0], tuple)
+        self.assertEqual(p._type[0][0][0], 'map')
+        self.assertIsInstance(p._type[0][0][1], tuple)
+        self.assertEqual(p._type[0][0][1][0], 'int32')
+        self.assertEqual(p._type[0][0][1][1], 'complex64')
+        self.assertEqual('m', p._type[0][1])
 
     def test_nested_tuple(self):
       p = _SchemaParser('tuple<int32 a, tuple<int64 b, complex32 c, float32 d> e>')
@@ -116,6 +127,14 @@ class TestSchema(unittest.TestCase):
             p = _SchemaParser(schema)
             p._parse()
 
+    def test_bounded_schema(self):
+        s = _sch.StreamSchema('tuple<rstring[1] a, boolean alert>')
+        s = _sch.StreamSchema('tuple<map<int32,rstring>[8] a>')
+        s = _sch.StreamSchema('tuple<list<int32>[100] a>')
+        s = _sch.StreamSchema('tuple<set<list<int32>[9]>[100] a>')
+
+
+    @unittest.skip
     def test_named_schema(self):
         s = _sch.StreamSchema('tuple<int32 a, boolean alert>')
 
@@ -128,3 +147,111 @@ class TestSchema(unittest.TestCase):
         self.assertFalse(t.alert)
         self.assertEqual(345, t[0])
         self.assertFalse(t[1])
+
+    def test_common_styles(self):
+        """ Test that common schemas cannot have their style changed"""
+        s = _sch.CommonSchema.Python
+        st = s.value.as_tuple()
+        self.assertIs(s.value, st)
+
+        s = _sch.CommonSchema.String
+        st = s.value.as_tuple()
+        self.assertIs(s.value, st)
+
+        s = _sch.CommonSchema.Json
+        st = s.value.as_tuple()
+        self.assertIs(s.value, st)
+
+        s = _sch.CommonSchema.Binary
+        st = s.value.as_tuple()
+        self.assertIs(s.value, st)
+
+        s = _sch.CommonSchema.XML
+        st = s.value.as_tuple()
+        self.assertIs(s.value, st)
+
+    def test_styles(self):
+        s = _sch.StreamSchema('tuple<int32 a, boolean alert>')
+        self.assertEqual(dict, s.style)
+        st = s.as_tuple()
+        self.assertIsNot(s, st)
+        self.assertEqual(tuple, st.style)
+
+        sd = s.as_dict()
+        self.assertIs(s, sd)
+        self.assertEqual(dict, sd.style)
+
+        sd2 = st.as_dict()
+        self.assertIsNot(st, sd2)
+        self.assertEqual(dict, sd2.style)
+
+        self.assertEqual(object, _sch.CommonSchema.Python.value.style)
+        self.assertEqual(str, _sch.CommonSchema.String.value.style)
+        self.assertEqual(dict, _sch.CommonSchema.Json.value.style)
+
+
+class TestKeepSchema(unittest.TestCase):
+    """
+    Testing that schemas are maintained through various transforms.
+    We test items have the same schema, we don't actually run any apps.
+    """
+
+    def test_keep_schema_python(self):
+        topo = Topology()
+        s = topo.source([])
+        self._check_kept(s)
+
+    def test_keep_schema_string(self):
+        topo = Topology()
+        s = topo.source([]).as_string()
+        self._check_kept(s)
+
+    def test_keep_schema_json(self):
+        topo = Topology()
+        s = topo.source([]).as_json()
+        self._check_kept(s)
+
+    def test_keep_schema_schema(self):
+        topo = Topology()
+        s = topo.source([]).map(lambda x : x, schema='tuple<rstring a, int32 b>')
+        self._check_kept(s)
+
+    def _check_kept(self, s):
+       # Stream.oport.schema is an internal api
+       s1 = s.low_latency()
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.filter(lambda t : True)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s.end_low_latency()
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.filter(lambda t : True)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.isolate()
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+
+       s1 = s1.parallel(width=2)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.filter(lambda t : True)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.end_parallel()
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+
+       s1 = s1.parallel(width=2, routing=Routing.ROUND_ROBIN)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.filter(lambda t : True)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.end_parallel()
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+
+       s1 = s1.parallel(width=2, routing=Routing.HASH_PARTITIONED, func=hash)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.filter(lambda t : True)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+       s1 = s1.end_parallel()
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+
+       s1 = s1.filter(lambda t : True)
+       self.assertEqual(s.oport.schema, s1.oport.schema)
+
+       s2 = s.union({s1})
+       self.assertEqual(s.oport.schema, s2.oport.schema)

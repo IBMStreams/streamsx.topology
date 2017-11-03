@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import java.util.Objects;
 import java.util.Set;
 
 import com.ibm.streamsx.topology.TSink;
@@ -48,5 +49,13 @@ public class TSinkImpl extends TopologyItem implements TSink {
     public Set<String> getResourceTags() {
         return PlacementInfo.getResourceTags(this);
     }
-
+    
+    @Override
+    public TSink invocationName(String name) {
+        if (!isPlaceable())
+            throw new IllegalStateException();
+        
+        builder().renameOp(operator(), Objects.requireNonNull(name));
+        return this;
+    }
 }

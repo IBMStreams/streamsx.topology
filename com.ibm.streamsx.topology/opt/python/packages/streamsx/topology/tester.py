@@ -49,11 +49,30 @@ Here is a simple example that tests a filter correctly only passes tuples with v
 
 A stream may have any number of conditions and any number of streams may be tested.
 
-A py:meth:`~Tester.local_check` is supported where a method of the
+A :py:meth:`~Tester.local_check` is supported where a method of the
 unittest class is executed once the job becomes healthy. This performs
 checks from the context of the Python unittest class, such as
 checking external effects of the application or using the REST api to
 monitor the application.
+
+A test fails-fast if any of the following occur:
+    * Any condition fails. E.g. a tuple failing a :py:meth:`~Tester.tuple_check`.
+    * The :py:meth:`~Tester.local_check` (if set) raises an error.
+    * The job for the test:
+        * Fails to become healthy.
+        * Becomes unhealthy during the test run.
+        * Any processing element (PE) within the job restarts.
+
+A test timeouts if it does not fail but its conditions do not become valid.
+The timeout is not fixed as an absolute test run time, but as a time since "progress"
+was made. This can allow tests to pass when healthy runs are run in a constrained
+environment that slows execution. For example with a tuple count condition of ten,
+progress is indicated by tuples arriving on a stream, so that as long as gaps
+between tuples are within the timeout period the test remains running until ten tuples appear.
+
+.. note:: The test timeout value is not configurable.
+
+
 
 .. warning::
     Python 3.5 and Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
@@ -426,7 +445,7 @@ class Tester(object):
         else:
             raise NotImplementedError("Tester context type not implemented:", ctxtype)
 
-        if 'conditions' in self.result:
+        if self.result.get('conditions'):
             for cn,cnr in self.result['conditions'].items():
                 c = self._conditions[cn][1]
                 cdesc = cn
@@ -499,7 +518,7 @@ class Tester(object):
 
         self.result['submission_result'] = self.submission_result
         cc._canceljob(self.result)
-        if self.local_check_exception is not None:
+        if hasattr(self, 'local_check_exception') and self.local_check_exception is not None:
             raise self.local_check_exception
         return self.result['passed']
 
@@ -516,6 +535,9 @@ class Tester(object):
         except Exception as e:
             self.local_check_value = None
             self.local_check_exception = e
+
+# Stop nose from seeing tha Tester.test is a test (#1266)
+Tester.__test__ = False
 
 #######################################
 # Internal functions
@@ -553,11 +575,12 @@ class _ConditionChecker(object):
     # if the job became healthy, False if not.
     def _wait_for_healthy(self):
         while (self.waits * self.delay) < self.timeout:
-            if self.__check_job_health():
+            if self._check_job_health():
                 self.waits = 0
                 return True
             time.sleep(self.delay)
             self.waits += 1
+        self._check_job_health(verbose=True)
         return False
 
     def _complete(self):
@@ -586,7 +609,7 @@ class _ConditionChecker(object):
             self.job.cancel(force=not result['passed'])
 
     def __check_once(self):
-        if not self.__check_job_health():
+        if not self._check_job_health(verbose=True):
             return _ConditionChecker._UNHEALTHY
         cms = self._get_job_metrics()
         valid = True
@@ -632,9 +655,22 @@ class _ConditionChecker(object):
 
         return (valid, fail, progress, condition_states)
 
-    def __check_job_health(self):
+    def _check_job_health(self, verbose=False):
         self.job.refresh()
-        return self.job.health == 'healthy'
+        if self.job.health != 'healthy':
+            if verbose:
+                _logger.error("Job %s health:%s", self.job.name, self.job.health)
+            return False
+        for pe in self.job.get_pes():
+            if pe.launchCount != 1:
+                if verbose:
+                    _logger.error("PE %s launch count > 1: %s", pe.id, pe.launchCount)
+                return False
+            if pe.health != 'healthy':
+                if verbose:
+                    _logger.error("PE %s health: %s", pe.id, pe.health)
+                return False
+        return True
 
     def _find_job(self):
         instance = self._sc.get_instance(id=self._instance_id)

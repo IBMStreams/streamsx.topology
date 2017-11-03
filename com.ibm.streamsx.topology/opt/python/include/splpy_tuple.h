@@ -17,7 +17,6 @@
 #define __SPL__SPLPY_TUPLE_H
 
 #include "splpy_general.h"
-#include <SPL/Runtime/Common/RuntimeException.h>
 
 /**
  * Structure representing a SPL tuple containing a PyObject * pointer.
@@ -47,6 +46,23 @@ namespace streamsx {
 
       return pyReturnVar;
     }
+
+
+  /**
+   *  An SPL tuple is passed to Python through pySplProcessTuple.
+   *  The generated code performs a first step in converting
+   *  the specific SPL tuple instance to a value (through
+   *  the cgt file pyspltuple2value.cgt) that is passed
+   *  as the second argument to pySplProcessTuple.
+   *  This first step convertds as follows:
+   *
+   *  CommonSchema.Python (pickle): SPL::blob & representing the single SPL attribute '__spl_po'
+   *  CommonSchema.String (string): SPL::rstring & representing the single SPL attribute 'string'
+   *  CommonSchema.Json (json): SPL::rstring & representing the single SPL attribute 'jsonString'
+   *  SPL Schema (dict):  PyObject * that is a dict object with all attributes of the SPL schema
+   *  SPL Schema (tuple):  PyObject * that is a tuple object with all attributes of the SPL schema in order
+   *
+   */
 
   /**
    * Convert the SPL tuple that represents a Python object

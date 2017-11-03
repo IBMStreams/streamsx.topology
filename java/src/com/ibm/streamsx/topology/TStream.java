@@ -39,6 +39,9 @@ import com.ibm.streamsx.topology.function.UnaryOperator;
  * For example, calling a {@code Placeable} method on the stream
  * returned from {@link #filter(Predicate)} will apply to the
  * container that is executing the {@code Predicate} passed into {@code filter()}.
+ * <BR>
+ * When multiple streams are produced by a method (e.g. {@link #split(int, ToIntFunction)}
+ * placement directives are common to all of the produced streams. 
  * </P>
  * 
  * @param <T>

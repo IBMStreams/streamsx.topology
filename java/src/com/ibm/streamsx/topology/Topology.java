@@ -253,9 +253,7 @@ public class Topology implements TopologyElement {
             Type tupleType) {
                 
         String opName = LogicUtils.functionName(data);
-        if (opName.isEmpty()) {
-            opName = getTupleName(tupleType) + "Source";
-        } else if (data instanceof Constants) {
+        if (data instanceof Constants) {
             opName = getTupleName(tupleType) + opName;
         }
         
@@ -296,9 +294,7 @@ public class Topology implements TopologyElement {
            Type tupleType) {
         
         String opName = LogicUtils.functionName(data);
-        if (opName.isEmpty()) {
-            opName = TypeDiscoverer.getTupleName(tupleType) + "PeriodicMultiSource";
-        } else if (data instanceof Constants) {
+        if (data instanceof Constants) {
             opName = TypeDiscoverer.getTupleName(tupleType) + opName;
         }
         
@@ -310,7 +306,7 @@ public class Topology implements TopologyElement {
                 opName,
                 JavaFunctionalOps.PERIODIC_MULTI_SOURCE_KIND, data, params);
         SourceInfo.setSourceInfo(bop, getClass());
-        return JavaFunctional.addJavaOutput(this, bop, tupleType);
+        return JavaFunctional.addJavaOutput(this, bop, tupleType, true);
     }
     
     /**
@@ -904,7 +900,7 @@ public class Topology implements TopologyElement {
     public void addJobControlPlane() {
         if (!hasJCP) {
             // no inputs, outputs or parameters.
-            builder.addSPLOperator("spl.control::JobControlPlane", Collections.emptyMap());
+            builder.addSPLOperator("JobControlPlane", "spl.control::JobControlPlane", Collections.emptyMap());
             hasJCP = true;
         }        
     }

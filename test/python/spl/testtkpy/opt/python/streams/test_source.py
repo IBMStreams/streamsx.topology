@@ -1,6 +1,7 @@
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016
+# Copyright IBM Corp. 2016,2017
 
+import decimal
 import itertools
 
 # Import the SPL decorators
@@ -33,6 +34,9 @@ class SpecificValues:
            4367.34, -87657525334.22,
            "⡍⠔⠙⠖ ⡊ ⠙⠕⠝⠰⠞ ⠍⠑⠁⠝ ⠞⠕ ⠎⠁⠹ ⠹⠁⠞ ⡊ ⠅⠝⠪⠂ ⠕⠋ ⠍⠹",
            complex(-23.0, 325.38), complex(-35346.234, 952524.93),
+           decimal.Decimal("3.459876E72"), 
+           decimal.Decimal("4.515716038731674E-307"),
+           decimal.Decimal("1.085059319410602846995696978141388E+5922"),
            Timestamp(781959759, 9320, 76),
            "binary blob 8322".encode('utf-8'),
            ["a", "Streams!", "2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm"],

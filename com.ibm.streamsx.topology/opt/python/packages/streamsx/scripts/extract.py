@@ -44,21 +44,18 @@ def replaceTokenInFile(file, token, value):
     f.close()
 
 def _optype(opobj):
-    if hasattr(opobj, '__splpy_optype'):
-        return opobj.__splpy_optype
+    if hasattr(opobj, '_splpy_optype'):
+        return opobj._splpy_optype
     return None
 
 def _opfile(opobj):
-    return opobj.__splpy_file
-
-def _opstyle(opobj):
-    return opobj.__splpy_style
+    return opobj._splpy_file
 
 def _opcallable(opobj):
-    return opobj.__splpy_callable
+    return opobj._splpy_callable
 
 def _opdoc(opobj):
-    return opobj.__splpy_docpy
+    return opobj._splpy_docpy
 
 _INFO_XML_TEMPLATE="""<?xml version="1.0" encoding="UTF-8"?>
 <toolkitInfoModel
@@ -109,6 +106,36 @@ _OP_PARAM_TEMPLATE ="""
   <type></type>
   <cardinality>1</cardinality>
  </parameter>"""
+
+_OP_INPUT_PORT_SET_TEMPLATE ="""
+<inputPortSet>
+  <description>
+                                    __SPLPY__INPORT_DESCRIPTION__SPLPY__
+  </description>
+  <tupleMutationAllowed>false</tupleMutationAllowed>
+  <windowingMode>NonWindowed</windowingMode>
+  <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
+  <cardinality>1</cardinality>
+  <optional>false</optional>
+</inputPortSet>
+"""
+
+_OP_OUTPUT_PORT_SET_TEMPLATE ="""
+<outputPortSet>
+  <description>
+    __SPLPY__OUTPORT_DESCRIPTION__SPLPY__
+  </description>
+  <expressionMode>Nonexistent</expressionMode>
+  <autoAssignment>false</autoAssignment>
+  <completeAssignment>false</completeAssignment>
+  <rewriteAllowed>true</rewriteAllowed>
+  <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
+  <tupleMutationAllowed>false</tupleMutationAllowed>
+  <cardinality>1</cardinality>
+  <optional>false</optional>
+</outputPortSet>
+"""
+
 
 
 
@@ -244,7 +271,10 @@ class _Extractor(object):
          replaceTokenInFile(opmodel_xml, "__SPLPY__MINOR_VERSION__SPLPY__", str(sys.version_info[1]));
          self._create_op_parameters(opmodel_xml, name, funcTuple)
          self._create_op_spldoc(opmodel_xml, name, funcTuple)
-         self._create_ip_spldoc(opmodel_xml, name, funcTuple)
+         if cgtbase == 'PythonPrimitive':
+             self._create_primitive(opmodel_xml, name, funcTuple)
+         else:
+             self._create_ip_spldoc(opmodel_xml, name, funcTuple)
 
     ## Create SPL doc entries in the Operator model xml file.
     ##
@@ -272,11 +302,11 @@ class _Extractor(object):
          replaceTokenInFile(opmodel_xml, "__SPLPY__DESCRIPTION__SPLPY__", opdoc);
 
     def _create_ip_spldoc(self, opmodel_xml, name, opobj):
-         if _opstyle(opobj) == 'dictionary':
+         if opobj._splpy_style == 'dictionary':
            _p0doc = """
            Tuple attribute values are passed by name to the Python callable using `\*\*kwargs`.
                  """
-         elif _opstyle(opobj) == 'tuple':
+         elif opobj._splpy_style == 'tuple':
            _p0doc = """
            Tuple attribute values are passed by position to the Python callable.
                  """
@@ -284,37 +314,48 @@ class _Extractor(object):
            _p0doc = ''
      
          replaceTokenInFile(opmodel_xml, "__SPLPY__INPORT_0_DESCRIPTION__SPLPY__", _p0doc);
+
+    def _create_primitive(self, opmodel_xml, name, cls):
+        # input ports
+        if cls._splpy_input_ports:
+            ipd = ''
+            for portfn in cls._splpy_input_ports:
+                tip = _OP_INPUT_PORT_SET_TEMPLATE
+                fndoc = inspect.getdoc(portfn)
+                if not fndoc:
+                    fndoc = portfn.__name__
+                tip = tip.replace('__SPLPY__INPORT_DESCRIPTION__SPLPY__', fndoc)
+                ipd += tip
+        else:
+            ipd = "<!-- no input ports -->"
+        replaceTokenInFile(opmodel_xml, "__SPLPY__INPORTS__SPLPY__", ipd);
+
+        # output ports
+        if cls._splpy_output_ports:
+            opd = ''
+            for portfn in cls._splpy_output_ports:
+                top = _OP_OUTPUT_PORT_SET_TEMPLATE
+                opd += top
+        else:
+            opd = "<!-- no output ports -->"
+        replaceTokenInFile(opmodel_xml, "__SPLPY__OUTPORTS__SPLPY__", opd);
    
     # Write information about the Python function parameters.
     #
     def _write_style_info(self, cfgfile, opobj):
-            is_class = inspect.isclass(opobj)
-            if is_class:
-                opfn = opobj.__call__
-            else:
-                opfn = opobj
-        
-            sig = _inspect.signature(opfn)
-            fixedCount = 0
-            if _opstyle(opobj) == 'tuple':
-                pmds = sig.parameters
-                itpmds = iter(pmds)
-                # Skip 'self' for classes
-                if is_class:
-                    next(itpmds)
-                
-                for pn in itpmds:
-                     param = pmds[pn]
-                     if param.kind == _inspect.Parameter.POSITIONAL_OR_KEYWORD:
-                         fixedCount += 1
-                     if param.kind == _inspect.Parameter.VAR_POSITIONAL:
-                         fixedCount = -1
-                         break
-                     if param.kind == _inspect.Parameter.VAR_KEYWORD:
-                         break
 
-            cfgfile.write('sub splpy_FixedParam { \''+ str(fixedCount)   + "\'}\n")
-            cfgfile.write('sub splpy_ParamStyle { \''+ str(_opstyle(opobj))   + "\'}\n")
+            if isinstance(opobj._splpy_style, list):
+                pm_style = '(' + ','.join(["'{0}'".format(_) for _ in opobj._splpy_style]) + ')'
+            else:
+                pm_style = "'" + opobj._splpy_style + "'"
+            cfgfile.write('sub splpy_ParamStyle {'+ pm_style + '}\n')
+             
+            if isinstance(opobj._splpy_fixed_count, list):
+                pm_fixed = '(' + ','.join(["'{0}'".format(_) for _ in opobj._splpy_fixed_count]) + ')'
+            else:
+                pm_fixed = "'" + str(opobj._splpy_fixed_count) + "'"
+
+            cfgfile.write('sub splpy_FixedParam { '+ pm_fixed + "}\n")
  
 
     # Write out the configuration for the operator
@@ -442,7 +483,7 @@ def _extract_from_toolkit():
 
     for mf in glob.glob(os.path.join(tk_streams, '*.py')):
         print('Checking ', mf, 'for operators')
-        (name, suffix, mode, mtype)  = inspect.getmoduleinfo(mf)
+        name  = inspect.getmodulename(mf)
         dynm = imp.load_source(name, mf)
         streams_python_file = inspect.getsourcefile(dynm)
         extractor._process_operators(dynm, name, streams_python_file, inspect.getmembers(dynm, inspect.isfunction))

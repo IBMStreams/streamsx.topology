@@ -34,38 +34,39 @@ def _splpy_iter_source(iterable) :
 # may be sparse, values not set by the dictionary
 # (etc.) are set to None in the Python tuple.
 
+def _splpy_convert_tuple(attributes):
+    """Create a function that converts tuples to
+    be submitted as dict objects into Python tuples
+    with the value by position.
+    Return function handles tuple,dict,list[tuple|dict|None],None
+    """
+
+    def _to_tuples(tuple_):
+        if isinstance(tuple_, tuple):
+            return tuple_
+        if isinstance(tuple_, dict):
+            return tuple(tuple_.get(name, None) for name in attributes)
+        if isinstance(tuple_, list):
+            lt = list()
+            for ev in tuple_:
+                if isinstance(ev, dict):
+                    ev = tuple(ev.get(name, None) for name in attributes)
+                lt.append(ev)
+            return lt
+        return tuple_
+    return _to_tuples
+
 def _splpy_to_tuples(fn, attributes):
-   attr_count = len(attributes)
-   attr_map = dict()
-   for idx, name in enumerate(attributes):
-       attr_map[name] = idx
-   def _dict_to_tuple(value):
-      if isinstance(value, dict):
-         to_assign = set.intersection(set(value.keys()), attributes) 
-         tl = [None] * attr_count
-         for name in to_assign:
-             tl[attr_map[name]] = value[name]
-         return tuple(tl)
-      return value
+   conv_fn = _splpy_convert_tuple(attributes)
 
    def _to_tuples(*args, **kwargs):
       value = fn(*args, **kwargs)
-      if isinstance(value, tuple):
-          return value
-      if isinstance(value, dict):
-         return _dict_to_tuple(value)
-      if isinstance(value, list):
-         lt = list()
-         for ev in value:
-             if isinstance(ev, dict):
-                ev = _dict_to_tuple(ev)
-             lt.append(ev)
-         return lt
-      return value
-   if hasattr(fn, '_shutdown'):
-       def _shutdown():
-           fn._shutdown()
-       _to_tuples._shutdown = _shutdown
+      return conv_fn(value)
+
+   if hasattr(fn, '_splpy_shutdown'):
+       def _splpy_shutdown():
+           fn._splpy_shutdown()
+       _to_tuples._splpy_shutdown = _splpy_shutdown
    return _to_tuples
 
 def _splpy_release_memoryviews(*args):
@@ -78,3 +79,29 @@ def _splpy_release_memoryviews(*args):
         elif isinstance(o, dict):
             for e in o.values():
                 _splpy_release_memoryviews(e)
+
+def _splpy_primitive_input_fns(obj):
+    """Convert the list of class input functions to be
+        instance functions against obj.
+        Used by @spl.primitive_operator SPL cpp template.
+    """
+    ofns = list()
+    for fn in obj._splpy_input_ports:
+        ofns.append(getattr(obj, fn.__name__))
+    return ofns
+    
+
+def _splpy_primitive_output_attrs(callable_, port_attributes):
+    """Sets output conversion functions in the callable."""
+    conv_fns = []
+    for attributes in port_attributes:
+        conv_fns.append(_splpy_convert_tuple(attributes))
+        
+    callable_._splpy_conv_fns = conv_fns
+
+
+def _splpy_all_ports_ready(callable_):
+    """Call all_ports_ready for a primitive operator."""
+    if hasattr(type(callable_), 'all_ports_ready'):
+        return callable_.all_ports_ready()
+    return None

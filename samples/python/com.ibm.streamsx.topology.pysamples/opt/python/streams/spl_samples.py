@@ -70,9 +70,9 @@ def spl_namespace():
 # See Test01.spl
 
 @spl.map()
-def Noop(*tuple):
+def Noop(*tuple_):
     "Pass the tuple along without any change."
-    return tuple
+    return tuple_
 
 # Stateful operator that adds a sequence number
 # as the last attribute of the input tuple.
@@ -85,14 +85,14 @@ def Noop(*tuple):
 
 @spl.map()
 class AddSeq:
-    "Add a sequence number as the last attribute."
+    """Add a sequence number as the last attribute."""
     def __init__(self):
         self.seq = 0
 
-    def __call__(self, *tuple):
+    def __call__(self, *tuple_):
         id = self.seq
         self.seq += 1
-        return tuple + (id,)
+        return tuple_ + (id,)
 
 from datetime import datetime
 
@@ -105,11 +105,11 @@ class PrintWithTimeIntervals:
     def __init__(self):
         self.last = datetime.now()
 
-    def __call__(self, *tuple):
+    def __call__(self, *tuple_):
         now = datetime.now()
         iat = now - self.last
         self.last = now
-        print(tuple, " ", iat, " seconds", flush=True)
+        print(tuple_, " ", iat, " seconds", flush=True)
 
     
 # Filters tuples by only returning a value if
@@ -181,7 +181,7 @@ def ReturnList(a,b,c):
     "Demonstrate returning a list of values, each value is submitted as a tuple." 
     return [(a+1,b+1,c+1),(a+2,b+2,c+2),(a+3,b+3,c+3),(a+4,b+4,c+4)]
 
-@spl.sink
-def PrintTuple(*tuple):
-    "Print each tuple to standard out."
-    print(tuple, flush=True)
+@spl.for_each()
+def PrintTuple(*tuple_):
+    """Print each tuple to standard out."""
+    print(tuple_, flush=True)

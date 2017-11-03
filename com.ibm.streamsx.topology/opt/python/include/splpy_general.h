@@ -19,6 +19,7 @@
 #define __SPL__SPLPY_GENERAL_H
 
 #include "Python.h"
+#include <sstream>
 
 #undef PyMemoryView_Check
 #define PyMemoryView_Check(o) SplpyGeneral::checkMemoryView(o)
@@ -26,6 +27,7 @@
 #include <TopologySplpyResource.h>
 #include <SPL/Runtime/Common/RuntimeException.h>
 #include <SPL/Runtime/Type/Meta/BaseType.h>
+#include <SPL/Runtime/Function/SPLFunctions.h>
 #include <SPL/Runtime/ProcessingElement/PE.h>
 #include <SPL/Runtime/Operator/Port/OperatorPort.h>
 #include <SPL/Runtime/Operator/Port/OperatorInputPort.h>
@@ -154,17 +156,37 @@ class SplpyGeneral {
      * Utility method to call an object
      * passing in a tuple of arguments.
      * 
-     * Steals the reference the the tuple.
+     * Steals the reference the the args (which may be NULL).
      */
-    static PyObject *pyCallObject(PyObject *pyclass, PyObject *args) {
-      PyObject *ret  = PyObject_CallObject(pyclass, args);
-      Py_DECREF(args);
+    static PyObject *pyCallObject(PyObject *callable_object, PyObject *args) {
+      PyObject *ret  = PyObject_CallObject(callable_object, args);
+      if (args != NULL)
+          Py_DECREF(args);
       if (ret == NULL) {
          throw SplpyGeneral::pythonException("pyCallObject");
       }
 
       return ret;
     }
+
+    /**
+     * Utility method to call PyObject_Call(callable_object, args, kw)
+     * 
+     * Does not check for PyObject_Call returning null,
+     * the return from PyObject_Call is directly returned.
+     *
+     * Steals the reference to args and kw
+     */
+    static PyObject *pyObject_Call(PyObject *callable_object, PyObject *args, PyObject *kw) {
+      PyObject *ret  = PyObject_Call(callable_object, args, kw);
+      Py_DECREF(args);
+      if (kw != NULL)
+          Py_DECREF(kw);
+     
+      return ret;
+    }
+
+    
 
     /**
      * Class object for streamsx.spl.types.Timestamp.
@@ -176,6 +198,10 @@ class SplpyGeneral {
     static PyObject * timestampClass(PyObject *tsc) {
         static PyObject * tsClass = tsc;
         return tsClass;
+    }
+    static PyObject * decimalClass(PyObject *dsc) {
+        static PyObject * decClass = dsc;
+        return decClass;
     }
     /**
      * streamsx.spl.types._get_timestamp_tuple
@@ -471,6 +497,26 @@ class SplpyGeneral {
             (int32_t) PyLong_AsLong(PyTuple_GET_ITEM(tst, 2)));
     }
 
+    // decimal
+    inline void pySplValueFromPyObject(SPL::decimal32 & splv, PyObject *value) {
+        SPL::rstring rs;
+        pySplValueFromPyObject(rs, value);
+        std::istringstream is(rs);
+        SPL::deserializeWithNanAndInfs(is, splv);
+    }
+    inline void pySplValueFromPyObject(SPL::decimal64 & splv, PyObject *value) {
+        SPL::rstring rs;
+        pySplValueFromPyObject(rs, value);
+        std::istringstream is(rs);
+        SPL::deserializeWithNanAndInfs(is, splv);
+    }
+    inline void pySplValueFromPyObject(SPL::decimal128 & splv, PyObject *value) {
+        SPL::rstring rs;
+        pySplValueFromPyObject(rs, value);
+        std::istringstream is(rs);
+        SPL::deserializeWithNanAndInfs(is, splv);
+    }
+
     // complex
     inline void pySplValueFromPyObject(SPL::complex32 & splv, PyObject * value) {
         splv = SPL::complex32(
@@ -604,6 +650,62 @@ class SplpyGeneral {
     }
     inline PyObject * pySplValueToPyObject(const SPL::complex64 & value) {
        return PyComplex_FromDoubles(value.real(), value.imag());
+    }
+
+    /**
+     *  Convert decimal values by first converting to strings
+     *  and then creating Python decimal.Decimal instance.
+     */
+    inline PyObject * _pySplDecStringToPyDecimal(const std::stringstream & buf)
+    {
+        SPL::rstring decString(buf.str());
+
+        PyObject * pyDecString = pySplValueToPyObject(decString);
+
+        PyObject * pyTuple = PyTuple_New(1);
+        PyTuple_SET_ITEM(pyTuple, 0, pyDecString);
+
+        return SplpyGeneral::pyCallObject(
+                 SplpyGeneral::decimalClass(NULL),
+                 pyTuple
+               );
+    }
+    inline PyObject * pySplValueToPyObject(const SPL::decimal32 & value) {
+
+        // Number of decimal32 digits (7) minus 1 to account
+        // for the single digit written before the decimal point
+        // in scientific notation
+        // www.cplusplus.com/reference/ios/scientific
+        std::stringstream buf;
+        buf.setf(std::ios::scientific, std::ios::floatfield);
+        buf.precision(7 - 1);
+        buf << value;
+
+        return _pySplDecStringToPyDecimal(buf);
+    }
+    inline PyObject * pySplValueToPyObject(const SPL::decimal64 & value) {
+        // Number of decimal64 digits (16) minus 1 to account
+        // for the single digit written before the decimal point
+        // in scientific notation
+        // www.cplusplus.com/reference/ios/scientific
+        std::stringstream buf;
+        buf.setf(std::ios::scientific, std::ios::floatfield);
+        buf.precision(16 - 1);
+        buf << value;
+
+        return _pySplDecStringToPyDecimal(buf);
+    }
+    inline PyObject * pySplValueToPyObject(const SPL::decimal128 & value) {
+        // Number of decimal128 digits (34) minus 1 to account
+        // for the single digit written before the decimal point
+        // in scientific notation
+        // www.cplusplus.com/reference/ios/scientific
+        std::stringstream buf;
+        buf.setf(std::ios::scientific, std::ios::floatfield);
+        buf.precision(34 - 1);
+        buf << value;
+
+        return _pySplDecStringToPyDecimal(buf);
     }
 
     inline PyObject * pySplValueToPyObject(const SPL::boolean & value) {

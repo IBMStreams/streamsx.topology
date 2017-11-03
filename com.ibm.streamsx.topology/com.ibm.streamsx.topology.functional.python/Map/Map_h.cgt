@@ -30,7 +30,7 @@ private:
 <%
 if ($pyoutstyle eq 'dict') {
 %>
-    void fromPythonToPort0(PyObject * pyTuple, <%=$oport->getCppTupleType()%> & otuple);
+    void fromPythonToPort0(PyObject * pyTuple);
 <%}%>
 
     // Members

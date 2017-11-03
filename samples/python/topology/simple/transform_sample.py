@@ -38,7 +38,7 @@ def main():
     i2.print()
     
     # execute the application in standalone mode
-    streamsx.topology.context.submit("STANDALONE")
+    streamsx.topology.context.submit("STANDALONE", topo)
 
 if __name__ == '__main__':
     main()

@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.json.java.JSONObject;
@@ -22,6 +23,7 @@ import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig;
+import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -34,8 +36,11 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
 
     private final StreamSchema schema;
     
-    static SPLStream newSPLStream(TopologyElement te, BOperatorInvocation op, StreamSchema schema) {
-        return new SPLStreamImpl(te, schema, op.addOutput(schema.getLanguageType()));
+    static SPLStream newSPLStream(TopologyElement te, BOperatorInvocation op, StreamSchema schema,
+            boolean singleOutput) {
+        return new SPLStreamImpl(te, schema,
+                op.addOutput(schema.getLanguageType(),
+                        singleOutput ? Optional.of(op.name()) : Optional.empty()));
     }
     
     private SPLStreamImpl(TopologyElement te, StreamSchema schema, BOutput stream) {
@@ -163,6 +168,15 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
         publishParms.put("allowFilter", allowFilter);
         
         SPL.invokeSink("com.ibm.streamsx.topology.topic::Publish", this, publishParms);
+    }
+    
+    @Override
+    public SPLStream colocate(Placeable<?>... elements) {
+        return asSPL(super.colocate(elements));
+    }
+    @Override
+    public SPLStream invocationName(String name) {
+        return asSPL(super.invocationName(name));
     }
 
     public static class TupleToString implements Function<Tuple, String> {

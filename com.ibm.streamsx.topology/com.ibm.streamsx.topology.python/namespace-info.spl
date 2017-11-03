@@ -128,8 +128,11 @@ Functions to create topologies and streams.
     complex32,complex64 : complex
     rstring : str
     ustring : str
-    boolean : boolean
+    boolean : bool
+    timestamp : streamsx.spl.type.Timestamp
+    decimal32,decimal64,decimal128 : decimal.Decimal
     list : list
+    set : set
     map : dictionary
 
   See [namespace:com.ibm.streamsx.topology.topic] for more details.
@@ -939,12 +942,14 @@ A limited set of SPL types are supported.
 
  * **Primitive types**
   * `blob` - maps to a Python `memoryview`
-  * `boolean` - maps to Python `Boolean`
+  * `boolean` - maps to Python `bool`
   * `int8`, `int16`, `int32`, `int64` - maps to Python `int`
   * `uint8`, `uint16`, `uint32`, `uint64` - maps to Python `int`
   * `float32`, `float64` - maps to Python `float`
+  * `decimal32`, `decimal64`, `decimal128` - maps to Python `decimal.Decimal`
   * `complex32`, `complex64` - maps to Python `complex`
   * `rstring`, `ustring` - maps to Python `String` - `rstring` values assume UTF-8 encoding
+  * `timestamp` - maps to Python `streamsx.spl.type.Timestamp`
  * **Collection types**
   * `list<T>` where `T` is any supported type. Passed into Python as a list.
   * `set<T>` where `T` is any supported primitive type except `blob`. Passed into Python as a set. `T` must be primitive to match Python's requirement that an element of a set is hashable.

@@ -1,0 +1,22 @@
+<%
+# Takes the input SPL tuple and converts it to
+# the arguments needed to be passed to a Python
+# functional operator
+
+# Variables that need to be set:
+
+# $pyStyle - tuple or dictionary
+# $iport - input port 
+# $inputAttrs2Py - number of attributes to pass as tuple style
+%>
+
+    <%=$iport->getCppTupleType()%> const & <%=$iport->getCppTupleName()%> = static_cast< <%=$iport->getCppTupleType()%> const &>(tuple);
+
+<%
+print splpy_inputtuple2value($pystyle, $iport);
+if ($pystyle eq 'dict') {
+%>
+@include "pyspltuple2dict.cgt"
+<% } elsif ($pystyle eq 'tuple') { %>
+@include "pyspltuple2tuple.cgt"
+<% } %>

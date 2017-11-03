@@ -20,7 +20,7 @@ import re
 import streamsx.topology.dependency
 import streamsx.topology.functions
 import streamsx.topology.param
-from streamsx.topology.schema import CommonSchema
+from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.schema import _stream_schema
 
 def _fix_namespace(ns):
@@ -284,11 +284,17 @@ class _SPLInvocation(object):
                 # Convert the set to a list for JSON
                 tags = _op['config']['placement']['resourceTags']
                 _op['config']['placement']['resourceTags'] = list(tags)
-        _params = {}
+
         # Add parameters as their string representation
         # unless they value has a spl_json() function,
         # then use that
         _params = {}
+
+        # Fix up any pending streams for input style
+        if 'pyStyle' in self.params and 'pending' == self.params['pyStyle']\
+                and self.kind.startswith('com.ibm.streamsx.topology.functional.python'):
+            StreamSchema._fnop_style(self.inputPorts[0].schema, self, 'pyStyle')
+
         for name in self.params:
             param = self.params[name]
             try:
@@ -352,11 +358,20 @@ class _SPLInvocation(object):
             self._placement['explicitColocate'] = colocate_id
         other._placement['explicitColocate'] = colocate_id
 
-    def _layout(self, kind=None, hidden=None):
+    def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
         if kind:
            self._layout_hints['kind'] = str(kind)
         if hidden:
            self._layout_hints['hidden'] = True
+        if name:
+            self._layout_map_name(name, orig_name)
+
+
+    def _layout_map_name(self, name, orig_name):
+        if orig_name and name != orig_name:
+            if 'names' not in self._layout_hints:
+                self._layout_hints['names'] = dict()
+            self._layout_hints['names'][name] = orig_name
 
     def _layout_group(self,kind, name, group_id=None):
         group = {}

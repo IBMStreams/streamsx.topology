@@ -9,9 +9,11 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
+import java.nio.charset.StandardCharsets;
 import java.util.StringTokenizer;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 
 /**
  * Keys in the JSON graph object for job submission.
@@ -107,6 +109,12 @@ public interface GraphKeys {
                     nsb.append(getSPLCompatibleName(st.nextToken()));
                 }
                 ns = nsb.toString();
+                // Account for the full app name being > 255 (with a margin)
+                // when including file suffixes and separators.
+                if (ns.length() + splAppName(graph).length() > 240) {
+                    ns = "__spl_ns._" + 
+                        SPLGenerator.md5Name(appNamespace(graph).getBytes(StandardCharsets.UTF_8));
+                }
                 graph.addProperty(SPL_NAMESPACE, ns);
             }
         }

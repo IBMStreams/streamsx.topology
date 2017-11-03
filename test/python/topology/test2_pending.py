@@ -120,8 +120,14 @@ class TestPending(unittest.TestCase):
         tester.contents(result, expected)
         tester.test(self.test_ctxtype, self.test_config)
 
+@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
+class TestPendingCloud(TestPending):
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)
+
 class TestPendingCompileOnly(unittest.TestCase):
 
+    @unittest.skipIf("STREAMS_INSTALL" not in os.environ, "STREAMS_INSTALL not set")
     def test_pure_loop(self):
         topo = Topology()
 

@@ -169,7 +169,7 @@ public class Util {
         int pr = vers[1];
         if (pr > r)
             return true;
-        if (pv < r)
+        if (pr < r)
             return false;
         
         // same v.r       

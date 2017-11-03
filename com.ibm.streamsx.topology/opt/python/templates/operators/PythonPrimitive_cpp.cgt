@@ -1,0 +1,237 @@
+/*
+ * # Licensed Materials - Property of IBM
+ * # Copyright IBM Corp. 2017
+ */
+
+#include "splpy.h"
+
+using namespace streamsx::topology;
+
+<%SPL::CodeGen::implementationPrologue($model);%>
+
+<%
+ my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.__splpy/common/";
+
+ require "splpy_operator.pm";
+ require $cmnDir."/splpy.pm";
+
+ my @packages = splpy_Packages();
+ spl_pip_packages($model, \@packages);
+
+ my $module = splpy_Module();
+ my $functionName = splpy_FunctionName();
+%>
+
+// Constructor
+MY_OPERATOR::MY_OPERATOR() :
+    pyop_(NULL)
+<%if ($model->getNumberOfInputPorts() != 0) {%>
+    ,pyinputfns_(NULL),
+    pyInNames_(NULL)
+<%  for (my $p = 1; $p < $model->getNumberOfInputPorts(); $p++) { %>
+    , pyInNames_<%=$p%>(NULL)
+<%}}%>
+{
+   PyObject * callable;
+@include  "../../opt/.__splpy/common/py_constructor.cgt"
+
+   pyop_->setCallable(callable);
+
+<% if ($model->getNumberOfInputPorts() != 0) { %>
+{
+   SplpyGIL lock;
+<%
+
+my @portParamStyles = splpy_ParamStyle();
+my @portFixedParam = splpy_FixedParam();
+
+for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
+
+my $iport = $model->getInputPortAt($p);
+
+my $paramStyle = @portParamStyles[$p];
+my $fixedParam = @portFixedParam[$p];
+
+if ($fixedParam != -1) {
+    if ($fixedParam > $iport->getNumberOfAttributes()) {
+       SPL::CodeGen::exitln('%s requires at least %i attributes in input port %i but schema is %s',
+           $model->getContext()->getKind(), $fixedParam, $iport->getIndex(), $iport->getSPLTupleType());
+ }
+}
+
+my $ppn = "";
+if ($p >= 1) {
+   $ppn = $p;
+}
+
+if ($paramStyle eq 'dictionary') { %>
+      pyInNames_<%=$ppn%> = streamsx::topology::Splpy::pyAttributeNames(
+               getInputPortAt(<%=$p%>));
+<%}}%>
+
+   // callFunction takes a reference.
+   Py_INCREF(callable);
+   pyinputfns_ = SplpyGeneral::callFunction(
+             "streamsx.spl.runtime", "_splpy_primitive_input_fns",
+             callable, NULL);   
+}
+
+<% } %>
+
+<% if ($model->getNumberOfOutputPorts() != 0) { %>
+{
+   // Setup the conversion of of submitted values (e.g. dict->tuple)
+   SplpyGIL lock;
+   PyObject *pyOutNames = PyTuple_New(<%=$model->getNumberOfOutputPorts()%>);
+   for (int p = 0; p < <%=$model->getNumberOfOutputPorts()%>; p++) {
+        PyTuple_SET_ITEM(pyOutNames, p, Splpy::pyAttributeNames(getOutputPortAt(p)));
+   }
+   SplpyGeneral::callVoidFunction(
+             "streamsx.spl.runtime", "_splpy_primitive_output_attrs",
+             callable, pyOutNames);   
+
+}
+<%}%>
+}
+
+void MY_OPERATOR::allPortsReady()
+{
+    createThreads(1);
+}
+
+/**
+  Call the Python class's all_ports_ready method
+  if it exists and use the return to block for
+  completion of outstanding work. If this
+  operator has no output ports then it will
+  complete when this function (thread) returns.
+*/
+void MY_OPERATOR::process(uint32_t idx)
+{
+   if (getPE().getShutdownRequested())
+       return;
+
+   PyObject *blocker = NULL;
+
+   {
+     SplpyGIL lock;
+
+     Py_INCREF(pyop_->callable());
+     blocker = SplpyGeneral::callFunction(
+             "streamsx.spl.runtime", "_splpy_all_ports_ready",
+             pyop_->callable(), NULL);
+
+     bool callable = (bool) PyCallable_Check(blocker);
+     if (!callable) {
+         int has_background_work = PyObject_IsTrue(blocker);
+         Py_DECREF(blocker);
+         blocker = NULL;
+         
+         if (has_background_work == 0)
+             return;
+     }
+   }
+
+   if (blocker == NULL) {
+       getPE().blockUntilShutdownRequest();
+   } else {
+       if (getPE().getShutdownRequested())
+           return;
+
+       SplpyGIL lock;
+
+       PyObject *rv = SplpyGeneral::pyCallObject(blocker, NULL);
+       Py_DECREF(rv);
+       Py_DECREF(blocker);
+   }
+}
+
+// Destructor
+MY_OPERATOR::~MY_OPERATOR() 
+{
+   SplpyGIL lock;
+   delete pyop_;
+
+<%if ($model->getNumberOfInputPorts() != 0) {%>
+   if (pyinputfns_ != NULL)
+       Py_DECREF(pyinputfns_);
+   if (pyInNames_ != NULL)
+       Py_DECREF(pyInNames_);
+<%  for (my $p = 1; $p < $model->getNumberOfInputPorts(); $p++) { %>
+   if (pyInNames_<%=$p%> != NULL)
+       Py_DECREF(pyInNames_<%=$p%>);
+<%}}%>
+}
+
+// Notify pending shutdown
+void MY_OPERATOR::prepareToShutdown() 
+{
+    pyop_->prepareToShutdown();
+}
+
+void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
+{
+<%
+if ($model->getNumberOfInputPorts() != 0) {
+my @portParamStyles = splpy_ParamStyle();
+my @portFixedParam = splpy_FixedParam();
+
+for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
+
+  my $iport = $model->getInputPortAt($p);
+  my $paramStyle = @portParamStyles[$p];
+  my $fixedParam = @portFixedParam[$p];
+  my $inputAttrs2Py = $iport->getNumberOfAttributes();
+  if ($fixedParam != -1) {
+    $inputAttrs2Py = $fixedParam;
+  }
+
+  if ($model->getNumberOfInputPorts() > 1) {
+%>
+      if (port == <%=$p%>)
+<%
+  }
+
+%>
+ {
+ // Code block for a single port
+ @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
+
+    SplpyGIL lock;
+
+ @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
+
+    PyObject *fn = PyList_GET_ITEM(pyinputfns_, (Py_ssize_t) <%=$p%>);
+    PyObject * pyReturnVar = SplpyGeneral::pyObject_Call(fn, pyTuple, pyDict);
+
+    if (pyReturnVar == NULL) {
+        SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
+        throw SplpyGeneral::pythonException("<%=$functionName%>");
+    }
+    Py_DECREF(pyReturnVar);
+
+    return;
+ }
+
+<%}}%>
+}
+
+// Create member functions that convert Python tuple to SPL tuple
+// for each port.
+<%
+for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) {
+    my $oport = $model->getOutputPortAt($p);
+    my $iport = undef;
+%>
+@include  "../../opt/.__splpy/common/py_valueToTuples.cgt"
+@include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
+<% } %>
+
+void MY_OPERATOR::convertAndSubmit(uint32_t port, PyObject *tuple_) {
+<% for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) { %>
+     if (port == <%=$p%>)
+         pySubmitTuplesPort<%=$p%>(tuple_);
+<%}%>
+}
+
+<%SPL::CodeGen::implementationEpilogue($model);%>

@@ -48,7 +48,10 @@ sub splToPythonConversionCheck{
     elsif(SPL::CodeGen::Type::isUnsigned($type)) {
       return;
     } 
-    elsif(SPL::CodeGen::Type::isFloatingpoint($type)) {
+    elsif(SPL::CodeGen::Type::isFloat($type)) {
+      return;
+    } 
+    elsif(SPL::CodeGen::Type::isDecimal($type)) {
       return;
     } 
     elsif (SPL::CodeGen::Type::isRString($type) || SPL::CodeGen::Type::isBString($type)) {
@@ -199,17 +202,17 @@ sub splpy_tuplestyle{
 # represents the value to be passed into the Python function
 #
 sub splpy_inputtuple2value{
- my ($pystyle) = @_;
+ my ($pystyle, $iport) = @_;
  if ($pystyle eq 'pickle') {
-  return 'SPL::blob const & value = ip.get___spl_po();';
+  return 'SPL::blob const & value = ' . $iport->getCppTupleName() . '.get___spl_po();';
  }
 
  if ($pystyle eq 'string') {
-  return 'SPL::rstring const & value = ip.get_string();';
+  return 'SPL::rstring const & value = ' . $iport->getCppTupleName() . '.get_string();';
  }
  
  if ($pystyle eq 'json') {
-  return 'SPL::rstring const & value = ip.get_jsonString();';
+  return 'SPL::rstring const & value = ' . $iport->getCppTupleName() . '.get_jsonString();';
  }
 
  if ($pystyle eq 'dict') {
@@ -272,6 +275,30 @@ sub convertAndAddToPythonDictionaryObject {
   $setdict =  $setdict . "Py_DECREF(value);\n";
 
   return $get . $getkey . $setdict . "}\n" ;
+}
+
+#
+# Convert attribute of an SPL tuple to Python
+# and add to a tuple object.
+#
+# ituple - C++ expression of the tuple
+# i  - Attribute index
+# type - spl type
+# name - attribute name
+# names - PyObject * pointing to Python tuple containing attribute names.
+
+sub convertAndAddToPythonTupleObject {
+  my $ituple = $_[0];
+  my $i = $_[1];
+  my $type = $_[2];
+  my $name = $_[3];
+
+  # starts a C++ blockand sets value
+  my $get = _attr2Value($ituple, $type, $name);
+
+  my $settuple =  "PyTuple_SET_ITEM(pyTuple, $i, value);\n";
+
+  return $get . $settuple . "}\n" ;
 }
 
 ## Execute pip to install packages in the

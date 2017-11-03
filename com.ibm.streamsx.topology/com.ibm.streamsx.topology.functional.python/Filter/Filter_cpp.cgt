@@ -49,15 +49,8 @@ void MY_OPERATOR::prepareToShutdown()
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
-  IPort0Type const &ip = static_cast<IPort0Type const &>(tuple);
+@include "../pyspltuple2value.cgt"
 
-<%
-print splpy_inputtuple2value($pystyle);
-%>
-
-<%if ($pystyle eq 'dict') {%>
-@include "../pyspltuple2dict.cgt"
-<%}%>
   if (streamsx::topology::Splpy::pyTupleFilter(funcop_->callable(), value)) {
       submit(tuple, 0);
   }

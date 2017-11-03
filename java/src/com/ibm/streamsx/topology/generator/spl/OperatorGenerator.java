@@ -14,7 +14,7 @@ import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLI
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_NOT_WINDOWED;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_SLIDING;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_TUMBLING;
-import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.splBasename;
+import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.stringLiteral;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_TAG_MAPPING;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
@@ -23,6 +23,7 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectArray;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.stringArray;
 
 import java.io.IOException;
@@ -84,9 +85,56 @@ class OperatorGenerator {
     }
 
     private static void layoutNote(JsonObject op, StringBuilder sb) {
-        JsonObject layout = object(op, "layout");
-        if (layout != null)
+        final JsonObject layout = object(op, "layout");
+        if (layout != null) {
+            
+            // Need to check for name mangling from provided names to SPL identifiers
+            layoutMapName(layout, jstring(op, "name"));
+            
+            if (op.has("outputs")) {
+                JsonArray outputs = array(op, "outputs");
+                for (int i = 0; i < outputs.size(); i++) {
+                    JsonObject output = outputs.get(i).getAsJsonObject();
+                    String name = jstring(output, "name");
+                    if (name != null)
+                        layoutMapName(layout, name);
+                }
+            }
+            if (op.has("inputs")) {
+                JsonArray inputs = array(op, "inputs");
+                for (int i = 0; i < inputs.size(); i++) {
+                    JsonObject output = inputs.get(i).getAsJsonObject();
+                    String name = jstring(output, "name");
+                    if (name != null)
+                        layoutMapName(layout, name);
+                }
+            }
+
             appendNoteAnnotation(sb, "__spl_layout", layout);
+        }
+    }
+    
+    /**
+     * Add a name mapping from the original name to the SPL identifier.
+     * Three cases: 
+     *   1) Name is valid as an SPL identifier, mapping left unchanged (if it exists or not).
+     *   2) Name is original and no mapping exists: Mapping of {id:name} added.
+     *   3) Name is not original and mapping is updated, e.g:
+     *          on entry: {name:original}
+     *          on exit:  {id:original}
+     */
+    private static void layoutMapName(final JsonObject layout, final String name) {
+        final String id = getSPLCompatibleName(name);
+        if (id == name) // yes - reference comparison
+            return;
+        
+        JsonObject names = objectCreate(layout, "names");
+        if (names.has(name)) {
+            JsonElement origName = names.remove(name);
+            names.add(id, origName);
+        } else {
+            names.addProperty(id, name);
+        }
     }
 
     private static void sourceLocationNote(JsonObject op, StringBuilder sb) throws IOException {
@@ -164,7 +212,7 @@ class OperatorGenerator {
                 String parallelInputPortName = jstring(op, "parallelInputPortName");
                 JsonArray partitionKeys = op.get("partitionedKeys").getAsJsonArray();
 
-                parallelInputPortName = splBasename(parallelInputPortName);
+                parallelInputPortName = getSPLCompatibleName(parallelInputPortName);
                 sb.append(", partitionBy=[{port=");
                 sb.append(parallelInputPortName);
                 sb.append(", attributes=[");
@@ -227,7 +275,7 @@ class OperatorGenerator {
             }
 
             String name = jstring(output, "name");
-            name = splBasename(name);
+            name = getSPLCompatibleName(name);
 
             if (!first.get()) {
                 sb.append("; ");
@@ -250,7 +298,7 @@ class OperatorGenerator {
 
         if (!singlePortSingleName) {
             String name = jstring(op, "name");
-            name = splBasename(name);
+            name = getSPLCompatibleName(name);
 
             sb.append("as ");
             sb.append(name);
@@ -291,12 +339,12 @@ class OperatorGenerator {
             stringArray(input, "connections", name -> {
                 if (!firstStream.getAndSet(false))
                     sb.append(", ");
-                sb.append(splBasename(name));
+                sb.append(getSPLCompatibleName(name));
             });
 
             if (!singleName) {
                 sb.append(" as ");
-                sb.append(splBasename(portName));
+                sb.append(getSPLCompatibleName(portName));
             }
         });
 
@@ -321,7 +369,7 @@ class OperatorGenerator {
                 sb.append("  window\n");
 
             sb.append("    ");
-            sb.append(splBasename(jstring(input, "name")));
+            sb.append(getSPLCompatibleName(jstring(input, "name")));
             sb.append(":");
             switch (type) {
             case TYPE_SLIDING:
@@ -500,7 +548,7 @@ class OperatorGenerator {
 
             StringBuilder assignsSb = new StringBuilder();
             String name = jstring(output, "name");
-            name = splBasename(name);
+            name = getSPLCompatibleName(name);
             assignsSb.append(name);
             assignsSb.append(":\n");
 

@@ -17,14 +17,9 @@
 #ifndef __SPL__SPLPY_FUNCOP_H
 #define __SPL__SPLPY_FUNCOP_H
 
-#include "splpy_general.h"
-#include "splpy_setup.h"
 #include "splpy_op.h"
-#include "splpy_ec_api.h"
 
 #include <SPL/Runtime/Operator/ParameterValue.h>
-#include <SPL/Runtime/Operator/OperatorContext.h>
-#include <SPL/Runtime/Operator/Operator.h>
 
 namespace streamsx {
   namespace topology {
@@ -38,9 +33,11 @@ class SplpyFuncOp : public SplpyOp {
          addAppPythonPackages();
          loadAndWrapCallable(wrapfn);
       }
- 
+
       ~SplpyFuncOp() {
       }
+
+
 
   private:
 
@@ -79,9 +76,16 @@ class SplpyFuncOp : public SplpyOp {
 #endif
           }
 
+          PyObject *extraArg = NULL;
+          if (op()->getNumberOfOutputPorts() == 1) {
+              extraArg = streamsx::topology::Splpy::pyAttributeNames(
+               op()->getOutputPortAt(0));
+          }
+
           setCallable(SplpyGeneral::callFunction(
-               "streamsx.topology.runtime", wrapfn, appCallable, NULL));
+               "streamsx.topology.runtime", wrapfn, appCallable, extraArg));
       }
+
 
       /*
        *  Add any packages in the application directory

@@ -24,9 +24,6 @@ using namespace streamsx::topology;
  spl_pip_packages($model, \@packages);
  
  my $iport = $model->getInputPortAt(0);
- my $itupleType = $iport->getSPLTupleType();
- my @inames = SPL::CodeGen::Type::getAttributeNames($itupleType);
- my @itypes = SPL::CodeGen::Type::getAttributeTypes($itupleType);
 
  my $inputAttrs2Py = $iport->getNumberOfAttributes();
  if ($fixedParam != -1) {
@@ -43,32 +40,28 @@ using namespace streamsx::topology;
   my @onames = SPL::CodeGen::Type::getAttributeNames($otupleType);
   my @otypes = SPL::CodeGen::Type::getAttributeTypes($otupleType);
  
-  my $ituple = $iport->getCppTupleName();
-  
 %>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    pyop_(NULL),
-   pyInNames_(NULL),
-   pyOutNames_(NULL)
+   pyInNames_(NULL)
 {
    PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
    
    {
       SplpyGIL lock;
-      pyOutNames_ = Splpy::pyAttributeNames(getOutputPortAt(0));
+      PyObject * pyOutNames = Splpy::pyAttributeNames(getOutputPortAt(0));
 
      // Now create the wrapper function that converts
      // other types returned by the user's function
      // (e.g. dictionaries) to Python tuples as the
      // decorated operators only handle tuples to
      // simplify the generated code.
-     Py_INCREF(pyOutNames_); // callFunction steals the reference
      callable = SplpyGeneral::callFunction(
              "streamsx.spl.runtime", "_splpy_to_tuples",
-             callable, pyOutNames_);   
+             callable, pyOutNames);   
 
 <% if ($paramStyle eq 'dictionary') { %>
       pyInNames_ = Splpy::pyAttributeNames(
@@ -86,9 +79,7 @@ MY_OPERATOR::~MY_OPERATOR()
    SplpyGIL lock;
    if (pyInNames_)
       Py_DECREF(pyInNames_);
-   if (pyOutNames_)
-      Py_DECREF(pyOutNames_);
-    }
+   }
 
    delete pyop_;
 }
@@ -108,21 +99,17 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
 
-   std::vector<OPort0Type> output_tuples;  
-   {
-    // Don't hold the lock across submission
-    SplpyGIL lock;
+ // GIL is released across submission
+ SplpyGIL lock;
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
 
  @include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
    
-    }
- for(int i = 0; i < output_tuples.size();i++)
-   submit(output_tuples[i], 0);   
 }
 
 // Create member function that converts Python tuple to SPL tuple
+@include  "../../opt/.__splpy/common/py_valueToTuples.cgt"
 @include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
 
 // Punctuation processing

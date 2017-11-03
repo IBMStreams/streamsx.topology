@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.2.1.1" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <toolkit name="tk17" requiredProductVersion="4.0.1.0" version="1.0.0">
+    <description>Automatic generated toolkit description file.</description>
+    <uriTable>
+      <uri index="3" value="opt/.__splpy/icons/python-powered32.gif"/>
+      <uri index="2" value="opt/.__splpy/icons/python-powered16.gif"/>
+      <uri index="4" value="com.ibm.streamsx.topology.pytest.tk17/M17F"/>
+      <uri index="1" value="com.ibm.streamsx.topology.pytest.tk17/M17C"/>
+    </uriTable>
+    <namespace name="com.ibm.streamsx.topology.pytest.tk17">
+      <primitiveOp language="Cpp" modelUriIndex="1" name="M17C" public="true">
+        <description>
+Callable: M17C
+
+# Python
+    class M17C(object):
+        def __init__(self, x):
+            self.x = x
+        def __call__(self, *t):
+            return t + ('1.7','C', self.x)
+
+      </description>
+        <images>
+          <image size="16" uriIndex="2"/>
+          <image size="32" uriIndex="3"/>
+        </images>
+        <parameter cardinality="1" expressionMode="AttributeFree" name="x" optional="false" type="">
+          <description/>
+        </parameter>
+        <inputPort maxNumPorts="1" minNumPorts="1" optional="false" windowPunctInputMode="Oblivious">
+          <description>
+
+           Tuple attribute values are passed by position to the Python callable.
+                 
+        </description>
+          <windowPolicy>NonWindowed</windowPolicy>
+        </inputPort>
+        <outputPort expressionMode="Nonexistent" maxNumPorts="1" minNumPorts="1" optional="false" windowPunctOutputMode="Preserving"/>
+      </primitiveOp>
+      <primitiveOp language="Cpp" modelUriIndex="4" name="M17F" public="true">
+        <description>
+Callable: M17F
+
+# Python
+    @spl.map()
+    def M17F(*t):
+        return t + ('1.7','F')
+
+      </description>
+        <images>
+          <image size="16" uriIndex="2"/>
+          <image size="32" uriIndex="3"/>
+        </images>
+        <inputPort maxNumPorts="1" minNumPorts="1" optional="false" windowPunctInputMode="Oblivious">
+          <description>
+
+           Tuple attribute values are passed by position to the Python callable.
+                 
+        </description>
+          <windowPolicy>NonWindowed</windowPolicy>
+        </inputPort>
+        <outputPort expressionMode="Nonexistent" maxNumPorts="1" minNumPorts="1" optional="false" windowPunctOutputMode="Preserving"/>
+      </primitiveOp>
+    </namespace>
+    <sabFiles>
+      <ti:include path="toolkit.xml" root="toolkitDir"/>
+      <ti:include path="impl/java/lib/**" root="toolkitDir"/>
+      <ti:include path="impl/java/bin/**" root="toolkitDir"/>
+      <ti:include path="impl/bin/**" root="toolkitDir"/>
+      <ti:include path="impl/lib/**" root="toolkitDir"/>
+      <ti:include path="impl/nl/*.dat" root="toolkitDir"/>
+      <ti:include path="etc/**" root="toolkitDir"/>
+      <ti:include path="lib/**" root="toolkitDir"/>
+      <ti:include path="nl/**" root="toolkitDir"/>
+      <ti:include path="opt/**" root="toolkitDir"/>
+    </sabFiles>
+  </toolkit>
+
+</toolkitModel>

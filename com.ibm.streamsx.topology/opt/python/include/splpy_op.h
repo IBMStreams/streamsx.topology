@@ -17,8 +17,9 @@
 #ifndef __SPL__SPLPY_OP_H
 #define __SPL__SPLPY_OP_H
 
-#include "splpy_general.h"
 #include "splpy_ec_api.h"
+#include "splpy_general.h"
+#include "splpy_setup.h"
 
 namespace streamsx {
   namespace topology {

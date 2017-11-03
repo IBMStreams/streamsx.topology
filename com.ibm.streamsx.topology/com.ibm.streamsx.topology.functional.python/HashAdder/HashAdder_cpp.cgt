@@ -49,26 +49,21 @@ void MY_OPERATOR::prepareToShutdown()
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
-  IPort0Type const &ip = static_cast<IPort0Type const &>(tuple);
+@include "../pyspltuple2value.cgt"
 
-<%
-print splpy_inputtuple2value($pystyle);
-%>
-
-<%if ($pystyle eq 'dict') {%>
-@include "../pyspltuple2dict.cgt"
+<%if ($pystyle eq 'dict' || $pystyle eq 'tuple') {%>
 
   OPort0Type otuple;
-  otuple.assignFrom(ip, false);
+  otuple.assignFrom(<%=$iport->getCppTupleName()%>, false);
   otuple.set___spl_hash(streamsx::topology::Splpy::pyTupleHash(funcop_->callable(), value));
 
-<%}%>
+<%} else { %>
 
-<%if ($pystyle ne 'dict') {%>
-
+  // value is the first matching attribute and an SPL:: reference
   OPort0Type otuple(value,
        streamsx::topology::Splpy::pyTupleHash(funcop_->callable(), value));
 <%}%>
+
   // submit tuple
   submit(otuple, 0);
 }
