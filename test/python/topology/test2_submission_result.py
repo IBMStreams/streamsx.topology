@@ -3,6 +3,8 @@ from streamsx.topology.tester import Tester
 from streamsx.topology.topology import Topology
 from streamsx.topology.context import ConfigParams
 from streamsx import rest
+import os
+import fnmatch
 
 import test_vers
 
@@ -46,7 +48,7 @@ class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
         tester.local_check = self._correct_job_ids
         tester.test(self.test_ctxtype, self.test_config)
 
-    @unittest.expectedFailure
+
     def test_fetch_logs_on_failure(self):
         topo = Topology("fetch_logs_on_failure")
         s = topo.source(["foo"])
@@ -55,4 +57,23 @@ class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
         # Causes test to fail
         tester.contents(s, ["bar"])
 
-        tester.test(self.test_ctxtype, self.test_config)
+        try:
+            tester.test(self.test_ctxtype, self.test_config)
+        except AssertionError:
+            # This test is expected to fail, do nothing.
+            pass
+
+        # Check if logs were downloaded
+        to_remove = None
+        for f in os.listdir('.'):
+            if fnmatch.fnmatch(f, "test2_submission_resultfetch_logs_on_failure*app_logs.tar"):
+                to_remove = f
+                break
+
+        self.assertTrue(to_remove is not None, "Application logs were not downloaded on test failure")
+
+        if to_remove:
+            os.remove(to_remove)
+
+            
+                
