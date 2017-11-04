@@ -407,6 +407,9 @@ class Tester(object):
         raising an error.
 
         The test fails if the job is unhealthy, any condition fails or the local check callable (if present) raised an exception.
+        In the event that the test fails when submitting to the `ANALYTICS_SERVICE` context, the application logs are retrieved as
+        a tar file and are saved to the current working directory. The filesystem path to the application logs is saved in the
+        tester's result object under the `application_logs` key, i.e. `tester.result['application_logs']`
 
         Args:
             ctxtype(str): Context type for submission.
@@ -416,6 +419,7 @@ class Tester(object):
             password(str): password for distributed tests
 
         Attributes:
+            result: The result of the test. This can contain exit codes, application log paths, or other relevant test information.
             submission_result: Result of the application submission from :py:func:`~streamsx.topology.context.submit`.
             streams_connection(StreamsConnection): Connection object that can be used to interact with the REST API of
                 the Streaming Analytics service or instance.
@@ -521,7 +525,8 @@ class Tester(object):
         self.result['submission_result'] = self.submission_result
 
         if not self.result['passed']:
-            self._fetch_application_logs(ctxtype)
+            path = self._fetch_application_logs(ctxtype)
+            self.result['application_logs'] = path
 
         cc._canceljob(self.result)
         if hasattr(self, 'local_check_exception') and self.local_check_exception is not None:
@@ -532,7 +537,8 @@ class Tester(object):
         # Fetch the logs if submitting to a Streaming Analytics Service
         if stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype:
             application_logs = self.submission_result.job.get_application_logs()
-            _logger.info("Application logs have been fetched to " + application_logs)                
+            _logger.info("Application logs have been fetched to " + application_logs)
+            return application_logs
 
     def _start_local_check(self):
         self.local_check_exception = None

@@ -64,16 +64,13 @@ class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
             pass
 
         # Check if logs were downloaded
-        to_remove = None
-        for f in os.listdir('.'):
-            if fnmatch.fnmatch(f, "test2_submission_resultfetch_logs_on_failure*app_logs.tar"):
-                to_remove = f
-                break
+        logs = tester.result['application_logs']
+        exists = os.path.isfile(logs)
 
-        self.assertTrue(to_remove is not None, "Application logs were not downloaded on test failure")
+        self.assertTrue(exists, "Application logs were not downloaded on test failure")
 
-        if to_remove:
-            os.remove(to_remove)
+        if exists:
+            os.remove(logs)
 
             
                 
