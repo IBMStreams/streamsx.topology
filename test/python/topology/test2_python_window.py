@@ -199,13 +199,19 @@ class TestPythonWindowing(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_WindowPunctuation(self):
+        """Trigger an aggregation 4 times. Ensure that window punctuations are submitted each time
+        by writing them to an output file, and then verifying that the file contains the correct
+        contents."""
         topo = Topology()
         s = topo.source([1,2,3,4])
 
+        # Aggregate and write to file.
         s = s.last(1).trigger(1).aggregate(lambda x: None)
         op_params = {'file' : 'punct_file', 'writePunctuations' : True, 'flushOnPunctuation' : True}
         op.Sink("spl.adapter::FileSink", s, params = op_params)
 
+        # Copy the config, since it's shared across all tests, and not every test needs a data
+        # directory.
         cfg = self.test_config.copy()
         jc = context.JobConfig(data_directory=os.getcwd())
         jc.add(cfg)
@@ -215,6 +221,7 @@ class TestPythonWindowing(unittest.TestCase):
 
         path = os.path.join(os.getcwd(), 'punct_file')
         
+        # Validate the contents of the file.
         with open(path, 'r') as f:
             file_contents = f.read()
             self.assertTrue(file_contents == expected_contents)
