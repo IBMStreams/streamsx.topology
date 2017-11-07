@@ -407,7 +407,7 @@ class Tester(object):
         raising an error.
 
         The test fails if the job is unhealthy, any condition fails or the local check callable (if present) raised an exception.
-        In the event that the test fails when submitting to the `ANALYTICS_SERVICE` context, the application logs are retrieved as
+        In the event that the test fails when submitting to the `STREAMING_ANALYTICS_SERVICE` context, the application logs are retrieved as
         a tar file and are saved to the current working directory. The filesystem path to the application logs is saved in the
         tester's result object under the `application_logs` key, i.e. `tester.result['application_logs']`
 
