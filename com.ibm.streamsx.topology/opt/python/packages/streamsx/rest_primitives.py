@@ -411,13 +411,15 @@ class Job(_ResourceElement):
         If logs are retrieved with the same path and name as previously retrieved logs, the prior logs will be
         overwritten.
 
-        Attributes:
+        Args:
             path (str): a valid directory in which to save the application log output. Defaults to current dir.
             prefix (str): the prefix of the filename of the created tar file. Defaults to a prefix based on the job name.
 
-         Returns:
+        Returns:
             str: the path to the application logs tar file.
-         """
+
+        .. versionadded:: 1.8
+        """
         logger.debug("Retrieving application logs from: " + self.applicationLogTrace)
         logs = self.rest_client.make_raw_streaming_request(self.applicationLogTrace)
         
