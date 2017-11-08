@@ -11,7 +11,7 @@
  * </p>
  * 
  * <p>
- * For the IBM Streams product, a {@link com.ibm.streamsx.rest.StreamsConnectionImpl
+ * For the IBM Streams product, a {@link com.ibm.streamsx.rest.AbstractStreamsConnection
  * Streams Connection} object is created to access the rest of the resourceTypes
  * in the instance.
  * </p>

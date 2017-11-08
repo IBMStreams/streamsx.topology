@@ -6,6 +6,8 @@ package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 
+import com.google.gson.JsonObject;
+
 /**
  * Connection to a Streaming Analytics Instance
  *
@@ -28,8 +30,9 @@ class StreamingAnalyticsConnectionV1 extends AbstractStreamingAnalyticsConnectio
      * @throws IOException
      */
     StreamingAnalyticsConnectionV1(String userName, String authToken,
-            String resourcesUrl, String jobsUrl) throws IOException {
-        super(userName, authToken, resourcesUrl, jobsUrl);
+            String resourcesUrl, JsonObject credentials) throws IOException {
+        super(StreamsRestUtils.createBasicAuth(userName, authToken),
+                resourcesUrl, credentials);
     }
 
     /**
@@ -45,7 +48,14 @@ class StreamingAnalyticsConnectionV1 extends AbstractStreamingAnalyticsConnectio
      * @throws IOException
      */
     public boolean cancelJob(String jobId) throws IOException {
+        String restUrl = StreamsRestUtils.getRequiredMember(credentials, "rest_url");
+        String jobsUrl = restUrl + StreamsRestUtils.getRequiredMember(credentials, "jobs_path");
         return delete(jobsUrl + "?job_id=" + jobId);
+    }
+
+    @Override
+    protected String getAuthorization() {
+        return authorization;
     }
 
 }

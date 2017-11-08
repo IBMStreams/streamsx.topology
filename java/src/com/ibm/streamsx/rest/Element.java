@@ -24,12 +24,12 @@ public abstract class Element {
     
     private static final Gson pretty = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
     
-    private StreamsConnectionImpl connection;
+    private AbstractStreamsConnection connection;
     
     @Expose
     private String self;
     
-    StreamsConnectionImpl connection() {
+    AbstractStreamsConnection connection() {
         return connection;
     }
     
@@ -37,10 +37,10 @@ public abstract class Element {
         return self;
     }
     
-    void setConnection(StreamsConnectionImpl connection) {
+    void setConnection(AbstractStreamsConnection connection) {
         this.connection = connection;
     }
-    void setConnection(StreamsConnectionImpl connection, String self) {
+    void setConnection(AbstractStreamsConnection connection, String self) {
         this.connection = connection;
         this.self = self;
     }

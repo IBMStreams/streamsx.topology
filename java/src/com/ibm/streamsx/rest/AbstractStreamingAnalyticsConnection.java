@@ -1,3 +1,8 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+ */
+
 package com.ibm.streamsx.rest;
 
 import java.io.IOException;
@@ -11,18 +16,22 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.util.EntityUtils;
 
+import com.google.gson.JsonObject;
+
 /**
  * Common code for implementations of {@link StreamingAnalyticsConnection}
  */
-abstract class AbstractStreamingAnalyticsConnection extends StreamsConnectionImpl implements StreamingAnalyticsConnection {
+abstract class AbstractStreamingAnalyticsConnection 
+        extends AbstractStreamsConnection
+        implements StreamingAnalyticsConnection {
+
     private static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.AbstractStreamingAnalyticsConnection");
 
-    protected String jobsUrl;
+    protected JsonObject credentials;
 
-    AbstractStreamingAnalyticsConnection(String userName, String authToken,
-            String resourcesUrl, String jobsUrl) throws IOException {
-        super(userName, authToken, resourcesUrl, false);
-        this.jobsUrl = jobsUrl;
+    AbstractStreamingAnalyticsConnection(String authorization,
+            String resourcesUrl, JsonObject credentials) throws IOException {
+        super(authorization, resourcesUrl, false);
     }
 
     /**
@@ -50,7 +59,7 @@ abstract class AbstractStreamingAnalyticsConnection extends StreamsConnectionImp
 
         Request request = Request
                 .Delete(deleteJobUrl)
-                .addHeader(AUTH.WWW_AUTH_RESP, getApiKey())
+                .addHeader(AUTH.WWW_AUTH_RESP, getAuthorization())
                 .useExpectContinue();
 
         Response response = executor.execute(request);

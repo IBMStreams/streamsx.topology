@@ -7,13 +7,14 @@ package com.ibm.streamsx.rest;
 import java.io.IOException;
 
 /**
- * The initial interface for interacting with the REST API of the Streaming
- * Analytics Service on IBM Bluemix. Since Streaming Analytics Service has a
- * single Streams instance, this extends {@link StreamsConnection} and adds a
- * convenience method {@link getInstance} to get the single instance.
+ * The initial interface for interacting with the REST API of a Streams instance
+ * on the Streaming Analytics Service on IBM Bluemix. Since Streaming Analytics
+ * Service has a single Streams instance (at least for now), this extends
+ * {@link StreamsConnection} and adds a convenience method {@link getInstance}
+ * to get the single instance.
  * <p>
  * Concrete instances are created with the factory methods in
- * {@link StreamsConnectionFactory}
+ * {@link StreamsRestFactory}
  */
 public interface StreamingAnalyticsConnection extends StreamsConnection {
     /**

@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * The initial interface for interacting with the REST API of Streams.
  * Concrete instances are created with the factory methods in
- * {@link StreamsConnectionFactory}
+ * {@link StreamsRestFactory}
  */
 public interface StreamsConnection {
 

@@ -75,7 +75,7 @@ public class ProcessingElement extends Element {
     @Expose
     private String tracingLevel;
 
-    final static List<ProcessingElement> getPEList(StreamsConnectionImpl sc, String peGSONList) {
+    final static List<ProcessingElement> getPEList(AbstractStreamsConnection sc, String peGSONList) {
         List<ProcessingElement> peList;
         try {
             ProcessingElementArray peArray = gson.fromJson(peGSONList, ProcessingElementArray.class);
