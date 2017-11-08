@@ -72,3 +72,8 @@ class Range:
         # Use zip to convert the single returned value
         # into a tuple to allow it to be returned to SPL
         return zip(range(self.count))
+
+@spl.source()
+def Range37():
+    """Sample of a function as a source operator."""
+    return zip(range(37))
