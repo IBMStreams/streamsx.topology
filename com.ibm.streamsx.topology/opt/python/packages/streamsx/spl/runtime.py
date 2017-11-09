@@ -10,8 +10,15 @@
 # generated). When the iteration stops
 # the wrapper function returns None.
 #
+# There are two possibilities:
+# a) iterable is a decorated class and is iterable
+# b) iterable is a decorated function that returns an iterator
+#
 def _splpy_iter_source(iterable) :
-  it = iter(iterable)
+  try:
+      it = iter(iterable)
+  except TypeError:
+      it = iterable()
   def _wf():
      try:
         while True:
