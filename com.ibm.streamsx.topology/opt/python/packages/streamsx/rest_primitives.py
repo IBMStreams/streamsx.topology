@@ -1182,6 +1182,45 @@ class StreamingAnalyticsService(object):
     def _get_url(self, req_name):
         return self._credentials['rest_url'] + self._credentials[req_name]
 
+    def submit_job(self, sab_file, application_name,  parameters=[], configuration={}, tracing='info' ):
+        """Submit a compiled Streams Application Bundle (a SAB file) to run in this Streamin Analytics service.
+        
+        Args:
+        sab_file (string): path to the compiled SAB file containing the application to be submitted
+        application_name (string): name of the application in the SAB file
+        parameters (list of {name/value} pairs, optional): application's submission-time parameters
+        configuration (dict, optional): hash of deployment configuration parameters 
+        tracing (string, optional): one of 'off', 'error', 'warn', 'info',' debug', or 'trace', defaults to 'info'
+        
+        For details of job configuration overlays, see:
+        https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/job_configuration_overlays.html
+        https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html
+        
+        Returns:
+        dict: JSON response with name of submitted job
+        """
+
+        jobURL = self._get_url('jobs_path')
+        
+        jobParameters = { 'bundle_id': application_name + ".sab" }
+        
+        jobOptions = {
+            'jobConfigOverlays': [
+                { 'jobConfig': {
+                        'submissionParameters': parameters,
+                        'tracing': tracing },
+                  'deploymentConfig': configuration
+                  }
+                ]
+            }
+        
+        jobFiles = [
+            ('sab_file', ( application_name,  open(sab_file, 'rb'), 'application/octet-stream' ) ),
+            ('job_options', ( 'job_options', json.dumps(jobOptions), 'application/json' ) )
+            ]
+        
+        return self.rest_client.session.post(url=jobURL, params=jobParameters, files=jobFiles).json()
+
     def cancel_job(self, job_id=None, job_name=None):
         """Cancel a running job.
 
