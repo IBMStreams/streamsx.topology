@@ -1182,41 +1182,28 @@ class StreamingAnalyticsService(object):
     def _get_url(self, req_name):
         return self._credentials['rest_url'] + self._credentials[req_name]
 
-    def submit_job(self, sab_file, application_name,  parameters=[], configuration={}, tracing='info' ):
-        """Submit a compiled Streams Application Bundle (a SAB file) to run in this Streamin Analytics service.
+    def submit_job(self, sab_file, configuration=None):
+        """Submit a compiled Streams Application Bundle (a SAB file) to run in this Streamin Analytics service, optionally with a job configuration overlay.
         
         Args:
-        sab_file (string): path to the compiled SAB file containing the application to be submitted
-        application_name (string): name of the application in the SAB file
-        parameters (list of {name/value} pairs, optional): application's submission-time parameters
-        configuration (dict, optional): hash of deployment configuration parameters 
-        tracing (string, optional): one of 'off', 'error', 'warn', 'info',' debug', or 'trace', defaults to 'info'
+        sab_file(str): path to a compiled SAB file containing the application to be submitted
+        configuration(dict): job configuration overlay containing application parameters, deployment options, tracing level, etc.
         
         For details of job configuration overlays, see:
         https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/job_configuration_overlays.html
         https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html
         
         Returns:
-        dict: JSON response with name of submitted job
+        dict: JSON response from service with name of submitted job, or, error status code and description
         """
 
         jobURL = self._get_url('jobs_path')
         
-        jobParameters = { 'bundle_id': application_name + ".sab" }
-        
-        jobOptions = {
-            'jobConfigOverlays': [
-                { 'jobConfig': {
-                        'submissionParameters': parameters,
-                        'tracing': tracing },
-                  'deploymentConfig': configuration
-                  }
-                ]
-            }
+        jobParameters = { 'bundle_id': os.path.basename(sab_file) }
         
         jobFiles = [
-            ('sab_file', ( application_name,  open(sab_file, 'rb'), 'application/octet-stream' ) ),
-            ('job_options', ( 'job_options', json.dumps(jobOptions), 'application/json' ) )
+            ('sab_file', ( os.path.basename(sab_file),  open(sab_file, 'rb'), 'application/octet-stream' ) ),
+            ('job_options', ( 'job_options', json.dumps( {} if configuration is None else configuration ), 'application/json' ) )
             ]
         
         return self.rest_client.session.post(url=jobURL, params=jobParameters, files=jobFiles).json()
@@ -1229,7 +1216,7 @@ class StreamingAnalyticsService(object):
             job_name (str, optional): Name of job to be canceled.
 
         Returns:
-            dict: JSON response for the job cancel operation.
+            dict: JSON response from service for the job cancel operation.
         """
         payload = {}
         if job_name is not None:
@@ -1244,7 +1231,7 @@ class StreamingAnalyticsService(object):
         """Start the instance for this Streaming Analytics service.
 
         Returns:
-            dict: JSON response for the instance start operation.
+            dict: JSON response from service for the instance start operation.
         """
         start_url = self._get_url('start_path')
         return self.rest_client.session.put(start_url, json={}).json()
@@ -1262,7 +1249,7 @@ class StreamingAnalyticsService(object):
         """Get the status the instance for this Streaming Analytics service.
 
         Returns:
-            dict: JSON response for the instance status operation.
+            dict: JSON response from service for the instance status operation.
         """
         status_url = self._get_url('status_path')
         return self.rest_client.session.get(status_url).json()
