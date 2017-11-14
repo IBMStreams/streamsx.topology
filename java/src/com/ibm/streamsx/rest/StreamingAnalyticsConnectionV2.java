@@ -14,17 +14,13 @@ import com.google.gson.JsonObject;
 
 public class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnection {
 
-    private static final String MEMBER_EXPIRATION = "expiration";
-    private static final String MEMBER_ACCESS_TOKEN = "access_token";
-    private static final long MS = 1000L;
-    private static final long EXPIRY_PAD_MS = 300 * MS;
-
     private long authExpiryTime;
     private String jobsUrl;
 
     StreamingAnalyticsConnectionV2(String authorization, long authExpiryTime,
-            String resourcesUrl, JsonObject credentials) throws IOException {
-        super(authorization, resourcesUrl, credentials);
+            String resourcesUrl, JsonObject credentials, boolean allowInsecure)
+            throws IOException {
+        super(authorization, resourcesUrl, credentials, allowInsecure);
         this.authExpiryTime = authExpiryTime;
     }
 
@@ -35,7 +31,8 @@ public class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsCo
     // I/O that typically follows using the returned authorization.
     @Override
     synchronized protected String getAuthorization() {
-        if (System.currentTimeMillis() > authExpiryTime) {
+        if (authorization == null ||
+                System.currentTimeMillis() > authExpiryTime) {
             refreshAuthorization();
         }
         return authorization;
@@ -44,13 +41,13 @@ public class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsCo
     private void refreshAuthorization() {
         String tokenUrl = StreamsRestUtils.getTokenUrl(credentials);
         String apiKey = StreamsRestUtils.getServiceApiKey(credentials);
-        JsonObject response = StreamsRestUtils.getToken(tokenUrl, apiKey);
-        if (null != response && response.has(MEMBER_ACCESS_TOKEN)
-                && response.has(MEMBER_EXPIRATION)) {
-            String accessToken = response.get(MEMBER_ACCESS_TOKEN).getAsString();
-            setAuthorization(StreamsRestUtils.createBearerAuth(accessToken));
-            long expirySecs = response.get(MEMBER_EXPIRATION).getAsLong();
-            authExpiryTime = (expirySecs * MS) - EXPIRY_PAD_MS;
+        JsonObject response = StreamsRestUtils.getTokenResponse(tokenUrl, apiKey);
+        if (null != response) {
+            String accessToken = StreamsRestUtils.getToken(response);
+            if (null != accessToken) {
+                setAuthorization(StreamsRestUtils.createBearerAuth(accessToken));
+                authExpiryTime = StreamsRestUtils.getTokenExpiryMillis(response);
+            }
         }
     }
 

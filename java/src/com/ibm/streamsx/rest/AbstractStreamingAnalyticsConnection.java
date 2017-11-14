@@ -30,8 +30,10 @@ abstract class AbstractStreamingAnalyticsConnection
     protected JsonObject credentials;
 
     AbstractStreamingAnalyticsConnection(String authorization,
-            String resourcesUrl, JsonObject credentials) throws IOException {
-        super(authorization, resourcesUrl, false);
+            String resourcesUrl, JsonObject credentials, boolean allowInsecure)
+            throws IOException {
+        super(authorization, resourcesUrl, allowInsecure);
+        this.credentials = credentials;
     }
 
     /**

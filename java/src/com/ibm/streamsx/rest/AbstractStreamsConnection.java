@@ -22,6 +22,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -32,10 +33,11 @@ abstract class AbstractStreamsConnection implements StreamsConnection {
     private static final String INSTANCES_RESOURCE_NAME = "instances";
     private static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamsConnection");
 
-    private String instancesUrl;
+    private final String resourcesUrl;
 
-    protected String authorization;
     protected Executor executor;
+    protected String authorization;
+    protected String instancesUrl;
 
     abstract protected String getAuthorization();
 
@@ -51,8 +53,10 @@ abstract class AbstractStreamsConnection implements StreamsConnection {
      *            String representing the root url to the REST API resources,
      *            for example: https://server:port/streams/rest/resources
      */
-    AbstractStreamsConnection(String authorization, String resourcesUrl, boolean allowInsecure) throws IOException {
-        setAuthorization(authorization);
+    AbstractStreamsConnection(String authorization, String resourcesUrl,
+            boolean allowInsecure) throws IOException {
+        this.authorization = authorization;
+        this.resourcesUrl = resourcesUrl;
         // Create the executor with a custom verifier if insecure connections
         // were requested
         try {
@@ -77,21 +81,28 @@ abstract class AbstractStreamsConnection implements StreamsConnection {
             executor = Executor.newInstance();
             traceLog.info("Could not set up Insecure Host Connection");
         }
+    }
 
-        // Query the resourcesUrl to find the instances URL
-        String response = getResponseString(resourcesUrl);
-        ResourcesArray resources = new GsonBuilder()
-                .excludeFieldsWithoutExposeAnnotation()
-                .create().fromJson(response, ResourcesArray.class);
-        for (Resource resource : resources.resources) {
-            if (INSTANCES_RESOURCE_NAME.equals(resource.name)) {
-                instancesUrl = resource.resource;
-                break;
-            }
-        }
+    /**
+     * Must be called after construction once to initialize the connection.
+     */
+    synchronized void init() throws IOException, JsonSyntaxException {
         if (null == instancesUrl) {
-            // If we couldn't find instances something is wrong
-            throw new RESTException("Unable to find instances resource from resources URL: " + resourcesUrl);
+            // Query the resourcesUrl to find the instances URL
+            String response = getResponseString(resourcesUrl);
+            ResourcesArray resources = new GsonBuilder()
+                    .excludeFieldsWithoutExposeAnnotation()
+                    .create().fromJson(response, ResourcesArray.class);
+            for (Resource resource : resources.resources) {
+                if (INSTANCES_RESOURCE_NAME.equals(resource.name)) {
+                    instancesUrl = resource.resource;
+                    break;
+                }
+            }
+            if (null == instancesUrl) {
+                // If we couldn't find instances something is wrong
+                throw new RESTException("Unable to find instances resource from resources URL: " + resourcesUrl);
+            }
         }
     }
 

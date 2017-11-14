@@ -56,9 +56,11 @@ public class StreamsRestFactory {
     public static StreamsConnection createStreamsConnection(String userName,
             String authToken, String resourcesUrl)
                     throws IOException {
-        return new StreamsConnectionImpl(userName,
+        StreamsConnectionImpl connection = new StreamsConnectionImpl(userName,
                 StreamsRestUtils.createBasicAuth(userName, authToken),
                 resourcesUrl, false);
+        connection.init();
+        return connection;
     }
 
     /**
@@ -83,9 +85,11 @@ public class StreamsRestFactory {
     public static StreamsConnection createStreamsConnection(String userName,
             String authToken, String resourcesUrl, boolean allowInsecure)
                     throws IOException {
-        return new StreamsConnectionImpl(userName,
+        StreamsConnectionImpl connection = new StreamsConnectionImpl(userName,
                 StreamsRestUtils.createBasicAuth(userName, authToken),
                 resourcesUrl, allowInsecure);
+        connection.init();
+        return connection;
     }
 
     /**
@@ -101,13 +105,34 @@ public class StreamsRestFactory {
      */
     public static StreamingAnalyticsConnection createStreamingAnalyticsConnection(
             String vcap, String serviceName) throws IOException {
+        return createStreamingAnalyticsConnection(vcap, serviceName, false);
+    }
+
+    /**
+     * Connect to IBM Streaming Analytics Service instance's Streams REST API
+     * given a VCAP file and service name.
+     *
+     * @param vcap
+     *            Path to VCAP file or representation of VCAP in JSON
+     * @param serviceName
+     *            Name of the service in vcap
+     * @param allowInsecure
+     *            Flag to allow insecure TLS/SSL connections. This is
+     *            <strong>not</strong> recommended in a production environment.
+     * @return a connection to IBM Streaming Analytics service
+     * @throws IOException
+     */
+    public static StreamingAnalyticsConnection createStreamingAnalyticsConnection(
+            String vcap, String serviceName, boolean allowInsecure)
+            throws IOException {
 
         JsonObject config = new JsonObject();
 
         config.addProperty(SERVICE_NAME, serviceName);
         config.addProperty(VCAP_SERVICES, vcap);
 
-        return StreamsRestFactory.createStreamingAnalyticsConnection(config);
+        return StreamsRestFactory.createStreamingAnalyticsConnection(config,
+                allowInsecure);
     }
 
     /**
@@ -126,6 +151,28 @@ public class StreamsRestFactory {
      */
     public static StreamingAnalyticsConnection createStreamingAnalyticsConnection(
             JsonObject config) throws IOException {
+        return createStreamingAnalyticsConnection(config, false);
+    }
+
+    /**
+     * Connect to IBM Streaming Analytics Service instance's Streams REST API
+     * given a configuration.
+     * <p>
+     * The contents of the VCAP in config determine the version of the
+     * Streaming Analytics Service. Version 1 expects "userid" and "password".
+     * Version 2 will use another member name (TBD)
+     * @param config
+     *            JSON configuration, must contain at least
+     *            {@link AnalyticsServiceProperties.VCAP_SERVICES} and
+     *            {@link AnalyticsServiceProperties.SERVICE_NAME} members
+     * @param allowInsecure
+     *            Flag to allow insecure TLS/SSL connections. This is
+     *            <strong>not</strong> recommended in a production environment.
+     * @return a connection to IBM Streaming Analytics service
+     * @throws IOException
+     */
+    public static StreamingAnalyticsConnection createStreamingAnalyticsConnection(
+            JsonObject config, boolean allowInsecure) throws IOException {
 
         // Get the VCAP service based on the config, and extract credentials
         JsonObject service = VcapServices.getVCAPService(config);
@@ -151,15 +198,18 @@ public class StreamsRestFactory {
             // In V1, streams_rest_url is missing /resources
             String streamsResoursesUrl = fixStreamsRestUrl(streamsRestUrl);
 
-            return new StreamingAnalyticsConnectionV1(userId, authToken,
-                    streamsResoursesUrl, credentials);
+            StreamingAnalyticsConnectionV1 connection =
+                    new StreamingAnalyticsConnectionV1(userId, authToken,
+                    streamsResoursesUrl, credentials, allowInsecure);
+            connection.init();
+            return connection;
         }
         case V2:
         {
             // V2: authorization is constructed with IAM and must be renewed
             String tokenUrl = StreamsRestUtils.getTokenUrl(credentials);
             String apiKey = StreamsRestUtils.getServiceApiKey(credentials);
-            JsonObject response = StreamsRestUtils.getToken(tokenUrl, apiKey);
+            JsonObject response = StreamsRestUtils.getTokenResponse(tokenUrl, apiKey);
             if (null != response && response.has(MEMBER_ACCESS_TOKEN)
                     && response.has(MEMBER_EXPIRATION)) {
                 String accessToken = response.get(MEMBER_ACCESS_TOKEN).getAsString();
@@ -168,13 +218,19 @@ public class StreamsRestFactory {
                 // but member name not yet fixed
                 String sasResourcesUrl = StreamsRestUtils.getRequiredMember(credentials, "resources_url");
                 JsonObject sasResources = getServiceResources(authorization, sasResourcesUrl);
-                String streamsRestUrl = StreamsRestUtils.getRequiredMember(sasResources, "streams_rest_url");
-                String streamsResoursesUrl = fixStreamsRestUrl(streamsRestUrl);
+                String instanceUrl = StreamsRestUtils.getRequiredMember(sasResources, "streams_self");
+                // Find root URL
+                String baseUrl = instanceUrl.substring(0, instanceUrl.lastIndexOf("/instances/"));
+                String streamsResoursesUrl = fixStreamsRestUrl(baseUrl);
 
                 long expirySecs = response.get(MEMBER_EXPIRATION).getAsLong();
                 long authExpiryMillis = (expirySecs * MS) - EXPIRY_PAD_MS;
-                return new StreamingAnalyticsConnectionV2(accessToken,
-                        authExpiryMillis, streamsResoursesUrl, credentials);
+                StreamingAnalyticsConnectionV2 connection =
+                        new StreamingAnalyticsConnectionV2(authorization,
+                        authExpiryMillis, streamsResoursesUrl, credentials,
+                        allowInsecure);
+                connection.init();
+                return connection;
             }
             throw new IllegalStateException("Unable to authenticate Streaming Analytics Service");
         }
@@ -184,12 +240,15 @@ public class StreamsRestFactory {
     }
 
     private static String fixStreamsRestUrl(String streamsRestUrl) {
-        final String suffix = "/resources";
-        StringBuilder sb = new StringBuilder(streamsRestUrl.length() + suffix.length());
+        final String suffix = "resources";
+        StringBuilder sb = new StringBuilder(streamsRestUrl.length() + 1 + suffix.length());
         sb.append(streamsRestUrl);
+        if (!streamsRestUrl.endsWith("/")) {
+            sb.append('/');
+        }
         sb.append(suffix);
-        String streamsResoursesUrl = sb.toString();
-        return streamsResoursesUrl;
+        String streamsResourcesUrl = sb.toString();
+        return streamsResourcesUrl;
     }
 
     private static JsonObject getServiceResources(String authorization,

@@ -170,7 +170,6 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
             RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submitting build " + buildName);
             JsonObject build = submitBuild(httpclient, getAuthorization(), archive, buildName);
-            System.err.println("Submit response: " + build.toString());
 
             String buildId = jstring(build, "id");
             String outputId = jstring(build, "output_id");
@@ -178,7 +177,6 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             // Loop until built
             String status = buildStatusGet(buildId, httpclient, getAuthorization());
             while (!status.equals("built")) {
-                System.err.println("Build status: " + status);
                 // 'building', 'notBuilt', and 'waiting' are all states which can eventualy result in 'built'
                 // sleep and continue to monitor
                 if (status.equals("building") || status.equals("notBuilt") || status.equals("waiting")) {
@@ -203,7 +201,6 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
 
             // Now perform archive put
             build = getBuild(buildId, httpclient, getAuthorization());
-            System.err.println("Build result: " + build.toString());
 
             JsonArray artifacts = array(build, "artifacts");
             if (artifacts == null || artifacts.size() == 0) {

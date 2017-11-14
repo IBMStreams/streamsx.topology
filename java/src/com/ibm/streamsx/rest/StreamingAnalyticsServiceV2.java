@@ -28,14 +28,8 @@ import com.ibm.streamsx.topology.context.remote.RemoteContext;
 
 public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
 
-    private static final String MEMBER_EXPIRATION = "expiration";
-    private static final String MEMBER_ACCESS_TOKEN = "access_token";
-    private static final String BUNDLE_ID_PARAM = "bundle_id=";
-    private static final long MS = 1000L;
-    private static final long EXPIRY_PAD_MS = 300 * MS;
-
     private long authExpiryTime = -1L;
-    
+
     private String statusUrl;
     private String jobSubmitUrl;
     private String buildsUrl;
@@ -60,13 +54,13 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
     private void refreshAuthorization() {
         String tokenUrl = StreamsRestUtils.getTokenUrl(credentials);
         String apiKey = StreamsRestUtils.getServiceApiKey(credentials);
-        JsonObject response = StreamsRestUtils.getToken(tokenUrl, apiKey);
-        if (null != response && response.has(MEMBER_ACCESS_TOKEN)
-                && response.has(MEMBER_EXPIRATION)) {
-            String accessToken = response.get(MEMBER_ACCESS_TOKEN).getAsString();
-            setAuthorization(StreamsRestUtils.createBearerAuth(accessToken));
-            long expirySecs = response.get(MEMBER_EXPIRATION).getAsLong();
-            authExpiryTime = (expirySecs * MS) - EXPIRY_PAD_MS;
+        JsonObject response = StreamsRestUtils.getTokenResponse(tokenUrl, apiKey);
+        if (null != response) {
+            String accessToken = StreamsRestUtils.getToken(response);
+            if (null != accessToken) {
+                setAuthorization(StreamsRestUtils.createBearerAuth(accessToken));
+                authExpiryTime = StreamsRestUtils.getTokenExpiryMillis(response);
+            }
         }
     }
 
@@ -84,15 +78,7 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
         if (null == jobSubmitUrl) {
             setUrls(httpclient);
         }
-        String name = URLEncoder.encode(bundle.getName(), StandardCharsets.UTF_8.name());
-        StringBuilder sb = new StringBuilder(jobSubmitUrl.length() + 1
-                + BUNDLE_ID_PARAM.length() + name.length());
-        sb.append(jobSubmitUrl);
-        sb.append('?');
-        sb.append(BUNDLE_ID_PARAM);
-        sb.append(name);
-
-        return sb.toString();
+        return jobSubmitUrl;
     }
 
     @Override
@@ -153,7 +139,6 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
                 + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name())
                 + "&output_id="
                 + URLEncoder.encode(outputId, StandardCharsets.UTF_8.name());
-        System.out.println(buildOutputURL);
         HttpGet httpget = new HttpGet(buildOutputURL);
         httpget.addHeader("Authorization", authorization);
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
@@ -194,23 +179,17 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
     protected JsonObject submitBuildArtifact(CloseableHttpClient httpclient,
             JsonObject jobConfigOverlays, String authorization, String submitUrl)
             throws IOException {
-        System.err.println("Job submit: " + submitUrl);
         HttpPost postArtifact = new HttpPost(submitUrl);
         postArtifact.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         postArtifact.addHeader("Authorization", authorization);
-        postArtifact.addHeader("content-type", ContentType.APPLICATION_JSON.getMimeType());
 
         StringBody paramsBody = new StringBody(jobConfigOverlays.toString(),
                 ContentType.APPLICATION_JSON);
-
         HttpEntity reqEntity = MultipartEntityBuilder.create()
                 .addPart("job_options", paramsBody).build();
-
         postArtifact.setEntity(reqEntity);
 
         JsonObject jso = StreamsRestUtils.getGsonResponse(httpclient, postArtifact);
-        System.err.println("Artifact submit response: " + jso.toString());
-
         RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job response: " + jso.toString());
         return jso;
     }
@@ -227,13 +206,12 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
         HttpPost postJobWithConfig = new HttpPost(url);
         postJobWithConfig.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         postJobWithConfig.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
+
         FileBody bundleBody = new FileBody(bundle, ContentType.APPLICATION_OCTET_STREAM);
         StringBody configBody = new StringBody(jobConfigOverlay.toString(), ContentType.APPLICATION_JSON);
-
         HttpEntity reqEntity = MultipartEntityBuilder.create()
                 .addPart("bundle_file", bundleBody)
                 .addPart("job_options", configBody).build();
-
         postJobWithConfig.setEntity(reqEntity);
 
         JsonObject jsonResponse = StreamsRestUtils.getGsonResponse(httpClient, postJobWithConfig);

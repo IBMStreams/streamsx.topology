@@ -43,6 +43,12 @@ public class StreamsRestUtils {
     private static final String AUTH_BASIC = "Basic ";
     private static final String TOKEN_PARAMS = genTokenParams();
 
+    private static final String MEMBER_EXPIRATION = "expiration";
+    private static final String MEMBER_ACCESS_TOKEN = "access_token";
+
+    private static final long MS = 1000L;
+    private static final long EXPIRY_PAD_MS = 300 * MS;
+
     private static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamsConnectionUtils");
 
     private StreamsRestUtils() {}
@@ -189,7 +195,7 @@ public class StreamsRestUtils {
         return StreamingAnalyticsServiceVersion.UNKNOWN;
     }
 
-    static JsonObject getToken(String iamUrl, String apiKey) {
+    static JsonObject getTokenResponse(String iamUrl, String apiKey) {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             String key = URLEncoder.encode(apiKey, StandardCharsets.UTF_8.name());
             StringBuilder sb = new StringBuilder(iamUrl.length()
@@ -206,6 +212,43 @@ public class StreamsRestUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Given a token request response, return the access token.
+     * @param tokenResponse The response from an earlier call to {@link getToken}
+     * @return The access token, or null.
+     */
+    static String getToken(JsonObject tokenResponse) {
+        String token = null;
+        if (tokenResponse.has(MEMBER_ACCESS_TOKEN)) {
+            token = tokenResponse.get(MEMBER_ACCESS_TOKEN).getAsString();
+        }
+        return token;
+    }
+    /**
+     * Given a token request response, return the expiry time as milliseconds
+     * since the epoch, with default padding before the final expiry deadline.
+     * @param tokenResponse The response from an earlier call to {@link getToken}
+     * @return An expiry time, or 0
+     */
+    static long getTokenExpiryMillis(JsonObject tokenResponse) {
+        return getTokenExpiryMillis(tokenResponse, EXPIRY_PAD_MS);
+    }
+
+    /**
+     * Given a token request response, return the expiry time as milliseconds
+     * since the epoch, with padding before the final expiry deadline.
+     * @param tokenResponse The response from an earlier call to {@link getToken}
+     * @return An expiry time, or 0
+     */
+    static long getTokenExpiryMillis(JsonObject tokenResponse, long padMillis) {
+        long expiryMillis = 0;
+        if (tokenResponse.has(MEMBER_EXPIRATION)) {
+            expiryMillis = tokenResponse.get(MEMBER_EXPIRATION).getAsLong() * MS
+                    - padMillis;
+        }
+        return expiryMillis;
     }
 
     // FIXME: Where does this come from?

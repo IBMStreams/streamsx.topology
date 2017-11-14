@@ -24,15 +24,17 @@ class StreamingAnalyticsConnectionV1 extends AbstractStreamingAnalyticsConnectio
      * @param resourcesUrl
      *            String representing the root url to the REST API resources,
      *            for example: https:server:port/streams/rest/resources
+     * @param allowInsecure 
      * @param jobsUrl
      *            String representing the url to the Streaming Analytics
      *            Service jobs REST API.
      * @throws IOException
      */
     StreamingAnalyticsConnectionV1(String userName, String authToken,
-            String resourcesUrl, JsonObject credentials) throws IOException {
+            String resourcesUrl, JsonObject credentials, boolean allowInsecure)
+            throws IOException {
         super(StreamsRestUtils.createBasicAuth(userName, authToken),
-                resourcesUrl, credentials);
+                resourcesUrl, credentials, allowInsecure);
     }
 
     /**

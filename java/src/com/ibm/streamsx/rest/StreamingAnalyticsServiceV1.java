@@ -69,7 +69,6 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
     protected String getJobSubmitUrl(JsonObject artifact)
             throws UnsupportedEncodingException {
         String artifactId = jstring(artifact, "id");
-        System.err.println("Submitting id: " + artifactId);
         StringBuilder sb = new StringBuilder(500);
         sb.append(jstring(credentials, "rest_url"));
         sb.append(jstring(credentials, "jobs_path").replace("jobs", "builds"));
@@ -124,7 +123,6 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
                 + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name())
                 + "&output_id="
                 + URLEncoder.encode(outputId, StandardCharsets.UTF_8.name());
-        System.out.println(buildOutputURL);
         HttpGet httpget = new HttpGet(buildOutputURL);
         httpget.addHeader("Authorization", authorization);
         httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
@@ -167,7 +165,6 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
     protected JsonObject submitBuildArtifact(CloseableHttpClient httpclient,
             JsonObject jobConfigOverlays, String authorization, String submitUrl)
             throws IOException {
-        System.err.println("Job submit: " + submitUrl);
         HttpPut httpput = new HttpPut(submitUrl);
         httpput.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpput.addHeader("Authorization", authorization);
