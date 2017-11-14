@@ -13,7 +13,7 @@ import com.ibm.streamsx.rest.Metric;
 import com.ibm.streamsx.rest.Operator;
 import com.ibm.streamsx.rest.OutputPort;
 import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
-import com.ibm.streamsx.rest.StreamsConnectionFactory;
+import com.ibm.streamsx.rest.StreamsRestFactory;
 
 /**
  * Sample code to show how to access a Streaming Analytics Instance through the
@@ -39,13 +39,22 @@ public class StreamingAnalyticsConnectionSample {
     public static void main(String[] args) {
         String credentials = args[0];
         String serviceName = args[1];
+        boolean allowInsecure = false;
+
+        /*
+         * This option is only used to by-pass the certificate certification
+         */
+        if (args.length == 3 && "true".equals(args[2])) {
+            allowInsecure = true;
+        }
+
 
         System.out.println(credentials);
         System.out.println(serviceName);
 
         try {
-            StreamingAnalyticsConnection sClient = StreamsConnectionFactory.createStreamingAnalyticsConnection(credentials,
-                    serviceName);
+            StreamingAnalyticsConnection sClient = StreamsRestFactory.createStreamingAnalyticsConnection(credentials,
+                    serviceName, allowInsecure);
 
             Instance instance = sClient.getInstance();
             System.out.println("Instance:" + instance.toString());

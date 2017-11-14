@@ -30,7 +30,7 @@ import com.ibm.streamsx.rest.PEOutputPort;
 import com.ibm.streamsx.rest.ProcessingElement;
 import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.StreamsConnection;
-import com.ibm.streamsx.rest.StreamsConnectionFactory;
+import com.ibm.streamsx.rest.StreamsRestFactory;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
@@ -97,7 +97,7 @@ public class StreamsConnectionTest {
 
             String restUrl = "https://localhost:" + streamsPort + "/streams/rest/resources";
             // for localhost, need to disable security
-            connection = StreamsConnectionFactory.createStreamsConnection(userName, instancePassword, restUrl, true);
+            connection = StreamsRestFactory.createStreamsConnection(userName, instancePassword, restUrl, true);
         }
     }
 
@@ -123,7 +123,7 @@ public class StreamsConnectionTest {
 
         // send in wrong url
         String badUrl = "https://localhost:" + sPort + "/streams/re";
-        StreamsConnection badConn = StreamsConnectionFactory.createStreamsConnection(iName, iPassword, badUrl, true);
+        StreamsConnection badConn = StreamsRestFactory.createStreamsConnection(iName, iPassword, badUrl, true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {
@@ -132,7 +132,7 @@ public class StreamsConnectionTest {
 
         // send in url too long
         String badURL = "https://localhost:" + sPort + "/streams/rest/resourcesTooLong";
-        badConn = StreamsConnectionFactory.createStreamsConnection(iName, iPassword, badURL, true);
+        badConn = StreamsRestFactory.createStreamsConnection(iName, iPassword, badURL, true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {
@@ -141,7 +141,7 @@ public class StreamsConnectionTest {
 
         // send in bad iName
         String restUrl = "https://localhost:" + sPort + "/streams/rest/resources";
-        badConn = StreamsConnectionFactory.createStreamsConnection("fakeName", iPassword, restUrl, true);
+        badConn = StreamsRestFactory.createStreamsConnection("fakeName", iPassword, restUrl, true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {
@@ -149,7 +149,7 @@ public class StreamsConnectionTest {
         }
 
         // send in wrong password
-        badConn = StreamsConnectionFactory.createStreamsConnection(iName, "badPassword", restUrl, true);
+        badConn = StreamsRestFactory.createStreamsConnection(iName, "badPassword", restUrl, true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {

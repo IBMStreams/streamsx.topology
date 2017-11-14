@@ -16,7 +16,7 @@ import com.ibm.streamsx.rest.OutputPort;
 import com.ibm.streamsx.rest.ProcessingElement;
 import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.StreamsConnection;
-import com.ibm.streamsx.rest.StreamsConnectionFactory;
+import com.ibm.streamsx.rest.StreamsRestFactory;
 
 /**
  * This is the main class to show how to use the StreamsConnection.
@@ -50,13 +50,13 @@ public class StreamsConnectionSample {
          * This option is only used to by-pass the certificate certification
          */
         if (args.length == 5 && "true".equals(args[4])) {
-            allowInsecure = false;
+            allowInsecure = true;
         }
 
         /*
          * Create the connection to the instance indicated
          */
-        StreamsConnection sClient = StreamsConnectionFactory.createStreamsConnection(userName, authToken,
+        StreamsConnection sClient = StreamsRestFactory.createStreamsConnection(userName, authToken,
                 url, allowInsecure);
 
         try {
