@@ -405,15 +405,13 @@ class Job(_ResourceElement):
         healthy
     """
     def get_application_logs(self, path=None, prefix=None):
-        """Retrieves the application log and trace files of the job and saves them as a tar file to the specified path
-        with the given name.
+        """Retrieves the console logs and application traces of the job's processing elements (PEs) and stores them in a compressed 'tar' archive (that is, a '.tar.gz' file) with the specified file name in the specified directory path.
 
-        If logs are retrieved with the same path and name as previously retrieved logs, the prior logs will be
-        overwritten.
+        If logs are retrieved with the same path and name as previously retrieved logs, the previous logs will be overwritten.
 
         Args:
-            path (str): a valid directory in which to save the application log output. Defaults to current dir.
-            prefix (str): the prefix of the filename of the created tar file. Defaults to a prefix based on the job name.
+            path (str): the directory in which to save the logs. Defaults to the current directory.
+            prefix (str): the first part of the filename of the compressed 'tar' archive. Defaults to the job name and id.
 
         Returns:
             str: the path to the application logs tar file.
