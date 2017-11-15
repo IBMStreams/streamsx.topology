@@ -2,17 +2,21 @@
 To add another suite of tests, create a file of the form *tests.py. Any classes inside the created module which
 inherit from unittest.TestCase will be added to the list of suites which are run by the test runner. For example
 
-**string_test.py**
+**string_tests.py**
 ```Python
+import unittest
+import logging
+logger = logging.getLogger('string_tests')
 class TestStringFeatures(unittest.TestCase):
     def test_upper(self):
-        unittest.assertEquals("asdf".upper(), "ASDF")
+        logger.debug("Beginning test: test_upper")
+        self.assertEqual("asdf".upper(), "ASDF")
 ```
 
 ## Running tests
 To run the test suite, just invoke
 ```
-python -m unittest discover
+python -m unittest -v string_tests
 ```
 
 Run a subset of tests using the standard Python unittest approaches.

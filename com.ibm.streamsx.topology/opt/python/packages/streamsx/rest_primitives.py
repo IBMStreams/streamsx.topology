@@ -428,7 +428,7 @@ class Job(_ResourceElement):
             prefix = ''.join(self.name.split(':'))
             
         prefix = prefix + "_" + self.id
-        name = prefix + "_app_logs.tar"
+        name = prefix + "_app_logs.tar.gz"
         
         if path is None:
             path = os.getcwd()
@@ -1197,16 +1197,16 @@ class StreamingAnalyticsService(object):
         dict: JSON response from service with name of submitted job, or, error status code and description
         """
 
-        jobURL = self._get_url('jobs_path')
-        
-        jobParameters = { 'bundle_id': os.path.basename(sab_file) }
-        
-        jobFiles = [
-            ('sab_file', ( os.path.basename(sab_file),  open(sab_file, 'rb'), 'application/octet-stream' ) ),
-            ('job_options', ( 'job_options', json.dumps( {} if configuration is None else configuration ), 'application/json' ) )
-            ]
-        
-        return self.rest_client.session.post(url=jobURL, params=jobParameters, files=jobFiles).json()
+        bundleName = os.path.basename(sab_file)
+        with open(sab_file, 'rb') as bundleFile:
+            jobURL = self._get_url('jobs_path')
+            jobParameters = { 'bundle_id': bundleName }
+            jobOptions = json.dumps( {} if configuration is None else configuration )
+            jobFiles = [
+                ('sab_file', ( bundleName, bundleFile, 'application/octet-stream' ) ),
+                ('job_options', ( 'job_options', jobOptions, 'application/json' ) )
+                ]
+            return self.rest_client.session.post(url=jobURL, params=jobParameters, files=jobFiles).json()
 
     def cancel_job(self, job_id=None, job_name=None):
         """Cancel a running job.
