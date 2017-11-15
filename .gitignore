@@ -40,7 +40,7 @@ samples/python/com.ibm.streamsx.topology.pysamples/opt/.__splpy/
 samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/__pycache__/
 samples/python/com.ibm.streamsx.topology.pysamples/output/
 
-test/java/streams.topology.test.jar
+test/java/streamsx.topology.test.jar
 
 test/java/classes/
 test/python/topology/tk*
