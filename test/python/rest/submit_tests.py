@@ -49,6 +49,9 @@ class RestSubmitTests(unittest.TestCase):
         result = os.system('sc -M ' + applicationName)
         if not result==0: raise unittest.SkipTest(applicationName + ' failed to compile, exit code ' + str(result>>8) + ', signal ' + str(result&0xFF))
 
+        if not os.path.isdir('logs'):
+            os.mkdir('logs')
+
         name = os.environ['STREAMING_ANALYTICS_SERVICE_NAME']
 
         logger.warning('connect to IBM Cloud')
@@ -91,7 +94,18 @@ class RestSubmitTests(unittest.TestCase):
 
         for job in jobs:
             logger.warning('store logs for job ' + job.name)
-            job.get_application_logs()
+            filename = job.get_application_logs()
+            self.assertTrue(os.path.isfile(filename), 'get_application_logs() failed, no file stored as ' + filename)
+            filename = job.store_logs()
+            self.assertTrue(os.path.isfile(filename), 'store_logs() failed, no file stored as ' + filename)
+            for pe in job.get_pes():
+                logger.warning('store logs for PE ' + pe.id + ' of job ' + job.name)
+                filename = pe.store_console_log()
+                self.assertTrue(os.path.isfile(filename), 'store_console_log() failed, no file stored as ' + filename)
+                filename = pe.store_application_trace()
+                self.assertTrue(os.path.isfile(filename), 'store_application_trace() failed, no file stored as ' + filename)
+
+        for job in jobs:
             logger.warning('cancel job ' + job.name)
             result = job.cancel()
             self.assertTrue(result, 'cancel() failed for job ' + job.name)
@@ -124,7 +138,18 @@ class RestSubmitTests(unittest.TestCase):
 
         for job in jobs:
             logger.warning('store logs for job ' + job.name)
-            job.get_application_logs()
+            filename = job.get_application_logs()
+            self.assertTrue(os.path.isfile(filename), 'get_application_logs() failed, no file stored as ' + filename)
+            filename = job.store_logs('mylogs.'+job.name+'.tar.gz')
+            self.assertTrue(filename=='mylogs.'+job.name+'.tar.gz', 'store_logs() failed, stored ' + filename + ' instead of ' + 'mylogs.'+job.name+'.tar.gz')
+            for pe in job.get_pes():
+                logger.warning('store logs for PE ' + pe.id + ' of job ' + job.name)
+                filename = pe.store_console_log('mylogs.'+job.name+'.PE_'+pe.id+'.log')
+                self.assertTrue(filename=='mylogs.'+job.name+'.PE_'+pe.id+'.log', 'store_console_log() failed, stored ' + filename + ' instead of ' + 'mylogs.'+job.name+'.PE_'+pe.id+'.log')
+                filename = pe.store_application_trace('mylogs.'+job.name+'.PE_'+pe.id+'.trace')
+                self.assertTrue(filename=='mylogs.'+job.name+'.PE_'+pe.id+'.trace', 'store_appliation_trace() failed, stored ' + filename + ' instead of ' + 'mylogs.'+job.name+'.PE_'+pe.id+'.trace')
+
+        for job in jobs:
             logger.warning('cancel job ' + job.name)
             result = job.cancel()
             self.assertTrue(result, 'cancel() failed for job ' + job.name)
@@ -152,12 +177,21 @@ class RestSubmitTests(unittest.TestCase):
             self.assertTrue(result['name']==job.name, 'submit_job() failed, could not find job')
             self.assertTrue(job.status=='running', 'submit_job() failed, job is not running, status is ' + job.status + ', health is ' + job.health)
             self.assertTrue(job.health=='healthy', 'submit_job() failed, job is not healthy, status is ' + job.status + ', health is ' + job.health)
-            pes = job.get_pes()
-            self.assertTrue(len(pes)==1, 'job configuration failed, job has more than one PE')
 
         for job in jobs:
-            logger.warning('store logs for job ' + job.name)
-            job.get_application_logs()
+            logger.warning('store logs for job ' + job.name + ' in subdirectory')
+            filename = job.get_application_logs()
+            self.assertTrue(os.path.isfile(filename), 'get_application_logs() failed, no file stored as ' + filename)
+            filename = job.store_logs('./logs/'+job.name+'.tgz')
+            self.assertTrue(filename=='./logs/'+job.name+'.tgz', 'store_logs() failed, stored ' + filename + ' instead of ' + './logs/'+job.name+'.tgz')
+            for pe in job.get_pes():
+                logger.warning('store logs for PE ' + pe.id + ' of job ' + job.name + ' in subdirectory')
+                filename = pe.store_console_log('./logs/'+job.name+'.PE_'+pe.id+'.log')
+                self.assertTrue(filename=='./logs/'+job.name+'.PE_'+pe.id+'.log', 'store_console_log() failed, stored ' + filename + ' instead of ' + './logs/'+job.name+'.PE_'+pe.id+'.log')
+                filename = pe.store_application_trace('./logs/'+job.name+'.PE_'+pe.id+'.trace')
+                self.assertTrue(filename=='./logs/'+job.name+'.PE_'+pe.id+'.trace', 'store_appliation_trace() failed, stored ' + filename + ' instead of ' + './logs/'+job.name+'.PE_'+pe.id+'.trace')
+
+        for job in jobs:
             logger.warning('cancel job ' + job.name)
             result = job.cancel()
             self.assertTrue(result, 'cancel() failed for job ' + job.name)
