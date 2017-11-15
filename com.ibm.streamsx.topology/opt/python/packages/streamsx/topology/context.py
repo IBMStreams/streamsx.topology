@@ -630,8 +630,7 @@ class JobConfig(object):
     """
     Job configuration.
 
-    `JobConfig` allows configuration of job that will result from
-    submission of a py:class:`Topology` (application).
+    `JobConfig` allows configuration of job that will result from submission of a py:class:`Topology` (application).
 
     A `JobConfig` is set in the `config` dictionary passed to :py:func:`~streamsx.topology.context.submit`
     using the key :py:const:`~ConfigParams.JOB_CONFIG`. :py:meth:`~JobConfig.add` exists as a convenience
@@ -646,7 +645,12 @@ class JobConfig(object):
             relocated to a new resource.
         data_directory(str): Specifies the location of the optional data directory. The data directory is a path
             within the cluster that is running the Streams instance.
-        tracing: Specify the application trace level. See :py:attr:`tracing`
+        submision_parameters(dict): Specifies values for submission-time parameters in the application the job will run. 
+            See :py:attr:`submission_parameters`.
+        target_pe_count(int): Suggests the number of processing elements (PEs) desired for the job. 
+            See :py:attr:`target_pe_count`.
+            The default is 'None'; the scheduler will decide how many PEs the job needs.
+        tracing: Specifies the application trace level. See :py:attr:`tracing`
 
     Example::
 
@@ -656,13 +660,14 @@ class JobConfig(object):
         job_config.add(cfg)
         context.submit('ANALYTICS_SERVICE', topo, cfg)
     """
-    def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None, tracing=None):
+    def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None, submission_parameters=None, target_pe_count=None, tracing=None):
         self.job_name = job_name
         self.job_group = job_group
         self.preload = preload
         self.data_directory = data_directory
+        self.submission_parameters = submission_parameters
+        self.target_pe_count = target_pe_count
         self.tracing = tracing
-        self._pe_count = None
 
     @property
     def tracing(self):
@@ -736,6 +741,22 @@ class JobConfig(object):
                 raise ValueError("target_pe_count must be greater than 0.")
         self._pe_count = count
 
+    @property
+    def submission_parameters(self):
+        """Submission parameters for job.
+
+        Specified as a dict with item names that match the submission-time parameters in the application the job will run, and
+        item values that will be cast to strings and passed to those parameters when the job starts.
+        """
+        return self._submission_parameters
+
+    @submission_parameters.setter
+    def submission_parameters(self, p):
+        if p is not None:
+            if not isinstance(p, dict):
+                raise ValueError("parameters must be a dict")
+        self._submission_parameters = p
+
     def add(self, config):
         """
         Add this `JobConfig` into a submission configuration object.
@@ -766,6 +787,8 @@ class JobConfig(object):
             jc["dataDirectory"] = self.data_directory
         if self.preload:
             jc['preloadApplicationBundles'] = True
+        if self.submission_parameters is not None:
+            jc['submissionParameters'] = [ { 'name': name, 'value': str(value) } for name,value in self.submission_parameters.items() ]
         if self.tracing is not None:
             jc['tracing'] = self.tracing
 
@@ -773,8 +796,7 @@ class JobConfig(object):
             jco["jobConfig"] = jc
 
         if self.target_pe_count is not None and self.target_pe_count >= 1:
-            deployment = {'fusionScheme' : 'manual', 'fusionTargetPeCount' : self.target_pe_count}
-            jco["deploymentConfig"] = deployment
+            jco["deploymentConfig"] = { 'fusionScheme' : 'manual', 'fusionTargetPeCount' : self.target_pe_count }
 
 
 class SubmissionResult(object):
