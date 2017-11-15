@@ -33,9 +33,13 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
     private String statusUrl;
     private String jobSubmitUrl;
     private String buildsUrl;
+    private final String tokenUrl;
+    private final String apiKey;
 
     StreamingAnalyticsServiceV2(JsonObject service) {
         super(service);
+        tokenUrl = StreamsRestUtils.getTokenUrl(credentials);
+        apiKey = StreamsRestUtils.getServiceApiKey(credentials);
     }
 
     // Synchronized because it needs to read and possibly write two members
@@ -52,8 +56,6 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
     }
 
     private void refreshAuthorization() {
-        String tokenUrl = StreamsRestUtils.getTokenUrl(credentials);
-        String apiKey = StreamsRestUtils.getServiceApiKey(credentials);
         JsonObject response = StreamsRestUtils.getTokenResponse(tokenUrl, apiKey);
         if (null != response) {
             String accessToken = StreamsRestUtils.getToken(response);
@@ -99,9 +101,7 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
 
     private synchronized void setUrls(CloseableHttpClient httpClient)
             throws ClientProtocolException, IOException {
-        // FIXME: Cloud team says this will be single URL in credentials
-        // but member name not yet fixed
-        statusUrl = jstring(credentials, "resources_url");
+        statusUrl = jstring(credentials, "v2_rest_url");
         HttpGet getStatus = new HttpGet(statusUrl);
         getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
 

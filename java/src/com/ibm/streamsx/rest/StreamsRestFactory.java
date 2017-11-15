@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.rest;
 
+import static com.ibm.streamsx.rest.StreamsRestUtils.MEMBER_PASSWORD;
+import static com.ibm.streamsx.rest.StreamsRestUtils.MEMBER_USERID;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
 
@@ -17,11 +19,6 @@ import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 public class StreamsRestFactory {
-
-    private static final String MEMBER_EXPIRATION = "expiration";
-    private static final String MEMBER_ACCESS_TOKEN = "access_token";
-    private static final long MS = 1000L;
-    private static final long EXPIRY_PAD_MS = 300 * MS;
 
     private StreamsRestFactory() {}
 
@@ -188,8 +185,8 @@ public class StreamsRestFactory {
         case V1:
         {
             // V1: can construct authorization directly and use indefinitely
-            String userId = StreamsRestUtils.getRequiredMember(credentials, "userid");
-            String authToken = StreamsRestUtils.getRequiredMember(credentials, "password");
+            String userId = StreamsRestUtils.getRequiredMember(credentials, MEMBER_USERID);
+            String authToken = StreamsRestUtils.getRequiredMember(credentials, MEMBER_PASSWORD);
             String authorization = StreamsRestUtils.createBasicAuth(userId, authToken);
             String restUrl = StreamsRestUtils.getRequiredMember(credentials, "rest_url");
             String sasResourcesUrl = restUrl + StreamsRestUtils.getRequiredMember(credentials, "resources_path");
@@ -210,21 +207,19 @@ public class StreamsRestFactory {
             String tokenUrl = StreamsRestUtils.getTokenUrl(credentials);
             String apiKey = StreamsRestUtils.getServiceApiKey(credentials);
             JsonObject response = StreamsRestUtils.getTokenResponse(tokenUrl, apiKey);
-            if (null != response && response.has(MEMBER_ACCESS_TOKEN)
-                    && response.has(MEMBER_EXPIRATION)) {
-                String accessToken = response.get(MEMBER_ACCESS_TOKEN).getAsString();
+            String accessToken = StreamsRestUtils.getToken(response);
+            if (null != accessToken) {
                 String authorization = StreamsRestUtils.createBearerAuth(accessToken);
-                // FIXME: Cloud team says this will be single URL in credentials
-                // but member name not yet fixed
-                String sasResourcesUrl = StreamsRestUtils.getRequiredMember(credentials, "resources_url");
+                String sasResourcesUrl = StreamsRestUtils.getRequiredMember(credentials,
+                        StreamsRestUtils.MEMBER_V2_REST_URL);
                 JsonObject sasResources = getServiceResources(authorization, sasResourcesUrl);
-                String instanceUrl = StreamsRestUtils.getRequiredMember(sasResources, "streams_self");
-                // Find root URL
+                String instanceUrl = StreamsRestUtils.getRequiredMember(sasResources,
+                        "streams_self");
+                // Find root URL. V2 starts at the instance, we want resources
                 String baseUrl = instanceUrl.substring(0, instanceUrl.lastIndexOf("/instances/"));
                 String streamsResoursesUrl = fixStreamsRestUrl(baseUrl);
 
-                long expirySecs = response.get(MEMBER_EXPIRATION).getAsLong();
-                long authExpiryMillis = (expirySecs * MS) - EXPIRY_PAD_MS;
+                long authExpiryMillis = StreamsRestUtils.getTokenExpiryMillis(response);
                 StreamingAnalyticsConnectionV2 connection =
                         new StreamingAnalyticsConnectionV2(authorization,
                         authExpiryMillis, streamsResoursesUrl, credentials,

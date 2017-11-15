@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
@@ -37,41 +39,60 @@ import com.google.gson.JsonObject;
 
 public class StreamsRestUtils {
 
+    private StreamsRestUtils() {}
+
     public enum StreamingAnalyticsServiceVersion { V1, V2, UNKNOWN }
+
+    // V1 credentials members
+    static final String MEMBER_PASSWORD = "password";
+    static final String MEMBER_USERID = "userid";
+
+    // V2 credentials members
+    static final String MEMBER_V2_REST_URL = "v2_rest_url";
+    private static final String MEMBER_APIKEY = "apikey";
+
+    // IAM response members 
+    private static final String MEMBER_EXPIRATION = "expiration";
+    private static final String MEMBER_ACCESS_TOKEN = "access_token";
 
     private static final String AUTH_BEARER = "Bearer ";
     private static final String AUTH_BASIC = "Basic ";
     private static final String TOKEN_PARAMS = genTokenParams();
-
-    private static final String MEMBER_EXPIRATION = "expiration";
-    private static final String MEMBER_ACCESS_TOKEN = "access_token";
 
     private static final long MS = 1000L;
     private static final long EXPIRY_PAD_MS = 300 * MS;
 
     private static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamsConnectionUtils");
 
-    private StreamsRestUtils() {}
-
     /**
      * Create an encoded Basic auth header for the given credentials.
+     * @param credentials Service credentials.
+     * @return the body of a Authentication: Basic header using the user and
+     * password contained in the credentials. 
      */
     static String createBasicAuth(JsonObject credentials) {
-        return createBasicAuth(jstring(credentials,  "userid"),
-                jstring(credentials, "password"));
-    };
+        return createBasicAuth(jstring(credentials,  MEMBER_USERID),
+                jstring(credentials, MEMBER_PASSWORD));
+    }
 
     /**
      * Create an encoded Basic auth header for the given userName and authToken
+     * @param userName The user name for authentication
+     * @param authToken The password for authentication
+     * @return the body of a Authentication: Basic header using the userName
+     * and authToken
      */
     static String createBasicAuth(String userName, String authToken) {
         String apiCredentials = userName + ":" + authToken;
         return AUTH_BASIC + DatatypeConverter.printBase64Binary(
                 apiCredentials.getBytes(StandardCharsets.UTF_8));
-    }
+    };
 
     /**
      * Create an encoded Bearer auth header for the given token.
+     * @param tokenBase64 An authentication token, expected to be already
+     * encoded in base64, as it is when returned from the IAM server
+     * @return the body of a Authentication: Bearer header using tokenBase64
      */
     static String createBearerAuth(String tokenBase64) {
         StringBuilder sb = new StringBuilder(AUTH_BEARER.length()
@@ -81,6 +102,15 @@ public class StreamsRestUtils {
         return sb.toString();
     }
 
+    /**
+     * Gets a JSON response to an HTTP call
+     * 
+     * @param httpClient HTTP client to use for call
+     * @param auth Authentication header contents, or null
+     * @param inputString REST call to make
+     * @return response from the inputString
+     * @throws IOException
+     */
     static JsonObject getGsonResponse(CloseableHttpClient httpClient,
             HttpRequestBase request) throws IOException {
         request.addHeader("accept",
@@ -105,6 +135,7 @@ public class StreamsRestUtils {
             throws IOException {
         Request request = Request
                 .Get(inputString)
+                .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
                 .useExpectContinue();
         if (null != auth) {
             request = request.addHeader(AUTH.WWW_AUTH_RESP, auth);
@@ -114,6 +145,13 @@ public class StreamsRestUtils {
         return gsonFromResponse(response.returnResponse());
     }
 
+    /**
+     * Get a member that is expected to exist and be non-null.
+     * @param json The JSON object
+     * @param member The member name in the object.
+     * @return The string value of the member.
+     * @throws IllegalStateException if the member does not exist or is null.
+     */
     static String getRequiredMember(JsonObject json, String member)
             throws IllegalStateException {
         JsonElement element = json.get(member);
@@ -129,8 +167,7 @@ public class StreamsRestUtils {
      * 
      * @param executor HTTP client executor to use for call
      * @param auth Authentication header contents, or null
-     * @param inputString
-     *            REST call to make
+     * @param inputString REST call to make
      * @return response from the inputString
      * @throws IOException
      * 
@@ -142,6 +179,7 @@ public class StreamsRestUtils {
         String sReturn = "";
         Request request = Request
                 .Get(inputString)
+                .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
                 .useExpectContinue();
         if (null != auth) {
             request = request.addHeader(AUTH.WWW_AUTH_RESP, auth);
@@ -173,6 +211,15 @@ public class StreamsRestUtils {
     }
 
     /**
+     * Get the IAM API key that will be used to request a token.
+     * @param credentials Service credentials.
+     * @return the IAM API key
+     */
+    static String getServiceApiKey(JsonObject credentials) {
+        return jstring(credentials, MEMBER_APIKEY);
+    }
+
+    /**
      * Determine service version based on credential contents.
      * <p>
      * Ideally, the service would return version information directly, but for
@@ -182,36 +229,17 @@ public class StreamsRestUtils {
      * conceptually distinct, at present they are coupled so the version implies
      * the authentication mechanism.
      *  
-     * @param credentials Credentials for the service.
+     * @param credentials Service credentials.
      * @return A version or UNKNOWN.
      */
     static StreamingAnalyticsServiceVersion getStreamingAnalyticsServiceVersion(
             JsonObject credentials) {
-        if (credentials.has("service_id")) { // FIXME: correct member name
+        if (credentials.has(MEMBER_V2_REST_URL)) {
             return StreamingAnalyticsServiceVersion.V2;
-        } else if (credentials.has("userid") && credentials.has("password")) {
+        } else if (credentials.has(MEMBER_USERID) && credentials.has(MEMBER_PASSWORD)) {
             return StreamingAnalyticsServiceVersion.V1;
         }
         return StreamingAnalyticsServiceVersion.UNKNOWN;
-    }
-
-    static JsonObject getTokenResponse(String iamUrl, String apiKey) {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            String key = URLEncoder.encode(apiKey, StandardCharsets.UTF_8.name());
-            StringBuilder sb = new StringBuilder(iamUrl.length()
-                    + TOKEN_PARAMS.length() + key.length());
-            sb.append(iamUrl);
-            sb.append(TOKEN_PARAMS);
-            sb.append(key);
-            HttpPost httpPost = new HttpPost(sb.toString());
-            httpPost.addHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
-            httpPost.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
-
-            return StreamsRestUtils.getGsonResponse(httpClient, httpPost);
-        } catch (IOException e) {
-        }
-
-        return null;
     }
 
     /**
@@ -226,6 +254,7 @@ public class StreamsRestUtils {
         }
         return token;
     }
+
     /**
      * Given a token request response, return the expiry time as milliseconds
      * since the epoch, with default padding before the final expiry deadline.
@@ -251,21 +280,62 @@ public class StreamsRestUtils {
         return expiryMillis;
     }
 
-    // FIXME: Where does this come from?
-    // Cloud team says this might be in credentials, but values are "well-known"
-    // for stage1 / production so worst case we would have to look up based on
-    // service URL.
+    /**
+     * Request a token from an IAM server.
+     * @param iamUrl The URL of the IAM server's token service
+     * @param apiKey The API key to use for the token request
+     * @return The response from the server.
+     */
+    static JsonObject getTokenResponse(String iamUrl, String apiKey) {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            String key = URLEncoder.encode(apiKey, StandardCharsets.UTF_8.name());
+            StringBuilder sb = new StringBuilder(iamUrl.length()
+                    + TOKEN_PARAMS.length() + key.length());
+            sb.append(iamUrl);
+            sb.append(TOKEN_PARAMS);
+            sb.append(key);
+            HttpPost httpPost = new HttpPost(sb.toString());
+            httpPost.addHeader("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
+            httpPost.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
+
+            return StreamsRestUtils.getGsonResponse(httpClient, httpPost);
+        } catch (IOException e) {
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the IAM token URL.
+     * @param credentials Service credentials
+     * @return The IAM token URL.
+     */
     static String getTokenUrl(JsonObject credentials) {
-        return jstring(credentials, "iam_url");
+        // Default to the well-known Bluemix URL
+        String iamUrl = "https://iam.bluemix.net/oidc/token";
+        // If the REST URL looks like a staging server, construct an IAM URL
+        // in the expected place, eg https://iam.stage1.bluemix.net/oidc/token
+        // If anything goes wrong, we get the default.
+        if (credentials.has(MEMBER_V2_REST_URL)) {
+            try {
+                URL restUrl = new URL(jstring(credentials, MEMBER_V2_REST_URL));
+                String host = restUrl.getHost();
+                int start = host.indexOf(".stage");
+                if (-1 != start) {
+                    String stage = host.substring(start + 1);
+                    int end = stage.indexOf('.');
+                    if (-1 != end) {
+                        iamUrl = "https://iam." + stage.substring(0, end)
+                                + ".bluemix.net/oidc/token";
+                    }
+                }
+            } catch (MalformedURLException ignored) {}
+        }
+        return iamUrl;
     }
 
-    // FIXME: Where does this come from?
-    // Cloud team says it should be in credentials, but not sure with what
-    // member name yet.
-    static String getServiceApiKey(JsonObject credentials) {
-        return jstring(credentials, "apiKey");
-    }
-
+    // Construct the constant token request parameters. URLEncoder will never
+    // throw because UTF-8 is a required charset.
     private static String genTokenParams() {
         try {
             String grantParam = "?grant_type=";
@@ -307,5 +377,4 @@ public class StreamsRestUtils {
         EntityUtils.consume(entity);
         return jsonResponse;
     }
-
 }

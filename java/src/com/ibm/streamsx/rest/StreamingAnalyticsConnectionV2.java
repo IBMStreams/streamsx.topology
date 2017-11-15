@@ -16,12 +16,16 @@ public class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsCo
 
     private long authExpiryTime;
     private String jobsUrl;
+    private final String tokenUrl;
+    private final String apiKey;
 
     StreamingAnalyticsConnectionV2(String authorization, long authExpiryTime,
             String resourcesUrl, JsonObject credentials, boolean allowInsecure)
             throws IOException {
         super(authorization, resourcesUrl, credentials, allowInsecure);
         this.authExpiryTime = authExpiryTime;
+        this.tokenUrl = StreamsRestUtils.getTokenUrl(credentials);
+        this.apiKey = StreamsRestUtils.getServiceApiKey(credentials);
     }
 
     // Synchronized because it needs to read and possibly write two members
@@ -39,8 +43,6 @@ public class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsCo
     }
 
     private void refreshAuthorization() {
-        String tokenUrl = StreamsRestUtils.getTokenUrl(credentials);
-        String apiKey = StreamsRestUtils.getServiceApiKey(credentials);
         JsonObject response = StreamsRestUtils.getTokenResponse(tokenUrl, apiKey);
         if (null != response) {
             String accessToken = StreamsRestUtils.getToken(response);
