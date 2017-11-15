@@ -14,7 +14,12 @@ class TestStringFeatures(unittest.TestCase):
 ```
 
 ## Running tests
-To run the test suite, just invoke
+To run all test suites, just invoke:
+```
+python -m unittest discover
+```
+
+To run just one test suite, invoke it like this:
 ```
 python -m unittest -v string_tests
 ```
@@ -30,6 +35,6 @@ To change them, specify the environment variables:
 * STREAMS_USERNAME
 * STREAMS_PASSWORD
 
-To run the rest_bluemix_tests, specify the environment variables:
+To run the rest_bluemix_tests and submit_tests, specify these environment variables:
 * VCAP_SERVICES
 * STREAMING_ANALYTICS_SERVICE_NAME
