@@ -119,6 +119,43 @@ class _ResourceElement(object):
             return elements[0]
         raise ValueError("Multiple resources matching: {0}".format(id))
 
+    def _store_file(self, filename, url, mimetype):
+        """Download a file from a job or PE and store it in a file.
+        
+        Args:
+        filename (str): directory/filename where the downloaded file should be stored locally
+        url (str): URL of the remote file to be downloaded
+        mimetype (str): expected MimeType of the remote file
+        
+        Returns:
+        str: directory/filename where the downloaded file was stored
+        
+        Raises:
+        Exception; HTTP GET failed, error xxx xxxxxxxxxxxxx from URL xxxxxxxxxxxxxxxx
+        Exception: HTTP GET expected response of type xxxx/xxxx, got xxxxx/xxxxxx, from URL xxxxxxxxxxxxxx
+        """
+        
+        response = self.rest_client.session.get(url=url, stream=True)
+        
+        if response.status_code != 200:
+            raise Exception('HTTP GET failed, error ' + str(response.status_code) + ' ' + response.reason + ' from URL ' + response.url)
+        
+        if not response.headers['Content-Type'].startswith(mimetype):
+            raise Exception('HTTP GET expected response of type ' + mimetype + ', got ' + response.headers['Content-Type'] + ', from URL ' + response.url)
+
+        try:
+            with open(filename, 'wb') as file:
+                for chunk in response.iter_content(chunk_size=None):
+                    file.write(chunk)    
+        except IOError as e:
+            logger.error("IOError {1} {2} storing file {0}".format(filename, e.errno, e.strerror))
+            raise e
+        except Exception as e:
+            logger.error("Exception while storing file {0}".format(filename))
+            raise e
+                
+        return filename
+            
             
 class _StreamsRestClient(object):
     """Handles the session connection with the Streams REST API
@@ -404,47 +441,6 @@ class Job(_ResourceElement):
         >>> print (jobs[0].health)
         healthy
     """
-    def get_application_logs(self, path=None, prefix=None):
-        """Retrieves the console logs and application traces of the job's processing elements (PEs) and stores them in a compressed 'tar' archive (that is, a '.tar.gz' file) with the specified file name in the specified directory path.
-
-        If logs are retrieved with the same path and name as previously retrieved logs, the previous logs will be overwritten.
-
-        Args:
-            path (str): the directory in which to save the logs. Defaults to the current directory.
-            prefix (str): the first part of the filename of the compressed 'tar' archive. Defaults to the job name and id.
-
-        Returns:
-            str: the path to the application logs tar file.
-
-        .. versionadded:: 1.8
-        """
-        logger.debug("Retrieving application logs from: " + self.applicationLogTrace)
-        logs = self.rest_client.make_raw_streaming_request(self.applicationLogTrace)
-        
-        if prefix is None:
-            # Take the job name and remove colons (colons confuse the unix 'tar' command)
-            prefix = ''.join(self.name.split(':'))
-            
-        prefix = prefix + "_" + self.id
-        name = prefix + "_app_logs.tar.gz"
-        
-        if path is None:
-            path = os.getcwd()
-
-        path = os.path.join(path, name)
-        try:
-            with open(path, 'w+b') as logfile:
-                for chunk in logs.iter_content(chunk_size=1024*64):
-                    if chunk:
-                        logfile.write(chunk)
-        except IOError as e:
-            logger.error("IOError({0}) writing application log files: {1}".format(e.errno, e.strerror))
-            raise e
-        except Exception as e:
-            logger.error("Error while writing application log files")
-            raise e
-
-        return path                    
 
     def get_views(self, name=None):
         """Get the list of :py:class:`View` elements associated with this job.
@@ -543,6 +539,22 @@ class Job(_ResourceElement):
             self.rest_client._sc.get_streaming_analytics().cancel_job(self.id)
             return True
         raise NotImplementedError('Job.cancel()')
+
+    def store_logs(self, filename=None):
+        """Download the console logs and application traces from a job and store them locally in a compressed 'tar' archive (that is, a '.tar.gz' file).
+        
+        Args:
+        filename (str): directory/file path of a compreseed 'tar' archive where the logs and traces should be stored. The default value is 'name.tar.gz' in the current directory, where 'name' is the job name.
+        
+        Returns:
+        str: directory/filename of the compressed 'tar' archive where the logs and traces were stored
+        
+        Exceptions:
+        HTTP GET failed, error xxx xxxxxxxxxxxxx from URL xxxxxxxxxxxxxxxx
+        HTTP GET expected response of type application/x-compressed, got xxxxx/xxxxxx, from URL xxxxxxxxxxxxxx
+        """
+        
+        return self._store_file( ( filename if filename else self.name+'.tar.gz' ), self.applicationLogTrace, 'application/x-compressed')
 
 
 class Operator(_ResourceElement):
@@ -675,6 +687,44 @@ class PE(_ResourceElement):
         pe
     """
     pass
+
+    def store_console_log(self, filename=None):
+        """Download the console log from the PE and store it in an uncompressed text file. The console log contains messages written to STDOUT and STDERR by the PE's operators.
+        
+        Args:
+        filename (string): directory/filename of the text file where the downloaded console log should be stored. The default value is 'PE_id.log' in the current directory, where 'id' is the PE identifier.
+        
+        Returns:
+        str: directory/filename of the text file where the downloaded console log was stored
+        
+        Raises:
+        Exception: HTTP GET failed, error xxx xxxxxxxxxxxxx from URL xxxxxxxxxxxxxxxx
+        Exception: HTTP GET expected response of type text/plain', got xxxxx/xxxxxx, from URL xxxxxxxxxxxxxx
+        """
+        
+        return self._store_file( ( filename if filename else 'PE_'+self.id+'.log' ), self.consoleLog, 'text/plain')
+
+
+    def store_application_trace(self, filename=None):
+        """Download the application trace from the PE and store it in an uncompressed text file. The application trace contains messages from the Streams runtime 'PE container', plus messages from any appTrc() functions in the PE's operators. 
+
+        Note that application trace messages are filtered by the tracing level in effect for the PE. For details of tracing levels, see:
+     
+        https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/job_configuration_overlays.html
+        https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html
+
+        Args:
+        filename (string): directory/filename of the text file where the downloaded application trace should be stored. The default value is 'PE_id.trace' in the current directory, where 'id' is the PE identifier.
+        
+        Returns:
+        str: directory/filename of the text file where the downloaded application trace was stored
+        
+        Raises:
+        Exception: HTTP GET failed, error xxx xxxxxxxxxxxxx from URL xxxxxxxxxxxxxxxx
+        Exception: HTTP GET expected response of type text/plain', got xxxxx/xxxxxx, from URL xxxxxxxxxxxxxx
+        """
+        
+        return self._store_file( ( filename if filename else 'PE_'+self.id+'.trace' ), self.applicationTrace, 'text/plain')
 
 
 class PEConnection(_ResourceElement):
