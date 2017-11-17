@@ -193,7 +193,7 @@
   -->
   <property name="topology.test.base.pattern" value="**/*Test.java"/>
 
-  <target name="unittest.base" depends="">
+  <target name="unittest.base" depends="unittest.base.scala">
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
      <mkdir dir="${topology.test.dir}"/>
