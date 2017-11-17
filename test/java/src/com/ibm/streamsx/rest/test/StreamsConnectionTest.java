@@ -30,7 +30,6 @@ import com.ibm.streamsx.rest.PEOutputPort;
 import com.ibm.streamsx.rest.ProcessingElement;
 import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.StreamsConnection;
-import com.ibm.streamsx.rest.StreamsRestFactory;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
@@ -96,8 +95,10 @@ public class StreamsConnectionTest {
             assumeNotNull(instanceName, instancePassword);
 
             String restUrl = "https://localhost:" + streamsPort + "/streams/rest/resources";
+            connection = StreamsConnection.createInstance(userName, instancePassword, restUrl);
+
             // for localhost, need to disable security
-            connection = StreamsRestFactory.createStreamsConnection(userName, instancePassword, restUrl, true);
+            connection.allowInsecureHosts(true);
         }
     }
 
@@ -123,37 +124,41 @@ public class StreamsConnectionTest {
 
         // send in wrong url
         String badUrl = "https://localhost:" + sPort + "/streams/re";
-        StreamsConnection badConn = StreamsRestFactory.createStreamsConnection(iName, iPassword, badUrl, true);
+        StreamsConnection badConn = StreamsConnection.createInstance(iName, iPassword, badUrl);
+        badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {
-            assertEquals(404, r.getStatusCode());
+            assertEquals(r.toString(), 404, r.getStatusCode());
         }
 
         // send in url too long
         String badURL = "https://localhost:" + sPort + "/streams/rest/resourcesTooLong";
-        badConn = StreamsRestFactory.createStreamsConnection(iName, iPassword, badURL, true);
+        badConn = StreamsConnection.createInstance(iName, iPassword, badURL);
+        badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {
-            assertEquals(404, r.getStatusCode());
+            assertEquals(r.toString(), 404, r.getStatusCode());
         }
 
         // send in bad iName
         String restUrl = "https://localhost:" + sPort + "/streams/rest/resources";
-        badConn = StreamsRestFactory.createStreamsConnection("fakeName", iPassword, restUrl, true);
+        badConn = StreamsConnection.createInstance("fakeName", iPassword, restUrl);
+        badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {
-            assertEquals(401, r.getStatusCode());
+            assertEquals(r.toString(), 401, r.getStatusCode());
         }
 
         // send in wrong password
-        badConn = StreamsRestFactory.createStreamsConnection(iName, "badPassword", restUrl, true);
+        badConn = StreamsConnection.createInstance(iName, "badPassword", restUrl);
+        badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {
-            assertEquals(401, r.getStatusCode());
+            assertEquals(r.toString(), 401, r.getStatusCode());
         }
     }
 
@@ -177,7 +182,7 @@ public class StreamsConnectionTest {
             fail("the connection.getInstance call should have thrown an exception");
         } catch (RESTException r) {
             // not a failure, this is the expected result
-            assertEquals(404, r.getStatusCode());
+            assertEquals(r.toString(), 404, r.getStatusCode());
         }
     }
 
@@ -304,14 +309,16 @@ public class StreamsConnectionTest {
             Job nonExistantJob = instance.getJob("999999");
             fail("this job number should not exist");
         } catch (RESTException r) {
-            assertEquals(404, r.getStatusCode());
+            assertEquals(r.toString(), 404, r.getStatusCode());
             assertEquals("CDISW5000E", r.getStreamsErrorMessageId());
         }
 
         // cancel a non-existant jobid
-        boolean failCancel = connection.cancelJob("99999");
-        assertTrue(failCancel == false);
-
+        // API does not specify if this fails or throws, accept both
+        try {
+            boolean failCancel = connection.cancelJob("99999");
+            assertTrue(failCancel == false);
+        } catch (RESTException ok) {}
     }
 
     @Test

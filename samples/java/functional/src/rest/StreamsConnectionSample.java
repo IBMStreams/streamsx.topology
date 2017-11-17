@@ -15,11 +15,11 @@ import com.ibm.streamsx.rest.Operator;
 import com.ibm.streamsx.rest.OutputPort;
 import com.ibm.streamsx.rest.ProcessingElement;
 import com.ibm.streamsx.rest.RESTException;
-import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.rest.StreamsConnectionInterface;
 import com.ibm.streamsx.rest.StreamsRestFactory;
 
 /**
- * This is the main class to show how to use the StreamsConnection.
+ * This is the main class to show how to use the StreamsConnectionInterface.
  *
  * <p>
  * The example connects to the streams instance and gets a list of resources The
@@ -56,7 +56,7 @@ public class StreamsConnectionSample {
         /*
          * Create the connection to the instance indicated
          */
-        StreamsConnection sClient = StreamsRestFactory.createStreamsConnection(userName, authToken,
+        StreamsConnectionInterface sClient = StreamsRestFactory.createStreamsConnection(userName, authToken,
                 url, allowInsecure);
 
         try {

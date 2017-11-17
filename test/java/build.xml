@@ -193,7 +193,7 @@
   -->
   <property name="topology.test.base.pattern" value="**/*Test.java"/>
 
-  <target name="unittest.base" depends="">
+  <target name="unittest.base" depends="unittest.base.scala">
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
      <mkdir dir="${topology.test.dir}"/>
@@ -304,6 +304,16 @@
      <fail message="Unittests failed" if="topology.tests.failed"/>
   </target>
 
+  <target name="unittest.restapi.distributed">
+    <property name="topology.test.type" value="DISTRIBUTED_TESTER"/>
+     <antcall target="unittest.restapi.base"/>
+  </target>
+
+  <target name="unittest.restapi.streaminganalytics">
+     <property name="topology.test.type" value="STREAMING_ANALYTICS_SERVICE_TESTER"/>
+     <antcall target="unittest.restapi.base"/>
+  </target>
+	 
   <target name="unittest.restapi.base">
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>

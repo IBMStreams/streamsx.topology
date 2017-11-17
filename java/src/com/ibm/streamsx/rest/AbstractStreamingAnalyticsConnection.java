@@ -19,11 +19,11 @@ import org.apache.http.util.EntityUtils;
 import com.google.gson.JsonObject;
 
 /**
- * Common code for implementations of {@link StreamingAnalyticsConnection}
+ * Common code for implementations of {@link StreamingAnalyticsConnectionInterface}
  */
 abstract class AbstractStreamingAnalyticsConnection 
         extends AbstractStreamsConnection
-        implements StreamingAnalyticsConnection {
+        implements StreamingAnalyticsConnectionInterface {
 
     private static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.AbstractStreamingAnalyticsConnection");
 

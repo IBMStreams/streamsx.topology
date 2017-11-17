@@ -56,6 +56,8 @@ public class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsCo
     /**
      * Cancels a job that has been submitted to IBM Streaming Analytics service
      *
+     * @param instanceId
+     *            string indicating the instance id of the job
      * @param jobId
      *            string indicating the job id to be canceled
      * @return boolean indicating
@@ -65,7 +67,7 @@ public class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsCo
      *         </ul>
      * @throws IOException
      */
-    public boolean cancelJob(String jobId) throws IOException {
+    boolean cancelJob(String instanceId, String jobId) throws IOException {
         if (null == jobsUrl) {
             String restUrl = jstring(credentials, "rest_url");
             String resourcesPath = jstring(credentials, "resources_path");
@@ -78,8 +80,16 @@ public class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsCo
             JsonElement element = response.get("jobs");
             if (null != element) {
                 jobsUrl = element.getAsString();
+            } else {
+                throw new RESTException("Unable to get jobs URL");
             }
         }
+        Instance instance = getInstance();
+        if (!instance.getId().equals(instanceId)) {
+            // Sanity check, should not happen
+            throw new RESTException("Unable to cancel job in instance " + instanceId);
+        }
+
         return delete(jobsUrl + "/" + jobId);
     }
 

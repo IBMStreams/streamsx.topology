@@ -125,7 +125,10 @@ public class Job extends Element {
      * @throws Exception
      */
     public boolean cancel() throws Exception, IOException {
-        return connection().cancelJob(id);
+        // Get the instance ID
+        String sReturn = connection().getResponseString(instance);
+        String instanceId = Instance.create(connection(), sReturn).getId();
+        return connection().cancelJob(instanceId, id);
     }
 
     /**

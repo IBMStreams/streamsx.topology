@@ -28,7 +28,7 @@ import com.google.gson.annotations.Expose;
 /**
  * Connection to IBM Streams instance
  */
-abstract class AbstractStreamsConnection implements StreamsConnection {
+abstract class AbstractStreamsConnection implements StreamsConnectionInterface {
 
     private static final String INSTANCES_RESOURCE_NAME = "instances";
     private static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamsConnection");
@@ -38,6 +38,8 @@ abstract class AbstractStreamsConnection implements StreamsConnection {
     protected Executor executor;
     protected String authorization;
     protected String instancesUrl;
+
+    abstract boolean cancelJob(String instanceId, String jobId) throws IOException;
 
     abstract protected String getAuthorization();
 
@@ -154,7 +156,7 @@ abstract class AbstractStreamsConnection implements StreamsConnection {
                 // Should find one or none
                 si = instances.get(0);
             } else {
-                throw new RESTException("No single instance with id " + instanceId);
+                throw new RESTException(404, "No single instance with id " + instanceId);
             }
 
         }

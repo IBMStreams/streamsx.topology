@@ -12,7 +12,7 @@ import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Metric;
 import com.ibm.streamsx.rest.Operator;
 import com.ibm.streamsx.rest.OutputPort;
-import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
+import com.ibm.streamsx.rest.StreamingAnalyticsConnectionInterface;
 import com.ibm.streamsx.rest.StreamsRestFactory;
 
 /**
@@ -53,7 +53,7 @@ public class StreamingAnalyticsConnectionSample {
         System.out.println(serviceName);
 
         try {
-            StreamingAnalyticsConnection sClient = StreamsRestFactory.createStreamingAnalyticsConnection(credentials,
+            StreamingAnalyticsConnectionInterface sClient = StreamsRestFactory.createStreamingAnalyticsConnection(credentials,
                     serviceName, allowInsecure);
 
             Instance instance = sClient.getInstance();
