@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 
-2import time
+import time
 
 class DelayedTupleSourceWithLastTuple:
     """
