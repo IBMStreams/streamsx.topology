@@ -1,6 +1,7 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
+
 import logging
 import requests
 import queue
@@ -404,6 +405,7 @@ class Job(_ResourceElement):
         >>> print (jobs[0].health)
         healthy
     """
+
     def get_application_logs(self, path=None, prefix=None):
         """Retrieves the console logs and application traces of the job's processing elements (PEs) and stores them in a compressed 'tar' archive (that is, a '.tar.gz' file) with the specified file name in the specified directory path.
 
@@ -979,7 +981,7 @@ class Instance(_ResourceElement):
     def get_published_topics(self):
         """Get a list of published topics for this instance.
 
-        Streams applications publish streams to a a topic that can be subscribed to by other
+        Streaming applications publish streams to a a topic that can be subscribed to by other
         applications. This allows a microservice approach where publishers
         and subscribers are independent of each other.
 
@@ -1181,28 +1183,55 @@ class StreamingAnalyticsService(object):
         return self._credentials['rest_url'] + self._credentials[req_name]
 
     def submit_job(self, sab_file, configuration=None):
-        """Submit a compiled Streams Application Bundle (a SAB file) to run in this Streamin Analytics service, optionally with a job configuration overlay.
+        """Submit a compiled Streaming Application Bundle (a SAB file) to run in
+        this Streaming Analytics service, optionally with a job configuration
+        overlay.
         
         Args:
-        sab_file(str): path to a compiled SAB file containing the application to be submitted
-        configuration(dict): job configuration overlay containing application parameters, deployment options, tracing level, etc.
+            sab_file(str): path to a compiled SAB file containing the
+                application to be submitted
+            configuration(JobConfig, dict, or str): a job configuration overlay,
+                specified as a JobConfig object, a dictionary containing a
+                jobConfigOverlays structure, or a JSON filename containing a
+                jobConfigOverlays structure. If not specified, all job
+                configuration defaults will be used.
         
         For details of job configuration overlays, see:
-        https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/job_configuration_overlays.html
-        https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html
-        
+            https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/job_configuration_overlays.html
+            https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html
+
+        Raises:
+            AttributeError: configuration file does not contain a jobConfigOverlays structure'
+            AttributeError: configuration is not a JobConfig object, a dictionary containing a jobConfigOverlays structure, or a JSON file containing a job configuration overlay structure'
+
         Returns:
-        dict: JSON response from service with name of submitted job, or, error status code and description
+            dict: JSON response from service containing 'name' field with unique
+                job name assigned to submitted job, or, 'error_status' and
+                'description' fields if submission was unsuccessful.
         """
 
         bundleName = os.path.basename(sab_file)
+
+        jobURL = self._get_url('jobs_path')
+        jobParameters = { 'bundle_id': bundleName }
+        if configuration is None:
+            jobOptions = {}
+        elif isinstance(configuration, streamsx.topology.context.JobConfig):
+            jobOptions = configuration._add_overlays({})
+        elif isinstance(configuration, dict) and 'jobConfigOverlays' in configuration:
+            jobOptions = configuration
+        elif isinstance(configuration, str) and os.path.isfile(configuration):
+            with open(configuration) as file:    
+                jobOptions = json.load(file)
+            if 'jobConfigOverlays' not in jobOptions:
+                raise AttributeError('configuration file does not contain a jobConfigOverlays structure')
+        else:
+            raise AttributeError('configuration is not a JobConfig object, a dictionary containing a jobConfigOverlays structure, or a JSON file containing a job configuration overlay structure')
+
         with open(sab_file, 'rb') as bundleFile:
-            jobURL = self._get_url('jobs_path')
-            jobParameters = { 'bundle_id': bundleName }
-            jobOptions = json.dumps( {} if configuration is None else configuration )
             jobFiles = [
                 ('sab_file', ( bundleName, bundleFile, 'application/octet-stream' ) ),
-                ('job_options', ( 'job_options', jobOptions, 'application/json' ) )
+                ('job_options', ( 'job_options', json.dumps(jobOptions), 'application/json' ) )
                 ]
             return self.rest_client.session.post(url=jobURL, params=jobParameters, files=jobFiles).json()
 

@@ -630,27 +630,34 @@ class JobConfig(object):
     """
     Job configuration.
 
-    `JobConfig` allows configuration of job that will result from submission of a py:class:`Topology` (application).
+    `JobConfig` allows configuration of job that will result from submission of
+        a py:class:`Topology` (application).
 
-    A `JobConfig` is set in the `config` dictionary passed to :py:func:`~streamsx.topology.context.submit`
-    using the key :py:const:`~ConfigParams.JOB_CONFIG`. :py:meth:`~JobConfig.add` exists as a convenience
-    method to add it to a submission configuration.
+    A `JobConfig` is set in the `config` dictionary passed to
+        :py:func:`~streamsx.topology.context.submit` using the key
+        :py:const:`~ConfigParams.JOB_CONFIG`. :py:meth:`~JobConfig.add` exists
+        as a convenience method to add it to a submission configuration.
 
     Args:
-        job_name(str): The name that is assigned to the job. A job name must be unique within a Streasm instance
-            When set to `None` a system generated name is used.
-        job_group(str): The job group to use to control permissions for the submitted job.
-        preload(bool): Specifies whether to preload the job onto all resources in the instance, even if the job is
-            not currently needed on each. Preloading the job can improve PE restart performance if the PEs are
-            relocated to a new resource.
-        data_directory(str): Specifies the location of the optional data directory. The data directory is a path
-            within the cluster that is running the Streams instance.
-        submision_parameters(dict): Specifies values for submission-time parameters in the application the job will run. 
-            See :py:attr:`submission_parameters`.
-        target_pe_count(int): Suggests the number of processing elements (PEs) desired for the job. 
-            See :py:attr:`target_pe_count`.
-            The default is 'None'; the scheduler will decide how many PEs the job needs.
+        job_name(str): The name that is assigned to the job. A job name must be
+            unique within a Streasm instance When set to `None` a system
+            generated name is used.
+        job_group(str): The job group to use to control permissions for the
+            submitted job.
+        preload(bool): Specifies whether to preload the job onto all resources
+            in the instance, even if the job is not currently needed on
+            each. Preloading the job can improve PE restart performance if the
+            PEs are relocated to a new resource.
+        data_directory(str): Specifies the location of the optional data
+            directory. The data directory is a path within the cluster that is
+            running the Streams instance.
         tracing: Specifies the application trace level. See :py:attr:`tracing`
+        submision_parameters(dict): Specifies values for submission-time
+            parameters in the application the job will run.  See
+            :py:attr:`submission_parameters`.
+        target_pe_count(int): Suggests the number of processing elements (PEs)
+            desired for the job.  See :py:attr:`target_pe_count`.  The default
+            is 'None'; the scheduler will decide how many PEs the job needs.
 
     Example::
 
@@ -660,14 +667,14 @@ class JobConfig(object):
         job_config.add(cfg)
         context.submit('ANALYTICS_SERVICE', topo, cfg)
     """
-    def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None, submission_parameters=None, target_pe_count=None, tracing=None):
+    def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None, tracing=None, submission_parameters=None, target_pe_count=None):
         self.job_name = job_name
         self.job_group = job_group
         self.preload = preload
         self.data_directory = data_directory
+        self.tracing = tracing
         self.submission_parameters = submission_parameters
         self.target_pe_count = target_pe_count
-        self.tracing = tracing
 
     @property
     def tracing(self):
@@ -714,17 +721,19 @@ class JobConfig(object):
     def target_pe_count(self):
         """Target processing element count.
 
-         When submitted against a Streams instance `target_pe_count` provides
-         a hint to the scheduler as to how to partition the topology
-         across processing elements (processes) for the job execution. When a job
-         contains multiple processing elements (PEs) then the Streams scheduler can
-         distributed the PEs across the resources (hosts) running in the instance.
+         When submitted against a Streams instance `target_pe_count` provides a
+         hint to the scheduler as to how to partition the topology across
+         processing elements (processes) for the job execution. When a job
+         contains multiple processing elements (PEs) then the Streams scheduler
+         can distributed the PEs across the resources (hosts) running in the
+         instance.
 
-         When set to ``None`` (the default) no hint is supplied to the scheduler.
-         The number of PEs in the submitted job will be determined by the scheduler.
+         When set to ``None`` (the default) no hint is supplied to the
+         scheduler.  The number of PEs in the submitted job will be determined
+         by the scheduler.
 
-         The value is only a target and may be ignored when the topology contains
-         :py:meth:`~Stream.isolate` calls.
+         The value is only a target and may be ignored when the topology
+         contains :py:meth:`~Stream.isolate` calls.
 
          .. note::
              Only supported in Streaming Analytics service and IBM Streams 4.2 or later.
@@ -745,8 +754,10 @@ class JobConfig(object):
     def submission_parameters(self):
         """Submission parameters for job.
 
-        Specified as a dict with item names that match the submission-time parameters in the application the job will run, and
-        item values that will be cast to strings and passed to those parameters when the job starts.
+        Specified as a dictionary with item names that match the submission-time
+        parameters in the application the job will run, and item values that
+        will be cast to strings and passed to those parameters when the job
+        starts.
         """
         return self._submission_parameters
 
@@ -773,7 +784,18 @@ class JobConfig(object):
 
     def _add_overlays(self, config):
         """
-        Add this as a jobConfigOverlays JSON to config.
+        Add a jobConfigOverlays structure to an empty dictionary and fill it
+        with this job configuration.
+
+        For details of job configuration overlay structures, see:
+            https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html
+            https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.dev.doc/doc/dev_job_configuration_overlays.html
+
+        Args:
+            config(dict): empty dictionary, to be filled in with a jobConfigOverlays structure.
+
+        Returns:
+            dict: config, filled in with a jobConfigOverlays structure.
         """
         jco = {}
         config["jobConfigOverlays"] = [jco]
@@ -797,6 +819,8 @@ class JobConfig(object):
 
         if self.target_pe_count is not None and self.target_pe_count >= 1:
             jco["deploymentConfig"] = { 'fusionScheme' : 'manual', 'fusionTargetPeCount' : self.target_pe_count }
+
+        return config
 
 
 class SubmissionResult(object):

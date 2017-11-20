@@ -1,3 +1,7 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+
 import csv
 import os
 import sys

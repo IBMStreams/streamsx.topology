@@ -1,3 +1,7 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+
 import os
 import sys
 import time
@@ -8,7 +12,6 @@ import streamsx.topology.context
 
 logger = logging.getLogger('submit_tests')
 logger.setLevel(logging.INFO)
-
 
 applicationName = 'TestApplication::Main'
 
@@ -24,19 +27,18 @@ applicationParameters = {
     'mapParameter': { 'one': 1, 'two': 2, 'three': 3, 'many': sys.maxsize }
     }
 
+jobConfigFile = 'TestApplication.jobConfig.json'
+
 runInterval = 30
 
 def environment_variables_set():
 
     variables = [ 'STREAMS_INSTALL', 'STREAMING_ANALYTICS_SERVICE_NAME', 'VCAP_SERVICES' ]
-    result = True
-
     for variable in variables:
         if variable not in os.environ:
-            logger.error(variable + ' environment variable not set')
-            result = False
+            return False
 
-    return result
+    return True
 
 @unittest.skipIf(not environment_variables_set() , "Streams environment variables not set")
 class RestSubmitTests(unittest.TestCase):
@@ -92,18 +94,16 @@ class RestSubmitTests(unittest.TestCase):
             self.assertTrue(job.status=='running', 'submit_job() failed, job is not running, status is ' + job.status + ', health is ' + job.health)
             self.assertTrue(job.health=='healthy', 'submit_job() failed, job is not healthy, status is ' + job.status + ', health is ' + job.health)
 
-        for job in jobs:
-            logger.warning('store logs for job ' + job.name)
-            filename = job.get_application_logs()
-            self.assertTrue(os.path.isfile(filename), 'get_application_logs() failed, no file stored as ' + filename)
-            #filename = job.store_logs()
-            #self.assertTrue(os.path.isfile(filename), 'store_logs() failed, no file stored as ' + filename)
-            #for pe in job.get_pes():
-            #    logger.warning('store logs for PE ' + pe.id + ' of job ' + job.name)
-            #    filename = pe.store_console_log()
-            #    self.assertTrue(os.path.isfile(filename), 'store_console_log() failed, no file stored as ' + filename)
-            #    filename = pe.store_application_trace()
-            #    self.assertTrue(os.path.isfile(filename), 'store_application_trace() failed, no file stored as ' + filename)
+#        for job in jobs:
+#            logger.warning('store logs for job ' + job.name)
+#            filename = job.store_logs()
+#            self.assertTrue(os.path.isfile(filename), 'store_logs() failed, no file stored as ' + filename)
+#            for pe in job.get_pes():
+#                logger.warning('store logs for PE ' + pe.id + ' of job ' + job.name)
+#                filename = pe.store_console_log()
+#                self.assertTrue(os.path.isfile(filename), 'store_console_log() failed, no file stored as ' + filename)
+#                filename = pe.store_application_trace()
+#                self.assertTrue(os.path.isfile(filename), 'store_application_trace() failed, no file stored as ' + filename)
 
         for job in jobs:
             logger.warning('cancel job ' + job.name)
@@ -113,13 +113,8 @@ class RestSubmitTests(unittest.TestCase):
 
     def test_B_submit_fully_fused(self):
 
-        jobConfig = streamsx.topology.context.JobConfig(target_pe_count=1, tracing='info')
-
-        jobConfigOverlay = {}
-        jobConfig._add_overlays(jobConfigOverlay)
-
         logger.warning('submit bundle ' + os.path.basename(applicationBundle))
-        result = self.service.submit_job(applicationBundle, configuration=jobConfigOverlay)
+        result = self.service.submit_job(applicationBundle, configuration=jobConfigFile)
         self.assertFalse('status_code' in result, 'submit_job() failed, status code and error description:' + str(result))
         self.assertTrue('name' in result, 'submit_job() failed, no job name returned, result: ' + str(result))
 
@@ -136,18 +131,16 @@ class RestSubmitTests(unittest.TestCase):
             pes = job.get_pes()
             self.assertTrue(len(pes)==1, 'job configuration failed, job has more than one PE')
 
-        for job in jobs:
-            logger.warning('store logs for job ' + job.name)
-            filename = job.get_application_logs()
-            self.assertTrue(os.path.isfile(filename), 'get_application_logs() failed, no file stored as ' + filename)
-            #filename = job.store_logs('mylogs.'+job.name+'.tar.gz')
-            #self.assertTrue(filename=='mylogs.'+job.name+'.tar.gz', 'store_logs() failed, stored ' + filename + ' instead of ' + 'mylogs.'+job.name+'.tar.gz')
-            #for pe in job.get_pes():
-            #    logger.warning('store logs for PE ' + pe.id + ' of job ' + job.name)
-            #    filename = pe.store_console_log('mylogs.'+job.name+'.PE_'+pe.id+'.log')
-            #    self.assertTrue(filename=='mylogs.'+job.name+'.PE_'+pe.id+'.log', 'store_console_log() failed, stored ' + filename + ' instead of ' + 'mylogs.'+job.name+'.PE_'+pe.id+'.log')
-            #    filename = pe.store_application_trace('mylogs.'+job.name+'.PE_'+pe.id+'.trace')
-            #    self.assertTrue(filename=='mylogs.'+job.name+'.PE_'+pe.id+'.trace', 'store_appliation_trace() failed, stored ' + filename + ' instead of ' + 'mylogs.'+job.name+'.PE_'+pe.id+'.trace')
+#        for job in jobs:
+#            logger.warning('store logs for job ' + job.name)
+#            filename = job.store_logs('mylogs.'+job.name+'.tar.gz')
+#            self.assertTrue(filename=='mylogs.'+job.name+'.tar.gz', 'store_logs() failed, stored ' + filename + ' instead of ' + 'mylogs.'+job.name+'.tar.gz')
+#            for pe in job.get_pes():
+#                logger.warning('store logs for PE ' + pe.id + ' of job ' + job.name)
+#                filename = pe.store_console_log('mylogs.'+job.name+'.PE_'+pe.id+'.log')
+#                self.assertTrue(filename=='mylogs.'+job.name+'.PE_'+pe.id+'.log', 'store_console_log() failed, stored ' + filename + ' instead of ' + 'mylogs.'+job.name+'.PE_'+pe.id+'.log')
+#                filename = pe.store_application_trace('mylogs.'+job.name+'.PE_'+pe.id+'.trace')
+#                self.assertTrue(filename=='mylogs.'+job.name+'.PE_'+pe.id+'.trace', 'store_appliation_trace() failed, stored ' + filename + ' instead of ' + 'mylogs.'+job.name+'.PE_'+pe.id+'.trace')
 
         for job in jobs:
             logger.warning('cancel job ' + job.name)
@@ -157,13 +150,10 @@ class RestSubmitTests(unittest.TestCase):
 
     def test_C_submit_with_parameters(self):
 
-        jobConfig = streamsx.topology.context.JobConfig(submission_parameters=applicationParameters, tracing='info')
-
-        jobConfigOverlay = {}
-        jobConfig._add_overlays(jobConfigOverlay)
+        jobConfig = streamsx.topology.context.JobConfig(submission_parameters=applicationParameters, target_pe_count=1, tracing='info')
 
         logger.warning('submit bundle ' + os.path.basename(applicationBundle))
-        result = self.service.submit_job(applicationBundle, configuration=jobConfigOverlay)
+        result = self.service.submit_job(applicationBundle, configuration=jobConfig)
         self.assertFalse('status_code' in result, 'submit_job() failed, status code and error description:' + str(result))
         self.assertTrue('name' in result, 'submit_job() failed, no job name returned, result: ' + str(result))
 
@@ -178,18 +168,16 @@ class RestSubmitTests(unittest.TestCase):
             self.assertTrue(job.status=='running', 'submit_job() failed, job is not running, status is ' + job.status + ', health is ' + job.health)
             self.assertTrue(job.health=='healthy', 'submit_job() failed, job is not healthy, status is ' + job.status + ', health is ' + job.health)
 
-        for job in jobs:
-            logger.warning('store logs for job ' + job.name + ' in subdirectory')
-            filename = job.get_application_logs()
-            self.assertTrue(os.path.isfile(filename), 'get_application_logs() failed, no file stored as ' + filename)
-            #filename = job.store_logs('./logs/'+job.name+'.tgz')
-            #self.assertTrue(filename=='./logs/'+job.name+'.tgz', 'store_logs() failed, stored ' + filename + ' instead of ' + './logs/'+job.name+'.tgz')
-            #for pe in job.get_pes():
-            #    logger.warning('store logs for PE ' + pe.id + ' of job ' + job.name + ' in subdirectory')
-            #    filename = pe.store_console_log('./logs/'+job.name+'.PE_'+pe.id+'.log')
-            #    self.assertTrue(filename=='./logs/'+job.name+'.PE_'+pe.id+'.log', 'store_console_log() failed, stored ' + filename + ' instead of ' + './logs/'+job.name+'.PE_'+pe.id+'.log')
-            #    filename = pe.store_application_trace('./logs/'+job.name+'.PE_'+pe.id+'.trace')
-            #    self.assertTrue(filename=='./logs/'+job.name+'.PE_'+pe.id+'.trace', 'store_appliation_trace() failed, stored ' + filename + ' instead of ' + './logs/'+job.name+'.PE_'+pe.id+'.trace')
+#        for job in jobs:
+#            logger.warning('store logs for job ' + job.name + ' in subdirectory')
+#            filename = job.store_logs('./logs/'+job.name+'.tgz')
+#            self.assertTrue(filename=='./logs/'+job.name+'.tgz', 'store_logs() failed, stored ' + filename + ' instead of ' + './logs/'+job.name+'.tgz')
+#            for pe in job.get_pes():
+#                logger.warning('store logs for PE ' + pe.id + ' of job ' + job.name + ' in subdirectory')
+#                filename = pe.store_console_log('./logs/'+job.name+'.PE_'+pe.id+'.log')
+#                self.assertTrue(filename=='./logs/'+job.name+'.PE_'+pe.id+'.log', 'store_console_log() failed, stored ' + filename + ' instead of ' + './logs/'+job.name+'.PE_'+pe.id+'.log')
+#                filename = pe.store_application_trace('./logs/'+job.name+'.PE_'+pe.id+'.trace')
+#                self.assertTrue(filename=='./logs/'+job.name+'.PE_'+pe.id+'.trace', 'store_appliation_trace() failed, stored ' + filename + ' instead of ' + './logs/'+job.name+'.PE_'+pe.id+'.trace')
 
         for job in jobs:
             logger.warning('cancel job ' + job.name)
@@ -200,13 +188,15 @@ class RestSubmitTests(unittest.TestCase):
     @classmethod
     def tearDownClass(self):
 
-        name = os.environ['STREAMING_ANALYTICS_SERVICE_NAME']
+        #name = os.environ['STREAMING_ANALYTICS_SERVICE_NAME']
+        #logger.warning('stop service ' + name)
+        #result = self.service.stop_instance()
+        #self.assertTrue(result['state']=='STOPPED', 'service did not stop')
 
-        logger.warning('stop service ' + name)
-        result = self.service.stop_instance()
-        self.assertTrue(result['state']=='STOPPED', 'service did not stop')
+        logger.warning('cleanup')
+        result = os.system('rm -rf logs output __pycache__ *.log *.trace *.tar.gz')
 
-
+        pass
 
 
 

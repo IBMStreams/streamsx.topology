@@ -1,3 +1,7 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+
 from streamsx.rest_primitives import *
 import os
 
