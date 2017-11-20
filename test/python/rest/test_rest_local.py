@@ -1,3 +1,7 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+
 import unittest
 import test_vers
 from common_tests import CommonTests, logger
