@@ -1,3 +1,7 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+
 import os
 import sys
 import time
@@ -8,7 +12,6 @@ import streamsx.topology.context
 
 logger = logging.getLogger('submit_tests')
 logger.setLevel(logging.INFO)
-
 
 applicationName = 'TestApplication::Main'
 
@@ -24,19 +27,18 @@ applicationParameters = {
     'mapParameter': { 'one': 1, 'two': 2, 'three': 3, 'many': sys.maxsize }
     }
 
+jobConfigFile = 'TestApplication.jobConfig.json'
+
 runInterval = 30
 
 def environment_variables_set():
 
     variables = [ 'STREAMS_INSTALL', 'STREAMING_ANALYTICS_SERVICE_NAME', 'VCAP_SERVICES' ]
-    result = True
-
     for variable in variables:
         if variable not in os.environ:
-            logger.error(variable + ' environment variable not set')
-            result = False
+            return False
 
-    return result
+    return True
 
 @unittest.skipIf(not environment_variables_set() , "Streams environment variables not set")
 class RestSubmitTests(unittest.TestCase):
@@ -111,13 +113,8 @@ class RestSubmitTests(unittest.TestCase):
 
     def test_B_submit_fully_fused(self):
 
-        jobConfig = streamsx.topology.context.JobConfig(target_pe_count=1, tracing='info')
-
-        jobConfigOverlay = {}
-        jobConfig._add_overlays(jobConfigOverlay)
-
         logger.warning('submit bundle ' + os.path.basename(applicationBundle))
-        result = self.service.submit_job(applicationBundle, configuration=jobConfigOverlay)
+        result = self.service.submit_job(applicationBundle, configuration=jobConfigFile)
         self.assertFalse('status_code' in result, 'submit_job() failed, status code and error description:' + str(result))
         self.assertTrue('name' in result, 'submit_job() failed, no job name returned, result: ' + str(result))
 
@@ -153,13 +150,10 @@ class RestSubmitTests(unittest.TestCase):
 
     def test_C_submit_with_parameters(self):
 
-        jobConfig = streamsx.topology.context.JobConfig(submission_parameters=applicationParameters, tracing='info')
-
-        jobConfigOverlay = {}
-        jobConfig._add_overlays(jobConfigOverlay)
+        jobConfig = streamsx.topology.context.JobConfig(submission_parameters=applicationParameters, target_pe_count=1, tracing='info')
 
         logger.warning('submit bundle ' + os.path.basename(applicationBundle))
-        result = self.service.submit_job(applicationBundle, configuration=jobConfigOverlay)
+        result = self.service.submit_job(applicationBundle, configuration=jobConfig)
         self.assertFalse('status_code' in result, 'submit_job() failed, status code and error description:' + str(result))
         self.assertTrue('name' in result, 'submit_job() failed, no job name returned, result: ' + str(result))
 
@@ -194,13 +188,15 @@ class RestSubmitTests(unittest.TestCase):
     @classmethod
     def tearDownClass(self):
 
-        name = os.environ['STREAMING_ANALYTICS_SERVICE_NAME']
+        #name = os.environ['STREAMING_ANALYTICS_SERVICE_NAME']
+        #logger.warning('stop service ' + name)
+        #result = self.service.stop_instance()
+        #self.assertTrue(result['state']=='STOPPED', 'service did not stop')
 
-        logger.warning('stop service ' + name)
-        result = self.service.stop_instance()
-        self.assertTrue(result['state']=='STOPPED', 'service did not stop')
+        logger.warning('cleanup')
+        result = os.system('rm -rf logs output __pycache__ *.log *.trace *.tar.gz')
 
-
+        pass
 
 
 
