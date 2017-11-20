@@ -1,3 +1,7 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+
 from streamsx.rest_primitives import *
 import os
 
@@ -43,7 +47,7 @@ def _fetch_from_job(tc, job):
 
     # Presently, application logs can only be fetched from the Stream Analytics Service
     else:
-        logs = job.get_application_logs()
+        logs = job.store_logs()
         tc.assertTrue(os.path.isfile(logs))
         os.remove(logs)
 

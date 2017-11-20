@@ -1,0 +1,71 @@
+/*
+** Licensed Materials - Property of IBM
+** Copyright IBM Corp. 2017
+*/
+
+namespace TestApplication;
+
+
+public stateful rstring formatTimestringLocal() {
+  return formatTimestringLocal(getTimestampInSecs(), "%Y-%m-%d %H:%M:%S", 6); }
+
+
+public rstring formatTimestringLocal(float64 when) {
+  return formatTimestringLocal(when, "%Y-%m-%d %H:%M:%S", 6); }
+
+
+public rstring formatTimestringLocal(float64 when, rstring pattern, int32 precision) {
+  timestamp ts = createTimestamp((int64)when, 0u);
+  mutable Sys.tm tm = {};
+  time(ts, tm);
+  mutable rstring formatted = strftime(tm, pattern);
+  if (precision>0) formatted += substring(formatNumber(fmod(when, 1.0), 0u, (uint32)precision, false), 1, precision+1);
+  return formatted; }
+
+
+composite Main {
+
+  param
+  expression<float64> $iterationInterval: (float64)getSubmissionTimeValue("iterationInterval", "1.0");
+  expression<rstring> $stringParameter: getSubmissionTimeValue("stringParameter", "");
+  expression<int32> $integerParameter: (int32)getSubmissionTimeValue("integerParameter", "0");
+  expression<float64> $floatParameter: (float64)getSubmissionTimeValue("floatParameter", "0.0");
+  expression<boolean> $booleanParameter: (boolean)getSubmissionTimeValue("booleanParameter", "false");
+  expression<list<int32>> $listParameter: (list<int32>)getSubmissionTimeValue("listParameter", "[]");
+  expression<map<rstring,uint64>> $mapParameter: (map<rstring,uint64>)getSubmissionTimeValue("mapParameter", "{}");
+  expression<rstring> $outputFilename: "/tmp/TestApplication.out";
+
+
+  graph
+
+  () as Parameters = Custom() {
+  logic onProcess: {
+    log(Sys.info, "parameter iterationInterval: " + (rstring)$iterationInterval);
+    log(Sys.info, "parameter stringParameter: \"" + $stringParameter + "\"");
+    log(Sys.info, "parameter integerParameter: " + (rstring)$integerParameter);
+    log(Sys.info, "parameter floatParameter: " + (rstring)$floatParameter);
+    log(Sys.info, "parameter booleanParameter: " + (rstring)$booleanParameter);
+    log(Sys.info, "parameter listParameter: " + (rstring)$listParameter);
+    log(Sys.info, "parameter mapParameter: " + (rstring)$mapParameter);
+    log(Sys.info, "output filename: " + $outputFilename);
+  } }
+
+
+  stream<float64 when> TimestampStream as Out = Beacon() {
+  param period: $iterationInterval;
+  output Out: when = getTimestampInSecs(); }
+
+
+  stream<rstring line> TimestringStream as Out = Functor(TimestampStream as In) {
+  logic state: { mutable rstring timestring; }
+  onTuple In: {
+    timestring = formatTimestringLocal(when);
+    printStringLn("Beacon operator fired at " + timestring);
+    appTrc(Trace.info, "Beacon operator fired at " + timestring); }
+  output Out:
+  	line = timestring + "\n"; }
+
+
+  () as FileOutput = FileSink(TimestringStream) { param file: $outputFilename; format: txt; }
+
+}
