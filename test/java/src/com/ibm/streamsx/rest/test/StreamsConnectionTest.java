@@ -6,6 +6,7 @@
 package com.ibm.streamsx.rest.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -35,7 +36,6 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
-import com.ibm.streamsx.topology.function.Supplier;
 
 public class StreamsConnectionTest {
 
@@ -194,10 +194,13 @@ public class StreamsConnectionTest {
             Topology topology = new Topology(getClass().getSimpleName(), 
                     "JobForRESTApiTest");
 
-            TStream<Integer> source = topology.periodicSource(randomGenerator(), 200, TimeUnit.MILLISECONDS);
-            TStream<Integer> sourceDouble = source.transform(doubleNumber());
+            TStream<Integer> source = topology.periodicSource(() -> (int) (Math.random() * 5000 + 1), 200, TimeUnit.MILLISECONDS);
+            source.invocationName("IntegerPeriodicMultiSource");
+            TStream<Integer> sourceDouble = source.map(doubleNumber());
+            sourceDouble.invocationName("IntegerTransformInteger");
             @SuppressWarnings("unused")
-            TStream<Integer> sourceDoubleAgain = sourceDouble.isolate().transform(doubleNumber());
+            TStream<Integer> sourceDoubleAgain = sourceDouble.isolate().map(doubleNumber());
+            sourceDoubleAgain.invocationName("ZIntegerTransformInteger");
 
             if (testType.equals("DISTRIBUTED")) {
                 jobId = StreamsContextFactory.getStreamsContext(StreamsContext.Type.DISTRIBUTED).submit(topology).get()
@@ -217,25 +220,8 @@ public class StreamsConnectionTest {
         System.out.println("jobId: " + jobId + " is setup.");
     }
 
-    @SuppressWarnings("serial")
     static Function<Integer, Integer> doubleNumber() {
-        return new Function<Integer, Integer>() {
-            @Override
-            public Integer apply(Integer v) {
-                return new Integer(v * 2);
-            }
-        };
-    }
-
-    @SuppressWarnings("serial")
-    static Supplier<Integer> randomGenerator() {
-        return new Supplier<Integer>() {
-
-            @Override
-            public Integer get() {
-                return (int) (Math.random() * 5000 + 1);
-            }
-        };
+        return x -> x*2;
     }
 
     @After
@@ -343,7 +329,7 @@ public class StreamsConnectionTest {
         OutputPort opSource = outputSource.get(0);
         assertEquals(0, opSource.getIndexWithinOperator());
         assertEquals("operatorOutputPort", opSource.getResourceType());
-        assertEquals("IntegerPeriodicMultiSource_OUT0", opSource.getName());
+        assertNameValid(opSource.getName());
 
         List<Metric> operatorMetrics = opSource.getMetrics();
         for (Metric m : operatorMetrics) {
@@ -359,12 +345,12 @@ public class StreamsConnectionTest {
         assertEquals("operator", op1.getResourceType());
         assertEquals("IntegerTransformInteger", op1.getName());
         assertEquals(1, op1.getIndexWithinJob());
-        assertEquals("com.ibm.streamsx.topology.functional.java::FunctionTransform", op1.getOperatorKind());
+        assertEquals("com.ibm.streamsx.topology.functional.java::Map", op1.getOperatorKind());
 
         List<InputPort> inputTransform = op1.getInputPorts();
         assertEquals(1, inputTransform.size());
         InputPort ip = inputTransform.get(0);
-        assertEquals("IntegerTransformInteger_IN0", ip.getName());
+        assertNameValid(ip.getName());
         assertEquals(0, ip.getIndexWithinOperator());
         assertEquals("operatorInputPort", ip.getResourceType(), "operatorInputPort");
 
@@ -383,8 +369,8 @@ public class StreamsConnectionTest {
         OutputPort opTransform = outputTransform.get(0);
         assertEquals(0, opTransform.getIndexWithinOperator());
         assertEquals("operatorOutputPort", opTransform.getResourceType());
-        assertEquals("IntegerTransformInteger_OUT0", opTransform.getName());
-        assertEquals("IntegerTransformInteger_OUT0", opTransform.getStreamName());
+        assertNameValid(opTransform.getName());
+        assertNameValid(opTransform.getStreamName());
 
         List<Metric> outputPortMetrics = opTransform.getMetrics();
         for (Metric m : outputPortMetrics) {
@@ -395,6 +381,12 @@ public class StreamsConnectionTest {
             assertNotNull(m.getDescription());
             assertTrue(m.getLastTimeRetrieved() > 0);
         }
+    }
+    
+    static void assertNameValid(String name) {
+        assertNotNull(name);
+        assertFalse(name.isEmpty());
+        
     }
 
     @Test
