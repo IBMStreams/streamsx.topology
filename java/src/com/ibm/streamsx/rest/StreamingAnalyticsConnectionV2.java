@@ -34,7 +34,7 @@ public class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsCo
     // of the way we use this, and this should be fast compared to the network
     // I/O that typically follows using the returned authorization.
     @Override
-    synchronized protected String getAuthorization() {
+    synchronized String getAuthorization() {
         if (authorization == null ||
                 System.currentTimeMillis() > authExpiryTime) {
             refreshAuthorization();

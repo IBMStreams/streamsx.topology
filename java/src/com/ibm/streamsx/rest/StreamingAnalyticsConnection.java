@@ -16,18 +16,18 @@ import com.ibm.streamsx.rest.StreamsConnection.InvalidStreamsConnection;
  * Connection to a Streaming Analytics Instance.
  * <p>
  * This class exists for backward compatibility. Users should instead create
- * instances of {@link StreamingAnalyticsConnectionInterface} using the factory
+ * instances of {@link IStreamingAnalyticsConnection} using the factory
  * methods in {@link StreamsRestFactory}.
  */
 
 @Deprecated
 public class StreamingAnalyticsConnection extends StreamsConnection
-        implements StreamingAnalyticsConnectionInterface {
+        implements IStreamingAnalyticsConnection {
 
     private JsonObject config;
 
     private StreamingAnalyticsConnection(
-            StreamingAnalyticsConnectionInterface delegate,
+            IStreamingAnalyticsConnection delegate,
             boolean allowInsecure) {
         super(delegate, allowInsecure);
     }
@@ -112,7 +112,7 @@ public class StreamingAnalyticsConnection extends StreamsConnection
 
     private static StreamingAnalyticsConnection createInstance(
             JsonObject config, boolean allowInsecure) throws IOException {
-        StreamingAnalyticsConnectionInterface delegate =
+        IStreamingAnalyticsConnection delegate =
                 StreamsRestFactory.createStreamingAnalyticsConnection(config,
                         allowInsecure);
         StreamingAnalyticsConnection sac = new StreamingAnalyticsConnection(delegate, allowInsecure);
@@ -120,9 +120,9 @@ public class StreamingAnalyticsConnection extends StreamsConnection
         return sac;
     }
 
-    private StreamingAnalyticsConnectionInterface streamingAnalyticsConnection() {
+    private IStreamingAnalyticsConnection streamingAnalyticsConnection() {
         // We know the cast is safe, because this class' constructor requires
         // StreamingAnalyticsConnectionInterface as the delegate.
-        return (StreamingAnalyticsConnectionInterface)delegate;
+        return (IStreamingAnalyticsConnection)delegate;
     }
 }

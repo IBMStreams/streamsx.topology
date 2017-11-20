@@ -15,7 +15,7 @@ import com.ibm.streamsx.rest.Operator;
 import com.ibm.streamsx.rest.OutputPort;
 import com.ibm.streamsx.rest.ProcessingElement;
 import com.ibm.streamsx.rest.RESTException;
-import com.ibm.streamsx.rest.StreamsConnectionInterface;
+import com.ibm.streamsx.rest.IStreamsConnection;
 import com.ibm.streamsx.rest.StreamsRestFactory;
 
 /**
@@ -56,7 +56,7 @@ public class StreamsConnectionSample {
         /*
          * Create the connection to the instance indicated
          */
-        StreamsConnectionInterface sClient = StreamsRestFactory.createStreamsConnection(userName, authToken,
+        IStreamsConnection sClient = StreamsRestFactory.createStreamsConnection(userName, authToken,
                 url, allowInsecure);
 
         try {

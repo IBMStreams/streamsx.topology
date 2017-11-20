@@ -28,7 +28,7 @@ import com.google.gson.annotations.Expose;
 /**
  * Connection to IBM Streams instance
  */
-abstract class AbstractStreamsConnection implements StreamsConnectionInterface {
+abstract class AbstractStreamsConnection implements IStreamsConnection {
 
     private static final String INSTANCES_RESOURCE_NAME = "instances";
     private static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamsConnection");
@@ -41,7 +41,7 @@ abstract class AbstractStreamsConnection implements StreamsConnectionInterface {
 
     abstract boolean cancelJob(String instanceId, String jobId) throws IOException;
 
-    abstract protected String getAuthorization();
+    abstract String getAuthorization();
 
     /**
      * Connection to IBM Streams
@@ -106,6 +106,13 @@ abstract class AbstractStreamsConnection implements StreamsConnectionInterface {
                 throw new RESTException("Unable to find instances resource from resources URL: " + resourcesUrl);
             }
         }
+    }
+
+    /**
+     * Direct package access to the Executor.
+     */
+    Executor getExecutor() {
+        return executor;
     }
 
     /**

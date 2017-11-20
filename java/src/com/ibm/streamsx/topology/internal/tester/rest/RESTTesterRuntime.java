@@ -16,7 +16,7 @@ import com.google.gson.JsonObject;
 import com.ibm.streams.flow.handlers.StreamHandler;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.rest.Job;
-import com.ibm.streamsx.rest.StreamingAnalyticsConnectionInterface;
+import com.ibm.streamsx.rest.IStreamingAnalyticsConnection;
 import com.ibm.streamsx.rest.StreamsRestFactory;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
@@ -48,7 +48,7 @@ public class RESTTesterRuntime extends TesterRuntime {
     public void start(Object info) throws Exception {
         
         JsonObject deployment = (JsonObject) info;
-        StreamingAnalyticsConnectionInterface conn = StreamsRestFactory.createStreamingAnalyticsConnection(deployment);
+        IStreamingAnalyticsConnection conn = StreamsRestFactory.createStreamingAnalyticsConnection(deployment);
         
         JsonObject submission = jobject(deployment, "submissionResults");
         requireNonNull(submission);

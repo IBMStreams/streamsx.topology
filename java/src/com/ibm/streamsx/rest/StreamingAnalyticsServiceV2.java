@@ -125,7 +125,6 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
         String buildURL = getBuildsUrl(httpclient) + "/"
             + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name());
         HttpGet httpget = new HttpGet(buildURL);
-        httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpget.addHeader("Authorization", authorization);
 
         return StreamsRestUtils.getGsonResponse(httpclient, httpget);
@@ -141,7 +140,6 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
                 + URLEncoder.encode(outputId, StandardCharsets.UTF_8.name());
         HttpGet httpget = new HttpGet(buildOutputURL);
         httpget.addHeader("Authorization", authorization);
-        httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
 
         return StreamsRestUtils.getGsonResponse(httpclient, httpget);
     }
@@ -152,7 +150,6 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
             throws IOException {
         String newBuildURL = getBuildsUrl(httpclient);
         HttpPost httppost = new HttpPost(newBuildURL);
-        httppost.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httppost.addHeader("Authorization", authorization);
 
         JsonObject buildParams = new JsonObject();
@@ -180,7 +177,6 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
             JsonObject jobConfigOverlays, String authorization, String submitUrl)
             throws IOException {
         HttpPost postArtifact = new HttpPost(submitUrl);
-        postArtifact.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         postArtifact.addHeader("Authorization", authorization);
 
         StringBody paramsBody = new StringBody(jobConfigOverlays.toString(),
@@ -204,7 +200,6 @@ public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsServi
         String url = getJobSubmitUrl(httpClient, bundle);
 
         HttpPost postJobWithConfig = new HttpPost(url);
-        postJobWithConfig.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         postJobWithConfig.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
 
         FileBody bundleBody = new FileBody(bundle, ContentType.APPLICATION_OCTET_STREAM);

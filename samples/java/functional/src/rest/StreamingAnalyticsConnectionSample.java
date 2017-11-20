@@ -12,7 +12,7 @@ import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Metric;
 import com.ibm.streamsx.rest.Operator;
 import com.ibm.streamsx.rest.OutputPort;
-import com.ibm.streamsx.rest.StreamingAnalyticsConnectionInterface;
+import com.ibm.streamsx.rest.IStreamingAnalyticsConnection;
 import com.ibm.streamsx.rest.StreamsRestFactory;
 
 /**
@@ -29,7 +29,7 @@ import com.ibm.streamsx.rest.StreamsRestFactory;
  * The following arguments are required for the sample:
  * <ul>
  * <li>credentials (as an absolute file path, or JSON string)</li>
- * <li>serviceName identifiying the credentials to use in the file</li>
+ * <li>serviceName identifying the credentials to use in the file</li>
  * </ul>
  * </p>
  *
@@ -53,7 +53,7 @@ public class StreamingAnalyticsConnectionSample {
         System.out.println(serviceName);
 
         try {
-            StreamingAnalyticsConnectionInterface sClient = StreamsRestFactory.createStreamingAnalyticsConnection(credentials,
+            IStreamingAnalyticsConnection sClient = StreamsRestFactory.createStreamingAnalyticsConnection(credentials,
                     serviceName, allowInsecure);
 
             Instance instance = sClient.getInstance();

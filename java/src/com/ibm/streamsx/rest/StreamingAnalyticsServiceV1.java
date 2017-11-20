@@ -100,7 +100,6 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
         String buildURL = getBuildsUrl(httpclient) + "?build_id="
             + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name());
         HttpGet httpget = new HttpGet(buildURL);
-        httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpget.addHeader("Authorization", authorization);
 
         JsonObject response = StreamsRestUtils.getGsonResponse(httpclient, httpget);
@@ -125,7 +124,6 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
                 + URLEncoder.encode(outputId, StandardCharsets.UTF_8.name());
         HttpGet httpget = new HttpGet(buildOutputURL);
         httpget.addHeader("Authorization", authorization);
-        httpget.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
 
         JsonObject response = StreamsRestUtils.getGsonResponse(httpclient, httpget);
         for(JsonElement outputElem : array(response, "builds")){
@@ -144,7 +142,6 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
         String newBuildURL = getBuildsUrl(httpclient) + "?build_name=" +
                 URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
         HttpPost httppost = new HttpPost(newBuildURL);
-        httppost.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httppost.addHeader("Authorization", authorization);
 
         FileBody archiveBody = new FileBody(archive,
@@ -166,7 +163,6 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
             JsonObject jobConfigOverlays, String authorization, String submitUrl)
             throws IOException {
         HttpPut httpput = new HttpPut(submitUrl);
-        httpput.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         httpput.addHeader("Authorization", authorization);
         httpput.addHeader("content-type", ContentType.APPLICATION_JSON.getMimeType());
 
@@ -190,7 +186,6 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
         String url = getJobSubmitUrl(httpClient, bundle);
 
         HttpPost postJobWithConfig = new HttpPost(url);
-        postJobWithConfig.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         postJobWithConfig.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
         FileBody bundleBody = new FileBody(bundle, ContentType.APPLICATION_OCTET_STREAM);
         StringBody configBody = new StringBody(jobConfigOverlay.toString(), ContentType.APPLICATION_JSON);

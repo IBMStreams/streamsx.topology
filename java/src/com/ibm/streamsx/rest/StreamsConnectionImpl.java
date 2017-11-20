@@ -17,7 +17,7 @@ public class StreamsConnectionImpl extends AbstractStreamsConnection {
     }
 
     @Override
-    protected String getAuthorization() {
+    String getAuthorization() {
         return authorization;
     }
 

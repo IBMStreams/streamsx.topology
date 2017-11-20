@@ -8,28 +8,39 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 
+import org.apache.http.client.fluent.Executor;
+
 import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
 
 /**
  * Connection to IBM Streams
  * <p>
  * This class exists for backward compatibility. Users should instead create
- * instances of {@link StreamsConnectionInterface} using the factory methods
+ * instances of {@link IStreamsConnection} using the factory methods
  * in {@link StreamsRestFactory}.
  */
 @Deprecated
-public class StreamsConnection implements StreamsConnectionInterface {
-    protected StreamsConnectionInterface delegate;
+public class StreamsConnection implements IStreamsConnection {
+    protected IStreamsConnection delegate;
     protected boolean allowInsecure;
 
     private String userName;
     private String authToken;
     private String url;
 
-    protected StreamsConnection(StreamsConnectionInterface delegate,
+    // May be stale or expired. Invoke a member method to refresh.
+    protected String apiKey;
+    protected Executor executor;
+
+    StreamsConnection(IStreamsConnection delegate,
             boolean allowInsecure) {
         this.delegate = delegate;
         this.allowInsecure = allowInsecure;
+        refreshState();
+    }
+
+    protected StreamsConnection(String userName, String authToken, String url) {
+        this(createDelegate(userName, authToken, url), false);
     }
 
     /**
@@ -43,29 +54,13 @@ public class StreamsConnection implements StreamsConnectionInterface {
      *            String representing the root url to the REST API
      * @return a connection to IBM Streams
      */
-    public static StreamsConnection createInstance(String userName, String authToken, String url) {
-        System.err.println("createInstance start");
-        StreamsConnectionInterface delegate = null;
-        try {
-            delegate = StreamsRestFactory.createStreamsConnection(userName,
-                    authToken, url, false);
-            System.err.println("createInstance delegate ok");
-        } catch (IOException ioe) {
-            System.err.println("createInstance delegate I/O exception");
-            delegate = new InvalidStreamsConnection(ioe);
-            System.err.println("createInstance delegate dummy ok");
-        } catch (Exception e) {
-            System.err.println("createInstance delegate exception");
-            delegate = new InvalidStreamsConnection(e);
-            System.err.println("createInstance delegate dummy ok");
-        }
-        System.err.println("createInstance delegate ready");
+    public static StreamsConnection createInstance(String userName,
+            String authToken, String url) {
+        IStreamsConnection delegate = createDelegate(userName, authToken, url);
         StreamsConnection sc = new StreamsConnection(delegate, false);
-        System.err.println("createInstance StreamsConnection ok");
         sc.userName = userName;
         sc.authToken = authToken;
         sc.url = url;
-        System.err.println("createInstance end");
         return sc;
     }
 
@@ -86,6 +81,7 @@ public class StreamsConnection implements StreamsConnectionInterface {
      *         </ul>
      */
     public boolean allowInsecureHosts(boolean allowInsecure) {
+        refreshState();
         if (allowInsecure != this.allowInsecure
                 && null != userName && null != authToken && null != url) {
             try {
@@ -114,6 +110,7 @@ public class StreamsConnection implements StreamsConnectionInterface {
      * @throws Exception
      */
     public boolean cancelJob(String jobId) throws Exception {
+        refreshState();
         InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId), userName);
         return cancelJob.invoke(false) == 0;
     }
@@ -128,6 +125,7 @@ public class StreamsConnection implements StreamsConnectionInterface {
      * @throws IOException
      */
     public Instance getInstance(String instanceId) throws IOException {
+        refreshState();
         return delegate.getInstance(instanceId);
     }
 
@@ -140,12 +138,41 @@ public class StreamsConnection implements StreamsConnectionInterface {
      * @throws IOException
      */
     public List<Instance> getInstances() throws IOException {
+        refreshState();
         return delegate.getInstances();
+    }
+
+    // Refresh protected members from the previous implementation
+    void refreshState() {
+        if (delegate instanceof AbstractStreamsConnection) {
+            AbstractStreamsConnection asc = (AbstractStreamsConnection)delegate;
+            apiKey = asc.getAuthorization();
+            executor = asc.getExecutor();
+        }
+    }
+
+    protected void setStreamsRESTURL(String url) {
+        delegate = createDelegate(userName, authToken, url);
+        refreshState();
+    }
+
+    private static IStreamsConnection createDelegate(String userName,
+            String authToken, String url) {
+        IStreamsConnection delegate = null;
+        try {
+            delegate = StreamsRestFactory.createStreamsConnection(userName,
+                    authToken, url, false);
+        } catch (IOException ioe) {
+            delegate = new InvalidStreamsConnection(ioe);
+        } catch (Exception e) {
+            delegate = new InvalidStreamsConnection(e);
+        }
+        return delegate;
     }
 
     // Since the original class never threw on exception on creation, we need a
     // dummy class that will throw on use.
-    static class InvalidStreamsConnection implements StreamsConnectionInterface {
+    static class InvalidStreamsConnection implements IStreamsConnection {
         private final static String MSG = "Invalid Streams connection";
 
         protected final Exception exception;

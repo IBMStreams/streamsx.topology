@@ -63,7 +63,7 @@ class StreamingAnalyticsConnectionV1 extends AbstractStreamingAnalyticsConnectio
     }
 
     @Override
-    protected String getAuthorization() {
+    String getAuthorization() {
         return authorization;
     }
 
