@@ -1,0 +1,7 @@
+*.tar.gz
+*.log
+*.trace
+
+logs/
+output/
+tk*/

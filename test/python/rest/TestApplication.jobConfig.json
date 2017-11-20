@@ -1,0 +1,13 @@
+{
+  "jobConfigOverlays": [
+    {
+      "deploymentConfig": {
+        "fusionScheme": "manual",
+        "fusionTargetPeCount": 1
+      },
+      "jobConfig": {
+        "tracing": "info"
+      }
+    }
+  ]
+}

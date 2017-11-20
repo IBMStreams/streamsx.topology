@@ -2,17 +2,26 @@
 To add another suite of tests, create a file of the form *tests.py. Any classes inside the created module which
 inherit from unittest.TestCase will be added to the list of suites which are run by the test runner. For example
 
-**string_test.py**
+**string_tests.py**
 ```Python
+import unittest
+import logging
+logger = logging.getLogger('string_tests')
 class TestStringFeatures(unittest.TestCase):
     def test_upper(self):
-        unittest.assertEquals("asdf".upper(), "ASDF")
+        logger.debug("Beginning test: test_upper")
+        self.assertEqual("asdf".upper(), "ASDF")
 ```
 
 ## Running tests
-To run the test suite, just invoke
+To run all test suites, just invoke:
 ```
 python -m unittest discover
+```
+
+To run just one test suite, invoke it like this:
+```
+python -m unittest -v string_tests
 ```
 
 Run a subset of tests using the standard Python unittest approaches.
@@ -26,6 +35,6 @@ To change them, specify the environment variables:
 * STREAMS_USERNAME
 * STREAMS_PASSWORD
 
-To run the rest_bluemix_tests, specify the environment variables:
+To run the rest_bluemix_tests and submit_tests, specify these environment variables:
 * VCAP_SERVICES
 * STREAMING_ANALYTICS_SERVICE_NAME
