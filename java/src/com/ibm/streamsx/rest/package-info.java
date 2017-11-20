@@ -11,14 +11,14 @@
  * </p>
  * 
  * <p>
- * For the IBM Streams product, a {@link com.ibm.streamsx.rest.StreamsConnection
+ * For the IBM Streams product, a {@link com.ibm.streamsx.rest.AbstractStreamsConnection
  * Streams Connection} object is created to access the rest of the resourceTypes
  * in the instance.
  * </p>
  * 
  * <p>
  * For the IBM Streaming Analytics service, a
- * {@link com.ibm.streamsx.rest.StreamingAnalyticsConnection Streaming Analytics
+ * {@link com.ibm.streamsx.rest.StreamingAnalyticsConnectionV1 Streaming Analytics
  * Connection} object is created to access the rest of the resourceTypes in the
  * service.
  * </p>

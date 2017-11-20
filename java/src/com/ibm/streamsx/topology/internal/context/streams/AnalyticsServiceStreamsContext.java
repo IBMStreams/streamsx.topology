@@ -6,7 +6,6 @@ package com.ibm.streamsx.topology.internal.context.streams;
 
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices.getVCAPService;
 
 import java.io.File;
@@ -14,16 +13,10 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.Future;
 
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.context.remote.RemoteContext;
-import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.rest.StreamingAnalyticsService;
+import com.ibm.streamsx.rest.StreamsRestFactory;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
-import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
-import com.ibm.streamsx.topology.internal.streams.Util;
 
 public class AnalyticsServiceStreamsContext extends
         BundleUserStreamsContext<BigInteger> {
@@ -87,33 +80,7 @@ public class AnalyticsServiceStreamsContext extends
         JsonObject deploy =  deploy(submission);
         
         final JsonObject service = getVCAPService(deploy);
-        final String serviceName = jstring(service, "name");
-                      
-        final CloseableHttpClient httpClient = HttpClients.createDefault();
-        try {
-            Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Checking status :" + serviceName);
-            
-            RestUtils.checkInstanceStatus(httpClient, service);
-            
-            Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Submitting bundle : " + bundle.getName() + " to " + serviceName);
-            
-            JsonObject jcojson = DeployKeys.copyJobConfigOverlays(deploy);
-            
-            Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job request:" + jcojson.toString());
-
-            JsonObject response = RestUtils.postJob(httpClient, service, bundle, jcojson);
-            
-            final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
-            GsonUtilities.addAll(submissionResult, response);
-            
-            String jobId = jstring(response, "jobId");
-            
-            if (jobId == null)
-                return BigInteger.valueOf(-1);
-            
-            return new BigInteger(jobId);
-        } finally {
-            httpClient.close();
-        }
+        final StreamingAnalyticsService sas = StreamsRestFactory.createStreamingAnalyticsService(service);
+        return sas.submitJob(bundle, submission);
     }
 }

@@ -38,7 +38,7 @@ public class InputPort extends Element {
     @Expose
     private String restid;
 
-    static final List<InputPort> getInputPortList(StreamsConnection sc, String inputPortListString) {
+    static final List<InputPort> getInputPortList(AbstractStreamsConnection sc, String inputPortListString) {
         List<InputPort> ipList;
         try {
             InputPortArray ipArray = gson.fromJson(inputPortListString, InputPortArray.class);

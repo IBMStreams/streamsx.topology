@@ -39,10 +39,13 @@ public class RemoteStreamingAnalyticsServiceStreamsContext extends JSONStreamsCo
     @Override
     protected Future<BigInteger> action(com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity entity) throws Exception {
         remoteContext.submit(entity.submission).get();
-        
+
         JsonObject results = object(entity.submission, RemoteContext.SUBMISSION_RESULTS);
         if (results != null) {
-            String jobId = jstring(results, "jobId");
+            // V2 uses id, V1 uses jobId
+            String jobId = jstring(results, "id");
+            if (jobId == null)
+                jobId = jstring(results, "jobId");
             if (jobId != null)
                 return new CompletedFuture<>(new BigInteger(jobId));
         }

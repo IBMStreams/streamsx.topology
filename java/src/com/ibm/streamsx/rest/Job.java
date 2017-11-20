@@ -77,13 +77,13 @@ public class Job extends Element {
     @Expose
     private String views;
 
-    static final Job create(StreamsConnection sc, String gsonJobString) {
+    static final Job create(AbstractStreamsConnection sc, String gsonJobString) {
         Job job = gson.fromJson(gsonJobString, Job.class);
         job.setConnection(sc);
         return job;
     }
 
-    static final List<Job> getJobList(StreamsConnection sc, String gsonJobList) {
+    static final List<Job> getJobList(AbstractStreamsConnection sc, String gsonJobList) {
         List<Job> jList;
         JobArray jobsArray;
         try {
@@ -125,7 +125,10 @@ public class Job extends Element {
      * @throws Exception
      */
     public boolean cancel() throws Exception, IOException {
-        return connection().cancelJob(id);
+        // Get the instance ID
+        String sReturn = connection().getResponseString(instance);
+        String instanceId = Instance.create(connection(), sReturn).getId();
+        return connection().cancelJob(instanceId, id);
     }
 
     /**
