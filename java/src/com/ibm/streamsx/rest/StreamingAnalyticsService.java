@@ -97,4 +97,13 @@ public interface StreamingAnalyticsService {
      * @throws IOException
      */
     BigInteger buildAndSubmitJob(File archive, JsonObject submission) throws IOException;
+
+    /**
+     * Gets the {@link Instance IBM Streams Instance} object for the Streaming
+     * Analytics service.
+     * @return an {@link Instance IBM Streams Instance} associated with this
+     * service.
+     * @throws IOException
+     */
+    Instance getInstance() throws IOException;
 }
