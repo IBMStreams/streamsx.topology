@@ -7,7 +7,6 @@ package com.ibm.streamsx.rest;
 
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.File;
 import java.io.IOException;
@@ -97,4 +96,13 @@ public interface StreamingAnalyticsService {
      * @throws IOException
      */
     BigInteger buildAndSubmitJob(File archive, JsonObject submission) throws IOException;
+
+    /**
+     * Gets the {@link Instance IBM Streams Instance} object for the Streaming
+     * Analytics service.
+     * @return an {@link Instance IBM Streams Instance} associated with this
+     * service.
+     * @throws IOException
+     */
+    Instance getInstance() throws IOException;
 }
