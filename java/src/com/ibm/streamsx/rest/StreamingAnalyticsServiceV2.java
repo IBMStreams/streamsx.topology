@@ -26,7 +26,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 
-public class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
+class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
 
     private long authExpiryTime = -1L;
 
