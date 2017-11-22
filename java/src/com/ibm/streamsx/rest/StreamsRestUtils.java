@@ -37,11 +37,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-public class StreamsRestUtils {
+class StreamsRestUtils {
 
     private StreamsRestUtils() {}
 
-    public enum StreamingAnalyticsServiceVersion { V1, V2, UNKNOWN }
+    enum StreamingAnalyticsServiceVersion { V1, V2, UNKNOWN }
 
     // V1 credentials members
     static final String MEMBER_PASSWORD = "password";

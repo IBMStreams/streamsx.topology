@@ -12,7 +12,7 @@ import java.io.IOException;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-public class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnection {
+class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnection {
 
     private long authExpiryTime;
     private String jobsUrl;

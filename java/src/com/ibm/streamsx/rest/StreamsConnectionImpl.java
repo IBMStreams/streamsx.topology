@@ -6,7 +6,7 @@ import java.math.BigInteger;
 import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
-public class StreamsConnectionImpl extends AbstractStreamsConnection {
+class StreamsConnectionImpl extends AbstractStreamsConnection {
 
     private final String userName;
 
