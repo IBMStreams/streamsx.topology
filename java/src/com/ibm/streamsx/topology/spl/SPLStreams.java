@@ -21,9 +21,11 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
+import com.ibm.streamsx.topology.logic.Value;
 
 /**
  * Utilities for SPL attribute schema streams.
@@ -43,9 +45,19 @@ public class SPLStreams {
      */
     public static SPLStream subscribe(TopologyElement te, String topic,
             StreamSchema schema) {
+    	return subscribe(te, Value.of(topic), schema);
+    }
 
+    public static SPLStream subscribe(TopologyElement te, Supplier<String> topic, StreamSchema schema) {
+    	return _subscribe(te, topic, schema);
+    }
+
+    private static SPLStream _subscribe(TopologyElement te, Supplier<String> topic, StreamSchema schema) {
         Map<String, Object> params = new HashMap<>();
-
+        
+        if(topic == null)
+        	throw new IllegalArgumentException("topic");
+                
         params.put("topic", topic);
         params.put("streamType", schema);
 
@@ -55,7 +67,7 @@ public class SPLStreams {
 
         return stream;
     }
-
+    
     /**
      * Convert a {@code Stream} to an {@code SPLStream}. For each tuple
      * {@code t} on {@code stream}, the returned stream will contain a tuple
