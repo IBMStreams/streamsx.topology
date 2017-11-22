@@ -5,19 +5,68 @@
 
 package com.ibm.streamsx.rest;
 
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 /**
- * An interface for using the REST API of IBM Clould Streaming Analytics Service.
- * Not all REST services are supported at this time, only the ones currently
- * used by Topology for build and job submission.
+ * Access to a Streaming Analytics service on IBM Cloud.
+ * 
  * @since 1.8
  */
 public interface StreamingAnalyticsService {
+    
+    /**
+     * Access to a Streaming Analytics service on IBM Cloud.
+     * 
+     * <BR>
+     *  When specified {@code vcapServices} may be one of:
+     * <UL>
+     * <LI>An object representing VCAP service definitions.</LI>
+     * <LI>A string representing a file containing VCAP service definitions.</LI>
+     * </UL>
+     * If {@code vcapServices} is {@code null} then the environment
+     * variable {@code VCAP_SERVICES} must contain the valid service
+     * definitions and credentials.
+     * <BR>
+     * If {@code serviceName} is {@code null} then the environment
+     * variable {@code STREAMING_ANALYTICS_SERVICE_NAME} must contain the name of
+     * the required service.
+     * <BR>
+     * The service named by {@code serviceName} must exist in the
+     * defined VCAP services.
+     *
+     * @param vcapServices
+     *            JSON representation of VCAP service definitions.
+     * @param serviceName
+     *            Name of the Streaming Analytics service to access.
+     *            
+     * @return {@code StreamingAnalyticsService} for {@code serviceName}.
+     * @throws IOException
+     */
+    static StreamingAnalyticsService of(JsonElement vcapServices,
+            String serviceName) throws IOException {
+
+        JsonObject config = new JsonObject();
+
+        if (serviceName != null)
+            config.addProperty(SERVICE_NAME, serviceName);
+        if (vcapServices != null)
+            config.add(VCAP_SERVICES, vcapServices);
+        
+        System.err.println("SAS:" + config);
+
+
+        return AbstractStreamingAnalyticsService.of(config);
+    }
+    
     /**
      * Submit a Streams bundle to run on the Streaming Analytics Service.
      * <p>The JSON object may contain an optional {@code deploy} member that

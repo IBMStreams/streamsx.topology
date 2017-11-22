@@ -22,20 +22,6 @@ public class StreamsRestFactory {
 
     private StreamsRestFactory() {}
 
-    public static StreamingAnalyticsService createStreamingAnalyticsService(
-            JsonObject service) throws IOException {
-        JsonObject credentials = service.get("credentials").getAsJsonObject();
-        StreamingAnalyticsServiceVersion version = StreamsRestUtils.getStreamingAnalyticsServiceVersion(credentials);
-        switch (version) {
-        case V1:
-            return new StreamingAnalyticsServiceV1(service);
-        case V2:
-            return new StreamingAnalyticsServiceV2(service);
-        default:
-            throw new IllegalStateException("Unknown Streaming Analytics Service version");
-        }
-    }
-
     /**
      * Connect to IBM Streams REST API instance directly (eg. a DISTRIBUTED
      * instance).
