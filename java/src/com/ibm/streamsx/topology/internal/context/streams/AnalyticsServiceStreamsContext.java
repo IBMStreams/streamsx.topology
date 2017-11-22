@@ -4,8 +4,11 @@
  */
 package com.ibm.streamsx.topology.internal.context.streams;
 
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices.getVCAPService;
 
 import java.io.File;
@@ -15,8 +18,9 @@ import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.StreamingAnalyticsService;
-import com.ibm.streamsx.rest.StreamsRestFactory;
+import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
+import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 public class AnalyticsServiceStreamsContext extends
         BundleUserStreamsContext<BigInteger> {
@@ -79,8 +83,14 @@ public class AnalyticsServiceStreamsContext extends
     private BigInteger submitJobToService(File bundle, JsonObject submission) throws IOException {
         JsonObject deploy =  deploy(submission);
         
-        final JsonObject service = getVCAPService(deploy);
-        final StreamingAnalyticsService sas = StreamsRestFactory.createStreamingAnalyticsService(service);
+        JsonObject vcapServices = VcapServices.getVCAPServices(deploy.get(VCAP_SERVICES));
+        
+        System.err.println("CONTEXT:" + vcapServices);
+        System.err.println("CONTEXT:NAME:" + jstring(deploy, SERVICE_NAME));
+
+        final StreamingAnalyticsService sas = StreamingAnalyticsService.of(vcapServices,
+                jstring(deploy, SERVICE_NAME));
+        
         return sas.submitJob(bundle, submission);
     }
 }

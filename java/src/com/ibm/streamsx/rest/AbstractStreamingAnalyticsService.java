@@ -29,9 +29,11 @@ import org.apache.http.impl.client.HttpClients;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.StreamsRestUtils.StreamingAnalyticsServiceVersion;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
@@ -267,5 +269,22 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             name += String.valueOf((hexes[r.nextInt(hexes.length)]));
         }
         return name;
+    }
+    
+    static StreamingAnalyticsService of(JsonObject config) throws IOException {
+        
+        // Get the VCAP service based on the config, and extract credentials
+        JsonObject service = VcapServices.getVCAPService(config);
+                
+        JsonObject credentials = service.get("credentials").getAsJsonObject();
+        StreamingAnalyticsServiceVersion version = StreamsRestUtils.getStreamingAnalyticsServiceVersion(credentials);
+        switch (version) {
+        case V1:
+            return new StreamingAnalyticsServiceV1(service);
+        case V2:
+            return new StreamingAnalyticsServiceV2(service);
+        default:
+            throw new IllegalStateException("Unknown Streaming Analytics Service version");
+        }
     }
 }

@@ -4,14 +4,17 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.StreamingAnalyticsService;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContext {
@@ -25,24 +28,22 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	    // Get the VCAP service info which also verifies we have the
 	    // right information before we do any work.
 	    JsonObject deploy = deploy(submission);
-	    JsonObject service = VcapServices.getVCAPService(deploy);
+        JsonObject vcapServices = VcapServices.getVCAPServices(deploy.get(VCAP_SERVICES));
+
+        final StreamingAnalyticsService sas = StreamingAnalyticsService.of(vcapServices,
+                jstring(deploy, SERVICE_NAME));
 	    
 	    Future<File> archive = super._submit(submission);
 	    
 	    File buildArchive =  archive.get();
 		
 	    try {
-		    doSubmit(submission, service, buildArchive);
+	        sas.buildAndSubmitJob(buildArchive, submission);
 	    } finally {		
 		    if (!keepArtifacts(submission))
 		        buildArchive.delete();
 	    }
 		
 		return archive;
-	}
-	
-	private void doSubmit(JsonObject submission, JsonObject service, File archive) throws IOException{
-        BuildServiceRemoteRESTWrapper wrapper = new BuildServiceRemoteRESTWrapper(service);
-        wrapper.remoteBuildAndSubmit(submission, archive);
 	}
 }
