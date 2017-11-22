@@ -7,7 +7,6 @@ package com.ibm.streamsx.rest;
 
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.File;
 import java.io.IOException;
