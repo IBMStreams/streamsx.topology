@@ -153,7 +153,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     }
 
     @Override
-    public void buildAndSubmitJob(File archive, JsonObject submission) throws IOException {
+    public BigInteger buildAndSubmitJob(File archive, JsonObject submission) throws IOException {
         JsonObject deploy = DeployKeys.deploy(submission);
         JsonObject graph = object(submission, "graph");
         // Use the SPL compatible form of the name to ensure
@@ -219,6 +219,13 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             // Pass back to Python
             final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
             GsonUtilities.addAll(submissionResult, response);
+
+            String jobId = jstring(response, getJobSubmitId());
+
+            if (jobId == null)
+                return BigInteger.valueOf(-1);
+
+            return new BigInteger(jobId);
         } finally {
             httpclient.close();
 
