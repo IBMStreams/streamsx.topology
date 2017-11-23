@@ -10,17 +10,16 @@ import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_
 import java.io.IOException;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.rest.StreamsConnection.InvalidStreamsConnection;
 
 /**
- * Connection to a Streaming Analytics Instance.
+ * Connection to a Streaming Analytics Service Instance.
  * <p>
- * This class exists for backward compatibility. Users should instead create
- * instances of {@link IStreamingAnalyticsConnection} using the factory
- * methods in {@link StreamsRestFactory}.
+ * This class exists for backward compatibility and direct use is strongly
+ * discouraged. The preferred method for interacting with the Streaming
+ * Analytics Service is to use instances of {@link StreamingAnalyticsConnection}
+ * which can be created using a factory method in it.
  */
 
-@Deprecated
 public class StreamingAnalyticsConnection extends StreamsConnection
         implements IStreamingAnalyticsConnection {
 

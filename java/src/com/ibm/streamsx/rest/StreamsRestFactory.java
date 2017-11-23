@@ -18,7 +18,7 @@ import com.ibm.streamsx.rest.StreamsRestUtils.StreamingAnalyticsServiceVersion;
 import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
-public class StreamsRestFactory {
+class StreamsRestFactory {
 
     private StreamsRestFactory() {}
 

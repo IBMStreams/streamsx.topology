@@ -21,7 +21,49 @@ import com.google.gson.JsonObject;
  * @since 1.8
  */
 public interface StreamingAnalyticsService {
-    
+
+    /**
+     * Access to a Streaming Analytics service on IBM Cloud.
+     * 
+     * <BR>
+     *  When specified {@code vcapServices} may be one of:
+     * <UL>
+     * <LI>An string representing VCAP service definitions in JSON format.</LI>
+     * <LI>A string representing a file containing VCAP service definitions.</LI>
+     * </UL>
+     * If {@code vcapServices} is {@code null} then the environment
+     * variable {@code VCAP_SERVICES} must contain the valid service
+     * definitions and credentials.
+     * <BR>
+     * If {@code serviceName} is {@code null} then the environment
+     * variable {@code STREAMING_ANALYTICS_SERVICE_NAME} must contain the name of
+     * the required service.
+     * <BR>
+     * The service named by {@code serviceName} must exist in the
+     * defined VCAP services.
+     *
+     * @param vcapServices
+     *            JSON representation of VCAP service definitions, or path to
+     *            a file containing the VCAP service definitions.
+     * @param serviceName
+     *            Name of the Streaming Analytics service to access.
+     *
+     * @return {@code StreamingAnalyticsService} for {@code serviceName}.
+     * @throws IOException
+     */
+    static StreamingAnalyticsService of(String vcapServices,
+            String serviceName) throws IOException {
+
+        JsonObject config = new JsonObject();
+
+        if (serviceName != null)
+            config.addProperty(SERVICE_NAME, serviceName);
+        if (vcapServices != null)
+            config.addProperty(VCAP_SERVICES, vcapServices);
+
+        return AbstractStreamingAnalyticsService.of(config);
+    }
+
     /**
      * Access to a Streaming Analytics service on IBM Cloud.
      * 
