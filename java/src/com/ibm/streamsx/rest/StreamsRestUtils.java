@@ -242,6 +242,27 @@ class StreamsRestUtils {
         return StreamingAnalyticsServiceVersion.UNKNOWN;
     }
 
+    static String fixStreamsRestUrl(String streamsRestUrl) {
+        final String suffix = "resources";
+        StringBuilder sb = new StringBuilder(streamsRestUrl.length() + 1 + suffix.length());
+        sb.append(streamsRestUrl);
+        if (!streamsRestUrl.endsWith("/")) {
+            sb.append('/');
+        }
+        sb.append(suffix);
+        String streamsResourcesUrl = sb.toString();
+        return streamsResourcesUrl;
+    }
+
+    static JsonObject getServiceResources(String authorization,
+            String url)throws IOException {
+        JsonObject resources = StreamsRestUtils.getGsonResponse(Executor.newInstance(),
+                authorization, url);
+        if (null == resources) {
+            throw new IllegalStateException("Missing resources for service");
+        }
+        return resources;
+    }
     /**
      * Given a token request response, return the access token.
      * @param tokenResponse The response from an earlier call to {@link getToken}

@@ -5,8 +5,6 @@
 
 package com.ibm.streamsx.rest;
 
-import static com.ibm.streamsx.rest.StreamsRestUtils.MEMBER_PASSWORD;
-import static com.ibm.streamsx.rest.StreamsRestUtils.MEMBER_USERID;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -206,20 +204,6 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
 
     @Override
     protected AbstractStreamsConnection createStreamsConnection() throws IOException {
-        String userId = StreamsRestUtils.getRequiredMember(credentials, MEMBER_USERID);
-        String authToken = StreamsRestUtils.getRequiredMember(credentials, MEMBER_PASSWORD);
-        String authorization = getAuthorization();
-        String restUrl = StreamsRestUtils.getRequiredMember(credentials, "rest_url");
-        String sasResourcesUrl = restUrl + StreamsRestUtils.getRequiredMember(credentials, "resources_path");
-        JsonObject sasResources = getServiceResources(authorization, sasResourcesUrl);
-        String streamsRestUrl = StreamsRestUtils.getRequiredMember(sasResources, "streams_rest_url");
-        // In V1, streams_rest_url is missing /resources
-        String streamsResourcesUrl = fixStreamsRestUrl(streamsRestUrl);
-
-        StreamingAnalyticsConnectionV1 connection =
-                new StreamingAnalyticsConnectionV1(userId, authToken,
-                streamsResourcesUrl, credentials, false);
-        connection.init();
-        return connection;
+        return StreamingAnalyticsConnectionV1.of(service, false);
     }
 }
