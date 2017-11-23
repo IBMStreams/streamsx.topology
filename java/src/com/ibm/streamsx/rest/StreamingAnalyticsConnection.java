@@ -20,13 +20,12 @@ import com.google.gson.JsonObject;
  * which can be created using a factory method in it.
  */
 
-public class StreamingAnalyticsConnection extends StreamsConnection
-        implements IStreamingAnalyticsConnection {
+public class StreamingAnalyticsConnection extends StreamsConnection {
 
     private JsonObject config;
 
     private StreamingAnalyticsConnection(
-            IStreamingAnalyticsConnection delegate,
+            AbstractStreamingAnalyticsConnection delegate,
             boolean allowInsecure) {
         super(delegate, allowInsecure);
     }
@@ -111,7 +110,7 @@ public class StreamingAnalyticsConnection extends StreamsConnection
 
     private static StreamingAnalyticsConnection createInstance(
             JsonObject config, boolean allowInsecure) throws IOException {
-        IStreamingAnalyticsConnection delegate =
+        AbstractStreamingAnalyticsConnection delegate =
                 StreamsRestFactory.createStreamingAnalyticsConnection(config,
                         allowInsecure);
         StreamingAnalyticsConnection sac = new StreamingAnalyticsConnection(delegate, allowInsecure);
@@ -119,9 +118,9 @@ public class StreamingAnalyticsConnection extends StreamsConnection
         return sac;
     }
 
-    private IStreamingAnalyticsConnection streamingAnalyticsConnection() {
+    private AbstractStreamingAnalyticsConnection streamingAnalyticsConnection() {
         // We know the cast is safe, because this class' constructor requires
-        // StreamingAnalyticsConnectionInterface as the delegate.
-        return (IStreamingAnalyticsConnection)delegate;
+        // AbstractStreamingAnalyticsConnection as the delegate.
+        return (AbstractStreamingAnalyticsConnection)delegate;
     }
 }

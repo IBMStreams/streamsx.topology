@@ -22,8 +22,7 @@ import com.google.gson.JsonObject;
  * Common code for implementations of {@link IStreamingAnalyticsConnection}
  */
 abstract class AbstractStreamingAnalyticsConnection 
-        extends AbstractStreamsConnection
-        implements IStreamingAnalyticsConnection {
+        extends AbstractStreamsConnection {
 
     private static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.AbstractStreamingAnalyticsConnection");
 
