@@ -79,9 +79,7 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
     public boolean allowInsecureHosts(boolean allowInsecure) {
         if (allowInsecure != this.allowInsecure && null != this.config) {
             try {
-                delegate =
-                        StreamsRestFactory.createStreamingAnalyticsConnection(config,
-                                allowInsecure);
+                delegate = AbstractStreamingAnalyticsConnection.of(config, allowInsecure);
                 this.allowInsecure = allowInsecure; 
             } catch (IOException e) {
                 // Don't change current allowInsecure but update delegate in
@@ -114,8 +112,7 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
     private static StreamingAnalyticsConnection createInstance(
             JsonObject config, boolean allowInsecure) throws IOException {
         AbstractStreamingAnalyticsConnection delegate =
-                StreamsRestFactory.createStreamingAnalyticsConnection(config,
-                        allowInsecure);
+                AbstractStreamingAnalyticsConnection.of(config, allowInsecure);
         StreamingAnalyticsConnection sac = new StreamingAnalyticsConnection(delegate, allowInsecure);
         sac.config = config;
         return sac;

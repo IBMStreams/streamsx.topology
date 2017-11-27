@@ -93,4 +93,25 @@ class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnectio
         return delete(jobsUrl + "/" + jobId);
     }
 
+    static StreamingAnalyticsConnectionV2 of(JsonObject service,
+            String authorization, long authExpiryMillis, boolean allowInsecure)
+            throws IOException {
+        JsonObject credentials = service.get("credentials").getAsJsonObject();
+        String sasResourcesUrl = StreamsRestUtils.getRequiredMember(credentials,
+                StreamsRestUtils.MEMBER_V2_REST_URL);
+        JsonObject sasResources = StreamsRestUtils.getServiceResources(authorization, sasResourcesUrl);
+        String instanceUrl = StreamsRestUtils.getRequiredMember(sasResources,
+                "streams_self");
+        // Find root URL. V2 starts at the instance, we want resources
+        String baseUrl = instanceUrl.substring(0, instanceUrl.lastIndexOf("/instances/"));
+        String streamsResourcesUrl = StreamsRestUtils.fixStreamsRestUrl(baseUrl);
+
+        StreamingAnalyticsConnectionV2 connection =
+                new StreamingAnalyticsConnectionV2(authorization,
+                        authExpiryMillis, streamsResourcesUrl, credentials,
+                        allowInsecure);
+        connection.init();
+        return connection;
+    }
+
 }

@@ -218,22 +218,8 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
 
     @Override
     protected AbstractStreamsConnection createStreamsConnection() throws IOException {
-        String authorization = getAuthorization();
-        String sasResourcesUrl = StreamsRestUtils.getRequiredMember(credentials,
-                StreamsRestUtils.MEMBER_V2_REST_URL);
-        JsonObject sasResources = getServiceResources(authorization, sasResourcesUrl);
-        String instanceUrl = StreamsRestUtils.getRequiredMember(sasResources,
-                "streams_self");
-        // Find root URL. V2 starts at the instance, we want resources
-        String baseUrl = instanceUrl.substring(0, instanceUrl.lastIndexOf("/instances/"));
-        String streamsResourcesUrl = fixStreamsRestUrl(baseUrl);
-
-        StreamingAnalyticsConnectionV2 connection =
-                new StreamingAnalyticsConnectionV2(authorization,
-                        authExpiryTime, streamsResourcesUrl, credentials,
-                        false);
-        connection.init();
-        return connection;
+        return StreamingAnalyticsConnectionV2.of(service, getAuthorization(),
+                authExpiryTime, false);
     }
 
 }

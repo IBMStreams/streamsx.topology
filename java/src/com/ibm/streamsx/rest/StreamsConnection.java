@@ -83,8 +83,11 @@ public class StreamsConnection implements IStreamsConnection {
         if (allowInsecure != this.allowInsecure
                 && null != userName && null != authToken && null != url) {
             try {
-                delegate = StreamsRestFactory.createStreamsConnection(userName,
-                        authToken, url, allowInsecure);
+                StreamsConnectionImpl connection = new StreamsConnectionImpl(userName,
+                        StreamsRestUtils.createBasicAuth(userName, authToken),
+                        url, allowInsecure);
+                connection.init();
+                delegate = connection;
                 this.allowInsecure = allowInsecure; 
             } catch (IOException e) {
                 // Don't change current allowInsecure but update delegate in
@@ -158,10 +161,11 @@ public class StreamsConnection implements IStreamsConnection {
             String authToken, String url) {
         IStreamsConnection delegate = null;
         try {
-            delegate = StreamsRestFactory.createStreamsConnection(userName,
-                    authToken, url, false);
-        } catch (IOException ioe) {
-            delegate = new InvalidStreamsConnection(ioe);
+            StreamsConnectionImpl connection = new StreamsConnectionImpl(userName,
+                    StreamsRestUtils.createBasicAuth(userName, authToken),
+                    url, false);
+            connection.init();
+            delegate = connection;
         } catch (Exception e) {
             delegate = new InvalidStreamsConnection(e);
         }

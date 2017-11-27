@@ -23,7 +23,6 @@ import java.util.Random;
 
 import org.apache.http.auth.AUTH;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -292,28 +291,6 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         } else {
             throw new RESTException("Unexpected number of instances: " + instances.size());
         }
-    }
-
-    protected String fixStreamsRestUrl(String streamsRestUrl) {
-        final String suffix = "resources";
-        StringBuilder sb = new StringBuilder(streamsRestUrl.length() + 1 + suffix.length());
-        sb.append(streamsRestUrl);
-        if (!streamsRestUrl.endsWith("/")) {
-            sb.append('/');
-        }
-        sb.append(suffix);
-        String streamsResourcesUrl = sb.toString();
-        return streamsResourcesUrl;
-    }
-
-    protected JsonObject getServiceResources(String authorization,
-            String url)throws IOException {
-        JsonObject resources = StreamsRestUtils.getGsonResponse(Executor.newInstance(),
-                authorization, url);
-        if (null == resources) {
-            throw new IllegalStateException("Missing resources for service");
-        }
-        return resources;
     }
 
     static StreamingAnalyticsService of(JsonObject config) throws IOException {
