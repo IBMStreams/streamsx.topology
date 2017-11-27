@@ -36,7 +36,7 @@ class StreamsRestFactory {
      * @return a connection to IBM Streams
      * @throws IOException
      */
-    public static IStreamsConnection createStreamsConnection(String userName,
+    static IStreamsConnection createStreamsConnection(String userName,
             String authToken, String resourcesUrl)
                     throws IOException {
         StreamsConnectionImpl connection = new StreamsConnectionImpl(userName,
@@ -65,7 +65,7 @@ class StreamsRestFactory {
      * @return a connection to IBM Streams
      * @throws IOException
      */
-    public static IStreamsConnection createStreamsConnection(String userName,
+    static IStreamsConnection createStreamsConnection(String userName,
             String authToken, String resourcesUrl, boolean allowInsecure)
                     throws IOException {
         StreamsConnectionImpl connection = new StreamsConnectionImpl(userName,
@@ -86,7 +86,7 @@ class StreamsRestFactory {
      * @return a connection to IBM Streaming Analytics service
      * @throws IOException
      */
-    public static IStreamingAnalyticsConnection createStreamingAnalyticsConnection(
+    static AbstractStreamingAnalyticsConnection createStreamingAnalyticsConnection(
             String vcap, String serviceName) throws IOException {
         return createStreamingAnalyticsConnection(vcap, serviceName, false);
     }
@@ -105,7 +105,7 @@ class StreamsRestFactory {
      * @return a connection to IBM Streaming Analytics service
      * @throws IOException
      */
-    public static IStreamingAnalyticsConnection createStreamingAnalyticsConnection(
+    static AbstractStreamingAnalyticsConnection createStreamingAnalyticsConnection(
             String vcap, String serviceName, boolean allowInsecure)
             throws IOException {
 
@@ -132,7 +132,7 @@ class StreamsRestFactory {
      * @return a connection to IBM Streaming Analytics service
      * @throws IOException
      */
-    public static IStreamingAnalyticsConnection createStreamingAnalyticsConnection(
+    static AbstractStreamingAnalyticsConnection createStreamingAnalyticsConnection(
             JsonObject config) throws IOException {
         return createStreamingAnalyticsConnection(config, false);
     }
@@ -154,7 +154,7 @@ class StreamsRestFactory {
      * @return a connection to IBM Streaming Analytics service
      * @throws IOException
      */
-    public static IStreamingAnalyticsConnection createStreamingAnalyticsConnection(
+    static AbstractStreamingAnalyticsConnection createStreamingAnalyticsConnection(
             JsonObject config, boolean allowInsecure) throws IOException {
 
         // Get the VCAP service based on the config, and extract credentials
