@@ -16,7 +16,7 @@ import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
  * Connection to IBM Streams.
  */
 public class StreamsConnection {
-    protected IStreamsConnection delegate;
+    IStreamsConnection delegate;
     protected boolean allowInsecure;
 
     private String userName;
@@ -24,10 +24,15 @@ public class StreamsConnection {
     private String url;
 
     /**
-     * Direct use by derived classes is strongly discouraged. May be stale or
-     * expired. Invoke a member method to refresh.
+     * @deprecated No replacement {@code StreamsConnection} is not intended to be sub-classed.
      */
+    @Deprecated
     protected String apiKey;
+    
+    /**
+     * @deprecated No replacement {@code StreamsConnection} is not intended to be sub-classed.
+     */
+    @Deprecated
     protected Executor executor;
 
     StreamsConnection(IStreamsConnection delegate,
@@ -37,6 +42,10 @@ public class StreamsConnection {
         refreshState();
     }
 
+    /**
+     * @deprecated No replacement {@code StreamsConnection} is not intended to be sub-classed.
+     */
+    @Deprecated
     protected StreamsConnection(String userName, String authToken, String url) {
         this(createDelegate(userName, authToken, url), false);
     }
@@ -152,6 +161,10 @@ public class StreamsConnection {
         }
     }
 
+    /**
+     * @deprecated No replacement {@code StreamsConnection} is not intended to be sub-classed.
+     */
+    @Deprecated
     protected void setStreamsRESTURL(String url) {
         delegate = createDelegate(userName, authToken, url);
         refreshState();
@@ -177,9 +190,9 @@ public class StreamsConnection {
     static class InvalidStreamsConnection implements IStreamsConnection {
         private final static String MSG = "Invalid Streams connection";
 
-        protected final Exception exception;
+        private final Exception exception;
 
-        protected InvalidStreamsConnection(Exception e) {
+        InvalidStreamsConnection(Exception e) {
             exception = e;
         }
 
