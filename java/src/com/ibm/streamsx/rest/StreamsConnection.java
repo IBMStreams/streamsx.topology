@@ -15,7 +15,7 @@ import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
 /**
  * Connection to IBM Streams.
  */
-public class StreamsConnection implements IStreamsConnection {
+public class StreamsConnection {
     protected IStreamsConnection delegate;
     protected boolean allowInsecure;
 
