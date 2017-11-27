@@ -14,13 +14,17 @@ import com.google.gson.JsonObject;
 /**
  * Connection to a Streaming Analytics Service Instance.
  * <p>
- * This class exists for backward compatibility and direct use is strongly
+ * This class exists for backward compatibility and use is
  * discouraged. The preferred method for interacting with the Streaming
- * Analytics Service is to use instances of {@link StreamingAnalyticsConnection}
- * which can be created using a factory method in it.
+ * Analytics Service is to use instances of {@link StreamingAnalyticsService}.
+ * 
+ * @deprecated Replaced by {@link StreamingAnalyticsService}
  */
 
-public class StreamingAnalyticsConnection extends StreamsConnection {
+
+@Deprecated
+public class StreamingAnalyticsConnection extends StreamsConnection
+        implements IStreamingAnalyticsConnection {
 
     private JsonObject config;
 
