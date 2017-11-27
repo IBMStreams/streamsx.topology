@@ -56,11 +56,8 @@ public class RESTTesterRuntime extends TesterRuntime {
         String serviceName = jstring(deployment, SERVICE_NAME);
         StreamingAnalyticsService sas = StreamingAnalyticsService.of(vcapServices, serviceName);
 
-        JsonObject submission = jobject(deployment, "submissionResults");
-        requireNonNull(submission);
-
-        // FIXME: This is not correct for SASv2, SAS needs a method to get this
-        String jobId = jstring(submission, "jobId");
+        String jobId = sas.getJobId(deployment);
+        requireNonNull(jobId);
 
         Job job = sas.getInstance().getJob(jobId);
 

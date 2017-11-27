@@ -278,6 +278,17 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         return name;
     }
 
+    public String getJobId(JsonObject submission) {
+        if (submission.has(RemoteContext.SUBMISSION_RESULTS)) {
+            JsonObject results = submission.getAsJsonObject(RemoteContext.SUBMISSION_RESULTS);
+            String memberName = getJobSubmitId();
+            if (results.has(memberName)) {
+                return results.get(memberName).getAsString();
+            }
+        }
+        return null;
+    }
+
     public Instance getInstance() throws IOException {
         synchronized (this) {
             if (null == streamsConnection) {

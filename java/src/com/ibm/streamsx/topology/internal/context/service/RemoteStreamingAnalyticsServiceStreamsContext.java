@@ -4,18 +4,21 @@
  */
 package com.ibm.streamsx.topology.internal.context.service;
 
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.math.BigInteger;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.StreamingAnalyticsService;
 import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.JSONStreamsContext;
 import com.ibm.streamsx.topology.internal.context.remote.RemoteBuildAndSubmitRemoteContext;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
+import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 /**
  * Context that submits the SPL to the Streaming Analytics service
@@ -40,16 +43,19 @@ public class RemoteStreamingAnalyticsServiceStreamsContext extends JSONStreamsCo
     protected Future<BigInteger> action(com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity entity) throws Exception {
         remoteContext.submit(entity.submission).get();
 
-        JsonObject results = object(entity.submission, RemoteContext.SUBMISSION_RESULTS);
-        if (results != null) {
-            // V2 uses id, V1 uses jobId
-            String jobId = jstring(results, "id");
-            if (jobId == null)
-                jobId = jstring(results, "jobId");
-            if (jobId != null)
-                return new CompletedFuture<>(new BigInteger(jobId));
-        }
-        
+        // TODO: Be nice if we had a way to reuse the StreamingAnalyticsService
+        // that remoteContext used, but this will not make any REST calls so
+        // while there is some duplication it should be relatively cheap.
+        JsonObject deploy = deploy(entity.submission);
+        JsonObject vcapServices = VcapServices.getVCAPServices(deploy.get(VCAP_SERVICES));
+
+        final StreamingAnalyticsService sas = StreamingAnalyticsService.of(vcapServices,
+                jstring(deploy, SERVICE_NAME));
+
+        String jobId = sas.getJobId(entity.submission);
+        if (jobId != null)
+            return new CompletedFuture<>(new BigInteger(jobId));
+
         throw new IllegalStateException("Job submission failed!");
     }
 }

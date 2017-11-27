@@ -140,6 +140,14 @@ public interface StreamingAnalyticsService {
     BigInteger buildAndSubmitJob(File archive, JsonObject submission) throws IOException;
 
     /**
+     * Get the job ID from a previous successful {@link #buildAndSubmitJob} or
+     * {@link #submitJob}.
+     * @param submission The JSON object provided at submit time.
+     * @return Job ID or null.
+     */
+    String getJobId(JsonObject submission);
+
+    /**
      * Gets the {@link Instance IBM Streams Instance} object for the Streaming
      * Analytics service.
      * @return an {@link Instance IBM Streams Instance} associated with this
