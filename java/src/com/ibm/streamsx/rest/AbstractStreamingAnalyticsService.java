@@ -5,9 +5,7 @@
 
 package com.ibm.streamsx.rest;
 
-import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.copyJobConfigOverlays;
-import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
-import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
+import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -15,7 +13,6 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -32,8 +29,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.StreamsRestUtils.StreamingAnalyticsServiceVersion;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
-import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
@@ -112,9 +107,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     }
 
     @Override
-    public BigInteger submitJob(File bundle, JsonObject submission) throws IOException {
-        JsonObject deploy =  deploy(submission);
-
+    public Job submitJob(File bundle, JsonObject jco) throws IOException {
         final CloseableHttpClient httpClient = HttpClients.createDefault();
         try {
             Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Checking status :" + serviceName);
@@ -123,21 +116,20 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
 
             Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Submitting bundle : " + bundle.getName() + " to " + serviceName);
 
-            JsonObject jcojson = DeployKeys.copyJobConfigOverlays(deploy);
+            if (null == jco) {
+                jco = new JsonObject();
+            }
 
-            Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job request:" + jcojson.toString());
+            Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job request:" + jco.toString());
 
-            JsonObject response = postJob(httpClient, service, bundle, jcojson);
-
-            final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
-            GsonUtilities.addAll(submissionResult, response);
+            JsonObject response = postJob(httpClient, service, bundle, jco);
 
             String jobId = jstring(response, getJobSubmitId());
+            if (null == jobId) {
+                return null;
+            }
 
-            if (jobId == null)
-                return BigInteger.valueOf(-1);
-
-            return new BigInteger(jobId);
+            return getInstance().getJob(jobId);
         } finally {
             httpClient.close();
         }
@@ -162,21 +154,21 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     }
 
     @Override
-    public BigInteger buildAndSubmitJob(File archive, JsonObject submission) throws IOException {
-        JsonObject deploy = DeployKeys.deploy(submission);
-        JsonObject graph = object(submission, "graph");
-        // Use the SPL compatible form of the name to ensure
-        // that any strange characters in the name provided by
-        // the user are not rejected by the build service.
-        String graphBuildName = splAppName(graph);
+    public Job buildAndSubmitJob(File archive, JsonObject jco,
+            String buildName) throws IOException {
+
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
             RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): Checking status");
             checkInstanceStatus(httpclient);
 
-            // Perform initial post of the archive
-            String buildName = graphBuildName + "_" + randomHex(16);
+            // Set up the build name
+            if (null == buildName) {
+                buildName = "build";
+            }
+            buildName = getSPLCompatibleName(buildName) + "_" + randomHex(16);
             buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
+            // Perform initial post of the archive
             RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submitting build " + buildName);
             JsonObject build = submitBuild(httpclient, getAuthorization(), archive, buildName);
 
@@ -221,23 +213,17 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             String submitUrl = getJobSubmitUrl(artifact);
 
             RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submitting job request.");
-            JsonObject jobConfigOverlays = copyJobConfigOverlays(deploy);
-            JsonObject response = submitBuildArtifact(httpclient,
-                    jobConfigOverlays, getAuthorization(), submitUrl);
-
-            // Pass back to Python
-            final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
-            GsonUtilities.addAll(submissionResult, response);
+            JsonObject response = submitBuildArtifact(httpclient, jco,
+                    getAuthorization(), submitUrl);
 
             String jobId = jstring(response, getJobSubmitId());
+            if (null == jobId) {
+                return null;
+            }
 
-            if (jobId == null)
-                return BigInteger.valueOf(-1);
-
-            return new BigInteger(jobId);
+            return getInstance().getJob(jobId);
         } finally {
             httpclient.close();
-
         }
     }
 
