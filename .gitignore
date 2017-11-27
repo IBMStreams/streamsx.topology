@@ -5,6 +5,7 @@ toolkit.xml
 *_cpp.pm
 *_h.pm
 *~
+show-*.sh
 
 .__splpy/
 

@@ -120,11 +120,12 @@ class _ResourceElement(object):
             return elements[0]
         raise ValueError("Multiple resources matching: {0}".format(id))
 
-    def _store_file(self, filename, url, mimetype):
+    def _retrieve_file(self, path, dir, url, mimetype):
         """Download a file from a job or PE and store it in a file.
         
         Args:
-            filename (str): directory/filename where the downloaded file should be stored locally
+            path (str): path where downloaded file should be stored
+            dir (str): directory where downloaded file should be stored
             url (str): URL of the remote file to be downloaded
             mimetype (str): expected MimeType of the remote file
         
@@ -136,6 +137,13 @@ class _ResourceElement(object):
             Exception: HTTP GET expected response of type xxxx/xxxx, got xxxxx/xxxxxx, from URL xxxxxxxxxxxxxx
         """
         
+        if dir:
+            path = dir + ( '' if dir.endswith('/') else '/' ) + path
+
+        dir = os.path.dirname(path)
+        if dir and not os.path.isdir(dir):
+            os.makedirs(dir)
+
         response = self.rest_client.session.get(url=url, stream=True)
         
         if response.status_code != 200:
@@ -145,17 +153,17 @@ class _ResourceElement(object):
             raise Exception('HTTP GET expected response of type ' + mimetype + ', got ' + response.headers['Content-Type'] + ', from URL ' + response.url)
 
         try:
-            with open(filename, 'wb') as file:
+            with open(path, 'wb') as fh:
                 for chunk in response.iter_content(chunk_size=None):
-                    file.write(chunk)    
+                    fh.write(chunk)    
         except IOError as e:
-            logger.error("IOError {1} {2} storing file {0}".format(filename, e.errno, e.strerror))
+            logger.error("IOError {1} {2} storing file {0}".format(path, e.errno, e.strerror))
             raise e
         except Exception as e:
-            logger.error("Exception while storing file {0}".format(filename))
+            logger.error("Exception while storing file {0}".format(path))
             raise e
                 
-        return filename
+        return path
             
             
 class _StreamsRestClient(object):
@@ -541,29 +549,25 @@ class Job(_ResourceElement):
             return True
         raise NotImplementedError('Job.cancel()')
 
-    def store_logs(self, filename=None):
+    def retrieve_logs_traces(self, path=None, dir=None):
         """Download the console logs and application traces from a job and store
         them locally in a compressed 'tar' archive (that is, a '.tar.gz' or
         '.tgz' file).
         
-        Args:
-            filename (str): directory/file path of a compressed 'tar' archive
-                where the logs and traces should be stored. The default value is
-                'jobname.tar.gz' in the current directory, where 'jobname' is
-                the name assigned to the job when it was submitted.
-        
-        Note: By default, the name assigned to a job when it is submitted is of
-        the form 'namespace::composite_id', so the default filename of its
-        compressed 'tar' archive is 'namespace::composite_id.tar.gz', where 'id'
-        is the job number, 'composite' is the SPL name of the job's main
-        composite, and 'namespace' is the main composite's SPL namespace. If the
-        archive is decompressed with the Linux 'tar' command, it may
-        misinterpret the colon characters as a remote filename. To avoid this,
-        specify the '--force-local' option of the 'tar' command, or use the
-        alternative Linux command 'bsdtar3' instead.
+        Args: 
 
+        path (str): path to a compressed 'tar' archive file where the logs and
+            traces should be stored. The default is 'job_id_timestamp.tar.gz',
+            where 'id' is the job number assigned when the job was submitted,
+            and 'timestamp' is the Unix epoch time, in seconds, when the archive
+            file was stored, according to the local system clock.
+
+        dir (str): directory where the archive file should be stored. The
+            default is the current directory.
+        
         Returns:
-            str: directory/filename of the compressed 'tar' archive where the
+
+            str: 'directory/filename' of the compressed 'tar' archive where the
                 logs and traces were stored
         
         Raises:
@@ -571,7 +575,9 @@ class Job(_ResourceElement):
             Exception: HTTP GET expected response of type application/x-compressed, got xxxxx/xxxxxx, from URL xxxxxxxxxxxxxx
         """
         
-        return self._store_file( ( filename if filename else self.name+'.tar.gz' ), self.applicationLogTrace, 'application/x-compressed')
+        if not path:
+            path = 'job_' + self.id + '_' + str(int(time.time())) + '.tar.gz'
+        return self._retrieve_file( path, dir, self.applicationLogTrace, 'application/x-compressed')
 
 
 class Operator(_ResourceElement):
@@ -705,30 +711,38 @@ class PE(_ResourceElement):
     """
     pass
 
-    def store_console_log(self, filename=None):
+    def retrieve_console_log(self, path=None, dir=None):
         """Download the console log from the PE and store it in an uncompressed
         text file. The console log contains messages written to STDOUT and
         STDERR by the PE's operators.
         
         Args:
-            filename (string): directory/filename of the text file where the
-                downloaded console log should be stored. The default value is
-                'PE_id.log' in the current directory, where 'id' is the PE
-                identifier.
+
+        path (string): path to an uncompressed text file where the downloaded
+            console log should be stored. The default is 'pe_id_timestamp.log',
+            where 'id' is the PE number assigned when the PE started, and
+            'timestamp' is the Unix epoch time, in seconds, when the text file
+            was stored, according to the local system clock.
+
+        dir (str): directory where the text file should be stored. The default
+            is the current directory.
         
-        Returns:
-            str: directory/filename of the text file where the downloaded
-                console log was stored
+        Returns: 
+
+        str: 'directory/filename' of the text file where the downloaded console
+            log was stored
         
         Raises:
             Exception: HTTP GET failed, error xxx xxxxxxxxxxxxx from URL xxxxxxxxxxxxxxxx
             Exception: HTTP GET expected response of type text/plain', got xxxxx/xxxxxx, from URL xxxxxxxxxxxxxx
         """
         
-        return self._store_file( ( filename if filename else 'PE_'+self.id+'.log' ), self.consoleLog, 'text/plain')
+        if not path:
+            path = 'pe_' + self.id + '_' + str(int(time.time())) + '.log'
+        return self._retrieve_file( path, dir, self.consoleLog, 'text/plain')
 
 
-    def store_application_trace(self, filename=None):
+    def retrieve_application_trace(self, path=None, dir=None):
         """Download the application trace from the PE and store it in an
         uncompressed text file. The application trace contains messages from the
         Streams runtime 'PE container', plus messages from any appTrc()
@@ -739,20 +753,29 @@ class PE(_ResourceElement):
             https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html
 
         Args:
-            filename (string): directory/filename of the text file where the
-                downloaded application trace should be stored. The default value
-                is 'PE_id.trace' in the current directory, where 'id' is the PE
-                identifier.
+
+        path (string): path to an uncompressed text file where the downloaded
+            application trace should be stored. The default is
+            'pe_id_timestamp.log', where 'id' is the PE number assigned when the
+            PE started, and 'timestamp' is the Unix epoch time, in seconds, when
+            the text file was stored, according to the local system clock.
+
+        dir (str): directory where the text file should be stored. The default
+            is the current directory.
         
         Returns:
-            str: directory/filename of the text file where the downloaded application trace was stored
+
+        str: 'directory/filename' of the text file where the downloaded
+            application trace was stored
         
         Raises:
             Exception: HTTP GET failed, error xxx xxxxxxxxxxxxx from URL xxxxxxxxxxxxxxxx
             Exception: HTTP GET expected response of type text/plain', got xxxxx/xxxxxx, from URL xxxxxxxxxxxxxx
         """
         
-        return self._store_file( ( filename if filename else 'PE_'+self.id+'.trace' ), self.applicationTrace, 'text/plain')
+        if not path:
+            path = 'pe_' + self.id + '_' + str(int(time.time())) + '.trace'
+        return self._retrieve_file( path, dir, self.applicationTrace, 'text/plain')
 
 
 class PEConnection(_ResourceElement):
