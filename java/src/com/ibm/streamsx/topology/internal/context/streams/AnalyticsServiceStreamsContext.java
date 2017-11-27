@@ -17,8 +17,12 @@ import java.math.BigInteger;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.StreamingAnalyticsService;
-import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
+import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
@@ -79,18 +83,30 @@ public class AnalyticsServiceStreamsContext extends
         return jco.fullOverlayAsJSON(new JsonObject());
     }
     */
-    
+
     private BigInteger submitJobToService(File bundle, JsonObject submission) throws IOException {
         JsonObject deploy =  deploy(submission);
-        
+        JsonObject jco = DeployKeys.copyJobConfigOverlays(deploy);
+
         JsonObject vcapServices = VcapServices.getVCAPServices(deploy.get(VCAP_SERVICES));
-        
+
         System.err.println("CONTEXT:" + vcapServices);
         System.err.println("CONTEXT:NAME:" + jstring(deploy, SERVICE_NAME));
 
         final StreamingAnalyticsService sas = StreamingAnalyticsService.of(vcapServices,
                 jstring(deploy, SERVICE_NAME));
-        
-        return sas.submitJob(bundle, submission);
+
+        Job job = sas.submitJob(bundle, jco);
+        final JsonObject result = GsonUtilities.objectCreate(submission,
+                RemoteContext.SUBMISSION_RESULTS);
+
+        if (null == job) {
+            return BigInteger.valueOf(-1);
+        }
+
+        String jobId = job.getId();
+        GsonUtilities.addToObject(result, SubmissionResultsKeys.JOB_ID, jobId);
+
+        return new BigInteger(jobId);
     }
 }

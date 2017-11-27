@@ -25,6 +25,7 @@ import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
@@ -59,8 +60,8 @@ public class RESTTesterRuntime extends TesterRuntime {
         JsonObject submission = jobject(deployment, "submissionResults");
         requireNonNull(submission);
 
-        // FIXME: This is not correct for SASv2, SAS needs a method to get this
-        String jobId = jstring(submission, "jobId");
+        String jobId = jstring(submission, SubmissionResultsKeys.JOB_ID);
+        requireNonNull(jobId);
 
         Job job = sas.getInstance().getJob(jobId);
 

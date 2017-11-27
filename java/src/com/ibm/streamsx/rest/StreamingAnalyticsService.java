@@ -10,7 +10,6 @@ import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -110,34 +109,23 @@ public interface StreamingAnalyticsService {
     
     /**
      * Submit a Streams bundle to run on the Streaming Analytics Service.
-     * <p>The JSON object may contain an optional {@code deploy} member that
-     * includes deployment information.
      * @param bundle A streams application bundle
-     * @param submission Deployment info to be submitted.
-     * @return The job id, or -1. Results from the submit will be added to the
-     * submission parameter object as a member named @{code submissionResults}.
+     * @param jco Job configuration overlay in JSON format.
+     * @return The Job, or null.
      * @throws IOException
      */
-    BigInteger submitJob(File bundle, JsonObject submission) throws IOException;
+    Job submitJob(File bundle, JsonObject jco) throws IOException;
 
     /**
      * Submit an archive to build on the Streaming Analytics Service, and submit
      * the job if the build is successful.
-     * <p>
-     * The JSON object contains two keys:
-     * <UL>
-     * <LI>{@code deploy} - Optional - Deployment information.</LI>
-     * <LI>{@code graph} - Required - JSON representation of the topology graph.</LI>
-     * </UL>
-     * <p>
-     * Results are added to the submission parameters object.
      * @param archive The application archive to build.
-     * @param submission Topology and deployment info to be submitted.
-     * @return The job id, or -1. Results from the submit will be added to the
-     * submission parameter object as a member named @{code submissionResults}.
+     * @param jco Job configuration overlay in JSON format.
+     * @param buildName A name for the build, or null.
+     * @return The Job, or null.
      * @throws IOException
      */
-    BigInteger buildAndSubmitJob(File archive, JsonObject submission) throws IOException;
+    Job buildAndSubmitJob(File archive, JsonObject jco, String buildName) throws IOException;
 
     /**
      * Gets the {@link Instance IBM Streams Instance} object for the Streaming
