@@ -23,8 +23,7 @@ import com.google.gson.JsonObject;
 
 
 @Deprecated
-public class StreamingAnalyticsConnection extends StreamsConnection
-        implements IStreamingAnalyticsConnection {
+public class StreamingAnalyticsConnection extends StreamsConnection {
 
     private JsonObject config;
 
