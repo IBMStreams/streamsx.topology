@@ -49,7 +49,7 @@ class RestSubmitTests(unittest.TestCase):
         # temporarily compile test application locally until REST API wrapper supports remote build service 
         logger.warning('compile ' + applicationName)
         result = os.system('sc -M ' + applicationName)
-        if not result==0: unittest.SkipTest(applicationName + ' failed to compile, exit code ' + str(result>>8) + ', signal ' + str(result&0xFF))
+        if not result==0: raise unittest.SkipTest(applicationName + ' failed to compile, exit code ' + str(result>>8) + ', signal ' + str(result&0xFF))
 
         logger.warning('connect to IBM Cloud')
         self.connection = streamsx.rest.StreamingAnalyticsConnection()
@@ -59,15 +59,15 @@ class RestSubmitTests(unittest.TestCase):
 
         logger.warning('start service ' + self.connection.service_name)
         result = self.service.start_instance()
-        if not result['state']=='STARTED': unittest.SkipTest(self.connection.service_name + ' service did not start')
-        if not result['status']=='running': unittest.SkipTest(self.connection.service_name + ' service is not running')
+        if not result['state']=='STARTED': raise unittest.SkipTest(self.connection.service_name + ' service did not start')
+        if not result['status']=='running': raise unittest.SkipTest(self.connection.service_name + ' service is not running')
 
         logger.warning('check service ' + self.connection.service_name)
         instances = self.connection.get_instances()
-        if not len(instances)==1: unittest.SkipTest(self.connection.service_name + ' service not found')
+        if not len(instances)==1: raise unittest.SkipTest(self.connection.service_name + ' service not found')
         self.instance = instances[0]
-        if not self.instance.status=='running': unittest.SkipTest(self.connection.service_name + ' service is not running')
-        if not self.instance.health=='healthy': unittest.SkipTest(self.connection.service_name + ' service is not healthy')
+        if not self.instance.status=='running': raise unittest.SkipTest(self.connection.service_name + ' service is not running')
+        if not self.instance.health=='healthy': raise unittest.SkipTest(self.connection.service_name + ' service is not healthy')
 
 
     def testA_submit_with_defaults(self):

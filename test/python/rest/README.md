@@ -36,5 +36,6 @@ To change them, specify the environment variables:
 * STREAMS_PASSWORD
 
 To run the rest_bluemix_tests and submit_tests, specify these environment variables:
+* STREAMS_INSTALL
 * VCAP_SERVICES
 * STREAMING_ANALYTICS_SERVICE_NAME
