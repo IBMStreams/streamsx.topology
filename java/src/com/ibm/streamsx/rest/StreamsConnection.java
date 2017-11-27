@@ -13,13 +13,8 @@ import org.apache.http.client.fluent.Executor;
 import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
 
 /**
- * Connection to IBM Streams
- * <p>
- * This class exists for backward compatibility. Users should instead create
- * instances of {@link IStreamsConnection} using the factory methods
- * in {@link StreamsRestFactory}.
+ * Connection to IBM Streams.
  */
-@Deprecated
 public class StreamsConnection implements IStreamsConnection {
     protected IStreamsConnection delegate;
     protected boolean allowInsecure;
@@ -28,7 +23,10 @@ public class StreamsConnection implements IStreamsConnection {
     private String authToken;
     private String url;
 
-    // May be stale or expired. Invoke a member method to refresh.
+    /**
+     * Direct use by derived classes is strongly discouraged. May be stale or
+     * expired. Invoke a member method to refresh.
+     */
     protected String apiKey;
     protected Executor executor;
 

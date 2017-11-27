@@ -12,7 +12,7 @@ import java.util.List;
  * Concrete instances are created with the factory methods in
  * {@link StreamsRestFactory}
  */
-public interface IStreamsConnection {
+interface IStreamsConnection {
 
     /**
      * Gets a list of {@link Instance instances} that are available to this IBM

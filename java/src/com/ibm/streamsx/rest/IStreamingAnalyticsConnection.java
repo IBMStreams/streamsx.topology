@@ -15,7 +15,7 @@ import java.io.IOException;
  * Concrete instances are created with the factory methods in
  * {@link StreamsRestFactory}
  */
-public interface IStreamingAnalyticsConnection extends IStreamsConnection {
+interface IStreamingAnalyticsConnection extends IStreamsConnection {
     /**
      * Gets the {@link Instance IBM Streams Instance} object for the Streaming
      * Analytics service.
