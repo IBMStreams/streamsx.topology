@@ -19,9 +19,13 @@ class Person(object):
     def rough_birth_year(self):
         return time.localtime().tm_year - self.age;
 
-expected_contents = """Punctuation received: WindowMarker
+expected_contents = """8
 Punctuation received: WindowMarker
+9
 Punctuation received: WindowMarker
+10
+Punctuation received: WindowMarker
+11
 Punctuation received: WindowMarker
 Punctuation received: FinalMarker
 """
@@ -206,11 +210,11 @@ class TestPythonWindowing(unittest.TestCase):
         s = topo.source([1,2,3,4])
 
         # Aggregate and write to file.
-        s = s.last(1).trigger(1).aggregate(lambda x: None)
+        s = s.last(1).trigger(1).aggregate(lambda x: x[0]+7)
         # Ensure map/flat_map/filter passes window marks through.
         s = s.flat_map(lambda x : [x])
         s = s.filter(lambda x : True)
-        s = s.map(lambda x : x)
+        s = s.map(lambda x : (x,), schema='tuple<int32 z>')
         op_params = {'file' : 'punct_file', 'writePunctuations' : True, 'flushOnPunctuation' : True}
         op.Sink("spl.adapter::FileSink", s, params = op_params)
 
@@ -228,7 +232,7 @@ class TestPythonWindowing(unittest.TestCase):
         # Validate the contents of the file.
         with open(path, 'r') as f:
             file_contents = f.read()
-            self.assertTrue(file_contents == expected_contents)
+            self.assertEqual(expected_contents, file_contents)
             
         os.remove(path)
 
