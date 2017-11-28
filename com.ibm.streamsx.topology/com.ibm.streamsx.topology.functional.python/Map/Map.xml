@@ -106,7 +106,7 @@
         <autoAssignment>false</autoAssignment>
         <completeAssignment>false</completeAssignment>
         <rewriteAllowed>false</rewriteAllowed>
-        <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
+        <windowPunctuationOutputMode>Preserving</windowPunctuationOutputMode>
         <tupleMutationAllowed>false</tupleMutationAllowed>
         <cardinality>1</cardinality>
         <optional>false</optional>

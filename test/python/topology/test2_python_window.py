@@ -207,6 +207,10 @@ class TestPythonWindowing(unittest.TestCase):
 
         # Aggregate and write to file.
         s = s.last(1).trigger(1).aggregate(lambda x: None)
+        # Ensure map/flat_map/filter passes window marks through.
+        s = s.flat_map(lambda x : [x])
+        s = s.filter(lambda x : True)
+        s = s.map(lambda x : x)
         op_params = {'file' : 'punct_file', 'writePunctuations' : True, 'flushOnPunctuation' : True}
         op.Sink("spl.adapter::FileSink", s, params = op_params)
 

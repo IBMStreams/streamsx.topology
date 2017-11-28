@@ -132,4 +132,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   
 }
 
+void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
+{
+   forwardWindowPunctuation(punct);
+}
+
 <%SPL::CodeGen::implementationEpilogue($model);%>
