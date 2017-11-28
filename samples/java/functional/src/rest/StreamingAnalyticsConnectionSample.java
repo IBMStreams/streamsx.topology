@@ -6,6 +6,7 @@ package rest;
 
 import java.util.List;
 
+import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.rest.InputPort;
 import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.Job;
@@ -43,7 +44,8 @@ public class StreamingAnalyticsConnectionSample {
         System.out.println(serviceName);
 
         try {
-            StreamingAnalyticsService sClient = StreamingAnalyticsService.of(credentials,
+            StreamingAnalyticsService sClient = StreamingAnalyticsService.of(
+                    new JsonPrimitive(credentials),
                     serviceName);
 
             Instance instance = sClient.getInstance();
