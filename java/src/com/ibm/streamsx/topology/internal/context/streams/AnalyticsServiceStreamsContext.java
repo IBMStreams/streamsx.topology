@@ -90,9 +90,6 @@ public class AnalyticsServiceStreamsContext extends
 
         JsonObject vcapServices = VcapServices.getVCAPServices(deploy.get(VCAP_SERVICES));
 
-        System.err.println("CONTEXT:" + vcapServices);
-        System.err.println("CONTEXT:NAME:" + jstring(deploy, SERVICE_NAME));
-
         final StreamingAnalyticsService sas = StreamingAnalyticsService.of(vcapServices,
                 jstring(deploy, SERVICE_NAME));
 
