@@ -86,7 +86,7 @@
       <inputPortSet>
         <tupleMutationAllowed>false</tupleMutationAllowed>
         <windowingMode>Windowed</windowingMode>
-        <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
+        <windowPunctuationInputMode>WindowBound</windowPunctuationInputMode>
         <cardinality>1</cardinality>
         <optional>false</optional>
       </inputPortSet>      
@@ -97,7 +97,7 @@
         <autoAssignment>false</autoAssignment>
         <completeAssignment>false</completeAssignment>
         <rewriteAllowed>false</rewriteAllowed>
-        <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
+        <windowPunctuationOutputMode>Generating</windowPunctuationOutputMode>
         <tupleMutationAllowed>false</tupleMutationAllowed>
         <cardinality>1</cardinality>
         <optional>false</optional>
