@@ -86,6 +86,12 @@ public class InvokeStandalone {
             }
         }
 
+	String datadir = jc.getDataDirectory();
+	if (datadir != null) {
+	    commands.add("--data-directory");
+	    commands.add(datadir);
+	}
+
         trace.info("Invoking standalone application");
         trace.info(Util.concatenate(commands));
 
