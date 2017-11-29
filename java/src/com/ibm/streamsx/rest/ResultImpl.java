@@ -4,10 +4,12 @@ import java.io.IOException;
 
 class ResultImpl<T,R> implements Result<T, R> {
     
+    private final boolean ok;
     private final String id;
     private final ElementSupplier<T> elementGetter;
     private final R rawResult;
-    ResultImpl(String id, ElementSupplier<T> elementGetter, R rawResult) {
+    ResultImpl(boolean ok, String id, ElementSupplier<T> elementGetter, R rawResult) {
+        this.ok = ok;
         this.id = id;
         this.elementGetter = elementGetter;
         this.rawResult = rawResult;
@@ -31,5 +33,10 @@ class ResultImpl<T,R> implements Result<T, R> {
     @FunctionalInterface
     static interface ElementSupplier<T> {
         T get() throws IOException;
+    }
+    
+    @Override
+    public boolean isOk() {
+        return ok;
     }
 }

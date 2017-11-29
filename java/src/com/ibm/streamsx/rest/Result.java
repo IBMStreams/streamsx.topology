@@ -43,4 +43,10 @@ public interface Result<T,R> {
      * @return raw result from the request.
      */
     R getRawResult();
+    
+    /**
+     * Was the request successful.
+     * @return {@code true} if the request was successful, {@code false} otherwise.
+     */
+    boolean isOk(); 
 }

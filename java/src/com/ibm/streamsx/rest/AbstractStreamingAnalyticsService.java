@@ -132,7 +132,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     
     private Result<Job,JsonObject> jobResult(JsonObject response) {
         final String jobId = jstring(response, getJobSubmitId());
-        return new ResultImpl<>(jobId, () -> jobId == null ? null : getInstance().getJob(jobId), response);            
+        return new ResultImpl<>(jobId != null, jobId, () -> jobId == null ? null : getInstance().getJob(jobId), response);            
     }
 
     private void checkInstanceStatus(CloseableHttpClient httpClient)
