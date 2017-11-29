@@ -13,7 +13,7 @@ import java.io.IOException;
  * values are returned by its methods.
  *
  * @param <T> Type of the element being created.
- * @param <R> Type
+ * @param <R> Type of the raw response.
  */
 public interface Result<T,R> {
 
