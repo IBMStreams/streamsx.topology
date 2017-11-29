@@ -66,23 +66,43 @@ public interface StreamingAnalyticsService {
     
     /**
      * Submit a Streams bundle to run on the Streaming Analytics Service.
+     * <P>
+     * The returned {@link Result} instance has:
+     * <UL>
+     * <LI>{@link Result#getId()} returning the job identifier or {@code null} if
+     * a job was not created..</LI>
+     * <LI>{@link Result#getElement()} returning a {@link Job} instance for the submitted job or {@code null} if
+     * a job was not created.</LI>
+     * <LI>{@link Result#getRawResult()} return the raw JSON response.</LI>
+     * </UL>
+     * </P>
      * @param bundle A streams application bundle
      * @param jco Job configuration overlay in JSON format.
-     * @return The Job, or null.
-     * @throws IOException
+     * @return Result of the job submission.
+     * @throws IOException Error communicating with the service.
      */
-    Job submitJob(File bundle, JsonObject jco) throws IOException;
+    Result<Job,JsonObject> submitJob(File bundle, JsonObject jco) throws IOException;
 
     /**
      * Submit an archive to build on the Streaming Analytics Service, and submit
      * the job if the build is successful.
+     * <P>
+     * The returned {@link Result} instance has:
+     * <UL>
+     * <LI>{@link Result#getId()} returning the job identifier or {@code null} if
+     * a job was not created..</LI>
+     * <LI>{@link Result#getElement()} returning a {@link Job} instance for the submitted job or {@code null} if
+     * a job was not created.</LI>
+     * <LI>{@link Result#getRawResult()} return the raw JSON response.</LI>
+     * </UL>
+     * </P>
      * @param archive The application archive to build.
      * @param jco Job configuration overlay in JSON format.
      * @param buildName A name for the build, or null.
-     * @return The Job, or null.
-     * @throws IOException
+     * @return Result of the build and job submission.
+     * @throws IOException Error communicating with the service.
      */
-    Job buildAndSubmitJob(File archive, JsonObject jco, String buildName) throws IOException;
+    Result<Job,JsonObject> buildAndSubmitJob(File archive, JsonObject jco, String buildName) throws IOException;
 
     /**
      * Gets the {@link Instance IBM Streams Instance} object for the Streaming

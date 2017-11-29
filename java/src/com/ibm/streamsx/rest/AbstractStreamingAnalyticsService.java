@@ -107,7 +107,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     }
 
     @Override
-    public Job submitJob(File bundle, JsonObject jco) throws IOException {
+    public Result<Job, JsonObject> submitJob(File bundle, JsonObject jco) throws IOException {
         final CloseableHttpClient httpClient = HttpClients.createDefault();
         try {
             Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Checking status :" + serviceName);
@@ -123,16 +123,16 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job request:" + jco.toString());
 
             JsonObject response = postJob(httpClient, service, bundle, jco);
-
-            String jobId = jstring(response, getJobSubmitId());
-            if (null == jobId) {
-                return null;
-            }
-
-            return getInstance().getJob(jobId);
+            return jobResult(response);
+            
         } finally {
             httpClient.close();
         }
+    }
+    
+    private Result<Job,JsonObject> jobResult(JsonObject response) {
+        final String jobId = jstring(response, getJobSubmitId());
+        return new ResultImpl<>(jobId != null, jobId, () -> jobId == null ? null : getInstance().getJob(jobId), response);            
     }
 
     private void checkInstanceStatus(CloseableHttpClient httpClient)
@@ -154,7 +154,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     }
 
     @Override
-    public Job buildAndSubmitJob(File archive, JsonObject jco,
+    public Result<Job, JsonObject> buildAndSubmitJob(File archive, JsonObject jco,
             String buildName) throws IOException {
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -215,13 +215,8 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submitting job request.");
             JsonObject response = submitBuildArtifact(httpclient, jco,
                     getAuthorization(), submitUrl);
-
-            String jobId = jstring(response, getJobSubmitId());
-            if (null == jobId) {
-                return null;
-            }
-
-            return getInstance().getJob(jobId);
+            
+            return jobResult(response);
         } finally {
             httpclient.close();
         }
