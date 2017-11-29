@@ -203,7 +203,7 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
     }
 
     @Override
-    protected AbstractStreamsConnection createStreamsConnection() throws IOException {
+    AbstractStreamingAnalyticsConnection createStreamsConnection() throws IOException {
         return StreamingAnalyticsConnectionV1.of(service, false);
     }
 }
