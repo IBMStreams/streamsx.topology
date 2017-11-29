@@ -1,5 +1,7 @@
 from streamsx.rest_primitives import *
 import os
+import random
+import tempfile
 
 def check_instance(tc, instance):
     """Basic test of calls against an instance, assumed there is
@@ -43,8 +45,36 @@ def _fetch_from_job(tc, job):
 
     # Presently, application logs can only be fetched from the Stream Analytics Service
     else:
-        logs = job.get_application_logs()
+        logs = job.retrieve_log_trace()
         tc.assertTrue(os.path.isfile(logs))
+        fn = os.path.basename(logs)
+        tc.assertTrue(fn.startswith('job_' + job.id + '_'))
+        tc.assertTrue(fn.endswith('.tar.gz'))
+        tc.assertEqual(os.getcwd(), os.path.dirname(logs))
+        os.remove(logs)
+
+        fn = 'myjoblogs_' + str(random.randrange(999999)) + '.tgz'
+        logs = job.retrieve_log_trace(fn)
+        tc.assertTrue(os.path.isfile(logs))
+        tc.assertEqual(fn, os.path.basename(logs))
+        tc.assertEqual(os.getcwd(), os.path.dirname(logs))
+        os.remove(logs)
+
+        td = tempfile.mkdtemp()
+
+        logs = job.retrieve_log_trace(dir=td)
+        tc.assertTrue(os.path.isfile(logs))
+        fn = os.path.basename(logs)
+        tc.assertTrue(fn.startswith('job_' + job.id + '_'))
+        tc.assertTrue(fn.endswith('.tar.gz'))
+        tc.assertEqual(td, os.path.dirname(logs))
+        os.remove(logs)
+
+        fn = 'myjoblogs_' + str(random.randrange(999999)) + '.tgz'
+        logs = job.retrieve_log_trace(filename=fn,dir=td)
+        tc.assertTrue(os.path.isfile(logs))
+        tc.assertEqual(fn, os.path.basename(logs))
+        tc.assertEqual(td, os.path.dirname(logs))
         os.remove(logs)
 
     _check_list(tc, job.get_pe_connections(), PEConnection)
