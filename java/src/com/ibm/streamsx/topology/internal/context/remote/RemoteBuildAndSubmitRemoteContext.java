@@ -16,6 +16,7 @@ import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Job;
+import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamingAnalyticsService;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.graph.GraphKeys;
@@ -49,14 +50,15 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	    File buildArchive =  archive.get();
 		
 	    try {
-	        Job job = sas.buildAndSubmitJob(buildArchive, jco, buildName);
-	        final JsonObject result = GsonUtilities.objectCreate(submission,
+	        Result<Job, JsonObject> submitResult = sas.buildAndSubmitJob(buildArchive, jco, buildName);
+	        final JsonObject submissionResult = GsonUtilities.objectCreate(submission,
 	                RemoteContext.SUBMISSION_RESULTS);
 
-	        if (null != job) {
-	            String jobId = job.getId();
-	            GsonUtilities.addToObject(result, SubmissionResultsKeys.JOB_ID, jobId);
-	        }
+	        GsonUtilities.addAll(submissionResult, submitResult.getRawResut());
+	        // Ensure job id is in a known place regardless of version
+	        final String jobId = submitResult.getId();
+	        GsonUtilities.addToObject(submissionResult, SubmissionResultsKeys.JOB_ID, jobId);
+
 	    } finally {		
 		    if (!keepArtifacts(submission))
 		        buildArchive.delete();

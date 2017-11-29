@@ -18,6 +18,7 @@ import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Job;
+import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamingAnalyticsService;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
@@ -93,16 +94,14 @@ public class AnalyticsServiceStreamsContext extends
         final StreamingAnalyticsService sas = StreamingAnalyticsService.of(vcapServices,
                 jstring(deploy, SERVICE_NAME));
 
-        Job job = sas.submitJob(bundle, jco);
-        final JsonObject result = GsonUtilities.objectCreate(submission,
+        Result<Job, JsonObject> submitResult = sas.submitJob(bundle, jco);
+        final JsonObject submissionResult = GsonUtilities.objectCreate(submission,
                 RemoteContext.SUBMISSION_RESULTS);
-
-        if (null == job) {
-            return BigInteger.valueOf(-1);
-        }
-
-        String jobId = job.getId();
-        GsonUtilities.addToObject(result, SubmissionResultsKeys.JOB_ID, jobId);
+        GsonUtilities.addAll(submissionResult, submitResult.getRawResut());
+        
+        // Ensure job id is in a known place regardless of version
+        final String jobId = submitResult.getId();
+        GsonUtilities.addToObject(submissionResult, SubmissionResultsKeys.JOB_ID, jobId);
 
         return new BigInteger(jobId);
     }
