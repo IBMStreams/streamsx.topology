@@ -69,14 +69,9 @@ class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnectio
      */
     boolean cancelJob(String instanceId, String jobId) throws IOException {
         if (null == jobsUrl) {
-            String restUrl = jstring(credentials, "rest_url");
-            String resourcesPath = jstring(credentials, "resources_path");
-            StringBuilder sb = new StringBuilder(restUrl.length() + resourcesPath.length());
-            sb.append(restUrl);
-            sb.append(resourcesPath);
-            String statusUrl = sb.toString();
+            String restUrl = jstring(credentials, "v2_rest_url");
             JsonObject response = StreamsRestUtils.getGsonResponse(executor,
-                    getAuthorization(), statusUrl);
+                    getAuthorization(), restUrl);
             JsonElement element = response.get("jobs");
             if (null != element) {
                 jobsUrl = element.getAsString();
