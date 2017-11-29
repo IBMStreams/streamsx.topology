@@ -14,6 +14,8 @@ import java.io.IOException;
  *
  * @param <T> Type of the element being created.
  * @param <R> Type of the raw response.
+ * 
+ * @since 1.8
  */
 public interface Result<T,R> {
 
@@ -32,7 +34,13 @@ public interface Result<T,R> {
     
     /**
      * Get the raw result from the request.
+     * <BR>
+     * Unless specified by the method returning
+     * a {@code Result} the contents of a raw
+     * result are not guaranteed to be stable
+     * across releases.
+     * 
      * @return raw result from the request.
      */
-    R getRawResut();
+    R getRawResult();
 }

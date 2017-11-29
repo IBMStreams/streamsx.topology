@@ -97,7 +97,7 @@ public class AnalyticsServiceStreamsContext extends
         Result<Job, JsonObject> submitResult = sas.submitJob(bundle, jco);
         final JsonObject submissionResult = GsonUtilities.objectCreate(submission,
                 RemoteContext.SUBMISSION_RESULTS);
-        GsonUtilities.addAll(submissionResult, submitResult.getRawResut());
+        GsonUtilities.addAll(submissionResult, submitResult.getRawResult());
         
         // Ensure job id is in a known place regardless of version
         final String jobId = submitResult.getId();

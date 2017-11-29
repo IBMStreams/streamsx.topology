@@ -14,7 +14,7 @@ class ResultImpl<T,R> implements Result<T, R> {
     }
 
     @Override
-    public final R getRawResut() {
+    public final R getRawResult() {
         return rawResult;
     }
 

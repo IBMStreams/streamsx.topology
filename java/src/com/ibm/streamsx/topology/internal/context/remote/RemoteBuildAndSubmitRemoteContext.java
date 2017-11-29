@@ -54,7 +54,7 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	        final JsonObject submissionResult = GsonUtilities.objectCreate(submission,
 	                RemoteContext.SUBMISSION_RESULTS);
 
-	        GsonUtilities.addAll(submissionResult, submitResult.getRawResut());
+	        GsonUtilities.addAll(submissionResult, submitResult.getRawResult());
 	        // Ensure job id is in a known place regardless of version
 	        final String jobId = submitResult.getId();
 	        GsonUtilities.addToObject(submissionResult, SubmissionResultsKeys.JOB_ID, jobId);
