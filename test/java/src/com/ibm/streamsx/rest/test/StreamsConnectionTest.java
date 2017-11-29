@@ -356,7 +356,11 @@ public class StreamsConnectionTest {
 
         List<Metric> inputPortMetrics = ip.getMetrics();
         for (Metric m : inputPortMetrics) {
-            assertTrue((m.getMetricKind().equals("counter")) || (m.getMetricKind().equals("gauge")));
+            assertTrue("Unexpected metric kind for metric " + m.getName() + ": "
+                    + m.getMetricKind(),
+                    (m.getMetricKind().equals("counter")) ||
+                            (m.getMetricKind().equals("gauge")) ||
+                            (m.getMetricKind().equals("time")));
             assertEquals("system", m.getMetricType());
             assertEquals("metric", m.getResourceType());
             assertNotNull(m.getName());
