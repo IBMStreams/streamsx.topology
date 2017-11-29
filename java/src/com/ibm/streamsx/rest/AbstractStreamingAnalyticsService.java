@@ -51,13 +51,20 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     protected String authorization;
 
     // Connection to Streams REST API
-    AbstractStreamsConnection streamsConnection;
+    AbstractStreamingAnalyticsConnection streamsConnection;
 
     AbstractStreamingAnalyticsService(JsonObject service) {
         JsonObject credentials = object(service,  "credentials");
         this.credentials = credentials;
         this.service = service;
         this.serviceName = jstring(service, "name");
+    }
+    
+    synchronized AbstractStreamingAnalyticsConnection streamsConnection() throws IOException {
+        if (null == streamsConnection) {
+            streamsConnection = createStreamsConnection();
+        }
+        return streamsConnection;
     }
 
     /** Version-specific authorization header handling. */
@@ -96,7 +103,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             CloseableHttpClient httpclient,
             String authorization) throws IOException;
     /** Version-specific mechanism to get AbstractStreamsConnection. */
-    protected abstract AbstractStreamsConnection createStreamsConnection()
+    abstract AbstractStreamingAnalyticsConnection createStreamsConnection()
             throws IOException;
 
     /**
@@ -260,18 +267,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     }
 
     public Instance getInstance() throws IOException {
-        synchronized (this) {
-            if (null == streamsConnection) {
-                streamsConnection = createStreamsConnection();
-            }
-        }
-        List<Instance> instances = streamsConnection.getInstances();
-        if (instances.size() == 1) {
-            // Should find one only
-            return instances.get(0);
-        } else {
-            throw new RESTException("Unexpected number of instances: " + instances.size());
-        }
+        return streamsConnection().getInstance();
     }
 
     static StreamingAnalyticsService of(JsonObject config) throws IOException {

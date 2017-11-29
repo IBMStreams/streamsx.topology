@@ -28,7 +28,8 @@ abstract class AbstractStreamingAnalyticsConnection
 
     private static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.AbstractStreamingAnalyticsConnection");
 
-    protected JsonObject credentials;
+    JsonObject credentials;
+    private Instance instance;
 
     AbstractStreamingAnalyticsConnection(String authorization,
             String resourcesUrl, JsonObject credentials, boolean allowInsecure)
@@ -47,10 +48,12 @@ abstract class AbstractStreamingAnalyticsConnection
      * @throws IOException
      */
     public Instance getInstance() throws IOException {
+        if (instance != null)
+            return instance;
         List<Instance> instances = getInstances();
         if (instances.size() == 1) {
             // Should find one only
-            return instances.get(0);
+            return instance = instances.get(0);
         } else {
             throw new RESTException("Unexpected number of instances: " + instances.size());
         }

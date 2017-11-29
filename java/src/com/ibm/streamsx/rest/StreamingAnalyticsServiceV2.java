@@ -217,7 +217,7 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
     }
 
     @Override
-    protected AbstractStreamsConnection createStreamsConnection() throws IOException {
+    AbstractStreamingAnalyticsConnection createStreamsConnection() throws IOException {
         return StreamingAnalyticsConnectionV2.of(service, getAuthorization(),
                 authExpiryTime, false);
     }
