@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.tester.rest;
 
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static java.util.Objects.requireNonNull;
@@ -12,15 +14,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streams.flow.handlers.StreamHandler;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
+import com.ibm.streamsx.rest.StreamingAnalyticsService;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
@@ -47,15 +52,19 @@ public class RESTTesterRuntime extends TesterRuntime {
     public void start(Object info) throws Exception {
         
         JsonObject deployment = (JsonObject) info;
-        StreamingAnalyticsConnection conn = StreamingAnalyticsConnection.newInstance(deployment);
-        
+
+        JsonElement vcapServices = deployment.get(VCAP_SERVICES);
+        String serviceName = jstring(deployment, SERVICE_NAME);
+        StreamingAnalyticsService sas = StreamingAnalyticsService.of(vcapServices, serviceName);
+
         JsonObject submission = jobject(deployment, "submissionResults");
         requireNonNull(submission);
-        
-        String jobId = jstring(submission, "jobId");
-        
-        Job job = conn.getInstance().getJob(jobId);
-        
+
+        String jobId = jstring(submission, SubmissionResultsKeys.JOB_ID);
+        requireNonNull(jobId);
+
+        Job job = sas.getInstance().getJob(jobId);
+
         metricsChecker.setup(job);
     }
 

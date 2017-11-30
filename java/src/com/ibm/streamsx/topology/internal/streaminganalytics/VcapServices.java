@@ -38,7 +38,7 @@ public class VcapServices {
      * <li>null - assumed to be in the environment variable VCAP_SERVICES</li>
      * </ul>
      */
-    private static JsonObject getVCAPServices(JsonElement rawServices) throws IOException {
+    public static JsonObject getVCAPServices(JsonElement rawServices) throws IOException {
 
         JsonParser parser = new JsonParser();
         String vcapString;

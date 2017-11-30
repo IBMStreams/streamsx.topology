@@ -8,43 +8,31 @@ import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVI
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
 
 import java.io.IOException;
-import java.util.logging.Logger;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.auth.AUTH;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
-import org.apache.http.util.EntityUtils;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 /**
- * Connection to a Streaming Analytics Instance
- *
+ * Connection to a Streaming Analytics Service Instance.
+ * <p>
+ * This class exists for backward compatibility and use is
+ * discouraged. The preferred method for interacting with the Streaming
+ * Analytics Service is to use instances of {@link StreamingAnalyticsService}.
+ * 
+ * @deprecated Replaced by {@link StreamingAnalyticsService}
  */
+
+
+@Deprecated
 public class StreamingAnalyticsConnection extends StreamsConnection {
 
-    static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamingAnalyticsConnection");
+    private JsonObject config;
 
-    private String jobsPath;
-    private String instanceId;
-
-    /**
-     * Connection to IBM Streaming Analytics service
-     *
-     * @param credentialsFile
-     *            Credentials from the Streaming Analytics File
-     * @param serviceName
-     *            Name of the service in the file above
-     * @throws IOException
-     */
-    private StreamingAnalyticsConnection(String userName, String authToken, String url) {
-        super(userName, authToken, url);
+    private StreamingAnalyticsConnection(
+            AbstractStreamingAnalyticsConnection delegate,
+            boolean allowInsecure) {
+        super(delegate, allowInsecure);
     }
-    
+
     /**
      * Connection to IBM Streaming Analytics service
      *
@@ -55,65 +43,51 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
      * @return a connection to IBM Streaming Analytics service
      * @throws IOException
      */
-    public static StreamingAnalyticsConnection createInstance(String credentialsFile, String serviceName)
-            throws IOException {
+    public static StreamingAnalyticsConnection createInstance(String credentialsFile,
+            String serviceName) throws IOException {
 
         JsonObject config = new JsonObject();
 
         config.addProperty(SERVICE_NAME, serviceName);
         config.addProperty(VCAP_SERVICES, credentialsFile);
-        
+
         return newInstance(config);
     }
-        
-    public static StreamingAnalyticsConnection newInstance(JsonObject config) throws IOException{
 
-        JsonObject service = VcapServices.getVCAPService(config);
-
-        JsonObject credential = new JsonObject();
-        credential = service.get("credentials").getAsJsonObject();
-
-        String userId = credential.get("userid").getAsString();
-        String authToken = credential.get("password").getAsString();
-
-        String resourcesPath = credential.get("resources_path").getAsString();
-        String sURL = credential.get("rest_url").getAsString() + resourcesPath;
-
-        String jobPath = credential.get("jobs_path").getAsString();
-        String jobString = credential.get("rest_url").getAsString() + jobPath;
-
-        String restURL = "";
-        StreamingAnalyticsConnection streamingConnection = new StreamingAnalyticsConnection(userId, authToken, restURL);
-        streamingConnection.setJobsPath(jobString);
-
-        String sResources = streamingConnection.getResponseString(sURL);
-        if (!sResources.equals("")) {
-            JsonParser jParse = new JsonParser();
-            JsonObject resources = jParse.parse(sResources).getAsJsonObject();
-
-            restURL = resources.get("streams_rest_url").getAsString();
-        }
-
-        if (restURL.equals("")) {
-            throw new IllegalStateException("Missing restURL for service");
-        }
-
-        streamingConnection.setStreamsRESTURL(restURL);
-        String[] rTokens = resourcesPath.split("/");
-        if (rTokens[3].equals("service_instances")) {
-            streamingConnection.setInstanceId(rTokens[4]);
-        } else {
-            throw new IllegalStateException("Resource Path decoding error.");
-        }
-        return streamingConnection;
+    public static StreamingAnalyticsConnection newInstance(JsonObject config)
+            throws IOException {
+        return createInstance(config, false);
     }
 
-    private void setInstanceId(String id) {
-        instanceId = id;
-    }
-
-    private void setJobsPath(String sJobs) {
-        jobsPath = sJobs;
+    /**
+     * This function is used to disable checking the trusted certificate chain
+     * and should never be used in production environments
+     * 
+     * @param allowInsecure
+     *            <ul>
+     *            <li>true - disables checking</li>
+     *            <li>false - enables checking (default)</li>
+     *            </ul>
+     * @return a boolean indicating the state of the connection after this
+     *         method was called.
+     *         <ul>
+     *         <li>true - if checking is disabled</li>
+     *         <li>false - if checking is enabled</li>
+     *         </ul>
+     */
+    @Override
+    public boolean allowInsecureHosts(boolean allowInsecure) {
+        if (allowInsecure != this.allowInsecure && null != this.config) {
+            try {
+                delegate = AbstractStreamingAnalyticsConnection.of(config, allowInsecure);
+                this.allowInsecure = allowInsecure; 
+            } catch (IOException e) {
+                // Don't change current allowInsecure but update delegate in
+                // case new exception is more informative.
+                delegate = new InvalidStreamsConnection(e);
+            }
+        }
+        return this.allowInsecure;
     }
 
     /**
@@ -126,41 +100,27 @@ public class StreamingAnalyticsConnection extends StreamsConnection {
      * @throws IOException
      */
     public Instance getInstance() throws IOException {
-        return super.getInstance(instanceId);
+        return streamingAnalyticsConnection().getInstance();
     }
 
-    /**
-     * Cancels a job that has been submitted to IBM Streaming Analytcis service
-     *
-     * @param jobId
-     *            string indicating the job id to be canceled
-     * @return boolean indicating
-     *         <ul>
-     *         <li>true - if job is cancelled</li>
-     *         <li>false - if the job still exists</li>
-     *         </ul>
-     * @throws IOException
-     */
-    public boolean cancelJob(String jobId) throws IOException {
-        boolean rc = false;
-        String sReturn = "";
-        String deleteJob = jobsPath + "?job_id=" + jobId;
-
-        Request request = Request.Delete(deleteJob).addHeader(AUTH.WWW_AUTH_RESP, apiKey).useExpectContinue();
-
-        Response response = executor.execute(request);
-        HttpResponse hResponse = response.returnResponse();
-        int rcResponse = hResponse.getStatusLine().getStatusCode();
-
-        if (HttpStatus.SC_OK == rcResponse) {
-            sReturn = EntityUtils.toString(hResponse.getEntity());
-            rc = true;
-        } else {
-            rc = false;
-        }
-        traceLog.finest("Request: [" + deleteJob + "]");
-        traceLog.finest(rcResponse + ": " + sReturn);
-        return rc;
+    @Override
+    public boolean cancelJob(String jobId) throws Exception {
+        Instance instance = streamingAnalyticsConnection().getInstance();
+        return instance.getJob(jobId).cancel();
     }
 
+    private static StreamingAnalyticsConnection createInstance(
+            JsonObject config, boolean allowInsecure) throws IOException {
+        AbstractStreamingAnalyticsConnection delegate =
+                AbstractStreamingAnalyticsConnection.of(config, allowInsecure);
+        StreamingAnalyticsConnection sac = new StreamingAnalyticsConnection(delegate, allowInsecure);
+        sac.config = config;
+        return sac;
+    }
+
+    private AbstractStreamingAnalyticsConnection streamingAnalyticsConnection() {
+        // We know the cast is safe, because this class' constructor requires
+        // AbstractStreamingAnalyticsConnection as the delegate.
+        return (AbstractStreamingAnalyticsConnection)delegate;
+    }
 }

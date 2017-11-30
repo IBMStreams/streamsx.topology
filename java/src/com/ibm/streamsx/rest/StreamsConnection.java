@@ -6,114 +6,53 @@ package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.List;
-import java.util.logging.Logger;
 
-import javax.xml.bind.DatatypeConverter;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.auth.AUTH;
 import org.apache.http.client.fluent.Executor;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
-import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
-import org.apache.http.conn.ssl.SSLContextBuilder;
-import org.apache.http.conn.ssl.TrustStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 
 import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
 
 /**
- * Connection to IBM Streams
+ * Connection to IBM Streams.
  */
 public class StreamsConnection {
+    IStreamsConnection delegate;
+    protected boolean allowInsecure;
 
-    static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamsConnection");
-
-    private final String userName;
+    private String userName;
+    private String authToken;
     private String url;
-    protected String apiKey;
-    private boolean allowInsecureHosts = false;
 
+    /**
+     * @deprecated No replacement {@code StreamsConnection} is not intended to be sub-classed.
+     */
+    @Deprecated
+    protected String apiKey;
+    
+    /**
+     * @deprecated No replacement {@code StreamsConnection} is not intended to be sub-classed.
+     */
+    @Deprecated
     protected Executor executor;
 
+    StreamsConnection(IStreamsConnection delegate,
+            boolean allowInsecure) {
+        this.delegate = delegate;
+        this.allowInsecure = allowInsecure;
+        refreshState();
+    }
+
     /**
-     * Connection to IBM Streams
-     * 
-     * @param userName
-     *            String representing the userName to connect to the instance
-     * @param authToken
-     *            String representing the password to connect to the instance
-     * @param url
-     *            String representing the root url to the REST API, for example:
-     *            https:server:port/streams/rest
+     * @deprecated No replacement {@code StreamsConnection} is not intended to be sub-classed.
      */
+    @Deprecated
     protected StreamsConnection(String userName, String authToken, String url) {
-        this.userName = userName;
-        String apiCredentials = userName + ":" + authToken;
-        apiKey = "Basic " + DatatypeConverter.printBase64Binary(apiCredentials.getBytes(StandardCharsets.UTF_8));
-
-        executor = Executor.newInstance();
-        setStreamsRESTURL(url);
-    }
-
-    /**
-     * sets the REST API url for this connection removing the trailing slash
-     * 
-     * @param url
-     *            String representing the root url to the REST API, for example:
-     *            https:server:port/streams/rest/resources
-     *            https:server/streams/rest Need to remove the '/resources' for
-     *            all other access to be efficient
-     */
-    protected void setStreamsRESTURL(String iUrl) {
-        // set this originally to what comes in to force a 404 if it's not what
-        // we wanted
-        this.url = iUrl;
-        if (!iUrl.isEmpty()) {
-            // strip trailing slash
-            if (iUrl.charAt(iUrl.length() - 1) == '/') {
-                iUrl = iUrl.substring(0, iUrl.length() - 1);
-            }
-
-            // IBM Streams returns the REST URI Root as
-            // https:server:port/streams/rest/resources
-            // whereas Streaming Analytics returns the REST URI as
-            // https:server/streams/rest
-            // https:server/streams/rest is the common path between them
-            String keyword = "streams/rest";
-            String endString = "";
-            if (getClass() == StreamsConnection.class) {
-                endString = "/resources";
-            }
-
-            int index = iUrl.indexOf(keyword);
-            if (index != -1) {
-                String remants = "";
-                if (index < iUrl.length()) {
-                    remants = iUrl.substring(index + keyword.length(), iUrl.length());
-                }
-                // verify that there's nothing at the end
-                if (remants.equals(endString)) {
-                    // make sure we stop at streams/rest
-                    this.url = iUrl.substring(0, index + keyword.length());
-                }
-            }
-        }
+        this(createDelegate(userName, authToken, url), false);
     }
 
     /**
      * Connection to IBM Streams
-     * 
+     *
      * @param userName
      *            String representing the userName to connect to the instance
      * @param authToken
@@ -122,86 +61,14 @@ public class StreamsConnection {
      *            String representing the root url to the REST API
      * @return a connection to IBM Streams
      */
-    public static StreamsConnection createInstance(String userName, String authToken, String url) {
-        return new StreamsConnection(userName, authToken, url);
-    }
-
-    /**
-     * Gets a response to an HTTP call
-     * 
-     * @param inputString
-     *            REST call to make
-     * @return response from the inputString
-     * @throws IOException
-     */
-    String getResponseString(String inputString) throws IOException {
-        String sReturn = "";
-        Request request = Request.Get(inputString).addHeader(AUTH.WWW_AUTH_RESP, apiKey).useExpectContinue();
-
-        Response response = executor.execute(request);
-        HttpResponse hResponse = response.returnResponse();
-        int rcResponse = hResponse.getStatusLine().getStatusCode();
-
-        if (HttpStatus.SC_OK == rcResponse) {
-            sReturn = EntityUtils.toString(hResponse.getEntity());
-        } else if (HttpStatus.SC_NOT_FOUND == rcResponse) {
-            // with a 404 message, we are likely to have a message from Streams
-            // but if not, provide a better message
-            sReturn = EntityUtils.toString(hResponse.getEntity());
-            if ((sReturn != null) && (!sReturn.equals(""))) {
-                throw RESTException.create(rcResponse, sReturn);
-            } else {
-                String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
-                throw new RESTException(rcResponse, httpError);
-            }
-        } else {
-            // all other errors...
-            String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
-            throw new RESTException(rcResponse, httpError);
-        }
-        traceLog.finest("Request: " + inputString);
-        traceLog.finest(rcResponse + ": " + sReturn);
-        return sReturn;
-    }
-
-    /**
-     * Gets a list of {@link Instance instances} that are available to this IBM
-     * Streams connection
-     * 
-     * @return List of {@link Instance IBM Streams Instances} available to this
-     *         connection
-     * @throws IOException
-     */
-    public List<Instance> getInstances() throws IOException {
-        String instancesURL = url + "/instances/";
-
-        String sReturn = getResponseString(instancesURL);
-        List<Instance> instanceList = Instance.getInstanceList(this, sReturn);
-
-        return instanceList;
-    }
-
-    /**
-     * Gets a specific {@link Instance instance} identified by the instanceId at
-     * this IBM Streams connection
-     * 
-     * @param instanceId
-     *            name of the instance to be retrieved
-     * @return a single {@link Instance}
-     * @throws IOException
-     */
-    public Instance getInstance(String instanceId) throws IOException {
-        Instance si = null;
-        if (instanceId.equals("")) {
-            // should add some fallback code to see if there's only one instance
-            throw new IllegalArgumentException("Missing instance name");
-        } else {
-            String instanceURL = url + "/instances/" + instanceId;
-            String sReturn = getResponseString(instanceURL);
-
-            si = Instance.create(this, sReturn);
-        }
-        return si;
+    public static StreamsConnection createInstance(String userName,
+            String authToken, String url) {
+        IStreamsConnection delegate = createDelegate(userName, authToken, url);
+        StreamsConnection sc = new StreamsConnection(delegate, false);
+        sc.userName = userName;
+        sc.authToken = authToken;
+        sc.url = url;
+        return sc;
     }
 
     /**
@@ -221,29 +88,23 @@ public class StreamsConnection {
      *         </ul>
      */
     public boolean allowInsecureHosts(boolean allowInsecure) {
-        try {
-            if ((allowInsecure) && (false == allowInsecureHosts)) {
-                CloseableHttpClient httpClient = HttpClients.custom()
-                        .setHostnameVerifier(new AllowAllHostnameVerifier())
-                        .setSslcontext(new SSLContextBuilder().loadTrustMaterial(null, new TrustStrategy() {
-                            public boolean isTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-                                return true;
-                            }
-                        }).build()).build();
-                executor = Executor.newInstance(httpClient);
-                allowInsecureHosts = true;
-            } else if ((false == allowInsecure) && (true == allowInsecureHosts)) {
-                executor = Executor.newInstance();
-                allowInsecureHosts = false;
+        refreshState();
+        if (allowInsecure != this.allowInsecure
+                && null != userName && null != authToken && null != url) {
+            try {
+                StreamsConnectionImpl connection = new StreamsConnectionImpl(userName,
+                        StreamsRestUtils.createBasicAuth(userName, authToken),
+                        url, allowInsecure);
+                connection.init();
+                delegate = connection;
+                this.allowInsecure = allowInsecure; 
+            } catch (IOException e) {
+                // Don't change current allowInsecure but update delegate in
+                // case new exception is more informative.
+                delegate = new InvalidStreamsConnection(e);
             }
-        } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
-            executor = Executor.newInstance();
-            allowInsecureHosts = false;
         }
-        if (allowInsecureHosts) {
-            traceLog.info("Insecure Host Connection enabled");
-        }
-        return allowInsecureHosts;
+        return this.allowInsecure;
     }
 
     /**
@@ -259,7 +120,90 @@ public class StreamsConnection {
      * @throws Exception
      */
     public boolean cancelJob(String jobId) throws Exception {
+        refreshState();
         InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId), userName);
         return cancelJob.invoke(false) == 0;
+    }
+
+    /**
+     * Gets a specific {@link Instance instance} identified by the instanceId at
+     * this IBM Streams connection
+     * 
+     * @param instanceId
+     *            name of the instance to be retrieved
+     * @return a single {@link Instance}
+     * @throws IOException
+     */
+    public Instance getInstance(String instanceId) throws IOException {
+        refreshState();
+        return delegate.getInstance(instanceId);
+    }
+
+    /**
+     * Gets a list of {@link Instance instances} that are available to this IBM
+     * Streams connection
+     * 
+     * @return List of {@link Instance IBM Streams Instances} available to this
+     *         connection
+     * @throws IOException
+     */
+    public List<Instance> getInstances() throws IOException {
+        refreshState();
+        return delegate.getInstances();
+    }
+
+    // Refresh protected members from the previous implementation
+    void refreshState() {
+        if (delegate instanceof AbstractStreamsConnection) {
+            AbstractStreamsConnection asc = (AbstractStreamsConnection)delegate;
+            apiKey = asc.getAuthorization();
+            executor = asc.getExecutor();
+        }
+    }
+
+    /**
+     * @deprecated No replacement {@code StreamsConnection} is not intended to be sub-classed.
+     */
+    @Deprecated
+    protected void setStreamsRESTURL(String url) {
+        delegate = createDelegate(userName, authToken, url);
+        refreshState();
+    }
+
+    private static IStreamsConnection createDelegate(String userName,
+            String authToken, String url) {
+        IStreamsConnection delegate = null;
+        try {
+            StreamsConnectionImpl connection = new StreamsConnectionImpl(userName,
+                    StreamsRestUtils.createBasicAuth(userName, authToken),
+                    url, false);
+            connection.init();
+            delegate = connection;
+        } catch (Exception e) {
+            delegate = new InvalidStreamsConnection(e);
+        }
+        return delegate;
+    }
+
+    // Since the original class never threw on exception on creation, we need a
+    // dummy class that will throw on use.
+    static class InvalidStreamsConnection implements IStreamsConnection {
+        private final static String MSG = "Invalid Streams connection";
+
+        private final Exception exception;
+
+        InvalidStreamsConnection(Exception e) {
+            exception = e;
+        }
+
+        @Override
+        public Instance getInstance(String instanceId) throws IOException {
+            throw new RESTException(MSG, exception);
+        }
+
+        @Override
+        public List<Instance> getInstances() throws IOException {
+            throw new RESTException(MSG, exception);
+        }
     }
 }

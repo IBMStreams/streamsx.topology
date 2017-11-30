@@ -70,7 +70,7 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
             connection.getInstance("fakeName");
             fail("the connection.getInstance() call should have thrown an exception");
         } catch (RESTException r) {
-            assertEquals(404, r.getStatusCode());
+            assertEquals(r.toString(), 404, r.getStatusCode());
         }
     }
 
