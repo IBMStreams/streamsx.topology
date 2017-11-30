@@ -404,36 +404,30 @@ class Job(_ResourceElement):
         >>> print (jobs[0].health)
         healthy
     """
-    def get_application_logs(self, path=None, prefix=None):
-        """Retrieves the application log and trace files of the job and saves them as a tar file to the specified path
-        with the given name.
+    def retrieve_log_trace(self, filename=None, dir=None):
+        """Retrieves the application log and trace files of the job
+        and saves them as a compressed tar file.
 
-        If logs are retrieved with the same path and name as previously retrieved logs, the prior logs will be
-        overwritten.
+        An existing file with the same name will be overwritten.
 
         Args:
-            path (str): a valid directory in which to save the application log output. Defaults to current dir.
-            prefix (str): the prefix of the filename of the created tar file. Defaults to a prefix based on the job name.
+            filename (str): name of the created tar file. Defaults to `job_<id>_<timestamp>.tar.gz` where `id` is the job identifier and `timestamp` is the number of seconds since the Unix epoch, for example ``job_355_1511995995.tar.gz``.
+            dir (str): a valid directory in which to save the archive. Defaults to the current directory.
 
         Returns:
-            str: the path to the application logs tar file.
+            str: the path to the created tar file.
 
         .. versionadded:: 1.8
         """
         logger.debug("Retrieving application logs from: " + self.applicationLogTrace)
         logs = self.rest_client.make_raw_streaming_request(self.applicationLogTrace)
         
-        if prefix is None:
-            # Take the job name and remove colons (colons confuse the unix 'tar' command)
-            prefix = ''.join(self.name.split(':'))
-            
-        prefix = prefix + "_" + self.id
-        name = prefix + "_app_logs.tar"
-        
-        if path is None:
-            path = os.getcwd()
+        if filename is None:
+            filename = 'job_' + self.id + '_' + str(int(time.time())) + '.tar.gz'
+        if dir is None:
+            dir = os.getcwd()
 
-        path = os.path.join(path, name)
+        path = os.path.join(dir, filename)
         try:
             with open(path, 'w+b') as logfile:
                 for chunk in logs.iter_content(chunk_size=1024*64):
