@@ -23,6 +23,7 @@ import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
 
+@SuppressWarnings("deprecation")
 public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
 
     @Override
@@ -64,6 +65,8 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
         String instanceName = instances.get(0).getId();
         Instance i2 = connection.getInstance(instanceName);
         assertEquals(instanceName, i2.getId());
+        
+        checkDomainFromInstance(instances.get(0));
 
         try {
             // try a fake instance name

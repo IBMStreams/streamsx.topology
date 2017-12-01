@@ -177,16 +177,8 @@ public class StreamsConnectionTest {
         i2.refresh();
         assertEquals(instanceName, i2.getId());
         
-        for (Instance instance : instances) {
-            instance.refresh();
-            
-            Domain domain = instance.getDomain();
-            assertNotNull(domain);
-            assertNotNull(domain.getId());
-            assertNotNull(domain.getZooKeeperConnectionString());
-            assertNotNull(domain.getCreationUser());
-            assertTrue(domain.getCreationTime() <= instance.getCreationTime());
-        }
+        for (Instance instance : instances)
+            checkDomainFromInstance(instance);
 
         try {
             // try a fake instance name
@@ -196,6 +188,19 @@ public class StreamsConnectionTest {
             // not a failure, this is the expected result
             assertEquals(r.toString(), 404, r.getStatusCode());
         }
+    }
+    
+    static void checkDomainFromInstance(Instance instance)  throws Exception {
+        instance.refresh();
+        
+        System.err.println("DDDDD" + " GET DOMAIN");
+        Domain domain = instance.getDomain();
+        System.err.println("DDDDD" + " GOT DOMAIN:" + domain.getId());
+        assertNotNull(domain);
+        assertNotNull(domain.getId());
+        assertNotNull(domain.getZooKeeperConnectionString());
+        assertNotNull(domain.getCreationUser());
+        assertTrue(domain.getCreationTime() <= instance.getCreationTime());
     }
 
     @Before
@@ -287,6 +292,7 @@ public class StreamsConnectionTest {
         assertEquals(2, pes.size());
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testCancelSpecificJob() throws Exception {
         if (jobId != null) {
@@ -299,6 +305,7 @@ public class StreamsConnectionTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testNonExistantJob() throws Exception {
         try {
