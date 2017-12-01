@@ -20,6 +20,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.ibm.streamsx.rest.Domain;
 import com.ibm.streamsx.rest.InputPort;
 import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.Job;
@@ -175,6 +176,17 @@ public class StreamsConnectionTest {
 
         i2.refresh();
         assertEquals(instanceName, i2.getId());
+        
+        for (Instance instance : instances) {
+            instance.refresh();
+            
+            Domain domain = instance.getDomain();
+            assertNotNull(domain);
+            assertNotNull(domain.getId());
+            assertNotNull(domain.getZooKeeperConnectionString());
+            assertNotNull(domain.getCreationUser());
+            assertTrue(domain.getCreationTime() <= instance.getCreationTime());
+        }
 
         try {
             // try a fake instance name
