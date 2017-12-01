@@ -105,7 +105,7 @@ public class Instance extends Element {
     public List<Job> getJobs() throws IOException {
         String sReturn = connection().getResponseString(jobs);
 
-        List<Job> lJobs = Job.getJobList(connection(), sReturn);
+        List<Job> lJobs = Job.getJobList(this, sReturn);
         return lJobs;
     }
 
@@ -123,7 +123,7 @@ public class Instance extends Element {
         String sGetJobURI = jobs + "/" + jobId;
 
         String sReturn = connection().getResponseString(sGetJobURI);
-        Job job = Job.create(connection(), sReturn);
+        Job job = Job.create(this, sReturn);
         return job;
     }
 

@@ -67,7 +67,8 @@ class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnectio
      *         </ul>
      * @throws IOException
      */
-    boolean cancelJob(String instanceId, String jobId) throws IOException {
+    @Override
+    boolean cancelJob(Instance instance, String jobId) throws IOException {
         if (null == jobsUrl) {
             String restUrl = jstring(credentials, "v2_rest_url");
             JsonObject response = StreamsRestUtils.getGsonResponse(executor,
@@ -78,11 +79,6 @@ class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnectio
             } else {
                 throw new RESTException("Unable to get jobs URL");
             }
-        }
-        Instance instance = getInstance();
-        if (!instance.getId().equals(instanceId)) {
-            // Sanity check, should not happen
-            throw new RESTException("Unable to cancel job in instance " + instanceId);
         }
 
         return delete(jobsUrl + "/" + jobId);

@@ -16,35 +16,53 @@ public class InvokeCancel {
 
     static final Logger trace = Util.STREAMS_LOGGER;
 
+    private final String domainId;
+    private final String instanceId;
     private final BigInteger jobId;
     private final String userName;
 
-    public InvokeCancel(BigInteger jobId, String userName) {
+    public InvokeCancel(String domainId, String instanceId, BigInteger jobId, String userName) {
         super();
+        this.domainId = domainId;
+        this.instanceId = instanceId;
         this.jobId = jobId;
         this.userName = userName;
+
+    }
+    public InvokeCancel(BigInteger jobId, String userName) {
+        this(null, null, jobId, userName);
     }
     public InvokeCancel(BigInteger jobId) {
-        super();
-        this.jobId = jobId;
-        this.userName = null;
+        this(jobId, null);
     }
 
     public int invoke(boolean throwOnError) throws Exception, InterruptedException {
         String si = Util.getStreamsInstall();
         File sj = new File(si, "bin/streamtool");
         
-        Util.checkInvokeStreamtoolPreconditions();
+        if (domainId == null)
+             Util.checkInvokeStreamtoolPreconditions();
 
         List<String> commands = new ArrayList<>();
 
         commands.add(sj.getAbsolutePath());
         commands.add("canceljob");
-        if ( null != userName )
+        if (domainId != null)
+        {
+          commands.add("--domain-id");
+          commands.add(domainId);
+        }
+        if (instanceId != null)
+        {
+          commands.add("--instance-id");
+          commands.add(instanceId);
+        }
+        if (null != userName)
         {
           commands.add("-U");
           commands.add(userName);
         }
+
         commands.add(jobId.toString());
 
         trace.info("Invoking streamtool canceljob " + jobId);

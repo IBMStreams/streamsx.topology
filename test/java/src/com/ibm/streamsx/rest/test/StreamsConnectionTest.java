@@ -292,7 +292,7 @@ public class StreamsConnectionTest {
         try {
             // get a non-existant job
             @SuppressWarnings("unused")
-            Job nonExistantJob = instance.getJob("999999");
+            Job nonExistantJob = instance.getJob("9999999");
             fail("this job number should not exist");
         } catch (RESTException r) {
             assertEquals(r.toString(), 404, r.getStatusCode());
@@ -302,7 +302,7 @@ public class StreamsConnectionTest {
         // cancel a non-existant jobid
         // API does not specify if this fails or throws, accept both
         try {
-            boolean failCancel = connection.cancelJob("99999");
+            boolean failCancel = connection.cancelJob("9999999");
             assertTrue(failCancel == false);
         } catch (RESTException ok) {}
     }
