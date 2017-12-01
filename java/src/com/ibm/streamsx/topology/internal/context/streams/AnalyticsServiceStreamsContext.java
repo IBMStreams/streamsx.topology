@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.topology.internal.context.streams;
 
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
@@ -14,16 +16,16 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.Future;
 
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.Job;
+import com.ibm.streamsx.rest.Result;
+import com.ibm.streamsx.rest.StreamingAnalyticsService;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
-import com.ibm.streamsx.topology.internal.streaminganalytics.RestUtils;
-import com.ibm.streamsx.topology.internal.streams.Util;
+import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 public class AnalyticsServiceStreamsContext extends
         BundleUserStreamsContext<BigInteger> {
@@ -82,38 +84,25 @@ public class AnalyticsServiceStreamsContext extends
         return jco.fullOverlayAsJSON(new JsonObject());
     }
     */
-    
+
     private BigInteger submitJobToService(File bundle, JsonObject submission) throws IOException {
         JsonObject deploy =  deploy(submission);
-        
-        final JsonObject service = getVCAPService(deploy);
-        final String serviceName = jstring(service, "name");
-                      
-        final CloseableHttpClient httpClient = HttpClients.createDefault();
-        try {
-            Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Checking status :" + serviceName);
-            
-            RestUtils.checkInstanceStatus(httpClient, service);
-            
-            Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Submitting bundle : " + bundle.getName() + " to " + serviceName);
-            
-            JsonObject jcojson = DeployKeys.copyJobConfigOverlays(deploy);
-            
-            Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job request:" + jcojson.toString());
+        JsonObject jco = DeployKeys.copyJobConfigOverlays(deploy);
 
-            JsonObject response = RestUtils.postJob(httpClient, service, bundle, jcojson);
-            
-            final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
-            GsonUtilities.addAll(submissionResult, response);
-            
-            String jobId = jstring(response, "jobId");
-            
-            if (jobId == null)
-                return BigInteger.valueOf(-1);
-            
-            return new BigInteger(jobId);
-        } finally {
-            httpClient.close();
-        }
+        JsonObject vcapServices = VcapServices.getVCAPServices(deploy.get(VCAP_SERVICES));
+
+        final StreamingAnalyticsService sas = StreamingAnalyticsService.of(vcapServices,
+                jstring(deploy, SERVICE_NAME));
+
+        Result<Job, JsonObject> submitResult = sas.submitJob(bundle, jco);
+        final JsonObject submissionResult = GsonUtilities.objectCreate(submission,
+                RemoteContext.SUBMISSION_RESULTS);
+        GsonUtilities.addAll(submissionResult, submitResult.getRawResult());
+        
+        // Ensure job id is in a known place regardless of version
+        final String jobId = submitResult.getId();
+        GsonUtilities.addToObject(submissionResult, SubmissionResultsKeys.JOB_ID, jobId);
+
+        return new BigInteger(jobId);
     }
 }

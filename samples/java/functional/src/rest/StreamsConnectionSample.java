@@ -18,7 +18,7 @@ import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.StreamsConnection;
 
 /**
- * This is the main class to show how to use the StreamsConnection.
+ * This is the main class to show how to use the StreamsConnectionInterface.
  *
  * <p>
  * The example connects to the streams instance and gets a list of resources The
@@ -47,15 +47,13 @@ public class StreamsConnectionSample {
         /*
          * Create the connection to the instance indicated
          */
-        StreamsConnection sClient = StreamsConnection.createInstance(userName, authToken, url);
-
+        StreamsConnection sClient = StreamsConnection.createInstance(userName, authToken,
+                url);
         /*
          * This option is only used to by-pass the certificate certification
          */
-        if (args.length == 5) {
-            if (args[4].equals("true")) {
-                sClient.allowInsecureHosts(true);
-            }
+        if (args.length == 5 && "true".equals(args[4])) {
+            sClient.allowInsecureHosts(true);
         }
 
         try {

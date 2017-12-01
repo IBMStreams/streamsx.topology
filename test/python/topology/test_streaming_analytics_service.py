@@ -81,6 +81,7 @@ class TestStreamingAnalytics(unittest.TestCase):
         vsi = self.require_vcap()
         topo = build_simple_app("test_vcap_json")
         cfg = {}
+        cfg[ConfigParams.FORCE_REMOTE_BUILD] = False
         cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap']
         cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
         self.submit_to_service(topo, cfg)

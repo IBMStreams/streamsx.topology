@@ -129,7 +129,7 @@ public class StreamsConnectionTest {
         try {
             badConn.getInstances();
         } catch (RESTException r) {
-            assertEquals(404, r.getStatusCode());
+            assertEquals(r.toString(), 404, r.getStatusCode());
         }
 
         // send in url too long
@@ -139,7 +139,7 @@ public class StreamsConnectionTest {
         try {
             badConn.getInstances();
         } catch (RESTException r) {
-            assertEquals(404, r.getStatusCode());
+            assertEquals(r.toString(), 404, r.getStatusCode());
         }
 
         // send in bad iName
@@ -149,7 +149,7 @@ public class StreamsConnectionTest {
         try {
             badConn.getInstances();
         } catch (RESTException r) {
-            assertEquals(401, r.getStatusCode());
+            assertEquals(r.toString(), 401, r.getStatusCode());
         }
 
         // send in wrong password
@@ -158,7 +158,7 @@ public class StreamsConnectionTest {
         try {
             badConn.getInstances();
         } catch (RESTException r) {
-            assertEquals(401, r.getStatusCode());
+            assertEquals(r.toString(), 401, r.getStatusCode());
         }
     }
 
@@ -182,7 +182,7 @@ public class StreamsConnectionTest {
             fail("the connection.getInstance call should have thrown an exception");
         } catch (RESTException r) {
             // not a failure, this is the expected result
-            assertEquals(404, r.getStatusCode());
+            assertEquals(r.toString(), 404, r.getStatusCode());
         }
     }
 
@@ -295,14 +295,16 @@ public class StreamsConnectionTest {
             Job nonExistantJob = instance.getJob("999999");
             fail("this job number should not exist");
         } catch (RESTException r) {
-            assertEquals(404, r.getStatusCode());
+            assertEquals(r.toString(), 404, r.getStatusCode());
             assertEquals("CDISW5000E", r.getStreamsErrorMessageId());
         }
 
         // cancel a non-existant jobid
-        boolean failCancel = connection.cancelJob("99999");
-        assertTrue(failCancel == false);
-
+        // API does not specify if this fails or throws, accept both
+        try {
+            boolean failCancel = connection.cancelJob("99999");
+            assertTrue(failCancel == false);
+        } catch (RESTException ok) {}
     }
 
     @Test
@@ -354,7 +356,11 @@ public class StreamsConnectionTest {
 
         List<Metric> inputPortMetrics = ip.getMetrics();
         for (Metric m : inputPortMetrics) {
-            assertTrue((m.getMetricKind().equals("counter")) || (m.getMetricKind().equals("gauge")));
+            assertTrue("Unexpected metric kind for metric " + m.getName() + ": "
+                    + m.getMetricKind(),
+                    (m.getMetricKind().equals("counter")) ||
+                            (m.getMetricKind().equals("gauge")) ||
+                            (m.getMetricKind().equals("time")));
             assertEquals("system", m.getMetricType());
             assertEquals("metric", m.getResourceType());
             assertNotNull(m.getName());

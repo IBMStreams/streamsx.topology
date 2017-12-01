@@ -6,13 +6,14 @@ package rest;
 
 import java.util.List;
 
+import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.rest.InputPort;
 import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Metric;
 import com.ibm.streamsx.rest.Operator;
 import com.ibm.streamsx.rest.OutputPort;
-import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
+import com.ibm.streamsx.rest.StreamingAnalyticsService;
 
 /**
  * Sample code to show how to access a Streaming Analytics Instance through the
@@ -28,7 +29,7 @@ import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
  * The following arguments are required for the sample:
  * <ul>
  * <li>credentials (as an absolute file path, or JSON string)</li>
- * <li>serviceName identifiying the credentials to use in the file</li>
+ * <li>serviceName identifying the credentials to use in the file</li>
  * </ul>
  * </p>
  *
@@ -43,7 +44,8 @@ public class StreamingAnalyticsConnectionSample {
         System.out.println(serviceName);
 
         try {
-            StreamingAnalyticsConnection sClient = StreamingAnalyticsConnection.createInstance(credentials,
+            StreamingAnalyticsService sClient = StreamingAnalyticsService.of(
+                    new JsonPrimitive(credentials),
                     serviceName);
 
             Instance instance = sClient.getInstance();

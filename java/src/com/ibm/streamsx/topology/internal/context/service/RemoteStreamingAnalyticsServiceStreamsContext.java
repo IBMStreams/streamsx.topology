@@ -15,6 +15,7 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.JSONStreamsContext;
 import com.ibm.streamsx.topology.internal.context.remote.RemoteBuildAndSubmitRemoteContext;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 
 /**
@@ -39,10 +40,10 @@ public class RemoteStreamingAnalyticsServiceStreamsContext extends JSONStreamsCo
     @Override
     protected Future<BigInteger> action(com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity entity) throws Exception {
         remoteContext.submit(entity.submission).get();
-        
+
         JsonObject results = object(entity.submission, RemoteContext.SUBMISSION_RESULTS);
         if (results != null) {
-            String jobId = jstring(results, "jobId");
+            String jobId = jstring(results, SubmissionResultsKeys.JOB_ID);
             if (jobId != null)
                 return new CompletedFuture<>(new BigInteger(jobId));
         }
