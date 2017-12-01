@@ -23,8 +23,9 @@ class StreamsConnectionImpl extends AbstractStreamsConnection {
     @Override
     boolean cancelJob(Instance instance, String jobId) throws IOException {
 
-        // TODO - correct domain id
-        InvokeCancel cancelJob = new InvokeCancel(null, instance.getId(), new BigInteger(jobId), userName);
+        InvokeCancel cancelJob = new InvokeCancel(
+                instance.getDomain().getId(), instance.getId(),
+                new BigInteger(jobId), userName);
         try {
             return cancelJob.invoke(false) == 0;
         } catch (Exception e) {
