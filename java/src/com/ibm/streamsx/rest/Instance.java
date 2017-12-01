@@ -229,6 +229,24 @@ public class Instance extends Element {
     public String getStatus() {
         return status;
     }
+    
+    private Domain _domain;
+    /**
+     * Get the Streams domain for this instance.
+     * 
+     * @return Domain for this instance.
+     * 
+     * @throws IOException Error communicating with REST api.
+     * 
+     * @since 1.8
+     */
+    public Domain getDomain() throws IOException {
+        if (_domain == null) {
+            String sReturn = connection().getResponseString(domain);
+            _domain = Domain.create(connection(), sReturn);
+        }
+        return _domain;
+    }
 
     /**
      * internal usae to get list of instances
