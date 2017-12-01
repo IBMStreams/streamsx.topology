@@ -39,7 +39,17 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
     protected String authorization;
     protected String instancesUrl;
 
-    abstract boolean cancelJob(String instanceId, String jobId) throws IOException;
+    /**
+     * Cancel a job.
+     * domainInstance will only be called for distributed where we cancel using
+     * streamtool and not the context provided by the REST connection object.
+     * 
+     * @param jobId Job identifier.
+     * @param domainInstance - How to get the domain and instance identifiers if needed.
+     * @return
+     * @throws IOException
+     */
+    abstract boolean cancelJob(Instance instance, String jobId) throws IOException;
 
     abstract String getAuthorization();
 

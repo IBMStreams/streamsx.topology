@@ -108,7 +108,14 @@ public class StreamsConnection {
     }
 
     /**
-     * Cancels a job at this streams connection identified by the jobId
+     * Cancels a job identified by the jobId.
+     * <BR>
+     * <B>WARNING:</B> This cancels the job in the domain
+     * and instance identified by the environment variables
+     * {@code STREAMS_DOMAIN_ID} and {@code STREAMS_INSTANCE_ID}
+     * which may not be the intended job.
+     * <BR>
+     * Use {@link Job#cancel()} to cancel a job.
      * 
      * @param jobId
      *            string identifying the job to be cancelled
@@ -118,7 +125,10 @@ public class StreamsConnection {
      *         <li>false if the jobId did not get cancelled</li>
      *         </ul>
      * @throws Exception
+     * @deprecated Not recommend for use as an instance is not uniquely defined
+     * by a {@code StreamsConnection}. Use {@link Job#cancel()}.
      */
+    @Deprecated
     public boolean cancelJob(String jobId) throws Exception {
         refreshState();
         InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId), userName);
