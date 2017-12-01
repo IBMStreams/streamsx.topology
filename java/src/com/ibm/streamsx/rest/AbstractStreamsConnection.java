@@ -44,9 +44,9 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
      * domainInstance will only be called for distributed where we cancel using
      * streamtool and not the context provided by the REST connection object.
      * 
+     * @param instance - instance job is running in.
      * @param jobId Job identifier.
-     * @param domainInstance - How to get the domain and instance identifiers if needed.
-     * @return
+     * @return True if job was canceled.
      * @throws IOException
      */
     abstract boolean cancelJob(Instance instance, String jobId) throws IOException;
