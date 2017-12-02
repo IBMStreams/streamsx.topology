@@ -209,7 +209,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
         self.service_name = service_name or os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME')
         self.credentials = _get_credentials(_get_vcap_services(vcap_services), self.service_name)
         self._resource_url = None
-        if IAMConstants.V2_REST_URL in self.credentials:
+        if IAMConstants.V2_REST_URL in self.credentials and not ('username' in self.credentials and 'password' in self.credentials):
             self._iam = True
 
         if self._iam:
