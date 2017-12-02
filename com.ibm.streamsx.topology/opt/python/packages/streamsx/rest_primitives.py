@@ -9,7 +9,10 @@ import threading
 import time
 import json
 import re
+import time
+
 from pprint import pformat
+from urllib import parse
 
 import streamsx.topology.schema
 
@@ -148,6 +151,78 @@ class _StreamsRestClient(object):
     def make_raw_streaming_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
         return self.session.get(url, stream=True)
+
+    def __str__(self):
+        return pformat(self.__dict__)
+
+
+
+class _IAMStreamsRestClient(object):
+    """Handles the session connection with the Streams REST API and Streaming Analytics service
+    using IAM authentication.
+    """
+    def __init__(self, credentials):
+        """
+        Args:
+            credentials: The credentials of the Streaming Analytics service.
+        """
+        self._credentials = credentials
+        self._api_key = self._credentials[IAMConstants.API_KEY]
+
+        # Represents the epoch time at which the token is no longer valid
+        # Starts at -1 such that the first invocation of a REST request
+        # Retrieves a token
+        #
+        # Note: Python's long datatype has been rolled into the int datatype
+        # See PEP0237
+        self._auth_expiry_time = -1
+
+        # Determine if service is in stage1
+        if 'stage1' in  self._credentials[IAMConstants.V2_REST_URL]:
+            self._token_url = IAMConstants.TOKEN_URL_STAGE1
+        else:
+            self._token_url = IAMConstants.TOKEN_URL
+
+        self.session = requests.Session()
+
+    def _get_authorization(self):
+        cur_time = int(time.time())
+        if cur_time >= self._auth_expiry_time:
+            self._refresh_authorization()
+        return self._bearer_token
+
+    def _refresh_authorization(self):
+        post_url = iamurl + '?' + self._get_token_params(self._api_key)
+        res = requests.post(post_url, headers = {'Accept' : 'application/json',
+                                                 'Content-Type' : 'application/x-www-form-urlencoded'})
+        res = res.json()
+
+        self._auth_exporiry_time = int(res[IAMConstants.EXPIRATION]) - IAMConstants.EXPIRY_PAD_MS
+        self._bearer_token = self._create_bearer_auth(res[IAMConstants.ACCESS_TOKEN])
+
+    def _create_bearer_auth(token):
+        return IAMConstants.AUTH_BEARER_PREFIX + token
+
+    def _get_token_params(api_key):
+        return urllib.parse.urlencode({IAMConstants.GRANT_PARAM : IAMConstants.GRANT_TYPE,
+                                       IAMConstants.API_KEY : api_key})
+
+    def make_request(self, url):
+        return self.make_raw_request(url).json()
+
+    def make_raw_request(self, url):
+        # Preparing statements in this manner is necessary. For reasons that are unclear,
+        # SSL proxies have issues when simply calling requests.get
+        logger.debug('Beginning a REST request to: ' + url)
+        req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
+        prepared = self.session.prepare_request(req)
+        return self.session.send(prepared)
+
+    def make_raw_streaming_request(self, url):
+        logger.debug('Beginning a REST request to: ' + url)
+        req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
+        prepared = self.session.prepare_request(req)
+        return self.session.send(prepared, stream=True)
 
     def __str__(self):
         return pformat(self.__dict__)
@@ -1221,3 +1296,45 @@ class StreamingAnalyticsService(object):
         """
         status_url = self._get_url('status_path')
         return self.rest_client.session.get(status_url).json()
+
+class IAMConstants(object):
+    V2_REST_URL = 'v2_rest_url'
+    """The credentials key for the REST url of the Streaming Analytics service
+    """
+
+    API_KEY = 'apikey'
+    """The credentials key for the api key which can be used to retrieve bearer authentication
+    tokens for REST requests using IAM.
+    """
+
+    EXPIRATION = 'expiration'
+    """The key used to retrieve the expiration time of the bearer authentication token from
+    the IAM token response.
+    """
+
+    ACCESS_TOKEN = 'access_token'
+    """The key of the bearer authentication token in the IAM token response.
+    """
+
+    AUTH_BEARER_PREFIX = 'Bearer '
+    """The prefix to append to the bearer token retrieved from IAM when setting the Authentication 
+    HTTP header.
+    """
+
+    GRANT_PARAM = 'grant_type'
+    GRANT_TYPE = 'urn:ibm:params:oauth:grant-type:apikey'
+
+    TOKEN_URL = 'https://iam.bluemix.net/oidc/token'
+    """The url from which to receive bearer authentication tokens for Authorizing REST requests on
+    IBM Cloud.
+    """
+
+    TOKEN_URL_STAGE1 = 'https://iam.stage1.bluemix.net/oidc/token'
+    """The url from which to receive bearer authentication tokens for Authorizing REST requests on
+    stage1 IBM Cloud.
+    """
+
+    EXPIRY_PAD_MS = 300000
+    """Padding to ensure that a new IAM token is retrieved when the current token is due to expire
+    in less than five minutes.
+    """
