@@ -161,11 +161,12 @@ class _IAMStreamsRestClient(object):
     """Handles the session connection with the Streams REST API and Streaming Analytics service
     using IAM authentication.
     """
-    def __init__(self, credentials):
+    def __init__(self, credentials, verify = None):
         """
         Args:
             credentials: The credentials of the Streaming Analytics service.
         """
+        self.verify=verify
         self._credentials = credentials
         self._api_key = self._credentials[IAMConstants.API_KEY]
 
@@ -194,7 +195,8 @@ class _IAMStreamsRestClient(object):
     def _refresh_authorization(self):
         post_url = self._token_url + '?' + self._get_token_params(self._api_key)
         res = requests.post(post_url, headers = {'Accept' : 'application/json',
-                                                 'Content-Type' : 'application/x-www-form-urlencoded'})
+                                                 'Content-Type' : 'application/x-www-form-urlencoded'},
+                            verify=self.verify)
         res = res.json()
 
         self._auth_exporiry_time = int(res[IAMConstants.EXPIRATION]) - IAMConstants.EXPIRY_PAD_MS
@@ -216,13 +218,13 @@ class _IAMStreamsRestClient(object):
         logger.debug('Beginning a REST request to: ' + url)
         req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
         prepared = req.prepare()
-        return self.session.send(prepared)
+        return self.session.send(prepared, verify=self.verify)
 
     def make_raw_streaming_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
         req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
         prepared = req.prepare()
-        return self.session.send(prepared, stream=True)
+        return self.session.send(prepared, stream=True, verify=self.verify)
     def __str__(self):
         return pformat(self.__dict__)
 
@@ -1297,7 +1299,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         self.rest_client.session.send(prepared)
 
     def start_instance(self):
-        req = requests.Request("PATCH", self._v2_rest_url, data={'state' : 'STARTED'},
+        req = requests.Request("PATCH", self._v2_rest_url, json={'state' : 'STARTED'},
                                headers = {'Authorization' : self.rest_client._get_authorization(),
                                           'Content-Type' : 'application/json',
                                           'Accept' : 'application/json'})
@@ -1305,7 +1307,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         self.rest_client.session.send(prepared)
 
     def stop_instance(self):
-        req = requests.Request("PATCH", self._v2_rest_url, data={'state' : 'STOPPED'},
+        req = requests.Request("PATCH", self._v2_rest_url, json={'state' : 'STOPPED'},
                                headers = {'Authorization' : self.rest_client._get_authorization(),
                                           'Content-Type' : 'application/json',
                                           'Accept' : 'application/json'})

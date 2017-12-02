@@ -46,7 +46,7 @@ from pprint import pformat
 
 from streamsx import st
 from .rest_primitives import (Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService,
-    _exact_resource, _IAMStreamsRestClient)
+    _exact_resource, _IAMStreamsRestClient, IAMConstants)
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -212,9 +212,10 @@ class StreamingAnalyticsConnection(StreamsConnection):
             self._iam = True
 
         if self._iam:
-            self.rest_client = _IAMStreamsRestClient(self.credentials)
+            self.rest_client = _IAMStreamsRestClient(self.credentials, verify=False)
         else:
             self.rest_client = _StreamsRestClient(self.credentials['username'], self.credentials['password'])
+        self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = True
 
