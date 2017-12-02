@@ -341,6 +341,7 @@
              excludes="**/samples/*Test.java" >
              <include name="**/StreamsConnectionTest.java"/>
              <include name="**/StreamingAnalyticsConnectionTest.java"/>
+             <include name="**/StreamingAnalyticsServiceTest.java"/>
           </fileset>
        </batchtest>
      </junit>
