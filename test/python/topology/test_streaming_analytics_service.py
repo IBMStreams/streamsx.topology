@@ -54,6 +54,14 @@ class TestStreamingAnalytics(unittest.TestCase):
         with open(fn) as vcap_json_data:
             vs = json.load(vcap_json_data)
         sn = cls.service_name
+
+        # Set flag if service is a v2 service
+        self.is_v2 = None
+        for creds in vs['streaming-analytics']:
+            if creds['name'] == sn:
+                if 'v2_rest_url' in creds:
+                    self.is_v2 = True
+
         return {'vcap': vs, 'service_name': sn, 'vcap_file': fn}
 
     def submit_to_service(self, topo, cfg):
@@ -153,13 +161,22 @@ class TestStreamingAnalytics(unittest.TestCase):
         cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap_file']
         cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
         rc = self.submit_to_service(topo, cfg)
-        self.assertIn("artifact", rc, "\"artifact\" field not in returned json dict")
-        self.assertIn("jobId", rc, "\"jobId\" field not in returned json dict")
-        self.assertIn("application", rc, "\"application\" field not in returned json dict")
-        self.assertIn("name", rc, "\"name\" field not in returned json dict")
-        self.assertIn("state", rc, "\"state\" field not in returned json dict")
-        self.assertIn("plan", rc, "\"plan\" field not in returned json dict")
-        self.assertIn("enabled", rc, "\"enabled\" field not in returned json dict")
-        self.assertIn("status", rc, "\"status\" field not in returned json dict")
-        self.assertIn("instanceId", rc, '"instanceId" field not in returned json dict')
 
+        if not self.is_v2:
+            self.assertIn("artifact", rc, "\"artifact\" field not in returned json dict")
+            self.assertIn("jobId", rc, "\"jobId\" field not in returned json dict")
+            self.assertIn("application", rc, "\"application\" field not in returned json dict")
+            self.assertIn("name", rc, "\"name\" field not in returned json dict")
+            self.assertIn("state", rc, "\"state\" field not in returned json dict")
+            self.assertIn("plan", rc, "\"plan\" field not in returned json dict")
+            self.assertIn("enabled", rc, "\"enabled\" field not in returned json dict")
+            self.assertIn("status", rc, "\"status\" field not in returned json dict")
+            self.assertIn("instanceId", rc, '"instanceId" field not in returned json dict')
+        
+        else:
+            self.assertIn("streams_self", rc, "\"streams_self\" field not in returned json dict")
+            self.assertIn("application", rc, "\"application\" field not in returned json dict")
+            self.assertIn("name", rc, "\"name\" field not in returned json dict")
+            self.assertIn("health", rc, "\"health\" field not in returned json dict")
+            self.assertIn("self", rc, "\"self\" field not in returned json dict")
+            self.assertIn("id", rc, "\"id\" field not in returned json dict")
