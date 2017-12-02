@@ -14,11 +14,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * Utilities to get the correct VCAP services information for submission to
@@ -121,5 +123,41 @@ public class VcapServices {
                     "No streaming-analytics services defined in VCAP_SERVICES with name: " + serviceName);
 
         return service;
+    }
+    
+    /**
+     * Return a mocked up VCAP services entry that represents the single
+     * service definition. Simplifies code by making the lower levels always
+     * handle a VCAP_SERVICES format.
+     */
+    public static JsonObject vcapFromServiceDefinition(JsonObject serviceDefinition) {
+        // Create a VCAP services that contains our single service
+        JsonObject singleVcap = new JsonObject();
+        JsonArray services = new JsonArray();
+        singleVcap.add("streaming-analytics", services);
+
+        JsonObject credentials = GsonUtilities.object(serviceDefinition, "credentials");
+        if (credentials != null) {
+            String type = jstring(serviceDefinition, "type");
+            if (!"streaming-analytics".equals(type))
+                throw new IllegalArgumentException("Invalid type for service definition, streaming-analytics required: " + type);
+        } else {
+            credentials = serviceDefinition;
+        }
+        
+        JsonObject service = new JsonObject();
+        service.addProperty("name", nameFromServiceDefinition(serviceDefinition));
+        service.add("credentials", credentials);
+        
+        services.add(service);
+
+        return singleVcap;
+    }
+    
+    public static String nameFromServiceDefinition(JsonObject serviceDefinition) {
+        String name = "service";
+        if (serviceDefinition.has("credentials"))
+            name = Objects.requireNonNull(jstring(serviceDefinition, "name"));
+        return name;
     }
 }

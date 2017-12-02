@@ -13,6 +13,7 @@ import java.io.IOException;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 /**
  * Access to a Streaming Analytics service on IBM Cloud.
@@ -22,7 +23,7 @@ import com.google.gson.JsonObject;
 public interface StreamingAnalyticsService {
 
     /**
-     * Access to a Streaming Analytics service on IBM Cloud.
+     * Access to a Streaming Analytics service from service name and VCAP services.
      * 
      * <BR>
      *  When specified {@code vcapServices} may be one of:
@@ -49,7 +50,7 @@ public interface StreamingAnalyticsService {
      *            Name of the Streaming Analytics service to access.
      *            
      * @return {@code StreamingAnalyticsService} for {@code serviceName}.
-     * @throws IOException
+     * @throws IOException Error connecting to the service.
      */
     static StreamingAnalyticsService of(JsonElement vcapServices,
             String serviceName) throws IOException {
@@ -60,6 +61,36 @@ public interface StreamingAnalyticsService {
             config.addProperty(SERVICE_NAME, serviceName);
         if (vcapServices != null)
             config.add(VCAP_SERVICES, vcapServices);
+        
+        return AbstractStreamingAnalyticsService.of(config);
+    }
+    
+    /**
+     * Access to a Streaming Analytics service from a service definition.
+     * 
+     * A service definition is a JSON object describing a Streaming Analytics service and may be one of:
+     * <UL>
+     * <LI>The service credentials copied from the <em>Service credentials</em> page of the service console
+     * (not the Streams console). Credentials are provided in JSON format. The JSON snippet lists credentials,
+     * such as the API key and secret, as well as connection information for the service.</LI>
+     * <LI>A JSON object of the form:
+     * <code>{ "type": "streaming-analytics", "name": "</code><em>service-name</em><code>": "credentials": { ... } } </code>
+     * with the service credentials as the value of the {@code credentials} key.
+     * </LI>
+     * </UL>
+     * 
+     * @param serviceDefinition Definition of the service to access.
+     * @throws IOException Error connecting to the service.
+     * @since 1.8
+     */
+    static StreamingAnalyticsService of(JsonObject serviceDefinition) throws IOException {
+        
+        // Create a VCAP services that contains our single service
+        JsonObject singleVcap = VcapServices.vcapFromServiceDefinition(serviceDefinition);
+        
+        JsonObject config = new JsonObject();
+        config.add(VCAP_SERVICES, singleVcap);
+        config.addProperty(SERVICE_NAME, VcapServices.nameFromServiceDefinition(serviceDefinition));
         
         return AbstractStreamingAnalyticsService.of(config);
     }
