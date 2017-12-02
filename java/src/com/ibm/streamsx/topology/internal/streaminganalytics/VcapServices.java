@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.streaminganalytics;
 
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_DEFINITION;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
@@ -20,6 +21,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
@@ -79,22 +81,34 @@ public class VcapServices {
 
     /**
      * Get the specific streaming analytics service from the service name and
-     * the vcap services.
+     * the vcap services or the service definition.
      * 
-     * @param getter
-     *            How to get the value from the container given a key
      * 
      * @throws IOException
      */
     public static JsonObject getVCAPService(JsonObject deploy) throws IOException {
         
-        JsonObject services = getVCAPServices(deploy.get(VCAP_SERVICES));
+        JsonObject services;
+        String serviceName = null;
+        if (deploy.has(SERVICE_DEFINITION)) {
+            JsonObject definition = GsonUtilities.object(deploy, SERVICE_DEFINITION);
+            services = vcapFromServiceDefinition(definition);
+            serviceName = nameFromServiceDefinition(definition);
+            
+            // Add the values to use back into the deploy
+            //deploy.add(VCAP_SERVICES, services);
+            //deploy.addProperty(SERVICE_NAME, serviceName);
+            
+        } else {      
+             services = getVCAPServices(deploy.get(VCAP_SERVICES));
+        }
 
         JsonArray streamsServices = array(services, "streaming-analytics");
         if (streamsServices == null || streamsServices.size() == 0)
             throw new IllegalStateException("No streaming-analytics services defined in VCAP_SERVICES");
 
-        String serviceName = jstring(deploy, SERVICE_NAME);
+        if (serviceName == null)
+            serviceName = jstring(deploy, SERVICE_NAME);
 
         // if we don't find our serviceName check the environment variable
         if (serviceName == null) {
@@ -130,7 +144,7 @@ public class VcapServices {
      * service definition. Simplifies code by making the lower levels always
      * handle a VCAP_SERVICES format.
      */
-    public static JsonObject vcapFromServiceDefinition(JsonObject serviceDefinition) {
+    private static JsonObject vcapFromServiceDefinition(JsonObject serviceDefinition) {
         // Create a VCAP services that contains our single service
         JsonObject singleVcap = new JsonObject();
         JsonArray services = new JsonArray();
@@ -154,7 +168,7 @@ public class VcapServices {
         return singleVcap;
     }
     
-    public static String nameFromServiceDefinition(JsonObject serviceDefinition) {
+    private static String nameFromServiceDefinition(JsonObject serviceDefinition) {
         String name = "service";
         if (serviceDefinition.has("credentials"))
             name = Objects.requireNonNull(jstring(serviceDefinition, "name"));
