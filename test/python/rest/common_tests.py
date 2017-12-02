@@ -20,7 +20,7 @@ class CommonTests(unittest.TestCase):
         """
         if cls is CommonTests:
             raise unittest.SkipTest("Skipping base tests.")
-    @unittest.skip
+
     def test_username_and_password(self):
         self.logger.debug("Beginning test: test_username_and_password.")
         # Ensure, at minimum, that the StreamsContext can connect and retrieve valid data from the SWS resources path
@@ -28,7 +28,6 @@ class CommonTests(unittest.TestCase):
         self.logger.debug("Number of retrieved resources is: " + str(len(resources)))
         self.assertGreater(len(resources), 0, msg="Returned zero resources from the \"resources\" endpoint.")
 
-    @unittest.skip
     def test_streamsconnection_samplecode(self):
         self.logger.debug("Beginning test: test_streamsconnection_samplecode.")
         domains = self.sc.get_domains()
@@ -52,7 +51,6 @@ class CommonTests(unittest.TestCase):
         self.logger.debug("Returned view value in basic_view_support is " + view_tuple_value)
         self.assertTrue(view_tuple_value.startswith('hello'))
 
-    @unittest.skip
     def test_basic_view_support(self):
         self.logger.debug("Beginning test: test_basic_view_support.")
         top = topology.Topology('basicViewTest')
@@ -68,14 +66,12 @@ class CommonTests(unittest.TestCase):
         tester.local_check = self._verify_basic_view
         tester.test(self.test_ctxtype, self.test_config)
 
-
     def _verify_job_refresh(self):
         result = self.tester.submission_result
         self.job = self.sc.get_instance(result['instanceId']).get_job(result['jobId'])
 
         self.assertEqual('healthy', self.job.health)
 
-    @unittest.skip
     def test_job_refresh(self):
         top = topology.Topology('jobRefreshTest')
         src = top.source(['Hello'])

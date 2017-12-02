@@ -11,8 +11,7 @@ def check_instance(tc, instance):
     instance.refresh()
     _fetch_from_instance(tc, instance)
 
-def _fetch_from_instance(tc, instance):
-    _check_non_empty_list(tc, instance.get_hosts(), Host)
+def _fetch_from_instance(tc, instance):    
     _check_non_empty_list(tc, instance.get_pes(), PE)
     _check_non_empty_list(tc, instance.get_jobs(), Job)
     _check_non_empty_list(tc, instance.get_operators(), Operator)
@@ -22,6 +21,7 @@ def _fetch_from_instance(tc, instance):
     _check_non_empty_list(tc, instance.get_active_services(), ActiveService)
 
     _check_list(tc, instance.get_exported_streams(), ExportedStream)
+    _check_list(tc, instance.get_hosts(), Host)
     _check_list(tc, instance.get_imported_streams(), ImportedStream)
     _check_list(tc, instance.get_pe_connections(), PEConnection)
 
@@ -34,16 +34,14 @@ def check_job(tc, job):
     _fetch_from_job(tc, job)
 
 def _fetch_from_job(tc, job):
-    _check_non_empty_list(tc, job.get_hosts(), Host)
     _check_non_empty_list(tc, job.get_pes(), PE)
     _check_non_empty_list(tc, job.get_operators(), Operator)
     _check_non_empty_list(tc, job.get_views(), View)
     _check_non_empty_list(tc, job.get_operator_connections(), OperatorConnection)
-    # See issue 952
-    if tc.test_ctxtype != 'STREAMING_ANALYTICS_SERVICE':
-        _check_non_empty_list(tc, job.get_resource_allocations(), ResourceAllocation)
+    _check_non_empty_list(tc, job.get_resource_allocations(), ResourceAllocation)
 
     # Presently, application logs can only be fetched from the Stream Analytics Service
+
     else:
         logs = job.retrieve_log_trace()
         tc.assertTrue(os.path.isfile(logs))
@@ -77,6 +75,7 @@ def _fetch_from_job(tc, job):
         tc.assertEqual(td, os.path.dirname(logs))
         os.remove(logs)
 
+    _check_list(tc, job.get_hosts(), Host)
     _check_list(tc, job.get_pe_connections(), PEConnection)
 
     tc.assertIsInstance(job.get_instance(), Instance)
@@ -89,7 +88,6 @@ def check_domain(tc, domain):
     _fetch_from_domain(tc, domain)
 
 def _fetch_from_domain(tc, domain):
-    _check_non_empty_list(tc, domain.get_hosts(), Host)
     _check_non_empty_list(tc, domain.get_instances(), Instance)
     _check_non_empty_list(tc, domain.get_active_services(), ActiveService)
     
@@ -97,6 +95,8 @@ def _fetch_from_domain(tc, domain):
     if tc.test_ctxtype != 'STREAMING_ANALYTICS_SERVICE':
         _check_non_empty_list(tc, domain.get_resource_allocations(), ResourceAllocation)
     _check_non_empty_list(tc, domain.get_resources(), Resource)
+
+    _check_list(tc, domain.get_hosts(), Host)
 
 def _check_non_empty_list(tc, items, expect_class):
     tc.assertTrue(items)
