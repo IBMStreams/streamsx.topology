@@ -1274,7 +1274,27 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         self._v2_rest_url = self._credentials[IAMConstants.V2_REST_URL]
 
     def cancel_job(self, job_id=None, job_name=None):
-        pass
+        if job_id is None and job_name is None:
+            raise ValueError("Please specify either the job id or job name when cancelling a job.")
+        
+        if job_id is None:
+            # Get the job id using the job name, since it's required by the REST API
+            req = requests.Request("GET", self._v2_rest_url + '/jobs/',
+                               headers = {'Authorization' : self.rest_client._get_authorization(),
+                                          'Accept' : 'application/json'})
+            prepared = req.prepare()
+            res = self.rest_client.session.send(prepared).json()
+            for job in res['resources']:
+                if job['name'] == job_name:
+                    # Find the correct job_id, set it
+                    job_id = job['id']
+
+        # Cancel the job using the job id
+        req = requests.Request("DELETE", self._v2_rest_url + '/jobs/' + job_id,
+                               headers = {'Authorization' : self.rest_client._get_authorization(),
+                                          'Accept' : 'application/json'})
+        prepared = req.prepare()
+        self.rest_client.session.send(prepared)
 
     def start_instance(self):
         req = requests.Request("PATCH", self._v2_rest_url, data={'state' : 'STARTED'},
