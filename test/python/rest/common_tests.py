@@ -20,6 +20,7 @@ class CommonTests(unittest.TestCase):
         """
         if cls is CommonTests:
             raise unittest.SkipTest("Skipping base tests.")
+        cls.is_v2 = None
 
     def test_username_and_password(self):
         self.logger.debug("Beginning test: test_username_and_password.")
