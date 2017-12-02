@@ -5,6 +5,7 @@
 
 package com.ibm.streamsx.rest;
 
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_DEFINITION;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
 
@@ -13,6 +14,7 @@ import java.io.IOException;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 /**
@@ -84,13 +86,9 @@ public interface StreamingAnalyticsService {
      * @since 1.8
      */
     static StreamingAnalyticsService of(JsonObject serviceDefinition) throws IOException {
-        
-        // Create a VCAP services that contains our single service
-        JsonObject singleVcap = VcapServices.vcapFromServiceDefinition(serviceDefinition);
-        
+                
         JsonObject config = new JsonObject();
-        config.add(VCAP_SERVICES, singleVcap);
-        config.addProperty(SERVICE_NAME, VcapServices.nameFromServiceDefinition(serviceDefinition));
+        config.add(SERVICE_DEFINITION, serviceDefinition);
         
         return AbstractStreamingAnalyticsService.of(config);
     }
