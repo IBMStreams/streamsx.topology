@@ -173,9 +173,6 @@ class _IAMStreamsRestClient(object):
         # Represents the epoch time at which the token is no longer valid
         # Starts at -1 such that the first invocation of a REST request
         # Retrieves a token
-        #
-        # Note: Python's long datatype has been rolled into the int datatype
-        # See PEP0237
         self._auth_expiry_time = -1
 
         # Determine if service is in stage1
@@ -1251,19 +1248,43 @@ class StreamingAnalyticsService(object):
             self._delegator = _StreamingAnalyticsServiceV1Delegator(rest_client, credentials)
 
     def cancel_job(self, job_id=None, job_name=None):
+        """Cancel a running job.
+
+        Args:
+            job_id (str, optional): Identifier of job to be canceled.
+            job_name (str, optional): Name of job to be canceled.
+
+        Returns:
+            dict: JSON response for the job cancel operation.
+        """
         self._delegator.cancel_job(job_id=job_id, job_name = job_name)
 
     def start_instance(self):
+        """Start the instance for this Streaming Analytics service.
+
+        Returns:
+            dict: JSON response for the instance start operation.
+        """
         self._delegator.start_instance()
 
     def stop_instance(self):
+        """Stop the instance for this Streaming Analytics service.
+
+        Returns:
+            dict: JSON response for the instance start operation.
+        """
         self._delegator.stop_instance()
 
     def get_instance_status(self):
+        """Get the status the instance for this Streaming Analytics service.
+
+        Returns:
+            dict: JSON response for the instance status operation.
+        """
         return self._delegator.get_instance_status()
 
 class _StreamingAnalyticsServiceV2Delegator(object):
-    """Delegator for pre-IAM access to a Streaming Analytics service
+    """Delegator for IAM access to a Streaming Analytics service
     """
     def __init__(self, rest_client, credentials):
         """
