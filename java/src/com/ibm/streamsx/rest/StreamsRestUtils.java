@@ -225,6 +225,29 @@ class StreamsRestUtils {
      * Ideally, the service would return version information directly, but for
      * now key off contents we expect in the credentials.
      * <p>
+     * As described by the IBM Cloud team there are 3 cases:
+     * <ol>
+     * <li>New container-based RHEL 7.x instances use IAM authentication for both
+     * Streaming Analytics Service and Streams REST APIs, must use V2 of the
+     * Service API, and have <tt>v2_rest_url</tt> but neither <tt>userid</tt>
+     * nor <tt>password</tt>.</li>
+     * <li>Old VM-based RHEL 6.x instances use Basic authentication for both
+     * REST APIs, use V1 for the Service API, and have <tt>userid</tt> and
+     * <tt>password</tt> but do not have <tt>v2_rest_url</tt></li>
+     * <li>New instances created on old plans are VM-based and RHEL 6.x, and
+     * must use Basic authentication for the Streams REST API, but can use
+     * either V1 with Basic or V2 with IAM for the Service API. These have
+     * <tt>userid</tt>, <tt>password</tt>, and <tt>v2_rest_url</tt>.
+     * </ol>
+     * <p>
+     * Since the last case can function just like the second as a V1 Service
+     * and using Basic authentication for both APIs, we use the existence of
+     * <tt>userid</tt> and <tt>password</tt> to signal a V1 environment and
+     * treat them the same.
+     * <p>
+     * Both versions have other required parameters, but those will be handled
+     * by callers as needed and are not checked here.
+     * <p>
      * Note also that while service version and authentication mechanism are
      * conceptually distinct, at present they are coupled so the version implies
      * the authentication mechanism.
@@ -234,10 +257,10 @@ class StreamsRestUtils {
      */
     static StreamingAnalyticsServiceVersion getStreamingAnalyticsServiceVersion(
             JsonObject credentials) {
-        if (credentials.has(MEMBER_V2_REST_URL)) {
-            return StreamingAnalyticsServiceVersion.V2;
-        } else if (credentials.has(MEMBER_USERID) && credentials.has(MEMBER_PASSWORD)) {
+        if (credentials.has(MEMBER_USERID) && credentials.has(MEMBER_PASSWORD)) {
             return StreamingAnalyticsServiceVersion.V1;
+        } else if (credentials.has(MEMBER_V2_REST_URL)) { 
+            return StreamingAnalyticsServiceVersion.V2;
         }
         return StreamingAnalyticsServiceVersion.UNKNOWN;
     }
