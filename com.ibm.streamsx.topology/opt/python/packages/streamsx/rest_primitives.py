@@ -192,7 +192,7 @@ class _IAMStreamsRestClient(object):
         return self._bearer_token
 
     def _refresh_authorization(self):
-        post_url = iamurl + '?' + self._get_token_params(self._api_key)
+        post_url = self._token_url + '?' + self._get_token_params(self._api_key)
         res = requests.post(post_url, headers = {'Accept' : 'application/json',
                                                  'Content-Type' : 'application/x-www-form-urlencoded'})
         res = res.json()
@@ -200,11 +200,11 @@ class _IAMStreamsRestClient(object):
         self._auth_exporiry_time = int(res[IAMConstants.EXPIRATION]) - IAMConstants.EXPIRY_PAD_MS
         self._bearer_token = self._create_bearer_auth(res[IAMConstants.ACCESS_TOKEN])
 
-    def _create_bearer_auth(token):
+    def _create_bearer_auth(self, token):
         return IAMConstants.AUTH_BEARER_PREFIX + token
 
-    def _get_token_params(api_key):
-        return urllib.parse.urlencode({IAMConstants.GRANT_PARAM : IAMConstants.GRANT_TYPE,
+    def _get_token_params(self, api_key):
+        return parse.urlencode({IAMConstants.GRANT_PARAM : IAMConstants.GRANT_TYPE,
                                        IAMConstants.API_KEY : api_key})
 
     def make_request(self, url):
@@ -215,15 +215,14 @@ class _IAMStreamsRestClient(object):
         # SSL proxies have issues when simply calling requests.get
         logger.debug('Beginning a REST request to: ' + url)
         req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
-        prepared = self.session.prepare_request(req)
+        prepared = req.prepare()
         return self.session.send(prepared)
 
     def make_raw_streaming_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
         req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
-        prepared = self.session.prepare_request(req)
+        prepared = req.prepare()
         return self.session.send(prepared, stream=True)
-
     def __str__(self):
         return pformat(self.__dict__)
 
@@ -1235,9 +1234,70 @@ def get_view_obj(_view, rc):
                     return view
     return None
 
-
 class StreamingAnalyticsService(object):
     """Streaming Analytics service running on IBM Bluemix cloud platform.
+    """
+    def __init__(self, rest_client, credentials):
+        # If IAM, create a V2 delegator, if basic http auth, create a V1 delegator
+        #
+        # Delegators are required because we need to keep StreamingAnalyticsService
+        # around for backwards compatibility, yet it also needs to work with basic
+        # and IAM authentication.
+        if 'v2_rest_url' in credentials:
+            self._delegator = _StreamingAnalyticsServiceV2Delegator(rest_client, credentials)
+        else:
+            self._delegator = _StreamingAnalyticsServiceV1Delegator(rest_client, credentials)
+
+    def cancel_job(self, job_id=None, job_name=None):
+        self._delegator.cancel_job(job_id=job_id, job_name = job_name)
+
+    def start_instance(self):
+        self._delegator.start_instance()
+
+    def stop_instance(self):
+        self._delegator.stop_instance()
+
+    def get_instance_status(self):
+        return self._delegator.get_instance_status()
+
+class _StreamingAnalyticsServiceV2Delegator(object):
+    """Delegator for pre-IAM access to a Streaming Analytics service
+    """
+    def __init__(self, rest_client, credentials):
+        """
+        Args:
+            rest_client (_IAMStreamsRestClient): The client used to make REST calls.
+            credentials (str): credentials for accessing Streaming Analytics service.
+        """
+        self.rest_client = rest_client
+        self._credentials = credentials
+        self._v2_rest_url = self._credentials[IAMConstants.V2_REST_URL]
+
+    def cancel_job(self, job_id=None, job_name=None):
+        pass
+
+    def start_instance(self):
+        req = requests.Request("PATCH", self._v2_rest_url, data={'state' : 'STARTED'},
+                               headers = {'Authorization' : self.rest_client._get_authorization(),
+                                          'Content-Type' : 'application/json',
+                                          'Accept' : 'application/json'})
+        prepared = req.prepare()
+        self.rest_client.session.send(prepared)
+
+    def stop_instance(self):
+        req = requests.Request("PATCH", self._v2_rest_url, data={'state' : 'STOPPED'},
+                               headers = {'Authorization' : self.rest_client._get_authorization(),
+                                          'Content-Type' : 'application/json',
+                                          'Accept' : 'application/json'})
+        prepared = req.prepare()
+        self.rest_client.session.send(prepared)
+
+    def get_instance_status(self):
+        return self.rest_client.make_request(self._v2_rest_url)
+
+
+class _StreamingAnalyticsServiceV1Delegator(object):
+    """Delegator for pre-IAM access to a Streaming Analytics service
     """
     def __init__(self, rest_client, credentials):
         """
