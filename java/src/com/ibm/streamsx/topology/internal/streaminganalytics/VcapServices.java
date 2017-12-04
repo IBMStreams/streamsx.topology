@@ -92,12 +92,7 @@ public class VcapServices {
         if (deploy.has(SERVICE_DEFINITION)) {
             JsonObject definition = GsonUtilities.object(deploy, SERVICE_DEFINITION);
             services = vcapFromServiceDefinition(definition);
-            serviceName = nameFromServiceDefinition(definition);
-            
-            // Add the values to use back into the deploy
-            //deploy.add(VCAP_SERVICES, services);
-            //deploy.addProperty(SERVICE_NAME, serviceName);
-            
+            serviceName = nameFromServiceDefinition(definition);            
         } else {      
              services = getVCAPServices(deploy.get(VCAP_SERVICES));
         }
