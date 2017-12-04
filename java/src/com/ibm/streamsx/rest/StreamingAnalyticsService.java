@@ -14,8 +14,6 @@ import java.io.IOException;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
-import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 /**
  * Access to a Streaming Analytics service on IBM Cloud.
