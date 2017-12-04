@@ -105,7 +105,7 @@ public class Instance extends Element {
     public List<Job> getJobs() throws IOException {
         String sReturn = connection().getResponseString(jobs);
 
-        List<Job> lJobs = Job.getJobList(connection(), sReturn);
+        List<Job> lJobs = Job.getJobList(this, sReturn);
         return lJobs;
     }
 
@@ -123,7 +123,7 @@ public class Instance extends Element {
         String sGetJobURI = jobs + "/" + jobId;
 
         String sReturn = connection().getResponseString(sGetJobURI);
-        Job job = Job.create(connection(), sReturn);
+        Job job = Job.create(this, sReturn);
         return job;
     }
 
@@ -228,6 +228,24 @@ public class Instance extends Element {
      */
     public String getStatus() {
         return status;
+    }
+    
+    private Domain _domain;
+    /**
+     * Get the Streams domain for this instance.
+     * 
+     * @return Domain for this instance.
+     * 
+     * @throws IOException Error communicating with REST api.
+     * 
+     * @since 1.8
+     */
+    public Domain getDomain() throws IOException {
+        if (_domain == null) {
+            String sReturn = connection().getResponseString(domain);
+            _domain = Domain.create(connection(), sReturn);
+        }
+        return _domain;
     }
 
     /**

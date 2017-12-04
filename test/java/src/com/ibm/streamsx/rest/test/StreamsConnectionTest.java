@@ -20,6 +20,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.ibm.streamsx.rest.Domain;
 import com.ibm.streamsx.rest.InputPort;
 import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.Job;
@@ -175,6 +176,9 @@ public class StreamsConnectionTest {
 
         i2.refresh();
         assertEquals(instanceName, i2.getId());
+        
+        for (Instance instance : instances)
+            checkDomainFromInstance(instance);
 
         try {
             // try a fake instance name
@@ -184,6 +188,19 @@ public class StreamsConnectionTest {
             // not a failure, this is the expected result
             assertEquals(r.toString(), 404, r.getStatusCode());
         }
+    }
+    
+    static void checkDomainFromInstance(Instance instance)  throws Exception {
+        instance.refresh();
+        
+        System.err.println("DDDDD" + " GET DOMAIN");
+        Domain domain = instance.getDomain();
+        System.err.println("DDDDD" + " GOT DOMAIN:" + domain.getId());
+        assertNotNull(domain);
+        assertNotNull(domain.getId());
+        assertNotNull(domain.getZooKeeperConnectionString());
+        assertNotNull(domain.getCreationUser());
+        assertTrue(domain.getCreationTime() <= instance.getCreationTime());
     }
 
     @Before
@@ -275,6 +292,7 @@ public class StreamsConnectionTest {
         assertEquals(2, pes.size());
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testCancelSpecificJob() throws Exception {
         if (jobId != null) {
@@ -287,12 +305,13 @@ public class StreamsConnectionTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testNonExistantJob() throws Exception {
         try {
             // get a non-existant job
             @SuppressWarnings("unused")
-            Job nonExistantJob = instance.getJob("999999");
+            Job nonExistantJob = instance.getJob("9999999");
             fail("this job number should not exist");
         } catch (RESTException r) {
             assertEquals(r.toString(), 404, r.getStatusCode());
@@ -302,7 +321,7 @@ public class StreamsConnectionTest {
         // cancel a non-existant jobid
         // API does not specify if this fails or throws, accept both
         try {
-            boolean failCancel = connection.cancelJob("99999");
+            boolean failCancel = connection.cancelJob("9999999");
             assertTrue(failCancel == false);
         } catch (RESTException ok) {}
     }

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
-import com.ibm.streamsx.topology.internal.streams.Util;
 
 class StreamsConnectionImpl extends AbstractStreamsConnection {
 
@@ -22,17 +21,16 @@ class StreamsConnectionImpl extends AbstractStreamsConnection {
     }
 
     @Override
-    boolean cancelJob(String instanceId, String jobId) throws IOException {
-        // Sanity check instance since InvokeCancel uses default instance
-        if (!Util.getDefaultInstanceId().equals(instanceId)) {
-            throw new RESTException("Unable to cancel job in instance " + instanceId);
-        }
-        InvokeCancel cancelJob = new InvokeCancel(new BigInteger(jobId), userName);
+    boolean cancelJob(Instance instance, String jobId) throws IOException {
+
+        InvokeCancel cancelJob = new InvokeCancel(
+                instance.getDomain().getId(), instance.getId(),
+                new BigInteger(jobId), userName);
         try {
             return cancelJob.invoke(false) == 0;
         } catch (Exception e) {
             throw new RESTException("Unable to cancel job " + jobId
-                    + " in instance " + instanceId, e);
+                    + " in instance " + instance.getId(), e);
         }
     }
 }
