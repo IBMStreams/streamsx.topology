@@ -218,7 +218,7 @@ public interface StreamsContext<T> {
          * cloud platform.
          * <P>
          * The returned type for the {@code submit} calls is
-         * a {@code Future&lt;BigInteger>} where the value is
+         * a {@code Future<BigInteger>} where the value is
          * the job identifier.
          * <BR>
          * When {@code submit} returns the {@code Future} will be complete,
@@ -235,12 +235,24 @@ public interface StreamsContext<T> {
          * <LI>Using the environment variable {@code VCAP_SERVICES}</LI>
          * </UL>
          * </P>
+         * <P>
+         * If the environment variable {@code STREAMS_INSTALL} is set to a non-empty value
+         * then a Streams Application bundle ({@code sab} file) is created locally using
+         * the IBM Streams install and submitted to the service. This may be overridden
+         * by setting the context property {@link ContextProperties#FORCE_REMOTE_BUILD FORCE_REMOTE_BUILD}
+         * to {@code true}.
+         * <.P>
          */
         STREAMING_ANALYTICS_SERVICE,
         
         /**
          * Testing variant of {@link #STREAMING_ANALYTICS_SERVICE}.
-         * 
+         * <P>
+         * This context ignores any local IBM Streams install defined by the
+         * environment variable {@code STREAMS_INSTALL}, thus
+         * the Streams Application bundle ({@code sab} file) is created using
+         * the build service.
+         * </P>
          * @since 1.7
          */
         STREAMING_ANALYTICS_SERVICE_TESTER,

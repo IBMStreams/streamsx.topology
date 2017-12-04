@@ -4,8 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.tester.rest;
 
-import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
-import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
+import static com.ibm.streamsx.topology.internal.context.remote.RemoteBuildAndSubmitRemoteContext.streamingAnalyticServiceFromDeploy;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static java.util.Objects.requireNonNull;
@@ -14,12 +13,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streams.flow.handlers.StreamHandler;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.rest.Job;
-import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
 import com.ibm.streamsx.rest.StreamingAnalyticsService;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
@@ -52,10 +49,8 @@ public class RESTTesterRuntime extends TesterRuntime {
     public void start(Object info) throws Exception {
         
         JsonObject deployment = (JsonObject) info;
-
-        JsonElement vcapServices = deployment.get(VCAP_SERVICES);
-        String serviceName = jstring(deployment, SERVICE_NAME);
-        StreamingAnalyticsService sas = StreamingAnalyticsService.of(vcapServices, serviceName);
+        
+        final StreamingAnalyticsService sas = streamingAnalyticServiceFromDeploy(deployment);  
 
         JsonObject submission = jobject(deployment, "submissionResults");
         requireNonNull(submission);

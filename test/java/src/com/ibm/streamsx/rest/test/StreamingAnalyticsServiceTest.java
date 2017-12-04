@@ -49,7 +49,7 @@ public class StreamingAnalyticsServiceTest {
         return System.getenv("STREAMING_ANALYTICS_SERVICE_NAME");
     }
     
-    private static JsonObject credentials() throws Exception {
+    public static JsonObject credentials() throws Exception {
         JsonElement _services = services();
         JsonObject services;
         if (_services.isJsonObject()) {
