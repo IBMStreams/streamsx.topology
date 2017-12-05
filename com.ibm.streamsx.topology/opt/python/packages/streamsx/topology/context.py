@@ -271,7 +271,7 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
     def __init__(self, ctxtype, config, graph):
         super(_StreamingAnalyticsSubmitter, self).__init__(ctxtype, config, graph)
         self._streams_connection = self._config().get(ConfigParams.STREAMS_CONNECTION)
-        if ConfigParams.SERVICE_DEFINITION in config:
+        if ConfigParams.SERVICE_DEFINITION in self._config():
             # Convert the service definition to a VCAP services definition.
             # Which is then passed through to Java as a VCAP_SERVICES env var
             # Service name matching the generated VCAP is passed through config.
