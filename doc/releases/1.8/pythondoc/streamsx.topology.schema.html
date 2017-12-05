@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.schema module &mdash; streamsx 1.8b1 documentation</title>
+  <title>streamsx.topology.schema module &mdash; streamsx 1.8b2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.8b1 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.8b2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -366,7 +366,7 @@ for example:</p>
 </table>
 <p>When a type is not supported in Python it can only be used in a schema used for streams produced and consumed by invocation of SPL operators.</p>
 <p>A <cite>StreamSchema</cite> can be created by passing a string of the
-for <code class="docutils literal"><span class="pre">tuple&lt;...&gt;</span></code> or by passing the name of an SPL type from
+form <code class="docutils literal"><span class="pre">tuple&lt;...&gt;</span></code> or by passing the name of an SPL type from
 an SPL toolkit, for example <code class="docutils literal"><span class="pre">com.ibm.streamsx.transportation.vehicle::VehicleLocation</span></code>.</p>
 <p>Attribute names must start with an ASCII letter or underscore, followed by ASCII letters, digits, or underscores.</p>
 <p>When a tuple on a structured scheme is passed into Python it
@@ -379,7 +379,8 @@ for example as the return from the function invoked in a
 <cite>schema</cite> parameter set, it must be:</p>
 <blockquote>
 <div><ul class="simple">
-<li>A Python tuple. Attributes are set by position, with the first attribute being the value at index 0 in the Python tuple. If a value does not exist (the tuple has less values than the structured schema) or is set to <cite>None</cite> then the attribute has its default value, zero, false, empty list or string etc.</li>
+<li>A Python <cite>dict</cite>. Attributes are set by name using value in the dict for the name. If a value does not exist (the name does not exist as a key) or is set to <cite>None</cite> then the attribute has its default value, zero, false, empty list or string etc.</li>
+<li>A Python <cite>tuple</cite>. Attributes are set by position, with the first attribute being the value at index 0 in the Python <cite>tuple</cite>. If a value does not exist (the tuple has less values than the structured schema) or is set to <cite>None</cite> then the attribute has its default value, zero, false, empty list or string etc.</li>
 </ul>
 </div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
@@ -408,6 +409,9 @@ to their definition.</p>
 </tr>
 </tbody>
 </table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.8.</span></p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -427,6 +431,9 @@ to their definition.</p>
 </tr>
 </tbody>
 </table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.8.</span></p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -509,6 +516,9 @@ with <code class="docutils literal"><span class="pre">tuple&lt;float32</span> <s
 </tr>
 </tbody>
 </table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.8.</span></p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -564,7 +574,7 @@ with <code class="docutils literal"><span class="pre">tuple&lt;float32</span> <s
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.8b1',
+            VERSION:'1.8b2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

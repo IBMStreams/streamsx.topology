@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.context module &mdash; streamsx 1.8b1 documentation</title>
+  <title>streamsx.topology.context module &mdash; streamsx 1.8b2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.8b1 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.8b2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -156,10 +156,24 @@ local Streams install and forces the build to occur remotely using the service.<
 </dd></dl>
 
 <dl class="attribute">
+<dt id="streamsx.topology.context.ConfigParams.SERVICE_DEFINITION">
+<code class="descname">SERVICE_DEFINITION</code><em class="property"> = 'topology.service.definition'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.SERVICE_DEFINITION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Streaming Analytics service definition.
+Identifies the Streaming Analytics service to use. The definition can be one of</p>
+<blockquote>
+<div><ul class="simple">
+<li>The <cite>service credentials</cite> copied from the <cite>Service credentials</cite> page of the service console (not the Streams console). Credentials are provided in JSON format. They contain such as the API key and secret, as well as connection information for the service.</li>
+<li>A JSON object (<cite>dict</cite>) of the form: <code class="docutils literal"><span class="pre">{</span> <span class="pre">&quot;type&quot;:</span> <span class="pre">&quot;streaming-analytics&quot;,</span> <span class="pre">&quot;name&quot;:</span> <span class="pre">&quot;service</span> <span class="pre">name&quot;,</span> <span class="pre">&quot;credentials&quot;:</span> <span class="pre">{...}</span> <span class="pre">}</span></code> with the <cite>service credentials</cite> as the value of the <code class="docutils literal"><span class="pre">credentials</span></code> key.</li>
+</ul>
+</div></blockquote>
+<p>This key takes precedence over <a class="reference internal" href="#streamsx.topology.context.ConfigParams.VCAP_SERVICES" title="streamsx.topology.context.ConfigParams.VCAP_SERVICES"><code class="xref py py-const docutils literal"><span class="pre">VCAP_SERVICES</span></code></a> and <a class="reference internal" href="#streamsx.topology.context.ConfigParams.SERVICE_NAME" title="streamsx.topology.context.ConfigParams.SERVICE_NAME"><code class="xref py py-const docutils literal"><span class="pre">SERVICE_NAME</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="streamsx.topology.context.ConfigParams.SERVICE_NAME">
 <code class="descname">SERVICE_NAME</code><em class="property"> = 'topology.service.name'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.SERVICE_NAME" title="Permalink to this definition">¶</a></dt>
 <dd><p>Streaming Analytics service name.</p>
-<p>Selects the specific Streaming Analytics service from VCAP services information
+<p>Selects the specific Streaming Analytics service from VCAP service definitions
 defined by the the environment variable <strong>VCAP_SERVICES</strong> or the key <a class="reference internal" href="#streamsx.topology.context.ConfigParams.VCAP_SERVICES" title="streamsx.topology.context.ConfigParams.VCAP_SERVICES"><code class="xref py py-const docutils literal"><span class="pre">VCAP_SERVICES</span></code></a> in the <cite>submit</cite> config.</p>
 </dd></dl>
 
@@ -172,9 +186,11 @@ defined by the the environment variable <strong>VCAP_SERVICES</strong> or the ke
 <dl class="attribute">
 <dt id="streamsx.topology.context.ConfigParams.VCAP_SERVICES">
 <code class="descname">VCAP_SERVICES</code><em class="property"> = 'topology.service.vcap'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.VCAP_SERVICES" title="Permalink to this definition">¶</a></dt>
-<dd><p>Streaming Analytics service credentials in <strong>VCAP_SERVICES</strong> format.</p>
+<dd><p>Streaming Analytics service definitions including credentials in <strong>VCAP_SERVICES</strong> format.</p>
 <p>Provides the connection credentials when connecting to a Streaming Analytics service
-using context type <a class="reference internal" href="#streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE" title="streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE"><code class="xref py py-const docutils literal"><span class="pre">STREAMING_ANALYTICS_SERVICE</span></code></a>.</p>
+using context type <a class="reference internal" href="#streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE" title="streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE"><code class="xref py py-const docutils literal"><span class="pre">STREAMING_ANALYTICS_SERVICE</span></code></a>.
+The <code class="docutils literal"><span class="pre">streaming-analytics</span></code> service to use within the service definitions is identified
+by name using <a class="reference internal" href="#streamsx.topology.context.ConfigParams.SERVICE_NAME" title="streamsx.topology.context.ConfigParams.SERVICE_NAME"><code class="xref py py-const docutils literal"><span class="pre">SERVICE_NAME</span></code></a>.</p>
 <p>The key overrides the environment variable <strong>VCAP_SERVICES</strong>.</p>
 <dl class="docutils">
 <dt>The value can be:</dt>
@@ -537,7 +553,7 @@ constant passed as <cite>ctxtype</cite>.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.8b1',
+            VERSION:'1.8b2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

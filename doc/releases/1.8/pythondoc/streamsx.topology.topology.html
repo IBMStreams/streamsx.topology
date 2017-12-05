@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.topology module &mdash; streamsx 1.8b1 documentation</title>
+  <title>streamsx.topology.topology module &mdash; streamsx 1.8b2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.8b1 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.8b2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -700,20 +700,20 @@ is called.</p>
 <dl class="method">
 <dt id="streamsx.topology.topology.Stream.map">
 <code class="descname">map</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em>, <em>schema=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Maps each tuple from this stream into 0 or 1 tuples.</p>
+<dd><p>Maps each tuple from this stream into 0 or 1 stream tuples.</p>
 <p>For each tuple on this stream <code class="docutils literal"><span class="pre">result</span> <span class="pre">=</span> <span class="pre">func(tuple)</span></code> is called.
 If <cite>result</cite> is not <cite>None</cite> then the result will be submitted
 as a tuple on the returned stream. If <cite>result</cite> is <cite>None</cite> then
 no tuple submission will occur.</p>
-<p>By default the submitted tuple is <cite>result</cite> without modification
+<p>By default the submitted tuple is <code class="docutils literal"><span class="pre">result</span></code> without modification
 resulting in a stream of pickable Python objects. Setting the
 <cite>schema</cite> parameter changes the type of the stream and
-modifies each <cite>result</cite> before submission.</p>
+modifies each <code class="docutils literal"><span class="pre">result</span></code> before submission.</p>
 <ul class="simple">
-<li><a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.CommonSchema.Python" title="streamsx.topology.schema.CommonSchema.Python"><code class="xref py py-const docutils literal"><span class="pre">Python</span></code></a> - The defaullt:  <cite>result</cite> is submitted.</li>
+<li><a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.CommonSchema.Python" title="streamsx.topology.schema.CommonSchema.Python"><code class="xref py py-const docutils literal"><span class="pre">Python</span></code></a> - The default:  <cite>result</cite> is submitted.</li>
 <li><a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.CommonSchema.String" title="streamsx.topology.schema.CommonSchema.String"><code class="xref py py-const docutils literal"><span class="pre">String</span></code></a> - A stream of strings: <code class="docutils literal"><span class="pre">str(result)</span></code> is submitted.</li>
 <li><a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.CommonSchema.Json" title="streamsx.topology.schema.CommonSchema.Json"><code class="xref py py-const docutils literal"><span class="pre">Json</span></code></a> - A stream of JSON objects: <code class="docutils literal"><span class="pre">result</span></code> must be convertable to a JSON object using <cite>json</cite> package.</li>
-<li><a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema"><code class="xref py py-const docutils literal"><span class="pre">StreamSchema</span></code></a> - A structured stream. <cite>result</cite> must be a (Python) tuple. Each attribute in the structured tuple is set by position from <cite>result</cite>. If the value in <cite>result</cite> is <cite>None</cite> or not present then the attribute has the default value for its type.</li>
+<li><a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema"><code class="xref py py-const docutils literal"><span class="pre">StreamSchema</span></code></a> - A structured stream. <cite>result</cite> must be a <cite>dict</cite> or (Python) <cite>tuple</cite>. When a <cite>dict</cite> is returned the outgoing stream tuple attributes are set by name, when a <cite>tuple</cite> is returned stream tuple attributes are set by position.</li>
 </ul>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -737,6 +737,9 @@ modifies each <cite>result</cite> before submission.</p>
 <div class="versionadded">
 <p><span class="versionmodified">New in version 1.7: </span><cite>schema</cite> argument added to allow conversion to
 a structured stream.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.8: </span>Support for submitting <cite>dict</cite> objects as stream tuples to a structured stream (in addition to existing support for <cite>tuple</cite> objects).</p>
 </div>
 </dd></dl>
 
@@ -1333,7 +1336,7 @@ duration of the window.</td>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.8b1',
+            VERSION:'1.8b2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

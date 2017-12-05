@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.tester module &mdash; streamsx 1.8b1 documentation</title>
+  <title>streamsx.topology.tester module &mdash; streamsx 1.8b2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.8b1 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.8b2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -450,7 +450,10 @@ In addition if a local check was specified using <a class="reference internal" h
 that callable must complete before the job is cancelled.</p>
 <p>The test passes if all conditions became valid and the local check callable (if present) completed without
 raising an error.</p>
-<p>The test fails if the job is unhealthy, any condition fails or the local check callable (if present) raised an exception.</p>
+<p>The test fails if the job is unhealthy, any condition fails or the local check callable (if present) raised an exception.
+In the event that the test fails when submitting to the <cite>STREAMING_ANALYTICS_SERVICE</cite> context, the application logs are retrieved as
+a tar file and are saved to the current working directory. The filesystem path to the application logs is saved in the
+tester&#8217;s result object under the <cite>application_logs</cite> key, i.e. <cite>tester.result[&#8216;application_logs&#8217;]</cite></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -466,6 +469,12 @@ raising an error.</p>
 </tr>
 </tbody>
 </table>
+<dl class="attribute">
+<dt id="streamsx.topology.tester.Tester.result">
+<code class="descname">result</code><a class="headerlink" href="#streamsx.topology.tester.Tester.result" title="Permalink to this definition">¶</a></dt>
+<dd><p>The result of the test. This can contain exit codes, application log paths, or other relevant test information.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="streamsx.topology.tester.Tester.submission_result">
 <code class="descname">submission_result</code><a class="headerlink" href="#streamsx.topology.tester.Tester.submission_result" title="Permalink to this definition">¶</a></dt>
@@ -615,7 +624,7 @@ tuples, <cite>False</cite> if the stream must contain at least <cite>count</cite
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.8b1',
+            VERSION:'1.8b2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
