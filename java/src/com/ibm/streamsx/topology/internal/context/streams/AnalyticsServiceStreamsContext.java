@@ -4,11 +4,9 @@
  */
 package com.ibm.streamsx.topology.internal.context.streams;
 
-import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
-import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.context.remote.RemoteBuildAndSubmitRemoteContext.streamingAnalyticServiceFromDeploy;
 import static com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices.getVCAPService;
 
 import java.io.File;
@@ -25,7 +23,6 @@ import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
-import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 
 public class AnalyticsServiceStreamsContext extends
         BundleUserStreamsContext<BigInteger> {
@@ -89,10 +86,7 @@ public class AnalyticsServiceStreamsContext extends
         JsonObject deploy =  deploy(submission);
         JsonObject jco = DeployKeys.copyJobConfigOverlays(deploy);
 
-        JsonObject vcapServices = VcapServices.getVCAPServices(deploy.get(VCAP_SERVICES));
-
-        final StreamingAnalyticsService sas = StreamingAnalyticsService.of(vcapServices,
-                jstring(deploy, SERVICE_NAME));
+        final StreamingAnalyticsService sas = streamingAnalyticServiceFromDeploy(deploy); 
 
         Result<Job, JsonObject> submitResult = sas.submitJob(bundle, jco);
         final JsonObject submissionResult = GsonUtilities.objectCreate(submission,

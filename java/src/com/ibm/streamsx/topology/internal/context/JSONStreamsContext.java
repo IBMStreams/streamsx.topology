@@ -122,6 +122,8 @@ public abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
             return new JsonPrimitive((Number) value);
         else if (value instanceof String) {
             return new JsonPrimitive((String) value);
+        } else if (value instanceof JsonElement) {
+            return (JsonElement) value;
         } else if (JSON4JBridge.isJson4J(value)) {
             return JSON4JBridge.fromJSON4J(value);
         } else if (value instanceof Collection) {
