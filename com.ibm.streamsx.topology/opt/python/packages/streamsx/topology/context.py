@@ -271,7 +271,15 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
     def __init__(self, ctxtype, config, graph):
         super(_StreamingAnalyticsSubmitter, self).__init__(ctxtype, config, graph)
         self._streams_connection = self._config().get(ConfigParams.STREAMS_CONNECTION)
-        self._vcap_services = self._config().get(ConfigParams.VCAP_SERVICES)
+        if ConfigParams.SERVICE_DEFINITION in config:
+            # Convert the service definition to a VCAP services definition.
+            # Which is then passed through to Java as a VCAP_SERVICES env var
+            # Service name matching the generated VCAP is passed through config.
+            service_def = self._config().get(ConfigParams.SERVICE_DEFINITION)
+            self._vcap_services = _vcap_from_service_definition(service_def)
+            self._config()[ConfigParams.SERVICE_NAME] = _name_from_service_definition(service_def)
+        else:
+            self._vcap_services = self._config().get(ConfigParams.VCAP_SERVICES)
         self._service_name = self._config().get(ConfigParams.SERVICE_NAME)
 
         if self._streams_connection is not None:
@@ -290,6 +298,7 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
 
         # Clear the VCAP_SERVICES key in config, since env var will contain the content
         self._config().pop(ConfigParams.VCAP_SERVICES, None)
+        self._config().pop(ConfigParams.SERVICE_DEFINITION, None)
 
         self._setup_views()
 
@@ -591,10 +600,12 @@ class ConfigParams(object):
     Configuration options which may be used as keys in :py:func:`submit` `config` parameter.
     """
     VCAP_SERVICES = 'topology.service.vcap'
-    """Streaming Analytics service credentials in **VCAP_SERVICES** format.
+    """Streaming Analytics service definitions including credentials in **VCAP_SERVICES** format.
 
     Provides the connection credentials when connecting to a Streaming Analytics service
     using context type :py:const:`~ContextTypes.STREAMING_ANALYTICS_SERVICE`.
+    The ``streaming-analytics`` service to use within the service definitions is identified
+    by name using :py:const:`SERVICE_NAME`.
 
     The key overrides the environment variable **VCAP_SERVICES**.
 
@@ -606,7 +617,7 @@ class ConfigParams(object):
     SERVICE_NAME = 'topology.service.name'
     """Streaming Analytics service name.
 
-    Selects the specific Streaming Analytics service from VCAP services information
+    Selects the specific Streaming Analytics service from VCAP service definitions
     defined by the the environment variable **VCAP_SERVICES** or the key :py:const:`VCAP_SERVICES` in the `submit` config.
     """
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
@@ -625,6 +636,15 @@ class ConfigParams(object):
     """
     Key for a :py:class:`StreamsConnection` object for connecting to a running IBM Streams instance.
     """
+    SERVICE_DEFINITION = 'topology.service.definition'
+    """Streaming Analytics service definition.
+    Identifies the Streaming Analytics service to use. The definition can be one of
+        * The `service credentials` copied from the `Service credentials` page of the service console (not the Streams console). Credentials are provided in JSON format. They contain such as the API key and secret, as well as connection information for the service. 
+        * A JSON object (`dict`) of the form: ``{ "type": "streaming-analytics", "name": "service name", "credentials": {...} }`` with the `service credentials` as the value of the ``credentials`` key.
+
+    This key takes precedence over :py:const:`VCAP_SERVICES` and :py:const:`SERVICE_NAME`.
+    """
+
 
 class JobConfig(object):
     """
@@ -825,3 +845,22 @@ class SubmissionResult(object):
 
     def __contains__(self, item):
         return item in self.results
+
+
+def _vcap_from_service_definition(service_def):
+    """Turn a service definition into a vcap services
+    containing a single service.
+    """
+    if 'credentials' in service_def:
+        credentials = service_def['credentials']
+    else:
+        credentials = service_def
+
+    service = {}
+    service['credentials'] = credentials
+    service['name'] = _name_from_service_definition(service_def)
+    vcap = {'streaming-analytics': [service]}
+    return vcap
+
+def _name_from_service_definition(service_def):
+    return service_def['name'] if 'credentials' in service_def else 'service'

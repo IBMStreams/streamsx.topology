@@ -113,6 +113,38 @@ class TestStreamingAnalytics(unittest.TestCase):
         cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
         self.submit_to_service(topo, cfg)
 
+    def test_service_def(self):
+        """ Test a submit using a service definition."""
+        vsi = self.require_vcap()
+        topo = build_simple_app("test_service_def")
+        cfg = {}
+        cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
+        services = vsi['vcap']['streaming-analytics']
+        creds = {}
+        for s in services:
+            if s['name'] == vsi['service_name']:
+               creds = s['credentials']
+            
+        service = {'type':'streaming-analytics', 'name':vsi['service_name']}
+        service['credentials'] = creds
+        cfg[ConfigParams.SERVICE_DEFINITION] = service
+        self.submit_to_service(topo, cfg)
+
+    def test_service_creds(self):
+        """ Test a submit using service credentials."""
+        vsi = self.require_vcap()
+        topo = build_simple_app("test_service_creds")
+        cfg = {}
+        cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
+        services = vsi['vcap']['streaming-analytics']
+        creds = {}
+        for s in services:
+            if s['name'] == vsi['service_name']:
+               creds = s['credentials']
+            
+        cfg[ConfigParams.SERVICE_DEFINITION] = creds
+        self.submit_to_service(topo, cfg)
+
     def test_submit_job_results(self):
         vsi = self.require_vcap()
         topo = build_simple_app("test_submit_job_results")
