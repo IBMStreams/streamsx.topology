@@ -24,7 +24,7 @@ abstract class BundleUserStreamsContext<T> extends JSONStreamsContext<T> {
     }
     
     @Override
-    protected final Future<T> action(AppEntity entity) throws Exception {
+    protected Future<T> action(AppEntity entity) throws Exception {
         File bundle = bundler._submit(entity).get();
         preInvoke(entity, bundle);
         Future<T> future = invoke(entity, bundle);       
