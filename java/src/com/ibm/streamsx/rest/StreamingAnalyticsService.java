@@ -92,6 +92,35 @@ public interface StreamingAnalyticsService {
     }
     
     /**
+     * Get the service name.
+     * If the name is unknown then {@code service} is returned.
+     * @return Service name or {@code service} if it is unknown.
+     */
+    String getName();
+    
+    /**
+     * Check the status of this Streaming Analytics Service.
+     * <P>
+     * The returned {@link Result} instance has:
+     * <UL>
+     * <LI>{@link Result#getId()} returning {@code null}.</LI>
+     * <LI>{@link Result#getElement()} returning {@code this}.</LI>
+     * <LI>{@link Result#getRawResult()} return the raw JSON response.</LI>
+     * <LI>{@link Result#isOk()} returns {@code true} if the service is running otherwise {@code false}.</LI>
+     * </UL>
+     * </P>
+     * 
+     * @param requireRunning If {@code true} and the service is not running then an {@code IllegalStateException}
+     * is thrown, otherwise the return indicates the status of the service.
+     * 
+     * @return Result of the status check.
+     * 
+     * @throws IOException Error communicating with the service.
+     * @throws IllegalStateException {@code requireRunning} is {@code true} and the service is not running.
+     */
+    Result<StreamingAnalyticsService,JsonObject> checkStatus(boolean requireRunning) throws IOException;
+    
+    /**
      * Submit a Streams bundle to run on the Streaming Analytics Service.
      * <P>
      * The returned {@link Result} instance has:

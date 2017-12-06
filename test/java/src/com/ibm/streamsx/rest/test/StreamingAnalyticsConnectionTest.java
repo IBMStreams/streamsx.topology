@@ -33,7 +33,6 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
             String vcapServices = System.getenv("VCAP_SERVICES");
 
             // if we don't have serviceName or vcapServices, skip the test
-            System.out.println("Checking STREAMING_ANALYTICS_SERVICE_NAME and VCAP_SERVICES is not NULL ...");
             assumeNotNull(serviceName, vcapServices);
 
             testType = "STREAMING_ANALYTICS_SERVICE";

@@ -52,6 +52,9 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
 	    File buildArchive =  archive.get();
 		
 	    try {
+	        
+	        RemoteContexts.checkServiceRunning(sas);
+	        
 	        Result<Job, JsonObject> submitResult = sas.buildAndSubmitJob(buildArchive, jco, buildName);
 	        final JsonObject submissionResult = GsonUtilities.objectCreate(submission,
 	                RemoteContext.SUBMISSION_RESULTS);
