@@ -20,9 +20,7 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamingAnalyticsService;
-import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
-import com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.context.remote.RemoteContexts;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
@@ -47,12 +45,27 @@ public class AnalyticsServiceStreamsContext extends
     
     @Override
     protected Future<BigInteger> action(AppEntity entity) throws Exception {
-        if (jboolean(deploy(entity.submission), FORCE_REMOTE_BUILD)) {
+        if (useRemoteBuild(entity)) {
             RemoteStreamingAnalyticsServiceStreamsContext rc = new RemoteStreamingAnalyticsServiceStreamsContext();
             return rc.submit(entity.submission);
         }
 
         return super.action(entity);
+    }
+    
+    /**
+     * See if the remote build service should be used.
+     * If STREAMS_INSTALL was not set is handled elsewhere,
+     * so this path assumes that STREAMS_INSTALL is set and not empty.
+     * 
+     * Remote build if:
+     *  - FORCE_REMOTE_BUILD is set to true.
+     */
+    private boolean useRemoteBuild(AppEntity entity) {
+        if (jboolean(deploy(entity.submission), FORCE_REMOTE_BUILD))
+            return true;
+        
+        return false;
     }
     
     
@@ -82,22 +95,7 @@ public class AnalyticsServiceStreamsContext extends
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
-    } 
-    
-    /*
-   
-    private JsonObject getBluemixSubmitConfig( Map<String, Object> config) throws IOException {
-        
-        JobConfig jc = JobConfig.fromProperties(config);
-        
-        // Streaming Analytics service is always using 4.2 or later
-        // so use the job config overlay
-            
-        JobConfigOverlay jco = new JobConfigOverlay(jc);
-        
-        return jco.fullOverlayAsJSON(new JsonObject());
     }
-    */
 
     private BigInteger submitJobToService(File bundle, JsonObject submission) throws IOException {
         JsonObject deploy =  deploy(submission);
