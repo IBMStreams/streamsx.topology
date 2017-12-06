@@ -20,6 +20,7 @@ import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamingAnalyticsService;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
+import com.ibm.streamsx.topology.internal.context.remote.RemoteContexts;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
@@ -87,6 +88,8 @@ public class AnalyticsServiceStreamsContext extends
         JsonObject jco = DeployKeys.copyJobConfigOverlays(deploy);
 
         final StreamingAnalyticsService sas = streamingAnalyticServiceFromDeploy(deploy); 
+        
+        RemoteContexts.checkServiceRunning(sas);
 
         Result<Job, JsonObject> submitResult = sas.submitJob(bundle, jco);
         final JsonObject submissionResult = GsonUtilities.objectCreate(submission,

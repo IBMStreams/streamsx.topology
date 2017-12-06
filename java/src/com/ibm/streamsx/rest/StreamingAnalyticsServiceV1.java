@@ -172,7 +172,7 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
 
         JsonObject jso = StreamsRestUtils.getGsonResponse(httpclient, httpput);
 
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job response: " + jso.toString());
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + getName() + "): submit job response: " + jso.toString());
         return jso;
     }
 
@@ -197,7 +197,7 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
 
         JsonObject jsonResponse = StreamsRestUtils.getGsonResponse(httpClient, postJobWithConfig);
 
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job response:" + jsonResponse.toString());
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + getName() + "): submit job response:" + jsonResponse.toString());
 
         return jsonResponse;
     }
