@@ -6,6 +6,9 @@
 package com.ibm.streamsx.rest.test;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeNotNull;
 
 import java.io.File;
@@ -20,6 +23,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.rest.Instance;
+import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamingAnalyticsService;
 
 /**
@@ -104,9 +108,30 @@ public class StreamingAnalyticsServiceTest {
     }
     
     private void use_it(StreamingAnalyticsService service) throws Exception {
+        
+        
         assertNotNull(service);
+                
+        Result<StreamingAnalyticsService, JsonObject> cs = service.checkStatus(false);
+        assertNotNull(cs);
+        assertSame(service, cs.getElement());
+        assertNull(cs.getId());
+        assertTrue(cs.isOk());
+        assertNotNull(cs.getRawResult());
+        
+        cs = service.checkStatus(true);
+        assertNotNull(cs);
+        assertSame(service, cs.getElement());
+        assertNull(cs.getId());
+        assertTrue(cs.isOk());
+        assertNotNull(cs.getRawResult());
+
+
+        
         Instance instance = service.getInstance();
         assertNotNull(instance);      
         assertNotNull(instance.getJobs());
+        
+        
     }
 }

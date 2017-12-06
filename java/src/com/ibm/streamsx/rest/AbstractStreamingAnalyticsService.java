@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Random;
 
 import org.apache.http.auth.AUTH;
@@ -45,7 +44,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
 
     final protected JsonObject credentials;
     final protected JsonObject service;
-    final protected String serviceName;
+    private final String serviceName;
 
     // Current value for the authorization header
     protected String authorization;
@@ -58,6 +57,11 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         this.credentials = credentials;
         this.service = service;
         this.serviceName = jstring(service, "name");
+    }
+    
+    @Override
+    public final String getName() {
+        return serviceName;
     }
     
     synchronized AbstractStreamingAnalyticsConnection streamsConnection() throws IOException {
@@ -117,9 +121,6 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     public Result<Job, JsonObject> submitJob(File bundle, JsonObject jco) throws IOException {
         final CloseableHttpClient httpClient = HttpClients.createDefault();
         try {
-            Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Checking status :" + serviceName);
-
-            checkInstanceStatus(httpClient);
 
             Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Submitting bundle : " + bundle.getName() + " to " + serviceName);
 
@@ -141,34 +142,40 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         final String jobId = jstring(response, getJobSubmitId());
         return new ResultImpl<>(jobId != null, jobId, () -> jobId == null ? null : getInstance().getJob(jobId), response);            
     }
+    
+    @Override
+    public Result<StreamingAnalyticsService, JsonObject> checkStatus(boolean requireRunning) throws IOException {
+        
+        final CloseableHttpClient httpClient = HttpClients.createDefault();
+        try {
+            String url = getStatusUrl(httpClient);
 
-    private void checkInstanceStatus(CloseableHttpClient httpClient)
-            throws IOException {
-        String url = getStatusUrl(httpClient);
+            HttpGet getStatus = new HttpGet(url);
+            getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
 
-        HttpGet getStatus = new HttpGet(url);
-        getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
+            JsonObject response = StreamsRestUtils.getGsonResponse(httpClient, getStatus);
+            
+            boolean running =
+                    "true".equals(jstring(response, "enabled"))
+                    &&
+                    "running".equals(jstring(response, "status"));
+            
+            if (requireRunning && !running)
+                throw new IllegalStateException("Service (" + serviceName + ") is not running!");
+            
+            return new ResultImpl<>(running, null, () -> this, response);            
 
-        JsonObject jsonResponse = StreamsRestUtils.getGsonResponse(httpClient, getStatus);
-
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): instance status response:" + jsonResponse.toString());
-
-        if (!"true".equals(jstring(jsonResponse, "enabled")))
-            throw new IllegalStateException("Service is not enabled!");
-
-        if (!"running".equals(jstring(jsonResponse, "status")))
-            throw new IllegalStateException("Service is not running!");
+        } finally {
+            httpClient.close();
+        }
     }
-
+    
     @Override
     public Result<Job, JsonObject> buildAndSubmitJob(File archive, JsonObject jco,
             String buildName) throws IOException {
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
-            RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): Checking status");
-            checkInstanceStatus(httpclient);
-
             // Set up the build name
             if (null == buildName) {
                 buildName = "build";
