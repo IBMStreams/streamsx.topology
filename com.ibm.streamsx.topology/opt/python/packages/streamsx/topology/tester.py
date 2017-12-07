@@ -89,6 +89,7 @@ from streamsx.rest import StreamsConnection
 from streamsx.rest import StreamingAnalyticsConnection
 from streamsx.topology.context import ConfigParams
 import time
+import json
 
 import streamsx.topology.tester_runtime as sttrt
 
@@ -216,6 +217,21 @@ class Tester(object):
         test.test_config = {'topology.service.name': service_name}
         if force_remote_build:
             test.test_config['topology.forceRemoteBuild'] = True
+
+        vcap_services = os.environ.get('VCAP_SERVICES')
+        if not vcap_services.startswith('/'):
+            #vcap services is json
+            vcap_services = json.loads(vcap_services)
+        else:
+            with open(vcap_services) as fh:
+                vcap_services = json.load(fh)
+
+        test.is_v2 = False
+        for creds in vcap_services['streaming-analytics']:
+            if creds['name'] == service_name:
+                if 'v2_rest_url' in creds['credentials']:
+                    test.is_v2 = True
+            
 
     def add_condition(self, stream, condition):
         """Add a condition to a stream.
