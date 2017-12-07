@@ -30,16 +30,17 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
 
     private long authExpiryTime = -1L;
 
-    private String statusUrl;
     private String jobSubmitUrl;
     private String buildsUrl;
     private final String tokenUrl;
     private final String apiKey;
+    private final String statusUrl;
 
     StreamingAnalyticsServiceV2(JsonObject service) {
         super(service);
         tokenUrl = StreamsRestUtils.getTokenUrl(credentials);
         apiKey = StreamsRestUtils.getServiceApiKey(credentials);
+        statusUrl = jstring(credentials, "v2_rest_url");
     }
 
     // Synchronized because it needs to read and possibly write two members
@@ -99,14 +100,25 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
         return buildsUrl;
     }
 
-    private synchronized void setUrls(CloseableHttpClient httpClient)
+    @Override
+    protected void updateStatus(JsonObject response) {
+        if (null == buildsUrl || null == jobSubmitUrl) {
+            setUrls(response);
+        }
+    }
+
+    private void setUrls(CloseableHttpClient httpClient)
             throws ClientProtocolException, IOException {
-        statusUrl = jstring(credentials, "v2_rest_url");
         HttpGet getStatus = new HttpGet(statusUrl);
         getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
 
         JsonObject response = StreamsRestUtils.getGsonResponse(httpClient, getStatus);
-        jobSubmitUrl = jstring(response, "jobs");
+        setUrls(response);
+    }
+
+    private synchronized void setUrls(JsonObject statusResponse)
+            throws IllegalStateException {
+        jobSubmitUrl = jstring(statusResponse, "jobs");
         // Builds URL is not public in response, kludge from jobs url
         if (!jobSubmitUrl.endsWith("/jobs")) {
             throw new IllegalStateException("Unexpected jobs URL: " + jobSubmitUrl);

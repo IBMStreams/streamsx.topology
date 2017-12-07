@@ -117,6 +117,14 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         this.authorization = authorization;
     }
 
+    /**
+     * Called on checking instance to allow implementations to update state
+     * if required.
+     */
+    protected void updateStatus(JsonObject statusResponse) {
+        // Do nothing by default, implementation classes may override
+    }
+
     @Override
     public Result<Job, JsonObject> submitJob(File bundle, JsonObject jco) throws IOException {
         final CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -154,7 +162,9 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
 
             JsonObject response = StreamsRestUtils.getGsonResponse(httpClient, getStatus);
-            
+
+            updateStatus(response);
+
             boolean running =
                     "true".equals(jstring(response, "enabled"))
                     &&
@@ -169,7 +179,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             httpClient.close();
         }
     }
-    
+
     @Override
     public Result<Job, JsonObject> buildAndSubmitJob(File archive, JsonObject jco,
             String buildName) throws IOException {
