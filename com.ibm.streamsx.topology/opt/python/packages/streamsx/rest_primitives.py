@@ -122,14 +122,6 @@ class _ResourceElement(object):
             return elements[0]
         raise ValueError("Multiple resources matching: {0}".format(id))
 
-def handle_http_errors(res):
-    # HTTP error responses are 4xx, server errors are 5xx
-    if res.status_code > 400:
-        logger.error("Response returned with error code: " + res.status_code)
-        logger.error(res.text)
-        res.raise_for_status()
-
-
 class _StreamsRestClient(object):
     """Handles the session connection with the Streams REST API
     """
@@ -147,10 +139,10 @@ class _StreamsRestClient(object):
         self.session = requests.Session()
         self.session.auth = (username, password)
 
-    def handle_http_errors(res):
+    def handle_http_errors(self, res):
         # HTTP error responses are 4xx, server errors are 5xx
         if res.status_code >= 400:
-            logger.error("Response returned with error code: " + res.status_code)
+            logger.error("Response returned with error code: " + str(res.status_code))
             logger.error(res.text)
             res.raise_for_status()
 
