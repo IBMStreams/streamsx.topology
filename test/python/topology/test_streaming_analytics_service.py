@@ -56,11 +56,11 @@ class TestStreamingAnalytics(unittest.TestCase):
         sn = cls.service_name
 
         # Set flag if service is a v2 service
-        self.is_v2 = False
+        cls.is_v2 = False
         for creds in vs['streaming-analytics']:
             if creds['name'] == sn:
-                if 'v2_rest_url' in creds:
-                    self.is_v2 = True
+                if 'v2_rest_url' in creds['credentials']:
+                    cls.is_v2 = True
 
         return {'vcap': vs, 'service_name': sn, 'vcap_file': fn}
 
