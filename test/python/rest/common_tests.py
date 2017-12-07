@@ -2,6 +2,7 @@ import logging
 import unittest
 import time
 from operators import DelayedTupleSourceWithLastTuple
+from requests import exceptions
 
 from streamsx.topology.tester import Tester
 from streamsx.topology import topology, schema
@@ -87,7 +88,11 @@ class CommonTests(unittest.TestCase):
         while hasattr(self.job, 'health') and 'healthy' == self.job.health:
             time.sleep(0.2)
             timeout -= 1
-            self.job.refresh()
+            try:
+                self.job.refresh()
+            except exceptions.HTTPError:
+                self.job = None
+                break
             self.assertGreaterEqual(timeout, 0, msg='Timeout exceeded while waiting for job to cancel')
 
         if hasattr(self.job, 'health'):

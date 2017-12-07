@@ -179,4 +179,4 @@ class TestStreamingAnalytics(unittest.TestCase):
             self.assertIn("name", rc, "\"name\" field not in returned json dict")
             self.assertIn("health", rc, "\"health\" field not in returned json dict")
             self.assertIn("self", rc, "\"self\" field not in returned json dict")
-            self.assertIn("id", rc, "\"id\" field not in returned json dict")
+            self.assertIn("jobId", rc, "\"id\" field not in returned json dict")
