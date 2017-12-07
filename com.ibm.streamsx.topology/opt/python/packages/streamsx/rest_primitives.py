@@ -122,6 +122,13 @@ class _ResourceElement(object):
             return elements[0]
         raise ValueError("Multiple resources matching: {0}".format(id))
 
+def handle_http_errors(res):
+    # HTTP error responses are 4xx, server errors are 5xx
+    if res.status_code > 400:
+        logger.error("Response returned with error code: " + res.status_code)
+        logger.error(res.text)
+        res.raise_for_status()
+
 
 class _StreamsRestClient(object):
     """Handles the session connection with the Streams REST API
@@ -140,24 +147,38 @@ class _StreamsRestClient(object):
         self.session = requests.Session()
         self.session.auth = (username, password)
 
+    def handle_http_errors(res):
+        # HTTP error responses are 4xx, server errors are 5xx
+        if res.status_code >= 400:
+            logger.error("Response returned with error code: " + res.status_code)
+            logger.error(res.text)
+            res.raise_for_status()
+
     def make_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
-        return self.session.get(url).json()
+        res = self.session.get(url)
+        self.handle_http_errors(res)
+        return res.json()
 
     def make_raw_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
-        return self.session.get(url)
+        res = self.session.get(url)
+        self.handle_http_errors(res)
+        return res
 
     def make_raw_streaming_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
-        return self.session.get(url, stream=True)
+        res = self.session.get(url, stream=True)
+        self.handle_http_errors(res)
+
+        return res
 
     def __str__(self):
         return pformat(self.__dict__)
 
 
 
-class _IAMStreamsRestClient(object):
+class _IAMStreamsRestClient(_StreamsRestClient):
     """Handles the session connection with the Streams REST API and Streaming Analytics service
     using IAM authentication.
     """
@@ -194,6 +215,7 @@ class _IAMStreamsRestClient(object):
         res = requests.post(post_url, headers = {'Accept' : 'application/json',
                                                  'Content-Type' : 'application/x-www-form-urlencoded'},
                             verify=self.verify)
+        self.handle_http_errors(res)
         res = res.json()
 
         self._auth_exporiry_time = int(res[IAMConstants.EXPIRATION]) - IAMConstants.EXPIRY_PAD_MS
@@ -215,13 +237,18 @@ class _IAMStreamsRestClient(object):
         logger.debug('Beginning a REST request to: ' + url)
         req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
         prepared = req.prepare()
-        return self.session.send(prepared, verify=self.verify)
+        res = self.session.send(prepared, verify=self.verify)
+        self.handle_http_errors(res)
+        return res
 
     def make_raw_streaming_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
         req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
         prepared = req.prepare()
-        return self.session.send(prepared, stream=True, verify=self.verify)
+        res = self.session.send(prepared, stream=True, verify=self.verify)
+        self.handle_http_errors(res)
+        return res
+
     def __str__(self):
         return pformat(self.__dict__)
 
@@ -1307,6 +1334,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
                                           'Accept' : 'application/json'})
             prepared = req.prepare()
             res = self.rest_client.session.send(prepared).json()
+            self.rest_client.handle_http_errors(res)
             for job in res['resources']:
                 if job['name'] == job_name:
                     # Find the correct job_id, set it
@@ -1317,7 +1345,8 @@ class _StreamingAnalyticsServiceV2Delegator(object):
                                headers = {'Authorization' : self.rest_client._get_authorization(),
                                           'Accept' : 'application/json'})
         prepared = req.prepare()
-        self.rest_client.session.send(prepared)
+        res = self.rest_client.session.send(prepared)
+        self.rest_client.handle_http_errors(res)
 
     def start_instance(self):
         req = requests.Request("PATCH", self._v2_rest_url, json={'state' : 'STARTED'},
@@ -1325,7 +1354,8 @@ class _StreamingAnalyticsServiceV2Delegator(object):
                                           'Content-Type' : 'application/json',
                                           'Accept' : 'application/json'})
         prepared = req.prepare()
-        self.rest_client.session.send(prepared)
+        res = self.rest_client.session.send(prepared)
+        self.rest_client.handle_http_errors(res)
 
     def stop_instance(self):
         req = requests.Request("PATCH", self._v2_rest_url, json={'state' : 'STOPPED'},
@@ -1333,10 +1363,13 @@ class _StreamingAnalyticsServiceV2Delegator(object):
                                           'Content-Type' : 'application/json',
                                           'Accept' : 'application/json'})
         prepared = req.prepare()
-        self.rest_client.session.send(prepared)
+        res = self.rest_client.session.send(prepared)
+        self.rest_client.handle_http_errors(res)
 
     def get_instance_status(self):
-        return self.rest_client.make_request(self._v2_rest_url)
+        res = self.rest_client.make_request(self._v2_rest_url)
+        self.rest_client.handle_http_errors(res)
+        return res
 
 
 class _StreamingAnalyticsServiceV1Delegator(object):
@@ -1371,7 +1404,9 @@ class _StreamingAnalyticsServiceV1Delegator(object):
             payload['job_id'] = job_id
 
         jobs_url = self._get_url('jobs_path')
-        return self.rest_client.session.delete(jobs_url, params=payload).json()
+        res = self.rest_client.session.delete(jobs_url, params=payload)
+        self.rest_client.handle_http_errors(res)
+        return res.json()
 
     def start_instance(self):
         """Start the instance for this Streaming Analytics service.
@@ -1380,7 +1415,9 @@ class _StreamingAnalyticsServiceV1Delegator(object):
             dict: JSON response for the instance start operation.
         """
         start_url = self._get_url('start_path')
-        return self.rest_client.session.put(start_url, json={}).json()
+        res = self.rest_client.session.put(start_url, json={})
+        self.rest_client.handle_http_errors(res)
+        return res.json()
 
     def stop_instance(self):
         """Stop the instance for this Streaming Analytics service.
@@ -1389,7 +1426,9 @@ class _StreamingAnalyticsServiceV1Delegator(object):
             dict: JSON response for the instance stop operation.
         """
         stop_url = self._get_url('stop_path')
-        return self.rest_client.session.put(stop_url, json={}).json()
+        res = self.rest_client.session.put(stop_url, json={})
+        self.rest_client.handle_http_errors(res)
+        return res.json()
 
     def get_instance_status(self):
         """Get the status the instance for this Streaming Analytics service.
@@ -1398,7 +1437,9 @@ class _StreamingAnalyticsServiceV1Delegator(object):
             dict: JSON response for the instance status operation.
         """
         status_url = self._get_url('status_path')
-        return self.rest_client.session.get(status_url).json()
+        res = self.rest_client.session.get(status_url)
+        self.rest_client.handle_http_errors(res)
+        return res.json()
 
 class IAMConstants(object):
     V2_REST_URL = 'v2_rest_url'
