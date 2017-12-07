@@ -180,7 +180,7 @@ class _IAMStreamsRestClient(_StreamsRestClient):
             credentials: The credentials of the Streaming Analytics service.
         """
         self._credentials = credentials
-        self._api_key = self._credentials[IAMConstants.API_KEY]
+        self._api_key = self._credentials[_IAMConstants.API_KEY]
 
         # Represents the epoch time at which the token is no longer valid
         # Starts at -1 such that the first invocation of a REST request
@@ -188,10 +188,10 @@ class _IAMStreamsRestClient(_StreamsRestClient):
         self._auth_expiry_time = -1
 
         # Determine if service is in stage1
-        if 'stage1' in  self._credentials[IAMConstants.V2_REST_URL]:
-            self._token_url = IAMConstants.TOKEN_URL_STAGE1
+        if 'stage1' in  self._credentials[_IAMConstants.V2_REST_URL]:
+            self._token_url = _IAMConstants.TOKEN_URL_STAGE1
         else:
-            self._token_url = IAMConstants.TOKEN_URL
+            self._token_url = _IAMConstants.TOKEN_URL
 
         self.session = requests.Session()
 
@@ -208,15 +208,15 @@ class _IAMStreamsRestClient(_StreamsRestClient):
         self.handle_http_errors(res)
         res = res.json()
 
-        self._auth_exporiry_time = int(res[IAMConstants.EXPIRATION]) - IAMConstants.EXPIRY_PAD_MS
-        self._bearer_token = self._create_bearer_auth(res[IAMConstants.ACCESS_TOKEN])
+        self._auth_exporiry_time = int(res[_IAMConstants.EXPIRATION]) - _IAMConstants.EXPIRY_PAD_MS
+        self._bearer_token = self._create_bearer_auth(res[_IAMConstants.ACCESS_TOKEN])
 
     def _create_bearer_auth(self, token):
-        return IAMConstants.AUTH_BEARER_PREFIX + token
+        return _IAMConstants.AUTH_BEARER_PREFIX + token
 
     def _get_token_params(self, api_key):
-        return parse.urlencode({IAMConstants.GRANT_PARAM : IAMConstants.GRANT_TYPE,
-                                       IAMConstants.API_KEY : api_key})
+        return parse.urlencode({_IAMConstants.GRANT_PARAM : _IAMConstants.GRANT_TYPE,
+                                       _IAMConstants.API_KEY : api_key})
 
     def make_request(self, url):
         return self.make_raw_request(url).json()
@@ -1311,7 +1311,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         """
         self.rest_client = rest_client
         self._credentials = credentials
-        self._v2_rest_url = self._credentials[IAMConstants.V2_REST_URL]
+        self._v2_rest_url = self._credentials[_IAMConstants.V2_REST_URL]
 
     def cancel_job(self, job_id=None, job_name=None):
         if job_id is None and job_name is None:
@@ -1429,7 +1429,7 @@ class _StreamingAnalyticsServiceV1Delegator(object):
         self.rest_client.handle_http_errors(res)
         return res.json()
 
-class IAMConstants(object):
+class _IAMConstants(object):
     V2_REST_URL = 'v2_rest_url'
     """The credentials key for the REST url of the Streaming Analytics service
     """

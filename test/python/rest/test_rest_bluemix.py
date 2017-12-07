@@ -4,7 +4,7 @@ from common_tests import CommonTests, logger
 from streamsx.topology.tester import Tester
 from streamsx.topology.context import ConfigParams
 from streamsx.rest import StreamingAnalyticsConnection
-from streamsx.rest_primitives import IAMConstants
+from streamsx.rest_primitives import _IAMConstants
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestRestFeaturesBluemix(CommonTests):
@@ -18,7 +18,7 @@ class TestRestFeaturesBluemix(CommonTests):
         self.test_config[ConfigParams.STREAMS_CONNECTION]=self.sc
 
         self.is_v2 = False
-        if IAMConstants.V2_REST_URL in self.sc.credentials:
+        if _IAMConstants.V2_REST_URL in self.sc.credentials:
             self.is_v2 = True
 
     def test_service_stop_start(self):

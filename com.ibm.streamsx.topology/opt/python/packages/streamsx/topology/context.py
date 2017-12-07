@@ -311,8 +311,8 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
         vcap = rest._get_vcap_services(self._vcap_services)
         credentials = rest._get_credentials(vcap, self._service_name)
         
-        if rest_primitives.IAMConstants.V2_REST_URL in credentials:
-            instance_id = credentials[rest_primitives.IAMConstants.V2_REST_URL].split('streaming_analytics/', 1)[1]
+        if rest_primitives._IAMConstants.V2_REST_URL in credentials:
+            instance_id = credentials[rest_primitives._IAMConstants.V2_REST_URL].split('streaming_analytics/', 1)[1]
         else:
             instance_id = credentials['jobs_path'].split('/service_instances/', 1)[1].split('/', 1)[0]
         submission_result['instanceId'] = instance_id

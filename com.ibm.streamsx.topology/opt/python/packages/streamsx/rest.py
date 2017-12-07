@@ -47,7 +47,7 @@ import streamsx.topology.context
 
 from streamsx import st
 from .rest_primitives import (Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService,
-    _exact_resource, _IAMStreamsRestClient, IAMConstants)
+    _exact_resource, _IAMStreamsRestClient, _IAMConstants)
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -209,7 +209,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
         self.service_name = service_name or os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME')
         self.credentials = _get_credentials(_get_vcap_services(vcap_services), self.service_name)
         self._resource_url = None
-        if IAMConstants.V2_REST_URL in self.credentials and not ('username' in self.credentials and 'password' in self.credentials):
+        if _IAMConstants.V2_REST_URL in self.credentials and not ('username' in self.credentials and 'password' in self.credentials):
             self._iam = True
 
         if self._iam:
@@ -354,7 +354,7 @@ def _get_iam_rest_api_url_from_creds(rest_client, credentials):
     Returns:
         str: The remote Streams REST API URL.
     """
-    res = rest_client.make_request(credentials[IAMConstants.V2_REST_URL])
+    res = rest_client.make_request(credentials[_IAMConstants.V2_REST_URL])
     base = res['streams_self']
     end = base.find('/instances')
     return base[:end] + '/resources'
