@@ -1359,9 +1359,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         self.rest_client.handle_http_errors(res)
 
     def get_instance_status(self):
-        res = self.rest_client.make_request(self._v2_rest_url)
-        self.rest_client.handle_http_errors(res)
-        return res
+        return self.rest_client.make_request(self._v2_rest_url)
 
 
 class _StreamingAnalyticsServiceV1Delegator(object):
