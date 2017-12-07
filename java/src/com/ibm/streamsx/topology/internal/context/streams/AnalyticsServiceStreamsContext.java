@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.ActiveVersion;
+import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamingAnalyticsService;
@@ -68,6 +70,7 @@ public class AnalyticsServiceStreamsContext extends
      *  - OS is not Linux.
      *  - OS is not centos or redhat
      *  - OS is less than version 6.
+     *  - OS service base does not match local os version
      */
     private boolean useRemoteBuild(AppEntity entity) {
         
@@ -136,6 +139,16 @@ public class AnalyticsServiceStreamsContext extends
             if (version < 6)
                 return true;
             
+            // Need to interrogate the service to figure out
+            // the os version of the service.
+            StreamingAnalyticsService sas = sas(entity);
+            Instance instance = sas.getInstance();
+            ActiveVersion ver = instance.getActiveVersion();
+            
+            int serviceBase = Integer.valueOf(ver.getMinimumOSBaseVersion());
+            if (version != serviceBase)
+                return true;          
+            
         } catch (SecurityException | IOException | NumberFormatException e) {
             // Can't determine information, force remote.
             return true;
@@ -148,7 +161,7 @@ public class AnalyticsServiceStreamsContext extends
     @Override
     Future<BigInteger> invoke(AppEntity entity, File bundle) throws Exception {
         try {           
-            BigInteger jobId = submitJobToService(bundle, entity.submission);
+            BigInteger jobId = submitJobToService(bundle, entity);
          
             return new CompletedFuture<BigInteger>(jobId);
         } finally {
@@ -172,14 +185,30 @@ public class AnalyticsServiceStreamsContext extends
             throw new IllegalArgumentException(e);
         }
     }
+    
+    /**
+     * Get the connection to the service and check it is running.
+     */
+    private StreamingAnalyticsService sas(AppEntity entity) throws IOException {
+        
+        StreamingAnalyticsService sas = (StreamingAnalyticsService)
+                entity.getSavedObject(StreamingAnalyticsService.class);
+        
+        if (sas == null) {
+            JsonObject deploy = deploy(entity.submission);
+            sas = entity.saveObject(StreamingAnalyticsService.class, streamingAnalyticServiceFromDeploy(deploy));
+            RemoteContexts.checkServiceRunning(sas);
+        }
+        
+        return sas;
+    }
 
-    private BigInteger submitJobToService(File bundle, JsonObject submission) throws IOException {
+    private BigInteger submitJobToService(File bundle, AppEntity entity) throws IOException {
+        final JsonObject submission = entity.submission;
         JsonObject deploy =  deploy(submission);
         JsonObject jco = DeployKeys.copyJobConfigOverlays(deploy);
 
-        final StreamingAnalyticsService sas = streamingAnalyticServiceFromDeploy(deploy); 
-        
-        RemoteContexts.checkServiceRunning(sas);
+        final StreamingAnalyticsService sas = sas(entity); 
 
         Result<Job, JsonObject> submitResult = sas.submitJob(bundle, jco);
         final JsonObject submissionResult = GsonUtilities.objectCreate(submission,
