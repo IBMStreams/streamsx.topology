@@ -174,12 +174,11 @@ class _IAMStreamsRestClient(_StreamsRestClient):
     """Handles the session connection with the Streams REST API and Streaming Analytics service
     using IAM authentication.
     """
-    def __init__(self, credentials, verify = None):
+    def __init__(self, credentials):
         """
         Args:
             credentials: The credentials of the Streaming Analytics service.
         """
-        self.verify=verify
         self._credentials = credentials
         self._api_key = self._credentials[IAMConstants.API_KEY]
 
@@ -205,8 +204,7 @@ class _IAMStreamsRestClient(_StreamsRestClient):
     def _refresh_authorization(self):
         post_url = self._token_url + '?' + self._get_token_params(self._api_key)
         res = requests.post(post_url, headers = {'Accept' : 'application/json',
-                                                 'Content-Type' : 'application/x-www-form-urlencoded'},
-                            verify=self.verify)
+                                                 'Content-Type' : 'application/x-www-form-urlencoded'})
         self.handle_http_errors(res)
         res = res.json()
 
@@ -229,7 +227,7 @@ class _IAMStreamsRestClient(_StreamsRestClient):
         logger.debug('Beginning a REST request to: ' + url)
         req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
         prepared = req.prepare()
-        res = self.session.send(prepared, verify=self.verify)
+        res = self.session.send(prepared)
         self.handle_http_errors(res)
         return res
 
@@ -237,7 +235,7 @@ class _IAMStreamsRestClient(_StreamsRestClient):
         logger.debug('Beginning a REST request to: ' + url)
         req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
         prepared = req.prepare()
-        res = self.session.send(prepared, stream=True, verify=self.verify)
+        res = self.session.send(prepared, stream=True)
         self.handle_http_errors(res)
         return res
 
