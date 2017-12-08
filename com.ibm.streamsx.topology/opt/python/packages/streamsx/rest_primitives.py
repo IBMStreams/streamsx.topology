@@ -138,7 +138,7 @@ class _StreamsRestClient(object):
 
         self.session = requests.Session()
         self.session.auth = (username, password)
-        self._auth_token = requests.auth._basic_auth_str(self.username, self.password)
+        self._auth_token = requests.auth._basic_auth_str(self._username, self._password)
 
     def _get_authorization(self):
         return self._auth_token
