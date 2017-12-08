@@ -211,13 +211,13 @@ class StreamingAnalyticsConnection(StreamsConnection):
         self._resource_url = None
 
         self._iam = False
-        if _IAMConstants.V2_REST_URL in self.credentials and not ('username' in self.credentials and 'password' in self.credentials):
+        if _IAMConstants.V2_REST_URL in self.credentials and not ('userid' in self.credentials and 'password' in self.credentials):
             self._iam = True
 
         if self._iam:
             self.rest_client = _IAMStreamsRestClient(self.credentials)
         else:
-            self.rest_client = _StreamsRestClient(self.credentials['username'], self.credentials['password'])
+            self.rest_client = _StreamsRestClient(self.credentials['userid'], self.credentials['password'])
         self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = True
