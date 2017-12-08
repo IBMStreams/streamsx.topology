@@ -20,8 +20,8 @@ class TestRestFeaturesBluemix(CommonTests):
         self.is_v2 = False
         if _IAMConstants.V2_REST_URL in self.sc.credentials:
             self.is_v2 = True
-
-    def test_service_stop_start(self):
+        
+    def _test_service_stop_start(self):
         self.logger.debug("Beginning test: test_service_stop_start")
         sas = self.sc.get_streaming_analytics()
 
