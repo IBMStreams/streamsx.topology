@@ -199,7 +199,8 @@ class _IAMStreamsRestClient(_StreamsRestClient):
         self.session = requests.Session()
 
     def _get_authorization(self):
-        cur_time = int(time.time())
+        # Convert cur time to milliseconds
+        cur_time = int(time.time() * 1000)
         if cur_time >= self._auth_expiry_time:
             self._refresh_authorization()
         return self._bearer_token
