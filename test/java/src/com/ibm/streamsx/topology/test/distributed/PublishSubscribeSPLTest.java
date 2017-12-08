@@ -72,15 +72,17 @@ public class PublishSubscribeSPLTest extends TestTopology {
         
         final String topic = "testSPLPublishNoFilterSFilteredSubscribe/" + System.currentTimeMillis();
         
-        source.publish(topic, false);
+        Supplier<String> pubParam = t.createSubmissionParameter("PPSPL", String.class);
+        source.publish(pubParam);
         
-        Supplier<String> topicParam = t.createSubmissionParameter("SPSPL", String.class);
-        SPLStream sub = SPLStreams.subscribe(t, topicParam, source.getSchema());
+        Supplier<String> subParam = t.createSubmissionParameter("SPSPL", String.class);
+        SPLStream sub = SPLStreams.subscribe(t, subParam, source.getSchema());
         
         TStream<String> subscribe = sub.transform(new GetTupleId());
         
         JobConfig jco = new JobConfig();
-        jco.addSubmissionParameter("SPSPL", topic);        
+        jco.addSubmissionParameter("SPSPL", topic); 
+        jco.addSubmissionParameter("PPSPL", topic); 
         jco.addToConfig(getConfig());
 
         completeAndValidate(subscribe, 20, "SPL:0", "SPL:1", "SPL:2", "SPL:3");
@@ -120,15 +122,17 @@ public class PublishSubscribeSPLTest extends TestTopology {
     @Test
     public void testSPLPublishAllowFilterWithFilteredSubscribe() throws Exception {
         _testSPLPublishFilteredSubscribe(
-              "testSPLPublishAllowFilterWithFilteredSubscribe", true);
+              "testSPLPublishAllowFilterWithFilteredSubscribe", true, true);
   }
     @Test
     public void testSPLPublishNoFilterWithFilteredSubscribe() throws Exception {
         _testSPLPublishFilteredSubscribe(
-              "testSPLPublishNoFilterWithFilteredSubscribe", false);
+              "testSPLPublishNoFilterWithFilteredSubscribe", false, false);
   }
-  private void _testSPLPublishFilteredSubscribe(String topic, boolean allowFilters) throws Exception {
+  private void _testSPLPublishFilteredSubscribe(String topic, boolean allowFilters, boolean useParams) throws Exception {
         final Topology t = new Topology();
+        
+        topic = topic + "/" + System.currentTimeMillis();
         
         SPL.addToolkit(t, new File(getTestRoot(), "spl/testtk"));
         
@@ -136,7 +140,12 @@ public class PublishSubscribeSPLTest extends TestTopology {
                 
         source = addStartupDelay(source);
         
-        source.publish(topic, allowFilters);
+        Supplier<String> pubParam = useParams ?
+                t.createSubmissionParameter("PFSPL", String.class) : null;
+        if (useParams)
+            source.publish(pubParam, allowFilters);
+        else
+            source.publish(topic, allowFilters);
         
         // Filter on the vi attribute, passing the value 321.
         Map<String,Object> params = new HashMap<>();
@@ -146,6 +155,12 @@ public class PublishSubscribeSPLTest extends TestTopology {
         SPLStream sub = SPL.invokeSource(t, "testspl::Int64SubscribeFilter", params, source.getSchema());
         
         TStream<String> subscribe = sub.transform(new GetTupleId());
+        
+        if (useParams) {
+            JobConfig jco = new JobConfig();
+            jco.addSubmissionParameter("PFSPL", topic); 
+            jco.addToConfig(getConfig());
+        }
 
         completeAndValidate(subscribe, 20, "SPL:1");
     } 

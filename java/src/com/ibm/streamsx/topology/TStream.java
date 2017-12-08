@@ -725,6 +725,29 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     /**
      * Publish tuples from this stream for consumption by other IBM Streams applications.
      * 
+     * Differs from {@link #publish(String)} in that it
+     * supports {@code topic} as a submission time parameter, for example
+     * using the topic defined by the submission parameter {@code eventTopic}:
+     * 
+     * <pre>
+     * <code>
+     * TStream<String> events = ...
+     * Supplier<String> topicParam = topology.createSubmissionParameter("eventTopic", String.class);
+     * topology.publish(topicParam);
+     * </code>
+     * </pre>
+     * 
+     * @param topic Topic name to publish tuples to.
+     * 
+     * @see #publish(String)
+     * 
+     * @since 1.8
+     */
+    void publish(Supplier<String> topic);
+    
+    /**
+     * Publish tuples from this stream for consumption by other IBM Streams applications.
+     * 
      * Applications consume published streams using:
      * <UL>
      * <LI>
@@ -829,6 +852,30 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @see com.ibm.streamsx.topology.spl.SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
      */
     void publish(String topic, boolean allowFilter);
+    
+    /**
+     * Publish tuples from this stream for consumption by other IBM Streams applications.
+     * 
+     * Differs from {@link #publish(String, boolean)} in that it
+     * supports {@code topic} as a submission time parameter, for example
+     * using the topic defined by the submission parameter {@code eventTopic}:
+     * 
+     * <pre>
+     * <code>
+     * TStream<String> events = ...
+     * Supplier<String> topicParam = topology.createSubmissionParameter("eventTopic", String.class);
+     * topology.publish(topicParam, false);
+     * </code>
+     * </pre>
+     * 
+     * @param topic Topic name to publish tuples to.
+     * @param allowFilter Allow SPL filters specified by SPL application to be executed.
+     * 
+     * @see #publish(String, boolean)
+     * 
+     * @since 1.8
+     */
+    void publish(Supplier<String> topic, boolean allowFilter);
 
     /**
      * Parallelizes the stream into a a fixed

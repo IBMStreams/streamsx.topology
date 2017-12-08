@@ -87,7 +87,7 @@ public class SPLStreamBridge {
         return new StreamImpl<T>(topology, subscribeOp.addOutput(schema), tupleTypeClass);
     }
     
-    static void publishJSON(TStream<?> stream, String topic) {
+    static void publishJSON(TStream<?> stream, Object topic) {
         try {
             Class<?>  jsonStreams = Class.forName("com.ibm.streamsx.topology.json.JSONStreams");
             Class<?>  splStream = Class.forName("com.ibm.streamsx.topology.spl.SPLStream");

@@ -68,13 +68,15 @@ public class PublishSubscribeTest extends TestTopology {
         
         String topic = "testPublishStringParams/" + System.currentTimeMillis();
        
-        source.publish(topic);
+        Supplier<String> pubParam = source.topology().createSubmissionParameter("PP", String.class);
+        source.publish(pubParam);
         
         Supplier<String> subParam = source.topology().createSubmissionParameter("SP", String.class);
         TStream<String> subscribe = source.topology().subscribe(subParam, String.class);
         
         JobConfig jco = new JobConfig();
-        jco.addSubmissionParameter("SP", topic);        
+        jco.addSubmissionParameter("SP", topic);
+        jco.addSubmissionParameter("PP", topic);    
         jco.addToConfig(getConfig());
         
         checkSubscribedAsStrings(subscribe);
