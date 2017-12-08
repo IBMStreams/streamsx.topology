@@ -22,7 +22,13 @@ public class PublishSubscribeTopicNames extends TestTopology {
     public void testNullTopicName() throws Exception {
         final Topology t = new Topology();
        
-        t.strings().publish(null, true);
+        t.strings().publish((String) null, true);
+    }
+    @Test(expected=NullPointerException.class)
+    public void testNullTopicNameParam() throws Exception {
+        final Topology t = new Topology();
+       
+        t.strings().publish((Supplier<String>) null);
     }
     
     @Test(expected=IllegalArgumentException.class)
