@@ -155,11 +155,12 @@ class TestStreamingAnalytics(unittest.TestCase):
         cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
         rc = self.submit_to_service(topo, cfg)
 
+        self.assertIn("jobId", rc, "\"jobId\" field not in returned json dict")
+        self.assertIn("application", rc, "\"application\" field not in returned json dict")
+        self.assertIn("name", rc, "\"name\" field not in returned json dict")
+
         if not self.is_v2:
             self.assertIn("artifact", rc, "\"artifact\" field not in returned json dict")
-            self.assertIn("jobId", rc, "\"jobId\" field not in returned json dict")
-            self.assertIn("application", rc, "\"application\" field not in returned json dict")
-            self.assertIn("name", rc, "\"name\" field not in returned json dict")
             self.assertIn("state", rc, "\"state\" field not in returned json dict")
             self.assertIn("plan", rc, "\"plan\" field not in returned json dict")
             self.assertIn("enabled", rc, "\"enabled\" field not in returned json dict")
@@ -167,9 +168,6 @@ class TestStreamingAnalytics(unittest.TestCase):
             self.assertIn("instanceId", rc, '"instanceId" field not in returned json dict')
         
         else:
-            self.assertIn("streams_self", rc, "\"streams_self\" field not in returned json dict")
-            self.assertIn("application", rc, "\"application\" field not in returned json dict")
-            self.assertIn("name", rc, "\"name\" field not in returned json dict")
+            self.assertIn("streams_self", rc, "\"streams_self\" field not in returned json dict")            
             self.assertIn("health", rc, "\"health\" field not in returned json dict")
             self.assertIn("self", rc, "\"self\" field not in returned json dict")
-            self.assertIn("jobId", rc, "\"id\" field not in returned json dict")
