@@ -213,7 +213,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
             self._iam = True
 
         if self._iam:
-            self.rest_client = _IAMStreamsRestClient(self.credentials, verify=False)
+            self.rest_client = _IAMStreamsRestClient(self.credentials)
         else:
             self.rest_client = _StreamsRestClient(self.credentials['username'], self.credentials['password'])
         self.rest_client._sc = self

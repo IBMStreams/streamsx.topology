@@ -510,7 +510,7 @@ class Tester(object):
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to distributed instance.")
             return False
-        return self._distributed_wait_for_result()
+        return self._distributed_wait_for_result(stc.ContextTypes.DISTRIBUTED)
 
 
     def _streaming_analytics_test(self, ctxtype, config):

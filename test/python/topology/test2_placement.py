@@ -38,8 +38,8 @@ class TestPlacement(unittest.TestCase):
 
     def test_ResourceTags(self):
         # Host tags might not be present when using a v2 service
-        if self.is_v2:
-            return unittest.skip('Host tags might not be present when using a v2 service')
+        #if self.is_v2:
+        #    return unittest.skip('Host tags might not be present when using a v2 service')
 
         topo = Topology()
         h1 = topo.source(host_name)
