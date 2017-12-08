@@ -160,8 +160,7 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     }
     
     @Override
-    public void publish(String topic, boolean allowFilter) {
-        checkTopicName(topic);
+    protected void _publish(Object topic, boolean allowFilter) {
         
         Map<String,Object> publishParms = new HashMap<>();
         publishParms.put("topic", topic);

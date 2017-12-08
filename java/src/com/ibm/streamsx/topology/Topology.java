@@ -461,6 +461,32 @@ public class Topology implements TopologyElement {
     }
     
     /**
+     * Declare a stream that is a subscription to {@code topic}.
+     * 
+     * Differs from {@link #subscribe(String, Class)} in that it
+     * supports {@code topic} as a submission time parameter, for example
+     * using the topic defined by the submission parameter {@code eventTopic}:
+     * 
+     * <pre>
+     * <code>
+     * Supplier<String> topicParam = topology.createSubmissionParameter("eventTopic", String.class);
+     * TStream<String> events = topology.subscribe(topicParam, String.class);
+     * </code>
+     * </pre>
+
+     * @param topic Topic to subscribe to.
+     * @param tupleTypeClass Type to subscribe to.
+     * @return Stream the will contain tuples from matching publishers.
+     * 
+     * @see #subscribe(String, Class)
+     * 
+     * @since 1.8
+     */
+    public <T> TStream<T> subscribe(Supplier<String> topic, Class<T> tupleTypeClass) {        
+        return SPLStreamBridge.subscribe(this, topic, tupleTypeClass);
+    }
+    
+    /**
      * Topic filter:
      *  - must not be zero length
      *  - must not contain nul

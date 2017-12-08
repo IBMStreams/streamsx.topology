@@ -367,15 +367,30 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     	publish(topic, false);
     }
     
+    @Override
+    public final void publish(Supplier<String> topic) {
+        _publish(topic, false);       
+    }
+    
+    @Override
+    public final void publish(Supplier<String> topic, boolean allowFilter) {
+        _publish(topic, allowFilter);        
+    }
+    
     private static void filtersNotAllowed(boolean allowFilter) {
     	if (allowFilter)
     		throw new IllegalArgumentException("TStream tuple type cannot be published allowing filters.");
     }
     
     @Override
-    public void publish(String topic, boolean allowFilter) {
+    public final void publish(String topic, boolean allowFilter) {
         
         checkTopicName(topic);
+        
+        _publish(topic, allowFilter);
+    }
+    
+    protected void _publish(Object topic, boolean allowFilter) {
     	
     	Type tupleType = getTupleType();
         
