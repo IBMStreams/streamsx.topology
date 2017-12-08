@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.spl;
 
 import static com.ibm.streamsx.topology.spl.SPLStreamImpl.newSPLStream;
+import static java.util.Objects.requireNonNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +17,7 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
+import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
@@ -25,7 +27,6 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
-import com.ibm.streamsx.topology.logic.Value;
 
 /**
  * Utilities for SPL attribute schema streams.
@@ -45,21 +46,44 @@ public class SPLStreams {
      */
     public static SPLStream subscribe(TopologyElement te, String topic,
             StreamSchema schema) {
-    	return subscribe(te, Value.of(topic), schema);
+    	return _subscribe(te, topic, schema);
     }
 
+    /**
+     * Subscribe to an {@link SPLStream} published by topic.
+     * 
+     * Supports {@code topic} as a submission time parameter, for example
+     * using the topic defined by the submission parameter {@code eventTopic}.:
+     * 
+     * <pre>
+     * <code>
+     * Supplier<String> topicParam = topology.createSubmissionParameter("eventTopic", String.class);
+     * SPLStream events = SPLStreams.subscribe(topology, topicParam, schema);
+     * </code>
+     * </pre>
+     * 
+     * @param te
+     *            Topology the stream will be contained in.
+     * @param topic
+     *            Topic to subscribe to.
+     * @param schema
+     *            SPL Schema of the published stream.
+     * @return Stream containing tuples for the published topic.
+     * 
+     * @see Topology#createSubmissionParameter(String, Class)
+     * @see Topology#createSubmissionParameter(String, Object)
+     * 
+     * @since 1.8
+     */
     public static SPLStream subscribe(TopologyElement te, Supplier<String> topic, StreamSchema schema) {
     	return _subscribe(te, topic, schema);
     }
 
-    private static SPLStream _subscribe(TopologyElement te, Supplier<String> topic, StreamSchema schema) {
+    private static SPLStream _subscribe(TopologyElement te, Object topic, StreamSchema schema) {
         Map<String, Object> params = new HashMap<>();
-        
-        if(topic == null)
-        	throw new IllegalArgumentException("topic");
                 
-        params.put("topic", topic);
-        params.put("streamType", schema);
+        params.put("topic", requireNonNull(topic));
+        params.put("streamType", requireNonNull(schema));
 
         SPLStream stream = SPL.invokeSource(te,
                 "com.ibm.streamsx.topology.topic::Subscribe",
