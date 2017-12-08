@@ -138,9 +138,10 @@ class _StreamsRestClient(object):
 
         self.session = requests.Session()
         self.session.auth = (username, password)
+        self._auth_token = requests.auth._basic_auth_str(self.username, self.password)
 
     def _get_authorization(self):
-        return requests.auth._basic_auth_str(self.username, self.password)
+        return self._auth_token
 
     def handle_http_errors(self, res):
         # HTTP error responses are 4xx, server errors are 5xx
