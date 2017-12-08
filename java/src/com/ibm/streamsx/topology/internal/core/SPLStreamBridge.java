@@ -27,7 +27,7 @@ import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
  */
 public class SPLStreamBridge {
         
-    public static <T> TStream<T> subscribe(Topology topology, String topic, Class<T> tupleTypeClass) {
+    public static <T> TStream<T> subscribe(Topology topology, Object topic, Class<T> tupleTypeClass) {
         if (JSON4JBridge.isJson4JClass(tupleTypeClass))
             return subscribeJson4j(topology, topic, tupleTypeClass);
         
@@ -37,7 +37,7 @@ public class SPLStreamBridge {
         return subscribeJava(topology, topic, tupleTypeClass);
     }
     
-    private static <T> TStream<T> subscribeJson4j(Topology topology, String topic, Class<T> tupleTypeClass) {
+    private static <T> TStream<T> subscribeJson4j(Topology topology, Object topic, Class<T> tupleTypeClass) {
         
         BOutputPort rawSubscribe = rawSubscribe(topology, topic, JSON_SCHEMA);
         
@@ -56,14 +56,14 @@ public class SPLStreamBridge {
         
         return new StreamImpl<T>(topology, asJson.addOutput(ObjectSchemas.JAVA_OBJECT_SCHEMA), tupleTypeClass);
     }
-    private static <T> TStream<T> subscribeDirect(Topology topology, String topic, Class<T> tupleTypeClass) {
+    private static <T> TStream<T> subscribeDirect(Topology topology, Object topic, Class<T> tupleTypeClass) {
         
         BOutputPort rawSubscribe = rawSubscribe(topology, topic, ObjectSchemas.getMappingSchema(tupleTypeClass));
         
         return new StreamImpl<T>(topology, rawSubscribe, tupleTypeClass);
     }
     
-    private static BOutputPort rawSubscribe(Topology topology, String topic, String schema) {
+    private static BOutputPort rawSubscribe(Topology topology, Object topic, String schema) {
         Map<String, Object> params = new HashMap<>();
         params.put("topic", topic);
         params.put("streamType", JParamTypes.create(TYPE_SPLTYPE, schema));
@@ -74,7 +74,7 @@ public class SPLStreamBridge {
         return subscribeOp.addOutput(schema);
     }
     
-    private static <T> TStream<T> subscribeJava(Topology topology, String topic, Class<T> tupleTypeClass) {
+    private static <T> TStream<T> subscribeJava(Topology topology, Object topic, Class<T> tupleTypeClass) {
         final String schema = ObjectSchemas.getMappingSchema(tupleTypeClass);
         Map<String, Object> params = new HashMap<>();
         params.put("topic", topic);
