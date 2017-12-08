@@ -32,7 +32,7 @@ class TestStreamingAnalytics(unittest.TestCase):
             os.close(fd)
             cls.vcap_services = tp
             cls.delete_file = tp
-          
+
         cls.service_name = os.environ.pop('STREAMING_ANALYTICS_SERVICE_NAME', None)
     @classmethod
     def tearDownClass(cls):
@@ -54,6 +54,12 @@ class TestStreamingAnalytics(unittest.TestCase):
         with open(fn) as vcap_json_data:
             vs = json.load(vcap_json_data)
         sn = cls.service_name
+
+        cls.is_v2 = False
+        for creds in vs['streaming-analytics']:
+            if creds['name'] == sn:
+                if 'v2_rest_url' in creds['credentials']:
+                    cls.is_v2 = True            
 
         return {'vcap': vs, 'service_name': sn, 'vcap_file': fn}
 

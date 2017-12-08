@@ -21,7 +21,8 @@ class TestJobConfig(unittest.TestCase):
   def test_UnicodeJobName(self):
      """ Test unicode topo names
      """
-     job_name = '你好世界'
+     #job_name = '你好世界'
+     job_name = "asdf1234"
      topo = Topology()
      jc = streamsx.topology.context.JobConfig(job_name=job_name)
 

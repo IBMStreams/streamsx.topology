@@ -225,13 +225,7 @@ class Tester(object):
         else:
             with open(vcap_services) as fh:
                 vcap_services = json.load(fh)
-
-        test.is_v2 = False
-        for creds in vcap_services['streaming-analytics']:
-            if creds['name'] == service_name:
-                if 'v2_rest_url' in creds['credentials']:
-                    test.is_v2 = True
-            
+                test.test_config['topology.service.vcap'] = vcap_services
 
     def add_condition(self, stream, condition):
         """Add a condition to a stream.

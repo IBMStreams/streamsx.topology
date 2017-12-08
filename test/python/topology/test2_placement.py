@@ -35,6 +35,12 @@ class RemoveDup(object):
 class TestPlacement(unittest.TestCase):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
+        
+        self.is_v2 = False
+        for creds in self.test_config['topology.service.vcap']['streaming-analytics']:
+            if creds['name'] == self.test_config['topology.service.name']:
+                if 'v2_rest_url' in creds['credentials']:
+                    self.is_v2 = True            
 
     def test_ResourceTags(self):
         # Host tags might not be present when using a v2 service
