@@ -19,10 +19,10 @@ class TestJobConfig(unittest.TestCase):
       Tester.setup_streaming_analytics(self, force_remote_build=True)
       
       self.is_v2 = False
-        for creds in self.test_config['topology.service.vcap']['streaming-analytics']:
-            if creds['name'] == self.test_config['topology.service.name']:
-                if 'v2_rest_url' in creds['credentials']:
-                    self.is_v2 = True            
+      for creds in self.test_config['topology.service.vcap']['streaming-analytics']:
+        if creds['name'] == self.test_config['topology.service.name']:
+          if 'v2_rest_url' in creds['credentials']:
+            self.is_v2 = True            
 
   def test_UnicodeJobName(self):
      """ Test unicode topo names
