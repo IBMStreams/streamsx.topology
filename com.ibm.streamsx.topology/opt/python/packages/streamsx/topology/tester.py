@@ -218,15 +218,6 @@ class Tester(object):
         if force_remote_build:
             test.test_config['topology.forceRemoteBuild'] = True
 
-        vcap_services = os.environ.get('VCAP_SERVICES')
-        if not vcap_services.startswith('/'):
-            #vcap services is json
-            vcap_services = json.loads(vcap_services)
-        else:
-            with open(vcap_services) as fh:
-                vcap_services = json.load(fh)
-                test.test_config['topology.service.vcap'] = vcap_services
-
     def add_condition(self, stream, condition):
         """Add a condition to a stream.
 

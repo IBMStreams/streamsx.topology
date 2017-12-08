@@ -14,6 +14,8 @@ import socket
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx import rest
+from streamsx.rest_primitives import _IAMConstants
 
 import test_vers
 
@@ -36,11 +38,8 @@ class TestPlacement(unittest.TestCase):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
         
-        self.is_v2 = False
-        for creds in self.test_config['topology.service.vcap']['streaming-analytics']:
-            if creds['name'] == self.test_config['topology.service.name']:
-                if 'v2_rest_url' in creds['credentials']:
-                    self.is_v2 = True            
+        sc = rest.StreamingAnalyticsConnection()
+        self.is_v2 = _IAMConstants.V2_REST_URL in sc.credentials
 
     def test_ResourceTags(self):
         # Host tags might not be present when using a v2 service
