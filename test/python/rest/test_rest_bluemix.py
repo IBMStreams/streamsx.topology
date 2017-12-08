@@ -1,4 +1,5 @@
-import unittestimport test_vers
+import unittest
+import test_vers
 from common_tests import CommonTests, logger
 from streamsx.topology.tester import Tester
 from streamsx.topology.context import ConfigParams
