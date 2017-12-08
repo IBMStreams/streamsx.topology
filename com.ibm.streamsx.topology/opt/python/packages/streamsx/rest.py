@@ -42,6 +42,7 @@ import os
 import json
 import logging
 from pprint import pformat
+import streamsx.topology.context
 
 from streamsx import st
 from .rest_primitives import (Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService,
@@ -209,6 +210,25 @@ class StreamingAnalyticsConnection(StreamsConnection):
         super(StreamingAnalyticsConnection, self).__init__(self.credentials['userid'], self.credentials['password'])
         self._analytics_service = True
 
+    @staticmethod
+    def of_definition(service_def):
+       """Create a connection to a Streaming Analytics service.
+
+       The single service is defined by `service_def` which can be one of
+
+               * The `service credentials` copied from the `Service credentials` page of the service console (not the Streams console). Credentials are provided in JSON format. They contain such as the API key and secret, as well as connection information for the service. 
+               * A JSON object (`dict`) of the form: ``{ "type": "streaming-analytics", "name": "service name", "credentials": {...} }`` with the `service credentials` as the value of the ``credentials`` key.
+
+       Args:
+           service_def(dict): Definition of the service to connect to.
+
+       Returns:
+           StreamingAnalyticsConnection: Connection to defined service.
+       """
+       vcap_services = streamsx.topology.context._vcap_from_service_definition(service_def)
+       service_name = streamsx.topology.context._name_from_service_definition(service_def)
+       return StreamingAnalyticsConnection(vcap_services, service_name)
+        
     @property
     def resource_url(self):
         """str: Root URL for IBM Streams REST API"""
