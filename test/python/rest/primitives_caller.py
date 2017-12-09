@@ -44,8 +44,7 @@ def _fetch_from_job(tc, job):
         _check_non_empty_list(tc, job.get_resource_allocations(), ResourceAllocation)
 
     # Presently, application logs can only be fetched from the Stream Analytics Service
-
-    else:
+    if tc.test_ctxtype == 'STREAMING_ANALYTICS_SERVICE':
         logs = job.retrieve_log_trace()
         tc.assertTrue(os.path.isfile(logs))
         fn = os.path.basename(logs)
