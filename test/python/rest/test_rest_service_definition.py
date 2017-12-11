@@ -8,12 +8,15 @@ class TestServiceDefinition(unittest.TestCase):
     rather than a vcap, service name pair.
     """
     def setUp(self):
-        self.vcap_file = os.environ.get('VCAP_SERVICES')
-        if self.vcap_file is None:
+        vcap_file = os.environ.get('VCAP_SERVICES')
+        if vcap_file is None:
             raise unittest.SkipTest("No VCAP SERVICES env var")
-
-        with open(self.vcap_file) as vcap_json_data:
-            self.vcap_services = json.load(vcap_json_data)
+        
+        if os.path.isfile(vcap_file):
+            with open(vcap_file) as vcap_json_data:
+                self.vcap_services = json.load(vcap_json_data)
+        else:
+            self.vcap_services = json.loads(vcap_file)
         self.service_name = os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME')
  
 
