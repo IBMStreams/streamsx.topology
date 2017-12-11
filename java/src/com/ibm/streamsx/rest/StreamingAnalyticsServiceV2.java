@@ -14,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.auth.AUTH;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -68,10 +67,17 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
     }
 
     @Override
-    protected String getStatusUrl(CloseableHttpClient httpclient) throws IOException {
-        if (null == statusUrl) {
-            setUrls(httpclient);
+    JsonObject getServiceStatus(CloseableHttpClient httpClient)
+            throws IOException, IllegalStateException {
+        JsonObject response = super.getServiceStatus(httpClient);
+        if (null == jobSubmitUrl || null == buildsUrl) {
+            setUrls(response);
         }
+        return response;
+    }
+    
+    @Override
+    protected String getStatusUrl(CloseableHttpClient httpclient) throws IOException {
         return statusUrl;
     }
 
@@ -79,7 +85,7 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
     protected String getJobSubmitUrl(CloseableHttpClient httpclient, File bundle)
             throws IOException {
         if (null == jobSubmitUrl) {
-            setUrls(httpclient);
+            getServiceStatus(httpclient);
         }
         return jobSubmitUrl;
     }
@@ -95,25 +101,9 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
     protected String getBuildsUrl(CloseableHttpClient httpclient)
             throws IOException {
         if (null == buildsUrl) {
-            setUrls(httpclient);
+            getServiceStatus(httpclient);
         }
         return buildsUrl;
-    }
-
-    @Override
-    protected void updateStatus(JsonObject response) {
-        if (null == buildsUrl || null == jobSubmitUrl) {
-            setUrls(response);
-        }
-    }
-
-    private void setUrls(CloseableHttpClient httpClient)
-            throws ClientProtocolException, IOException {
-        HttpGet getStatus = new HttpGet(statusUrl);
-        getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
-
-        JsonObject response = StreamsRestUtils.getGsonResponse(httpClient, getStatus);
-        setUrls(response);
     }
 
     private synchronized void setUrls(JsonObject statusResponse)
