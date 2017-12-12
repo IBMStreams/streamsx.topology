@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONSISTENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FILTER_KIND;
@@ -43,6 +44,7 @@ import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.builder.BUnionOutput;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig;
+import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig.Trigger;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
@@ -593,11 +595,34 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     @Override
     public TStream<T> setConsistent(ConsistentRegionConfig config) {
-        //BOperatorInvocation op = operator();
-        throw new UnsupportedOperationException("WIP");
-        //return this;
+
+        if (!(output() instanceof BOutputPort))
+            throw new IllegalStateException();
+
+        topology().addJobControlPlane();
+
+        // Create an object representing the consistent region
+        // converting times to seconds as doubles.
+        JsonObject crann = new JsonObject();
+        crann.addProperty("trigger", config.getTrigger().name());
+
+        if (Trigger.PERIODIC == config.getTrigger())
+            crann.addProperty("period", toSeconds(config.getTimeUnit(), config.getPeriod()));
+        crann.addProperty("drainTimeout", toSeconds(config.getTimeUnit(), config.getDrainTimeout()));
+        crann.addProperty("resetTimeout", toSeconds(config.getTimeUnit(), config.getResetTimeout()));
+        crann.addProperty("maxConsecutiveResetAttempts", config.getMaxConsecutiveResetAttempts());
+
+        BOutputPort out = (BOutputPort) output();
+
+        out.operator()._json().add(CONSISTENT, crann);
+
+        return this;
     }
     
+    private static double toSeconds(TimeUnit unit, long duration) {
+        return unit.toMillis(duration) / 1000.0;
+    }
+
     @Override
     public TStream<T> lowLatency() {
         BOutput toBeLowLatency = output();
