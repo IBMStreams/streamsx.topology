@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONSISTENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_COUNT;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_DELTA;
@@ -61,6 +62,7 @@ class OperatorGenerator {
         noteAnnotations(_op, sb);
         parallelAnnotation(_op, sb);
         viewAnnotation(_op, sb);
+        consistentAnnotation(_op, sb);
         AutonomousRegions.autonomousAnnotation(_op, sb);
         threadingAnnotation(graphConfig, _op, sb);
         boolean singlePortSingleName = outputPortClause(_op, sb);
@@ -239,6 +241,36 @@ class OperatorGenerator {
             sb.append("@threading(");
             sb.append("model=");
             sb.append(jstring(threading, "model"));
+            sb.append(")\n");
+        }
+    }
+    private static void asFloat64(StringBuilder sb, JsonObject obj, String key) {
+        SPLGenerator.numberLiteral(sb, obj.getAsJsonPrimitive(key), "FLOAT64");
+    }
+    
+    private void consistentAnnotation(JsonObject op, StringBuilder sb) {
+
+        JsonObject consistent = object(op, CONSISTENT);
+        if (consistent != null) {
+            sb.append("@consistent(");
+            if (consistent.has("period")) {
+                sb.append("trigger=periodic,period=");
+                asFloat64(sb, consistent, "period");
+                sb.append(",");
+            } else {
+                sb.append("trigger=operatorDriven,");
+            }
+            sb.append("drainTimeout=");
+            asFloat64(sb, consistent, "drainTimeout");
+            sb.append(",");
+            
+            sb.append("resetTimeout=");
+            asFloat64(sb, consistent, "resetTimeout");
+            sb.append(",");
+            
+            sb.append("maxConsecutiveResetAttempts=");
+            asFloat64(sb, consistent, "maxConsecutiveResetAttempts");
+            
             sb.append(")\n");
         }
     }
