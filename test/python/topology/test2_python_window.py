@@ -172,14 +172,15 @@ class TestPythonWindowing(unittest.TestCase):
 
     def test_ClassCountCountWindow(self):
         topo = Topology()
+        current_year = time.localtime().tm_year
         s = topo.source([
-                ['Wallace', 55],
-                ['Copernicus', 544],
-                ['Feynman', 99],
-                ['Dirac', 115],
-                ['Pauli', 117],
-                ['Frenkel', 49],
-                ['Terence Tao', 42]
+                ['Wallace', current_year - 1962],
+                ['Copernicus', current_year - 1473],
+                ['Feynman', current_year - 1918],
+                ['Dirac', current_year - 1902],
+                ['Pauli', current_year - 1900],
+                ['Frenkel', current_year - 1968],
+                ['Terence Tao', current_year - 1975]
         ])
         s = s.map(lambda x: Person(x[0], x[1]))
         s = s.last(3).trigger(1).aggregate(lambda x: int(sum([p.rough_birth_year() for p in x])/len(x)))
