@@ -4,6 +4,7 @@ from common_tests import CommonTests, logger
 from streamsx.topology.tester import Tester
 from streamsx.topology.context import ConfigParams
 from streamsx.rest import StreamingAnalyticsConnection
+from streamsx.rest_primitives import _IAMConstants
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestRestFeaturesBluemix(CommonTests):
@@ -15,3 +16,27 @@ class TestRestFeaturesBluemix(CommonTests):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
         self.sc = StreamingAnalyticsConnection()
         self.test_config[ConfigParams.STREAMS_CONNECTION]=self.sc
+
+        self.is_v2 = False
+        if _IAMConstants.V2_REST_URL in self.sc.credentials:
+            self.is_v2 = True
+
+    # The underscore in front of this test causes it to be skipped by default
+    # This is to prevent the starting and stopping of the instance from 
+    # interfering with other tests.
+    # The test can be run manually: 
+    # python -m unittest test_rest_bluemix.TestRestFeaturesBluemix._test_service_stop_start
+    def _test_service_stop_start(self):
+        self.logger.debug("Beginning test: test_service_stop_start")
+        sas = self.sc.get_streaming_analytics()
+
+        status = sas.get_instance_status()
+        self.assertEqual('running', status['status'])
+
+        sas.stop_instance()
+        status = sas.get_instance_status()
+        self.assertEqual('stopped', status['status'])
+        
+        sas.start_instance()
+        status = sas.get_instance_status()
+        self.assertEqual('running', status['status'])
