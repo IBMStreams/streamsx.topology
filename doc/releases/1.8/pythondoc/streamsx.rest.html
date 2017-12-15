@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.rest module &mdash; streamsx 1.8b2 documentation</title>
+  <title>streamsx.rest module &mdash; streamsx 1.8.2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.8b2 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.8.2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -312,6 +312,31 @@ the Streaming Analytics service.</p>
 </table>
 </dd></dl>
 
+<dl class="staticmethod">
+<dt id="streamsx.rest.StreamingAnalyticsConnection.of_definition">
+<em class="property">static </em><code class="descname">of_definition</code><span class="sig-paren">(</span><em>service_def</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection.of_definition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a connection to a Streaming Analytics service.</p>
+<p>The single service is defined by <cite>service_def</cite> which can be one of</p>
+<blockquote>
+<div><ul class="simple">
+<li>The <cite>service credentials</cite> copied from the <cite>Service credentials</cite> page of the service console (not the Streams console). Credentials are provided in JSON format. They contain such as the API key and secret, as well as connection information for the service.</li>
+<li>A JSON object (<cite>dict</cite>) of the form: <code class="docutils literal"><span class="pre">{</span> <span class="pre">&quot;type&quot;:</span> <span class="pre">&quot;streaming-analytics&quot;,</span> <span class="pre">&quot;name&quot;:</span> <span class="pre">&quot;service</span> <span class="pre">name&quot;,</span> <span class="pre">&quot;credentials&quot;:</span> <span class="pre">{...}</span> <span class="pre">}</span></code> with the <cite>service credentials</cite> as the value of the <code class="docutils literal"><span class="pre">credentials</span></code> key.</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>service_def</strong> (<em>dict</em>) &#8211; Definition of the service to connect to.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Connection to defined service.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest.StreamingAnalyticsConnection" title="streamsx.rest.StreamingAnalyticsConnection">StreamingAnalyticsConnection</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="streamsx.rest.StreamingAnalyticsConnection.resource_url">
 <code class="descname">resource_url</code><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection.resource_url" title="Permalink to this definition">¶</a></dt>
@@ -507,7 +532,7 @@ retrieve that information.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.8b2',
+            VERSION:'1.8.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
