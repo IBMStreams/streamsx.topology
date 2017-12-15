@@ -88,6 +88,11 @@ public interface OpProperties {
      * Stored within {@link OpProperties#CONFIG}.
      */
     String PLACEMENT = "placement";
+    
+    /**
+     * Attribute for start of a consistent region.
+     */
+    String CONSISTENT = "consistent";
 
 
 }

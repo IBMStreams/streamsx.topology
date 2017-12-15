@@ -23,6 +23,7 @@ import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
 
+@SuppressWarnings("deprecation")
 public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
 
     @Override
@@ -32,7 +33,6 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
             String vcapServices = System.getenv("VCAP_SERVICES");
 
             // if we don't have serviceName or vcapServices, skip the test
-            System.out.println("Checking STREAMING_ANALYTICS_SERVICE_NAME and VCAP_SERVICES is not NULL ...");
             assumeNotNull(serviceName, vcapServices);
 
             testType = "STREAMING_ANALYTICS_SERVICE";
@@ -64,13 +64,15 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
         String instanceName = instances.get(0).getId();
         Instance i2 = connection.getInstance(instanceName);
         assertEquals(instanceName, i2.getId());
+        
+        checkDomainFromInstance(instances.get(0));
 
         try {
             // try a fake instance name
             connection.getInstance("fakeName");
             fail("the connection.getInstance() call should have thrown an exception");
         } catch (RESTException r) {
-            assertEquals(404, r.getStatusCode());
+            assertEquals(r.toString(), 404, r.getStatusCode());
         }
     }
 

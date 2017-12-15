@@ -3,9 +3,12 @@ import unittest
 import test_vers
 
 from streamsx.topology.topology import *
+from streamsx.topology import context
 from streamsx.topology.schema import CommonSchema
 from streamsx.topology.tester import Tester
+from streamsx.spl import op
 import time
+import os
 import datetime
 
 class Person(object):
@@ -15,6 +18,17 @@ class Person(object):
 
     def rough_birth_year(self):
         return time.localtime().tm_year - self.age;
+
+expected_contents = """8
+Punctuation received: WindowMarker
+9
+Punctuation received: WindowMarker
+10
+Punctuation received: WindowMarker
+11
+Punctuation received: WindowMarker
+Punctuation received: FinalMarker
+"""
 
 class TimeCounter(object):
     """Count up from zero every `period` seconds for a given number of 
@@ -188,6 +202,39 @@ class TestPythonWindowing(unittest.TestCase):
         tester = Tester(topo)
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_WindowPunctuation(self):
+        """Trigger an aggregation 4 times. Ensure that window punctuations are submitted each time
+        by writing them to an output file, and then verifying that the file contains the correct
+        contents."""
+        topo = Topology()
+        s = topo.source([1,2,3,4])
+
+        # Aggregate and write to file.
+        s = s.last(1).trigger(1).aggregate(lambda x: x[0]+7)
+        # Ensure map/flat_map/filter passes window marks through.
+        s = s.flat_map(lambda x : [x])
+        s = s.filter(lambda x : True)
+        s = s.map(lambda x : (x,), schema='tuple<int32 z>')
+        op_params = {'file' : 'punct_file', 'writePunctuations' : True, 'flushOnPunctuation' : True}
+        op.Sink("spl.adapter::FileSink", s, params = op_params)
+
+        # Copy the config, since it's shared across all tests, and not every test needs a data
+        # directory.
+        cfg = self.test_config.copy()
+        jc = context.JobConfig(data_directory=os.getcwd())
+        jc.add(cfg)
+         
+        tester = Tester(topo)
+        tester.test(self.test_ctxtype, cfg)
+
+        path = os.path.join(os.getcwd(), 'punct_file')
+        
+        # Validate the contents of the file.
+        with open(path, 'r') as f:
+            file_contents = f.read()
+            self.assertEqual(expected_contents, file_contents)
+            
+        os.remove(path)
 
 if __name__ == '__main__':
     unittest.main()

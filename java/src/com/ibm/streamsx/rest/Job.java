@@ -76,14 +76,17 @@ public class Job extends Element {
     private long submitTime;
     @Expose
     private String views;
+    
+    private Instance _instance;
 
-    static final Job create(StreamsConnection sc, String gsonJobString) {
+    static final Job create(Instance instance, String gsonJobString) {
         Job job = gson.fromJson(gsonJobString, Job.class);
-        job.setConnection(sc);
+        job.setConnection(instance.connection());
+        job._instance = instance;
         return job;
     }
 
-    static final List<Job> getJobList(StreamsConnection sc, String gsonJobList) {
+    static final List<Job> getJobList(Instance instance, String gsonJobList) {
         List<Job> jList;
         JobArray jobsArray;
         try {
@@ -92,7 +95,8 @@ public class Job extends Element {
 
             jList = jobsArray.jobs;
             for (Job job : jList) {
-                job.setConnection(sc);
+                job.setConnection(instance.connection());
+                job._instance = instance;
             }
         } catch (JsonSyntaxException e) {
             jList = Collections.<Job> emptyList();
@@ -114,7 +118,7 @@ public class Job extends Element {
     }
 
     /**
-     * Cancels this job
+     * Cancels this job.
      * 
      * @return the result of the cancel method
      *         <ul>
@@ -125,8 +129,8 @@ public class Job extends Element {
      * @throws Exception
      */
     public boolean cancel() throws Exception, IOException {
-        return connection().cancelJob(id);
-    }
+        return connection().cancelJob(this._instance, id);
+    }          
 
     /**
      * Gets the name of the streams processing application that this job is

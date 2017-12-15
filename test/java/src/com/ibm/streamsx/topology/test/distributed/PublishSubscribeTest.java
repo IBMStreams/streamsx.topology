@@ -28,6 +28,8 @@ import com.ibm.streams.operator.types.ValueFactory;
 import com.ibm.streams.operator.types.XML;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.spl.SPLSchemas;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
@@ -55,6 +57,27 @@ public class PublishSubscribeTest extends TestTopology {
         source.publish("testPublishString");
         
         TStream<String> subscribe = source.topology().subscribe("testPublishString", String.class);
+        
+        checkSubscribedAsStrings(subscribe);
+    }
+    
+    @Test
+    public void testPublishStringParams() throws Exception {
+        
+        TStream<String> source = source();
+        
+        String topic = "testPublishStringParams/" + System.currentTimeMillis();
+       
+        Supplier<String> pubParam = source.topology().createSubmissionParameter("PP", String.class);
+        source.publish(pubParam);
+        
+        Supplier<String> subParam = source.topology().createSubmissionParameter("SP", String.class);
+        TStream<String> subscribe = source.topology().subscribe(subParam, String.class);
+        
+        JobConfig jco = new JobConfig();
+        jco.addSubmissionParameter("SP", topic);
+        jco.addSubmissionParameter("PP", topic);    
+        jco.addToConfig(getConfig());
         
         checkSubscribedAsStrings(subscribe);
     }

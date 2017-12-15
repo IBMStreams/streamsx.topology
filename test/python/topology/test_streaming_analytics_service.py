@@ -32,7 +32,7 @@ class TestStreamingAnalytics(unittest.TestCase):
             os.close(fd)
             cls.vcap_services = tp
             cls.delete_file = tp
-          
+
         cls.service_name = os.environ.pop('STREAMING_ANALYTICS_SERVICE_NAME', None)
     @classmethod
     def tearDownClass(cls):
@@ -54,6 +54,13 @@ class TestStreamingAnalytics(unittest.TestCase):
         with open(fn) as vcap_json_data:
             vs = json.load(vcap_json_data)
         sn = cls.service_name
+
+        cls.is_v2 = False
+        for creds in vs['streaming-analytics']:
+            if creds['name'] == sn:
+                if 'v2_rest_url' in creds['credentials']:
+                    cls.is_v2 = True            
+
         return {'vcap': vs, 'service_name': sn, 'vcap_file': fn}
 
     def submit_to_service(self, topo, cfg):
@@ -81,6 +88,7 @@ class TestStreamingAnalytics(unittest.TestCase):
         vsi = self.require_vcap()
         topo = build_simple_app("test_vcap_json")
         cfg = {}
+        cfg[ConfigParams.FORCE_REMOTE_BUILD] = False
         cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap']
         cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
         self.submit_to_service(topo, cfg)
@@ -112,6 +120,38 @@ class TestStreamingAnalytics(unittest.TestCase):
         cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
         self.submit_to_service(topo, cfg)
 
+    def test_service_def(self):
+        """ Test a submit using a service definition."""
+        vsi = self.require_vcap()
+        topo = build_simple_app("test_service_def")
+        cfg = {}
+        cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
+        services = vsi['vcap']['streaming-analytics']
+        creds = {}
+        for s in services:
+            if s['name'] == vsi['service_name']:
+               creds = s['credentials']
+            
+        service = {'type':'streaming-analytics', 'name':vsi['service_name']}
+        service['credentials'] = creds
+        cfg[ConfigParams.SERVICE_DEFINITION] = service
+        self.submit_to_service(topo, cfg)
+
+    def test_service_creds(self):
+        """ Test a submit using service credentials."""
+        vsi = self.require_vcap()
+        topo = build_simple_app("test_service_creds")
+        cfg = {}
+        cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
+        services = vsi['vcap']['streaming-analytics']
+        creds = {}
+        for s in services:
+            if s['name'] == vsi['service_name']:
+               creds = s['credentials']
+            
+        cfg[ConfigParams.SERVICE_DEFINITION] = creds
+        self.submit_to_service(topo, cfg)
+
     def test_submit_job_results(self):
         vsi = self.require_vcap()
         topo = build_simple_app("test_submit_job_results")
@@ -120,13 +160,20 @@ class TestStreamingAnalytics(unittest.TestCase):
         cfg[ConfigParams.VCAP_SERVICES] = vsi['vcap_file']
         cfg[ConfigParams.SERVICE_NAME] = vsi['service_name']
         rc = self.submit_to_service(topo, cfg)
-        self.assertIn("artifact", rc, "\"artifact\" field not in returned json dict")
+
         self.assertIn("jobId", rc, "\"jobId\" field not in returned json dict")
         self.assertIn("application", rc, "\"application\" field not in returned json dict")
         self.assertIn("name", rc, "\"name\" field not in returned json dict")
-        self.assertIn("state", rc, "\"state\" field not in returned json dict")
-        self.assertIn("plan", rc, "\"plan\" field not in returned json dict")
-        self.assertIn("enabled", rc, "\"enabled\" field not in returned json dict")
-        self.assertIn("status", rc, "\"status\" field not in returned json dict")
-        self.assertIn("instanceId", rc, '"instanceId" field not in returned json dict')
 
+        if not self.is_v2:
+            self.assertIn("artifact", rc, "\"artifact\" field not in returned json dict")
+            self.assertIn("state", rc, "\"state\" field not in returned json dict")
+            self.assertIn("plan", rc, "\"plan\" field not in returned json dict")
+            self.assertIn("enabled", rc, "\"enabled\" field not in returned json dict")
+            self.assertIn("status", rc, "\"status\" field not in returned json dict")
+            self.assertIn("instanceId", rc, '"instanceId" field not in returned json dict')
+        
+        else:
+            self.assertIn("streams_self", rc, "\"streams_self\" field not in returned json dict")            
+            self.assertIn("health", rc, "\"health\" field not in returned json dict")
+            self.assertIn("self", rc, "\"self\" field not in returned json dict")

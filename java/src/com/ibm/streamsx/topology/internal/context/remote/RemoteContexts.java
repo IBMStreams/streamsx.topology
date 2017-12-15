@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.Result;
+import com.ibm.streamsx.rest.StreamingAnalyticsService;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
@@ -27,5 +29,15 @@ public class RemoteContexts {
         // Write to the file and close the file.
         JsonObject results_json = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);        
         Files.write(Paths.get(resultsFile), results_json.toString().getBytes(StandardCharsets.UTF_8));
+    }
+    
+    public static void checkServiceRunning(StreamingAnalyticsService service) throws IOException {
+        final String serviceName = service.getName();
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): Checking status");
+
+        Result<StreamingAnalyticsService, JsonObject> status = service.checkStatus(true);
+
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): instance status response:" +
+                status.getRawResult().toString());
     }
 }

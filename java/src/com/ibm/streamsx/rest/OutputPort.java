@@ -40,7 +40,7 @@ public class OutputPort extends Element {
     @Expose
     private String streamName;
 
-    static final List<OutputPort> getOutputPortList(StreamsConnection sc, String outputPortList) {
+    static final List<OutputPort> getOutputPortList(AbstractStreamsConnection sc, String outputPortList) {
         List<OutputPort> opList;
         try {
             OutputPortArray opArray = gson.fromJson(outputPortList, OutputPortArray.class);

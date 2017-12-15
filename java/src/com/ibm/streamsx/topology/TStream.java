@@ -725,6 +725,29 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     /**
      * Publish tuples from this stream for consumption by other IBM Streams applications.
      * 
+     * Differs from {@link #publish(String)} in that it
+     * supports {@code topic} as a submission time parameter, for example
+     * using the topic defined by the submission parameter {@code eventTopic}:
+     * 
+     * <pre>
+     * <code>
+     * TStream<String> events = ...
+     * Supplier<String> topicParam = topology.createSubmissionParameter("eventTopic", String.class);
+     * topology.publish(topicParam);
+     * </code>
+     * </pre>
+     * 
+     * @param topic Topic name to publish tuples to.
+     * 
+     * @see #publish(String)
+     * 
+     * @since 1.8
+     */
+    void publish(Supplier<String> topic);
+    
+    /**
+     * Publish tuples from this stream for consumption by other IBM Streams applications.
+     * 
      * Applications consume published streams using:
      * <UL>
      * <LI>
@@ -829,6 +852,30 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @see com.ibm.streamsx.topology.spl.SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
      */
     void publish(String topic, boolean allowFilter);
+    
+    /**
+     * Publish tuples from this stream for consumption by other IBM Streams applications.
+     * 
+     * Differs from {@link #publish(String, boolean)} in that it
+     * supports {@code topic} as a submission time parameter, for example
+     * using the topic defined by the submission parameter {@code eventTopic}:
+     * 
+     * <pre>
+     * <code>
+     * TStream<String> events = ...
+     * Supplier<String> topicParam = topology.createSubmissionParameter("eventTopic", String.class);
+     * topology.publish(topicParam, false);
+     * </code>
+     * </pre>
+     * 
+     * @param topic Topic name to publish tuples to.
+     * @param allowFilter Allow SPL filters specified by SPL application to be executed.
+     * 
+     * @see #publish(String, boolean)
+     * 
+     * @since 1.8
+     */
+    void publish(Supplier<String> topic, boolean allowFilter);
 
     /**
      * Parallelizes the stream into a a fixed
@@ -1175,13 +1222,22 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * consistent region to support at least once and exactly once
      * processing.
      * IBM Streams calculates the boundaries of the consistent region
-     * that is based on the reachability graph of this stream.
+     * based on the reachability graph of this stream. A region
+     * can be bounded though use of {@link #autonomous()}.
      * 
      * <P>
      * Consistent regions are only supported in distributed contexts.
      * </P>
+     * <P>
+     * This must be called on a stream directly produced by an
+     * SPL operator that supports consistent regions.
+     * Source streams produced by methods on {@link Topology}
+     * do not support consistent regions.
+     * </P>
 
-     * @since v1.5
+     * @since 1.5 API added
+     * @since 1.8 Working implementation.
+     * 
      * @return this
      * 
      * @see com.ibm.streamsx.topology.consistent.ConsistentRegionConfig

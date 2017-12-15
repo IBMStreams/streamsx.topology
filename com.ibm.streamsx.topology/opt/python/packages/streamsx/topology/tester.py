@@ -89,6 +89,7 @@ from streamsx.rest import StreamsConnection
 from streamsx.rest import StreamingAnalyticsConnection
 from streamsx.topology.context import ConfigParams
 import time
+import json
 
 import streamsx.topology.tester_runtime as sttrt
 
@@ -494,7 +495,7 @@ class Tester(object):
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to distributed instance.")
             return False
-        return self._distributed_wait_for_result()
+        return self._distributed_wait_for_result(stc.ContextTypes.DISTRIBUTED)
 
 
     def _streaming_analytics_test(self, ctxtype, config):
@@ -536,7 +537,7 @@ class Tester(object):
     def _fetch_application_logs(self, ctxtype):
         # Fetch the logs if submitting to a Streaming Analytics Service
         if stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype:
-            application_logs = self.submission_result.job.get_application_logs()
+            application_logs = self.submission_result.job.retrieve_log_trace()
             _logger.info("Application logs have been fetched to " + application_logs)
             return application_logs
 

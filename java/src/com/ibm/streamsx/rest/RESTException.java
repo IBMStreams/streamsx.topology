@@ -89,6 +89,21 @@ public class RESTException extends IOException {
     }
 
     /**
+     * Customized exception that can provide more information on REST errors
+     * 
+     * @param message
+     *            - error message to be seen
+     * @param exception
+     *            - cause
+     */
+    public RESTException(String message, Exception exception) {
+        super(message, exception);
+        if (exception instanceof RESTException) {
+            this.status = ((RESTException)exception).status;
+        }
+    }
+
+    /**
      * Gets the error status code for this exception
      * 
      * @return the error status code

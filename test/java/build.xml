@@ -304,6 +304,16 @@
      <fail message="Unittests failed" if="topology.tests.failed"/>
   </target>
 
+  <target name="unittest.restapi.distributed">
+    <property name="topology.test.type" value="DISTRIBUTED_TESTER"/>
+     <antcall target="unittest.restapi.base"/>
+  </target>
+
+  <target name="unittest.restapi.streaminganalytics">
+     <property name="topology.test.type" value="STREAMING_ANALYTICS_SERVICE_TESTER"/>
+     <antcall target="unittest.restapi.base"/>
+  </target>
+	 
   <target name="unittest.restapi.base">
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
@@ -331,6 +341,7 @@
              excludes="**/samples/*Test.java" >
              <include name="**/StreamsConnectionTest.java"/>
              <include name="**/StreamingAnalyticsConnectionTest.java"/>
+             <include name="**/StreamingAnalyticsServiceTest.java"/>
           </fileset>
        </batchtest>
      </junit>

@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.streaminganalytics;
 
+import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_DEFINITION;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
@@ -14,11 +15,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * Utilities to get the correct VCAP services information for submission to
@@ -38,7 +41,7 @@ public class VcapServices {
      * <li>null - assumed to be in the environment variable VCAP_SERVICES</li>
      * </ul>
      */
-    private static JsonObject getVCAPServices(JsonElement rawServices) throws IOException {
+    public static JsonObject getVCAPServices(JsonElement rawServices) throws IOException {
 
         JsonParser parser = new JsonParser();
         String vcapString;
@@ -77,22 +80,29 @@ public class VcapServices {
 
     /**
      * Get the specific streaming analytics service from the service name and
-     * the vcap services.
+     * the vcap services or the service definition.
      * 
-     * @param getter
-     *            How to get the value from the container given a key
      * 
      * @throws IOException
      */
     public static JsonObject getVCAPService(JsonObject deploy) throws IOException {
         
-        JsonObject services = getVCAPServices(deploy.get(VCAP_SERVICES));
+        JsonObject services;
+        String serviceName = null;
+        if (deploy.has(SERVICE_DEFINITION)) {
+            JsonObject definition = GsonUtilities.object(deploy, SERVICE_DEFINITION);
+            services = vcapFromServiceDefinition(definition);
+            serviceName = nameFromServiceDefinition(definition);            
+        } else {      
+             services = getVCAPServices(deploy.get(VCAP_SERVICES));
+        }
 
         JsonArray streamsServices = array(services, "streaming-analytics");
         if (streamsServices == null || streamsServices.size() == 0)
             throw new IllegalStateException("No streaming-analytics services defined in VCAP_SERVICES");
 
-        String serviceName = jstring(deploy, SERVICE_NAME);
+        if (serviceName == null)
+            serviceName = jstring(deploy, SERVICE_NAME);
 
         // if we don't find our serviceName check the environment variable
         if (serviceName == null) {
@@ -121,5 +131,41 @@ public class VcapServices {
                     "No streaming-analytics services defined in VCAP_SERVICES with name: " + serviceName);
 
         return service;
+    }
+    
+    /**
+     * Return a mocked up VCAP services entry that represents the single
+     * service definition. Simplifies code by making the lower levels always
+     * handle a VCAP_SERVICES format.
+     */
+    private static JsonObject vcapFromServiceDefinition(JsonObject serviceDefinition) {
+        // Create a VCAP services that contains our single service
+        JsonObject singleVcap = new JsonObject();
+        JsonArray services = new JsonArray();
+        singleVcap.add("streaming-analytics", services);
+
+        JsonObject credentials = GsonUtilities.object(serviceDefinition, "credentials");
+        if (credentials != null) {
+            String type = jstring(serviceDefinition, "type");
+            if (!"streaming-analytics".equals(type))
+                throw new IllegalArgumentException("Invalid type for service definition, streaming-analytics required: " + type);
+        } else {
+            credentials = serviceDefinition;
+        }
+        
+        JsonObject service = new JsonObject();
+        service.addProperty("name", nameFromServiceDefinition(serviceDefinition));
+        service.add("credentials", credentials);
+        
+        services.add(service);
+
+        return singleVcap;
+    }
+    
+    private static String nameFromServiceDefinition(JsonObject serviceDefinition) {
+        String name = "service";
+        if (serviceDefinition.has("credentials"))
+            name = Objects.requireNonNull(jstring(serviceDefinition, "name"));
+        return name;
     }
 }
