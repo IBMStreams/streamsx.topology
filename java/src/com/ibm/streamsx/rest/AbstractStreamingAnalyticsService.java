@@ -173,7 +173,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     @Override
     public Result<Job, JsonObject> buildAndSubmitJob(File archive, JsonObject jco,
             String buildName) throws IOException {
-
+    	
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
             // Set up the build name
