@@ -9,7 +9,10 @@ import threading
 import time
 import json
 import re
+import time
+
 from pprint import pformat
+from urllib import parse
 
 import streamsx.topology.schema
 
@@ -119,7 +122,6 @@ class _ResourceElement(object):
             return elements[0]
         raise ValueError("Multiple resources matching: {0}".format(id))
 
-
 class _StreamsRestClient(object):
     """Handles the session connection with the Streams REST API
     """
@@ -136,18 +138,111 @@ class _StreamsRestClient(object):
 
         self.session = requests.Session()
         self.session.auth = (username, password)
+        self._auth_token = requests.auth._basic_auth_str(self._username, self._password)
+
+    def _get_authorization(self):
+        return self._auth_token
+
+    def handle_http_errors(self, res):
+        # HTTP error responses are 4xx, server errors are 5xx
+        if res.status_code >= 400:
+            logger.error("Response returned with error code: " + str(res.status_code))
+            logger.error(res.text)
+            res.raise_for_status()
 
     def make_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
-        return self.session.get(url).json()
+        res = self.session.get(url)
+        self.handle_http_errors(res)
+        return res.json()
 
     def make_raw_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
-        return self.session.get(url)
+        res = self.session.get(url)
+        self.handle_http_errors(res)
+        return res
 
     def make_raw_streaming_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
-        return self.session.get(url, stream=True)
+        res = self.session.get(url, stream=True)
+        self.handle_http_errors(res)
+
+        return res
+
+    def __str__(self):
+        return pformat(self.__dict__)
+
+
+
+class _IAMStreamsRestClient(_StreamsRestClient):
+    """Handles the session connection with the Streams REST API and Streaming Analytics service
+    using IAM authentication.
+    """
+    def __init__(self, credentials):
+        """
+        Args:
+            credentials: The credentials of the Streaming Analytics service.
+        """
+        self._credentials = credentials
+        self._api_key = self._credentials[_IAMConstants.API_KEY]
+
+        # Represents the epoch time at which the token is no longer valid
+        # Starts at -1 such that the first invocation of a REST request
+        # Retrieves a token
+        self._auth_expiry_time = -1
+
+        # Determine if service is in stage1
+        if 'stage1' in  self._credentials[_IAMConstants.V2_REST_URL]:
+            self._token_url = _IAMConstants.TOKEN_URL_STAGE1
+        else:
+            self._token_url = _IAMConstants.TOKEN_URL
+
+        self.session = requests.Session()
+
+    def _get_authorization(self):
+        # Convert cur time to milliseconds
+        cur_time = int(time.time() * 1000)
+        if cur_time >= self._auth_expiry_time:
+            self._refresh_authorization()
+        return self._bearer_token
+
+    def _refresh_authorization(self):
+        post_url = self._token_url + '?' + self._get_token_params(self._api_key)
+        res = requests.post(post_url, headers = {'Accept' : 'application/json',
+                                                 'Content-Type' : 'application/x-www-form-urlencoded'})
+        self.handle_http_errors(res)
+        res = res.json()
+
+        self._auth_expiry_time = int(res[_IAMConstants.EXPIRATION]) - _IAMConstants.EXPIRY_PAD_MS
+        self._bearer_token = self._create_bearer_auth(res[_IAMConstants.ACCESS_TOKEN])
+
+    def _create_bearer_auth(self, token):
+        return _IAMConstants.AUTH_BEARER_PREFIX + token
+
+    def _get_token_params(self, api_key):
+        return parse.urlencode({_IAMConstants.GRANT_PARAM : _IAMConstants.GRANT_TYPE,
+                                       _IAMConstants.API_KEY : api_key})
+
+    def make_request(self, url):
+        return self.make_raw_request(url).json()
+
+    def make_raw_request(self, url):
+        # Preparing statements in this manner is necessary. For reasons that are unclear,
+        # SSL proxies have issues when simply calling requests.get
+        logger.debug('Beginning a REST request to: ' + url)
+        req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
+        prepared = req.prepare()
+        res = self.session.send(prepared)
+        self.handle_http_errors(res)
+        return res
+
+    def make_raw_streaming_request(self, url):
+        logger.debug('Beginning a REST request to: ' + url)
+        req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
+        prepared = req.prepare()
+        res = self.session.send(prepared, stream=True)
+        self.handle_http_errors(res)
+        return res
 
     def __str__(self):
         return pformat(self.__dict__)
@@ -1160,9 +1255,118 @@ def get_view_obj(_view, rc):
                     return view
     return None
 
-
 class StreamingAnalyticsService(object):
     """Streaming Analytics service running on IBM Bluemix cloud platform.
+    """
+    def __init__(self, rest_client, credentials):
+        # If IAM, create a V2 delegator, if basic http auth, create a V1 delegator
+        #
+        # Delegators are required because we need to keep StreamingAnalyticsService
+        # around for backwards compatibility, yet it also needs to work with basic
+        # and IAM authentication.
+        if 'v2_rest_url' in credentials:
+            self._delegator = _StreamingAnalyticsServiceV2Delegator(rest_client, credentials)
+        else:
+            self._delegator = _StreamingAnalyticsServiceV1Delegator(rest_client, credentials)
+
+    def cancel_job(self, job_id=None, job_name=None):
+        """Cancel a running job.
+
+        Args:
+            job_id (str, optional): Identifier of job to be canceled.
+            job_name (str, optional): Name of job to be canceled.
+
+        Returns:
+            dict: JSON response for the job cancel operation.
+        """
+        self._delegator.cancel_job(job_id=job_id, job_name = job_name)
+
+    def start_instance(self):
+        """Start the instance for this Streaming Analytics service.
+
+        Returns:
+            dict: JSON response for the instance start operation.
+        """
+        self._delegator.start_instance()
+
+    def stop_instance(self):
+        """Stop the instance for this Streaming Analytics service.
+
+        Returns:
+            dict: JSON response for the instance start operation.
+        """
+        self._delegator.stop_instance()
+
+    def get_instance_status(self):
+        """Get the status the instance for this Streaming Analytics service.
+
+        Returns:
+            dict: JSON response for the instance status operation.
+        """
+        return self._delegator.get_instance_status()
+
+class _StreamingAnalyticsServiceV2Delegator(object):
+    """Delegator for IAM access to a Streaming Analytics service
+    """
+    def __init__(self, rest_client, credentials):
+        """
+        Args:
+            rest_client (_IAMStreamsRestClient): The client used to make REST calls.
+            credentials (str): credentials for accessing Streaming Analytics service.
+        """
+        self.rest_client = rest_client
+        self._credentials = credentials
+        self._v2_rest_url = self._credentials[_IAMConstants.V2_REST_URL]
+
+    def cancel_job(self, job_id=None, job_name=None):
+        if job_id is None and job_name is None:
+            raise ValueError("Please specify either the job id or job name when cancelling a job.")
+        
+        if job_id is None:
+            # Get the job id using the job name, since it's required by the REST API
+            req = requests.Request("GET", self._v2_rest_url + '/jobs/',
+                               headers = {'Authorization' : self.rest_client._get_authorization(),
+                                          'Accept' : 'application/json'})
+            prepared = req.prepare()
+            res = self.rest_client.session.send(prepared).json()
+            self.rest_client.handle_http_errors(res)
+            for job in res['resources']:
+                if job['name'] == job_name:
+                    # Find the correct job_id, set it
+                    job_id = job['id']
+
+        # Cancel the job using the job id
+        req = requests.Request("DELETE", self._v2_rest_url + '/jobs/' + job_id,
+                               headers = {'Authorization' : self.rest_client._get_authorization(),
+                                          'Accept' : 'application/json'})
+        prepared = req.prepare()
+        res = self.rest_client.session.send(prepared)
+        self.rest_client.handle_http_errors(res)
+
+    def start_instance(self):
+        req = requests.Request("PATCH", self._v2_rest_url, json={'state' : 'STARTED'},
+                               headers = {'Authorization' : self.rest_client._get_authorization(),
+                                          'Content-Type' : 'application/json',
+                                          'Accept' : 'application/json'})
+        prepared = req.prepare()
+        res = self.rest_client.session.send(prepared)
+        self.rest_client.handle_http_errors(res)
+
+    def stop_instance(self):
+        req = requests.Request("PATCH", self._v2_rest_url, json={'state' : 'STOPPED'},
+                               headers = {'Authorization' : self.rest_client._get_authorization(),
+                                          'Content-Type' : 'application/json',
+                                          'Accept' : 'application/json'})
+        prepared = req.prepare()
+        res = self.rest_client.session.send(prepared)
+        self.rest_client.handle_http_errors(res)
+
+    def get_instance_status(self):
+        return self.rest_client.make_request(self._v2_rest_url)
+
+
+class _StreamingAnalyticsServiceV1Delegator(object):
+    """Delegator for pre-IAM access to a Streaming Analytics service
     """
     def __init__(self, rest_client, credentials):
         """
@@ -1193,7 +1397,9 @@ class StreamingAnalyticsService(object):
             payload['job_id'] = job_id
 
         jobs_url = self._get_url('jobs_path')
-        return self.rest_client.session.delete(jobs_url, params=payload).json()
+        res = self.rest_client.session.delete(jobs_url, params=payload)
+        self.rest_client.handle_http_errors(res)
+        return res.json()
 
     def start_instance(self):
         """Start the instance for this Streaming Analytics service.
@@ -1202,7 +1408,9 @@ class StreamingAnalyticsService(object):
             dict: JSON response for the instance start operation.
         """
         start_url = self._get_url('start_path')
-        return self.rest_client.session.put(start_url, json={}).json()
+        res = self.rest_client.session.put(start_url, json={})
+        self.rest_client.handle_http_errors(res)
+        return res.json()
 
     def stop_instance(self):
         """Stop the instance for this Streaming Analytics service.
@@ -1211,7 +1419,9 @@ class StreamingAnalyticsService(object):
             dict: JSON response for the instance stop operation.
         """
         stop_url = self._get_url('stop_path')
-        return self.rest_client.session.put(stop_url, json={}).json()
+        res = self.rest_client.session.put(stop_url, json={})
+        self.rest_client.handle_http_errors(res)
+        return res.json()
 
     def get_instance_status(self):
         """Get the status the instance for this Streaming Analytics service.
@@ -1220,4 +1430,48 @@ class StreamingAnalyticsService(object):
             dict: JSON response for the instance status operation.
         """
         status_url = self._get_url('status_path')
-        return self.rest_client.session.get(status_url).json()
+        res = self.rest_client.session.get(status_url)
+        self.rest_client.handle_http_errors(res)
+        return res.json()
+
+class _IAMConstants(object):
+    V2_REST_URL = 'v2_rest_url'
+    """The credentials key for the REST url of the Streaming Analytics service
+    """
+
+    API_KEY = 'apikey'
+    """The credentials key for the api key which can be used to retrieve bearer authentication
+    tokens for REST requests using IAM.
+    """
+
+    EXPIRATION = 'expiration'
+    """The key used to retrieve the expiration time of the bearer authentication token from
+    the IAM token response.
+    """
+
+    ACCESS_TOKEN = 'access_token'
+    """The key of the bearer authentication token in the IAM token response.
+    """
+
+    AUTH_BEARER_PREFIX = 'Bearer '
+    """The prefix to append to the bearer token retrieved from IAM when setting the Authentication 
+    HTTP header.
+    """
+
+    GRANT_PARAM = 'grant_type'
+    GRANT_TYPE = 'urn:ibm:params:oauth:grant-type:apikey'
+
+    TOKEN_URL = 'https://iam.bluemix.net/oidc/token'
+    """The url from which to receive bearer authentication tokens for Authorizing REST requests on
+    IBM Cloud.
+    """
+
+    TOKEN_URL_STAGE1 = 'https://iam.stage1.bluemix.net/oidc/token'
+    """The url from which to receive bearer authentication tokens for Authorizing REST requests on
+    stage1 IBM Cloud.
+    """
+
+    EXPIRY_PAD_MS = 300000
+    """Padding to ensure that a new IAM token is retrieved when the current token is due to expire
+    in less than five minutes.
+    """
