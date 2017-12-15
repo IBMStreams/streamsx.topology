@@ -41,12 +41,13 @@ In addtion `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnect
 import os
 import json
 import logging
+import requests
 from pprint import pformat
 import streamsx.topology.context
 
 from streamsx import st
 from .rest_primitives import (Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService,
-    _exact_resource)
+    _exact_resource, _IAMStreamsRestClient, _IAMConstants)
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -207,7 +208,18 @@ class StreamingAnalyticsConnection(StreamsConnection):
     def __init__(self, vcap_services=None, service_name=None):
         self.service_name = service_name or os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME')
         self.credentials = _get_credentials(_get_vcap_services(vcap_services), self.service_name)
-        super(StreamingAnalyticsConnection, self).__init__(self.credentials['userid'], self.credentials['password'])
+        self._resource_url = None
+
+        self._iam = False
+        if _IAMConstants.V2_REST_URL in self.credentials and not ('userid' in self.credentials and 'password' in self.credentials):
+            self._iam = True
+
+        if self._iam:
+            self.rest_client = _IAMStreamsRestClient(self.credentials)
+        else:
+            self.rest_client = _StreamsRestClient(self.credentials['userid'], self.credentials['password'])
+        self.rest_client._sc = self
+        self.session = self.rest_client.session
         self._analytics_service = True
 
     @staticmethod
@@ -232,7 +244,10 @@ class StreamingAnalyticsConnection(StreamsConnection):
     @property
     def resource_url(self):
         """str: Root URL for IBM Streams REST API"""
-        self._resource_url = self._resource_url or _get_rest_api_url_from_creds(self.session, self.credentials)
+        if self._iam:
+            self._resource_url = self._resource_url or _get_iam_rest_api_url_from_creds(self.rest_client, self.credentials)
+        else:
+            self._resource_url = self._resource_url or _get_rest_api_url_from_creds(self.session, self.credentials)
         return self._resource_url
 
     def get_streaming_analytics(self):
@@ -332,3 +347,17 @@ def _get_rest_api_url_from_creds(session, credentials):
 
     rest_api_url = response['streams_rest_url'] + '/resources'
     return rest_api_url
+
+def _get_iam_rest_api_url_from_creds(rest_client, credentials):
+    """Retrieves the Streams REST API URL from the provided credentials using iam authentication.
+    Args:
+        rest_client (:py:class:`rest_primitives._IAMStreamsRestClient`): A client  for making REST calls using IAM authentication
+        credentials (dict): A dict representation of the credentials.
+    Returns:
+        str: The remote Streams REST API URL.
+    """
+    res = rest_client.make_request(credentials[_IAMConstants.V2_REST_URL])
+    base = res['streams_self']
+    end = base.find('/instances')
+    return base[:end] + '/resources'
+    
