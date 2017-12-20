@@ -33,8 +33,12 @@ sys.path.insert(0, os.path.abspath("../../../com.ibm.streamsx.topology/opt/pytho
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.napoleon'
 ]
+
+autodoc_default_flags = ['members']
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -100,7 +104,7 @@ exclude_patterns = []
 pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
-#modindex_common_prefix = []
+modindex_common_prefix = ['streamsx.', 'streamsx.spl.', 'streamsx.topology.']
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
