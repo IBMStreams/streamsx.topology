@@ -2,6 +2,13 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2017
 """
+SPL Python primitive operators.
+
+.. toctree::
+   :maxdepth: 4
+
+   streamsx.spl.spl
+
 Overview
 ========
 SPL primitive operators that call a Python function or
@@ -527,6 +534,10 @@ The list must only contain Python tuples, dictionaries or `None`. The list
 can contain a mix of valid values.
 
 The list may be empty resulting in no tuples being submitted.
+
+Module contents
+===============
+
 """
 
 from enum import Enum
