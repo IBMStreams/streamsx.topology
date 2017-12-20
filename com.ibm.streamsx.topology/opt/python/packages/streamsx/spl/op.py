@@ -2,6 +2,13 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
 """
+Integration of SPL operators.
+
+.. toctree::
+   :maxdepth: 4
+
+   streamsx.spl.op
+
 Invoking SPL Operators
 ++++++++++++++++++++++
 
@@ -110,6 +117,9 @@ For example invoking a SPL `Beacon` operator using an output function to set the
          Developing Streams applications.
     `Operator invocations <https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.0/com.ibm.streams.ref.doc/doc/operatorinvocations.html>`_
          Operator invocations from the SPL reference documentation.
+
+Module contents
++++++++++++++++
 
 """
 

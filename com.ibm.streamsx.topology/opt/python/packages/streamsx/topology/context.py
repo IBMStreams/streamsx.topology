@@ -1,11 +1,24 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2017
-"""Context for submission of applications.
+"""
+
+Context for submission of applications.
+
+.. toctree::
+   :maxdepth: 4
+
+   streamsx.topology.context
+
+Overview
+========
 
 The main function is :py:func:`submit` to submit
 a :py:class:`~streamsx.topology.topology.Topology`
 to a Streaming Analytics service or IBM® Streams instance for execution.
+
+Module contents
+===============
 
 """
 from __future__ import print_function
