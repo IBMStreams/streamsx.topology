@@ -3,22 +3,72 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+##########################
 IBM Streams Python support
-==========================
+##########################
 
-.. automodule:: streamsx
+Python APIs for use with IBM® Streaming Analytics service on
+IBM Bluemix® cloud platform and on-premises IBM Streams.
 
+**********************************
+Python Application API for Streams
+**********************************
 
-Contents:
+Module that allows the definition and execution of streaming
+applications implemented in Python.
+Applications use Python code to process tuples and tuples are Python objects.
 
-.. toctree::
-   :maxdepth: 2
+SPL operators may also be invoked from Python applications to allow
+use of existing IBM Streams toolkits.
 
-   source/modules.rst
-   source/streamsx.rst
-   source/streamsx.spl.rst
-   source/streamsx.topology.rst
+See :py:mod:`~streamsx.topology`
 
+.. autosummary::
+   :toctree: generated
+
+   streamsx.topology
+   streamsx.topology.topology
+   streamsx.topology.context
+   streamsx.topology.schema
+   streamsx.topology.tester
+   streamsx.topology.tester_runtime
+   streamsx.ec
+   streamsx.spl.op
+   streamsx.spl.types
+   streamsx.spl.toolkit
+
+******************************
+SPL primitive Python operators
+******************************
+
+SPL primitive Python operators provide the ability
+to perform tuple processing using Python in an SPL application.
+
+A Python function or class is simply turned into an SPL primitive operator
+through provided decorators.
+
+SPL (Streams Processing Language) is a domain specific language for streaming
+analytics supported by Streams.
+
+.. autosummary::
+   :toctree: generated
+
+   streamsx.spl.spl
+
+***********************
+Streams Python REST API
+***********************
+
+Module that allows interaction with an running Streams instance or
+service through HTTPS REST APIs.
+
+========
+
+.. autosummary::
+   :toctree: generated
+
+   streamsx.rest
+   streamsx.rest_primitives
 
 Indices and tables
 ==================
