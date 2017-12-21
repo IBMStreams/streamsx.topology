@@ -5,11 +5,6 @@
 """
 Streaming application definition.
 
-.. toctree::
-   :maxdepth: 4
-
-   streamsx.topology.topology
-
 Overview
 ########
 

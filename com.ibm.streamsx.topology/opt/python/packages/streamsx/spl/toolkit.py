@@ -5,11 +5,6 @@
 """
 SPL toolkit integration.
 
-.. toctree::
-   :maxdepth: 4
-
-   streamsx.spl.toolkit
-
 Overview
 ########
 

@@ -4,11 +4,6 @@
 """
 Integration of SPL operators.
 
-.. toctree::
-   :maxdepth: 4
-
-   streamsx.spl.op
-
 Invoking SPL Operators
 ++++++++++++++++++++++
 

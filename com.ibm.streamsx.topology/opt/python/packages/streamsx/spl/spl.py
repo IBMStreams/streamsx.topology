@@ -4,11 +4,6 @@
 """
 SPL Python primitive operators.
 
-.. toctree::
-   :maxdepth: 4
-
-   streamsx.spl.spl
-
 Overview
 ========
 SPL primitive operators that call a Python function or

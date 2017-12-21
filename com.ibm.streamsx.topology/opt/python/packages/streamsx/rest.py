@@ -3,8 +3,8 @@
 # Copyright IBM Corp. 2016,2017
 
 """
-Python API that wraps the REST apis for IBM® Streams
-& IBM Streaming Analytics service on IBM Bluemix®.
+REST API bindings for IBM® Streams
+& IBM Streaming Analytics service on IBM Cloud.
 
 Streams REST API
 ################
@@ -35,6 +35,9 @@ In addtion `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnect
         Reference documentation for the Streams REST API.
     `Streaming Analytics REST API <https://console.ng.bluemix.net/apidocs/220-streaming-analytics?&language=node#introduction>`_
         Reference documentation for the Streaming Analytics service REST API.
+
+Module contents
+###############
 
 """
 

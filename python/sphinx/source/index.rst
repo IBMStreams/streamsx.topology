@@ -24,7 +24,8 @@ use of existing IBM Streams toolkits.
 See :py:mod:`~streamsx.topology`
 
 .. autosummary::
-   :toctree: generated
+   :toctree: .
+   :template: streamsx_module.rst
 
    streamsx.topology
    streamsx.topology.topology
@@ -51,7 +52,8 @@ SPL (Streams Processing Language) is a domain specific language for streaming
 analytics supported by Streams.
 
 .. autosummary::
-   :toctree: generated
+   :toctree: .
+   :template: streamsx_module.rst
 
    streamsx.spl.spl
 
@@ -65,7 +67,8 @@ service through HTTPS REST APIs.
 ========
 
 .. autosummary::
-   :toctree: generated
+   :toctree: .
+   :template: streamsx_module.rst
 
    streamsx.rest
    streamsx.rest_primitives

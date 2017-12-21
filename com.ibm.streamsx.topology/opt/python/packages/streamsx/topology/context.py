@@ -5,11 +5,6 @@
 
 Context for submission of applications.
 
-.. toctree::
-   :maxdepth: 4
-
-   streamsx.topology.context
-
 Overview
 ========
 

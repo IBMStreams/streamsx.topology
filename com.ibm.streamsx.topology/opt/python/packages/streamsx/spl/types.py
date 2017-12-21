@@ -4,11 +4,6 @@
 """
 SPL type definitions.
 
-.. toctree::
-   :maxdepth: 4
-
-   streamsx.spl.types
-
 Overview
 ########
 
