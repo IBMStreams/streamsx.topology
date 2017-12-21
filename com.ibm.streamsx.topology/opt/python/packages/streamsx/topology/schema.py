@@ -4,11 +4,6 @@
 """
 Schemas for streams.
 
-.. toctree::
-   :maxdepth: 4
-
-   streamsx.topology.schema
-
 Overview
 ========
 

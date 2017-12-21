@@ -6,11 +6,6 @@
 
 Testing support for streaming applications.
 
-.. toctree::
-   :maxdepth: 4
-
-   streamsx.topology.tester
-
 Overview
 ========
 

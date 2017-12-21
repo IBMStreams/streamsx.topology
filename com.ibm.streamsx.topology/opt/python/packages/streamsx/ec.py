@@ -4,11 +4,6 @@
 """
 Access to the IBM Streams execution context.
 
-.. toctree::
-   :maxdepth: 4
-
-   streamsx.ec
-
 Overview
 ########
 
