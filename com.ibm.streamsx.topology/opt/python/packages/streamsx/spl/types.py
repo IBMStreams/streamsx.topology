@@ -183,3 +183,11 @@ def rstring(value):
     Create an SPL ``rstring`` value.
     """
     return Expression('RSTRING', str(value))
+
+_null = Expression.expression("null")
+
+def valueNull():
+    """
+    Create an SPL ``null`` value.
+    """
+    return _null

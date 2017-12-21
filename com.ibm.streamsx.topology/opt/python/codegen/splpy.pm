@@ -6,6 +6,21 @@ sub splToPythonConversionCheck{
 
     my ($type) = @_;
 
+    # use eval in case optional types are not supported
+    my $isOptionalType = eval {
+        no warnings all;
+        if (SPL::CodeGen::Type::isOptional($type)) {
+            my $value_type = SPL::CodeGen::Type::getUnderlyingType($type);
+            splToPythonConversionCheck($value_type);
+            return 1;
+        }
+        return 0;
+    };
+    if (! $@ && $isOptionalType) {
+        # optional type with optional types supported
+        return;
+    }
+
     if (SPL::CodeGen::Type::isList($type)) {
         my $element_type = SPL::CodeGen::Type::getElementType($type);
         splToPythonConversionCheck($element_type);

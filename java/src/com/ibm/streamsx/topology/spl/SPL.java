@@ -50,7 +50,8 @@ import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
  * the {@code FileSource} operator from the SPL Standard toolkit must be specified
  * as {@code spl.adapter::FileSource}.
  * <p>
- * When necessary use {@code createValue(T, MetaType)}
+ * When necessary use {@code createValue(T, MetaType)},
+ * or {@code createNullValue()},
  * to create parameter values for SPL types.
  * For example:
  * <pre>{@code
@@ -80,12 +81,12 @@ import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 public class SPL {
     
     /**
-     * Create a SPL value wrapper object for the 
+     * Create an SPL value wrapper object for the 
      * specified SPL {@code MetaType}.
      * <p>
-     * Use of this is required to construct a SPL operator parameter value
+     * Use of this is required to construct an SPL operator parameter value
      * whose SPL type is not implied from simple Java type.  e.g.,
-     * a {@code String} value is interpreted as a SPL {@code rstring},
+     * a {@code String} value is interpreted as an SPL {@code rstring},
      * and {@code Byte,Short,Integer,Long} are interpreted as SPL signed integers.
      * @param value the value to wrap
      * @param metaType the SPL meta type
@@ -95,6 +96,17 @@ public class SPL {
      */
     public static <T> Object createValue(T value, MetaType metaType) {
         return new SPLValue<T>(value, metaType).asJSON();
+    }
+    
+    /**
+     * Create an SPL value wrapper object for an SPL null value.
+     * <p>
+     * Use of this is required to construct an SPL operator parameter
+     * null value for an optional type.
+     * @return the wrapper object
+     */
+    public static Object createNullValue() {
+        return SPLNullValue.asJSON();
     }
     
     private static SPLValue<?> createSPLValue(Object paramValue) {
@@ -109,7 +121,7 @@ public class SPL {
      * Create a submission parameter with or without a default value.
      * <p>
      * Use of this is required to construct a submission parameter for
-     * a SPL operator parameter whose SPL type requires the use of
+     * an SPL operator parameter whose SPL type requires the use of
      * {@code createValue(Object, MetaType)}.
      * <p>
      * See {@link Topology#createSubmissionParameter(String, Class)} for

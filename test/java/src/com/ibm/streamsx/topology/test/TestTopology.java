@@ -252,6 +252,13 @@ public class TestTopology {
         assumeTrue(getTesterType() != StreamsContext.Type.EMBEDDED_TESTER);
         assumeTrue(SC_OK);
     }
+
+    /**
+     * Assume optional data types support.
+     */
+    protected void assumeOptionalTypes() {
+        checkMinimumVersion("Optional data types support required", 4, 2, 5);
+    }
         
     /**
      * Only run a test at a specific minimum version or higher.
@@ -269,6 +276,14 @@ public class TestTopology {
         }
         
         switch (vrmf.length) {
+        case 3:
+            assumeTrue((Product.getVersion().getVersion() > vrmf[0])
+                     || (Product.getVersion().getVersion() == vrmf[0] &&
+                             Product.getVersion().getRelease() > vrmf[1])
+                     || (Product.getVersion().getVersion() == vrmf[0] &&
+                             Product.getVersion().getRelease() == vrmf[1] &&
+                             Product.getVersion().getMod() >= vrmf[2]));
+            break;
         case 2:
             assumeTrue((Product.getVersion().getVersion() > vrmf[0])
                      || (Product.getVersion().getVersion() == vrmf[0] &&

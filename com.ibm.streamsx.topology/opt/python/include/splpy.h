@@ -83,7 +83,7 @@ namespace streamsx {
     }
 
     /*
-    
+    * Call a function passing the SPL attribute value of type T
     * and fill in the SPL attribute of type R with its result.
     * Implementation for function Map operator.
     */

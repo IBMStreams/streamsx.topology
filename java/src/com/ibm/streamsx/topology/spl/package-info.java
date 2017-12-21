@@ -38,6 +38,7 @@
  * <LI>{@code uint64} : Object returned by {@code SPL.createValue(Long value, MetaType.UINT64)}</LI>
  * <LI>{@code ustring} : Object returned by {@code SPL.createValue(String value, MetaType.USTRING)}</LI>
  * <LI><em>enum</em> : Java enumeration with constants matching the SPL enum's constants.</LI>
+ * <LI>{@code optional<T>} : Java type for type T, if value is present, else null or Object returned by {@code SPL.createNullValue()}</LI>
  * </UL>
  * When a primitive operator's parameter cardinality allows multiple values the parameter
  * value is a {@code java.util.Collection} containing values of the correct type, typically

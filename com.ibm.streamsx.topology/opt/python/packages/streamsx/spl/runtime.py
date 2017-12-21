@@ -41,10 +41,13 @@ def _splpy_iter_source(iterable) :
 # may be sparse, values not set by the dictionary
 # (etc.) are set to None in the Python tuple.
 
+from streamsx.spl.types import valueNull as types
+
 def _splpy_convert_tuple(attributes):
     """Create a function that converts tuples to
     be submitted as dict objects into Python tuples
     with the value by position.
+    Dict values set to Python None are mapped to SPL null for optional types.
     Return function handles tuple,dict,list[tuple|dict|None],None
     """
 
@@ -52,12 +55,12 @@ def _splpy_convert_tuple(attributes):
         if isinstance(tuple_, tuple):
             return tuple_
         if isinstance(tuple_, dict):
-            return tuple(tuple_.get(name, None) for name in attributes)
+            return tuple(tuple_.get(name, types.valueNull()) for name in attributes)
         if isinstance(tuple_, list):
             lt = list()
             for ev in tuple_:
                 if isinstance(ev, dict):
-                    ev = tuple(ev.get(name, None) for name in attributes)
+                    ev = tuple(ev.get(name, types.valueNull()) for name in attributes)
                 lt.append(ev)
             return lt
         return tuple_

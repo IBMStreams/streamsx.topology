@@ -95,9 +95,7 @@ class SplpySetup {
         PyObject * none =
                 ((__splpy_bv) dlsym(pydl, "Py_BuildValue"))("");
         
-        // Call the isNone passing in none which will
-        // be the first caller (as this is in setup)
-        // and thus set the local pointer to None (effectively Py_None).
+        SplpyGeneral::setNone(none);
         bool in = SplpyGeneral::isNone(none);
         if (!in) {
           throw SplpyGeneral::generalException("setup",
@@ -133,6 +131,11 @@ class SplpySetup {
           SplpyGeneral::loadFunction("streamsx.spl.types", "_get_timestamp_tuple"));
        SplpyGeneral::decimalClass(
           SplpyGeneral::loadFunction("decimal", "Decimal"));
+
+       PyObject *fn = SplpyGeneral::loadFunction("streamsx.spl.types", "null");
+       SplpyGeneral::isSplNull(
+          SplpyGeneral::pyCallObject(fn, NULL));
+       Py_DECREF(fn);
    }
 
   private:
