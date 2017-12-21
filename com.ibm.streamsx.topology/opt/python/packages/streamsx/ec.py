@@ -4,8 +4,9 @@
 """
 Access to the IBM Streams execution context.
 
+********
 Overview
-########
+********
 
 This module (`streamsx.ec`) provides access to the execution
 context when Python code is running in a Streams application.
@@ -33,8 +34,9 @@ Standalone is typically used for ad-hoc testing of an application.
 
 .. _streams_app_log_trc:
 
+*************************
 Application log and trace
-#########################
+*************************
 
 IBM Streams provides application trace and log services.
 
@@ -79,8 +81,9 @@ Streams trace messages if the application is using the `logging` package.
 
 Application code must not modify the root logger, if additional handlers or different levels are required a child logger should be used.
 
+*****************
 Execution Context
-#################
+*****************
 
 This module (`streamsx.ec`) provides access to the execution
 context when Python code is running in a Streams application.
@@ -94,9 +97,6 @@ in a `Topology` or decorated SPL operators.
 
 Most functionality is only available when a Python class is
 being invoked in a Streams application.
-
-Module contents
-###############
 
 """
 

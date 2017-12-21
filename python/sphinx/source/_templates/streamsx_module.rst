@@ -1,6 +1,10 @@
 {{ fullname | escape | underline}}
 
 .. automodule:: {{ fullname }}
+   
+   ***************
+   Module contents
+   ***************
 
    {% block functions %}
    {% if functions %}

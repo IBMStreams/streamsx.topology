@@ -4,15 +4,13 @@
 """
 SPL type definitions.
 
+********
 Overview
-########
+********
 
 SPL is strictly typed, thus when invoking SPL operators
 using classes from ``streamsx.spl.op`` then any parameters
 must use the SPL type required by the operator.
-
-Module contents
-###############
 
 """
 

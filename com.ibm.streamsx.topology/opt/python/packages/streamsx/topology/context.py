@@ -5,15 +5,13 @@
 
 Context for submission of applications.
 
+********
 Overview
-========
+********
 
 The main function is :py:func:`submit` to submit
 a :py:class:`~streamsx.topology.topology.Topology`
 to a Streaming Analytics service or IBM® Streams instance for execution.
-
-Module contents
-===============
 
 """
 from __future__ import print_function

@@ -5,14 +5,12 @@
 """
 Primitive objects for REST bindings.
 
+********
 Overview
-########
+********
 
 Contains classes representing primitive Streams objects, such as
 :py:class:`Instance`, :py:class:`Job`, :py:class:`PE`, etc.
-
-Module contents
-###############
 
 """
 

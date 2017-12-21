@@ -4,8 +4,9 @@
 """
 Integration of SPL operators.
 
+**********************
 Invoking SPL Operators
-++++++++++++++++++++++
+**********************
 
 IBM Streams supports *Stream Processing Language* (SPL),
 a domain specific language for streaming analytics.
@@ -112,9 +113,6 @@ For example invoking a SPL `Beacon` operator using an output function to set the
          Developing Streams applications.
     `Operator invocations <https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.0/com.ibm.streams.ref.doc/doc/operatorinvocations.html>`_
          Operator invocations from the SPL reference documentation.
-
-Module contents
-+++++++++++++++
 
 """
 
