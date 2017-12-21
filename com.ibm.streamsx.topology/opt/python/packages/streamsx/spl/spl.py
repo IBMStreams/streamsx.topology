@@ -4,8 +4,10 @@
 """
 SPL Python primitive operators.
 
+********
 Overview
-========
+********
+
 SPL primitive operators that call a Python function or
 class methods are created by decorators provided by this module.
 
@@ -529,9 +531,6 @@ The list must only contain Python tuples, dictionaries or `None`. The list
 can contain a mix of valid values.
 
 The list may be empty resulting in no tuples being submitted.
-
-Module contents
-===============
 
 """
 

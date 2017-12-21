@@ -3,8 +3,21 @@
 # Copyright IBM Corp. 2017
 
 """
-Contains test related code that is executed at runtime
-in the context of the application under test.
+Runtime tester functionality.
+
+********
+Overview
+********
+
+Module containing runtime functionality for
+:py:mod:`streamsx.topology.tester`.
+
+When test is executed any specified :py:class:`Condition` instances
+are executed in the context of the application under test (and
+not the ``unittest`` class instance). This module separates out
+the runtime execution code from the test definition module
+:py:mod:`~streamsx.topology.tester`.
+
 """
 
 import streamsx.ec as ec
