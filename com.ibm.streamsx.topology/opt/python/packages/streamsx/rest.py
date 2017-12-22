@@ -3,8 +3,7 @@
 # Copyright IBM Corp. 2016,2017
 
 """
-REST API bindings for IBM® Streams
-& IBM Streaming Analytics service on IBM Cloud.
+REST API bindings for IBM® Streams & Streaming Analytics service.
 
 ****************
 Streams REST API
