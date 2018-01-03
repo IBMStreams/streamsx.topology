@@ -20,10 +20,14 @@
  } else {
      $pystyle = splpy_tuplestyle($model->getInputPortAt(0));
  }
- my $fnpystyle = $pystyle;
- my $pystyle_nt = substr($fnpystyle, 0, 11) eq 'namedtuple:';
+ # $pystyle is the raw value from the operator parameter
+ # $pystyle_nt is the value that defines how the function is called
+ # (for style namedtuple:xxxx it is tuple)
+ # $pystyle_nt is non-zero if style is namedtuple
+ my $pystyle_fn = $pystyle;
+ my $pystyle_nt = substr($pystyle, 0, 11) eq 'namedtuple:';
  if ($pystyle_nt) {
-    $fnpystyle = 'tuple';
+    $pystyle_fn = 'tuple';
  }
 %>
 
