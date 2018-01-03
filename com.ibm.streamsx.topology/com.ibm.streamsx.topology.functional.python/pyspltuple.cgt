@@ -22,3 +22,5 @@
  }
 %>
 
+#define pyInNames_ pyInStyleObj_
+
