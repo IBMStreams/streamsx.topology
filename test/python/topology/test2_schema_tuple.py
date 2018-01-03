@@ -141,3 +141,10 @@ class TestSchemaTuple(unittest.TestCase):
         tester.contents(s, ['152Hi!-MapJSON', '304Hi!-MapJSON', '456Hi!-MapJSON'])
         tester.test(self.test_ctxtype, self.test_config)
 
+
+@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
+class TestSchemaNamedTuple(TestSchemaTuple):
+    def _create_stream(self, topo):
+        s = topo.source([1,2,3])
+        schema=StreamSchema('tuple<int32 x, rstring msg>').as_tuple(named=True)
+        return s.map(lambda x : (x,str(x*2) + "Hi!"), schema=schema)

@@ -16,9 +16,14 @@
 
  my $pystyle = $model->getParameterByName("pyStyle");
  if ($pystyle) {
-     $pystyle = substr $pystyle->getValueAt(0)->getSPLExpression(), 1, -1;
+     $pystyle = substr($pystyle->getValueAt(0)->getSPLExpression(), 1, -1);
  } else {
      $pystyle = splpy_tuplestyle($model->getInputPortAt(0));
+ }
+ my $fnpystyle = $pystyle;
+ my $pystyle_nt = substr($fnpystyle, 0, 11) eq 'namedtuple:';
+ if ($pystyle_nt) {
+    $fnpystyle = 'tuple';
  }
 %>
 

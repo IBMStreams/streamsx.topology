@@ -7,6 +7,7 @@ import pickle
 from past.builtins import basestring
 
 import streamsx.ec as ec
+from streamsx.topology.schema import StreamSchema
 
 try:
     import dill
@@ -433,3 +434,8 @@ tuple_in__string_out = object_in__object_out
 tuple_in__json_out = object_in__json_out
 tuple_in__dict_out = object_in__dict_out
 tuple_in = object_in
+
+# Get the _make function for a named tuple.
+# used by functional operators.
+def _get_namedtuple_make(schema, name):
+    return StreamSchema(schema).as_tuple(named=name).style._make

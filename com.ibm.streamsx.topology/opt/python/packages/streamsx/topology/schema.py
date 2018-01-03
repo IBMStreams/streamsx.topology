@@ -357,13 +357,10 @@ class StreamSchema(object) :
         if self.__spl_type:
             return tuple
         if name == True:
-            name = 'StreamSchemaNamedTuple'
-        fields = []
+            name = 'StreamTuple'
+        fields = _attribute_names(self._types)
         if sys.version_info.major == 2 or True:
-            for attr in self._types:
-                fields.append(attr[1])
-
-            nt = collections.namedtuple(name, fields)
+            nt = collections.namedtuple(name, fields, rename=True)
 
         nt._splpy_namedtuple = name
         return nt
@@ -401,6 +398,9 @@ class StreamSchema(object) :
         `typing.NamedTuple` and includes type hints according
         to the attribute types of the structured schema.
 
+        The value of `named` is used as the name of the named tuple
+        class with ``StreamTuple`` used when `named` is ``True``.
+
         It is not guaranteed that the class of the namedtuple is the
         same for all callables processing tuples with the same
         structured schema, only that the tuple is a named tuple
@@ -415,6 +415,7 @@ class StreamSchema(object) :
             StreamSchema: Schema passing stream tuples as ``tuple`` if allowed.
 
         .. versionadded:: 1.8
+        .. versionadded:: 1.9 Addition of `named` parameter.
         """
         if not named:
             return self._copy(tuple)
@@ -499,8 +500,8 @@ class StreamSchema(object) :
             ntp = 'tuple'
         elif schema.style == dict:
             ntp = 'dict'
-        elif _is_namedtuple(schema.style) and schema.style.hasattr('_splpy_namedtuple'):
-            ntp = 'namedtuple'
+        elif _is_namedtuple(schema.style) and hasattr(schema.style, '_splpy_namedtuple'):
+            ntp = 'namedtuple:' + schema.style._splpy_namedtuple
         else:
             return
         op.params[name] = ntp
