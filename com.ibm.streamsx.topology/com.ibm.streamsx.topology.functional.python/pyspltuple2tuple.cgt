@@ -2,12 +2,11 @@
 # Takes the input SPL tuple and converts it to
 # as a tuple to be passed to a Python functional operator
 #
-# Leaves the C++ variable value set to a PyObject * dict.
+# Leaves the C++ variable value set to a PyObject * tuple.
 
 # Variables that need to be set:
 # $iport - input port 
 %>
-@include "../opt/python/codegen/py_splTupleCheckForBlobs.cgt"
 
   PyObject *value = 0;
   {
