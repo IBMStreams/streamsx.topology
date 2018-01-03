@@ -1,0 +1,5 @@
+<% if ($pystyle eq 'dict') { %>
+     SplpyGIL lock;
+     pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
+               getInputPortAt(0));
+<% } %>
