@@ -2,6 +2,23 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 
+"""
+SPL toolkit integration.
+
+********
+Overview
+********
+
+SPL operators are defined by an SPL toolkit. When a ``Topology`` 
+contains invocations of SPL operators, their defining toolkit must
+be made known using :py:func:`add_toolkit`.
+
+Toolkits shipped with the IBM Streams product under
+``$STREAMS_INSTALL/toolkits`` are implictly known and
+must not be added through ``add_toolkit``.
+
+"""
+
 import os
 from streamsx.topology.topology import Topology
 

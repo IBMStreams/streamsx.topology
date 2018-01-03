@@ -3,8 +3,7 @@
 # Copyright IBM Corp. 2015,2017
 
 """
-Python API to allow creation of streaming applications for
-IBM® Streams & Streaming Analytics service on Bluemix.
+Streaming application definition.
 
 Overview
 ########
@@ -162,6 +161,9 @@ composite operators. This allows reuse of adapters and analytics provided by IBM
 open source and third-party SPL toolkits.
 
 See :py:mod:`streamsx.spl.op`
+
+Module contents
+###############
 
 """
 

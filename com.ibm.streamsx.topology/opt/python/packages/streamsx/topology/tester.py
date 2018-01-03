@@ -2,7 +2,13 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 
-"""Testing support for streaming applications.
+"""
+
+Testing support for streaming applications.
+
+********
+Overview
+********
 
 Allows testing of a streaming application by creation conditions
 on streams that are expected to become valid during the processing.
@@ -76,6 +82,7 @@ between tuples are within the timeout period the test remains running until ten 
 
 .. warning::
     Python 3.5 and Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
+
 """
 
 import streamsx.ec as ec

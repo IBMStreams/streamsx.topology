@@ -1,6 +1,19 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
+
+"""
+Primitive objects for REST bindings.
+
+********
+Overview
+********
+
+Contains classes representing primitive Streams objects, such as
+:py:class:`Instance`, :py:class:`Job`, :py:class:`PE`, etc.
+
+"""
+
 import logging
 import requests
 import queue

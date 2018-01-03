@@ -3,11 +3,11 @@
 # Copyright IBM Corp. 2016,2017
 
 """
-Python API that wraps the REST apis for IBM® Streams
-& IBM Streaming Analytics service on IBM Bluemix®.
+REST API bindings for IBM® Streams & Streaming Analytics service.
 
+****************
 Streams REST API
-################
+****************
 
 The Streams REST API provides programmatic access to configuration and status information for IBM Streams objects such as domains, instances, and jobs. 
 
@@ -16,8 +16,9 @@ from Python. Through its functions and the returned objects status information
 can be obtained for items such as :py:class:`instances <.rest_primitives.Instance>` and
 :py:class:`jobs <.rest_primitives.Job>`.
 
+****************************
 Streaming Analytics REST API
-############################
+****************************
 
 You can use the Streaming Analytics REST API to manage your service instance and the IBM Streams jobs that are running on the instance. The Streaming Analytics REST API is accessible from the Bluemix applications that are bound to your service instance or from an application outside of Bluemix that is configured with the service instance VCAP information.
 

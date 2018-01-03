@@ -2,8 +2,11 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
 """
+Integration of SPL operators.
+
+**********************
 Invoking SPL Operators
-++++++++++++++++++++++
+**********************
 
 IBM Streams supports *Stream Processing Language* (SPL),
 a domain specific language for streaming analytics.

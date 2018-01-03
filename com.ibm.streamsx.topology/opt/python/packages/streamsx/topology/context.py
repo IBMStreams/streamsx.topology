@@ -1,7 +1,13 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2017
-"""Context for submission of applications.
+"""
+
+Context for submission of applications.
+
+********
+Overview
+********
 
 The main function is :py:func:`submit` to submit
 a :py:class:`~streamsx.topology.topology.Topology`

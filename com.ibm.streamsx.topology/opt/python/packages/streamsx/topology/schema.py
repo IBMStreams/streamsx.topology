@@ -4,10 +4,15 @@
 """
 Schemas for streams.
 
+********
+Overview
+********
+
 On a structured stream a tuple is a sequence of attributes,
 and an attribute is a named value of a specific type.
 
 The supported types are defined by IBM Streams Streams Processing Language (SPL).
+
 """
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
