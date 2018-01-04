@@ -79,6 +79,7 @@ class SplpySetup {
         setupMemoryViewCheck(pydl);
         runSplSetup(pydl, spl_setup_py_path);
         setupClasses();
+        setupSplNull();
         return pydl;
     }
 
@@ -95,12 +96,20 @@ class SplpySetup {
         PyObject * none =
                 ((__splpy_bv) dlsym(pydl, "Py_BuildValue"))("");
         
-        SplpyGeneral::setNone(none);
+        // Call isNone() and getNone() passing in none which will
+        // be the first caller (as this is in setup)
+        // and thus set the local pointer to None (effectively Py_None).
         bool in = SplpyGeneral::isNone(none);
         if (!in) {
           throw SplpyGeneral::generalException("setup",
-                        "Internal error - None handling");
+                        "Internal error - None handling: isNone");
         }
+        PyObject * ret = SplpyGeneral::getNone(none);
+        if (ret != none) {
+          throw SplpyGeneral::generalException("setup",
+                        "Internal error - None handling: getNone");
+        }
+        Py_DECREF(ret);
     }
 
     /*
@@ -131,11 +140,23 @@ class SplpySetup {
           SplpyGeneral::loadFunction("streamsx.spl.types", "_get_timestamp_tuple"));
        SplpyGeneral::decimalClass(
           SplpyGeneral::loadFunction("decimal", "Decimal"));
+   }
 
-       PyObject *fn = SplpyGeneral::loadFunction("streamsx.spl.types", "null");
-       SplpyGeneral::isSplNull(
-          SplpyGeneral::pyCallObject(fn, NULL));
-       Py_DECREF(fn);
+   static void setupSplNull() {
+       SplpyGIL lock;
+
+       // Get a pointer to SPL null.
+       PyObject *null = SplpyGeneral::callFunction("streamsx.spl.types", "null", NULL, NULL);
+
+        // Call isSplNull() passing in a pointer to SPL null which will
+        // be the first caller (as this is in setup)
+        // and thus set the local pointer to SPL null.
+        bool in = SplpyGeneral::isSplNull(null);
+        if (!in) {
+          throw SplpyGeneral::generalException("setup",
+                        "Internal error - SPL null handling");
+        }
+        Py_DECREF(null);
    }
 
   private:

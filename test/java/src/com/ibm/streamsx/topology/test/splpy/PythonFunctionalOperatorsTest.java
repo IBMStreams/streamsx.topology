@@ -539,7 +539,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     @Test
     public void testReturnDict() throws Exception {
         Topology topology = new Topology("testReturnDict");
-        getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         addTestToolkit(topology);
                
@@ -685,7 +685,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         Tuple st = sparseTupleOut.getResult().get(0);
         assertEquals(37, st.getObject("a")); // set by op
         assertEquals(null, st.getObject("b")); // default as None in tuple
-        assertEquals(null, st.getObject("c")); // default as None in tuple
+        assertEquals(23, st.getObject("c")); // set by op
         assertEquals(-46, st.getObject("d")); // set by op
         assertEquals(null, st.getObject("e")); // default as no value (short tuple)
         
@@ -694,7 +694,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         Tuple stm = sparseTupleMapOut.getResult().get(0);
         assertEquals(37+81, stm.getObject("a")); // set by op
         assertEquals(null, stm.getObject("b")); // match input as None in tuple
-        assertEquals(23, stm.getObject("c")); // match input as None in tuple in tuple
+        assertEquals(23, stm.getObject("c")); // match input as None in tuple
         assertEquals(-46, stm.getObject("d")); // default to matching input
         assertEquals(null, stm.getObject("e")); // default to matching input
         assertEquals(null, stm.getObject("f")); // default as no value (short tuple)

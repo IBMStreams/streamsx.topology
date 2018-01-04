@@ -27,7 +27,7 @@ class OpAPIUtil {
         for (String name : params.keySet()) {
             Object value = fp.get(name);
             if (value == null) {
-                fp.put(name, SPLNullValue.asJSON());
+                fp.put(name, SPL.createNullValue());
             } else if (value instanceof StreamSchema) {
                 fp.put(name, JParamTypes.create(TYPE_SPLTYPE, ((StreamSchema) value).getLanguageType()));
             } else if (value instanceof Attribute) {

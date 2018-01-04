@@ -186,8 +186,13 @@ def rstring(value):
 
 _null = Expression.expression("null")
 
-def valueNull():
+def null():
     """
-    Create an SPL ``null`` value.
+    Return an SPL ``null``.
+
+    Returns:
+        Expression: Expression representing an SPL null value.
+
+    .. versionadded:: TODO support for optional data types added.
     """
     return _null

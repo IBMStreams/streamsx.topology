@@ -37,13 +37,19 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple <%=$
     if (<%=$ai%> < frs) {
          // Value from the Python function
          PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, <%=$ai%>);
-         if (!SplpyGeneral::isNone(pyAttrValue)
 <%
-    if (SPL::CodeGen::Type::isOptional($atype)) {
-             print ' || SplpyGeneral::isSplNull(pyAttrValue)'
+    # None in Python tuple is always mapped to default, or matching input.
+    # None in Python dict was remapped temporarily to Python SPL null.
+    if (hasOptionalTypesSupport() && SPL::CodeGen::Type::isOptional($atype)) {
+         # For optional types let dict None map to default value of null.
+         print 'if (!SplpyGeneral::isNone(pyAttrValue)) {';
+         print '    if (!SplpyGeneral::isSplNull(pyAttrValue))';
+    } else {
+         # For non-optional types map dict None to default or matching input.
+         print 'if (!SplpyGeneral::isNone(pyAttrValue) &&';
+         print '    !SplpyGeneral::isSplNull(pyAttrValue)) {';
     }
 %>
-            ) {
                   streamsx::topology::pySplValueFromPyObject(
                                otuple.get_<%=$name%>(), pyAttrValue);
 <%

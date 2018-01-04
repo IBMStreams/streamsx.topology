@@ -257,6 +257,7 @@ public class TestTopology {
      * Assume optional data types support.
      */
     protected void assumeOptionalTypes() {
+        // TODO: modify version number to match optional types support
         checkMinimumVersion("Optional data types support required", 4, 2, 5);
     }
         

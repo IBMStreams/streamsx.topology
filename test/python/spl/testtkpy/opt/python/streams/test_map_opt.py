@@ -19,7 +19,7 @@ class SparseTupleMap:
        pass
 
     def __call__(self, *t):
-        return (t[0]+81, None, 23) 
+        return (t[0]+81, None, None)
 
 @spl.map()
 def DictTupleMap(**tuple):

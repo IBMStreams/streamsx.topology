@@ -31,6 +31,7 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
+import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.context.remote.TkInfo;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
@@ -104,9 +105,13 @@ public class SPL {
      * Use of this is required to construct an SPL operator parameter
      * null value for an optional type.
      * @return the wrapper object
+     * @since TODO support for optional data types added
      */
     public static Object createNullValue() {
-        return SPLNullValue.asJSON();
+        JsonObject jo = new JsonObject();
+        jo.addProperty("type", JParamTypes.TYPE_SPL_EXPRESSION);
+        jo.addProperty("value", "null");
+        return jo;
     }
     
     private static SPLValue<?> createSPLValue(Object paramValue) {

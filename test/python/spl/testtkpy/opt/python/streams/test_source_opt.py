@@ -34,7 +34,7 @@ class SparseTuple:
 
     def __iter__(self):
         rv = (
-           37, None, None, -46
+           37, None, 23, -46
            )
         return itertools.repeat(rv, 1)
 

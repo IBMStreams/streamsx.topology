@@ -6,21 +6,6 @@ sub splToPythonConversionCheck{
 
     my ($type) = @_;
 
-    # use eval in case optional types are not supported
-    my $isOptionalType = eval {
-        no warnings all;
-        if (SPL::CodeGen::Type::isOptional($type)) {
-            my $value_type = SPL::CodeGen::Type::getUnderlyingType($type);
-            splToPythonConversionCheck($value_type);
-            return 1;
-        }
-        return 0;
-    };
-    if (! $@ && $isOptionalType) {
-        # optional type with optional types supported
-        return;
-    }
-
     if (SPL::CodeGen::Type::isList($type)) {
         my $element_type = SPL::CodeGen::Type::getElementType($type);
         splToPythonConversionCheck($element_type);
@@ -85,6 +70,11 @@ sub splToPythonConversionCheck{
       return;
     }
     elsif (SPL::CodeGen::Type::isComplex32($type) || SPL::CodeGen::Type::isComplex64($type)) {
+      return;
+    }
+    elsif(hasOptionalTypesSupport() && SPL::CodeGen::Type::isOptional($type)) {
+      my $value_type = SPL::CodeGen::Type::getUnderlyingType($type);
+      splToPythonConversionCheck($value_type);
       return;
     }
 
@@ -382,6 +372,39 @@ sub spl_pip_packages {
       $ENV{'PYTHONUSERBASE'} = $pub;
     }
   }
+}
+
+#
+# Return true if optional data types are supported, else false.
+#
+sub hasOptionalTypesSupport {
+    # TODO: modify version number to match optional data types support
+    return hasMinimumProductVersion("4.2.5");
+}
+
+#
+# Return true if the Streams product version matches or exceeds
+# the given version number in "VRMF" format, else false.
+#
+# Note: This test assumes the fixpack ("F") is numeric, or not specified.
+#
+sub hasMinimumProductVersion {
+    my ($requiredVersion) = @_;
+
+    my $productVersion = SPL::Operator::Instance::Context::getProductVersion();
+    SPL::CodeGen::println("xxx product version: $productVersion\n");
+    my @pvrmf = split(/\./, $productVersion);
+    my @vrmf = split(/\./, $requiredVersion);
+    for (my $i = 0; $i <= $#vrmf; $i++) {
+        if (!($vrmf[$i] =~ /^\d+$/)) {
+            SPL::CodeGen::errorln("Invalid version: " . $requiredVersion);
+            return 0;
+        }
+        return 0 if ($i > $#pvrmf);
+        return 0 if ($pvrmf[$i] < $vrmf[$i]);
+        return 1 if ($pvrmf[$i] > $vrmf[$i]);
+    }
+    return 1;
 }
 
 1;

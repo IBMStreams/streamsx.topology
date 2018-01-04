@@ -124,32 +124,27 @@ class SplpyGeneral {
 
   public:
     /*
-     * Return Py_None.
-     */
-    static PyObject * getNone() {
-        return none_;
-    }
-
-    /*
-     * Set Py_None.
+     * Return true if Python object is Py_None.
      * We load Py_None indirectly to avoid
      * having a reference to it when the
      * operator shared library is loaded.
      */
-    static void setNone(PyObject *o) {
-        if (none_ != NULL)
-            throw SplpyGeneral::generalException("setNone",
-                "Internal error - setNone() already called");
-        none_ = o;
-    }
-
-    /*
-     * Return true if Python object is Py_None.
-     */
     static bool isNone(PyObject *o) {
-        return o == none_;
+        static PyObject * none = o;
+        return o == none;
     }
  
+    /*
+     * Return Py_None.
+     * First call is through setup to set the static variable.
+     * Subsequent calls pass null and receive the value.
+     */
+    static PyObject * getNone(PyObject *o) {
+        static PyObject * none = o;
+        Py_INCREF(none);
+        return none;
+    }
+
 #ifdef SPL_RUNTIME_TYPE_OPTIONAL_H 
     /**
      * Return true if object is streamsx.spl.types.Null.
@@ -383,9 +378,6 @@ class SplpyGeneral {
         PyObject * ret = callFunction(mn, fn, arg1, arg2);
         Py_DECREF(ret);
     }
-
-  private:
-    static PyObject * none_;
 };
 
     /*
@@ -621,7 +613,7 @@ class SplpyGeneral {
     // SPL optional tyoe from Python optional tyoe
     template <typename T>
     inline void pySplValueFromPyObject(SPL::optional<T> & s, PyObject *value) {
-        if (SplpyGeneral::isNone(value) || SplpyGeneral::isSplNull(value)) {
+        if (SplpyGeneral::isNone(value)) {
             s.clear();
             return;
         }
@@ -837,12 +829,12 @@ class SplpyGeneral {
     }
  
 #ifdef SPL_RUNTIME_TYPE_OPTIONAL_H 
-    // SPL optional tyoe to Python optional tyoe
+    // SPL optional type to Python object for an optional type
     template <typename T>
     inline PyObject * pySplValueToPyObject(const SPL::optional<T> & o) {
         if (o.isPresent())
              return pySplValueToPyObject(o.value());
-        return SplpyGeneral::getNone();
+        return SplpyGeneral::getNone(NULL);
     }
 #endif
 

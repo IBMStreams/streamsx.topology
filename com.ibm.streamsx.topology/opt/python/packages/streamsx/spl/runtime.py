@@ -1,7 +1,9 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
-#
+
+from streamsx.spl.types import null as null
+
 # Wrap the operator's iterable in a function
 # that when called returns each value from
 # the iteration returned by iter(callable).
@@ -41,29 +43,35 @@ def _splpy_iter_source(iterable) :
 # may be sparse, values not set by the dictionary
 # (etc.) are set to None in the Python tuple.
 
-from streamsx.spl.types import valueNull as types
-
 def _splpy_convert_tuple(attributes):
     """Create a function that converts tuples to
     be submitted as dict objects into Python tuples
     with the value by position.
-    Dict values set to Python None are mapped to SPL null for optional types.
+    Dict values set to Python None are reset to SPL null
+    so they can be mapped later to value not present for optional types.
     Return function handles tuple,dict,list[tuple|dict|None],None
     """
+
+    def _dict_to_tuple(tuple_):
+        for name in tuple_.keys():
+            if tuple_[name] == None:
+                tuple_[name] = null()
+        return tuple(tuple_.get(name, None) for name in attributes)
 
     def _to_tuples(tuple_):
         if isinstance(tuple_, tuple):
             return tuple_
         if isinstance(tuple_, dict):
-            return tuple(tuple_.get(name, types.valueNull()) for name in attributes)
+            return _dict_to_tuple(tuple_)
         if isinstance(tuple_, list):
             lt = list()
             for ev in tuple_:
                 if isinstance(ev, dict):
-                    ev = tuple(ev.get(name, types.valueNull()) for name in attributes)
+                    ev = _dict_to_tuple(ev)
                 lt.append(ev)
             return lt
         return tuple_
+
     return _to_tuples
 
 def _splpy_to_tuples(fn, attributes):
