@@ -18,6 +18,10 @@ def check_correct(named, t):
     if named:
         if not isinstance(t, tuple):
             raise ValueError("Expected a tuple:" + str(t) + " >> type:" + str(type(t)))
+        for fn in type(t)._fields:
+            if not hasattr(t, fn):
+                raise ValueError("Expected tuple:" + str(t) + " >> type:" + str(type(t)) + " to have attribute " + fn)
+ 
     elif type(t) != tuple:
         raise ValueError("Expected a tuple:" + str(t) + " >> type:" + str(type(t)))
 
@@ -41,6 +45,12 @@ def check_is_tuple_hash(t):
     if t[1] != str(t[0]*2) + "Hi!":
         raise ValueError("Incorrect value:" + str(t))
     return t[0]
+
+def check_is_namedtuple_hash(t):
+    check_correct(True, t)
+    if t.msg != str(t.x*2) + "Hi!":
+        raise ValueError("Incorrect value:" + str(t))
+    return t.x
 
 class check_is_tuple_map(check_for_tuple_type):
   def __call__(self, t):
@@ -166,6 +176,9 @@ class TestSchemaTuple(unittest.TestCase):
 class TestSchemaNamedTuple(TestSchemaTuple):
     def is_named(self):
         return True
+
+    def hash_check(self):
+        return check_is_namedtuple_hash
 
     def _create_stream(self, topo):
         s = topo.source([1,2,3])
