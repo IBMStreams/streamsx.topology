@@ -8,11 +8,11 @@
 <% } %>
 
 <% if ($pystyle_nt) { %>
-#define pyNamedtupleMake_ pyInStyleObj_
+#define pyNamedtupleCls_ pyInStyleObj_
 {
      SplpyGIL lock;
-     pyNamedtupleMake_ = streamsx::topology::SplpyGeneral::callFunction(
-        "streamsx.topology.runtime", "_get_namedtuple_make",
+     pyNamedtupleCls_ = streamsx::topology::SplpyGeneral::callFunction(
+        "streamsx.topology.runtime", "_get_namedtuple_cls",
        streamsx::topology::pyUnicode_FromUTF8("<%=$iport->getSPLTupleType()%>"),
        streamsx::topology::pyUnicode_FromUTF8("<%=substr($pystyle, 11)%>"));
 }

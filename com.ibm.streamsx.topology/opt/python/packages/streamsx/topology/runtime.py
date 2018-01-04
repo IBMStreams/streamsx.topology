@@ -435,7 +435,7 @@ tuple_in__json_out = object_in__json_out
 tuple_in__dict_out = object_in__dict_out
 tuple_in = object_in
 
-# Get the _make function for a named tuple.
+# Get the named tuple class for a schema.
 # used by functional operators.
-def _get_namedtuple_make(schema, name):
-    return StreamSchema(schema).as_tuple(named=name).style._make
+def _get_namedtuple_cls(schema, name):
+    return StreamSchema(schema).as_tuple(named=name).style

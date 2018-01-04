@@ -19,11 +19,7 @@
      }
 %>
 <% if ($pystyle_nt) { %>
-    // Wrap the tuple in an tuple to pass it to _make as iterable of values.
-    PyObject *makeargs = PyTuple_New(1);
-    PyTuple_SET_ITEM(makeargs, 0, pyTuple);
-
-    pyTuple = streamsx::topology::SplpyGeneral::pyCallObject(pyNamedtupleMake_, makeargs);
+    pyTuple = streamsx::topology::SplpyGeneral::pyCallObject(pyNamedtupleCls_, pyTuple);
 
 <% } %>
 
