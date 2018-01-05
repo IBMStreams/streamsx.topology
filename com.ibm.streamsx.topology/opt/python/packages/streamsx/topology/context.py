@@ -684,7 +684,7 @@ class JobConfig(object):
         cfg = {}
         job_config = JobConfig(job_name='NewsIngester')
         job_config.add(cfg)
-        context.submit('ANALYTICS_SERVICE', topo, cfg)
+        context.submit('STREAMING_ANALYTICS_SERVICE', topo, cfg)
     """
     def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None, tracing=None):
         self.job_name = job_name
@@ -693,6 +693,7 @@ class JobConfig(object):
         self.data_directory = data_directory
         self.tracing = tracing
         self._pe_count = None
+        self._raw_overlay = None
 
     @property
     def tracing(self):
@@ -766,6 +767,44 @@ class JobConfig(object):
                 raise ValueError("target_pe_count must be greater than 0.")
         self._pe_count = count
 
+    @property
+    def raw_overlay(self):
+        """Raw Job Config Overlay.
+
+        A submitted job is configured using Job Config Overlay which
+        is represented as a JSON. `JobConfig` exposes Job Config Overlay
+        logically with properties such as ``job_name` and ``tracing``.
+        This property (as a ``dict``) allows merging of the
+        configuration defined by this object and raw representation
+        of a Job Config Overlay. This can be used when a capability
+        of Job Config Overlay is not exposed logically through this class.
+
+        For example, the threading model can be set by::
+
+            jc = streamsx.topology.context.JobConfig()
+            jc.raw_overlay = {'deploymentConfig': {'threadingModel': 'manual'}}
+
+        Any logical items set by this object **overwrite** any set with
+        ``raw_overlay``. For example this sets the job name to
+        to value set in the constructor (`DBIngest`) not the value
+        in ``raw_overlay`` (`Ingest`)::
+
+            jc = streamsx.topology.context.JobConfig(job_name='DBIngest')
+            jc.raw_overlay = {'jobConfig': {'jobName': 'Ingest'}}
+
+        .. note:: Contents of ``raw_overlay`` is a ``dict`` that is
+             must match a single Job Config Overlay and be serializable
+             as JSON to the correct format.
+
+        .. seealso:: `Job Config Overlay reference <https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html>`_
+
+        """
+        return self._raw_overlay
+
+    @raw_overlay.setter
+    def raw_overlay(self, raw):
+        self._raw_overlay = raw
+
     def add(self, config):
         """
         Add this `JobConfig` into a submission configuration object.
@@ -786,7 +825,11 @@ class JobConfig(object):
         """
         jco = {}
         config["jobConfigOverlays"] = [jco]
-        jc = {}
+
+        if self._raw_overlay:
+            jco.update(self._raw_overlay)
+
+        jc = jco.get('jobConfig', {})
 
         if self.job_name is not None:
             jc["jobName"] = self.job_name
@@ -803,7 +846,8 @@ class JobConfig(object):
             jco["jobConfig"] = jc
 
         if self.target_pe_count is not None and self.target_pe_count >= 1:
-            deployment = {'fusionScheme' : 'manual', 'fusionTargetPeCount' : self.target_pe_count}
+            deployment = jco.get('deploymentConfig', {})
+            deployment.update({'fusionScheme' : 'manual', 'fusionTargetPeCount' : self.target_pe_count})
             jco["deploymentConfig"] = deployment
 
 
