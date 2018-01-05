@@ -106,7 +106,7 @@ public class BOperatorInvocation extends BOperator {
                  * object {
                  *   type : "__spl_value"
                  *   value : object {
-                 *     value : any. non-null. type appropriate for metaType
+                 *     value : any. non-null. value appropriate for metaType
                  *     metaType : com.ibm.streams.operator.Type.MetaType.name() string
                  *   }
                  * }

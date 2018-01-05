@@ -20,6 +20,7 @@
   <property name="samples.src.dir" location="../../samples/java/functional/src"/>
   <property name="testtk" location="../spl/testtk"/>
   <property name="testtk.java" location="${testtk}/impl/java"/>
+  <property name="testtkopt" location="../spl/testtkopt"/>
 
 
   <makeurl file="${basedir}/log4j.properties" property="topology.log4j"/>
@@ -118,6 +119,10 @@
      <arg value="-i"/>
      <arg value="${testtk}"/>
    </exec>
+   <exec executable="${streams.install}/bin/spl-make-toolkit">
+     <arg value="-i"/>
+     <arg value="${testtkopt}"/>
+   </exec>
    </target>
 	
   <target name="test.toolkit.clean">
@@ -125,6 +130,7 @@
   	<delete dir="${testtk}/testjava"/>
   	<delete dir="${testtk.java}/bin"/>
   	<delete dir="${testtk.java}/bin"/>
+  	<delete file="${testtkopt}/toolkit.xml"/>
   </target>
 
 
