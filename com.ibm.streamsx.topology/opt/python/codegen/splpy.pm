@@ -392,7 +392,10 @@ sub hasMinimumProductVersion {
     my ($requiredVersion) = @_;
 
     my $productVersion = SPL::Operator::Instance::Context::getProductVersion();
+
     SPL::CodeGen::println("xxx product version: $productVersion\n");
+    $productVersion = "4.2.5.0";
+
     my @pvrmf = split(/\./, $productVersion);
     my @vrmf = split(/\./, $requiredVersion);
     for (my $i = 0; $i <= $#vrmf; $i++) {

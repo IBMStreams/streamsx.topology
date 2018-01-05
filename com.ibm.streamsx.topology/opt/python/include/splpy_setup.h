@@ -145,18 +145,17 @@ class SplpySetup {
    static void setupSplNull() {
        SplpyGIL lock;
 
-       // Get a pointer to SPL null.
-       PyObject *null = SplpyGeneral::callFunction("streamsx.spl.types", "null", NULL, NULL);
+       // Get a pointer to SPL null and keep the reference count.
+       PyObject *splNull = SplpyGeneral::callFunction("streamsx.spl.types", "null", NULL, NULL);
 
         // Call isSplNull() passing in a pointer to SPL null which will
         // be the first caller (as this is in setup)
         // and thus set the local pointer to SPL null.
-        bool in = SplpyGeneral::isSplNull(null);
+        bool in = SplpyGeneral::isSplNull(splNull);
         if (!in) {
           throw SplpyGeneral::generalException("setup",
                         "Internal error - SPL null handling");
         }
-        Py_DECREF(null);
    }
 
   private:

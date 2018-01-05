@@ -38,16 +38,28 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple <%=$
          // Value from the Python function
          PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, <%=$ai%>);
 <%
-    # None in Python tuple is always mapped to default, or matching input.
-    # None in Python dict was remapped temporarily to Python SPL null.
+    # A returned value from the Python function is mapped as follows:
+    # - None in Python tuple is mapped:
+    #   - for all types, to matching input, or the default value
+    # - None in Python dict is mapped:
+    #   - for optional types, to SPL null (the default value)
+    #   - for non-optional types, to matching input, or the default value.
+    #
+    # A returned dict has already been converted to a tuple,
+    # and a None in the dict has been converted to Python SPL null
+    # so it can be handled correctly for an optional type.
     if (hasOptionalTypesSupport() && SPL::CodeGen::Type::isOptional($atype)) {
-         # For optional types let dict None map to default value of null.
-         print 'if (!SplpyGeneral::isNone(pyAttrValue)) {';
-         print '    if (!SplpyGeneral::isSplNull(pyAttrValue))';
+         # For optional types map Python SPL null to default value of null.
+%>
+         if (!SplpyGeneral::isNone(pyAttrValue)) {
+             if (!SplpyGeneral::isSplNull(pyAttrValue))
+<%
     } else {
-         # For non-optional types map dict None to default or matching input.
-         print 'if (!SplpyGeneral::isNone(pyAttrValue) &&';
-         print '    !SplpyGeneral::isSplNull(pyAttrValue)) {';
+         # For non-optional types treat Python SPL null the same as None.
+%>
+         if (!SplpyGeneral::isNone(pyAttrValue) &&
+             !SplpyGeneral::isSplNull(pyAttrValue)) {
+<%
     }
 %>
                   streamsx::topology::pySplValueFromPyObject(

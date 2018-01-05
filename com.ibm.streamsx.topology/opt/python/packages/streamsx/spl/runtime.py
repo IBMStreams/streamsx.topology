@@ -53,10 +53,11 @@ def _splpy_convert_tuple(attributes):
     """
 
     def _dict_to_tuple(tuple_):
-        for name in tuple_.keys():
-            if tuple_[name] == None:
-                tuple_[name] = null()
-        return tuple(tuple_.get(name, None) for name in attributes)
+        return tuple(
+            None if name not in tuple_
+            else null() if tuple_.get(name) == None
+            else tuple_.get(name)
+                for name in attributes)
 
     def _to_tuples(tuple_):
         if isinstance(tuple_, tuple):

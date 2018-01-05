@@ -1,6 +1,5 @@
 use strict;
 use warnings;
-use IO::File;
 
 #
 # Return true if optional data types are supported, else false.
