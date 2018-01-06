@@ -34,12 +34,12 @@ def _parse_args():
     cmd_parser = argparse.ArgumentParser(description='Execute a Streams application using a Streaming Analytics service.')
 
     ctx_group = cmd_parser.add_mutually_exclusive_group(required=True)
-    ctx_group.add_argument('--service-name', help='Submit to streaming Analytics service')
+    ctx_group.add_argument('--service-name', help='Submit to Streaming Analytics service')
     ctx_group.add_argument('--create-bundle', action='store_true', help='Create a bundle')
 
     app_group = cmd_parser.add_mutually_exclusive_group(required=True)
     app_group.add_argument('--topology', help='Topology to call')
-    app_group.add_argument('--main-composite', help='SPL Main composite')
+    app_group.add_argument('--main-composite', help='SPL main composite')
 
     cmd_parser.add_argument('--toolkits', nargs='+', help='Additional SPL toolkits')
     cmd_args = cmd_parser.parse_args()
