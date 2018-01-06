@@ -73,6 +73,17 @@ service through HTTPS REST APIs.
    streamsx.rest
    streamsx.rest_primitives
 
+*******
+Scripts
+*******
+
+The `streamsx` package provides a number of command line scripts.
+
+.. toctree::
+
+   scripts/runner.rst
+
+
 Indices and tables
 ==================
 
