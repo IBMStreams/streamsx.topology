@@ -487,7 +487,6 @@ class SplpyGeneral {
 
         PyObject *tst = SplpyGeneral::pyCallObject(
                  SplpyGeneral::timestampGetter(NULL), args);
-        Py_DECREF(args);
 
         splv.setSeconds(
             (int64_t) PyLong_AsLong(PyTuple_GET_ITEM(tst, 0)));
@@ -495,6 +494,7 @@ class SplpyGeneral {
             (uint32_t) PyLong_AsUnsignedLong(PyTuple_GET_ITEM(tst, 1)));
         splv.setMachineId(
             (int32_t) PyLong_AsLong(PyTuple_GET_ITEM(tst, 2)));
+        Py_DECREF(tst);
     }
 
     // decimal
