@@ -2,8 +2,8 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 
-from streamsx.topology.topology import Stream, Window
-import streamsx.topology.schema as sch
+import streamsx.topology.topology
+import streamsx.topology.schema
 
 
 class ExtensionOperator(object):
@@ -26,7 +26,7 @@ class ExtensionOperator(object):
 
     def _add_input(self, _input):
         win_cfg = None
-        if isinstance(_input, Window):
+        if isinstance(_input, streamsx.topology.topology.Window):
             win_cfg = _input._config
             _input = _input.stream
         self._op.addInputPort(outputPort=_input.oport, name=_input.name, window_config = win_cfg)
@@ -52,11 +52,11 @@ class ExtensionOperator(object):
 
             try:
                 for schema in schemas:
-                    schema = sch._stream_schema(schema)
+                    schema = streamsx.topology.schema._stream_schema(schema)
                     oport = self._op.addOutputPort(schema=schema, name=stream_name)
-                    self.outputs.append(Stream(self.topology, oport))
+                    self.outputs.append(streamsx.topology.topology.Stream(self.topology, oport))
             except TypeError:
                 # not iterable, single schema
-                schema = sch._stream_schema(schemas)
+                schema = streamsx.topology.schema._stream_schema(schemas)
                 oport = self._op.addOutputPort(schema=schema, name=self._op.name)
-                self.outputs.append(Stream(self.topology, oport))
+                self.outputs.append(streamsx.topology.topology.Stream(self.topology, oport))
