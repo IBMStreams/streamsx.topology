@@ -177,6 +177,7 @@ try:
 except (ImportError,NameError):
     pass
 
+import copy
 import random
 import streamsx.topology.graph
 import streamsx.topology.schema
@@ -483,8 +484,42 @@ class Stream(object):
 
         Returns:
             str: Name of the stream.
+
+        .. seealso:: :py:meth:`aliased_as`
         """
-        return self.oport.name
+        return self._alias if self._alias else self.oport.name
+
+    def aliased_as(self, name):
+        """
+        Create an alias of this stream.
+
+        Returns an alias of this stream with name `name`.
+        When invocation of an SPL operator requires an
+        :py:class:`~streamsx.spl.op.Expression` against
+        an input port this can be used to ensure expression
+        matches the input port alias regardless of the name
+        of the actual stream.
+
+        Example use where the filter expression for a ``Filter`` SPL operator
+        uses ``IN`` to access input tuple attribute ``seq``::
+
+            s = ...
+            s = s.aliased_as('IN')
+
+            params =  {'filter': op.Expression.expression('IN.seq % 4ul == 0ul')}
+            f = op.Map('spl.relational::Filter', stream, params = params)
+
+        Args:
+            name(str): Name for returned stream.
+
+        Returns:
+            Stream: Alias of this stream with ``name`` equal to `name`.
+        
+        .. versionadded:: 1.9
+        """
+        stream = copy.copy(self)
+        stream._alias = name
+        return stream
 
     def for_each(self, func, name=None):
         """

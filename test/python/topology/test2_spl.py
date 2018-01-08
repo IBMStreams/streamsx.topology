@@ -57,6 +57,29 @@ class TestSPL(unittest.TestCase):
         tester.contents(s, [0, 4, 8, 12, 16, 20, 24])
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_stream_alias(self):
+        """
+        test a stream alias to ensure the SPL expression
+        is consistent with hand-coded SPL expression.
+        """
+        topo = Topology('test_SPLBeaconFilter')
+        s = op.Source(topo, "spl.utility::Beacon",
+            'tuple<uint64 seq>',
+            params = {'period': 0.02, 'iterations':27}, name='SomeName')
+        s.seq = s.output('IterationCount()')
+
+        stream = s.stream.aliased_as('IN')
+
+        f = op.Map('spl.relational::Functor', stream,
+            schema = 'tuple<uint64 a>',
+            params = {'filter': op.Expression.expression('IN.seq % 4ul == 0ul')})
+        f.a = f.output(f.attribute('seq'))
+        s = f.stream.map(lambda x : x['a'])
+
+        tester = Tester(topo)
+        tester.contents(s, [0, 4, 8, 12, 16, 20, 24])
+        tester.test(self.test_ctxtype, self.test_config)
+
     def test_SPL_as_json(self):
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
