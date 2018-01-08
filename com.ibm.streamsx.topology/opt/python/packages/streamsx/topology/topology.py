@@ -819,7 +819,7 @@ class Stream(object):
         """
         lastOp = self.topology.graph.getLastOperator()
         outport = self.oport
-        if (isinstance(lastOp, graph.Marker)):
+        if (isinstance(lastOp, streamsx.topology.graph.Marker)):
             if (lastOp.kind == "$Union$"):
                 pto = self.topology.graph.addPassThruOperator()
                 pto.addInputPort(outputPort=self.oport)
