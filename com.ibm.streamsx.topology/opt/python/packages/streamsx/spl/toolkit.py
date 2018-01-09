@@ -20,7 +20,7 @@ must not be added through ``add_toolkit``.
 """
 
 import os
-from streamsx.topology.topology import Topology
+import streamsx.topology.topology
 
 def add_toolkit(topology, location):
     """Add an SPL toolkit to a topology.
@@ -29,7 +29,7 @@ def add_toolkit(topology, location):
         topology(Topology): Topology to include toolkit in.
         location(str): Location of the toolkit directory.
     """
-    assert isinstance(topology, Topology)
+    assert isinstance(topology, streamsx.topology.topology.Topology)
     tkinfo = dict()
     tkinfo['root'] = os.path.abspath(location)
     topology.graph._spl_toolkits.append(tkinfo)

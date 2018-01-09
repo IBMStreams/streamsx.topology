@@ -15,6 +15,7 @@ must use the SPL type required by the operator.
 """
 
 import datetime
+import streamsx.spl.op
 
 class Timestamp(object):
     """
@@ -120,19 +121,18 @@ def _get_timestamp_tuple(ts):
         return Timestamp.from_datetime().tuple()
     return ts.tuple()
     
-from streamsx.spl.op import Expression
 
 def int8(value):
     """
     Create an SPL ``int8`` value.
     """
-    return Expression('INT8', int(value))
+    return streamsx.spl.op.Expression('INT8', int(value))
 
 def int16(value):
     """
     Create an SPL ``int16`` value.
     """
-    return Expression('INT16', int(value))
+    return streamsx.spl.op.Expression('INT16', int(value))
 
 def int32(value):
     """
@@ -141,52 +141,52 @@ def int32(value):
     Args:
         value(int): Value to be types as ``int32``.
     """
-    return Expression('INT32', int(value))
+    return streamsx.spl.op.Expression('INT32', int(value))
 
 def int64(value):
     """
     Create an SPL ``int64`` value.
     """
-    return Expression('INT64', int(value))
+    return streamsx.spl.op.Expression('INT64', int(value))
 
 def uint8(value):
     """
     Create an SPL ``uint8`` value.
     """
-    return Expression('UINT8', int(value))
+    return streamsx.spl.op.Expression('UINT8', int(value))
 
 def uint16(value):
     """
     Create an SPL ``uint16`` value.
     """
-    return Expression('UINT16', int(value))
+    return streamsx.spl.op.Expression('UINT16', int(value))
 
 def uint32(value):
     """
     Create an SPL ``uint32`` value.
     """
-    return Expression('UINT32', int(value))
+    return streamsx.spl.op.Expression('UINT32', int(value))
 
 def uint64(value):
     """
     Create an SPL ``uint64`` value.
     """
-    return Expression('UINT64', int(value))
+    return streamsx.spl.op.Expression('UINT64', int(value))
 
 def float32(value):
     """
     Create an SPL ``float32`` value.
     """
-    return Expression('FLOAT32', float(value))
+    return streamsx.spl.op.Expression('FLOAT32', float(value))
 
 def float64(value):
     """
     Create an SPL ``float64`` value.
     """
-    return Expression('FLOAT64', float(value))
+    return streamsx.spl.op.Expression('FLOAT64', float(value))
 
 def rstring(value):
     """
     Create an SPL ``rstring`` value.
     """
-    return Expression('RSTRING', str(value))
+    return streamsx.spl.op.Expression('RSTRING', str(value))

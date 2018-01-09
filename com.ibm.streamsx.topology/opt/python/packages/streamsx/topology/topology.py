@@ -178,8 +178,8 @@ except (ImportError,NameError):
     pass
 
 import random
-from streamsx.topology import graph
-from streamsx.topology.schema import StreamSchema, CommonSchema, _SCHEMA_PENDING
+import streamsx.topology.graph
+import streamsx.topology.schema
 import streamsx.topology.functions
 import streamsx.topology.runtime
 import json
@@ -322,7 +322,7 @@ class Topology(object):
         import streamsx.topology._deppkgs
         self.exclude_packages.update(streamsx.topology._deppkgs._DEP_PACKAGES)
         
-        self.graph = graph.SPLGraph(self, name, namespace)
+        self.graph = streamsx.topology.graph.SPLGraph(self, name, namespace)
 
     @property
     def name(self):
@@ -378,7 +378,7 @@ class Topology(object):
         oport = op.addOutputPort(name=_name)
         return Stream(self, oport)._make_placeable()
 
-    def subscribe(self, topic, schema=CommonSchema.Python, name=None):
+    def subscribe(self, topic, schema=streamsx.topology.schema.CommonSchema.Python, name=None):
         """
         Subscribe to a topic published by other Streams applications.
         A Streams application may publish a stream to allow other
@@ -475,6 +475,7 @@ class Stream(object):
         self.topology = topology
         self.oport = oport
         self._placeable = False
+        self._alias = None
 
     @property
     def name(self):
@@ -505,7 +506,7 @@ class Stream(object):
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='ForEach', name=_name, orig_name=name)
         return Sink(op)
 
@@ -535,7 +536,7 @@ class Stream(object):
         _name = self.topology.graph._requested_name(name, action="filter", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='Filter', name=_name, orig_name=name)
         oport = op.addOutputPort(schema=self.oport.schema, name=_name)
         return Stream(self.topology, oport)._make_placeable()
@@ -544,7 +545,7 @@ class Stream(object):
         _name = self.topology.graph._requested_name(name, action="map", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=_name)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(schema=schema, name=_name)
         op._layout(name=_name, orig_name=name)
         return Stream(self.topology, oport)._make_placeable()
@@ -580,7 +581,7 @@ class Stream(object):
         if name is None:
             name = ''.join(random.choice('0123456789abcdef') for x in range(16))
 
-        if self.oport.schema == CommonSchema.Python:
+        if self.oport.schema == streamsx.topology.schema.CommonSchema.Python:
             view_stream = self.as_json(force_object=False)._layout(hidden=True)
             # colocate map operator with stream that is being viewed.
             self.oport.operator.colocate(view_stream.oport.operator, 'view')
@@ -633,7 +634,7 @@ class Stream(object):
         .. versionadded:: 1.8 Support for submitting `dict` objects as stream tuples to a structured stream (in addition to existing support for `tuple` objects).
         """
         if schema is None:
-            schema = CommonSchema.Python
+            schema = streamsx.topology.schema.CommonSchema.Python
      
         ms = self._map(func, schema=schema, name=name)._layout('Map')
         ms.oport.operator.sl = _SourceLocation(_source_info(), 'map')
@@ -674,7 +675,7 @@ class Stream(object):
         _name = self.topology.graph._requested_name(name, action='flat_map', func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(name=_name)
         return Stream(self.topology, oport)._make_placeable()._layout('FlatMap', name=_name, orig_name=name)
     
@@ -777,10 +778,10 @@ class Stream(object):
         elif routing == Routing.HASH_PARTITIONED:
 
             if (func is None):
-                if self.oport.schema == CommonSchema.String:
+                if self.oport.schema == streamsx.topology.schema.CommonSchema.String:
                     keys = ['string']
                     parallel_input = self.oport
-                elif self.oport.schema == CommonSchema.Python:
+                elif self.oport.schema == streamsx.topology.schema.CommonSchema.Python:
                     func = hash
                 else:
                     raise NotImplementedError("HASH_PARTITIONED for schema {0} requires a hash function.".format(self.oport.schema))
@@ -789,9 +790,9 @@ class Stream(object):
                 keys = ['__spl_hash']
                 hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func)
                 hash_adder._layout(hidden=True)
-                hash_schema = self.oport.schema.extend(StreamSchema("tuple<int64 __spl_hash>"))
+                hash_schema = self.oport.schema.extend(streamsx.topology.schema.StreamSchema("tuple<int64 __spl_hash>"))
                 hash_adder.addInputPort(outputPort=self.oport, name=self.name)
-                StreamSchema._fnop_style(self.oport.schema, hash_adder, 'pyStyle')
+                streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, hash_adder, 'pyStyle')
                 parallel_input = hash_adder.addOutputPort(schema=hash_schema)
 
             parallel_op = self.topology.graph.addOperator("$Parallel$", name=_name)
@@ -818,7 +819,7 @@ class Stream(object):
         """
         lastOp = self.topology.graph.getLastOperator()
         outport = self.oport
-        if (isinstance(lastOp, graph.Marker)):
+        if (isinstance(lastOp, streamsx.topology.graph.Marker)):
             if (lastOp.kind == "$Union$"):
                 pto = self.topology.graph.addPassThruOperator()
                 pto.addInputPort(outputPort=self.oport)
@@ -953,9 +954,9 @@ class Stream(object):
         sl = _SourceLocation(_source_info(), 'publish')
         if schema is not None and self.oport.schema.schema() != schema.schema():
             nc = None
-            if schema == CommonSchema.Json:
+            if schema == streamsx.topology.schema.CommonSchema.Json:
                 schema_change = self.as_json()
-            elif schema == CommonSchema.String:
+            elif schema == streamsx.topology.schema.CommonSchema.String:
                 schema_change = self.as_string()
             else:
                 raise ValueError(schema)
@@ -1017,7 +1018,7 @@ class Stream(object):
         Returns:
             Stream: Stream containing the string representations of tuples on this stream.
         """
-        sas = self._change_schema(CommonSchema.String, 'as_string', name)._layout('AsString')
+        sas = self._change_schema(streamsx.topology.schema.CommonSchema.String, 'as_string', name)._layout('AsString')
         sas.oport.operator.sl = _SourceLocation(_source_info(), 'as_string')
         return sas
 
@@ -1054,7 +1055,7 @@ class Stream(object):
 
         """
         func = streamsx.topology.runtime._json_force_object if force_object else None
-        saj = self._change_schema(CommonSchema.Json, 'as_json', name, func)._layout('AsJson')
+        saj = self._change_schema(streamsx.topology.schema.CommonSchema.Json, 'as_json', name, func)._layout('AsJson')
         saj.oport.operator.sl = _SourceLocation(_source_info(), 'as_json')
         return saj
 
@@ -1210,7 +1211,7 @@ class PendingStream(object):
         def __init__(self, topology):
             self.topology = topology
             self._marker = topology.graph.addOperator(kind="$Pending$")
-            self._pending_schema = StreamSchema(_SCHEMA_PENDING)
+            self._pending_schema = streamsx.topology.schema.StreamSchema(streamsx.topology.schema._SCHEMA_PENDING)
 
             self.stream = Stream(topology, self._marker.addOutputPort(schema=self._pending_schema))
 
@@ -1337,7 +1338,7 @@ class Window(object):
             Stream: A `Stream` of the returned values of the supplied function.                                                                                                                                                             
         .. versionadded:: 1.8
         """
-        schema = CommonSchema.Python
+        schema = streamsx.topology.schema.CommonSchema.Python
         
         sl = _SourceLocation(_source_info(), "aggregate")
         name = self.topology.graph._requested_name(name, action="aggregate", func=function)
