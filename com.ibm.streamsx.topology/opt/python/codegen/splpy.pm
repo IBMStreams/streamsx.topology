@@ -374,6 +374,15 @@ sub spl_pip_packages {
   }
 }
 
+my $model;  # local copy of the operator model variable
+
+#
+# Initialize this module.
+#
+sub splpyInit {
+    ($model) = @_;
+}
+
 #
 # Return true if optional data types are supported, else false.
 #
@@ -391,13 +400,8 @@ sub hasOptionalTypesSupport {
 sub hasMinimumProductVersion {
     my ($requiredVersion) = @_;
 
-    my $productVersion = SPL::Operator::Instance::Context::getProductVersion();
-
-    SPL::CodeGen::println("xxx product version: $productVersion\n");
-    $productVersion = "4.2.5.0";
-
-    my @pvrmf = split(/\./, $productVersion);
     my @vrmf = split(/\./, $requiredVersion);
+    my @pvrmf = split(/\./, $model->getContext()->getProductVersion());
     for (my $i = 0; $i <= $#vrmf; $i++) {
         if (!($vrmf[$i] =~ /^\d+$/)) {
             SPL::CodeGen::errorln("Invalid version: " . $requiredVersion);
