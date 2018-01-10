@@ -7,7 +7,7 @@ import itertools
 import test_vers
 
 from streamsx.topology.topology import *
-from streamsx.topology.schema import StreamSchema
+from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.tester import Tester
 
 """
