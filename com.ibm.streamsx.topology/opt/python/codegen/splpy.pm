@@ -113,7 +113,7 @@ sub convertToPythonValueFromExpr {
 
 # Check if a type includes blobs in its definition.
 # Could be just blob, or list<blob> etc.
-# blob is not supported for map/set
+# blob is not supported for map keys or set values.
 sub typeHasBlobs {
   my $type = $_[0];
 
@@ -126,6 +126,10 @@ sub typeHasBlobs {
   }
   if (SPL::CodeGen::Type::isMap($type)) {
       my $value_type = SPL::CodeGen::Type::getValueType($type);
+      return typeHasBlobs($value_type);
+  }
+  if(hasOptionalTypesSupport() && SPL::CodeGen::Type::isOptional($type)) {
+      my $value_type = SPL::CodeGen::Type::getUnderlyingType($type);
       return typeHasBlobs($value_type);
   }
 
@@ -380,6 +384,10 @@ my $model;  # local copy of the operator model variable
 # Initialize this module.
 #
 sub splpyInit {
+    if (defined $model) {
+        # Attempt to detect possible future concurrent processing of operators.
+        SPL::CodeGen::errorln("Internal error: splpyInit() already called.");
+    }
     ($model) = @_;
 }
 

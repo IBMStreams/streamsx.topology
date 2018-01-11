@@ -59,6 +59,7 @@ class DictTuple:
 
         rv4 = dict()
         rv4['b'] = -32;
+        rv4['d'] = None;
         rv4['e'] = -64;
         
         return iter([rv1, rv2, [rv3, rv4]])

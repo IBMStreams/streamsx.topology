@@ -765,7 +765,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(3245, m1.getObject("a"));
         assertEquals(120, m1.getObject("b"));
         assertEquals(93, m1.getObject("c"));
-        assertEquals(null, m1.getObject("d"));
+        assertEquals(1234, m1.getObject("d"));
         assertEquals(null, m1.getObject("e"));
         assertEquals(null, m1.getObject("f"));
         
@@ -781,7 +781,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(1, m3.getObject("a"));
         assertEquals(2, m3.getObject("b"));
         assertEquals(23, m3.getObject("c"));
-        assertEquals(null, m3.getObject("d"));
+        assertEquals(4, m3.getObject("d"));
         assertEquals(25, m3.getObject("e"));
         assertEquals(null, m1.getObject("f"));
         
