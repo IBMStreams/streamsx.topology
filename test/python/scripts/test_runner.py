@@ -90,3 +90,8 @@ class TestRunnerService(unittest.TestCase):
         sr = self._run(args)
         self.assertEqual(jn, sr.name)
 
+    def test_spl_app_with_trace(self):
+        args = self._spl_app_args()
+        args.append('--trace')
+        args.append('debug')
+        self._run(args)
