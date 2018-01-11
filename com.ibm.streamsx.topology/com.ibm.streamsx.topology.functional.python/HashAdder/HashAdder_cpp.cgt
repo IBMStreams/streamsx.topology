@@ -10,7 +10,7 @@ using namespace streamsx::topology;
 @include "../pyspltuple.cgt"
 <%
  # Select the Python wrapper function
- my $pywrapfunc= $pystyle . '_in';
+ my $pywrapfunc= $pystyle_fn . '_in';
 %>
 
 // Constructor
@@ -46,7 +46,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
 @include "../pyspltuple2value.cgt"
 
-<%if ($pystyle eq 'dict' || $pystyle eq 'tuple') {%>
+<%if ($pystyle_fn eq 'dict' || $pystyle_fn eq 'tuple') {%>
 
   OPort0Type otuple;
   otuple.assignFrom(<%=$iport->getCppTupleName()%>, false);
