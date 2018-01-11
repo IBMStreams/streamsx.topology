@@ -147,9 +147,9 @@ class SplpyGeneral {
 
 #ifdef SPL_RUNTIME_TYPE_OPTIONAL_H 
     /**
-     * Return true if object is streamsx.spl.types.Null.
-     * First call is through setup to set the
-     * static variable.
+     * Return true if the Python object is the object returned from
+     * calling streamsx.spl.types.null().
+     * First call is through setup to set the static variable.
      * Subsequent calls compare the argument with the static value.
      */
     static bool isSplNull(PyObject *o) {
