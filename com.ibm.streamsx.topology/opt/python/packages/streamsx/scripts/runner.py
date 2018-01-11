@@ -46,7 +46,7 @@ def _parse_args():
     cmd_parser.add_argument('--toolkits', nargs='+', help='Additional SPL toolkits')
     cmd_parser.add_argument('--job-name', help='Job name')
     cmd_parser.add_argument('--preload', action='store_true', help='Preload job onto all resources in the instance')
-    cmd_parser.add_argument('--trace', help='Application trace level {error|warn|info|debug|trace}')
+    cmd_parser.add_argument('--trace', choices=['error', 'warn', 'info', 'debug', 'trace'], help='Application trace level')
     cmd_args = cmd_parser.parse_args()
     return cmd_args
 
@@ -102,7 +102,7 @@ def _job_config_args(cmd_args, app):
     if cmd_args.preload:
         jc.preload = True
     if cmd_args.trace:
-        jc.tracing = str(cmd_args.trace)
+        jc.tracing = cmd_args.trace
     
 if __name__ == '__main__':
     main()
