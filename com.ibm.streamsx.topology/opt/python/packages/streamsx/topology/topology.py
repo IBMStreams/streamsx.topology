@@ -180,6 +180,7 @@ except (ImportError,NameError):
 import copy
 import random
 import streamsx._streams._placement as _placement
+import streamsx.spl.code.translator
 import streamsx.topology.graph
 import streamsx.topology.schema
 import streamsx.topology.functions
@@ -576,6 +577,11 @@ class Stream(_placement._Placement, object):
         """
         sl = _SourceLocation(_source_info(), 'filter')
         _name = self.topology.graph._requested_name(name, action="filter", func=func)
+        spl_filter = streamsx.spl.code.translator.translate_filter(self, func, name)
+        if spl_filter is not None:
+             return spl_filter
+
+
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
