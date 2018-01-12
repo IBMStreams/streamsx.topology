@@ -35,6 +35,7 @@ import threading
 import sys
 import codecs
 import tempfile
+import copy
 
 logger = logging.getLogger('streamsx.topology.context')
 
@@ -899,6 +900,12 @@ class SubmissionResult(object):
 
     def __contains__(self, item):
         return item in self.results
+
+    def __repr__(self):
+        r = copy.copy(self.results)
+        if 'streamsConnection' in r:
+            del r['streamsConnection']
+        return r.__repr__()
 
 
 def _vcap_from_service_definition(service_def):

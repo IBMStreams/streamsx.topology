@@ -1,0 +1,15 @@
+namespace ns1;
+
+public composite MyApp {
+   graph
+
+   stream<uint64 s> S = Beacon() {
+   param
+     period: 1.0;
+
+   output S:
+        s = IterationCount();
+   }
+
+   () as End = Custom(S) { }
+}
