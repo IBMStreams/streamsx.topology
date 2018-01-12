@@ -94,7 +94,6 @@ class TestRunnerService(unittest.TestCase):
         args = self._spl_app_args()
         args.append('--trace')
         args.append('debug')
-        args.append('--submission-parameters')
         self._run(args)
 
     def test_spl_app_with_params(self):
