@@ -224,8 +224,8 @@ class TestSchema(unittest.TestCase):
 
     def test_get_namedtuple_make(self):
         sch = 'tuple<int32 b, rstring c>'
-        mk = _str._get_namedtuple_make(sch, 'MyTuple')
-        tv = mk((932, 'hello'))
+        cls = _str._get_namedtuple_cls(sch, 'MyTuple')
+        tv = cls(932, 'hello')
         self.assertEqual(932, tv.b)
         self.assertEqual('hello', tv.c)
         self.assertTrue(str(tv).startswith('MyTuple('))
