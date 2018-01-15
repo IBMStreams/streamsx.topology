@@ -27,6 +27,19 @@ def _fetch_from_instance(tc, instance):
 
     tc.assertIsInstance(instance.get_domain(), Domain)
 
+def _check_operators(tc, ops):
+    for op in ops:
+         tc.assertIsInstance(op.operatorKind, str)
+         tc.assertIsInstance(op.name, str)
+         pe = op.get_pe()
+         tc.assertIsInstance(pe, PE)
+        
+         host_op = op.get_host()
+         host_pe = pe.get_host()
+         tc.assertIsInstance(host_op, Host)
+         tc.assertIsInstance(host_pe, Host)
+         tc.assertEqual(host_op.ipAddress, host_pe.ipAddress)
+
 def check_job(tc, job):
     """Basic test of calls against an Job """
     _fetch_from_job(tc, job)
@@ -35,7 +48,10 @@ def check_job(tc, job):
 
 def _fetch_from_job(tc, job):
     _check_non_empty_list(tc, job.get_pes(), PE)
-    _check_non_empty_list(tc, job.get_operators(), Operator)
+    ops = job.get_operators()
+    _check_non_empty_list(tc, ops, Operator)
+    _check_operators(tc, ops)
+     
     _check_non_empty_list(tc, job.get_views(), View)
     _check_non_empty_list(tc, job.get_operator_connections(), OperatorConnection)
 

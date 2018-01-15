@@ -678,6 +678,28 @@ class Operator(_ResourceElement):
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
+    def get_host(self):
+        """Get resource this operator is currently executing in.
+           If the operator is running on an externally
+           managed resource ``None`` is returned.
+
+        Returns:
+            Host: Resource this operator is running on.
+
+        .. versionadded:: 1.9
+        """
+        return Host(self.rest_client.make_request(self.host), self.rest_client) if self.host else None
+
+    def get_pe(self):
+        """Get the Streams processing element this operator is executing in.
+
+        Returns:
+            PE: Processing element for this operator.
+
+        .. versionadded:: 1.9
+        """
+        return PE(self.rest_client.make_request(self.pe), self.rest_client)
+
 
 class OperatorConnection(_ResourceElement):
     """The operator connection element resource provides access to information about a connection between two operator
@@ -778,7 +800,18 @@ class PE(_ResourceElement):
         >>> print(pes[0].resourceType)
         pe
     """
-    pass
+
+    def get_host(self):
+        """Get resource this processing element is currently executing in.
+           If the processing element is running on an externally
+           managed resource ``None`` is returned.
+
+        Returns:
+            Host: Resource this processing element is running on.
+
+        .. versionadded:: 1.9
+        """
+        return Host(self.rest_client.make_request(self.host), self.rest_client) if self.host else None
 
 
 class PEConnection(_ResourceElement):
