@@ -18,6 +18,15 @@ from streamsx.topology.topology import Topology
 import streamsx.spl.toolkit as tk
 import streamsx.spl.op as op
 
+class _SubmitParamArg(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        sp = dict()
+        setattr(namespace, 'submission_parameters', sp)
+        for nvp in values:
+            name,value = nvp.split('=', maxsplit=1)
+            sp[name] = value
+        
+
 def main():
     cmd_args = _parse_args()
     if cmd_args.topology is not None:
@@ -47,6 +56,9 @@ def _parse_args():
     cmd_parser.add_argument('--job-name', help='Job name')
     cmd_parser.add_argument('--preload', action='store_true', help='Preload job onto all resources in the instance')
     cmd_parser.add_argument('--trace', choices=['error', 'warn', 'info', 'debug', 'trace'], help='Application trace level')
+
+    cmd_parser.add_argument('--submission-parameters', '-p', nargs='+', action=_SubmitParamArg, help="Submission parameters as name=value pairs")
+
     cmd_args = cmd_parser.parse_args()
     return cmd_args
 
@@ -103,6 +115,8 @@ def _job_config_args(cmd_args, app):
         jc.preload = True
     if cmd_args.trace:
         jc.tracing = cmd_args.trace
+    if cmd_args.submission_parameters:
+        jc.submission_parameters.update(cmd_args.submission_parameters)
     
 if __name__ == '__main__':
     main()

@@ -1,0 +1,16 @@
+namespace ns1;
+
+public composite SPApp {
+   graph
+
+   stream<uint64 s> S = Beacon() {
+   param
+     period: (float64) getSubmissionTimeValue('period');
+     iterations: (int32) getSubmissionTimeValue('iters');
+
+   output S:
+        s = IterationCount();
+   }
+
+   () as End = Custom(S) { }
+}

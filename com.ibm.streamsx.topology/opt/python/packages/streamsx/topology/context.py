@@ -695,6 +695,7 @@ class JobConfig(object):
         self.tracing = tracing
         self._pe_count = None
         self._raw_overlay = None
+        self._submission_parameters = dict()
 
     @property
     def tracing(self):
@@ -799,12 +800,24 @@ class JobConfig(object):
 
         .. seealso:: `Job Config Overlay reference <https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html>`_
 
+        .. versionadded:: 1.9
         """
         return self._raw_overlay
 
     @raw_overlay.setter
     def raw_overlay(self, raw):
         self._raw_overlay = raw
+
+    @property
+    def submission_parameters(self):
+        """Job submission parameters.
+
+        Submission parameters values for the job. A `dict` object
+        that maps submission parameter names to values.
+
+        .. versionadded:: 1.9
+        """
+        return self._submission_parameters
 
     def add(self, config):
         """
@@ -842,6 +855,12 @@ class JobConfig(object):
             jc['preloadApplicationBundles'] = True
         if self.tracing is not None:
             jc['tracing'] = self.tracing
+
+        if self.submission_parameters:
+             sp = jc.get('submissionParameters', [])
+             for name in self.submission_parameters:
+                  sp.append({'name': str(name), 'value': self.submission_parameters[name]})
+             jc['submissionParameters'] = sp
 
         if jc:
             jco["jobConfig"] = jc

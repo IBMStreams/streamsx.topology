@@ -37,10 +37,10 @@ class TestRunnerService(unittest.TestCase):
         args.append(os.environ['STREAMING_ANALYTICS_SERVICE_NAME'])
         return args
 
-    def _spl_app_args(self):
+    def _spl_app_args(self, name='ns1::MyApp'):
         args = self._service_args()
         args.append('--main-composite')
-        args.append('ns1::MyApp')
+        args.append(name)
         args.append('--toolkit')
         args.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'spl_app'))
         return args
@@ -95,3 +95,14 @@ class TestRunnerService(unittest.TestCase):
         args.append('--trace')
         args.append('debug')
         self._run(args)
+
+    def test_spl_app_with_params(self):
+        args = self._spl_app_args(name='ns1::SPApp')
+        args.append('--submission-parameters')
+        args.append('period=3.4')
+        args.append('iters=100')
+        args.append('--job-name')
+        jn = random_job_name(prefix='SP_JOB_')
+        args.append(jn)
+        sr = self._run(args)
+        self.assertEqual(jn, sr.name)
