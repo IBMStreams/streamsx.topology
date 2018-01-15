@@ -27,8 +27,15 @@ def _splpy_iter_source(iterable) :
                 return tv
      except StopIteration:
        return None
+  
+  _add_shutdown_hook(iterable, _wf)
   return _wf
 
+def _add_shutdown_hook(fn, wrapper):
+    if hasattr(fn, '_splpy_shutdown'):
+        def _splpy_shutdown():
+            fn._splpy_shutdown()
+        wrapper._splpy_shutdown = _splpy_shutdown
 
 # The decorated operators only support converting
 # Python tuples or a list of Python tuples to
@@ -70,10 +77,7 @@ def _splpy_to_tuples(fn, attributes):
       value = fn(*args, **kwargs)
       return conv_fn(value)
 
-   if hasattr(fn, '_splpy_shutdown'):
-       def _splpy_shutdown():
-           fn._splpy_shutdown()
-       _to_tuples._splpy_shutdown = _splpy_shutdown
+   _add_shutdown_hook(fn, _to_tuples)
    return _to_tuples
 
 def _splpy_release_memoryviews(*args):
