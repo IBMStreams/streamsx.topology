@@ -594,13 +594,18 @@ class Job(_ResourceElement):
         """
         return self._get_elements(self.operatorConnections, 'connections', OperatorConnection)
 
-    def get_operators(self):
+    def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this job.
+        Args:
+            name(str): Only return operators matching `name`, where `name` can be a regular expression.  If
+                `name` is not supplied, then all operators for this job are returned.
 
         Returns:
             list(Operator): List of Operator elements associated with this job.
+
+        .versionsince:: 1.9 `name` parameter
         """
-        return self._get_elements(self.operators, 'operators', Operator)
+        return self._get_elements(self.operators, 'operators', Operator, name=name)
 
     def get_pes(self):
         """Get the list of :py:class:`PE` elements associated with this job.
@@ -995,13 +1000,18 @@ class Instance(_ResourceElement):
         >>> print (instances[0].resourceType)
         instance
     """
-    def get_operators(self):
+    def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this instance.
+
+        Args:
+            name(str): Only return operators matching `name`, where `name` can be a regular expression.  If
+                `name` is not supplied, then all operators for this instance are returned.
 
         Returns:
             list(Operator): List of Operator elements associated with this instance.
+        .versionsince:: 1.9 `name` parameter
         """
-        return self._get_elements(self.operators, 'operators', Operator)
+        return self._get_elements(self.operators, 'operators', Operator, name=name)
 
     def get_operator_connections(self):
         """Get the list of :py:class:`OperatorConnection` elements associated with this instance.

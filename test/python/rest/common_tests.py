@@ -111,15 +111,23 @@ class CommonTests(unittest.TestCase):
         self.assertIsInstance(domain, Domain)
         primitives_caller.check_domain(self, domain)
 
+        nops = job.get_operators(name='.*BASIC.')
+        self.assertEqual(2, len(nops))
+
+        nops = job.get_operators(name='.*BASICD')
+        self.assertEqual(1, len(nops))
+        self.assertTrue(nops[0].name.endswith('BASICD'))
+        
+
     def test_basic_calls(self):
         """
         Test the basic rest apis.
         """
         top = topology.Topology()
         src = top.source(['Rest', 'tester'])
-        src = src.filter(lambda x : True)
+        src = src.filter(lambda x : True, name='BASICC')
         src.view()
-        src = src.map(lambda x : x)
+        src = src.map(lambda x : x, name='BASICD')
 
         self.tester = Tester(top)
         self.tester.tuple_count(src, 2)
