@@ -367,7 +367,7 @@ class Topology(object):
         else:
             if _name is None:
                 _name = type(func).__name__
-            func = streamsx.topology.functions._IterableInstance(func)
+            func = streamsx.topology.runtime._IterableInstance(func)
 
         sl = _SourceLocation(_source_info(), "source")
         _name = self.graph._requested_name(_name, action='source', func=func)
