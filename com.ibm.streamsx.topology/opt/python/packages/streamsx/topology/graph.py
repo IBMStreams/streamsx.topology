@@ -120,8 +120,8 @@ class SPLGraph(object):
         self.operators.append(op)
         if not function is None:
             dep_instance = function
-            if isinstance(function, streamsx.topology.functions._IterableInstance):
-                dep_instance = type(function._it)
+            if isinstance(function, streamsx.topology.runtime._WrappedInstance):
+                dep_instance = type(function._callable)
 
             if not inspect.isbuiltin(dep_instance):
                 self.resolver.add_dependencies(inspect.getmodule(dep_instance))
@@ -325,11 +325,11 @@ class _SPLInvocation(object):
 
         # Wrap a lambda as a callable class instance
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
-            function = streamsx.topology.functions._Callable(function)
+            function = streamsx.topology.runtime._Callable(function)
         elif function.__module__ == '__main__':
             # Function/Class defined in main, create a callable wrapping its
             # dill'ed form
-            function = streamsx.topology.functions._Callable(function)
+            function = streamsx.topology.runtime._Callable(function)
          
         if inspect.isroutine(function):
             # callable is a function
