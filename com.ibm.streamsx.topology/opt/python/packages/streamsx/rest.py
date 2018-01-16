@@ -87,8 +87,8 @@ class StreamsConnection:
             pass
         elif st._has_local_install:
             # Assume quickstart
-            username = 'streamsadmin'
-            password = 'passw0rd'
+            username = os.getenv("STREAMS_USERNAME", "streamsadmin")
+            password = os.getenv("STREAMS_PASSWORD", "passw0rd")
         else:
             raise ValueError("Must supply either a Bluemix VCAP Services or a username, password"
                              " to the StreamsConnection constructor.")
