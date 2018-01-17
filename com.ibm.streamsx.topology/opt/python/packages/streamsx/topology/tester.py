@@ -632,7 +632,7 @@ class _ConditionChecker(object):
             return _ConditionChecker._UNHEALTHY
         cms = self._get_job_metrics()
         valid = True
-        progress = True
+        progress = False
         fail = False
         condition_states = {}
         for cn in self._sequences:
@@ -644,9 +644,9 @@ class _ConditionChecker(object):
                 valid = False
                 continue
             seq_m = cms[seq_mn]
-            if seq_m.value == self._sequences[cn]:
-                progress = False
-            else:
+            if seq_m.value != self._sequences[cn]:
+                # At least one condition making progress
+                progress = True
                 self._sequences[cn] = seq_m.value
 
             fail_mn = sttrt.Condition._mn('fail', cn)
