@@ -79,3 +79,13 @@ class TestNames(unittest.TestCase):
      s12.for_each(lambda x : None)
      s12.category = 'DB'
      self.assertEqual(s12.category, 'DB')
+
+  def test_non_placable_names(self):
+     topo = Topology()
+     s0 = topo.source([])
+     s1 = topo.source([])
+     s = s0.union({s1})
+
+     self.assertIsNone(s.category)
+     with self.assertRaises(TypeError):
+         s.category = 'Foo'

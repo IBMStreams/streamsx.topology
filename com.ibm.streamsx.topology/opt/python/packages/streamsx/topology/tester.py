@@ -444,7 +444,7 @@ class Tester(object):
             stream = ct[0]
             cond_sink = stream.for_each(condition, name=condition.name)
             cond_sink.category = 'Tester'
-            cond_sink._op._layout(hidden=True)
+            cond_sink._op()._layout(hidden=True)
 
         if config is None:
             config = {}

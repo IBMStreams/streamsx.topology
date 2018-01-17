@@ -117,8 +117,9 @@ For example invoking a SPL `Beacon` operator using an output function to set the
 """
 
 import streamsx.topology.exop as exop
+from streamsx.topology.topology import _Placement
 
-class Invoke(exop.ExtensionOperator):
+class Invoke(_Placement, exop.ExtensionOperator):
     """
     Declaration of an invocation of an SPL operator in a Topology.
 
@@ -159,7 +160,7 @@ class Invoke(exop.ExtensionOperator):
                  action = kind
         name = topology.graph._requested_name(name, action)
         super(Invoke,self).__init__(topology,kind,inputs,schemas,params,name)
-        self._op._ex_op = self
+        self._op()._ex_op = self
 
     def attribute(self, stream, name):
         """Expression for an input attribute.
@@ -210,32 +211,6 @@ class Invoke(exop.ExtensionOperator):
         e = self.expression(value)
         e._stream = stream
         return e
-
-    @property
-    def category(self):
-        """Category for this operator.
-
-        An arbitrary application label allowing grouping of application
-        elements by category.
-
-        Assign categories based on common function.
-        For example, `ingest` is a common category that you can
-        use to group all ingest operators in an application.
-
-        A category is not required and defaults to ``None`` meaning
-        no assigned category.
-
-        Streams console supports visualization based upon categories.
-
-        .. note:: A category has no affect on the execution of the application.
-
-        .. versionadded:: 1.9
-        """
-        return self._op.category
-
-    @category.setter
-    def category(self, value):
-        self._op.category = value
 
     def _generate(self, opjson):
 

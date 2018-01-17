@@ -465,8 +465,42 @@ class Topology(object):
         else:
              self._files[location].append(path)
         return location + '/' + os.path.basename(path)
+
+class _Placement(object):
+
+    @property
+    def category(self):
+        """Category for this processing logic.
+
+        An arbitrary application label allowing grouping of application
+        elements by category.
+
+        Assign categories based on common function.
+        For example, `database` is a common category that you can
+        use to group all database sinks in an application.
+
+        A category is not required and defaults to ``None`` meaning
+        no assigned category.
+
+        Streams console supports visualization based upon categories.
+
+        Raises:
+            TypeError: No directly associated processing logic.
+
+        .. note:: A category has no affect on the execution of the application.
+
+        .. versionadded:: 1.9
+        """
+        try:
+            return self._op().category
+        except TypeError:
+            return None
+
+    @category.setter
+    def category(self, value):
+        self._op().category = value
      
-class Stream(object):
+class Stream(_Placement, object):
     """
     The Stream class is the primary abstraction within a streaming application. It represents a potentially infinite 
     series of tuples which can be operated upon to produce another stream, as in the case of :py:meth:`map`, or
@@ -477,6 +511,11 @@ class Stream(object):
         self.oport = oport
         self._placeable = False
         self._alias = None
+
+    def _op(self):
+        if not self._placeable:
+            raise TypeError()
+        return self.oport.operator
 
     @property
     def name(self):
@@ -619,7 +658,7 @@ class Stream(object):
         if self.oport.schema == streamsx.topology.schema.CommonSchema.Python:
             view_stream = self.as_json(force_object=False)._layout(hidden=True)
             # colocate map operator with stream that is being viewed.
-            self.oport.operator.colocate(view_stream.oport.operator, 'view')
+            self._op().colocate(view_stream.oport.operator, 'view')
         else:
             view_stream = self
 
@@ -943,7 +982,7 @@ class Stream(object):
             tag = str(tag) + ': '
             fn = lambda v : streamsx.topology.functions.print_flush(tag + str(v))
         sp = self.for_each(fn, name=_name)
-        sp._op.sl = _SourceLocation(_source_info(), 'print')
+        sp._op().sl = _SourceLocation(_source_info(), 'print')
         return sp
 
     def publish(self, topic, schema=None, name=None):
@@ -996,15 +1035,15 @@ class Stream(object):
             else:
                 raise ValueError(schema)
                
-            self.oport.operator.colocate(schema_change.oport.operator, 'publish')
+            self._op().colocate(schema_change.oport.operator, 'publish')
             sp = schema_change.publish(topic, schema=schema, name=name)
-            sp._op.sl = sl
+            sp._op().sl = sl
             return sp
 
         _name = self.topology.graph._requested_name(name, action="publish")
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name)
         op.addInputPort(outputPort=self.oport)
-        self.oport.operator.colocate(op, 'publish')
+        self._op().colocate(op, 'publish')
         op._layout_group('Publish', name if name else _name)
         return Sink(op)
 
@@ -1107,7 +1146,7 @@ class Stream(object):
         if _name is None:
             _name = action 
         css = self._map(func, schema, name=_name)
-        self.oport.operator.colocate(css.oport.operator, action)
+        self._op().colocate(css.oport.operator, action)
         return css
 
     def _make_placeable(self):
@@ -1142,44 +1181,17 @@ class Stream(object):
         .. versionadded:: 1.7
    
         """
-        if not self._placeable:
+        try:
+            plc = self._op()._placement
+            if not 'resourceTags' in plc:
+                plc['resourceTags'] = set()
+            return plc['resourceTags']
+        except TypeError:
             return frozenset()
-        plc = self.oport.operator._placement
-        if not 'resourceTags' in plc:
-            plc['resourceTags'] = set()
-        return plc['resourceTags']
 
     def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
-        self.oport.operator._layout(kind, hidden, name, orig_name)
+        self._op()._layout(kind, hidden, name, orig_name)
         return self
-
-    @property
-    def category(self):
-        """Category for the callable that produced this stream.
-
-        An arbitrary application label allowing grouping of application
-        elements by category.
-
-        Assign categories based on common function.
-        For example, `ingest` is a common category that you can
-        use to group all ingest streams in an application.
-
-        A category is not required and defaults to ``None`` meaning
-        no assigned category.
-
-        Streams console supports visualization based upon categories.
-
-        .. note:: A category has no affect on the execution of the application.
-
-        .. versionadded:: 1.9
-        """
-        return self.oport.operator.category
-
-    @category.setter
-    def category(self, value):
-        if not self._placeable:
-            raise TypeError()
-        self.oport.operator.category = value
 
 
 class View(object):
@@ -1413,7 +1425,7 @@ class Window(object):
 
 
 
-class Sink(object):
+class Sink(_Placement, object):
     """
     Termination of a `Stream`.
     
@@ -1427,30 +1439,7 @@ class Sink(object):
     .. versionadded:: 1.7
     """
     def __init__(self, op):
-        self._op = op
+        self.__op = op
 
-    @property
-    def category(self):
-        """Category for this sink.
-
-        An arbitrary application label allowing grouping of application
-        elements by category.
-
-        Assign categories based on common function.
-        For example, `database` is a common category that you can
-        use to group all database sinks in an application.
-
-        A category is not required and defaults to ``None`` meaning
-        no assigned category.
-
-        Streams console supports visualization based upon categories.
-
-        .. note:: A category has no affect on the execution of the application.
-
-        .. versionadded:: 1.9
-        """
-        return self._op.category
-
-    @category.setter
-    def category(self, value):
-        self._op.category = value
+    def _op(self):
+        return self.__op
