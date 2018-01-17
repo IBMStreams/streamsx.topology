@@ -60,6 +60,7 @@ class OperatorGenerator {
         JsonObject _op = op;
         StringBuilder sb = new StringBuilder();
         noteAnnotations(_op, sb);
+        categoryAnnotation(_op, sb);
         parallelAnnotation(_op, sb);
         viewAnnotation(_op, sb);
         consistentAnnotation(_op, sb);
@@ -157,6 +158,15 @@ class OperatorGenerator {
         sb.append(", text=");
         SPLGenerator.stringLiteral(sb, textObject.toString());
         sb.append(")\n");
+    }
+
+    private static void categoryAnnotation(JsonObject op, StringBuilder sb) {
+        String category = jstring(op, "category");
+        if (category != null) {
+            sb.append("@spl_category(name=");
+            SPLGenerator.stringLiteral(sb, category);
+            sb.append(")\n");
+        }
     }
 
     private static void portTypesNote(JsonObject op, StringBuilder sb) {

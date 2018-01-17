@@ -1153,6 +1153,34 @@ class Stream(object):
         self.oport.operator._layout(kind, hidden, name, orig_name)
         return self
 
+    @property
+    def category(self):
+        """Category for the callable that produced this stream.
+
+        An arbitrary application label allowing grouping of application
+        elements by category.
+
+        Assign categories based on common function.
+        For example, `ingest` is a common category that you can
+        use to group all ingest streams in an application.
+
+        A category is not required and defaults to ``None`` meaning
+        no assigned category.
+
+        Streams console supports visualization based upon categories.
+
+        .. note:: A category has no affect on the execution of the application.
+
+        .. versionadded:: 1.9
+        """
+        return self.oport.operator.category
+
+    @category.setter
+    def category(self, value):
+        if not self._placeable:
+            raise TypeError()
+        self.oport.operator.category = value
+
 
 class View(object):
     """
@@ -1400,3 +1428,29 @@ class Sink(object):
     """
     def __init__(self, op):
         self._op = op
+
+    @property
+    def category(self):
+        """Category for this sink.
+
+        An arbitrary application label allowing grouping of application
+        elements by category.
+
+        Assign categories based on common function.
+        For example, `database` is a common category that you can
+        use to group all database sinks in an application.
+
+        A category is not required and defaults to ``None`` meaning
+        no assigned category.
+
+        Streams console supports visualization based upon categories.
+
+        .. note:: A category has no affect on the execution of the application.
+
+        .. versionadded:: 1.9
+        """
+        return self._op.category
+
+    @category.setter
+    def category(self, value):
+        self._op.category = value

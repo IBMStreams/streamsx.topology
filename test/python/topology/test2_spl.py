@@ -29,6 +29,8 @@ class TestSPL(unittest.TestCase):
             'tuple<uint64 seq>',
             params = {'period': 0.02, 'iterations':100})
         s.seq = s.output('IterationCount()')
+        s.category = 'Generator'
+        self.assertEqual(s.category, 'Generator')
 
         f = op.Map('spl.relational::Filter', s.stream,
             params = {'filter': op.Expression.expression('seq % 2ul == 0ul')})

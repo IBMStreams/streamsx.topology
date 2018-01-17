@@ -21,6 +21,9 @@ class TestNames(unittest.TestCase):
      s1 = topo.source([], name="CoolSource")
      self.assertEqual(s1.name, "CoolSource")
 
+     s1.category = 'Ingest'
+     self.assertEqual(s1.category, 'Ingest')
+
      s1a = topo.source([], name="CoolSource")
      self.assertEqual(s1a.name, "CoolSource_2")
 
@@ -62,6 +65,9 @@ class TestNames(unittest.TestCase):
 
      s9 = s6.map(cool_class, name="mYM")
      self.assertEqual(s9.name, "mYM")
+     s9.category = 'Analytics'
+     self.assertEqual(s9.category, 'Analytics')
+
      s10 = s6.map(cool_class)
      self.assertEqual(s10.name, "cool_class_4")
 
@@ -70,3 +76,6 @@ class TestNames(unittest.TestCase):
      s12 = s6.flat_map(cool_class)
      self.assertEqual(s12.name, "cool_class_5")
      
+     s12.for_each(lambda x : None)
+     s12.category = 'DB'
+     self.assertEqual(s12.category, 'DB')

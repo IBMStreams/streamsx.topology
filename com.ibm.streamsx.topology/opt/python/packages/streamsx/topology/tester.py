@@ -442,7 +442,8 @@ class Tester(object):
         for ct in self._conditions.values():
             condition = ct[1]
             stream = ct[0]
-            stream.for_each(condition, name=condition.name)
+            cond_sink = stream.for_each(condition, name=condition.name)
+            cond_sink.category = 'test'
 
         if config is None:
             config = {}

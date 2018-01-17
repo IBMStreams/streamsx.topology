@@ -211,6 +211,32 @@ class Invoke(exop.ExtensionOperator):
         e._stream = stream
         return e
 
+    @property
+    def category(self):
+        """Category for this operator.
+
+        An arbitrary application label allowing grouping of application
+        elements by category.
+
+        Assign categories based on common function.
+        For example, `ingest` is a common category that you can
+        use to group all ingest operators in an application.
+
+        A category is not required and defaults to ``None`` meaning
+        no assigned category.
+
+        Streams console supports visualization based upon categories.
+
+        .. note:: A category has no affect on the execution of the application.
+
+        .. versionadded:: 1.9
+        """
+        return self._op.category
+
+    @category.setter
+    def category(self, value):
+        self._op.category = value
+
     def _generate(self, opjson):
 
         # For any attribute that is an expression
