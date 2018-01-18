@@ -42,7 +42,7 @@ def main():
   # Publish just the test of tweets to a topic as String
   ts.publish("tweets/text", schema=CommonSchema.String)
 
-  streamsx.topology.context.submit("DISTRIBUTED", topo.graph)
+  streamsx.topology.context.submit("DISTRIBUTED", topo)
 
 if __name__ == '__main__':
     main()
