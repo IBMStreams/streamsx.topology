@@ -1335,7 +1335,7 @@ class StreamingAnalyticsService(object):
         Returns:
             dict: JSON response for the job cancel operation.
         """
-        self._delegator.cancel_job(job_id=job_id, job_name = job_name)
+        return self._delegator.cancel_job(job_id=job_id, job_name = job_name)
 
     def start_instance(self):
         """Start the instance for this Streaming Analytics service.
@@ -1343,7 +1343,7 @@ class StreamingAnalyticsService(object):
         Returns:
             dict: JSON response for the instance start operation.
         """
-        self._delegator.start_instance()
+        return self._delegator.start_instance()
 
     def stop_instance(self):
         """Stop the instance for this Streaming Analytics service.
@@ -1351,7 +1351,7 @@ class StreamingAnalyticsService(object):
         Returns:
             dict: JSON response for the instance start operation.
         """
-        self._delegator.stop_instance()
+        return self._delegator.stop_instance()
 
     def get_instance_status(self):
         """Get the status the instance for this Streaming Analytics service.
@@ -1398,6 +1398,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         prepared = req.prepare()
         res = self.rest_client.session.send(prepared)
         self.rest_client.handle_http_errors(res)
+        return res.json()
 
     def start_instance(self):
         req = requests.Request("PATCH", self._v2_rest_url, json={'state' : 'STARTED'},
@@ -1407,6 +1408,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         prepared = req.prepare()
         res = self.rest_client.session.send(prepared)
         self.rest_client.handle_http_errors(res)
+        return res.json()
 
     def stop_instance(self):
         req = requests.Request("PATCH", self._v2_rest_url, json={'state' : 'STOPPED'},
@@ -1416,6 +1418,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         prepared = req.prepare()
         res = self.rest_client.session.send(prepared)
         self.rest_client.handle_http_errors(res)
+        return res.json()
 
     def get_instance_status(self):
         return self.rest_client.make_request(self._v2_rest_url)
