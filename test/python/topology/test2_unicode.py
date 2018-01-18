@@ -76,10 +76,10 @@ class TestDistributedUnicode(TestUnicode):
         Tester.setup_distributed(self)
 
         # Get username and password
-        username = self.username
-        password = self.password
+        self.username = os.getenv("STREAMS_USERNAME", "streamsadmin")
+        self.password = os.getenv("STREAMS_PASSWORD", "passw0rd")
 
-        self.sc = rest.StreamsConnection(username=username, password=password)
+        self.sc = rest.StreamsConnection(username=self.username, password=self.password)
 
         # Disable SSL verification
         self.sc.session.verify = False
