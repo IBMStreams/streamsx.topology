@@ -1146,7 +1146,8 @@ class Stream(_Placement, object):
         if _name is None:
             _name = action 
         css = self._map(func, schema, name=_name)
-        self._op().colocate(css.oport.operator, action)
+        if self._placeable:
+            self._op().colocate(css._op(), action)
         return css
 
     def _make_placeable(self):
