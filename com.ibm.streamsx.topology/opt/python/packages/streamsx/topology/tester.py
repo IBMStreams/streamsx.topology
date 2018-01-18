@@ -130,6 +130,7 @@ class Tester(object):
         topology.tester = self
         self._conditions = {}
         self.local_check = None
+        self._run_for = 0
 
     @staticmethod
     def setup_standalone(test):
@@ -401,6 +402,27 @@ class Tester(object):
         """
         self.local_check = callable
 
+    def run_for(self, duration):
+        """Run the test for a minimum number of seconds.
+
+        Creates a test wide condition that becomes `valid` when the
+        application under test has been running for `duration` seconds.
+        Maybe be called multiple times, the test will run as long as the maximum value provided.
+
+        Can be used to test applications without any externally visible
+        streams, or streams that do not have testable conditions. For
+        example a complete application may be tested by runnning it for
+        for ten minutes and use :py:meth:`local_check` to test
+        any external impacts, such as messages published to a
+        message queue system.
+
+        Args:
+            duration(float): Minimum number of seconds the test will run for.
+
+        .. versionadded: 1.9
+        """
+        self._run_for = max(self._run_for, float(duration))
+
     def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None):
         """Test the topology.
 
@@ -445,6 +467,13 @@ class Tester(object):
             cond_sink = stream.for_each(condition, name=condition.name)
             cond_sink.category = 'Tester'
             cond_sink._op()._layout(hidden=True)
+
+        if self._run_for:
+            run_cond = sttrt._RunFor(self._run_for)
+            self.add_condition(None, run_cond)
+            cond_run_time = self.topology.source(run_cond, name="TestRunTime")
+            cond_run_time.category = 'Tester'
+            cond_run_time._op()._layout(hidden=True)
 
         if config is None:
             config = {}

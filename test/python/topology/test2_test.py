@@ -2,6 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 import unittest
+import time
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -90,6 +91,24 @@ class TestTester(unittest.TestCase):
         tp = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
         self.assertFalse(tp)
 
-   
+    def test_run_for(self):
+        topo = Topology()
+        s = topo.source([1,2,3])
+        self.tester = Tester(topo)
+        self.tester.local_check = self.get_start_time
+        self.tester.tuple_count(s, 3)
+        self.tester.run_for(120)
+        self.tester.test(self.test_ctxtype, self.test_config)
+        now = time.time()
+        test_duration = now - self.rf_start
+        self.assertTrue(test_duration >= 120)
 
-   
+    def get_start_time(self):
+        job = self.tester.submission_result.job
+        self.rf_start = job.submitTime / 1000.0
+
+@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
+class TestCloudTester(TestTester):
+    def setUp(self):
+        Tester.setup_streaming_analytics(self)
+

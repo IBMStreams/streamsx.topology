@@ -191,3 +191,36 @@ class _TupleCheck(Condition):
 
     def __str__(self):
         return "Tuple checker:" + str(self.checker)
+
+
+class _RunFor(Condition):
+    def __init__(self, duration):
+        super(_RunFor, self).__init__("TestRunTime")
+        self.duration = duration
+
+    def __iter__(self):
+        self.start = time.time()
+        while True:
+            print("_progress_updator:YIEDL", self.duration, flush=True)
+            time.sleep(1)
+            if (time.time() - self.start) >= self.duration:
+                self.valid = True
+                time.sleep(40)
+                return
+            self.valid = False
+            yield None
+
+    def __str__(self):
+        return "Tuple run time:" + str(self.duration)
+
+    def __enter__(self):
+        print("TESTER_START:", self.duration, flush=True)
+        super(_RunFor, self).__enter__()
+        print("TESTER_START_SSS:", self.duration, flush=True)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        print("TESTER_END:", self.duration, flush=True)
+        super(_RunFor, self).__exit__(exc_type, exc_value, traceback)
+
+
+
