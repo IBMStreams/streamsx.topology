@@ -78,7 +78,7 @@ between tuples are within the timeout period the test remains running until ten 
 
 .. note:: The test timeout value is not configurable.
 
-
+.. note:: The submitted job (application under test) has additional elements (streams & operators) inserted to implement the conditions. These are visible through various APIs including the Streams console raw graph view. Such elements are put into the `Tester` category.
 
 .. warning::
     Python 3.5 and Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
@@ -442,7 +442,9 @@ class Tester(object):
         for ct in self._conditions.values():
             condition = ct[1]
             stream = ct[0]
-            stream.for_each(condition, name=condition.name)
+            cond_sink = stream.for_each(condition, name=condition.name)
+            cond_sink.category = 'Tester'
+            cond_sink._op()._layout(hidden=True)
 
         if config is None:
             config = {}

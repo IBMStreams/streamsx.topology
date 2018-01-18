@@ -194,6 +194,7 @@ class _SPLInvocation(object):
         self.kind = kind
         self.function = function
         self.name = name
+        self.category = None
         self.params = {}
         self.setParameters(params)
         self._addOperatorFunction(self.function)
@@ -259,6 +260,8 @@ class _SPLInvocation(object):
     def generateSPLOperator(self):
         _op = {}
         _op["name"] = self.name
+        if self.category:
+            _op["category"] = self.category
 
         _op["kind"] = self.kind
         _op["partitioned"] = False
