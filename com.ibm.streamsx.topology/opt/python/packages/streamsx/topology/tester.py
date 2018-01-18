@@ -444,8 +444,10 @@ class Tester(object):
             assert_on_fail(bool): True to raise an assertion if the test fails, False to return the passed status.
             username(str): username for distributed tests
                 .. deprecated:: 1.8.3
+                Pass the username via the STREAMS_USERNAME environment variable instead.
             password(str): password for distributed tests
                 .. deprecated:: 1.8.3
+                Pass the password via the STREAMS_PASSWORD environment variable instead.
 
         Attributes:
             result: The result of the test. This can contain exit codes, application log paths, or other relevant test information.

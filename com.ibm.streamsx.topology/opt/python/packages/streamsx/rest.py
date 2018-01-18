@@ -62,8 +62,14 @@ class StreamsConnection:
     retrieve that information.
 
     Args:
-        username (str): Username of an authorized Streams user.
+        username (str): Username of an authorized Streams user. If None, the username is taken from the 
+        STREAMS_USERNAME environment variable. If the STREAMS_USERNAME environment variable is not set,
+        the default `streamsadmin` is used.
+
         password (str): Password for `username`
+        If None, the password is taken from the STREAMS_PASSWORD environment variable. If the 
+        STREAMS_PASSWORD environment variable is not set, the default `passw0rd` is used.
+
         resource_url (str, optional): Root URL for IBM Streams REST API.
 
     Example:
