@@ -7,8 +7,7 @@ import itertools
 import logging
 
 from streamsx.topology.topology import *
-from streamsx.topology.context import JobConfig
-from streamsx.topology.context import ConfigParams
+from streamsx.topology.context import JobConfig, ConfigParams
 from streamsx.topology.tester import Tester
 from streamsx import rest
 from streamsx.rest_primitives import _IAMConstants
@@ -30,7 +29,7 @@ class TestJobConfig(unittest.TestCase):
        return unittest.expectedFailure(self)
      job_name = '你好世界'
      topo = Topology()
-     jc = streamsx.topology.context.JobConfig(job_name=job_name)
+     jc = JobConfig(job_name=job_name)
 
      hw = topo.source(["Hello", "Tester"])
      tester = Tester(topo)
@@ -95,7 +94,7 @@ class TestRawOverlay(unittest.TestCase):
         self.assertEqual('myjob72', jc.raw_overlay['jobConfig']['jobName'])
 
         gc = {}
-        jc._add_overlays(gc)
+        jc._add_overlays(gc) #type: ignore
 
         self.assertTrue('jobConfigOverlays' in gc)
         jcol = gc['jobConfigOverlays']
@@ -117,7 +116,7 @@ class TestRawOverlay(unittest.TestCase):
         jc.raw_overlay['other'] = {'xx':'yyy'}
 
         gc = {}
-        jc._add_overlays(gc)
+        jc._add_overlays(gc) #type: ignore
 
         self.assertTrue('jobConfigOverlays' in gc)
         jcol = gc['jobConfigOverlays']
@@ -163,7 +162,7 @@ class TestRawOverlay(unittest.TestCase):
         self.assertEqual(93, jc.target_pe_count)
 
         gc = {}
-        jc._add_overlays(gc)
+        jc._add_overlays(gc) #type: ignore
 
         self.assertTrue('jobConfigOverlays' in gc)
         jcol = gc['jobConfigOverlays']
