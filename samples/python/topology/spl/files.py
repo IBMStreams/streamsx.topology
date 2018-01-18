@@ -29,16 +29,16 @@ def main():
 
     # Follow it with a FileSource operator
     # If no schema is provided then the input schema is used.
-    lines = op.Map("spl.adapter::FileSource", files.stream)
+    file_reader = op.Map("spl.adapter::FileSource", files.stream)
 
     # Feed the lines into a Python function
-    lines = lines.stream.map(string.capwords)
+    lines = file_reader.stream.map(string.capwords)
     
     # Sink lines by printing each of its tuples to standard output
     lines.print()
     
     # Now execute the topology by submitting to a standalone context.
-    streamsx.topology.context.submit("STANDALONE", topo.graph)
+    streamsx.topology.context.submit("STANDALONE", topo)
      
 if __name__ == '__main__':
     main()

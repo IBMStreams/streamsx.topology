@@ -27,7 +27,7 @@ def main():
   # Print to see some output (in the PE Console log)
   ts.print()
 
-  streamsx.topology.context.submit("DISTRIBUTED", topo.graph)
+  streamsx.topology.context.submit("DISTRIBUTED", topo)
 
 if __name__ == '__main__':
     main()
