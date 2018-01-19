@@ -109,6 +109,10 @@ class TestPlacement(unittest.TestCase):
 
         self.assertEqual(s2f_op.get_pe().id, s2_op.get_pe().id)
         self.assertEqual(s2f_op.get_pe().id, s1f_op.get_pe().id)
+        self.assertEqual(s1f_op.get_pe().id, s1e_op.get_pe().id)
+
+        beacon_op = job.get_operators(name='.*BeaconColo')[0]
+        self.assertEqual(beacon_op.get_pe().id, s2_op.get_pe().id)
 
     def test_colocation(self):
         topo = Topology()
@@ -122,9 +126,27 @@ class TestPlacement(unittest.TestCase):
         s1e = s1f.for_each(lambda x : None, name='S1E')
         s2e = s2f.for_each(lambda x : None, name='S2E')
 
+        # S1 -> S1F -> S1E
+        # S2 -> S2F -> S2E
+
         s2e.colocate(s1)
+        # S1(X) -> S1F -> S1E
+        # S2 -> S2F -> S2E(X)
 
         s2f.colocate([s2,s1f])
+        # S1(X) -> S1F(Y) -> S1E
+        # S2(Y) -> S2F(Y) -> S2E(X)
+
+        s1f.colocate(s1e)
+        # S1(X) -> S1F(Y) -> S1E(Y)
+        # S2(Y) -> S2F(Y) -> S2E(X)
+
+        beacon = Source(topo, "spl.utility::Beacon",
+            'tuple<uint64 seq>',
+            params = {'period': 0.02, 'iterations':100},
+            name = 'BeaconColo')
+        beacon.seq = beacon.output('IterationCount()')
+        beacon.colocate(s2)
         
         self.tester = Tester(topo)
         self.tester.local_check = self.check_colocations

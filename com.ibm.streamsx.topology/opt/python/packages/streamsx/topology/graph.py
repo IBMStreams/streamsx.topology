@@ -357,8 +357,11 @@ class _SPLInvocation(object):
             return
         colocate_id = self._placement.get('explicitColocate')
         if colocate_id is None:
-            colocate_id = '__spl_' + why + '_' + str(self.index)
-            self._placement['explicitColocate'] = colocate_id
+            colocate_id = other._placement.get('explicitColocate')
+            if colocate_id is None:
+                colocate_id = '__spl_' + why + '_' + str(self.index)
+
+        self._placement['explicitColocate'] = colocate_id
         other._placement['explicitColocate'] = colocate_id
 
     def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
