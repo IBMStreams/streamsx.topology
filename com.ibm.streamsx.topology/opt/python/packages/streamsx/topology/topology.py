@@ -499,6 +499,43 @@ class _Placement(object):
     @category.setter
     def category(self, value):
         self._op().category = value
+
+    @property
+    def resource_tags(self):
+        """Resource tags for this processing logic.
+
+        Tags are a mechanism for differentiating and identifying resources that have different physical characteristics or logical uses. For example a resource (host) that has external connectivity for public data sources may be tagged `ingest`.
+
+        Processing logic can be associated with one or more tags to require 
+        running on suitably tagged resources. For example
+        adding tags `ingest` and `db` requires that the processing element
+        containing the callable that created the stream runs on a host
+        tagged with both `ingest` and `db`.
+
+        A :py:class:`~streamsx.topology.topology.Stream` that was not created directly with a Python callable
+        cannot have tags associated with it. For example a stream that
+        is a :py:meth:`~streamsx.topology.topology.Stream.union` of multiple streams cannot be tagged.
+        In this case this method returns an empty `frozenset` which
+        cannot be modified.
+
+        See https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/tags.html for more details of tags within IBM Streams.
+
+        Returns:
+            set: Set of resource tags, initially empty.
+
+        .. warning:: If no resources exist with the required tags then job submission will fail.
+        
+        .. versionadded:: 1.7
+        .. versionadded:: 1.9 Support for :py:class:`Sink` and :py:class:`~streamsx.spl.op.Invoke`.
+   
+        """
+        try:
+            plc = self._op()._placement
+            if not 'resourceTags' in plc:
+                plc['resourceTags'] = set()
+            return plc['resourceTags']
+        except TypeError:
+            return frozenset()
      
 class Stream(_Placement, object):
     """
@@ -1153,42 +1190,6 @@ class Stream(_Placement, object):
     def _make_placeable(self):
         self._placeable = True
         return self
-
-    @property
-    def resource_tags(self):
-        """Resource tags for this stream.
-
-        Tags are a mechanism for differentiating and identifying resources that have different physical characteristics or logical uses. For example a resource (host) that has external connectivity for public data sources may be tagged `ingest`.
-
-        A stream can be associated with one or more tags to require its
-        creating callable to run on suitably tagged resources. For example
-        adding tags `ingest` and `db` requires that the processing element
-        containing the callable that created the stream runs on a host
-        tagged with both `ingest` and `db`.
-
-        A stream that was not created directly with a Python callable
-        cannot have tags associated with it. For example a stream that
-        is a :py:meth:`union` of multiple streams cannot be tagged.
-        In this case this method returns an empty `frozenset` which
-        cannot be modified.
-
-        See https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/tags.html for more details of tags within IBM Streams.
-
-        Returns:
-            set: Set of resource tags for the stream, initially empty.
-
-        .. warning:: If no resources exist with the required tags then job submission will fail.
-        
-        .. versionadded:: 1.7
-   
-        """
-        try:
-            plc = self._op()._placement
-            if not 'resourceTags' in plc:
-                plc['resourceTags'] = set()
-            return plc['resourceTags']
-        except TypeError:
-            return frozenset()
 
     def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
         self._op()._layout(kind, hidden, name, orig_name)
