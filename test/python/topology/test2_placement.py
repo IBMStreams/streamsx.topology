@@ -14,6 +14,7 @@ import socket
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx.topology.context import JobConfig
 from streamsx import rest
 from streamsx.rest_primitives import _IAMConstants
 from streamsx.spl.op import Source
@@ -88,5 +89,48 @@ class TestPlacement(unittest.TestCase):
         self.tester = Tester(topo)
         self.tester.tuple_count(h, 2)
         self.tester.local_check = self.check_placements
+     
+        sr = self.tester.test(self.test_ctxtype, self.test_config)
+
+    def check_colocations(self):
+        job = self.tester.submission_result.job
+
+        s1_op = job.get_operators(name='.*S1')[0]
+        s2_op = job.get_operators(name='.*S2')[0]
+
+        s1f_op = job.get_operators(name='.*S1F')[0]
+        s2f_op = job.get_operators(name='.*S2F')[0]
+
+        s1e_op = job.get_operators(name='.*S1E')[0]
+        s2e_op = job.get_operators(name='.*S2E')[0]
+
+        self.assertNotEqual(s1_op.get_pe().id, s2_op.get_pe().id)
+        self.assertEqual(s1_op.get_pe().id, s2e_op.get_pe().id)
+
+        self.assertEqual(s2f_op.get_pe().id, s2_op.get_pe().id)
+        self.assertEqual(s2f_op.get_pe().id, s1f_op.get_pe().id)
+
+    def test_colocation(self):
+        topo = Topology()
+
+        s1 = topo.source([], name='S1')
+        s2 = topo.source([], name='S2')
+
+        s1f = s1.filter(lambda x : True, name='S1F')
+        s2f = s2.filter(lambda x : True, name='S2F')
+
+        s1e = s1f.for_each(lambda x : None, name='S1E')
+        s2e = s2f.for_each(lambda x : None, name='S2E')
+
+        s2e.colocate(s1)
+
+        s2f.colocate([s2,s1f])
+        
+        self.tester = Tester(topo)
+        self.tester.local_check = self.check_colocations
+
+        jc = JobConfig()
+        jc.raw_overlay = {'deploymentConfig': {'fusionScheme':'legacy'}}
+        jc.add(self.test_config)
      
         sr = self.tester.test(self.test_ctxtype, self.test_config)
