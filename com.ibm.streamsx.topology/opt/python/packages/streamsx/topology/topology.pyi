@@ -8,6 +8,8 @@ import datetime
 
 from streamsx.topology.schema import _AnySchema
 
+_StreamWindow = Union[Stream, Window]
+
 class Routing(Enum):
     ROUND_ROBIN=1
     KEY_PARTITIONED=2
@@ -55,6 +57,8 @@ class View(object):
 
 class PendingStream(object):
     def __init__(self, topology: Topology) -> None: ...
+    @property
+    def stream(self) -> Stream: ...
     def complete(self, stream: Stream) -> None: ...
     def is_complete(self) -> bool: ...
 

@@ -22,6 +22,22 @@ class SubmissionResult(object):
     def __init__(self, results: Any) -> None: ...
     def job(self) -> Optional[Any]: ...
 
-class ContextTypes(object): ...
-class ConfigParams(object): ...
+class ContextTypes(object):
+    STREAMING_ANALYTICS_SERVICE : str
+    ANALYTICS_SERVICE : str
+    DISTRIBUTED : str
+    STANDALONE : str
+    BUNDLE : str
+    TOOLKIT : str
+    BUILD_ARCHIVE : str
+    STANDALONE_BUNDLE : str
+
+
+class ConfigParams(object):
+    VCAP_SERVICES : str
+    SERVICE_NAME : str
+    FORCE_REMOTE_BUILD : str
+    JOB_CONFIG : str
+    STREAMS_CONNECTION : str
+    SERVICE_DEFINITION : str
 
