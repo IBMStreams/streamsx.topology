@@ -72,7 +72,7 @@ def _get_callable(f):
         ci = dill.loads(base64.b64decode(f))
         if callable(ci):
             return ci
-    raise TypeError("Class is not callable" + type(ci))
+    raise TypeError("Class is not callable" + str(type(ci)))
 
 def _verify_tuple(tuple_, attributes):
     if isinstance(tuple_, tuple) or tuple_ is None:

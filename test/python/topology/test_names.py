@@ -11,7 +11,13 @@ class cool_class(object):
     def __init__(self):
         pass
     def __call__(self, t):
+        return t
+
+class cool_filter(object):
+    def __init__(self):
         pass
+    def __call__(self, t):
+        return True
 
 class TestNames(unittest.TestCase):
 
@@ -58,10 +64,10 @@ class TestNames(unittest.TestCase):
 
      s6.for_each(name="End", func=cool_class)
 
-     s7 = s6.filter(cool_class, name="mYF")
+     s7 = s6.filter(cool_filter(), name="mYF")
      self.assertEqual(s7.name, "mYF")
-     s8 = s6.filter(cool_class)
-     self.assertEqual(s8.name, "cool_class_3")
+     s8 = s6.filter(cool_filter())
+     self.assertEqual(s8.name, "cool_filter")
 
      s9 = s6.map(cool_class, name="mYM")
      self.assertEqual(s9.name, "mYM")

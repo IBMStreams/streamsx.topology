@@ -44,10 +44,10 @@ class TestSPL(unittest.TestCase):
            Including an output clause.
         """
         topo = Topology('test_SPLBeaconFilter')
-        s = op.Source(topo, "spl.utility::Beacon",
+        beacon = op.Source(topo, "spl.utility::Beacon",
             'tuple<uint64 seq>',
             params = {'period': 0.02, 'iterations':27})
-        s.seq = s.output('IterationCount()')
+        beacon.seq = beacon.output('IterationCount()')
 
         f = op.Map('spl.relational::Functor', s.stream,
             schema = 'tuple<uint64 a>',
