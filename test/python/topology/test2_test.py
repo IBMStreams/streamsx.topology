@@ -20,11 +20,14 @@ def rands():
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestTester(unittest.TestCase):
     def setUp(self):
-        Tester.setup_distributed(self)
+        Tester.setup_standalone(self)
 
     def test_at_least(self):
         """ Test the at least tuple count.
         """
+        if self.test_ctxtype == context.ContextTypes.STANDALONE:
+            return unittest.skip("Standalone tests must complete")
+
         topo = Topology()
         s = topo.source(rands)
         tester = Tester(topo)
@@ -44,6 +47,9 @@ class TestTester(unittest.TestCase):
         """ Test at least count with zero tuples. 
             (kind of a pointless condition, always true).
         """
+        if self.test_ctxtype == context.ContextTypes.STANDALONE:
+            return unittest.skip("Standalone tests must complete")
+
         topo = Topology()
         s = topo.source([])
         tester = Tester(topo)
@@ -53,6 +59,9 @@ class TestTester(unittest.TestCase):
     def test_checker(self):
         """ Test the per-tuple checker.
         """
+        if self.test_ctxtype == context.ContextTypes.STANDALONE:
+            return unittest.skip("Standalone tests must complete")
+
         topo = Topology()
         s = topo.source(rands)
         s = s.filter(lambda r : r > 0.8)
@@ -65,6 +74,8 @@ class TestTester(unittest.TestCase):
     def test_local_check(self):
         """ Test the at least tuple count.
         """
+        if self.test_ctxtype == context.ContextTypes.STANDALONE:
+            return unittest.skip("Standalone tests must complete")
         topo = Topology()
         s = topo.source(rands)
         self.my_local_called = False
@@ -95,9 +106,12 @@ class TestTester(unittest.TestCase):
         topo = Topology()
         s = topo.source([1,2,3])
         self.tester = Tester(topo)
-        self.tester.local_check = self.get_start_time
         self.tester.tuple_count(s, 3)
         self.tester.run_for(120)
+        if self.test_ctxtype == context.ContextTypes.STANDALONE:
+            self.rf_start = time.time()
+        else:
+            self.tester.local_check = self.get_start_time
         self.tester.test(self.test_ctxtype, self.test_config)
         now = time.time()
         test_duration = now - self.rf_start
@@ -106,6 +120,13 @@ class TestTester(unittest.TestCase):
     def get_start_time(self):
         job = self.tester.submission_result.job
         self.rf_start = job.submitTime / 1000.0
+
+
+@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
+class TestDistributedTester(unittest.TestCase):
+    def setUp(self):
+        Tester.setup_distributed(self)
+
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestCloudTester(TestTester):

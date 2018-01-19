@@ -199,28 +199,14 @@ class _RunFor(Condition):
         self.duration = duration
 
     def __iter__(self):
-        self.start = time.time()
+        start = time.time()
         while True:
-            print("_progress_updator:YIEDL", self.duration, flush=True)
             time.sleep(1)
-            if (time.time() - self.start) >= self.duration:
+            if (time.time() - start) >= self.duration:
                 self.valid = True
-                time.sleep(40)
                 return
             self.valid = False
             yield None
 
     def __str__(self):
         return "Tuple run time:" + str(self.duration)
-
-    def __enter__(self):
-        print("TESTER_START:", self.duration, flush=True)
-        super(_RunFor, self).__enter__()
-        print("TESTER_START_SSS:", self.duration, flush=True)
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        print("TESTER_END:", self.duration, flush=True)
-        super(_RunFor, self).__exit__(exc_type, exc_value, traceback)
-
-
-
