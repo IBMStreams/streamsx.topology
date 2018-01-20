@@ -75,12 +75,12 @@ class TestNames(unittest.TestCase):
      self.assertEqual(s9.category, 'Analytics')
 
      s10 = s6.map(cool_class)
-     self.assertEqual(s10.name, "cool_class_4")
+     self.assertEqual(s10.name, "cool_class_3")
 
      s11 = s6.flat_map(cool_class, name="mYFM")
      self.assertEqual(s11.name, "mYFM")
      s12 = s6.flat_map(cool_class)
-     self.assertEqual(s12.name, "cool_class_5")
+     self.assertEqual(s12.name, "cool_class_4")
      
      s12.for_each(lambda x : None)
      s12.category = 'DB'
