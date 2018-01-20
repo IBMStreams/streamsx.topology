@@ -737,7 +737,7 @@ class Stream(_Placement, object):
         if self.oport.schema == streamsx.topology.schema.CommonSchema.Python:
             view_stream = self.as_json(force_object=False)._layout(hidden=True)
             # colocate map operator with stream that is being viewed.
-            self.colocate([view_stream], 'view')
+            self.colocate(view_stream, 'view')
         else:
             view_stream = self
 
@@ -1114,7 +1114,7 @@ class Stream(_Placement, object):
             else:
                 raise ValueError(schema)
                
-            self.colocate([schema_change], 'publish')
+            self.colocate(schema_change, 'publish')
             sp = schema_change.publish(topic, schema=schema, name=name)
             sp._op().sl = sl
             return sp
