@@ -537,7 +537,7 @@ class _Placement(object):
         except TypeError:
             return frozenset()
 
-    def colocate(self, others, reason=None):
+    def colocate(self, others):
         """Colocate this processing logic with others.
 
         Colocating processing logic requires execution in
@@ -560,16 +560,23 @@ class _Placement(object):
 
         .. versionadded: 1.9
         """
-        if not reason:
-            reason = 'colocate'
+        if not others:
+            return self
+       
+        other_ops = list()
         try:
-            for clop in others:
+            for p in others:
                 try:
-                    self._op().colocate(clop._op(), str(reason))
-                except TypeError:
-                    pass # not placeable
-        except TypeError:
-            self._op().colocate(others._op(), reason)
+                    other_ops.append(p._op())
+                except TypeError: # Only add placeables
+                    pass
+        except TypeError: # not an iterable
+            try:
+                other_ops.append(others._op())
+            except TypeError:
+                pass
+ 
+        self._op().colocate(other_ops, 'colocate')
         return self
      
 class Stream(_Placement, object):

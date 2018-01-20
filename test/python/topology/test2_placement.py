@@ -114,6 +114,15 @@ class TestPlacement(unittest.TestCase):
         beacon_op = job.get_operators(name='.*BeaconColo')[0]
         self.assertEqual(beacon_op.get_pe().id, s2_op.get_pe().id)
 
+        s3_op = job.get_operators(name='.*S3')[0]
+        s3f_op = job.get_operators(name='.*S3F')[0]
+        s3e_op = job.get_operators(name='.*S3E')[0]
+
+        self.assertEqual(s3_op.get_pe().id, s3e_op.get_pe().id)
+        self.assertNotEqual(s3_op.get_pe().id, s3f_op.get_pe().id)
+
+        self.assertEqual(s3_op.get_pe().id, s1_op.get_pe().id)
+
     def test_colocation(self):
         topo = Topology()
 
@@ -147,6 +156,17 @@ class TestPlacement(unittest.TestCase):
             name = 'BeaconColo')
         beacon.seq = beacon.output('IterationCount()')
         beacon.colocate(s2)
+
+        # Now a colocation independent of the other sets
+        s3 = topo.source([], name='S3')
+        s3f = s3.filter(lambda x : True, name='S3F')
+        s3e = s3f.for_each(lambda x : None, name='S3E')
+
+        s3.colocate(s3e)
+
+        # and then join to an existing set
+        #print("MERGE!!!")
+        s3.colocate(s1)
         
         self.tester = Tester(topo)
         self.tester.local_check = self.check_colocations
