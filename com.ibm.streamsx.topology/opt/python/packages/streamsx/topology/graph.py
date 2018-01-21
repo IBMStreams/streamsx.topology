@@ -59,6 +59,7 @@ class SPLGraph(object):
         self._spl_toolkits = []
         self._used_names = {'list', 'tuple', 'int'}
         self._layout_group_id = 0
+        self._colocate_tag_mapping = {}
 
     def get_views(self):
         return self._views
@@ -147,6 +148,8 @@ class SPLGraph(object):
         _graph["config"]["includes"] = []
         _graph['config']['spl'] = {}
         _graph['config']['spl']['toolkits'] = self._spl_toolkits
+        if self._colocate_tag_mapping:
+            _graph['config']['colocateTagMapping'] = self._colocate_tag_mapping
         _ops = []
         self._add_modules(_graph["config"]["includes"])
         self._add_packages(_graph["config"]["includes"])
@@ -347,19 +350,37 @@ class _SPLInvocation(object):
         # function.__module__ will be '__main__', so C++ operators cannot import the module
         self.params["pyModule"] = function.__module__
 
-    def colocate(self, other, why):
+    def _remap_colocate_tag(self, colocate_id, tag):
+        ctm = self.graph._colocate_tag_mapping
+        if tag in ctm:
+            old_colocate_id = ctm[tag]
+            if old_colocate_id != colocate_id:
+                ctm[tag] = colocate_id
+                self._remap_colocate_tag(colocate_id, old_colocate_id)
+        else:
+            ctm[tag] = colocate_id
+
+    
+    def colocate(self, others, why):
         """
         Colocate this operator with another.
-        Only supports the case where topology inserts
-        an operator to fufill the required method.
         """
         if isinstance(self, Marker):
             return
+
         colocate_id = self._placement.get('explicitColocate')
-        if colocate_id is None:
+        if not colocate_id:
             colocate_id = '__spl_' + why + '_' + str(self.index)
             self._placement['explicitColocate'] = colocate_id
-        other._placement['explicitColocate'] = colocate_id
+            self._remap_colocate_tag(colocate_id, colocate_id)
+
+        for op in others:
+            tag = op._placement.get('explicitColocate')
+            if tag:
+                if tag != colocate_id:
+                    self._remap_colocate_tag(colocate_id, tag)
+            else:
+                op._placement['explicitColocate'] = colocate_id
 
     def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
         if kind:

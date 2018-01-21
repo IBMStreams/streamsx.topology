@@ -536,6 +536,48 @@ class _Placement(object):
             return plc['resourceTags']
         except TypeError:
             return frozenset()
+
+    def colocate(self, others):
+        """Colocate this processing logic with others.
+
+        Colocating processing logic requires execution in
+        the same Streams processing element (operating system process).
+
+        When a job is submitted Streams may colocate (fuse) processing
+        logic into the same processing element based upon flow analysis
+        and current resource usage. This call instructs that this logic
+        and `others` must be executed in the same processing element.
+
+        Args:
+            others: Processing logic such as a
+                :py:class:`~streamsx.topology.topology.Stream`
+                or :py:class:`~streamsx.topology.topology.Sink`.
+                A single value can be passed or an iterable, such
+                as a list of streams.
+
+        Returns:
+            self: This logic.
+
+        .. versionadded: 1.9
+        """
+        if not others:
+            return self
+       
+        other_ops = list()
+        try:
+            for p in others:
+                try:
+                    other_ops.append(p._op())
+                except TypeError: # Only add placeables
+                    pass
+        except TypeError: # not an iterable
+            try:
+                other_ops.append(others._op())
+            except TypeError:
+                pass
+ 
+        self._op().colocate(other_ops, 'colocate')
+        return self
      
 class Stream(_Placement, object):
     """
@@ -695,7 +737,7 @@ class Stream(_Placement, object):
         if self.oport.schema == streamsx.topology.schema.CommonSchema.Python:
             view_stream = self.as_json(force_object=False)._layout(hidden=True)
             # colocate map operator with stream that is being viewed.
-            self._op().colocate(view_stream.oport.operator, 'view')
+            self.colocate(view_stream, 'view')
         else:
             view_stream = self
 
@@ -1072,7 +1114,7 @@ class Stream(_Placement, object):
             else:
                 raise ValueError(schema)
                
-            self._op().colocate(schema_change.oport.operator, 'publish')
+            self.colocate(schema_change, 'publish')
             sp = schema_change.publish(topic, schema=schema, name=name)
             sp._op().sl = sl
             return sp
@@ -1080,9 +1122,10 @@ class Stream(_Placement, object):
         _name = self.topology.graph._requested_name(name, action="publish")
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name)
         op.addInputPort(outputPort=self.oport)
-        self._op().colocate(op, 'publish')
         op._layout_group('Publish', name if name else _name)
-        return Sink(op)
+        sink = Sink(op)
+        self.colocate(sink, 'publish')
+        return sink
 
     def autonomous(self):
         """
@@ -1184,7 +1227,7 @@ class Stream(_Placement, object):
             _name = action 
         css = self._map(func, schema, name=_name)
         if self._placeable:
-            self._op().colocate(css._op(), action)
+            self.colocate(css, action)
         return css
 
     def _make_placeable(self):

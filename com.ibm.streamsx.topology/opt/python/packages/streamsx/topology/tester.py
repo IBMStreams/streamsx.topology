@@ -465,6 +465,7 @@ class Tester(object):
             condition = ct[1]
             stream = ct[0]
             cond_sink = stream.for_each(condition, name=condition.name)
+            cond_sink.colocate(stream)
             cond_sink.category = 'Tester'
             cond_sink._op()._layout(hidden=True)
 
