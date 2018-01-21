@@ -9,8 +9,7 @@ import streamsx.spl.code.types
 import streamsx.topology.schema 
 import streamsx.spl.op
 
-    
-class _SPLCtx(object):
+class _SPLTupleCtx(object):
     def __init__(self, code, in_schema, out_schema=None):
         self.code = code
         self._tuple = streamsx.spl.code.types.InTuple(0, code.co_varnames[0])
@@ -30,22 +29,23 @@ class _SPLCtx(object):
         self._return = None
 
     def _calculate(self):
+        """Calculate the returned expressions based upon bye code.
+
+        Raises:
+            AttributeError: Code accesses an attribute of the tuple
+                that does not exist.
+            CannotTranslate: Code cannot be translated into SPL.
+           
+        """
         stack = list()
-        try:
-            for ins in dis.get_instructions(self.code):
-                if self._seen_return:
-                    raise streamsx.spl.code.types.CannotTranslate()
-                act = streamsx.spl.code.opcodes.OA.get(ins.opname)
-                if act is not None:
-                    act(self, stack, self.code, ins)
-                else:
-                    raise streamsx.spl.code.types.CannotTranslate()
-        except streamsx.spl.code.types.CannotTranslate as e:
-            print("!!!!!!!")
-            import traceback
-            traceback.print_exc()
-            return False
-        return True
+        for ins in dis.get_instructions(self.code):
+            if self._seen_return:
+                raise streamsx.spl.code.types.CannotTranslate()
+            act = streamsx.spl.code.opcodes.OA.get(ins.opname)
+            if act is not None:
+                act(self, stack, self.code, ins)
+            else:
+                raise streamsx.spl.code.types.CannotTranslate()
 
     def _tuple_spl(ctx, schema, tuple_):
         st = '{'
@@ -79,12 +79,16 @@ def translate_filter(stream, fn, name):
             return ctx.add_translated(stream, name)
     return None
 
-class _FilterCtx(_SPLCtx):
+class _FilterCtx(_SPLTupleCtx):
     def __init__(self, code, in_schema):
         super(_FilterCtx, self).__init__(code, in_schema)
 
     def translate(self):
-        return self._calculate()
+        try:
+            self._calculate()
+            return True
+        except streamsx.spl.code.types.CannotTranslate:
+            return False
 
     def add_translated(self, stream, name):
         if type(self._return) in streamsx.spl.code.types.CT_BUILTINS:
@@ -112,13 +116,15 @@ def translate_map(stream, fn, out_schema, name):
             return ctx.add_translated(stream, name)
     return None
 
-class _MapCtx(_SPLCtx):
+class _MapCtx(_SPLTupleCtx):
     def __init__(self, code, in_schema, out_schema):
         super(_MapCtx, self).__init__(code, in_schema, out_schema)
 
 
     def translate(self):
-        if not self._calculate():
+        try:
+            self._calculate()
+        except streamsx.spl.code.types.CannotTranslate:
             return False
 
         if not isinstance(self._return, streamsx.spl.code.types.CodeTuple):
