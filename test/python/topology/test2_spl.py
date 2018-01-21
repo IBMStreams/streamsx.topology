@@ -6,12 +6,15 @@ import itertools
 
 import test_vers
 
+from streamsx.topology.schema import StreamSchema
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
-from streamsx.topology import schema
 import streamsx.topology.context
 import streamsx.spl.op as op
+from streamsx.spl.types import Timestamp
 
+def ts_check(tuple_):
+    return isinstance(tuple_.ts, Timestamp)
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSPL(unittest.TestCase):
@@ -108,6 +111,28 @@ class TestSPL(unittest.TestCase):
 
         tester = Tester(topo)
         tester.contents(s, [{'seq':0, 'b':'str!'}, {'seq':1, 'b':'str!'}, {'seq':2, 'b':'str!'}, {'seq':3, 'b':'str!'}, {'seq':4, 'b':'str!'}])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_timestamp(self):
+        ts_schema = StreamSchema('tuple<int32 a, timestamp ts>').as_tuple(named=True)
+
+        ts1 = Timestamp(133001, 302245576, 56)
+        ts2s = Timestamp(23543463, 876265298, 32)
+        dt1 = ts2s.datetime()
+        ts2 = Timestamp.from_datetime(dt1)
+
+        self.assertEqual(ts2s.seconds, ts2s.seconds);
+
+        topo = Topology()
+        s = topo.source([(1,ts1), (2,dt1)])
+        s = s.map(lambda x : x, schema=ts_schema)
+        as_ts = s.map(lambda x : x.ts.tuple())
+        s.print()
+
+        tester = Tester(topo)
+        tester.tuple_check(s, ts_check)
+        tester.tuple_count(s, 2)
+        tester.contents(as_ts, [ts1.tuple(), ts2.tuple()])
         tester.test(self.test_ctxtype, self.test_config)
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
