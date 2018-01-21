@@ -31,16 +31,20 @@ class ReadAttribute(object):
 
 class CodeValue(object):
     def __init__(self, code_type, expr):
-        self.code_type_ = code_type
+        self.code_type = code_type
         self.expr = expr
 
     def __str__(self):
         return str(self.expr)
 
+class CodeTuple(object):
+    def __init__(self, args):
+        self.values = args
+
 CT_BUILTINS={int,float,bool}
 
-CT_INTS={'int8', 'int16', 'int32', 'int64'}
-CT_FLOATS={'float32', 'float64'}
+CT_INTS=['int8', 'int16', 'int32', 'int64']
+CT_FLOATS=['float32', 'float64']
 CT_BOOLEANS={'boolean', bool}
 
 def value_type(value):
@@ -51,33 +55,52 @@ def value_type(value):
          t = value.code_type
      return t
 
-def code_cast(value, code_type):
-    if hasattr(value, 'code_type') and value.code_type == code_type:
+def same_type(value, target_type):
+    return hasattr(value, 'code_type') and value.code_type == target_type
+
+def code_cast(value, target_type):
+    if same_type(value, target_type):
          return value
-    cv = '((' + code_type + ') ' + str(value) + ')'
-    return CodeValue(code_type, cv)
+    cv = '((' + target_type + ') ' + str(value) + ')'
+    return CodeValue(target_type, cv)
 
 def binary_upcast(lhs, rhs):
-    lt = streamsx.spl.code.types.value_type(lhs)
-    rt = streamsx.spl.code.types.value_type(rhs)
+    lt = value_type(lhs)
+    rt = value_type(rhs)
+    print("BUT:", lt, rt)
     if lt == rt:
         pass
-    elif lt in streamsx.spl.code.types.CT_INTS:
-        lhs,rhs = lhs_int_upcast(lhs, lt, rhs, rt)
-    elif rt in streamsx.spl.code.types.CT_INTS:
+    elif lt in CT_INTS:
+        lhs,rhs = int_upcast(lhs, lt, rhs, rt)
+    elif rt in CT_INTS:
         # yes args are swapped as the rhs is driving the type
-        rhs,lhs = lhs_int_upcast(rhs, rt, lhs, lt)
+        rhs,lhs = int_upcast(rhs, rt, lhs, lt)
     else:
         _cannot_translate()
     return (lhs, rhs)
 
+def unary_cast(value, target_type):
+    if same_type(value, target_type):
+         return value
+    print(type(value))
+    vt = value_type(value)
+    print("UNARY", vt, target_type)
+    if vt in CT_BUILTINS:
+        if target_type in CT_INTS:
+            return code_cast(int(value), target_type)
+    elif vt in CT_INTS:
+        return code_cast(value, target_type)
+    _cannot_translate()
+
 def int_upcast(v, t, ov, ot):
+    print("IUT:", t, ot)
     if ot is int:
-        ov = streamsx.spl.code.types.code_cast(ov, t)
-    elif ot in streamsx.spl.code.types.CT_INTS:
-        t = streamsx.spl.code.types.CT_INTS[max(streamsx.spl.code.types.CT_INTS.index(t), streamsx.spl.code.types.CT_INTS.index(ot))]
-        v = streamsx.spl.code.types.code_cast(v, t)
-        ov = streamsx.spl.code.types.code_cast(ov, t)
+        ov = code_cast(ov, t)
+    elif ot in CT_INTS:
+        print("IUT:", CT_INTS.index(t), CT_INTS.index(ot))
+        t = CT_INTS[max(CT_INTS.index(t), CT_INTS.index(ot))]
+        v = code_cast(v, t)
+        ov = code_cast(ov, t)
     else:
         _cannot_translate()
     return (v, ov)

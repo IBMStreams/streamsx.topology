@@ -31,7 +31,11 @@ def _load_attr(ctx, stack, code, ins):
 def _binary_op(ctx, stack, code, ins, op):
     tos = stack.pop()
     tos1 = stack.pop()
-    stack.append('(' + str(tos1) + ' ' + op + ' ' + str(tos) + ')')
+    tos, tos1 = streamsx.spl.code.types.binary_upcast(tos, tos1)
+    expr = '(' + str(tos1) + ' ' + op + ' ' + str(tos) + ')'
+    et = streamsx.spl.code.types.value_type(tos)
+    val = streamsx.spl.code.types.CodeValue(et, expr)
+    stack.append(val)
 
 def _binary_add(ctx, stack, code, ins):
     _binary_op(ctx, stack, code, ins, '+')
@@ -40,7 +44,7 @@ def _binary_subtract(ctx, stack, code, ins):
     _binary_op(ctx, stack, code, ins, '-')
 
 def _binary_subscr(ctx, stack, code, ins):
-    """ supports tuple_[str_constant]"""
+    """ supports tuple_[int|str]"""
     tos = stack.pop()
     tos1 = stack.pop()
     if tos1 is ctx._tuple:
@@ -84,7 +88,7 @@ def _compare_op(ctx, stack, code, ins):
     stack.append(streamsx.spl.code.types.CodeValue(bool, cv))
 
 def _build_tuple(ctx, stack, code, ins):
-    items = tuple(stack[len(stack)-ins.arg:])
+    items = streamsx.spl.code.types.CodeTuple(tuple(stack[len(stack)-ins.arg:]))
     for _ in range(ins.arg):
         stack.pop()
     stack.append(items)

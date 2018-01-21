@@ -11,7 +11,7 @@ import streamsx.spl.op
 
     
 class _SPLCtx(object):
-    def __init__(self, code, in_schema):
+    def __init__(self, code, in_schema, out_schema=None):
         self.code = code
         self._tuple = streamsx.spl.code.types.InTuple(0, code.co_varnames[0])
         self.in_schema = in_schema
@@ -19,6 +19,13 @@ class _SPLCtx(object):
         attrs = streamsx.spl.code.types.attributes(in_schema)
         self.in_attrs_pos = attrs[0]
         self.in_attrs_name = attrs[1]
+
+        if out_schema:
+            self.out_schema = out_schema
+            attrs = streamsx.spl.code.types.attributes(out_schema)
+            self.out_attrs_pos = attrs[0]
+            self.out_attrs_name = attrs[1]
+
         self._seen_return = False
         self._return = None
 
@@ -91,13 +98,56 @@ class _FilterCtx(_SPLCtx):
         _op = streamsx.spl.op.Map('spl.relational::Filter', stream, params=params, name=name)
         return _op.stream
 
+def translate_map(stream, fn, out_schema, name):
+    """Translate a Python map to SPL if possible."""
+    if not _translatable_schema(out_schema):
+        return None
+    in_schema = stream.oport.schema
+    if not _translatable_schema(in_schema):
+        return None
+
+    if hasattr(fn, '__code__'):
+        ctx = _MapCtx(fn.__code__, in_schema, out_schema)
+        if ctx.translate():
+            return ctx.add_translated(stream, name)
+    return None
 
 class _MapCtx(_SPLCtx):
-    def __init__(self, code, in_schema=None, out_schema=None):
-        super(_MapCtx, self).__init__(code, in_schema)
+    def __init__(self, code, in_schema, out_schema):
+        super(_MapCtx, self).__init__(code, in_schema, out_schema)
 
-    def _spl_json(self):
-        if self._calculate():
-            print(self._tuple_spl(None, self._return))
 
+    def translate(self):
+        if not self._calculate():
+            return False
+
+        if not isinstance(self._return, streamsx.spl.code.types.CodeTuple):
+            return False
+
+        if len(self._return.values) != len(self.out_attrs_pos):
+            return False
+
+        try:
+            values = self._return.values
+            assignments = []
+            for i in range(len(self.out_attrs_pos)):
+                attr = self.out_attrs_pos[i]
+                assignments.append(streamsx.spl.code.types.unary_cast(values[i], attr.code_type))
+            self.assignments = assignments
+            return True
+        except streamsx.spl.code.types.CannotTranslate:
+            print("XXXXXXXXXXXXXXX")
+            import traceback
+            traceback.print_exc()
+            return False
+
+    def add_translated(self, stream, name):
+        stream = stream.aliased_as(self._tuple.name)
+
+        params = {}
+        _op = streamsx.spl.op.Map('spl.relational::Functor', stream, schema=self.out_schema, params=params, name=name)
+        for i in range(len(self.out_attrs_pos)):
+            attr = self.out_attrs_pos[i]
+            setattr(_op, attr.name, _op.output(str(self.assignments[i])))
+        return _op.stream
 

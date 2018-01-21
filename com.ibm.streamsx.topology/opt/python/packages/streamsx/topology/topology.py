@@ -683,7 +683,11 @@ class Stream(_placement._Placement, object):
         """
         if schema is None:
             schema = streamsx.topology.schema.CommonSchema.Python
-     
+        else:
+            spl_map = streamsx.spl.code.translator.translate_map(self, func, schema, name)
+            if spl_map is not None:
+                return spl_map
+
         ms = self._map(func, schema=schema, name=name)._layout('Map')
         ms.oport.operator.sl = _SourceLocation(_source_info(), 'map')
         return ms
