@@ -14,7 +14,7 @@ import streamsx.spl.op as op
 from streamsx.spl.types import Timestamp
 
 def ts_check(tuple_):
-    return isinstance(tuple_.ts, Timestamp)
+    return isinstance(tuple_[1], Timestamp)
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSPL(unittest.TestCase):
@@ -89,7 +89,7 @@ class TestSPL(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_timestamp(self):
-        ts_schema = StreamSchema('tuple<int32 a, timestamp ts>').as_tuple(named=True)
+        ts_schema = StreamSchema('tuple<int32 a, timestamp ts>').as_tuple()
 
         ts1 = Timestamp(133001, 302245576, 56)
         ts2s = Timestamp(23543463, 876265298, 32)
@@ -101,7 +101,7 @@ class TestSPL(unittest.TestCase):
         topo = Topology()
         s = topo.source([(1,ts1), (2,dt1)])
         s = s.map(lambda x : x, schema=ts_schema)
-        as_ts = s.map(lambda x : x.ts.tuple())
+        as_ts = s.map(lambda x : x[1])
         s.print()
 
         tester = Tester(topo)
