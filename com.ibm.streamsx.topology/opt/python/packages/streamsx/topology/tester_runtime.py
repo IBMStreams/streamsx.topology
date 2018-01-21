@@ -191,3 +191,22 @@ class _TupleCheck(Condition):
 
     def __str__(self):
         return "Tuple checker:" + str(self.checker)
+
+
+class _RunFor(Condition):
+    def __init__(self, duration):
+        super(_RunFor, self).__init__("TestRunTime")
+        self.duration = duration
+
+    def __iter__(self):
+        start = time.time()
+        while True:
+            time.sleep(1)
+            if (time.time() - start) >= self.duration:
+                self.valid = True
+                return
+            self.valid = False
+            yield None
+
+    def __str__(self):
+        return "Tuple run time:" + str(self.duration)
