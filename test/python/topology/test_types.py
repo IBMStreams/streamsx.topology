@@ -58,6 +58,14 @@ class TestTypes(unittest.TestCase):
       now = time.time()
       ts = Timestamp.now()
       self.assertTrue(ts.time() >= now)
+
+  def test_timestamp_nanos(self):
+      Timestamp(1, 0)
+      Timestamp(1, 999999999)
+      self.assertRaises(ValueError, Timestamp, 1, -1)
+      self.assertRaises(ValueError, Timestamp, 1, -2)
+      self.assertRaises(ValueError, Timestamp, 1, 1000000000)
+      self.assertRaises(ValueError, Timestamp, 1, 5000000000)
       
   def test_TimestampToDatetime(self):
       # 2017-06-04 11:48:25.008880
