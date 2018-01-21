@@ -101,7 +101,6 @@ class _Placement(object):
         return self._colocate(others, 'colocate')
 
     def _colocate(self, others, why):
-       
         other_ops = list()
         try:
             for p in others:
