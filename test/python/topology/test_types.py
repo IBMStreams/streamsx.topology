@@ -3,6 +3,7 @@
 import unittest
 import sys
 import dill
+import pickle
 import datetime
 import time
 import random
@@ -52,7 +53,16 @@ class TestTypes(unittest.TestCase):
       self.assertEqual(23423, tsft.seconds)
       self.assertEqual(20*1000.0*1000.0, float(tsft.nanoseconds))
       self.assertEqual(93, tsft.machine_id)
- 
+
+  def test_timestamp_pickle(self):
+     ts = Timestamp(1,2,3)
+     tsp = pickle.loads(pickle.dumps(ts))
+     self.assertEqual(ts, tsp)
+
+  def test_timestamp_dill(self):
+     ts = Timestamp(4,5,6)
+     tsp = dill.loads(dill.dumps(ts))
+     self.assertEqual(ts, tsp)
 
   def test_timestamp_now(self):
       now = time.time()
