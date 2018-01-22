@@ -562,6 +562,9 @@ class _Placement(object):
         """
         if not others:
             return self
+        return self._colocate(others, 'colocate')
+
+    def _colocate(self, others, why):
        
         other_ops = list()
         try:
@@ -576,7 +579,7 @@ class _Placement(object):
             except TypeError:
                 pass
  
-        self._op().colocate(other_ops, 'colocate')
+        self._op().colocate(other_ops, why)
         return self
      
 class Stream(_Placement, object):
@@ -737,7 +740,7 @@ class Stream(_Placement, object):
         if self.oport.schema == streamsx.topology.schema.CommonSchema.Python:
             view_stream = self.as_json(force_object=False)._layout(hidden=True)
             # colocate map operator with stream that is being viewed.
-            self.colocate(view_stream, 'view')
+            self._colocate(view_stream, 'view')
         else:
             view_stream = self
 
@@ -1114,7 +1117,7 @@ class Stream(_Placement, object):
             else:
                 raise ValueError(schema)
                
-            self.colocate(schema_change, 'publish')
+            self._colocate(schema_change, 'publish')
             sp = schema_change.publish(topic, schema=schema, name=name)
             sp._op().sl = sl
             return sp
@@ -1124,7 +1127,7 @@ class Stream(_Placement, object):
         op.addInputPort(outputPort=self.oport)
         op._layout_group('Publish', name if name else _name)
         sink = Sink(op)
-        self.colocate(sink, 'publish')
+        self._colocate(sink, 'publish')
         return sink
 
     def autonomous(self):
@@ -1227,7 +1230,7 @@ class Stream(_Placement, object):
             _name = action 
         css = self._map(func, schema, name=_name)
         if self._placeable:
-            self.colocate(css, action)
+            self._colocate(css, action)
         return css
 
     def _make_placeable(self):
