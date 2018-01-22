@@ -52,7 +52,7 @@ class TestSPL(unittest.TestCase):
             params = {'period': 0.02, 'iterations':27})
         beacon.seq = beacon.output('IterationCount()')
 
-        f = op.Map('spl.relational::Functor', s.stream,
+        f = op.Map('spl.relational::Functor', beacon.stream,
             schema = 'tuple<uint64 a>',
             params = {'filter': op.Expression.expression('seq % 4ul == 0ul')})
         f.a = f.output(f.attribute('seq'))
