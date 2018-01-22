@@ -79,7 +79,6 @@ class SplpySetup {
         setupMemoryViewCheck(pydl);
         runSplSetup(pydl, spl_setup_py_path);
         setupClasses();
-        setupSplNull();
         return pydl;
     }
 
@@ -140,22 +139,6 @@ class SplpySetup {
           SplpyGeneral::loadFunction("streamsx.spl.types", "_get_timestamp_tuple"));
        SplpyGeneral::decimalClass(
           SplpyGeneral::loadFunction("decimal", "Decimal"));
-   }
-
-   static void setupSplNull() {
-       SplpyGIL lock;
-
-       // Get a pointer to SPL null and keep the reference count.
-       PyObject *splNull = SplpyGeneral::callFunction("streamsx.spl.types", "null", NULL, NULL);
-
-        // Call isSplNull() passing in a pointer to SPL null which will
-        // be the first caller (as this is in setup)
-        // and thus set the local pointer to SPL null.
-        bool in = SplpyGeneral::isSplNull(splNull);
-        if (!in) {
-          throw SplpyGeneral::generalException("setup",
-                        "Internal error - SPL null handling");
-        }
    }
 
   private:
