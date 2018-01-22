@@ -117,9 +117,9 @@ For example invoking a SPL `Beacon` operator using an output function to set the
 """
 
 import streamsx.topology.exop as exop
-from streamsx.topology.topology import _Placement
+import streamsx._streams._placement as _placement
 
-class Invoke(_Placement, exop.ExtensionOperator):
+class Invoke(_placement._Placement, exop.ExtensionOperator):
     """
     Declaration of an invocation of an SPL operator in a Topology.
 
