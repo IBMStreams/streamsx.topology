@@ -291,6 +291,8 @@ class Topology(object):
            Package names in `include_packages` take precedence over package names in `exclude_packages`.
     """  
 
+    TRANSLATE_FEATURE = "TRANSLATE"
+
     def __init__(self, name=None, namespace=None, files=None):
         if name is None or namespace is None:
             # Take the name of the calling function
@@ -326,6 +328,10 @@ class Topology(object):
         self.exclude_packages.update(streamsx.topology._deppkgs._DEP_PACKAGES)
         
         self.graph = streamsx.topology.graph.SPLGraph(self, name, namespace)
+
+        # feature support
+        self.features = dict()
+        self.features[Topology.TRANSLATE_FEATURE] = os.environ.get('STREAMSX_TOPOLOGY_' + Topology.TRANSLATE_FEATURE, False)
 
     @property
     def name(self):

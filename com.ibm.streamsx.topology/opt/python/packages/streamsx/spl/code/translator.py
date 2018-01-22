@@ -4,32 +4,72 @@
 
 import copy
 import dis
+import inspect
 import streamsx.spl.code.opcodes
-import streamsx.spl.code.types
-import streamsx.topology.schema 
+import streamsx.spl.code.types as types
+import streamsx.topology.schema
+import streamsx.topology.topology
 import streamsx.spl.op
 
+
+
 class _SPLTupleCtx(object):
+    """Code translator for a function passed a structured schema tuple as a single argument.
+    """
     def __init__(self, code, in_schema, out_schema=None):
         self.code = code
-        self._tuple = streamsx.spl.code.types.InTuple(0, code.co_varnames[0])
+        self._tuple = types.InTuple(0, code.co_varnames[0])
         self.in_schema = in_schema
         # Attributes by position and name
-        attrs = streamsx.spl.code.types.attributes(in_schema)
+        attrs = types.attributes(in_schema)
         self.in_attrs_pos = attrs[0]
         self.in_attrs_name = attrs[1]
+        self._referenced_attrs = set()
 
         if out_schema:
             self.out_schema = out_schema
-            attrs = streamsx.spl.code.types.attributes(out_schema)
+            attrs = types.attributes(out_schema)
             self.out_attrs_pos = attrs[0]
             self.out_attrs_name = attrs[1]
 
         self._seen_return = False
         self._return = None
 
+        self.jumps = dict()
+
+    def alias(self):
+        """Alias the input stream requires once it is translated to SPL operator invocation.
+
+        The SPL expressions reference the input tuple as the returned value.
+        """
+        return self._tuple.name
+
+    def read_attribute(self, name):
+        self._referenced_attrs.add(name)
+        return types.ReadAttribute(self._tuple, self.in_attrs_name[name])
+
+
+    def merge_jumps(self, stack, ins):
+        jump_values = self.jumps.get(ins.offset)
+        if not jump_values:
+            return
+
+        while jump_values:
+            jv = jump_values.pop()
+            jv_val = jv[0]
+            jv_ins = jv[1]
+            if jv_ins.opname == 'JUMP_IF_FALSE_OR_POP':
+                tos = types.CodeValue('boolean', types.binary(jv_val, '&&', types.as_boolean(stack.pop())))
+                stack.append(tos)
+            elif jv_ins.opname == 'JUMP_IF_TRUE_OR_POP':
+                tos = types.CodeValue('boolean', types.binary(jv_val, '||', types.as_boolean(stack.pop())))
+                stack.append(tos)
+            else:
+                raise types.CannotTranslate()
+
+
     def _calculate(self):
-        """Calculate the returned expressions based upon bye code.
+        """Calculate the returned expressions based upon byte code.
 
         Raises:
             AttributeError: Code accesses an attribute of the tuple
@@ -40,12 +80,14 @@ class _SPLTupleCtx(object):
         stack = list()
         for ins in dis.get_instructions(self.code):
             if self._seen_return:
-                raise streamsx.spl.code.types.CannotTranslate()
+                raise types.CannotTranslate()
             act = streamsx.spl.code.opcodes.OA.get(ins.opname)
             if act is not None:
+                if ins.is_jump_target:
+                    self.merge_jumps(stack, ins)
                 act(self, stack, self.code, ins)
             else:
-                raise streamsx.spl.code.types.CannotTranslate()
+                raise types.CannotTranslate()
 
     def _tuple_spl(ctx, schema, tuple_):
         st = '{'
@@ -60,74 +102,120 @@ class _SPLTupleCtx(object):
         st += '}'
         return st
 
-def _translatable_schema(schema):
+def enabled(topo, fn):
+
+    state = topo.features.get(streamsx.topology.topology.Topology.TRANSLATE_FEATURE, False)
+    if isinstance(state, bool):
+        if not state:
+            return False
+    else:
+        state = str(state).lower()
+        state = state == 'true' or state == 'yes'
+        if not state:
+            return False
+
+    if hasattr(fn, '_spl_translate'):
+        return fn._spl_translate
+    return True
+
+
+def translatable_schema(schema):
     if streamsx.topology.schema.is_common(schema):
         return False
     if not hasattr(schema, '_types'):
         return False
     return True
 
+def translatable_logic(fn):
+    return inspect.isfunction(fn) and hasattr(fn, '__code__')
+
 def translate_filter(stream, fn, name):
     """Translate a Python filter to an SPL Filter if possible."""
+
+    if not enabled(stream.topology, fn):
+        return None
     schema = stream.oport.schema
-    if not _translatable_schema(schema):
+    if not translatable_schema(schema):
         return None
 
-    if hasattr(fn, '__code__'):
-        ctx = _FilterCtx(fn.__code__, schema)
+    if translatable_logic(fn):
+        ctx = FilterCtx(fn.__code__, schema)
         if ctx.translate():
             return ctx.add_translated(stream, name)
     return None
 
-class _FilterCtx(_SPLTupleCtx):
+class FilterCtx(_SPLTupleCtx):
+    """Translator for a Python filter against a structured schema.
+
+    Args:
+        code: Code atttribute ``__code__`` of Python function.
+        in_schema(StreamSchema): Schema of input stream.
+
+    """
     def __init__(self, code, in_schema):
-        super(_FilterCtx, self).__init__(code, in_schema)
+        super(FilterCtx, self).__init__(code, in_schema)
 
     def translate(self):
+        """
+        Attempt to translate filter function.
+
+        Return True if translation was successful, else False.
+        """
         try:
             self._calculate()
+
+            # Convert any return to boolean type
+            # following Python rules.
+            self._return = types.as_boolean(self._return)
             return True
-        except streamsx.spl.code.types.CannotTranslate:
+        except types.CannotTranslate:
             return False
 
+    def filter_expression(self):
+        """Return the translated filter expression.
+        Requires the stream is alaised as `alias()`.
+        """
+        return self._return.expr if self._return else None
+
     def add_translated(self, stream, name):
-        if type(self._return) in streamsx.spl.code.types.CT_BUILTINS:
-            self._return = bool(self._return)
-        if isinstance(self._return, bool):
-             self._return = 'true' if self._return else 'false'
 
-        stream = stream.aliased_as(self._tuple.name)
+        stream = stream.aliased_as(self.alias())
 
-        params = {'filter': streamsx.spl.op.Expression.expression(str(self._return))}
+        params = {'filter': streamsx.spl.op.Expression.expression(str(self.filter_expression()))}
         _op = streamsx.spl.op.Map('spl.relational::Filter', stream, params=params, name=name)
+        _op.stream._spl_translated = 'FromPython'
         return _op.stream
 
 def translate_map(stream, fn, out_schema, name):
     """Translate a Python map to SPL if possible."""
-    if not _translatable_schema(out_schema):
-        return None
-    in_schema = stream.oport.schema
-    if not _translatable_schema(in_schema):
+
+    if not enabled(stream.topology, fn):
         return None
 
-    if hasattr(fn, '__code__'):
-        ctx = _MapCtx(fn.__code__, in_schema, out_schema)
+    if not translatable_schema(out_schema):
+        return None
+    in_schema = stream.oport.schema
+    if not translatable_schema(in_schema):
+        return None
+
+    if translatable_logic(fn):
+        ctx = MapCtx(fn.__code__, in_schema, out_schema)
         if ctx.translate():
             return ctx.add_translated(stream, name)
     return None
 
-class _MapCtx(_SPLTupleCtx):
+class MapCtx(_SPLTupleCtx):
     def __init__(self, code, in_schema, out_schema):
-        super(_MapCtx, self).__init__(code, in_schema, out_schema)
+        super(MapCtx, self).__init__(code, in_schema, out_schema)
 
 
     def translate(self):
         try:
             self._calculate()
-        except streamsx.spl.code.types.CannotTranslate:
+        except types.CannotTranslate:
             return False
 
-        if not isinstance(self._return, streamsx.spl.code.types.CodeTuple):
+        if not isinstance(self._return, types.CodeTuple):
             return False
 
         if len(self._return.values) != len(self.out_attrs_pos):
@@ -138,13 +226,10 @@ class _MapCtx(_SPLTupleCtx):
             assignments = []
             for i in range(len(self.out_attrs_pos)):
                 attr = self.out_attrs_pos[i]
-                assignments.append(streamsx.spl.code.types.unary_cast(values[i], attr.code_type))
+                assignments.append(types.unary_cast(values[i], attr.code_type))
             self.assignments = assignments
             return True
-        except streamsx.spl.code.types.CannotTranslate:
-            print("XXXXXXXXXXXXXXX")
-            import traceback
-            traceback.print_exc()
+        except types.CannotTranslate:
             return False
 
     def add_translated(self, stream, name):
@@ -155,5 +240,6 @@ class _MapCtx(_SPLTupleCtx):
         for i in range(len(self.out_attrs_pos)):
             attr = self.out_attrs_pos[i]
             setattr(_op, attr.name, _op.output(str(self.assignments[i])))
+        _op.stream._spl_translated = 'FromPython'
         return _op.stream
 
