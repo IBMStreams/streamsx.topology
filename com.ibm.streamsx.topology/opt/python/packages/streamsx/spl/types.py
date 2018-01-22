@@ -19,6 +19,11 @@ import datetime
 import time
 import streamsx.spl.op
 
+# Used by Timestamp.__reduce__ to avoid dill
+# trying to treat a Timestamp as a namedtuple.
+def _stored_ts(s, ns, mid):
+    return Timestamp(s, ns, mid)
+
 class Timestamp(collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', 'machine_id'])):
     """
     SPL native timestamp type with nanosecond resolution.
@@ -56,6 +61,7 @@ class Timestamp(collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', '
 
     _EPOCH = datetime.datetime.utcfromtimestamp(0)
     _NS = 1000000000.0
+
 
     @staticmethod
     def from_datetime(dt, machine_id=0):
@@ -145,6 +151,9 @@ class Timestamp(collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', '
             Timestamp is a `tuple` now.
         """
         return self
+
+    def __reduce__(self):
+        return _stored_ts, tuple(self)
 
 def _get_timestamp_tuple(ts):
     """
