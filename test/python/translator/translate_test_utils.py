@@ -8,7 +8,6 @@ def setup(topo, translate):
 def check_stream(tc, stream, translate, kind=None):
     if translate:
         tc.assertTrue(stream._spl_translated)
-        print("TRANSLATED*********************")
-        #tc.assertEqual('spl.relational__' + kind, stream._op().kind)
+        tc.assertEqual('spl.relational::' + kind, stream._op().kind)
     else:
         tc.assertFalse(hasattr(stream, '_spl_translated'))
