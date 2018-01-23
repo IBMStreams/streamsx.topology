@@ -583,10 +583,13 @@ class Stream(_placement._Placement, object):
         """
         sl = _SourceLocation(_source_info(), 'filter')
         _name = self.topology.graph._requested_name(name, action="filter", func=func)
-        spl_filter = streamsx.spl.code.translator.translate_filter(self, func, name)
-        if spl_filter is not None:
-             return spl_filter
 
+        # Try translating filter to an SPL expression.
+        spl_filter_mapop = streamsx.spl.code.translator.translate_filter(self, func, name)
+        if spl_filter_mapop is not None:
+            spl_filter_mapop._op().sl = sl
+            spl_filter_mapop._op()._layout(kind='Filter', name=_name, orig_name=name)
+            return spl_filter_mapop.stream
 
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
@@ -690,9 +693,10 @@ class Stream(_placement._Placement, object):
         if schema is None:
             schema = streamsx.topology.schema.CommonSchema.Python
         else:
-            spl_map = streamsx.spl.code.translator.translate_map(self, func, schema, name)
-            if spl_map is not None:
-                return spl_map
+            schema = streamsx.topology.schema._stream_schema(schema)
+        spl_map_mapop = streamsx.spl.code.translator.translate_map(self, func, schema, name)
+        if spl_map_mapop is not None:
+            return spl_map_mapop.stream
 
         ms = self._map(func, schema=schema, name=name)._layout('Map')
         ms.oport.operator.sl = _SourceLocation(_source_info(), 'map')

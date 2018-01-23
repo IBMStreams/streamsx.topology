@@ -106,3 +106,10 @@ class TestFilterTranslator(unittest.TestCase):
 
         ctx = self.check_predicate(lambda v : v.a and v.b and v.c, schema, 'v')
         self.assertEqual('(v.a && (v.b && v.c))', ctx.filter_expression())
+
+    def test_string(self):
+        schema = sts.StreamSchema('tuple<rstring a, ustring b>').as_tuple(named=True)
+        ctx = self.check_predicate(lambda s : s.a, schema, 's')
+        self.assertEqual('(length(s.a) != 0)', ctx.filter_expression())
+        ctx = self.check_predicate(lambda s : s.b, schema, 's')
+        self.assertEqual('(length(s.b) != 0)', ctx.filter_expression())
