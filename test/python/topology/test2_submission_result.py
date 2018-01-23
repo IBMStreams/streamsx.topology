@@ -12,6 +12,8 @@ import test_vers
 class TestSubmissionResult(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.username = os.getenv("STREAMS_USERNAME", "streamsadmin")
+        self.password = os.getenv("STREAMS_PASSWORD", "passw0rd")
 
     def _correct_job_ids(self):
         # Test that result.job exists and you can pull values from it.

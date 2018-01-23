@@ -186,9 +186,6 @@ class Tester(object):
         if not 'STREAMS_DOMAIN_ID' in os.environ:
             raise unittest.SkipTest("Skipped due to STREAMS_DOMAIN_ID environment variable not set")
 
-        test.username = os.getenv("STREAMS_USERNAME", "streamsadmin")
-        test.password = os.getenv("STREAMS_PASSWORD", "passw0rd")
-
         test.test_ctxtype = stc.ContextTypes.DISTRIBUTED
         test.test_config = {}
 
@@ -446,7 +443,11 @@ class Tester(object):
             config: Configuration for submission.
             assert_on_fail(bool): True to raise an assertion if the test fails, False to return the passed status.
             username(str): username for distributed tests
+                .. deprecated:: 1.8.3
+                Pass the username via the STREAMS_USERNAME environment variable instead.
             password(str): password for distributed tests
+                .. deprecated:: 1.8.3
+                Pass the password via the STREAMS_PASSWORD environment variable instead.
 
         Attributes:
             result: The result of the test. This can contain exit codes, application log paths, or other relevant test information.
