@@ -145,19 +145,6 @@ class SplpyGeneral {
         return none;
     }
 
-#ifdef SPL_RUNTIME_TYPE_OPTIONAL_H 
-    /**
-     * Return true if the Python object is the object returned from
-     * calling streamsx.spl.types.null().
-     * First call is through setup to set the static variable.
-     * Subsequent calls compare the argument with the static value.
-     */
-    static bool isSplNull(PyObject *o) {
-        static PyObject * SplNull = o;
-        return o == SplNull;
-    }
-#endif
-
     /**
       PyMemoryView_Check macro gets reassigned to
       this function. This is because using it directly

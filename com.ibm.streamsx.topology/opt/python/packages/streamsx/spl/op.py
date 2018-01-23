@@ -61,6 +61,8 @@ value may need to be strongly typed. Python booleans, integers, floats and
 strings map automatically to SPL `boolean`, `int32`, `float64` and `rstring`
 respectively. The module :py:mod:`streamsx.spl.types` provides functions to
 create typed SPL values.
+An optional type may be set to SPL `null` by passing either Python `None` or
+the value returned from :py:func:`~streamsx.topology.spl.types.null`.
 
 For example to create a `count` parameter of type `uint64` for the SPL `DeDuplicate` operator::
 
