@@ -416,7 +416,7 @@ class Topology(object):
         subscribeParams = {'topic': topic, 'streamType': schema}
         op.setParameters(subscribeParams)
         op._layout_group('Subscribe', name if name else _name)
-        return Stream(self, oport)
+        return Stream(self, oport)._make_placeable()
 
     def add_file_dependency(self, path, location):
         """
@@ -1355,8 +1355,7 @@ class Window(object):
         op.addInputPort(outputPort=self.stream.oport, name=self.stream.name, window_config=self._config)
         oport = op.addOutputPort(schema=schema, name=name)
 
-        return Stream(self.topology, oport)
-
+        return Stream(self.topology, oport).make_placeable()
 
 
 class Sink(_placement._Placement, object):

@@ -62,4 +62,4 @@ class ExtensionOperator(object):
                 # not iterable, single schema
                 schema = streamsx.topology.schema._stream_schema(schemas)
                 oport = self._op().addOutputPort(schema=schema, name=self._op().name)
-                self.outputs.append(streamsx.topology.topology.Stream(self.topology, oport))
+                self.outputs.append(streamsx.topology.topology.Stream(self.topology, oport)._make_placeable())
