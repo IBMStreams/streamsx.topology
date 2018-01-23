@@ -2,6 +2,80 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2018
 
+"""
+Translation of Python code to SPL code.
+
+Walks bytecode of functions (__code__) to determine if the code can be translated to SPL.
+
+Current support for:
+* FilterCtx - If a filter function passed an SPL tuple as tuple, namedtuple, or dict can be converted to a suitable
+   ``filter` parameter for an SPL spl.relational::Filter operator.
+* MapCtx - If a mapping function passed an SPL tuple as tuple, namedtuple, or dict can be converted to a suitable
+    set of output clauses. Currently a function that only returns a Python tuple containing the output assigments
+    is supported.
+    MapCtx api is subject to cleanup for external callers.
+
+In both cases the SPL schemas must be known.
+
+Current use is an experimental feature for application api, silently translating functions passed to
+``Stream.filter`` and ``Stream.map``. If the function cannot be translated it is used as-is with the Python
+functional operators (as is currently done).
+
+Current Support
+
+Types:
+   Expressions are limited to include:
+        SPL: boolean, int8,int32, int64, float32, float64
+             Limited support: rstring, ustring
+        Python: bool, int, float, str
+
+    For MapCtx direct assignment of an input attribute to an output attribute of the same type is supported for any type.
+
+Python expressions:
+    Note: Since this is conversion of **Python** code, the semantics are Python,
+    e.g. T.a as a boolean expression translated to SPL is :
+
+        * ``T.a``  if a is a SPL boolean attribute
+        * ``T.a != 0`` if a is an SPL int32 attribute
+        * ``length(T.a) != 0`` if a is an SPL rstring/ustring attribute
+
+    Examples have T being the input tuple.
+
+    Function can be a real function or a lambda. The single parameter representing a tuple must currently be
+    a valid SPL identifier, and used as the alias for the input stream.
+
+         lambda val : val[0] > 37   # ok
+         lambda stream: stream[0] > 37 # not ok stream is a keyword in SPL.
+
+    literals: Python bool, int, float
+
+    tuple attribute access: T.a (when schema is passed as namedtuple), T[0] (when schema is passed as tuple/namedtuple)
+             T['a'] (when schema is passed as dict), key must be a Python string literal.
+
+    boolean: Any supported type used as a boolean, e.g. T.a and T.b where T.a is rstring (true if non-empty string)
+             and T.b is float32 (true of non-zero)
+
+    logic: Simple ``X and Y and Z`` or ``X or Y or Z`` expressions where X,Y,Z are valid expressions.
+            Note mixing of `and` and `or` is not currently supported.
+
+    arithmetic: X {+,-,*} Y where X, Y are SPL/Python signed ints or floats.
+
+    comparisons: X {<,<=,==,!=,>,>=} Y where X, Y are SPL/Python signed ints or floats.
+
+
+    Examples:
+
+        Schema  tuple<int32 i32, rstring s, boolean b, float32 f32>
+
+        Filter:
+             lambda tuple_ : tuple_.i32 < 100 and tuple_.b
+             lambda tuple_ : tuple.s or tuple.i32 > tuple.f32
+
+        Map:
+             lambda: tuple_: (tuple_.i32, tuple_.s, tuple_.i32 > 20, tuple_.f32)
+
+"""
+
 import copy
 import dis
 import inspect
