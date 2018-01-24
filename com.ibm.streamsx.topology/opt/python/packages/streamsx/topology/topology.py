@@ -1355,7 +1355,7 @@ class Window(object):
         op.addInputPort(outputPort=self.stream.oport, name=self.stream.name, window_config=self._config)
         oport = op.addOutputPort(schema=schema, name=name)
 
-        return Stream(self.topology, oport).make_placeable()
+        return Stream(self.topology, oport)._make_placeable()
 
 
 class Sink(_placement._Placement, object):
