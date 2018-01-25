@@ -55,14 +55,14 @@ class TestPubSub(unittest.TestCase):
         self.assertNotEqual(self.topic_spl, self.topic_python)
 
         topo = Topology()
-        s = op.Source(topo, "spl.utility::Beacon",
+        beacon = op.Source(topo, "spl.utility::Beacon",
             'tuple<uint64 seq>',
             params = {'period': 0.02})
-        s.seq = s.output('IterationCount()')
+        beacon.seq = beacon.output('IterationCount()')
 
-        s.stream.publish(topic=self.topic_spl)
+        beacon.stream.publish(topic=self.topic_spl)
 
-        s = s.stream.map(lambda x : x)
+        s = beacon.stream.map(lambda x : x)
         s.publish(topic=self.topic_python)
 
         # Publish twice to ensure its only listed once

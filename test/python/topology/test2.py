@@ -8,7 +8,7 @@ import shutil
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
-from streamsx.topology.context import ConfigParams
+from streamsx.topology.context import ConfigParams, submit
 from streamsx import rest
 import test_functions
 
@@ -82,7 +82,8 @@ class TestToolkitMethodsNew(unittest.TestCase):
 
     def setUp(self):
         self.topo = Topology('test_ToolkitSource')
-        self.topo.source(['Hello', 'Toolkit'])
+        #self.topo.source(['Hello', 'Toolkit'])
+        self.topo.source('Toolkit')
         self.test_ctxtype = 'TOOLKIT'
         self.test_config = {}
         self.result = {}
@@ -91,12 +92,12 @@ class TestToolkitMethodsNew(unittest.TestCase):
         removeArtifacts(self.result)
 
     def test_NoKeepArtifacts(self):
-        self.result = streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config)
+        self.result = submit(self.test_ctxtype, self.topo, self.test_config)
         verifyArtifacts(self)
 
     def test_KeepArtifacts(self):
         self.test_config['topology.keepArtifacts'] = True
-        self.result = streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config)
+        self.result = submit(self.test_ctxtype, self.topo, self.test_config)
         verifyArtifacts(self)
 
 @unittest.skipIf(not test_vers.tester_supported(), "Tester not supported")
@@ -134,13 +135,13 @@ class TestDistributedSubmitMethodsNew(unittest.TestCase):
         sc = rest.StreamsConnection('user1', 'pass1')
         self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
         with self.assertRaises(RuntimeError):
-            streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config, username='user2', password='pass1')
+            submit(self.test_ctxtype, self.topo, self.test_config, username='user2', password='pass1')
 
     def test_DifferentPassword(self):
         sc = rest.StreamsConnection('user1', 'pass1')
         self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
         with self.assertRaises(RuntimeError):
-            streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config, username='user1', password='pass2')
+            submit(self.test_ctxtype, self.topo, self.test_config, username='user1', password='pass2')
 
 @unittest.skipIf(not test_vers.tester_supported(), "Tester not supported")
 @unittest.skipUnless('VCAP_SERVICES' in os.environ, "requires VCAP_SERVICES")
@@ -157,12 +158,12 @@ class TestBluemixSubmitMethodsNew(unittest.TestCase):
         sc = rest.StreamsConnection('user1', 'pass1')
         self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
         with self.assertRaises(ValueError):
-            streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config)
+            submit(self.test_ctxtype, self.topo, self.test_config)
 
     def test_StreamingAnalyticsConnection(self):
         sc = rest.StreamingAnalyticsConnection()
         self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
-        result = streamsx.topology.context.submit(self.test_ctxtype, self.topo, self.test_config)
+        result = submit(self.test_ctxtype, self.topo, self.test_config)
         self.assertEqual(result.return_code, 0)
         result.job.cancel()
 

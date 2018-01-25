@@ -6,6 +6,26 @@ from streamsx.topology.context import ConfigParams
 from streamsx.rest import StreamingAnalyticsConnection
 from streamsx.rest_primitives import _IAMConstants
 
+instance_response_keys = [
+    "auto_stop",
+    "plan",
+    "state",
+    "id",
+    "status",
+    "maximum",
+    "crn",
+    "size",
+    "documentation",
+    "streams_self",
+    "enabled",
+    "job_count",
+    "jobs",
+    "streams_console",
+    "minimum",
+    "self"
+]
+
+
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestRestFeaturesBluemix(CommonTests):
     @classmethod
@@ -31,12 +51,19 @@ class TestRestFeaturesBluemix(CommonTests):
         sas = self.sc.get_streaming_analytics()
 
         status = sas.get_instance_status()
+        self.valid_response(status)        
         self.assertEqual('running', status['status'])
 
-        sas.stop_instance()
+        res = sas.stop_instance()
+        self.valid_response(res)
         status = sas.get_instance_status()
         self.assertEqual('stopped', status['status'])
         
-        sas.start_instance()
+        res = sas.start_instance()
+        self.valid_response(res)
         status = sas.get_instance_status()
         self.assertEqual('running', status['status'])
+        
+    def valid_response(self, res):
+        for key in instance_response_keys:
+            self.assertTrue(key in res)

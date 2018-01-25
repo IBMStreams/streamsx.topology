@@ -2,7 +2,13 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 
-"""Testing support for streaming applications.
+"""
+
+Testing support for streaming applications.
+
+********
+Overview
+********
 
 Allows testing of a streaming application by creation conditions
 on streams that are expected to become valid during the processing.
@@ -72,10 +78,11 @@ between tuples are within the timeout period the test remains running until ten 
 
 .. note:: The test timeout value is not configurable.
 
-
+.. note:: The submitted job (application under test) has additional elements (streams & operators) inserted to implement the conditions. These are visible through various APIs including the Streams console raw graph view. Such elements are put into the `Tester` category.
 
 .. warning::
     Python 3.5 and Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
+
 """
 
 import streamsx.ec as ec
@@ -123,6 +130,7 @@ class Tester(object):
         topology.tester = self
         self._conditions = {}
         self.local_check = None
+        self._run_for = 0
 
     @staticmethod
     def setup_standalone(test):
@@ -177,9 +185,6 @@ class Tester(object):
             raise unittest.SkipTest("Skipped due to STREAMS_INSTANCE_ID environment variable not set")
         if not 'STREAMS_DOMAIN_ID' in os.environ:
             raise unittest.SkipTest("Skipped due to STREAMS_DOMAIN_ID environment variable not set")
-
-        test.username = os.getenv("STREAMS_USERNAME", "streamsadmin")
-        test.password = os.getenv("STREAMS_PASSWORD", "passw0rd")
 
         test.test_ctxtype = stc.ContextTypes.DISTRIBUTED
         test.test_config = {}
@@ -394,6 +399,27 @@ class Tester(object):
         """
         self.local_check = callable
 
+    def run_for(self, duration):
+        """Run the test for a minimum number of seconds.
+
+        Creates a test wide condition that becomes `valid` when the
+        application under test has been running for `duration` seconds.
+        Maybe be called multiple times, the test will run as long as the maximum value provided.
+
+        Can be used to test applications without any externally visible
+        streams, or streams that do not have testable conditions. For
+        example a complete application may be tested by runnning it for
+        for ten minutes and use :py:meth:`local_check` to test
+        any external impacts, such as messages published to a
+        message queue system.
+
+        Args:
+            duration(float): Minimum number of seconds the test will run for.
+
+        .. versionadded: 1.9
+        """
+        self._run_for = max(self._run_for, float(duration))
+
     def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None):
         """Test the topology.
 
@@ -417,7 +443,11 @@ class Tester(object):
             config: Configuration for submission.
             assert_on_fail(bool): True to raise an assertion if the test fails, False to return the passed status.
             username(str): username for distributed tests
+                .. deprecated:: 1.8.3
+                Pass the username via the STREAMS_USERNAME environment variable instead.
             password(str): password for distributed tests
+                .. deprecated:: 1.8.3
+                Pass the password via the STREAMS_PASSWORD environment variable instead.
 
         Attributes:
             result: The result of the test. This can contain exit codes, application log paths, or other relevant test information.
@@ -435,7 +465,17 @@ class Tester(object):
         for ct in self._conditions.values():
             condition = ct[1]
             stream = ct[0]
-            stream.for_each(condition, name=condition.name)
+            cond_sink = stream.for_each(condition, name=condition.name)
+            cond_sink.colocate(stream)
+            cond_sink.category = 'Tester'
+            cond_sink._op()._layout(hidden=True)
+
+        if self._run_for:
+            run_cond = sttrt._RunFor(self._run_for)
+            self.add_condition(None, run_cond)
+            cond_run_time = self.topology.source(run_cond, name="TestRunTime")
+            cond_run_time.category = 'Tester'
+            cond_run_time._op()._layout(hidden=True)
 
         if config is None:
             config = {}
@@ -632,7 +672,7 @@ class _ConditionChecker(object):
             return _ConditionChecker._UNHEALTHY
         cms = self._get_job_metrics()
         valid = True
-        progress = True
+        progress = False
         fail = False
         condition_states = {}
         for cn in self._sequences:
@@ -644,9 +684,9 @@ class _ConditionChecker(object):
                 valid = False
                 continue
             seq_m = cms[seq_mn]
-            if seq_m.value == self._sequences[cn]:
-                progress = False
-            else:
+            if seq_m.value != self._sequences[cn]:
+                # At least one condition making progress
+                progress = True
                 self._sequences[cn] = seq_m.value
 
             fail_mn = sttrt.Condition._mn('fail', cn)

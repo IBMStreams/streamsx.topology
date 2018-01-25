@@ -48,8 +48,7 @@ if ($pyoutstyle eq 'dict') {
     SplpyFuncOp *funcop_;
     PyObject *spl_in_object_out;
     
-    // Names of input attributes
-    PyObject *pyInNames_;
+    PyObject *pyInStyleObj_;
 
     PyObject *loads;
 

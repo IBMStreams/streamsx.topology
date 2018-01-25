@@ -76,8 +76,8 @@ class TestDistributedUnicode(TestUnicode):
         Tester.setup_distributed(self)
 
         # Get username and password
-        username = self.username
-        password = self.password
+        username = os.getenv("STREAMS_USERNAME", "streamsadmin")
+        password = os.getenv("STREAMS_PASSWORD", "passw0rd")
 
         self.sc = rest.StreamsConnection(username=username, password=password)
 

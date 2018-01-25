@@ -65,5 +65,7 @@ See the documentation under [namespace:com.ibm.streamsx.topology.python|com.ibm.
     <exclude path="opt/python/include/**"/>
     <exclude path="opt/python/templates/**"/>
     <exclude path="opt/python/packages/**/__pycache__/**"/>
+    <exclude path="opt/python/packages/**/*.pyi"/>
+    <exclude path="opt/python/packages/.mypy_cache/**"/>
   </sabFiles>
 </toolkitInfoModel>

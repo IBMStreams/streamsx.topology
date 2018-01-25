@@ -2,14 +2,19 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 """
-Overview
---------
 Access to the IBM Streams execution context.
+
+********
+Overview
+********
+
+This module (`streamsx.ec`) provides access to the execution
+context when Python code is running in a Streams application.
 
 A Streams application runs distributed or standalone.
 
 Distributed
------------
+===========
 Distributed is used when an application is submitted
 to the Streaming Analytics service on IBM Bluemix cloud platform
 or a IBM Streams distributed instance.
@@ -21,7 +26,7 @@ The PEs in a job may be distributed across the
 resources (hosts) in the Streams instance.
 
 Standalone
-----------
+==========
 Standalone is a mode where the complete application is run
 as a single PE (process) outside of a Streams instance.
 
@@ -29,8 +34,9 @@ Standalone is typically used for ad-hoc testing of an application.
 
 .. _streams_app_log_trc:
 
+*************************
 Application log and trace
--------------------------
+*************************
 
 IBM Streams provides application trace and log services.
 
@@ -75,9 +81,11 @@ Streams trace messages if the application is using the `logging` package.
 
 Application code must not modify the root logger, if additional handlers or different levels are required a child logger should be used.
 
+*****************
 Execution Context
------------------
-This module (`streamsx.exec`) provides access to the execution
+*****************
+
+This module (`streamsx.ec`) provides access to the execution
 context when Python code is running in a Streams application.
 
 Access is only supported when running:
