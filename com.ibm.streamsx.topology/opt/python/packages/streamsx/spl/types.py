@@ -236,7 +236,7 @@ def rstring(value):
     """
     return streamsx.spl.op.Expression('RSTRING', str(value))
 
-_null = Expression.expression("null")
+_null = streamsx.spl.op.Expression.expression("null")
 
 def null():
     """
