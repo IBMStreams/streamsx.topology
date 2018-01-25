@@ -500,3 +500,9 @@ def _extract_from_toolkit():
         mktk = os.path.join(si, 'bin', 'spl-make-toolkit')
         mktk_args = [mktk, '--directory', extractor._cmd_args.directory, '--make-operator']
         subprocess.check_call(mktk_args)
+
+def main():
+    _extract_from_toolkit()
+
+if __name__ == '__main__':
+    main()
