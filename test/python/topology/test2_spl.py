@@ -6,14 +6,17 @@ import itertools
 
 import test_vers
 
+from streamsx.topology.schema import StreamSchema
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
-from streamsx.topology import schema
 import streamsx.topology.context
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
 import streamsx.spl.types
+from streamsx.spl.types import Timestamp
 
+def ts_check(tuple_):
+    return isinstance(tuple_.ts, Timestamp)
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSPL(unittest.TestCase):
@@ -31,6 +34,8 @@ class TestSPL(unittest.TestCase):
             'tuple<uint64 seq>',
             params = {'period': 0.02, 'iterations':100})
         s.seq = s.output('IterationCount()')
+        s.category = 'Generator'
+        self.assertEqual(s.category, 'Generator')
 
         f = op.Map('spl.relational::Filter', s.stream,
             params = {'filter': op.Expression.expression('seq % 2ul == 0ul')})
@@ -44,12 +49,12 @@ class TestSPL(unittest.TestCase):
            Including an output clause.
         """
         topo = Topology('test_SPLBeaconFilter')
-        s = op.Source(topo, "spl.utility::Beacon",
+        beacon = op.Source(topo, "spl.utility::Beacon",
             'tuple<uint64 seq>',
             params = {'period': 0.02, 'iterations':27})
-        s.seq = s.output('IterationCount()')
+        beacon.seq = beacon.output('IterationCount()')
 
-        f = op.Map('spl.relational::Functor', s.stream,
+        f = op.Map('spl.relational::Functor', beacon.stream,
             schema = 'tuple<uint64 a>',
             params = {'filter': op.Expression.expression('seq % 4ul == 0ul')})
         f.a = f.output(f.attribute('seq'))
@@ -102,6 +107,29 @@ class TestSPL(unittest.TestCase):
             'oi32nv': 789}])
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_stream_alias(self):
+        """
+        test a stream alias to ensure the SPL expression
+        is consistent with hand-coded SPL expression.
+        """
+        topo = Topology('test_SPLBeaconFilter')
+        s = op.Source(topo, "spl.utility::Beacon",
+            'tuple<uint64 seq>',
+            params = {'period': 0.02, 'iterations':27}, name='SomeName')
+        s.seq = s.output('IterationCount()')
+
+        stream = s.stream.aliased_as('IN')
+
+        f = op.Map('spl.relational::Functor', stream,
+            schema = 'tuple<uint64 a>',
+            params = {'filter': op.Expression.expression('IN.seq % 4ul == 0ul')})
+        f.a = f.output(f.attribute('seq'))
+        s = f.stream.map(lambda x : x['a'])
+
+        tester = Tester(topo)
+        tester.contents(s, [0, 4, 8, 12, 16, 20, 24])
+        tester.test(self.test_ctxtype, self.test_config)
+
     def test_SPL_as_json(self):
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
@@ -128,6 +156,28 @@ class TestSPL(unittest.TestCase):
 
         tester = Tester(topo)
         tester.contents(s, [{'seq':0, 'b':'str!'}, {'seq':1, 'b':'str!'}, {'seq':2, 'b':'str!'}, {'seq':3, 'b':'str!'}, {'seq':4, 'b':'str!'}])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_timestamp(self):
+        ts_schema = StreamSchema('tuple<int32 a, timestamp ts>').as_tuple(named=True)
+
+        ts1 = Timestamp(133001, 302245576, 56)
+        ts2s = Timestamp(23543463, 876265298, 32)
+        dt1 = ts2s.datetime()
+        ts2 = Timestamp.from_datetime(dt1)
+
+        self.assertEqual(ts2s.seconds, ts2s.seconds);
+
+        topo = Topology()
+        s = topo.source([(1,ts1), (2,dt1)])
+        s = s.map(lambda x : x, schema=ts_schema)
+        as_ts = s.map(lambda x : x.ts.tuple())
+        s.print()
+
+        tester = Tester(topo)
+        tester.tuple_check(s, ts_check)
+        tester.tuple_count(s, 2)
+        tester.contents(as_ts, [ts1.tuple(), ts2.tuple()])
         tester.test(self.test_ctxtype, self.test_config)
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")

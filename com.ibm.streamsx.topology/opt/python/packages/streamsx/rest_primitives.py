@@ -1,6 +1,19 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
+
+"""
+Primitive objects for REST bindings.
+
+********
+Overview
+********
+
+Contains classes representing primitive Streams objects, such as
+:py:class:`Instance`, :py:class:`Job`, :py:class:`PE`, etc.
+
+"""
+
 import logging
 import requests
 import queue
@@ -581,13 +594,18 @@ class Job(_ResourceElement):
         """
         return self._get_elements(self.operatorConnections, 'connections', OperatorConnection)
 
-    def get_operators(self):
+    def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this job.
+        Args:
+            name(str): Only return operators matching `name`, where `name` can be a regular expression.  If
+                `name` is not supplied, then all operators for this job are returned.
 
         Returns:
             list(Operator): List of Operator elements associated with this job.
+
+        .versionsince:: 1.9 `name` parameter
         """
-        return self._get_elements(self.operators, 'operators', Operator)
+        return self._get_elements(self.operators, 'operators', Operator, name=name)
 
     def get_pes(self):
         """Get the list of :py:class:`PE` elements associated with this job.
@@ -664,6 +682,28 @@ class Operator(_ResourceElement):
              list(Metric): List of matching metrics.
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
+
+    def get_host(self):
+        """Get resource this operator is currently executing in.
+           If the operator is running on an externally
+           managed resource ``None`` is returned.
+
+        Returns:
+            Host: Resource this operator is running on.
+
+        .. versionadded:: 1.9
+        """
+        return Host(self.rest_client.make_request(self.host), self.rest_client) if self.host else None
+
+    def get_pe(self):
+        """Get the Streams processing element this operator is executing in.
+
+        Returns:
+            PE: Processing element for this operator.
+
+        .. versionadded:: 1.9
+        """
+        return PE(self.rest_client.make_request(self.pe), self.rest_client)
 
 
 class OperatorConnection(_ResourceElement):
@@ -765,7 +805,18 @@ class PE(_ResourceElement):
         >>> print(pes[0].resourceType)
         pe
     """
-    pass
+
+    def get_host(self):
+        """Get resource this processing element is currently executing in.
+           If the processing element is running on an externally
+           managed resource ``None`` is returned.
+
+        Returns:
+            Host: Resource this processing element is running on.
+
+        .. versionadded:: 1.9
+        """
+        return Host(self.rest_client.make_request(self.host), self.rest_client) if self.host else None
 
 
 class PEConnection(_ResourceElement):
@@ -949,13 +1000,18 @@ class Instance(_ResourceElement):
         >>> print (instances[0].resourceType)
         instance
     """
-    def get_operators(self):
+    def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this instance.
+
+        Args:
+            name(str): Only return operators matching `name`, where `name` can be a regular expression.  If
+                `name` is not supplied, then all operators for this instance are returned.
 
         Returns:
             list(Operator): List of Operator elements associated with this instance.
+        .versionsince:: 1.9 `name` parameter
         """
-        return self._get_elements(self.operators, 'operators', Operator)
+        return self._get_elements(self.operators, 'operators', Operator, name=name)
 
     def get_operator_connections(self):
         """Get the list of :py:class:`OperatorConnection` elements associated with this instance.
@@ -1279,7 +1335,7 @@ class StreamingAnalyticsService(object):
         Returns:
             dict: JSON response for the job cancel operation.
         """
-        self._delegator.cancel_job(job_id=job_id, job_name = job_name)
+        return self._delegator.cancel_job(job_id=job_id, job_name = job_name)
 
     def start_instance(self):
         """Start the instance for this Streaming Analytics service.
@@ -1287,7 +1343,7 @@ class StreamingAnalyticsService(object):
         Returns:
             dict: JSON response for the instance start operation.
         """
-        self._delegator.start_instance()
+        return self._delegator.start_instance()
 
     def stop_instance(self):
         """Stop the instance for this Streaming Analytics service.
@@ -1295,7 +1351,7 @@ class StreamingAnalyticsService(object):
         Returns:
             dict: JSON response for the instance start operation.
         """
-        self._delegator.stop_instance()
+        return self._delegator.stop_instance()
 
     def get_instance_status(self):
         """Get the status the instance for this Streaming Analytics service.
@@ -1342,6 +1398,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         prepared = req.prepare()
         res = self.rest_client.session.send(prepared)
         self.rest_client.handle_http_errors(res)
+        return res.json()
 
     def start_instance(self):
         req = requests.Request("PATCH", self._v2_rest_url, json={'state' : 'STARTED'},
@@ -1351,6 +1408,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         prepared = req.prepare()
         res = self.rest_client.session.send(prepared)
         self.rest_client.handle_http_errors(res)
+        return res.json()
 
     def stop_instance(self):
         req = requests.Request("PATCH", self._v2_rest_url, json={'state' : 'STOPPED'},
@@ -1360,6 +1418,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         prepared = req.prepare()
         res = self.rest_client.session.send(prepared)
         self.rest_client.handle_http_errors(res)
+        return res.json()
 
     def get_instance_status(self):
         return self.rest_client.make_request(self._v2_rest_url)

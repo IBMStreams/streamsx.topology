@@ -75,13 +75,13 @@ class TestViews(unittest.TestCase):
         """ Test a view of SPL tuples.
         """
         topo = Topology()
-        s = op.Source(topo, "spl.utility::Beacon",
+        beacon = op.Source(topo, "spl.utility::Beacon",
             'tuple<uint64 seq, rstring fixed>',
             params = {'period': 0.05, 'iterations':1000})
-        s.seq = s.output('IterationCount()')
-        s.fixed = s.output(spltypes.rstring('FixedValue'))
+        beacon.seq = beacon.output('IterationCount()')
+        beacon.fixed = beacon.output(spltypes.rstring('FixedValue'))
 
-        s = s.stream
+        s = beacon.stream
         self._ov = s.view()
         self._expected_type = dict
         

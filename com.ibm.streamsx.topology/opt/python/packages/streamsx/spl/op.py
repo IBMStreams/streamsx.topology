@@ -2,8 +2,11 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
 """
+Integration of SPL operators.
+
+**********************
 Invoking SPL Operators
-++++++++++++++++++++++
+**********************
 
 IBM Streams supports *Stream Processing Language* (SPL),
 a domain specific language for streaming analytics.
@@ -116,8 +119,9 @@ For example invoking a SPL `Beacon` operator using an output function to set the
 """
 
 import streamsx.topology.exop as exop
+import streamsx._streams._placement as _placement
 
-class Invoke(exop.ExtensionOperator):
+class Invoke(_placement._Placement, exop.ExtensionOperator):
     """
     Declaration of an invocation of an SPL operator in a Topology.
 
@@ -158,7 +162,7 @@ class Invoke(exop.ExtensionOperator):
                  action = kind
         name = topology.graph._requested_name(name, action)
         super(Invoke,self).__init__(topology,kind,inputs,schemas,params,name)
-        self._op._ex_op = self
+        self._op()._ex_op = self
 
     def attribute(self, stream, name):
         """Expression for an input attribute.

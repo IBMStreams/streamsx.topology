@@ -32,7 +32,7 @@ using namespace streamsx::topology;
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
-   pyInNames_(NULL),
+   pyInStyleObj_(NULL),
    loads(NULL),
    occ_(-1),
    window_(<%=$windowCppInitializer%>)

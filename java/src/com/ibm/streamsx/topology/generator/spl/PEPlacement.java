@@ -257,7 +257,7 @@ class PEPlacement {
      */
     void resolveColocationTags() {
         
-        JsonObject tagMaps = new JsonObject();
+        JsonObject tagMaps = objectCreate(graph, CONFIG, CFG_COLOCATE_TAG_MAPPING);
         
         operators(graph, op -> {
             JsonObject placement = object(op, CONFIG, PLACEMENT);

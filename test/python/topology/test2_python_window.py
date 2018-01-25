@@ -12,12 +12,12 @@ import os
 import datetime
 
 class Person(object):
-    def __init__(self, name, age):
+    def __init__(self, name, birth_year):
         self.name = name
-        self.age = age
+        self._birth_year = birth_year
 
-    def rough_birth_year(self):
-        return time.localtime().tm_year - self.age;
+    def birth_year(self):
+        return self._birth_year
 
 expected_contents = """8
 Punctuation received: WindowMarker
@@ -172,17 +172,18 @@ class TestPythonWindowing(unittest.TestCase):
 
     def test_ClassCountCountWindow(self):
         topo = Topology()
+        current_year = time.localtime().tm_year
         s = topo.source([
-                ['Wallace', 55],
-                ['Copernicus', 544],
-                ['Feynman', 99],
-                ['Dirac', 115],
-                ['Pauli', 117],
-                ['Frenkel', 49],
-                ['Terence Tao', 42]
+                ['Wallace', 1962],
+                ['Copernicus', 1473],
+                ['Feynman', 1918],
+                ['Dirac', 1902],
+                ['Pauli', 1900],
+                ['Frenkel', 1968],
+                ['Terence Tao', 1975]
         ])
         s = s.map(lambda x: Person(x[0], x[1]))
-        s = s.last(3).trigger(1).aggregate(lambda x: int(sum([p.rough_birth_year() for p in x])/len(x)))
+        s = s.last(3).trigger(1).aggregate(lambda x: int(sum([p.birth_year() for p in x])/len(x)))
 
         tester = Tester(topo)
         tester.contents(s, [1962, 1717, 1784, 1764, 1906, 1923, 1947])
