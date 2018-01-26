@@ -28,19 +28,19 @@ class TestUnicode(unittest.TestCase):
         """
         topo = Topology()
         ud = []
-        ud.append('⡍⠔⠙⠖ ⡊ ⠙⠕⠝⠰⠞ ⠍⠑⠁⠝ ⠞⠕ ⠎⠁⠹ ⠹⠁⠞ ⡊ ⠅⠝⠪⠂ ⠕⠋ ⠍⠹')
-        ud.append('2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm')
-        ud.append('многоязычных')
+        ud.append(u'⡍⠔⠙⠖ ⡊ ⠙⠕⠝⠰⠞ ⠍⠑⠁⠝ ⠞⠕ ⠎⠁⠹ ⠹⠁⠞ ⡊ ⠅⠝⠪⠂ ⠕⠋ ⠍⠹')
+        ud.append(u'2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm')
+        ud.append(u'многоязычных')
         ud.append("Arsenal hammered 5-1 by Bayern again")
-        s = topo.source(ud, name='façade')
+        s = topo.source(ud, name=u'façade')
         sas = s.as_string()
-        sd = s.map(lambda s : {'val': s + "_test_it!"})
+        sd = s.map(lambda s : {'val': s + u"_test_it!"})
         tester = Tester(topo)
         tester.contents(s, ud)
         tester.contents(sas, ud)
         dud = []
         for v in ud:
-            dud.append({'val': v + "_test_it!"})
+            dud.append({'val': v + u"_test_it!"})
         tester.contents(sd, dud)
 
         tester.test(self.test_ctxtype, self.test_config)
@@ -52,7 +52,7 @@ class TestUnicode(unittest.TestCase):
         """
         if self.test_ctxtype == context.ContextTypes.STANDALONE:
             return self.skipTest("Skipping unicode view tests for standalone.")
-        view_names = ["®®®®", "™¬⊕⇔"]
+        view_names = [u"®®®®", u"™¬⊕⇔"]
         topo = Topology()
 
         view0 = topo.source(["hello"]).view(name=view_names[0])
@@ -68,8 +68,8 @@ class TestUnicode(unittest.TestCase):
         view_names = []
         for view in job.get_views():
             view_names.append(view.name)
-        self.assertIn("®®®®", view_names)
-        self.assertIn("™¬⊕⇔", view_names)
+        self.assertIn(u"®®®®", view_names)
+        self.assertIn(u"™¬⊕⇔", view_names)
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestDistributedUnicode(TestUnicode):

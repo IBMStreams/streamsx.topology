@@ -1,7 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017
-
+# Copyright IBM Corp. 2017,2018
 """
 
 Testing support for streaming applications.
@@ -84,6 +83,8 @@ between tuples are within the timeout period the test remains running until ten 
     Python 3.5 and Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
 
 """
+from __future__ import unicode_literals
+from builtins import str
 
 import streamsx.ec as ec
 import streamsx.topology.context as stc
