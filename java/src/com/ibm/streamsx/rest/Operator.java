@@ -33,6 +33,8 @@ public class Operator extends Element {
     @Expose
     private String job;
     @Expose
+    private String logicalName;
+    @Expose
     private String metrics;
     @Expose
     private String name;
@@ -62,6 +64,16 @@ public class Operator extends Element {
             opList = Collections.<Operator> emptyList();
         }
         return opList;
+    }
+
+    /**
+     * The logical name of this operator.
+     * 
+     * @return the logical name of the operator, which is just the name if the
+     * operator is not part of a parallel region.
+     */
+    public String getLogicalName() {
+        return logicalName == null ? name : logicalName;
     }
 
     /**
