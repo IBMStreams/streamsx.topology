@@ -224,13 +224,15 @@ class SplpySetup {
 
 #if __SPLPY_EC_MODULE_OK
 {
-          SPLAPPTRC(L_DEBUG, "Including Python extension: _streamsx_ec", "python");
 
+#if PY_MAJOR_VERSION == 3
+          SPLAPPTRC(L_DEBUG, "Including Python extension: _streamsx_ec", "python");
           typedef PyObject *(__splpy_initfunc)(void);
           typedef int (*__splpy_iai)(const char * name, __splpy_initfunc);
           __splpy_iai _SPLPyImport_AppendInittab =
              (__splpy_iai) dlsym(pydl, "PyImport_AppendInittab");
           _SPLPyImport_AppendInittab(__SPLPY_EC_MODULE_NAME, &init_streamsx_ec);
+#endif
 }
 #endif
 
@@ -257,7 +259,13 @@ class SplpySetup {
           const char *argv[] = {""};
           _SPLPySys_SetArgvEx(1, (char **) argv, 0);
 #endif
-
+#if __SPLPY_EC_MODULE_OK
+#if PY_MAJOR_VERSION == 2
+          SPLAPPTRC(L_DEBUG, "Including Python extension: _streamsx_ec", "python");
+          init_streamsx_ec();
+#endif
+#endif
+         
           _SPLPyEval_InitThreads();
           _SPLPyEval_SaveThread();
 
