@@ -339,9 +339,7 @@
        <batchtest todir="${topology.test.dir}">
           <fileset dir="${basedir}/src"
              excludes="**/samples/*Test.java" >
-             <include name="**/StreamsConnectionTest.java"/>
-             <include name="**/StreamingAnalyticsConnectionTest.java"/>
-             <include name="**/StreamingAnalyticsServiceTest.java"/>
+             <include name="**/rest/test/*Test.java"/>
           </fileset>
        </batchtest>
      </junit>
