@@ -44,7 +44,6 @@ class TestSPL2Python(unittest.TestCase):
         for schema in schemas:
             with self.subTest(schema=schema):
 
-                print("DDDD:Testing", schema);
                 topo = Topology('test_schemas_filter')
                 b = beacon(topo, schema)
                 f = b.filter(lambda tuple : True)
