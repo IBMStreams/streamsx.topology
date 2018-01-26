@@ -71,6 +71,7 @@ public class Operator extends Element {
      * 
      * @return the logical name of the operator, which is just the name if the
      * operator is not part of a parallel region.
+     * @since 1.9
      */
     public String getLogicalName() {
         return logicalName == null ? name : logicalName;
