@@ -2,6 +2,9 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2016
 
+from __future__ import unicode_literals
+from builtins import str
+
 import sys
 import uuid
 import json
@@ -23,13 +26,15 @@ import streamsx.topology.param
 from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.schema import _stream_schema
 
+
+
 def _fix_namespace(ns):
     ns = str(ns)
     sns = ns.split('.')
     if len(sns) == 1:
-        return re.sub(r'\W+', '', ns)
+        return re.sub(r'\W+', '', ns, flags=re.UNICODE)
     for i in range(0,len(sns)):
-        sns[i] = re.sub(r'\W+', '', sns[i])
+        sns[i] = re.sub(r'\W+', '', sns[i], flags=re.UNICODE)
 
     for i in range(len(sns), 0):
         if len(sns[i]) == 0:
@@ -50,7 +55,7 @@ class SPLGraph(object):
         # Allows Topology or SPLGraph to be passed to submit
         self.graph = self
         # Remove 'awkward characters' from names
-        self.name = re.sub(r'\W+', '', str(name))
+        self.name = re.sub(r'\W+', '', str(name), flags=re.UNICODE)
         self.namespace = _fix_namespace(namespace)
         self.topology = topology
         self.operators = []
