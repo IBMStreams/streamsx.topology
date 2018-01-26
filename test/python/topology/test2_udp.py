@@ -7,6 +7,7 @@ import sys
 import itertools
 import string
 import random
+import threading
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
