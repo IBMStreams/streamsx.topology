@@ -7,6 +7,7 @@ import sys
 import itertools
 import logging
 import tempfile
+import codecs
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -19,14 +20,14 @@ def _trc_msg_direct(level):
     import _streamsx_ec
     _streamsx_ec._app_trc(atm)
     ctl = _streamsx_ec._app_trc_level()
-    print("Current Trace level:", ctl, logging.getLevelName(ctl), flush=True)
+    print("Current Trace level:", ctl, logging.getLevelName(ctl))
 
 def _log_msg_direct(level):
     atm = (level, "direct _ec log message:" + str(level*77), "C1,D2,python", "MyLogFile.py", "MyLogFunc", 2189)
     import _streamsx_ec
     _streamsx_ec._app_log(atm)
     ctl = _streamsx_ec._app_log_level()
-    print("Current Log level:", ctl, logging.getLevelName(ctl), flush=True)
+    print("Current Log level:", ctl, logging.getLevelName(ctl))
 
 def _trc_msg(msg):
     logger = logging.getLogger()
@@ -36,7 +37,7 @@ def _trc_msg(msg):
     logger.info("Info:%s")
     logger.debug("Debug:" + msg)
     ctl = logger.getEffectiveLevel()
-    print("Current Root logger Trace level:", ctl, logging.getLevelName(ctl), flush=True)
+    print("Current Root logger Trace level:", ctl, logging.getLevelName(ctl))
 
 def _log_msg(msg):
     logger = logging.getLogger('com.ibm.streams.log')
@@ -45,11 +46,11 @@ def _log_msg(msg):
     logger.warning("Warning:" + msg)
     logger.info("Info:" + msg)
     ctl = logger.getEffectiveLevel()
-    print("Current Stream log logger level:", ctl, logging.getLevelName(ctl), flush=True)
+    print("Current Stream log logger level:", ctl, logging.getLevelName(ctl))
 
 def read_config_file(name):
     path = os.path.join(ec.get_application_directory(), 'etc', name)
-    with open(path, encoding='utf-8') as f:
+    with codecs.open(path, encoding='utf-8') as f:
         return f.read()
 
 class EcSource(object):
@@ -194,7 +195,7 @@ class TestEc(unittest.TestCase):
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestDistributedEc(TestEc):
   def setUp(self):
-      Tester.setup_standalone(self)
+      Tester.setup_distributed(self)
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestBluemixEc(TestEc):
