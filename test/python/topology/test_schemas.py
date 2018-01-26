@@ -54,6 +54,10 @@ def random_schema(depth=0):
 
 class TestSchema(unittest.TestCase):
 
+    # Fake out subTest
+    if sys.version_info.major == 2:
+        def subTest(self, **args): return threading.Lock()
+
     def test_simple(self):
       p = _SchemaParser('tuple<int32 a, int64 b>')
       p._parse()

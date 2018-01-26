@@ -54,6 +54,10 @@ def s2_hash(t):
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestUDP(unittest.TestCase):
 
+  # Fake out subTest
+  if sys.version_info.major == 2:
+      def subTest(self, **args): return threading.Lock()
+
   def setUp(self):
       Tester.setup_standalone(self)
 
