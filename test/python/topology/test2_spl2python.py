@@ -3,6 +3,7 @@
 import unittest
 import sys
 import itertools
+import threading
 
 import test_vers
 
@@ -30,6 +31,10 @@ schemas = [
 class TestSPL2Python(unittest.TestCase):
     """ Test invocations handling of SPL schemas in Python ops.
     """
+    # Fake out subTest
+    if sys.version_info.major == 2:
+        def subTest(self, **args): return threading.Lock()
+
     def setUp(self):
         Tester.setup_standalone(self)
 

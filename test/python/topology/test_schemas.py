@@ -4,6 +4,7 @@ import unittest
 import random
 import collections
 import sys
+import threading
 
 from streamsx.topology.topology import Topology, Routing
 from streamsx.topology.schema import _SchemaParser
@@ -53,6 +54,10 @@ def random_schema(depth=0):
     return s
 
 class TestSchema(unittest.TestCase):
+
+    # Fake out subTest
+    if sys.version_info.major == 2:
+        def subTest(self, **args): return threading.Lock()
 
     def test_simple(self):
       p = _SchemaParser('tuple<int32 a, int64 b>')
