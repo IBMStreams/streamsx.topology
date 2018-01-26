@@ -213,7 +213,7 @@ class _IAMStreamsRestClient(_StreamsRestClient):
         self.handle_http_errors(res)
         res = res.json()
 
-        self._auth_expiry_time = int(res[_IAMConstants.EXPIRATION]) - _IAMConstants.EXPIRY_PAD_MS
+        self._auth_expiry_time = int(res[_IAMConstants.EXPIRATION] * 1000) - _IAMConstants.EXPIRY_PAD_MS
         self._bearer_token = self._create_bearer_auth(res[_IAMConstants.ACCESS_TOKEN])
 
     def _create_bearer_auth(self, token):
