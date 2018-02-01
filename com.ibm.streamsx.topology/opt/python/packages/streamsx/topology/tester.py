@@ -138,9 +138,15 @@ class Tester(object):
         """
         Set up a unittest.TestCase to run tests using IBM Streams standalone mode.
 
-        Requires a local IBM Streams install define by the STREAMS_INSTALL
-        environment variable. If STREAMS_INSTALL is not set, then the
+        Requires a local IBM Streams install define by the ``STREAMS_INSTALL``
+        environment variable. If ``STREAMS_INSTALL`` is not set, then the
         test is skipped.
+
+        A standalone application under test will run until a condition
+        fails or all the streams are finalized or when the
+        :py:meth:`run_for` time (if set) elapses. 
+        Applications that include infinite streams must include set a
+        run for time using :py:meth:`run_for` to ensure the test completes
 
         Two attributes are set in the test case:
          * test_ctxtype - Context type the test will be run in.
@@ -394,6 +400,9 @@ class Tester(object):
         .. warning::
             A local check must not cancel the job (application under test).
 
+        .. warning::
+            A local check is not supported in standalone mode.
+
         Args:
             callable: Callable object.
 
@@ -471,7 +480,8 @@ class Tester(object):
             cond_sink.category = 'Tester'
             cond_sink._op()._layout(hidden=True)
 
-        if self._run_for:
+        # Standalone uses --kill-after parameter.
+        if self._run_for and stc.ContextTypes.STANDALONE != ctxtype:
             run_cond = sttrt._RunFor(self._run_for)
             self.add_condition(None, run_cond)
             cond_run_time = self.topology.source(run_cond, name="TestRunTime")
@@ -518,6 +528,9 @@ class Tester(object):
         """ Test using STANDALONE.
         Success is solely indicated by the process completing and returning zero.
         """
+        if self._run_for:
+            config = config.copy()
+            config['topology.standaloneRunTime'] = self._run_for + 5.0
         sr = stc.submit(stc.ContextTypes.STANDALONE, self.topology, config)
         self.submission_result = sr
         self.result = {'passed': sr['return_code'], 'submission_result': sr}
