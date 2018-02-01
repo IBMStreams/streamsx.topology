@@ -309,6 +309,13 @@ class PEPlacement {
             placement.addProperty(PLACEMENT_COLOCATE_KEY, singleTag);
         });
         
+        // Update the colocation keys of all operators to their final resolved tag.
+        operators(graph, op -> {
+        	JsonObject placement = object(op, CONFIG, PLACEMENT);
+        	String tag = jstring(placement, PLACEMENT_COLOCATE_KEY);
+        	placement.addProperty(PLACEMENT_COLOCATE_KEY, tagMaps.get(tag).getAsString());       	
+        });
+        
         object(graph, CONFIG).add(CFG_COLOCATE_TAG_MAPPING, tagMaps);
     }
 }
