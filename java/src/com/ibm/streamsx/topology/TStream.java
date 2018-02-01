@@ -1055,7 +1055,9 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * Sets the current stream as the start of a parallel region.
      * 
      * @param width The degree of parallelism.
-     * @return
+     * @see #parallel(int)
+     * @see #parallel(Supplier, Routing)
+     * @see #parallel(Supplier, Function)
      */
     void setParallel(Supplier<Integer> width);
     
