@@ -110,8 +110,13 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         }
                       
         if (!deploy.has(ContextProperties.TOOLKIT_DIR)) {
-            deploy.addProperty(ContextProperties.TOOLKIT_DIR, Files
-                    .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
+            Path tkDir = keepToolkit ?
+                Files.createTempDirectory(Paths.get(""), "tk")
+                :
+                Files.createTempDirectory("tk");
+            
+            deploy.addProperty(ContextProperties.TOOLKIT_DIR,
+                tkDir.toAbsolutePath().toString());
         }
 
         final File toolkitRoot = new File(jstring(deploy, ContextProperties.TOOLKIT_DIR));
