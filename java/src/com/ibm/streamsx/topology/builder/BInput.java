@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.builder;
 
-public class BInput extends BJSONObject {
+public abstract class BInput extends BJSONObject {
 
     private final GraphBuilder builder;
 
@@ -15,4 +15,6 @@ public class BInput extends BJSONObject {
     public GraphBuilder builder() {
         return builder;
     }
+    
+    public abstract BOperator operator();
 }

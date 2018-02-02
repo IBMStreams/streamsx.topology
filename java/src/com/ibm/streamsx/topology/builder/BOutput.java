@@ -9,4 +9,6 @@ public abstract class BOutput extends BJSONObject {
     public abstract String _type();
 
     public abstract void connectTo(BInputPort port);
+    
+    public abstract BOperator operator();
 }
