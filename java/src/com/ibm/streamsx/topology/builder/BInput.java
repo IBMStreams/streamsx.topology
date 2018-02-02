@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.builder;
 
-public abstract class BInput extends BJSONObject {
+public class BInput extends BJSONObject {
 
     private final GraphBuilder builder;
 
