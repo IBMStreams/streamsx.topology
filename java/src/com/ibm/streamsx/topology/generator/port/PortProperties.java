@@ -1,10 +1,12 @@
 package com.ibm.streamsx.topology.generator.port;
 
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
+
 public interface PortProperties {
 	/**
 	 * The width of the parallel region, if the port is the start of a parallel region.
 	 */
-	String WIDTH = "width";
+	String WIDTH = OpProperties.WIDTH;
 	
 	/**
 	 * Boolean top-level parameter indicating whether the port should broadcast tuples
@@ -12,7 +14,6 @@ public interface PortProperties {
 	 * region.	
 	 */
 	String BROADCAST = "broadcast";
-
 	
 	/**
 	 * Top-level boolean parameter indicating that the downstream parallel region

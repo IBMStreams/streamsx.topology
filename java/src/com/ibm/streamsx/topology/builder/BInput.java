@@ -15,6 +15,4 @@ public abstract class BInput extends BJSONObject {
     public GraphBuilder builder() {
         return builder;
     }
-    
-    public abstract BOperator operator();
 }

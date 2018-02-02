@@ -1058,6 +1058,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @see #parallel(int)
      * @see #parallel(Supplier, Routing)
      * @see #parallel(Supplier, Function)
+     * @since v1.9
      */
     TStream<T> setParallel(Supplier<Integer> width);
     
