@@ -136,7 +136,7 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
             throws IOException {
         String buildOutputURL = getBuildsUrl(httpclient) + "/"
                 + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name())
-                + "&output_id="
+                + "?output_id="
                 + URLEncoder.encode(outputId, StandardCharsets.UTF_8.name());
         HttpGet httpget = new HttpGet(buildOutputURL);
         httpget.addHeader("Authorization", authorization);
