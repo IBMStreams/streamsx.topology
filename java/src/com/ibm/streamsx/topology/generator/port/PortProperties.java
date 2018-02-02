@@ -12,12 +12,7 @@ public interface PortProperties {
 	 * region.	
 	 */
 	String BROADCAST = "broadcast";
-	
-	/** 
-	 * Top-level boolean parameter indicating whether the port is the start of a 
-	 * parallel region.
-	 */
-	String PARALLEL = "parallel";
+
 	
 	/**
 	 * Top-level boolean parameter indicating that the downstream parallel region
