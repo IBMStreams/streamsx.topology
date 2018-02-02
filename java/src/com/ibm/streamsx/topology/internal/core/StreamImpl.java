@@ -543,9 +543,10 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
     
     @Override
-    public void setParallel(Supplier<Integer> width){
+    public TStream<T> setParallel(Supplier<Integer> width){
     	output._json().addProperty(PortProperties.PARTITIONED, true);
     	output._json().addProperty(PortProperties.WIDTH, width.get());
+    	return this;
     }
 
     @Override
