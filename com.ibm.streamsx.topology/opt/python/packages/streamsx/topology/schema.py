@@ -16,7 +16,7 @@ The supported types are defined by IBM Streams Streams Processing Language (SPL)
 """
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-from builtins import *
+from builtins import object,list
 
 import collections
 import enum
