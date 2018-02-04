@@ -70,12 +70,14 @@ public class SPLGenerator {
                 output.addProperty("__unique_id", UUID.randomUUID().toString());
             });
         }); 
-               
+            
+        GCompositeDef gcomp = new GCompositeDefImpl(graph);
+        
         JsonObject graphConfig = getGraphConfig(graph);
         breakoutVersion(graphConfig);
                 
         stvHelper = new SubmissionTimeValue(graph);
-        new Preprocessor(this, graph).preprocess();
+        new Preprocessor(this, gcomp).preprocess();
         
         // Generate parallel composites
         JsonObject mainCompsiteDef = new JsonObject();
