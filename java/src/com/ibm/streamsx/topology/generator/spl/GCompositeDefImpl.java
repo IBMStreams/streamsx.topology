@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 public class GCompositeDefImpl implements GCompositeDef {
     JsonObject graph;
     
-    public GCompositeDefImpl(JsonObject graph) {
+    GCompositeDefImpl(JsonObject graph) {
         this.graph = graph;
         
         //TODO build indexes to speed up upstream/downstream search.

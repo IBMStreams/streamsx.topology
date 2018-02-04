@@ -12,10 +12,10 @@ import com.google.gson.JsonObject;
  */
 public interface GCompositeDef {
     /**
-     * Return the JsonObject graph of operators contained in the composite. 
+     * Return the top-level JsonObject graph containing all operators. 
      * @return The JsonObject graph.
      */
-    public JsonObject getGraph();
+    JsonObject getGraph();
     
     /**
      * Returns all operators that have input ports connected to the output 
@@ -23,7 +23,7 @@ public interface GCompositeDef {
      * @param op
      * @return A list of downstream operators.
      */
-    public Set<JsonObject> getDownstream(JsonObject op);
+    Set<JsonObject> getDownstream(JsonObject op);
     
     /**
      * Returns all operators that have output ports connected to the input 
@@ -31,5 +31,5 @@ public interface GCompositeDef {
      * @param op
      * @return A list of upstream operators.
      */
-    public Set<JsonObject> getUpstream(JsonObject op);
+    Set<JsonObject> getUpstream(JsonObject op);
 }
