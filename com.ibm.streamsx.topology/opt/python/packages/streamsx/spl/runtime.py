@@ -14,6 +14,9 @@
 # a) iterable is a decorated class and is iterable
 # b) iterable is a decorated function that returns an iterator
 #
+
+from builtins import object,str
+
 def _splpy_iter_source(iterable) :
   try:
       it = iter(iterable)

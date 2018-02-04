@@ -540,6 +540,7 @@ The list may be empty resulting in no tuples being submitted.
 
 """
 
+from builtins import object,str
 from enum import Enum
 import functools
 import inspect

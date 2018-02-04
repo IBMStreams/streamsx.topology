@@ -100,6 +100,7 @@ being invoked in a Streams application.
 
 """
 
+from builtins import object,str
 import enum
 import pickle
 import threading

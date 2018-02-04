@@ -2,6 +2,8 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 
+from builtins import object,str
+
 import streamsx.topology.topology
 import streamsx.topology.schema
 

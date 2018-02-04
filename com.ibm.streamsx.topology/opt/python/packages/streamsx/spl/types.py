@@ -13,6 +13,7 @@ using classes from ``streamsx.spl.op`` then any parameters
 must use the SPL type required by the operator.
 
 """
+from builtins import object,str
 
 import collections
 import datetime

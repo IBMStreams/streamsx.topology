@@ -3,6 +3,7 @@
 # Copyright IBM Corp. 2015,2017
 
 from __future__ import print_function
+from builtins import object,str
 import sys
 
 # Print function that flushes

@@ -1,6 +1,7 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
+from builtins import object,str
 import subprocess
 import io
 import os

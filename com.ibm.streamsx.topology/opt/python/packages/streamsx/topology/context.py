@@ -24,6 +24,7 @@ try:
 except (ImportError, NameError):
     # nothing to do here
     pass
+from builtins import object,str
 
 from streamsx import rest, rest_primitives
 import logging

@@ -13,6 +13,7 @@ Contains classes representing primitive Streams objects, such as
 :py:class:`Instance`, :py:class:`Job`, :py:class:`PE`, etc.
 
 """
+from builtins import object,str
 
 import logging
 import requests
