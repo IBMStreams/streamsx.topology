@@ -5,9 +5,10 @@ import java.util.Set;
 import com.google.gson.JsonObject;
 
 /**
- * The GComposite interface contains methods for accessing and modifying
- * elements of a JsonObject graph, and encapsulate other objects 
- * with the graphs such as search indexes..
+ * The GCompositeDef represents the definition of an SPL composite.
+ * It contains methods for accessing and modifying elements of a 
+ * JsonObject graph, and encapsulate other objects with the graph
+ * such as search indexes.
  *
  */
 public interface GCompositeDef {
