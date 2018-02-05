@@ -24,7 +24,8 @@ import streamsx.spl.op
 def _stored_ts(s, ns, mid):
     return Timestamp(s, ns, mid)
 
-class Timestamp(collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', 'machine_id'])):
+_Timestamp = collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', 'machine_id'])
+class Timestamp(_Timestamp):
     """
     SPL native timestamp type with nanosecond resolution.
 
@@ -118,7 +119,7 @@ class Timestamp(collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', '
          return ns
 
     def __new__(cls, seconds, nanoseconds, machine_id=0):
-        return super().__new__(cls, int(seconds), Timestamp._check_nanos(nanoseconds), int(machine_id))
+        return _Timestamp.__new__(cls, int(seconds), Timestamp._check_nanos(nanoseconds), int(machine_id))
 
     def time(self):
         """

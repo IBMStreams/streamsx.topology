@@ -31,8 +31,8 @@ class TestNames(unittest.TestCase):
   def test_UnicodeTopoNames(self):
      """ Test unicode topo names
      """
-     n = '你好'
-     ns = '世界'
+     n = u'你好'
+     ns = u'世界'
      topo = Topology(name=n, namespace=ns)
 
      self.assertEqual(n, topo.name)
@@ -53,8 +53,8 @@ class TestNames(unittest.TestCase):
      self.assertEqual(ns, topo.namespace)
      hw = topo.source(["Hello", "Tester"], name='sourceabc')
      hw = hw.filter(lambda x : True, name='a'*255)
-     hw = hw.filter(lambda x : True, name='你好'*100)
-     hw = hw.filter(lambda x : True, name='你好')
+     hw = hw.filter(lambda x : True, name=u'你好'*100)
+     hw = hw.filter(lambda x : True, name=u'你好')
      tester = Tester(topo)
      tester.contents(hw, ["Hello", "Tester"])
      tester.test(self.test_ctxtype, self.test_config)

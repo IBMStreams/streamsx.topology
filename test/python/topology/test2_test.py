@@ -59,15 +59,14 @@ class TestTester(unittest.TestCase):
     def test_checker(self):
         """ Test the per-tuple checker.
         """
-        if self.test_ctxtype == context.ContextTypes.STANDALONE:
-            return unittest.skip("Standalone tests must complete")
-
         topo = Topology()
         s = topo.source(rands)
         s = s.filter(lambda r : r > 0.8)
         s = s.map(lambda r : r + 7.0 )
         tester = Tester(topo)
         tester.tuple_count(s, 200, exact=False)
+        if self.test_ctxtype == context.ContextTypes.STANDALONE:
+            tester.run_for(20)
         tester.tuple_check(s, lambda r : r > 7.8)
         tester.test(self.test_ctxtype, self.test_config)
 
@@ -75,7 +74,7 @@ class TestTester(unittest.TestCase):
         """ Test the at least tuple count.
         """
         if self.test_ctxtype == context.ContextTypes.STANDALONE:
-            return unittest.skip("Standalone tests must complete")
+            return unittest.skip("Standalone tests don't support local check")
         topo = Topology()
         s = topo.source(rands)
         self.my_local_called = False

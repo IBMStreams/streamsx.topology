@@ -20,8 +20,10 @@ Usage
 ::
 
     streamsx-runner [-h] (--service-name SERVICE_NAME | --create-bundle)
-                       (--topology TOPOLOGY | --main-composite MAIN_COMPOSITE)
-                       [--toolkits TOOLKITS [TOOLKITS ...]]
+                 (--topology TOPOLOGY | --main-composite MAIN_COMPOSITE)
+                 [--toolkits TOOLKITS [TOOLKITS ...]] [--job-name JOB_NAME]
+                 [--preload] [--trace {error,warn,info,debug,trace}]
+                 [--submission-parameters SUBMISSION_PARAMETERS [SUBMISSION_PARAMETERS ...]]
 
     Execute a Streams application using a Streaming Analytics service.
 
@@ -32,10 +34,15 @@ Usage
       --create-bundle       Create a bundle
       --topology TOPOLOGY   Topology to call
       --main-composite MAIN_COMPOSITE
-                            SPL Main composite
+                            SPL main composite
       --toolkits TOOLKITS [TOOLKITS ...]
                             Additional SPL toolkits
-
+      --job-name JOB_NAME   Job name
+      --preload             Preload job onto all resources in the instance
+      --trace {error,warn,info,debug,trace}
+                            Application trace level
+      --submission-parameters SUBMISSION_PARAMETERS [SUBMISSION_PARAMETERS ...], -p SUBMISSION_PARAMETERS [SUBMISSION_PARAMETERS ...]
+                            Submission parameters as name=value pairs
 
 *****************************************
 Submitting to Streaming Analytics service

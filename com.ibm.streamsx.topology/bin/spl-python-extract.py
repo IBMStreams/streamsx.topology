@@ -12,5 +12,5 @@ sys.path.insert(0, _py_dir)
 
 import streamsx.scripts.extract as sse
 
-sse._extract_from_toolkit()
+sse.main()
 sys.exit(0)

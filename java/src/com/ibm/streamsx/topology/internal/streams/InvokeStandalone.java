@@ -44,7 +44,7 @@ public class InvokeStandalone {
             throws Exception, InterruptedException {
         String si = System.getProperty("java.home");
         File jvm = new File(si, "bin/java");
-        
+
         JobConfig jc = JobConfigOverlay.fromFullOverlay(deploy);
 
         List<String> commands = new ArrayList<>();
@@ -92,6 +92,11 @@ public class InvokeStandalone {
 	    commands.add(datadir);
 	}
 
+        if (deploy.has("topology.standaloneRunTime")) {
+             double rt = deploy.get("topology.standaloneRunTime").getAsDouble();
+             commands.add("--kill-after=" + rt);
+        }
+        
         trace.info("Invoking standalone application");
         trace.info(Util.concatenate(commands));
 
