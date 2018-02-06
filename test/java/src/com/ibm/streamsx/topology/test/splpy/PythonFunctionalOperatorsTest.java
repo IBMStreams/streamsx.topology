@@ -88,11 +88,11 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
 
     public static final StreamSchema ALL_PYTHON_TYPES_WITH_SETS_SCHEMA = ALL_PYTHON_TYPES_SCHEMA; 
 
-    public static final StreamSchema PYTHON_OPTIONAL_TYPES_SCHEMA=
-          Type.Factory.getStreamSchema("tuple<" +
+    public static final String PYTHON_OPTIONAL_TYPES_SCHEMA_STRING =
+          "tuple<" +
     		  "optional<int32> oi32v, optional<int32> oi32nv," +
     		  "optional<list<rstring>> olrv, optional<list<rstring>> olrnv" +
-    		  ">");
+    		  ">";
     
     public static final int TUPLE_COUNT = 1000;
     
@@ -635,7 +635,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         
         SPLStream pysrc = SPL.invokeSource(topology,
         		"com.ibm.streamsx.topology.pytest.pysource.opttype::SpecificValues",
-        		null, PYTHON_OPTIONAL_TYPES_SCHEMA);
+        		null, Type.Factory.getStreamSchema(PYTHON_OPTIONAL_TYPES_SCHEMA_STRING));
         
         StreamSchema sparseSchema = Type.Factory.getStreamSchema("tuple<optional<int32> a, optional<int32> b, optional<int32> c, optional<int32> d, optional<int32> e>");
               
