@@ -89,7 +89,6 @@ This module (`streamsx.ec`) provides access to the execution
 context when Python code is running in a Streams application.
 
 Access is only supported when running:
- * Python 3.5
  * Streams 4.2 or later
 
 This module may be used by Python functions or classes used
@@ -97,6 +96,8 @@ in a `Topology` or decorated SPL operators.
 
 Most functionality is only available when a Python class is
 being invoked in a Streams application.
+
+.. versionchanged:: 1.9 Support for Python 2.7
 
 """
 
@@ -140,7 +141,7 @@ def _check():
             _State._state = _State(False)
 
     if not _State._state._supported:
-        raise NotImplementedError("Access to the execution context requires Python 3.5 and Streams 4.2 or later")
+        raise NotImplementedError("Access to the execution context requires Streams 4.2 or later")
 
 def domain_id():
     """
