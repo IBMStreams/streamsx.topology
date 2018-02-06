@@ -15,7 +15,7 @@
 # b) iterable is a decorated function that returns an iterator
 #
 
-from builtins import object,str
+from future.builtins import *
 
 def _splpy_iter_source(iterable) :
   try:

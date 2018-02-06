@@ -87,7 +87,7 @@ between tuples are within the timeout period the test remains running until ten 
 
 """
 from __future__ import unicode_literals
-from builtins import object, str
+from future.builtins import *
 
 import streamsx.ec as ec
 import streamsx.topology.context as stc

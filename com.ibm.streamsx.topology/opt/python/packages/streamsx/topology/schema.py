@@ -16,7 +16,8 @@ The supported types are defined by IBM Streams Streams Processing Language (SPL)
 """
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-from builtins import object,list,str
+from future.builtins import *
+from past.builtins import basestring
 
 import collections
 import enum
@@ -42,7 +43,7 @@ def is_common(schema):
         return schema.schema() in _SCHEMA_COMMON
     if isinstance(schema, CommonSchema):
         return True
-    if isinstance(schema, str):
+    if isinstance(schema, basestring):
         return is_common(StreamSchema(schema))
     return False
 
@@ -356,7 +357,7 @@ class StreamSchema(object) :
     def _make_named_tuple(self, name):
         if self.__spl_type:
             return tuple
-        if name == True:
+        if name is True:
             name = 'StreamTuple'
         fields = _attribute_names(self._types)
         nt = collections.namedtuple(name, fields, rename=True)
@@ -417,7 +418,7 @@ class StreamSchema(object) :
         if not named:
             return self._copy(tuple)
 
-        if named == True or isinstance(named, str):
+        if named == True or isinstance(named, basestring):
             return self._copy(self._make_named_tuple(name=named))
 
         return self._copy(tuple)

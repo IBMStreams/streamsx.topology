@@ -116,7 +116,7 @@ For example invoking a SPL `Beacon` operator using an output function to set the
 
 """
 
-from builtins import object,str
+from future.builtins import *
 
 import streamsx.topology.exop as exop
 import streamsx._streams._placement as _placement

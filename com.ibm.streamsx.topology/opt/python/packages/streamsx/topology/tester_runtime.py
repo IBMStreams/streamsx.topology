@@ -20,7 +20,8 @@ the runtime execution code from the test definition module
 
 """
 
-from builtins import object,str
+from future.builtins import *
+
 import streamsx.ec as ec
 import streamsx.topology.context as stc
 import os

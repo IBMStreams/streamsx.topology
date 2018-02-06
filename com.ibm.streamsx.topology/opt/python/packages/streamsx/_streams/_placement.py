@@ -1,7 +1,7 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017,2018
-from builtins import object,str
+from future.builtins import *
 
 class _Placement(object):
 

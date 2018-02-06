@@ -9,7 +9,8 @@ Additional information at http://mqtt.org and
 http://ibmstreams.github.io/streamsx.messaging
 """
 
-from builtins import object,str
+from future.builtins import *
+
 from streamsx.topology.topology import *
 from streamsx.topology import schema
 

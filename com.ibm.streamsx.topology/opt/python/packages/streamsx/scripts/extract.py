@@ -1,5 +1,5 @@
 from __future__ import print_function
-from builtins import object,str
+from future.builtins import *
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
 import sys

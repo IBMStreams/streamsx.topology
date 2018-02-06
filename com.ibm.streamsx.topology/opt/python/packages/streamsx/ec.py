@@ -100,7 +100,8 @@ being invoked in a Streams application.
 
 """
 
-from builtins import object,str
+from future.builtins import *
+
 import enum
 import pickle
 import threading

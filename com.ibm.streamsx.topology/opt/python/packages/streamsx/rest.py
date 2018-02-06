@@ -38,7 +38,7 @@ In addtion `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnect
         Reference documentation for the Streaming Analytics service REST API.
 
 """
-from builtins import object,str
+from future.builtins import *
 
 import os
 import json
