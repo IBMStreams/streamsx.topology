@@ -467,7 +467,7 @@ For example:
        return "com.ibm.streamsx.topology.pysamples.mail"
 
 Decorating a Python class produces a stateful SPL operator. The instance fields of the class are the state for the operator. Any parameters to the
-`__init__` method (exluding the first `self` parameter) are mapped to
+`__init__` method (excluding the first `self` parameter) are mapped to
 operator parameters.
 
 Decorating a Python function produces a stateless SPL operator. The function may reference variables in the module that are effectively state but such variables are shared by all invocations of the operator within the same processing element.
