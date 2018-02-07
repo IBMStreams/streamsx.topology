@@ -575,7 +575,7 @@ of the toolkit, thus increasing the distribution size of the toolkit.
 
 # Packages installed by pip at SPL compile time
 
-Python packages can be requested to be installed during the SPL
+Python packages can be explictly requested to be installed during the SPL
 compilation using `pip install --user`. The packages are installed locally into
 the compliation's output directory, thus becoming part of the
 Streams application bundle (`sab`). The packages will be installed
@@ -593,6 +593,8 @@ For example is there was a dependency on `numpy` and `geocoder` and
 `numpy` was globally installed then only `geocoder` would be installed
 into the compliation's output directory (in addition to any dependencies
 `geocoder` has that were not globally installed).
+
+Packages are explictly requested for the whole toolkit or a specific module.
 
 **Tookit wide requirements**
 
