@@ -1,10 +1,12 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+from past.builtins import unicode
 import unittest
 import random
 import collections
 import sys
 import threading
+
 
 from streamsx.topology.topology import Topology, Routing
 from streamsx.topology.schema import _SchemaParser

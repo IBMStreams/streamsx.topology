@@ -24,7 +24,7 @@ _spl_dict = dict
 _spl_object = object
 
 from future.builtins import *
-from past.builtins import basestring
+from past.builtins import basestring, unicode
 
 import collections
 import enum
