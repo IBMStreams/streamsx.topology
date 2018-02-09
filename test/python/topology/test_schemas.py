@@ -194,7 +194,7 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(dict, sd2.style)
 
         self.assertEqual(object, _sch.CommonSchema.Python.value.style)
-        self.assertEqual(str, _sch.CommonSchema.String.value.style)
+        self.assertEqual(unicode if sys.version_info.major == 2 else str, _sch.CommonSchema.String.value.style)
         self.assertEqual(dict, _sch.CommonSchema.Json.value.style)
 
         snt = s.as_tuple(named='Alert')
