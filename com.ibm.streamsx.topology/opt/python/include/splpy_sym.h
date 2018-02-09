@@ -184,8 +184,13 @@ extern "C" {
 typedef PyObject* (*__splpy_ogas_fp)(PyObject *, const char *);
 typedef int (*__splpy_rssf_fp)(const char *, PyCompilerFlags *);
 #if __SPLPY_EC_MODULE_OK
+#if PY_MAJOR_VERSION == 3
 typedef PyObject* (*__splpy_mc2_fp)(PyModuleDef *, int);
 typedef int (*__splpy_sam_fp)(PyObject *, PyModuleDef *);
+#endif
+#if PY_MAJOR_VERSION == 2
+typedef PyObject * (*__splpy_im4_fp)(const char *, PyMethodDef *, const char *doc, PyObject *self, int);
+#endif
 #endif
 
 extern "C" {
@@ -197,8 +202,14 @@ extern "C" {
   static __splpy_p_p_fp __spl_fp_PyImport_Import;
 
 #if __SPLPY_EC_MODULE_OK
+#if PY_MAJOR_VERSION == 3
   static __splpy_mc2_fp __spl_fp_PyModule_Create2;
   static __splpy_sam_fp __spl_fp_PyState_AddModule;
+#endif
+#if PY_MAJOR_VERSION == 2
+  static __splpy_im4_fp __spl_fp_Py_InitModule4 ;
+#endif
+
 #endif
 
   static PyObject * __spl_fi_PyObject_GetAttrString(PyObject *o, const char * attr_name) {
@@ -221,12 +232,19 @@ extern "C" {
   }
 
 #if __SPLPY_EC_MODULE_OK
+#if PY_MAJOR_VERSION == 3
   static PyObject * __spl_fi_PyModule_Create2(PyModuleDef *module, int apivers) {
      return __spl_fp_PyModule_Create2(module, apivers);
   }
   static int __spl_fi_PyState_AddModule(PyObject *module, PyModuleDef *def) {
      return __spl_fp_PyState_AddModule(module, def);
   }
+#endif
+#if PY_MAJOR_VERSION == 2
+  static PyObject * __spl_fi_Py_InitModule4(const char *name, PyMethodDef *methods, const char *doc, PyObject *self, int apiver) {
+     return __spl_fp_Py_InitModule4(name, methods, doc, self, apiver);
+  }
+#endif
 #endif
 }
 #pragma weak PyObject_GetAttrString = __spl_fi_PyObject_GetAttrString
@@ -237,8 +255,14 @@ extern "C" {
 #pragma weak PyImport_Import = __spl_fi_PyImport_Import
 
 #if __SPLPY_EC_MODULE_OK
+#if PY_MAJOR_VERSION == 3
 #pragma weak PyModule_Create2 = __spl_fi_PyModule_Create2
 #pragma weak PyState_AddModule = __spl_fi_PyState_AddModule
+#endif
+#if PY_MAJOR_VERSION == 2
+#pragma weak Py_InitModule4_64 = __spl_fi_Py_InitModule4
+#pragma weak Py_InitModule4TraceRefs_64 = __spl_fi_Py_InitModule4
+#endif
 #endif
 
 /*
@@ -437,6 +461,10 @@ extern "C" {
 
 #define __SPLFIX(_NAME, _TYPE) __SPLFIX_EX( __spl_fp_##_NAME, #_NAME, _TYPE ) 
 
+#define __SPL_STRINGIFY(_X) #_X
+
+#define __SPL_TOSTRING(_X) __SPL_STRINGIFY(_X)
+
 namespace streamsx {
   namespace topology {
 
@@ -478,8 +506,13 @@ class SplpySym {
      __SPLFIX(PyImport_Import, __splpy_p_p_fp);
 
 #if __SPLPY_EC_MODULE_OK
+#if PY_MAJOR_VERSION == 3
      __SPLFIX(PyModule_Create2, __splpy_mc2_fp);
      __SPLFIX(PyState_AddModule, __splpy_sam_fp);
+#endif
+#if PY_MAJOR_VERSION == 2
+     __SPLFIX_EX(__spl_fp_Py_InitModule4, __SPL_TOSTRING(Py_InitModule4), __splpy_im4_fp);
+#endif
 #endif
  
      __SPLFIX(PyTuple_New, __splpy_p_s_fp);

@@ -3,7 +3,7 @@
 # Copyright IBM Corp. 2015,2016
 
 from __future__ import unicode_literals
-from builtins import str
+from future.builtins import *
 
 import sys
 import uuid

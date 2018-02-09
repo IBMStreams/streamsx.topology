@@ -540,6 +540,7 @@ The list may be empty resulting in no tuples being submitted.
 
 """
 
+from future.builtins import *
 from enum import Enum
 import functools
 import inspect

@@ -24,6 +24,7 @@ try:
 except (ImportError, NameError):
     # nothing to do here
     pass
+from future.builtins import *
 
 from streamsx import rest, rest_primitives
 import logging
@@ -137,7 +138,7 @@ class _BaseSubmitter(object):
 
         args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
         logger.info("Generating SPL and submitting application.")
-        proc_env = env=self._get_java_env()
+        proc_env = self._get_java_env()
         process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0, env=proc_env)
 
         stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
@@ -179,7 +180,7 @@ class _BaseSubmitter(object):
 
     def _get_java_env(self):
         "Get the environment to be passed to the Java execution"
-        return dict(os.environ)
+        return os.environ.copy()
 
     def _add_python_info(self):
         # Python information added to deployment

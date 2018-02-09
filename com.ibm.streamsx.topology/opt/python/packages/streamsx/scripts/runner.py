@@ -3,6 +3,8 @@
 # Copyright IBM Corp. 2017
 
 from __future__ import print_function
+from future.builtins import *
+
 import sys
 import sysconfig
 import inspect

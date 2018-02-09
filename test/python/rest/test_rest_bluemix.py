@@ -26,7 +26,6 @@ instance_response_keys = [
 ]
 
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestRestFeaturesBluemix(CommonTests):
     @classmethod
     def setUpClass(cls):

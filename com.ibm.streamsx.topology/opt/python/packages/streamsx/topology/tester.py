@@ -80,11 +80,14 @@ between tuples are within the timeout period the test remains running until ten 
 .. note:: The submitted job (application under test) has additional elements (streams & operators) inserted to implement the conditions. These are visible through various APIs including the Streams console raw graph view. Such elements are put into the `Tester` category.
 
 .. warning::
-    Python 3.5 and Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
+    Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
+
+
+.. versionchanged:: 1.9 - Python 2.7 supported (except with Streaming Analytics service).
 
 """
 from __future__ import unicode_literals
-from builtins import str
+from future.builtins import *
 
 import streamsx.ec as ec
 import streamsx.topology.context as stc
@@ -98,6 +101,7 @@ from streamsx.rest import StreamingAnalyticsConnection
 from streamsx.topology.context import ConfigParams
 import time
 import json
+import sys
 
 import streamsx.topology.tester_runtime as sttrt
 
@@ -216,8 +220,13 @@ class Tester(object):
             service_name(str): Name of Streaming Analytics service to use. Must exist as an
                 entry in the VCAP services. Defaults to value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.
 
+        If run with Python 2 the test is skipped, only Python 3.5
+        is supported with Streaming Analytics service.
+
         Returns: None
         """
+        if sys.version_info.major == 2:
+            raise unittest.SkipTest('Skipped due to running with Python 2')
         if not 'VCAP_SERVICES' in os.environ:
             raise unittest.SkipTest("Skipped due to VCAP_SERVICES environment variable not set")
 
