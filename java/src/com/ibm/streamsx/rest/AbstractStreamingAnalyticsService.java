@@ -170,10 +170,17 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         }
     }
     
+    private static String buildStateMetricKey(String state) {
+        return "buildState_" + state + "Time_ms";
+    }
+    
     @Override
     public Result<Job, JsonObject> buildAndSubmitJob(File archive, JsonObject jco,
             String buildName) throws IOException {
-    	
+        
+        JsonObject metrics = new JsonObject();
+        metrics.addProperty("codeArchiveSize", archive.length());
+           	
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
             // Set up the build name
@@ -184,14 +191,31 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
             // Perform initial post of the archive
             RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submitting build " + buildName);
+            final long startUploadTime = System.currentTimeMillis();
             JsonObject build = submitBuild(httpclient, getAuthorization(), archive, buildName);
-
+            final long endUploadTime = System.currentTimeMillis();
+            metrics.addProperty("codeArchiveUploadTime_ms", (endUploadTime - startUploadTime));
+            
             String buildId = jstring(build, "id");
             String outputId = jstring(build, "output_id");
 
             // Loop until built
+            final long startBuildTime = endUploadTime;
+            long lastCheckTime = endUploadTime;
             String status = buildStatusGet(buildId, httpclient, getAuthorization());
             while (!status.equals("built")) {
+                String mkey = buildStateMetricKey(status);
+                long now = System.currentTimeMillis();
+                long duration;
+                if (metrics.has(mkey)) {
+                    duration = metrics.get(mkey).getAsLong();                  
+                } else {
+                    duration = 0;
+                }
+                duration += (now - lastCheckTime);
+                metrics.addProperty(mkey, duration);
+                lastCheckTime = now;
+                
                 // 'building', 'notBuilt', and 'waiting' are all states which can eventualy result in 'built'
                 // sleep and continue to monitor
                 if (status.equals("building") || status.equals("notBuilt") || status.equals("waiting")) {
@@ -213,6 +237,8 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
                     throw new IllegalStateException("Error submitting archive for compilation: \n" + strOutput);
                 }
             }
+            final long endBuildTime = System.currentTimeMillis();
+            metrics.addProperty("totalBuildTime_ms", (endBuildTime - startBuildTime));
 
             // Now perform archive put
             build = getBuild(buildId, httpclient, getAuthorization());
@@ -227,10 +253,15 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             String submitUrl = getJobSubmitUrl(artifact);
 
             RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submitting job request.");
+            final long startSubmitTime = System.currentTimeMillis();
             JsonObject response = submitBuildArtifact(httpclient, jco,
                     getAuthorization(), submitUrl);
+            final long endSubmitTime = System.currentTimeMillis();
+            metrics.addProperty("jobSubmissionTime_ms", (endSubmitTime - startSubmitTime));
             
-            return jobResult(response);
+            Result<Job,JsonObject> result = jobResult(response);
+            result.getRawResult().add("submitMetrics", metrics);
+            return result;
         } finally {
             httpclient.close();
         }
