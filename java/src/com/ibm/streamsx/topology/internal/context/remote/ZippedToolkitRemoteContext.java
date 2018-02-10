@@ -186,8 +186,9 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         }
 
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            // Skip pyc files.
-            if (file.getFileName().toString().endsWith(".pyc"))
+            String fn = file.getFileName().toString();
+            // Skip pyc and pyi files.
+            if (fn.endsWith(".pyc") || fn.endsWith(".pyi"))
                 return FileVisitResult.CONTINUE;
             
             String entryName = rootEntryName;
@@ -225,8 +226,23 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     /**
      * Top-level toolkit directories not to include in a build archive.
      */
-    private static final Set<String> TK_EXCLUDES = new HashSet<>(
-            Arrays.asList("doc", "output", "samples"));
+    private static final String[] TK_EXCLUDES =
+        {
+            "toolkit.xml", // Toolkits will be reindexed by build.
+            "doc", "output", "samples",
+            "opt/client",
+        };
+    
+    private static Set<Path> asPaths(String[] paths) {
+        Set<Path> realPaths = new HashSet<>();
+        
+        for (String path : paths) {
+            realPaths.add(Paths.get(path.replace('/', File.separatorChar)));
+        }
+        return realPaths;
+    }
+    
+    private static final Set<Path> TK_PATH_EXCLUDES = asPaths(TK_EXCLUDES);
     
     /**
      * Copy a toolkit into a code archive, skipping any directories
@@ -244,21 +260,21 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
             FileVisitResult r = super.preVisitDirectory(dir, attrs);
             if (r == FileVisitResult.SKIP_SUBTREE)
                 return r;
-            final String dirName = dir.getFileName().toString();
-            if (TK_EXCLUDES.contains(dirName)) {
-                if (dir.getParent().equals(start))
-                    return FileVisitResult.SKIP_SUBTREE;
-            }
             
-            // Skip opt/client
-            if ("client".equals(dirName)) {
-                Path possibleOpt = dir.getParent();
-                if ("opt".equals(possibleOpt.getFileName().toString())) {
-                    if (possibleOpt.getParent().equals(start))
-                        return FileVisitResult.SKIP_SUBTREE;
-                }
-            }
+            if (TK_PATH_EXCLUDES.contains(start.relativize(dir)))
+                return FileVisitResult.SKIP_SUBTREE;
+
             return r;
+        }
+        
+        /**
+         * Allow skipping of specific toolkit files.
+         */
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            if (TK_PATH_EXCLUDES.contains(start.relativize(file)))
+               return FileVisitResult.SKIP_SUBTREE;
+
+            return super.visitFile(file, attrs);
         }
     }
 
