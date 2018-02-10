@@ -53,13 +53,13 @@ class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
         sr = tester.submission_result
         self.assertIn('submitMetrics', sr)
         m = sr['submitMetrics']
-        self.assertIn('codeArchiveSize', m)
-        self.assertIn('codeArchiveUploadTime_ms', m)
+        self.assertIn('buildArchiveSize', m)
+        self.assertIn('buildArchiveUploadTime_ms', m)
         self.assertIn('totalBuildTime_ms', m)
         self.assertIn('jobSubmissionTime_ms', m)
 
-        self.assertTrue(m['codeArchiveSize'] > 0)
-        self.assertTrue(m['codeArchiveUploadTime_ms'] > 0)
+        self.assertTrue(m['buildArchiveSize'] > 0)
+        self.assertTrue(m['buildArchiveUploadTime_ms'] > 0)
         self.assertTrue(m['totalBuildTime_ms'] > 0)
         self.assertTrue(m['jobSubmissionTime_ms'] > 0)
 
