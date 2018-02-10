@@ -179,7 +179,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             String buildName) throws IOException {
         
         JsonObject metrics = new JsonObject();
-        metrics.addProperty("codeArchiveSize", archive.length());
+        metrics.addProperty("buildArchiveSize", archive.length());
            	
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
@@ -194,7 +194,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             final long startUploadTime = System.currentTimeMillis();
             JsonObject build = submitBuild(httpclient, getAuthorization(), archive, buildName);
             final long endUploadTime = System.currentTimeMillis();
-            metrics.addProperty("codeArchiveUploadTime_ms", (endUploadTime - startUploadTime));
+            metrics.addProperty("buildArchiveUploadTime_ms", (endUploadTime - startUploadTime));
             
             String buildId = jstring(build, "id");
             String outputId = jstring(build, "output_id");
