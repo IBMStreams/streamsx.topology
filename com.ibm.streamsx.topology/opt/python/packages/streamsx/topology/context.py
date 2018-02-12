@@ -92,6 +92,7 @@ class _BaseSubmitter(object):
             # Make copy of config to avoid modifying
             # the callers config
             self.config.update(config)
+        self.config['contextType'] = str(self.ctxtype)
         self.graph = graph
         self.fn = None
         self.results_file = None
@@ -187,6 +188,8 @@ class _BaseSubmitter(object):
         pi = {}
         pi["prefix"] = sys.exec_prefix
         pi["version"] = sys.version
+        pi['major'] = sys.version_info.major
+        pi['minor'] = sys.version_info.minor
         self.config["python"] = pi
 
     def _create_job_config_overlays(self):
