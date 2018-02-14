@@ -28,6 +28,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.StreamsRestUtils.StreamingAnalyticsServiceVersion;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
@@ -170,16 +171,12 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         }
     }
     
-    private static String buildStateMetricKey(String state) {
-        return "buildState_" + state + "Time_ms";
-    }
-    
     @Override
     public Result<Job, JsonObject> buildAndSubmitJob(File archive, JsonObject jco,
             String buildName) throws IOException {
         
         JsonObject metrics = new JsonObject();
-        metrics.addProperty("buildArchiveSize", archive.length());
+        metrics.addProperty(SubmissionResultsKeys.SUBMIT_ARCHIVE_SIZE, archive.length());
            	
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
@@ -194,7 +191,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             final long startUploadTime = System.currentTimeMillis();
             JsonObject build = submitBuild(httpclient, getAuthorization(), archive, buildName);
             final long endUploadTime = System.currentTimeMillis();
-            metrics.addProperty("buildArchiveUploadTime_ms", (endUploadTime - startUploadTime));
+            metrics.addProperty(SubmissionResultsKeys.SUBMIT_UPLOAD_TIME, (endUploadTime - startUploadTime));
             
             String buildId = jstring(build, "id");
             String outputId = jstring(build, "output_id");
@@ -204,7 +201,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             long lastCheckTime = endUploadTime;
             String status = buildStatusGet(buildId, httpclient, getAuthorization());
             while (!status.equals("built")) {
-                String mkey = buildStateMetricKey(status);
+                String mkey = SubmissionResultsKeys.buildStateMetricKey(status);
                 long now = System.currentTimeMillis();
                 long duration;
                 if (metrics.has(mkey)) {
@@ -238,7 +235,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
                 }
             }
             final long endBuildTime = System.currentTimeMillis();
-            metrics.addProperty("totalBuildTime_ms", (endBuildTime - startBuildTime));
+            metrics.addProperty(SubmissionResultsKeys.SUBMIT_TOTAL_BUILD_TIME, (endBuildTime - startBuildTime));
 
             // Now perform archive put
             build = getBuild(buildId, httpclient, getAuthorization());
@@ -257,10 +254,10 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             JsonObject response = submitBuildArtifact(httpclient, jco,
                     getAuthorization(), submitUrl);
             final long endSubmitTime = System.currentTimeMillis();
-            metrics.addProperty("jobSubmissionTime_ms", (endSubmitTime - startSubmitTime));
+            metrics.addProperty(SubmissionResultsKeys.SUBMIT_JOB_TIME, (endSubmitTime - startSubmitTime));
             
             Result<Job,JsonObject> result = jobResult(response);
-            result.getRawResult().add("submitMetrics", metrics);
+            result.getRawResult().add(SubmissionResultsKeys.SUBMIT_METRICS, metrics);
             return result;
         } finally {
             httpclient.close();
