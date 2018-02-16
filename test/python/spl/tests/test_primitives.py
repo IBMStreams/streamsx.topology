@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 import os
@@ -11,11 +12,17 @@ from streamsx.topology import schema
 import streamsx.topology.context
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
+import streamsx.scripts.extract
 
 class TestPrimitives(unittest.TestCase):
     """ 
     Test @spl.primitive_operator decorated operators
     """
+    @classmethod
+    def setUpClass(cls):
+        """Extract Python operators in toolkit"""
+        streamsx.scripts.extract.main(['-i', '../testtkpy', '--make-toolkit'])
+
     def setUp(self):
         Tester.setup_distributed(self)
 
@@ -136,6 +143,10 @@ class TestPrimitives(unittest.TestCase):
 # With output ports it's easier to test thus can use standalone.
 #
 class TestPrimitivesOutputs(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        """Extract Python operators in toolkit"""
+        streamsx.scripts.extract.main(['-i', '../testtkpy', '--make-toolkit'])
     def setUp(self):
         Tester.setup_standalone(self)
 

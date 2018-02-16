@@ -23,7 +23,7 @@ def splNamespace():
 #
 # Returns a value matching the test schema TEST_ALL_PYTHON_TYPES
 @spl.source()
-class SpecificValues:
+class SpecificValues(object):
     def __init__(self):
         pass
 
@@ -55,7 +55,7 @@ class SpecificValues:
         return itertools.repeat(rv, 1)
 
 @spl.source()
-class SparseTuple:
+class SparseTuple(object):
     def __init__(self):
         pass
 
@@ -66,7 +66,7 @@ class SparseTuple:
         return itertools.repeat(rv, 1)
 
 @spl.source()
-class DictTuple:
+class DictTuple(object):
     def __init__(self):
         pass
 

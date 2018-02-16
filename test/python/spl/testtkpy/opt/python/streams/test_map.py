@@ -17,7 +17,7 @@ def splNamespace():
 ##
 ##
 @spl.map()
-class OffByOne:
+class OffByOne(object):
     def __init__(self):
         self.last = None
 
@@ -29,7 +29,7 @@ class OffByOne:
         return rv
 
 @spl.map()
-class SparseTupleMap:
+class SparseTupleMap(object):
     def __init__(self):
        pass
 

@@ -4,6 +4,7 @@
 
 # Import the SPL decorators
 from streamsx.spl import spl
+import sys
 
 #------------------------------------------------------------------
 # Test passing in SPL types functions
@@ -40,6 +41,9 @@ def validate_mv_blob(v):
     return None
 
 def validate_mv_blob_release(l):
+    # No release in Python 2
+    if sys.version_info.major == 2:
+        return None
     for b in l:
         try:
             bs = b.tobytes()
@@ -49,7 +53,7 @@ def validate_mv_blob_release(l):
     return None
 
 @spl.map()
-class BlobTest:
+class BlobTest(object):
     """
     Expect blob tuples, need to verify that after
     the call the previous value cannot be accessed.
@@ -70,10 +74,12 @@ class BlobTest:
 
         if self.keep:
              self.last.append(v)
-        return str(v, 'utf-8'),
+        if sys.version_info.major == 2:
+            return unicode(v.tobytes(), encoding='utf-8'),
+        return str(v, encoding='utf-8'),
 
 @spl.map()
-class ListBlobTest:
+class ListBlobTest(object):
     """
     Expect list<blob> tuples, need to verify that after
     the call the previous value cannot be accessed.
@@ -92,10 +98,12 @@ class ListBlobTest:
             return mvc
 
         self.last.append(v)
-        return str(v, 'utf-8'),
+        if sys.version_info.major == 2:
+            return unicode(v.tobytes(), encoding='utf-8'),
+        return str(v, encoding='utf-8'),
 
 @spl.map()
-class MapBlobTest:
+class MapBlobTest(object):
     """
     Expect map<rstring,blob> tuples, need to verify that after
     the call the previous value cannot be accessed.
@@ -114,5 +122,6 @@ class MapBlobTest:
             return mvc
 
         self.last.append(v)
-        return str(v, 'utf-8'),
-
+        if sys.version_info.major == 2:
+            return unicode(v.tobytes(), encoding='utf-8'),
+        return str(v, encoding='utf-8'),
