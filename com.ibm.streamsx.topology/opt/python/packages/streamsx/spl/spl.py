@@ -616,6 +616,9 @@ def _wrapforsplop(optype, wrapped, style, docpy):
         class _op_class(wrapped):
 
             __doc__ = wrapped.__doc__
+            _splpy_wrapped = wrapped
+            _splpy_optype = optype
+            _splpy_callable = 'class'
 
             @functools.wraps(wrapped.__init__)
             def __init__(self,*args,**kwargs):
@@ -627,10 +630,6 @@ def _wrapforsplop(optype, wrapped, style, docpy):
             def _splpy_shutdown(self):
                 ec._callable_exit_clean(self)
 
-        _op_class.__wrapped__ = wrapped
-        # _op_class.__doc__ = wrapped.__doc__
-        _op_class._splpy_optype = optype
-        _op_class._splpy_callable = 'class'
         if optype in (_OperatorType.Sink, _OperatorType.Pipe, _OperatorType.Filter):
             _op_class._splpy_style = _define_style(wrapped, wrapped.__call__, style)
             _op_class._splpy_fixed_count = _define_fixed(_op_class, _op_class.__call__)

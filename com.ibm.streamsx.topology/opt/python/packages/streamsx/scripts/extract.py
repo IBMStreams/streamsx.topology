@@ -1,8 +1,9 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2016,2018
 from __future__ import print_function
 from __future__ import unicode_literals
 from future.builtins import *
-# Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016,2017
 import sys
 import sysconfig
 import inspect
@@ -145,11 +146,11 @@ _OP_OUTPUT_PORT_SET_TEMPLATE ="""
 
 
 class _Extractor(object):
-    def __init__(self):
-        self._cmd_args = self._parse_cmd_args()
+    def __init__(self, args):
+        self._cmd_args = self._parse_cmd_args(args)
         self._tk_dir = self._cmd_args.directory
 
-    def _parse_cmd_args(self):
+    def _parse_cmd_args(self, args):
         cmd_parser = argparse.ArgumentParser(description='Extract SPL operators from decorated Python classes and functions.')
         cmd_parser.add_argument('-i', '--directory', required=True,
                    help='Toolkit directory')
@@ -157,7 +158,7 @@ class _Extractor(object):
                    help='Index toolkit using spl-make-toolkit')
         cmd_parser.add_argument('-v', '--verbose', action='store_true',
                    help='Print more diagnostics')
-        return cmd_parser.parse_args()
+        return cmd_parser.parse_args(args)
 
     def _make_namespace_dir(self, ns):
          nsdir = os.path.join(self._tk_dir, ns)
@@ -249,7 +250,7 @@ class _Extractor(object):
     def _create_op_parameters(self, opmodel_xml, name, opObj):
         opparam_xml = ''
         if _opcallable(opObj) == 'class':
-            pmds = init_sig = _inspect.signature(opObj.__init__).parameters
+            pmds = init_sig = _inspect.signature(opObj._splpy_wrapped.__init__).parameters
             itpmds = iter(pmds)
             # first argument to __init__ is self (instance ref)
             next(itpmds)
@@ -462,13 +463,13 @@ class _Extractor(object):
                 Sample info xml:\n""" + _INFO_XML_TEMPLATE
             sys.exit(errstr)
 
-def _extract_from_toolkit():
+def _extract_from_toolkit(args):
     """
     Look at all the modules in opt/python/streams (opt/python/streams/*.py)
     and extract any spl decorated function as an operator.
     """
 
-    extractor = _Extractor()
+    extractor = _Extractor(args)
 
     tk_dir = extractor._tk_dir
 
@@ -506,8 +507,8 @@ def _extract_from_toolkit():
         mktk_args = [mktk, '--directory', extractor._cmd_args.directory, '--make-operator']
         subprocess.check_call(mktk_args)
 
-def main():
-    _extract_from_toolkit()
+def main(args=None):
+    _extract_from_toolkit(args)
 
 if __name__ == '__main__':
     main()
