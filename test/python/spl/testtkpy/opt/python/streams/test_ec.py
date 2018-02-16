@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 
@@ -31,7 +32,7 @@ class PyTestOperatorContext:
 
     def same(self, expect, got):
         if expect != got:
-            print("Expected", expect, "Got", got, flush=True)
+            print("Expected", expect, "Got", got)
             return False
         return True
 
