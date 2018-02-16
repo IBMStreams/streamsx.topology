@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import *
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
@@ -22,6 +23,8 @@ from streamsx.spl.spl import _valid_op_parameter
 # setup for function inspection
 if sys.version_info.major == 3:
     _inspect = inspect
+elif sys.version_info.major == 2:
+  _inspect = funcsigs
 else:
     raise ValueError("Python version not supported.")
 ############################################
@@ -232,7 +235,7 @@ class _Extractor(object):
         # Print the summary of the class/function
         _doc = inspect.getdoc(opobj)
         if _doc is not None:
-            _doc = str.splitlines(_doc)[0]
+            _doc = _doc.splitlines()[0]
             print("  ", _doc)
         nsdir = self._make_namespace_dir(ns)
         opdir = self._make_operator_dir(nsdir, opname)
@@ -344,11 +347,12 @@ class _Extractor(object):
     # Write information about the Python function parameters.
     #
     def _write_style_info(self, cfgfile, opobj):
+            style = opobj._splpy_style
 
-            if isinstance(opobj._splpy_style, list):
+            if isinstance(style, list):
                 pm_style = '(' + ','.join(["'{0}'".format(_) for _ in opobj._splpy_style]) + ')'
             else:
-                pm_style = "'" + opobj._splpy_style + "'"
+                pm_style = "'" + style + "'"
             cfgfile.write('sub splpy_ParamStyle {'+ pm_style + '}\n')
              
             if isinstance(opobj._splpy_fixed_count, list):
