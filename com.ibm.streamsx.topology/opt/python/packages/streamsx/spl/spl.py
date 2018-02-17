@@ -1151,8 +1151,10 @@ class primitive_operator(object):
         cls = _wrapforsplop(_OperatorType.Primitive, wrapped, None, self._docpy)
 
         inputs = dict()
-        for fname, fn in inspect.getmembers(wrapped, inspect.isfunction):
+        for fname, fn in inspect.getmembers(wrapped):
             if hasattr(fn, '_splpy_input_port_seq'):
+                if sys.version_info.major == 2:
+                    fn = fn.__func__
                 inputs[fn._splpy_input_port_seq] = fn
 
         cls._splpy_input_ports = []
