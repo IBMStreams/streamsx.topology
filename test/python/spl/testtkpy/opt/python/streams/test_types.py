@@ -1,6 +1,8 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+from __future__ import unicode_literals
+from builtins import *
 
 # Import the SPL decorators
 from streamsx.spl import spl
@@ -75,7 +77,7 @@ class BlobTest(object):
         if self.keep:
              self.last.append(v)
         if sys.version_info.major == 2:
-            return unicode(v.tobytes(), encoding='utf-8'),
+            v = v.tobytes()
         return str(v, encoding='utf-8'),
 
 @spl.map()
@@ -99,7 +101,7 @@ class ListBlobTest(object):
 
         self.last.append(v)
         if sys.version_info.major == 2:
-            return unicode(v.tobytes(), encoding='utf-8'),
+            v = v.tobytes()
         return str(v, encoding='utf-8'),
 
 @spl.map()
@@ -123,5 +125,5 @@ class MapBlobTest(object):
 
         self.last.append(v)
         if sys.version_info.major == 2:
-            return unicode(v.tobytes(), encoding='utf-8'),
+            v = v.tobytes()
         return str(v, encoding='utf-8'),

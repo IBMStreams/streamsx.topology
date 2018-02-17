@@ -1,7 +1,9 @@
+# coding:utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015, 2016
 
 from __future__ import absolute_import, division, print_function
+import sys
 
 # Simple inclusion of Python logic within an SPL application
 # as a SPL "Function" operator. A "Function" operator has
@@ -64,16 +66,22 @@ def spl_namespace():
     return "com.ibm.streamsx.topology.pysamples.sources"
 
 @spl.source()
-class Range:
+class Range(object):
     def __init__(self, count):
         self.count = count
 
     def __iter__(self):
         # Use zip to convert the single returned value
         # into a tuple to allow it to be returned to SPL
+        if sys.version_info.major == 2:
+            # zip behaviour differs on Python 2.7
+            return iter(zip(range(self.count)))
         return zip(range(self.count))
 
 @spl.source()
 def Range37():
     """Sample of a function as a source operator."""
+    if sys.version_info.major == 2:
+        # zip behaviour differs on Python 2.7
+        return iter(zip(range(37)))
     return zip(range(37))

@@ -1,6 +1,9 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+from __future__ import unicode_literals
+from builtins import *
+
 import unittest
 import sys
 import itertools
