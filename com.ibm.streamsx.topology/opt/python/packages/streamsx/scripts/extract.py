@@ -25,7 +25,8 @@ from streamsx.spl.spl import _valid_op_parameter
 if sys.version_info.major == 3:
     _inspect = inspect
 elif sys.version_info.major == 2:
-  _inspect = funcsigs
+    _inspect = funcsigs
+    FileNotFoundError = IOError
 else:
     raise ValueError("Python version not supported.")
 ############################################
