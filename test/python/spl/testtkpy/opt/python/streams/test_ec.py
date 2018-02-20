@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 
@@ -14,7 +15,7 @@ def spl_namespace():
     return "com.ibm.streamsx.topology.pytest.pyec"
 
 @spl.filter()
-class PyTestOperatorContext:
+class PyTestOperatorContext(object):
     def __init__(self, domain_id, instance_id, job_id, pe_id, channel, local_channel, max_channels, local_max_channels):
         self.enter_called = False
         self.exit_called = False
@@ -31,7 +32,7 @@ class PyTestOperatorContext:
 
     def same(self, expect, got):
         if expect != got:
-            print("Expected", expect, "Got", got, flush=True)
+            print("Expected", expect, "Got", got)
             return False
         return True
 
@@ -60,7 +61,7 @@ class PyTestOperatorContext:
         self.exit_called = True
 
 @spl.filter()
-class PyTestMetrics:
+class PyTestMetrics(object):
     def __init__(self):
         ok = True
         self.c = ec.CustomMetric(self, "C1")

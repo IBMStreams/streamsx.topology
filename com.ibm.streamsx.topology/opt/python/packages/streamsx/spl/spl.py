@@ -552,9 +552,9 @@ import streamsx.ec as ec
 # setup for function inspection
 if sys.version_info.major == 3:
   _inspect = inspect
-#elif sys.version_info.major == 2:
-#  import funcsigs
-#  _inspect = funcsigs
+elif sys.version_info.major == 2:
+  import funcsigs
+  _inspect = funcsigs
 else:
   raise ValueError("Python version not supported.")
 ############################################
@@ -571,7 +571,7 @@ _SPL_KEYWORDS = {'graph', 'stream', 'public', 'composite', 'input', 'output', 't
                  'if', 'for', 'while', 'break', 'continue', 'return', 'attribute', 'function', 'operator'}
 
 def _valid_identifier(id):
-    if re.fullmatch('[a-zA-Z_][a-zA-Z_0-9]*', id) is None or id in _SPL_KEYWORDS:
+    if re.match('^[a-zA-Z_][a-zA-Z_0-9]*$', id) is None or id in _SPL_KEYWORDS:
         raise ValueError("{0} is not a valid SPL identifier".format(id))
 
 def _valid_op_parameter(name):
@@ -616,6 +616,9 @@ def _wrapforsplop(optype, wrapped, style, docpy):
         class _op_class(wrapped):
 
             __doc__ = wrapped.__doc__
+            _splpy_wrapped = wrapped
+            _splpy_optype = optype
+            _splpy_callable = 'class'
 
             @functools.wraps(wrapped.__init__)
             def __init__(self,*args,**kwargs):
@@ -627,13 +630,13 @@ def _wrapforsplop(optype, wrapped, style, docpy):
             def _splpy_shutdown(self):
                 ec._callable_exit_clean(self)
 
-        _op_class.__wrapped__ = wrapped
-        # _op_class.__doc__ = wrapped.__doc__
-        _op_class._splpy_optype = optype
-        _op_class._splpy_callable = 'class'
-        if hasattr(wrapped, '__call__'):
+        if optype in (_OperatorType.Sink, _OperatorType.Pipe, _OperatorType.Filter):
             _op_class._splpy_style = _define_style(wrapped, wrapped.__call__, style)
             _op_class._splpy_fixed_count = _define_fixed(_op_class, _op_class.__call__)
+        else:
+            _op_class._splpy_style = ''
+            _op_class._splpy_fixed_count = -1
+     
         _op_class._splpy_file = inspect.getsourcefile(wrapped)
         _op_class._splpy_docpy = docpy
         return _op_class
@@ -759,7 +762,7 @@ def _define_fixed(wrapped, callable_):
                 break
     return fixed_count
 
-class source:
+class source(object):
     """
     Create a source SPL operator from an iterable.
     The resulting SPL operator has a single output port.
@@ -810,7 +813,7 @@ class source:
     def __call__(self, wrapped):
         return _wrapforsplop(_OperatorType.Source, wrapped, self.style, self.docpy)
 
-class map:
+class map(object):
     """
     Decorator to create a map SPL operator from a callable class or function.
 
@@ -932,7 +935,7 @@ def sink(wrapped):
     return _wrapforsplop(_OperatorType.Sink, wrapped, 'position', False)
 
 # Defines a function as a sink operator
-class for_each:
+class for_each(object):
     """
     Creates an SPL operator with a single input port.
 
@@ -1148,8 +1151,10 @@ class primitive_operator(object):
         cls = _wrapforsplop(_OperatorType.Primitive, wrapped, None, self._docpy)
 
         inputs = dict()
-        for fname, fn in inspect.getmembers(wrapped, inspect.isfunction):
+        for fname, fn in inspect.getmembers(wrapped):
             if hasattr(fn, '_splpy_input_port_seq'):
+                if sys.version_info.major == 2:
+                    fn = fn.__func__
                 inputs[fn._splpy_input_port_seq] = fn
 
         cls._splpy_input_ports = []

@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015, 2016
 
@@ -84,7 +85,7 @@ def Noop(*tuple_):
 # numeric attribute as the last attribute.
 
 @spl.map()
-class AddSeq:
+class AddSeq(object):
     """Add a sequence number as the last attribute."""
     def __init__(self):
         self.seq = 0
@@ -100,7 +101,7 @@ from datetime import datetime
 # with the inter-tuple arrival delay.
 #
 @spl.for_each()
-class PrintWithTimeIntervals:
+class PrintWithTimeIntervals(object):
     "Print tuples with inter-tuple arrival delay."
     def __init__(self):
         self.last = datetime.now()

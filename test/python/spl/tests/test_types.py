@@ -1,5 +1,9 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+from __future__ import unicode_literals
+from builtins import *
+
 import unittest
 import sys
 import itertools
@@ -10,11 +14,16 @@ from streamsx.topology import schema
 import streamsx.topology.context
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
+import streamsx.scripts.extract
 
-
-class TestSPL(unittest.TestCase):
-    """ Test invocations of SPL operators from Python topology.
+class TestBlobs(unittest.TestCase):
+    """ Test blobs in decorated operators.
     """
+    @classmethod
+    def setUpClass(cls):
+        """Extract Python operators in toolkit"""
+        streamsx.scripts.extract.main(['-i', '../testtkpy', '--make-toolkit'])
+
     def setUp(self):
         Tester.setup_standalone(self)
 

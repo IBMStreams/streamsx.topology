@@ -795,8 +795,9 @@ class SplpyGeneral {
  * as we release the memory view once process returns
  * using MemoryViewCleanup RAII.
  *
- * In Python2 there is no release to to allow blobs
- * in schemas we copy the contents.
+ * In Python2 there is no release so to allow blobs
+ * in schemas we copy the contents. See pySplValueToPyObject
+ * overload that takes an SPL::blob.
  *
  * We do it this way
  * rather than in the conversion method as if the schema
@@ -871,8 +872,8 @@ class MemoryViewCleanup {
 
 #else /* VER == 2 */
 
-#define PYSPL_MEMORY_VIEW_CLEANUP() /* TODO */
-#define PYSPL_MEMORY_VIEW(o) /* TODO */
+#define PYSPL_MEMORY_VIEW_CLEANUP() 
+#define PYSPL_MEMORY_VIEW(o) 
 
 #endif /* END VER 2/3 */
 
