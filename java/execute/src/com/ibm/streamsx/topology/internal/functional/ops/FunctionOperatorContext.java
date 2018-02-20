@@ -28,8 +28,18 @@ class FunctionOperatorContext implements FunctionContext {
     private final OperatorContext context;
     private final FunctionContainer container;
     
-    private List<Runnable> metrics;
+    private List<MetricSetter> metrics;
     private ScheduledFuture<?> metricsGetter;
+    
+    static class MetricSetter {
+        final Metric metric;
+        final LongSupplier value;
+        
+        MetricSetter(Metric metric, LongSupplier value) {
+            this.metric = metric;
+            this.value = value;
+        }
+    }
     
     FunctionOperatorContext( OperatorContext context) {
         this.context = context;
@@ -78,23 +88,31 @@ class FunctionOperatorContext implements FunctionContext {
         cm.setValue(supplier.getAsLong());
         
         if (metrics == null) {
-            metrics = new ArrayList<>();
+            metrics = Collections.synchronizedList(new ArrayList<>());
             
             metricsGetter = getScheduledExecutorService().scheduleWithFixedDelay(this::updateMetrics,
                     1, 1, TimeUnit.SECONDS);
         }
         
-        metrics.add(() -> cm.setValue(supplier.getAsLong()));
+        metrics.add(new MetricSetter(cm, value));
     }
     
     private void updateMetrics() {
-        for (Runnable mu : metrics)
-            mu.run();
+        synchronized (metrics) {
+            for (MetricSetter ms : metrics)
+                ms.metric.setValue(ms.value.getAsLong());
+        }
+    }
+    
+    void clearMetrics() {
+        if (metrics != null)
+            metrics.clear();
     }
     
     synchronized void finalMarkers() {
         if (metricsGetter != null) {
             metricsGetter.cancel(false);
+            metricsGetter = null;
             
             // Final update of the metrics
             updateMetrics();

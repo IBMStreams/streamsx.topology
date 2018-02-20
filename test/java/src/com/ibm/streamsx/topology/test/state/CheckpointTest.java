@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015  
+# Copyright IBM Corp. 2015, 2018 
  */
 package com.ibm.streamsx.topology.test.state;
 
@@ -32,6 +32,16 @@ public class CheckpointTest extends TestTopology {
     public void checkIsDistributed() {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+    }
+    
+    @Test
+    public void testInitializable() throws Exception {
+        final Topology topology = new Topology();
+        TStream<Long> s = StatefulApp.createApp(topology, true, true);
+        
+        Condition<Long> atLeast = topology.getTester().atLeastTupleCount(s, 50*50);
+        
+        complete(topology.getTester(), atLeast, 120, TimeUnit.SECONDS);
     }
     
     @Test
