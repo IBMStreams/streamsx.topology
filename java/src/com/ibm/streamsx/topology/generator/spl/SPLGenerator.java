@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonArray;
@@ -58,6 +59,18 @@ public class SPLGenerator {
 
     public String generateSPL(JsonObject graph) throws IOException {
         
+        // Add a unique ID to every operator and port to allow indexing
+        GraphUtilities.operators(graph, op -> {
+            op.addProperty("__unique_id", UUID.randomUUID().toString());
+            GraphUtilities.inputs(op, input -> {
+                input.addProperty("__unique_id", UUID.randomUUID().toString());
+            });
+            
+            GraphUtilities.outputs(op, output -> {
+                output.addProperty("__unique_id", UUID.randomUUID().toString());
+            });
+        }); 
+               
         JsonObject graphConfig = getGraphConfig(graph);
         breakoutVersion(graphConfig);
                 
