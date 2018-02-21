@@ -1264,7 +1264,7 @@ class StreamingAnalyticsService(object):
         # Delegators are required because we need to keep StreamingAnalyticsService
         # around for backwards compatibility, yet it also needs to work with basic
         # and IAM authentication.
-        if 'v2_rest_url' in credentials and 'username' not in credentials and 'password' not in credentials:
+        if 'v2_rest_url' in credentials and 'userid' not in credentials and 'password' not in credentials:
             self._delegator = _StreamingAnalyticsServiceV2Delegator(rest_client, credentials)
         else:
             self._delegator = _StreamingAnalyticsServiceV1Delegator(rest_client, credentials)
