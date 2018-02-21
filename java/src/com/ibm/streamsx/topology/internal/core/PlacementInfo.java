@@ -71,7 +71,6 @@ class PlacementInfo {
         if (elements.size() < 2)
             return false;
         
-        // TODO: these checks should happen at graph preprocessing time.
         disallowColocateInLowLatency(elements);
         disallowColocateIsolatedOpWithParent(first, toFuse);
             
