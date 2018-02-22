@@ -99,7 +99,7 @@ def main():
     filtered_condensed.print()
     
     # Execute the topology
-    streamsx.topology.context.submit("STANDALONE", topo.graph)
+    streamsx.topology.context.submit("STANDALONE", topo)
      
 if __name__ == '__main__':
     main()

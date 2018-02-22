@@ -54,6 +54,7 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
+import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
@@ -478,7 +479,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     private TStream<T> _parallel(Supplier<Integer> width, Function<T,?> keyer) {
 
         if (width == null)
-            throw new IllegalArgumentException("width");
+            throw new IllegalArgumentException(PortProperties.WIDTH);
         Integer widthVal;
         if (width.get() != null)
             widthVal = width.get();
@@ -511,10 +512,10 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 
         BOutput parallelOutput = builder().parallel(toBeParallelized, width);
         if (isPartitioned) {
-            parallelOutput._json().addProperty("partitioned", true);
+            parallelOutput._json().addProperty(PortProperties.PARTITIONED, true);
             JsonArray partitionKeys = new JsonArray();
             partitionKeys.add(new JsonPrimitive("__spl_hash"));
-            parallelOutput._json().add("partitionedKeys", partitionKeys);
+            parallelOutput._json().add(PortProperties.PARTITION_KEYS, partitionKeys);
             // Add hash remover
             StreamImpl<T> parallelStream = new StreamImpl<T>(this,
                     parallelOutput, getTupleType());
@@ -539,6 +540,16 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> parallel(Supplier<Integer> width) {
         return parallel(width, TStream.Routing.ROUND_ROBIN);
+    }
+    
+    @Override
+    public TStream<T> setParallel(Supplier<Integer> width){
+    	BOutputPort output = (BOutputPort)this.output;
+    	output.operator().addConfig(OpProperties.PARALLEL, true);
+    	output.operator().addConfig(OpProperties.WIDTH, width.get());
+    	
+    	throw new UnsupportedOperationException("setParallel is not implemented.");
+    	//return this;
     }
 
     @Override

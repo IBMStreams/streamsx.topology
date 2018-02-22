@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 import os
@@ -11,10 +12,16 @@ from streamsx.topology import schema
 import streamsx.topology.context
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
+import streamsx.scripts.extract
 
 class TestVersion(unittest.TestCase):
     """ 
     """
+    @classmethod
+    def setUpClass(cls):
+        """Extract Python operators in toolkit"""
+        streamsx.scripts.extract.main(['-i', '../testtkpy', '--make-toolkit'])
+
     def setUp(self):
         Tester.setup_standalone(self)
 

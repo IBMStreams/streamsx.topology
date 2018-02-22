@@ -16,25 +16,25 @@ import com.ibm.streamsx.topology.builder.BVirtualMarker;
 
 public class GraphValidation {
     
-    void validateGraph(JsonObject graph){
-        checkValidEndParallel(graph);
+    void validateGraph(GCompositeDef gcomp){
+        checkValidEndParallel(gcomp);
     }
     
-    private void checkValidEndParallel(JsonObject graph){
-        Set<JsonObject> endParallels = findOperatorByKind(BVirtualMarker.END_PARALLEL, graph);	
+    private void checkValidEndParallel(GCompositeDef gcomp){
+        Set<JsonObject> endParallels = findOperatorByKind(BVirtualMarker.END_PARALLEL, gcomp);	
 
         for (JsonObject endParallel : endParallels) {
             // Setting up loop
             JsonObject endParallelParent = endParallel;
             do {
-                Set<JsonObject> endParallelParents = GraphUtilities.getUpstream(endParallelParent, graph);
+                Set<JsonObject> endParallelParents = gcomp.getUpstream(endParallelParent);
                 if (endParallelParents.size() != 1) {
                     throw new IllegalStateException("Cannot union multiple streams before invoking endParallel()");
                 }
                 endParallelParent = first(endParallelParents);
             } while (jstring(endParallelParent, "kind").startsWith("$"));
             
-            Set<JsonObject> endParallelParentChildren = getDownstream(endParallelParent, graph);
+            Set<JsonObject> endParallelParentChildren = gcomp.getDownstream(endParallelParent);
             if (endParallelParentChildren.size() != 1) {
                 throw new IllegalStateException("Cannot fanout a stream before invoking endParallel()");
             }

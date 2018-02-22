@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -82,8 +81,8 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     public Future<File> createCodeArchive(File toolkitRoot, JsonObject submission) throws IOException, URISyntaxException {
         
         String tkName = toolkitRoot.getName();
-        
-        Path zipOutPath = pack(toolkitRoot.toPath(), graph(submission), tkName);
+                
+        Path zipOutPath = pack(toolkitRoot.toPath(), submission, tkName);
         
         if (keepBuildArchive || keepArtifacts(submission)) {
         	final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
@@ -96,10 +95,12 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         return new CompletedFuture<File>(zipOutPath.toFile());
     }
         
-    private static Path pack(final Path folder, JsonObject graph, String tkName) throws IOException, URISyntaxException {
+    private static Path pack(final Path folder, JsonObject submission, String tkName) throws IOException, URISyntaxException {
+        
+        JsonObject graph = graph(submission);
         String namespace = splAppNamespace(graph);
         String name = splAppName(graph);
-
+        
         Path zipFilePath = Paths.get(folder.toAbsolutePath().toString() + ".zip");
         
         final Path topologyToolkit = TkInfo.getTopologyToolkitRoot().getAbsoluteFile().toPath(); 
@@ -148,7 +149,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         paths.put(makefile, "Makefile");
         
         try {
-            addAllToZippedArchive(toolkits, paths, zipFilePath);
+            addAllToZippedArchive(submission, toolkits, paths, zipFilePath);
         } finally {
             manifestTmp.toFile().delete();
             mainCompTmp.toFile().delete();
@@ -158,11 +159,11 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     }
     
     
-    private static void addAllToZippedArchive(Map<Path, String> toolkits, Map<Path, String> starts, Path zipFilePath) throws IOException {
+    private static void addAllToZippedArchive(JsonObject submission, Map<Path, String> toolkits, Map<Path, String> starts, Path zipFilePath) throws IOException {
         try (ZipArchiveOutputStream zos = new ZipArchiveOutputStream(zipFilePath.toFile())) {
             for (Path tk : toolkits.keySet()) {
                 final String rootEntryName = toolkits.get(tk);
-                Files.walkFileTree(tk, new ToolkitCopy(zos, rootEntryName, tk));
+                Files.walkFileTree(tk, new ToolkitCopy(zos, rootEntryName, tk, submission));
             }
             for (Path start : starts.keySet()) {
                 final String rootEntryName = starts.get(start);
@@ -186,8 +187,9 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         }
 
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            // Skip pyc files.
-            if (file.getFileName().toString().endsWith(".pyc"))
+            String fn = file.getFileName().toString();
+            // Skip pyc and pyi files.
+            if (fn.endsWith(".pyc") || fn.endsWith(".pyi"))
                 return FileVisitResult.CONTINUE;
             
             String entryName = rootEntryName;
@@ -223,10 +225,22 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     }
     
     /**
-     * Top-level toolkit directories not to include in a build archive.
-     */
-    private static final Set<String> TK_EXCLUDES = new HashSet<>(
-            Arrays.asList("doc", "output", "samples"));
+     * Top-level toolkit directories and file not to include in a build archive.
+     */   
+    private static final Set<Path> TK_PATH_EXCLUDES = new HashSet<>();
+    
+    static {
+        Set<Path> tpe = TK_PATH_EXCLUDES;
+        
+        // Toolkits will be reindexed by build.
+        tpe.add(Paths.get("toolkit.xml"));
+        
+        tpe.add(Paths.get("doc"));
+        tpe.add(Paths.get("output"));
+        tpe.add(Paths.get("samples"));
+        
+        tpe.add(Paths.get("opt", "client"));
+    }
     
     /**
      * Copy a toolkit into a code archive, skipping any directories
@@ -234,9 +248,14 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
      *
      */
     private static class ToolkitCopy extends FullCopy {
+        
+        private final JsonObject submission;
+        private final Set<Path> excludes;
 
-        ToolkitCopy(ZipArchiveOutputStream zos, String rootEntryName, Path start) {
+        ToolkitCopy(ZipArchiveOutputStream zos, String rootEntryName, Path start, JsonObject submission) {
             super(zos, rootEntryName, start);
+            this.submission = submission;
+            excludes = TK_PATH_EXCLUDES;
         }
         
         @Override
@@ -244,21 +263,21 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
             FileVisitResult r = super.preVisitDirectory(dir, attrs);
             if (r == FileVisitResult.SKIP_SUBTREE)
                 return r;
-            final String dirName = dir.getFileName().toString();
-            if (TK_EXCLUDES.contains(dirName)) {
-                if (dir.getParent().equals(start))
-                    return FileVisitResult.SKIP_SUBTREE;
-            }
             
-            // Skip opt/client
-            if ("client".equals(dirName)) {
-                Path possibleOpt = dir.getParent();
-                if ("opt".equals(possibleOpt.getFileName().toString())) {
-                    if (possibleOpt.getParent().equals(start))
-                        return FileVisitResult.SKIP_SUBTREE;
-                }
-            }
+            if (excludes.contains(start.relativize(dir)))
+                return FileVisitResult.SKIP_SUBTREE;
+
             return r;
+        }
+        
+        /**
+         * Allow skipping of specific toolkit files.
+         */
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            if (excludes.contains(start.relativize(file)))
+               return FileVisitResult.SKIP_SUBTREE;
+
+            return super.visitFile(file, attrs);
         }
     }
 

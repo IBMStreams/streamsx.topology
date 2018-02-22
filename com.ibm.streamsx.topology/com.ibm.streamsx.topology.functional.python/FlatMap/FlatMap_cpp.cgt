@@ -11,7 +11,7 @@ using namespace streamsx::topology;
 @include "../pyspltuple.cgt"
 <%
  # Select the Python wrapper function
- my $pywrapfunc= $pystyle . '_in__pickle_iter';
+ my $pywrapfunc= $pystyle_fn . '_in__pickle_iter';
 %>
 
 // Default case is pass by pickled value in which case
@@ -22,7 +22,7 @@ using namespace streamsx::topology;
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
-   pyInNames_(NULL),
+   pyInStyleObj_(NULL),
    occ_(-1)
 { 
     const char * wrapfn = "<%=$pywrapfunc%>";
@@ -37,7 +37,7 @@ MY_OPERATOR::MY_OPERATOR() :
  if ($oc) {
     my $occ = $oc->getValueAt(0)->getSPLExpression();
     if ($occ > 0) {
-        my $pybyrefwrapfunc = $pystyle . '_in__object_iter';
+        my $pybyrefwrapfunc = $pystyle_fn . '_in__object_iter';
 %>
 
 // Macro inserts an if passing by ref check then pass tuple
@@ -60,23 +60,16 @@ MY_OPERATOR::MY_OPERATOR() :
 
     funcop_ = new SplpyFuncOp(this, wrapfn);
 
-<% if ($pystyle eq 'dict') { %>
-     SplpyGIL lock;
- 
-     pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
-               getInputPortAt(0));
-<% } %>
+@include "../pyspltuple_constructor.cgt"
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-<% if ($pystyle eq 'dict') { %>
-    if (pyInNames_) {
+  if (pyInStyleObj_) {
       SplpyGIL lock;
-      Py_DECREF(pyInNames_);
-    }
-<% } %>
+      Py_DECREF(pyInStyleObj_);
+  }
 
   delete funcop_;
 }

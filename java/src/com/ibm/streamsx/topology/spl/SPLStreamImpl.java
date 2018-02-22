@@ -138,6 +138,11 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
         return asSPL(super.parallel(width));
     }
     
+    @Override 
+    public SPLStream setParallel(Supplier<Integer> width){
+    	return asSPL(super.setParallel(width));
+    }
+    
     @Override
     public SPLStream parallel(Supplier<Integer> width,
             com.ibm.streamsx.topology.TStream.Routing routing) {

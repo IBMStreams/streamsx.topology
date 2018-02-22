@@ -30,4 +30,29 @@ public interface SubmissionResultsKeys {
      * The file path of the Job config file.
      */
     String JOB_CONFIG_PATH = "jobConfigPath";
+    
+    /**
+     * JSON object holding metrics related to build/job submission.
+     */
+    String SUBMIT_METRICS = "submitMetrics";
+    String TIME_MS_SUFFIX = "Time_ms";
+            
+    /**
+     * Fields in in SUBMIT_METRICS.
+     * All long values.
+     * All times in milliseconds.
+     */
+       
+    String SUBMIT_ARCHIVE_SIZE = "buildArchiveSize";
+    String SUBMIT_UPLOAD_TIME = "buildArchiveUpload" + TIME_MS_SUFFIX;
+    String SUBMIT_TOTAL_BUILD_TIME = "totalBuild" + TIME_MS_SUFFIX;
+    String SUBMIT_JOB_TIME = "jobSubmission" + TIME_MS_SUFFIX;
+    
+    /**
+     * Separate build state times in SUBMIT_METRICS
+     */
+    String SUBMIT_BUILD_STATE_PREFIX = "buildState_";
+    static String buildStateMetricKey(String state) {
+        return  SUBMIT_BUILD_STATE_PREFIX + state + TIME_MS_SUFFIX;
+    }
 }

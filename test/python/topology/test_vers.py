@@ -15,7 +15,5 @@ def get_version():
     return vers['Version']
 
 def tester_supported():
-    if sys.version_info.major == 2:
-        return False
     v = get_version()
     return not v.startswith('4.0.') and not v.startswith('4.1.')

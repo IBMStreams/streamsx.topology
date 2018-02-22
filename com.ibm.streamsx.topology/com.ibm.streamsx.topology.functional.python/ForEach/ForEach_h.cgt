@@ -26,8 +26,7 @@ private:
   // Control for interaction with Python
   SplpyFuncOp *funcop_;
   
-  // Names of input attributes
-  PyObject *pyInNames_;
+  PyObject *pyInStyleObj_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

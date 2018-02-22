@@ -1,12 +1,16 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+from __future__ import unicode_literals
+from future.builtins import *
+
 import os
 import sys
 import pickle
 from past.builtins import basestring
 
 import streamsx.ec as ec
+from streamsx.topology.schema import StreamSchema
 
 try:
     import dill
@@ -71,7 +75,7 @@ def _get_callable(f):
         ci = dill.loads(base64.b64decode(f))
         if callable(ci):
             return ci
-    raise TypeError("Class is not callable" + type(ci))
+    raise TypeError("Class is not callable" + str(type(ci)))
 
 def _verify_tuple(tuple_, attributes):
     if isinstance(tuple_, tuple) or tuple_ is None:
@@ -84,12 +88,12 @@ def _verify_tuple(tuple_, attributes):
 
 import inspect
 class _FunctionalCallable(object):
-    def __init__(self, callable, attributes=None):
-        self._callable = _get_callable(callable)
+    def __init__(self, callable_, attributes=None):
+        self._callable = _get_callable(callable_)
         self._cls = False
         self._attributes = attributes
 
-        if callable is not self._callable:
+        if callable_ is not self._callable:
             is_cls = not inspect.isfunction(self._callable)
             is_cls = is_cls and ( not inspect.isbuiltin(self._callable) )
             is_cls = is_cls and (not inspect.isclass(self._callable))
@@ -433,3 +437,39 @@ tuple_in__string_out = object_in__object_out
 tuple_in__json_out = object_in__json_out
 tuple_in__dict_out = object_in__dict_out
 tuple_in = object_in
+
+# Get the named tuple class for a schema.
+# used by functional operators.
+def _get_namedtuple_cls(schema, name):
+    return StreamSchema(schema).as_tuple(named=name).style
+
+class _WrappedInstance(object):
+    def __init__(self, callable_):
+        self._callable = callable_
+
+    def _hasee(self):
+        return hasattr(self._callable, '__enter__') and hasattr(self._callable, '__exit__')
+
+    def __enter__(self):
+        if self._hasee():
+            self._callable.__enter__()
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._hasee():
+            self._callable.__exit__(exc_type, exc_value, traceback)
+
+# Wraps an iterable instance returning
+# it when called. Allows an iterable
+# instance to be passed directly to Topology.source
+class _IterableInstance(_WrappedInstance):
+    def __call__(self):
+        return self._callable
+
+# Wraps an callable instance 
+# When this is called, the callable is called.
+# Used to wrap a lambda object or a function/class
+# defined in __main__
+class _Callable(_WrappedInstance):
+    def __call__(self, *args, **kwargs):
+        return self._callable.__call__(*args, **kwargs)
+

@@ -1,6 +1,8 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
+from future.builtins import *
+
 import os.path
 import sys
 import site

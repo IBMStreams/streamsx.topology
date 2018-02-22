@@ -37,15 +37,15 @@ import com.ibm.streamsx.topology.function.Consumer;
 class PEPlacement {
     
     private final SPLGenerator generator;
-    private final JsonObject graph;
+    private final GCompositeDef gcomp;
 
     
     private int isolateRegionCount;
     private int lowLatencyRegionCount;
     
-    PEPlacement(SPLGenerator generator, JsonObject graph) {
+    PEPlacement(SPLGenerator generator, GCompositeDef gcomp) {
         this.generator = generator;
-        this.graph = graph;
+        this.gcomp = gcomp;
     }
     
     private void setIsolateRegionId(JsonObject op, String isolationRegionId) {
@@ -76,7 +76,7 @@ class PEPlacement {
 
         Set<BVirtualMarker> boundaries = EnumSet.of(BVirtualMarker.ISOLATE);
 
-        GraphUtilities.visitOnce(starts, boundaries, graph,
+        GraphUtilities.visitOnce(starts, boundaries, gcomp,
                 op -> setIsolateRegionId(op, isolationRegionId));
     }
 
@@ -99,15 +99,14 @@ class PEPlacement {
      */
     @SuppressWarnings("serial")
     private void checkValidColocationRegion(JsonObject isolate) {
-        final Set<JsonObject> isolateChildren = GraphUtilities.getDownstream(
-                isolate, graph);
-        Set<JsonObject> isoParents = GraphUtilities.getUpstream(isolate, graph);
+        final Set<JsonObject> isolateChildren = gcomp.getDownstream(isolate);
+        Set<JsonObject> isoParents = gcomp.getUpstream(isolate);
 
         assertNotIsolated(isoParents);
 
         Set<BVirtualMarker> boundaries = EnumSet.of(BVirtualMarker.ISOLATE);
 
-        GraphUtilities.visitOnce(isoParents, boundaries, graph,
+        GraphUtilities.visitOnce(isoParents, boundaries, gcomp,
                 new Consumer<JsonObject>() {
                     @Override
                     public void accept(JsonObject op) {
@@ -123,10 +122,10 @@ class PEPlacement {
 
     void tagIsolationRegions() {
         // Check whether graph is valid for colocations
-        Set<JsonObject> isolateOperators = findOperatorByKind(ISOLATE, graph);
+        Set<JsonObject> isolateOperators = findOperatorByKind(ISOLATE, gcomp);
         
         if (!isolateOperators.isEmpty())
-            graph.getAsJsonObject("config").addProperty(CFG_HAS_ISOLATE, true);
+            gcomp.getGraph().getAsJsonObject("config").addProperty(CFG_HAS_ISOLATE, true);
         
         for (JsonObject jso : isolateOperators) {
             checkValidColocationRegion(jso);
@@ -137,8 +136,8 @@ class PEPlacement {
         // and then downstream to separate the regions with
         // different isolate region identifiers.
         for (JsonObject isolate : isolateOperators) {
-            assignIsolateRegionIds(getUpstream(isolate, graph));
-            assignIsolateRegionIds(getDownstream(isolate, graph));
+            assignIsolateRegionIds(gcomp.getUpstream(isolate));
+            assignIsolateRegionIds(gcomp.getDownstream(isolate));
         }
  
         // For 4.2 and later we do not force colocation
@@ -146,7 +145,7 @@ class PEPlacement {
         // time fusion to figure out the best plan.
         if (!generator.versionAtLeast(4, 2))
             tagIslandIsolatedRegions();
-        GraphUtilities.removeOperators(isolateOperators, graph);
+        GraphUtilities.removeOperators(isolateOperators, gcomp);
     }
     
     /**
@@ -159,7 +158,7 @@ class PEPlacement {
      *   sub-graph has no isolates. 
      */
     private void tagIslandIsolatedRegions(){
-        Set<JsonObject> starts = GraphUtilities.findStarts(graph);   
+        Set<JsonObject> starts = GraphUtilities.findStarts(gcomp.getGraph());   
         
         for(JsonObject start : starts){
             final String colocationTag = newIsolateRegionId();
@@ -175,7 +174,7 @@ class PEPlacement {
             
             Set<BVirtualMarker> boundaries = EnumSet.of(BVirtualMarker.ISOLATE);
             
-            GraphUtilities.visitOnce(startList, boundaries, graph,
+            GraphUtilities.visitOnce(startList, boundaries, gcomp,
                     op -> setIsolateRegionId(op, colocationTag));          
         }
     }
@@ -196,12 +195,12 @@ class PEPlacement {
     
     void tagLowLatencyRegions() {
         Set<JsonObject> lowLatencyStartOperators = GraphUtilities
-                .findOperatorByKind(LOW_LATENCY, graph);
+                .findOperatorByKind(LOW_LATENCY, gcomp);
         
         if (lowLatencyStartOperators.isEmpty())
             return;
         
-        graph.getAsJsonObject("config").addProperty(CFG_HAS_LOW_LATENCY, true);
+        gcomp.getGraph().getAsJsonObject("config").addProperty(CFG_HAS_LOW_LATENCY, true);
         
         // Assign isolation regions their lowLatency tag
         for (JsonObject llStart : lowLatencyStartOperators) {
@@ -209,8 +208,8 @@ class PEPlacement {
         }
 
         // Remove all the markers
-        lowLatencyStartOperators.addAll(findOperatorByKind(END_LOW_LATENCY, graph));
-        GraphUtilities.removeOperators(lowLatencyStartOperators, graph);
+        lowLatencyStartOperators.addAll(findOperatorByKind(END_LOW_LATENCY, gcomp));
+        GraphUtilities.removeOperators(lowLatencyStartOperators, gcomp);
     }
 
     @SuppressWarnings("serial")
@@ -218,11 +217,11 @@ class PEPlacement {
         
         final String lowLatencyTag = "__spl_lowLatencyRegionId" + lowLatencyRegionCount++;
 
-        Set<JsonObject> llStartChildren = getDownstream(llStart, graph);
+        Set<JsonObject> llStartChildren = gcomp.getDownstream(llStart);
         
         Set<BVirtualMarker> boundaries = EnumSet.of(LOW_LATENCY, END_LOW_LATENCY);
 
-        GraphUtilities.visitOnce(llStartChildren, boundaries, graph,
+        GraphUtilities.visitOnce(llStartChildren, boundaries, gcomp,
                 new Consumer<JsonObject>() {
                     @Override
                     public void accept(JsonObject op) {
@@ -257,9 +256,9 @@ class PEPlacement {
      */
     void resolveColocationTags() {
         
-        JsonObject tagMaps = new JsonObject();
+        JsonObject tagMaps = objectCreate(gcomp.getGraph(), CONFIG, CFG_COLOCATE_TAG_MAPPING);
         
-        operators(graph, op -> {
+        operators(gcomp.getGraph(), op -> {
             JsonObject placement = object(op, CONFIG, PLACEMENT);
             if (placement == null)
                 return;
@@ -309,6 +308,6 @@ class PEPlacement {
             placement.addProperty(PLACEMENT_COLOCATE_KEY, singleTag);
         });
         
-        object(graph, CONFIG).add(CFG_COLOCATE_TAG_MAPPING, tagMaps);
+        object(gcomp.getGraph(), CONFIG).add(CFG_COLOCATE_TAG_MAPPING, tagMaps);
     }
 }

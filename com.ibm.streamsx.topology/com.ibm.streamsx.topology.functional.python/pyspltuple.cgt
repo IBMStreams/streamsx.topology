@@ -16,9 +16,17 @@
 
  my $pystyle = $model->getParameterByName("pyStyle");
  if ($pystyle) {
-     $pystyle = substr $pystyle->getValueAt(0)->getSPLExpression(), 1, -1;
+     $pystyle = substr($pystyle->getValueAt(0)->getSPLExpression(), 1, -1);
  } else {
      $pystyle = splpy_tuplestyle($model->getInputPortAt(0));
  }
+ # $pystyle is the raw value from the operator parameter
+ # $pystyle_nt is the value that defines how the function is called
+ # (for style namedtuple:xxxx it is tuple)
+ # $pystyle_nt is non-zero if style is namedtuple
+ my $pystyle_fn = $pystyle;
+ my $pystyle_nt = substr($pystyle, 0, 11) eq 'namedtuple:';
+ if ($pystyle_nt) {
+    $pystyle_fn = 'tuple';
+ }
 %>
-

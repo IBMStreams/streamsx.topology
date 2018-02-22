@@ -10,32 +10,26 @@ using namespace streamsx::topology;
 @include "../pyspltuple.cgt"
 <%
  # Select the Python wrapper function
- my $pywrapfunc= $pystyle . '_in';
+ my $pywrapfunc= $pystyle_fn . '_in';
 %>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR():
    funcop_(NULL),
-   pyInNames_(NULL)
+   pyInStyleObj_(NULL)
 {
     funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
 
-<% if ($pystyle eq 'dict') { %>
-     SplpyGIL lock;
-     pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
-               getInputPortAt(0));
-<% } %>
+@include "../pyspltuple_constructor.cgt"
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-<% if ($pystyle eq 'dict') { %>
-    if (pyInNames_) {
+  if (pyInStyleObj_) {
       SplpyGIL lock;
-      Py_DECREF(pyInNames_);
-    }
-<% } %>
+      Py_DECREF(pyInStyleObj_);
+  }
 
   delete funcop_;
 }

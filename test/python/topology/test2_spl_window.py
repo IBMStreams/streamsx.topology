@@ -3,6 +3,7 @@
 import unittest
 import sys
 import itertools
+import threading
 
 import test_vers
 
@@ -17,6 +18,10 @@ import streamsx.spl.op as op
 class TestSPLWindow(unittest.TestCase):
     """ Test invocations of SPL operators from Python topology.
     """
+    # Fake out subTest
+    if sys.version_info.major == 2:
+        def subTest(self, **args): return threading.Lock()
+
     def setUp(self):
         Tester.setup_standalone(self)
 

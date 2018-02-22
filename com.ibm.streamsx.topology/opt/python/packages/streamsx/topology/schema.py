@@ -4,21 +4,38 @@
 """
 Schemas for streams.
 
+********
+Overview
+********
+
 On a structured stream a tuple is a sequence of attributes,
 and an attribute is a named value of a specific type.
 
 The supported types are defined by IBM Streams Streams Processing Language (SPL).
+
 """
+
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-from builtins import *
+# For style dicts passed into Python from Streams C++
+# are raw dicts since they are created by Python C-API code
+# not the future dict in Python 2.7.
+_spl_dict = dict
+_spl_object = object
+
+from future.builtins import *
+from past.builtins import basestring, unicode
 
 import collections
 import enum
 import io
 import itertools
+import sys
 import token
 import tokenize
+
+_spl_str = unicode if sys.version_info.major == 2 else str
+
 
 
 def is_common(schema):
@@ -35,9 +52,12 @@ def is_common(schema):
         return schema.schema() in _SCHEMA_COMMON
     if isinstance(schema, CommonSchema):
         return True
-    if isinstance(schema, str):
+    if isinstance(schema, basestring):
         return is_common(StreamSchema(schema))
     return False
+
+def _is_namedtuple(cls):
+    return cls != tuple and issubclass(cls, tuple) and hasattr(cls, '_fields')
 
 _SCHEMA_PENDING = '<pending>'
 def _is_pending(schema):
@@ -195,7 +215,7 @@ _SCHEMA_XML = 'tuple<xml document>' # not yet supported
 
 _SCHEMA_COMMON = frozenset([_SCHEMA_PYTHON_OBJECT, _SCHEMA_JSON, _SCHEMA_STRING, _SCHEMA_BINARY, _SCHEMA_XML])
 
-_SCHEMA_COMMON_STYLES = {_SCHEMA_PYTHON_OBJECT:object, _SCHEMA_STRING: str, _SCHEMA_JSON: dict, _SCHEMA_BINARY:None, _SCHEMA_XML: None }
+_SCHEMA_COMMON_STYLES = {_SCHEMA_PYTHON_OBJECT:_spl_object, _SCHEMA_STRING: _spl_str, _SCHEMA_JSON: _spl_dict, _SCHEMA_BINARY:None, _SCHEMA_XML: None }
 
 class StreamSchema(object) :
     """Defines a schema for a structured stream.
@@ -261,17 +281,16 @@ class StreamSchema(object) :
 
     Attribute names must start with an ASCII letter or underscore, followed by ASCII letters, digits, or underscores.
 
-    When a tuple on a structured scheme is passed into Python it
-    is converted to a `dict` containing all attributes of the tuple.
-    Each key is the attribute name as a `str` and
-    the value is the attribute's value.
+    When a tuple on a structured stream is passed into a Python callable it
+    is converted to a ``dict``, ``tuple`` or named tuple object containing all attributes of the stream tuple.
+    See :py:meth:`style`, :py:meth:`as_dict` and :py:meth:`as_tuple` for details.
 
     When a Python object is submitted to a structured stream,
     for example as the return from the function invoked in a 
     :py:meth:`~streamsx.topology.topology.Stream.map` with the
     `schema` parameter set, it must be:
-         * A Python `dict`. Attributes are set by name using value in the dict for the name. If a value does not exist (the name does not exist as a key) or is set to `None` then the attribute has its default value, zero, false, empty list or string etc.
-         * A Python `tuple`. Attributes are set by position, with the first attribute being the value at index 0 in the Python `tuple`. If a value does not exist (the tuple has less values than the structured schema) or is set to `None` then the attribute has its default value, zero, false, empty list or string etc.
+         * A Python ``dict``. Attributes are set by name using value in the dict for the name. If a value does not exist (the name does not exist as a key) or is set to `None` then the attribute has its default value, zero, false, empty list or string etc.
+         * A Python ``tuple`` or named tuple. Attributes are set by position, with the first attribute being the value at index 0 in the Python `tuple`. If a value does not exist (the tuple has less values than the structured schema) or is set to `None` then the attribute has its default value, zero, false, empty list or string etc.
 
     Args:
         schema(str): Schema definition. Either a schema definition or the name of an SPL type.
@@ -301,40 +320,41 @@ class StreamSchema(object) :
     def style(self):
         """Style stream tuples will be passed into a callable.
 
-        For the common schemas the style is fixed as:
+        For the common schemas the style is fixed:
+
             * ``CommonSchema.Python`` - ``object`` - Stream tuples are arbitrary objects.
-            * ``CommonSchema.String`` - ``str`` - Stream tuples are strings.
+            * ``CommonSchema.String`` - ``str`` - Stream tuples are unicode strings. (``unicode`` on Python 2.7).
             * ``CommonSchema.Json`` - ``dict`` - Stream tuples are a ``dict`` that represents the JSON object.
 
         For a structured schema the supported styles are:
-            * ``dict`` - Stream tuples are passed as a ``dict`` with the key being the attribute name and
-                and the value the attribute value. This is the default.
-                * E.g. with a schema of ``tuple<rsting id, float32 value>`` a value is passed as
-                    ``{'id':'TempSensor', 'value':20.3}``.
-            * ``tuple`` - Stream tuples are passed as a ``tuple`` with the value being the attributes
-                value in order. A schema is set to pass stream tuples as tuples using :py:meth:`as_tuple`.
-                * E.g. with a schema of ``tuple<rsting id, float32 value>`` a value is passed as
-                    ``('TempSensor', 20.3)``.
 
+            * ``dict`` - Stream tuples are passed as a ``dict`` with the key being the attribute name and and the value the attribute value. This is the default.
 
-        Structured schemas may be changed to pass the stream tuple as a ``tuple`` using
+                * E.g. with a schema of ``tuple<rstring id, float32 value>`` a value is passed as ``{'id':'TempSensor', 'value':20.3}``.
+
+            * ``tuple`` - Stream tuples are passed as a ``tuple`` with the value being the attributes value in order. A schema is set to pass stream tuples as tuples using :py:meth:`as_tuple`.
+
+                * E.g. with a schema of ``tuple<rstring id, float32 value>`` a value is passed as ``('TempSensor', 20.3)``.
+
+            * ``namedtuple`` - Stream tuples are passed as a named tuple (see ``collections.namedtuple``) with the value being the attributes value in order. Field names correspond to the attribute names of the schema. A schema is set to pass stream tuples as named tuples using :py:meth:`as_tuple` setting the `named` parameter.
 
         Returns:
             type: Class of tuples that will be passed into callables.
 
         .. versionadded:: 1.8
+        .. versionadded:: 1.9 Support for namedtuple.
         """
         return self._style
 
     def _default_style(self):
         if self.__spl_type:
-            return dict
-        return _SCHEMA_COMMON_STYLES[self.schema()] if is_common(self) else dict
+            return _spl_dict
+        return _SCHEMA_COMMON_STYLES[self.schema()] if is_common(self) else _spl_dict
 
     def _copy(self, style=None):
         if style is None:
             return self
-        if self._style == style:
+        if self._style is style:
             return self
         # Cannot change style of common schemas
         if is_common(self):
@@ -343,19 +363,73 @@ class StreamSchema(object) :
         c._style = style
         return c
 
-    def as_tuple(self):
+    def _make_named_tuple(self, name):
+        if self.__spl_type:
+            return tuple
+        if name is True:
+            name = 'StreamTuple'
+        fields = _attribute_names(self._types)
+        nt = collections.namedtuple(name, fields, rename=True)
+        nt._splpy_namedtuple = name
+        return nt
+
+    def as_tuple(self, named=None):
         """
         Create a structured schema that will pass stream tuples into callables as ``tuple`` instances.
 
         If this instance represents a common schema then it will be returned
-        without modification. Stream tuples with common schemas are always passed according
-        to their definition.
+        without modification. Stream tuples with common schemas are
+        always passed according to their definition.
+
+        **Passing as tuple**
+
+        When `named` evaluates to ``False`` then each stream tuple will
+        be passed as a ``tuple``. For example with a structured schema
+        of ``tuple<rstring id, float64 value>`` a value is passed as
+        ``('TempSensor', 27.4)`` and access to the first attribute
+        is ``t[0]`` and the second as ``t[1]`` where ``t`` represents
+        the passed value..
+
+        **Passing as named tuple**
+
+        When `named` is ``True`` or a ``str`` then each stream tuple will
+        be passed as a named tuple. For example with a structured schema
+        of ``tuple<rstring id, float64 value>`` a value is passed as
+        ``('TempSensor', 27.4)`` and access to the first attribute
+        is ``t.id`` (or ``t[0]``) and the second as ``t.value`` (``t[1]``)
+        where ``t`` represents the passed value.
+
+        .. warning:: If an schema's attribute name is not a valid Python identifier or
+            starts with an underscore then it will be renamed as positional name ``_n``.
+            For example, with the schema ``tuple<int32 a, int32 def, int32 _id>`` the
+            field names are ``a``, ``_1``, ``_2``.
+
+
+        The value of `named` is used as the name of the named tuple
+        class with ``StreamTuple`` used when `named` is ``True``.
+
+        It is not guaranteed that the class of the namedtuple is the
+        same for all callables processing tuples with the same
+        structured schema, only that the tuple is a named tuple
+        with the correct field names.
+
+        Args:
+            named: Pass stream tuples as a named tuple.
+                If not set then stream tuples are passed as
+                instances of ``tuple``.
 
         Returns:
             StreamSchema: Schema passing stream tuples as ``tuple`` if allowed.
 
         .. versionadded:: 1.8
+        .. versionadded:: 1.9 Addition of `named` parameter.
         """
+        if not named:
+            return self._copy(tuple)
+
+        if named == True or isinstance(named, basestring):
+            return self._copy(self._make_named_tuple(name=named))
+
         return self._copy(tuple)
 
     def as_dict(self):
@@ -372,7 +446,7 @@ class StreamSchema(object) :
 
         .. versionadded:: 1.8
         """
-        return self._copy(dict)
+        return self._copy(_spl_dict)
 
     def schema(self):
         """Private method. May be removed at any time."""
@@ -429,10 +503,12 @@ class StreamSchema(object) :
             return
         if _is_pending(schema):
             ntp = 'pending'
-        elif schema.style == tuple:
+        elif schema.style is tuple:
             ntp = 'tuple'
-        elif schema.style == dict:
+        elif schema.style is _spl_dict:
             ntp = 'dict'
+        elif _is_namedtuple(schema.style) and hasattr(schema.style, '_splpy_namedtuple'):
+            ntp = 'namedtuple:' + schema.style._splpy_namedtuple
         else:
             return
         op.params[name] = ntp

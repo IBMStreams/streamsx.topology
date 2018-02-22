@@ -39,7 +39,7 @@ def main():
     
     outliers.print()
     
-    streamsx.topology.context.submit("STANDALONE", topo.graph)
+    streamsx.topology.context.submit("STANDALONE", topo)
      
 if __name__ == '__main__':
     main()

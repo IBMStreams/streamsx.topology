@@ -28,6 +28,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.port.PortProperties;
+import com.ibm.streamsx.topology.generator.spl.GCompositeDefImpl;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
@@ -136,7 +138,7 @@ public class GraphBuilder extends BJSONObject {
         for (BOperator operator : operators) {
             JsonObject jop = operator._complete();
             GraphUtilities.visitOnce(visitController,
-                    Collections.singleton(jop), graph,
+                    Collections.singleton(jop), new GCompositeDefImpl(graph),
                 new Consumer<JsonObject>() {
                     private static final long serialVersionUID = 1L;
                     @Override
@@ -177,10 +179,10 @@ public class GraphBuilder extends BJSONObject {
     public BOutput parallel(BOutput parallelize, Supplier<Integer> width) {
         BOutput parallelOutput = addPassThroughMarker(parallelize, BVirtualMarker.PARALLEL, true);
         if (width.get() != null)
-            parallelOutput._json().addProperty("width", width.get());
+            parallelOutput._json().addProperty(PortProperties.WIDTH, width.get());
         else {
             SubmissionParameter<?> spw = (SubmissionParameter<?>) width;
-            parallelOutput._json().add("width", SubmissionParameterFactory.asJSON(spw));
+            parallelOutput._json().add(PortProperties.WIDTH, SubmissionParameterFactory.asJSON(spw));
         }
         return parallelOutput;
     }

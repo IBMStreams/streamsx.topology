@@ -1,5 +1,7 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+from __future__ import print_function
 import sys
 
 
@@ -23,7 +25,7 @@ _hwcountU = 0
 # because sc defaults to optimized
 # compilation
 def check_asserts_disabled(tuple):
-    assert False
+    assert False, "Expect assertions to be disabled"
     return True
     
 

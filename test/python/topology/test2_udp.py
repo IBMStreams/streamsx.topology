@@ -1,10 +1,13 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+from __future__ import print_function
 import unittest
 import sys
 import itertools
 import string
 import random
+import threading
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -51,6 +54,10 @@ def s2_hash(t):
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestUDP(unittest.TestCase):
+
+  # Fake out subTest
+  if sys.version_info.major == 2:
+      def subTest(self, **args): return threading.Lock()
 
   def setUp(self):
       Tester.setup_standalone(self)

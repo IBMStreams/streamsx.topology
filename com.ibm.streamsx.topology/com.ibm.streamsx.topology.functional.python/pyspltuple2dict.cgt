@@ -8,8 +8,6 @@
 # $iport - input port 
 %>
 
-@include "../opt/python/codegen/py_splTupleCheckForBlobs.cgt"
-
   PyObject *value = 0;
   {
   SplpyGIL lockdict;
