@@ -4,12 +4,11 @@
  */
 package com.ibm.streamsx.topology.test.consistent;
 
+import static com.ibm.streamsx.topology.consistent.ConsistentRegionConfig.periodic;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assume.assumeTrue;
-import static com.ibm.streamsx.topology.consistent.ConsistentRegionConfig.periodic;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -23,7 +22,6 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
-import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 

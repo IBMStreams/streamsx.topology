@@ -27,7 +27,7 @@ public final class ResetterUserCondition extends UserCondition<Void>
     }
     
     public long getMinimumResets() {
-        return minimumResets;
+        return minimumResets == null ? 10 : minimumResets;
     }
 
     @Override

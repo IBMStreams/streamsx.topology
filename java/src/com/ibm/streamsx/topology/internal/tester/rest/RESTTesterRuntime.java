@@ -137,7 +137,7 @@ public class RESTTesterRuntime extends TesterRuntime {
     
     private void addNoStreamCondition(NoStreamCondition userCondition) {
 
-        String name = userCondition.getClass().getSimpleName() + id++;;        
+        String name = userCondition.getClass().getSimpleName() + id++;       
         userCondition.addTo(topology(), name);
         
         @SuppressWarnings("unchecked")
