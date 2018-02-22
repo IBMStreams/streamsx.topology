@@ -34,10 +34,23 @@ class FunctionalOpUtils {
         if (cc != null) {
             if (cc.getKind() == Kind.OPERATOR_DRIVEN)
                 throw new IllegalStateException(); // TODO compile time checks.
+        }
+        
+        ConsistentRegionContext crc = context.getOptionalContext(ConsistentRegionContext.class);
+        if (crc != null) {
+            if (crc.isStartOfRegion())
+                throw new IllegalStateException(); // TODO compile time checks.
+        }
+               
+        if (cc != null || crc != null) {
             
             if (!ObjectUtils.isImmutable(initialLogic.getClass())) {
-                if (trace.isLoggable(Level.FINE))
-                    trace.fine("Checkpoint stateful function:" + initialLogic.getClass().getName());
+                if (trace.isLoggable(Level.FINE)) {
+                    if (cc != null)
+                        trace.fine("Checkpoint stateful function:" + initialLogic.getClass().getName());
+                    if (crc != null)
+                        trace.fine("Consistent region stateful function:" + initialLogic.getClass().getName());
+                }
                 
                 // Close it just in case it does something in its deserialization.
                 FunctionalHandler.closeLogic(initialLogic); 
