@@ -23,9 +23,9 @@ import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.NoStreamCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.StringPredicateUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
-import com.ibm.streamsx.topology.internal.tester.rest.NoStreamCondition;
 
 /**
  * Tester runtime that uses handlers to validate conditions.

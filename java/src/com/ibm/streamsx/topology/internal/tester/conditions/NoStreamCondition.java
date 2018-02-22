@@ -1,4 +1,8 @@
-package com.ibm.streamsx.topology.internal.tester.rest;
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2018  
+ */
+package com.ibm.streamsx.topology.internal.tester.conditions;
 
 import com.ibm.streamsx.topology.Topology;
 

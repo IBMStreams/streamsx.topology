@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.internal.tester.rest.NoStreamCondition;
 
 /**
  * Condition that becomes valid after all consistent regions in
