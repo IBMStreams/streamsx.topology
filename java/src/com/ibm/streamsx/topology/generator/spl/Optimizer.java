@@ -22,10 +22,10 @@ import com.google.gson.JsonPrimitive;
  */
 class Optimizer {
 
-    private final JsonObject graph;
+    private final GCompositeDef gcomp;
 
-    Optimizer(JsonObject graph) {
-        this.graph = graph;
+    Optimizer(GCompositeDef gcomp) {
+        this.gcomp = gcomp;
     }
 
     void optimize() {
@@ -54,7 +54,7 @@ class Optimizer {
      * Assumes the graph's structure will not be subsequently modified.
      */
     private final void pyPassByRef() {
-        Set<JsonObject> pyops = findOperatorsByKinds(graph, PY_FUNC_OPS);
+        Set<JsonObject> pyops = findOperatorsByKinds(gcomp, PY_FUNC_OPS);
 
         if (pyops.isEmpty())
             return;
@@ -88,7 +88,7 @@ class Optimizer {
                 
                 boolean canPassByRef = true;
                 // TOOD - downstream for a specific port
-                Set<JsonObject> connected = getDownstream(pyop, graph);
+                Set<JsonObject> connected = gcomp.getDownstream(pyop);
                 for (JsonObject connectedOp : connected) {
                     if (!PY_FUNC_OPS.contains(kind(connectedOp))) {
                         canPassByRef = false;
