@@ -174,19 +174,22 @@ class _StreamsRestClient(object):
 
     def make_raw_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
-        res = self.session.get(url)
+        res = self.session.get(url, headers=headers)
         self.handle_http_errors(res)
         return res
 
-    def make_raw_streaming_request(self, url):
+    def make_raw_streaming_request(self, url, mimetype=None):
         logger.debug('Beginning a REST request to: ' + url)
-        res = self.session.get(url, stream=True)
+        headers = {}
+        if mimetype:
+            headers['Accept'] = mimetype
+        res = self.session.get(url, stream=True, headers=headers)
         self.handle_http_errors(res)
 
         return res
 
-    def _retrieve_file(self, url, filename, dir_=None):
-        logs = self.make_raw_streaming_request(url)
+    def _retrieve_file(self, url, filename, dir_, mimetype):
+        logs = self.make_raw_streaming_request(url, mimetype)
         
         if dir_ is None:
             dir_ = os.getcwd()
@@ -273,9 +276,12 @@ class _IAMStreamsRestClient(_StreamsRestClient):
         self.handle_http_errors(res)
         return res
 
-    def make_raw_streaming_request(self, url):
+    def make_raw_streaming_request(self, url, mimetype=None):
         logger.debug('Beginning a REST request to: ' + url)
-        req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
+        headers = {'Authorization' : self._get_authorization()}
+        if mimetype:
+            headers['Accept'] = mimetype
+        req = requests.Request("GET", url, headers = headers)
         prepared = req.prepare()
         res = self.session.send(prepared, stream=True)
         self.handle_http_errors(res)
@@ -556,7 +562,7 @@ class Job(_ResourceElement):
         if not filename:
             filename = _file_name('job', self.id, '.tar.gz')
  
-        return self.rest_client._retrieve_file(self.applicationLogTrace, filename, dir)
+        return self.rest_client._retrieve_file(self.applicationLogTrace, filename, dir, 'application/json')
 
     def get_views(self, name=None):
         """Get the list of :py:class:`View` elements associated with this job.
