@@ -832,6 +832,28 @@ class PE(_ResourceElement):
         """
         return Host(self.rest_client.make_request(self.host), self.rest_client) if self.host else None
 
+    def retrieve_trace(self, filename=None, dir=None):
+        """Retrieves the application trace files for this PE
+        and saves them as a plain text file.
+
+        An existing file with the same name will be overwritten.
+
+        Args:
+            filename (str): name of the created file. Defaults to `pe_<id>_<timestamp>.trace` where `id` is the PE identifier and `timestamp` is the number of seconds since the Unix epoch, for example ``pe_83_1511995995.trace``.
+            dir (str): a valid directory in which to save the file. Defaults to the current directory.
+
+        Returns:
+            str: the path to the created file.
+
+        .. versionadded:: 1.9
+        """
+        logger.debug("Retrieving PE trace: " + self.applicationTrace)
+
+        if not filename:
+            filename = _file_name('pe', self.id, '.trace')
+ 
+        return self.rest_client._retrieve_file(self.applicationTrace, filename, dir, 'text/plain')
+
 
 class PEConnection(_ResourceElement):
     """The processing element (PE) connection resource provides access to information about a connection between two
