@@ -562,7 +562,7 @@ class Job(_ResourceElement):
         if not filename:
             filename = _file_name('job', self.id, '.tar.gz')
  
-        return self.rest_client._retrieve_file(self.applicationLogTrace, filename, dir, 'application/json')
+        return self.rest_client._retrieve_file(self.applicationLogTrace, filename, dir, 'application/x-compressed')
 
     def get_views(self, name=None):
         """Get the list of :py:class:`View` elements associated with this job.
