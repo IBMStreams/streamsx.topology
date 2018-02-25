@@ -439,7 +439,7 @@ class Tester(object):
         """
         self._run_for = max(self._run_for, float(duration))
 
-    def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None):
+    def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None, always_collect_logs=False):
         """Test the topology.
 
         Submits the topology for testing and verifies the test conditions are met and the job remained healthy through its execution.
@@ -467,6 +467,7 @@ class Tester(object):
             password(str): password for distributed tests
                 .. deprecated:: 1.8.3
                 Pass the password via the STREAMS_PASSWORD environment variable instead.
+            always_collect_logs(bool): True to always collect the console log and PE trace files of the test.
 
         Attributes:
             result: The result of the test. This can contain exit codes, application log paths, or other relevant test information.
@@ -499,6 +500,8 @@ class Tester(object):
 
         if config is None:
             config = {}
+        config['topology.alwaysCollectLogs'] = always_collect_logs
+
         _logger.debug("Starting test topology %s context %s.", self.topology.name, ctxtype)
 
         if stc.ContextTypes.STANDALONE == ctxtype:
@@ -558,7 +561,7 @@ class Tester(object):
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to distributed instance.")
             return False
-        return self._distributed_wait_for_result(stc.ContextTypes.DISTRIBUTED)
+        return self._distributed_wait_for_result(stc.ContextTypes.DISTRIBUTED, config)
 
 
     def _streaming_analytics_test(self, ctxtype, config):
@@ -572,9 +575,9 @@ class Tester(object):
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to Streaming Analytics instance")
             return False
-        return self._distributed_wait_for_result(ctxtype)
+        return self._distributed_wait_for_result(ctxtype, config)
 
-    def _distributed_wait_for_result(self, ctxtype):
+    def _distributed_wait_for_result(self, ctxtype, config):
 
         cc = _ConditionChecker(self, self.streams_connection, self.submission_result)
         # Wait for the job to be healthy before calling the local check.
@@ -588,7 +591,7 @@ class Tester(object):
 
         self.result['submission_result'] = self.submission_result
 
-        if not self.result['passed']:
+        if not self.result['passed'] or config['topology.alwaysCollectLogs']:
             path = self._fetch_application_logs(ctxtype)
             self.result['application_logs'] = path
 
