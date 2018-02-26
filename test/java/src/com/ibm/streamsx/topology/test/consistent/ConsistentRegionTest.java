@@ -42,30 +42,36 @@ public class ConsistentRegionTest extends TestTopology {
     public void testConsistentPeriodic() throws Exception {
         Topology topology = new Topology("testConsistentPeriodic");
         
+        final int N = 2000;
+        
         StreamSchema schema = Type.Factory.getStreamSchema("tuple<uint64 id>");
         Map<String,Object> params = new HashMap<>();
-        params.put("iterations", 200);
-        params.put("period", 0.05);
-        
+        params.put("iterations", N);
+        params.put("period", 0.01);      
         SPLStream b = SPL.invokeSource(topology, "spl.utility::Beacon", params, schema);
         
         ConsistentRegionConfig config = periodic(2);
         assertSame(b, b.setConsistent(config));
         
-        Condition<Long> atLeast = topology.getTester().atLeastTupleCount(b, 200);
+        // Create a mini-flow
+        b = b.filter(t -> true);
+        
+        Condition<Long> exact = topology.getTester().tupleCount(b, N);
         Condition<Void> resets = topology.getTester().resetConsistentRegions(null);
         assertNotNull(resets);
-        complete(topology.getTester(), atLeast, 80, TimeUnit.SECONDS);
+        complete(topology.getTester(), exact, 80, TimeUnit.SECONDS);
     }
     
     @Test
     public void testConsistentOperatorDriven() throws Exception {
         Topology topology = new Topology("testConsistentOperatorDriven");
         
+        final int N = 2000;
+        
         StreamSchema schema = Type.Factory.getStreamSchema("tuple<uint64 id>");
         Map<String,Object> params = new HashMap<>();
-        params.put("iterations", 500);
-        params.put("period", 0.05);
+        params.put("iterations", N);
+        params.put("period", 0.01);
         params.put("triggerCount", SPL.createValue(37, Type.MetaType.UINT32));
         
         SPLStream b = SPL.invokeSource(topology, "spl.utility::Beacon", params, schema);
@@ -73,11 +79,14 @@ public class ConsistentRegionTest extends TestTopology {
         ConsistentRegionConfig config = ConsistentRegionConfig.operatorDriven();
         assertSame(b, b.setConsistent(config));
         
+        // Create a mini-flow
+        b = b.filter(t -> true);
+        
         Condition<Void> resets = topology.getTester().resetConsistentRegions(5);
         assertNotNull(resets);
         
-        Condition<Long> atLeast = topology.getTester().atLeastTupleCount(b, 500);
-        complete(topology.getTester(), atLeast, 80, TimeUnit.SECONDS);
+        Condition<Long> exact = topology.getTester().tupleCount(b, N);
+        complete(topology.getTester(), exact, 80, TimeUnit.SECONDS);
     }
     
     /**
