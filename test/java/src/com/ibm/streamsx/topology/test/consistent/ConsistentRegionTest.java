@@ -4,11 +4,11 @@
  */
 package com.ibm.streamsx.topology.test.consistent;
 
+import static com.ibm.streamsx.topology.consistent.ConsistentRegionConfig.periodic;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assume.assumeTrue;
-import static com.ibm.streamsx.topology.consistent.ConsistentRegionConfig.periodic;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -22,7 +22,6 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
-import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 
@@ -54,6 +53,8 @@ public class ConsistentRegionTest extends TestTopology {
         assertSame(b, b.setConsistent(config));
         
         Condition<Long> atLeast = topology.getTester().atLeastTupleCount(b, 200);
+        Condition<Void> resets = topology.getTester().resetConsistentRegions(null);
+        assertNotNull(resets);
         complete(topology.getTester(), atLeast, 80, TimeUnit.SECONDS);
     }
     
@@ -63,7 +64,8 @@ public class ConsistentRegionTest extends TestTopology {
         
         StreamSchema schema = Type.Factory.getStreamSchema("tuple<uint64 id>");
         Map<String,Object> params = new HashMap<>();
-        params.put("iterations", 300);
+        params.put("iterations", 500);
+        params.put("period", 0.05);
         params.put("triggerCount", SPL.createValue(37, Type.MetaType.UINT32));
         
         SPLStream b = SPL.invokeSource(topology, "spl.utility::Beacon", params, schema);
@@ -71,8 +73,11 @@ public class ConsistentRegionTest extends TestTopology {
         ConsistentRegionConfig config = ConsistentRegionConfig.operatorDriven();
         assertSame(b, b.setConsistent(config));
         
-        Condition<Long> atLeast = topology.getTester().atLeastTupleCount(b, 300);
-        complete(topology.getTester(), atLeast, 40, TimeUnit.SECONDS);
+        Condition<Void> resets = topology.getTester().resetConsistentRegions(5);
+        assertNotNull(resets);
+        
+        Condition<Long> atLeast = topology.getTester().atLeastTupleCount(b, 500);
+        complete(topology.getTester(), atLeast, 80, TimeUnit.SECONDS);
     }
     
     /**
