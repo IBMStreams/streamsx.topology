@@ -91,14 +91,9 @@ class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
         s = topo.source(["foo"])
 
         tester = Tester(topo)
-        # Causes test to fail
         tester.contents(s, ["foo"])
 
-        try:
-            tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
-        except AssertionError:
-            # This test is expected to fail, do nothing.
-            pass
+        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
 
         # Check if logs were downloaded
         logs = tester.result['application_logs']
