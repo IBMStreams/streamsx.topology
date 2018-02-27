@@ -36,9 +36,16 @@ def _check_operators(tc, ops):
         
          host_op = op.get_host()
          host_pe = pe.get_host()
-         tc.assertIsInstance(host_op, Host)
-         tc.assertIsInstance(host_pe, Host)
-         tc.assertEqual(host_op.ipAddress, host_pe.ipAddress)
+         # container based instances return None for get_host
+         if host_op is not None:
+             tc.assertIsInstance(host_op, Host)
+         else:
+             tc.assertIsNone(host_pe)
+         if host_pe is not None:
+             tc.assertIsInstance(host_pe, Host)
+             tc.assertEqual(host_op.ipAddress, host_pe.ipAddress)
+         else:
+             tc.assertIsNone(host_op)
 
 def check_job(tc, job):
     """Basic test of calls against an Job """
