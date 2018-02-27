@@ -86,5 +86,23 @@ class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
         if exists:
             os.remove(logs)
 
+    def test_always_fetch_logs(self):
+        topo = Topology("always_fetch_logs")
+        s = topo.source(["foo"])
+
+        tester = Tester(topo)
+        tester.contents(s, ["foo"])
+
+        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
+
+        # Check if logs were downloaded
+        logs = tester.result['application_logs']
+        exists = os.path.isfile(logs)
+
+        self.assertTrue(exists, "Application logs were not downloaded on test success")
+
+        if exists:
+            os.remove(logs)
+
             
                 
