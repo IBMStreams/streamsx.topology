@@ -72,6 +72,16 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         return streamsConnection;
     }
 
+    JsonObject getServiceStatus(CloseableHttpClient httpClient)
+            throws IOException, IllegalStateException {
+        String url = getStatusUrl(httpClient);
+
+        HttpGet getStatus = new HttpGet(url);
+        getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
+
+        return StreamsRestUtils.getGsonResponse(httpClient, getStatus);
+  }
+
     /** Version-specific authorization header handling. */
     protected abstract String getAuthorization();
     /** Version-specific handling for status URL. */
@@ -146,31 +156,25 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     
     @Override
     public Result<StreamingAnalyticsService, JsonObject> checkStatus(boolean requireRunning) throws IOException {
-        
         final CloseableHttpClient httpClient = HttpClients.createDefault();
         try {
-            String url = getStatusUrl(httpClient);
+            JsonObject response = getServiceStatus(httpClient);
 
-            HttpGet getStatus = new HttpGet(url);
-            getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
-
-            JsonObject response = StreamsRestUtils.getGsonResponse(httpClient, getStatus);
-            
             boolean running =
                     "true".equals(jstring(response, "enabled"))
                     &&
                     "running".equals(jstring(response, "status"));
-            
+
             if (requireRunning && !running)
                 throw new IllegalStateException("Service (" + serviceName + ") is not running!");
-            
-            return new ResultImpl<>(running, null, () -> this, response);            
 
+            return new ResultImpl<>(running, null, () -> this, response); 
         } finally {
             httpClient.close();
         }
+
     }
-    
+
     @Override
     public Result<Job, JsonObject> buildAndSubmitJob(File archive, JsonObject jco,
             String buildName) throws IOException {
