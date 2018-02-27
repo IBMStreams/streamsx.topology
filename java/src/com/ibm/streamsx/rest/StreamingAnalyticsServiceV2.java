@@ -25,7 +25,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
-import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 
 class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
 
@@ -189,13 +188,6 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
         JsonObject jso = StreamsRestUtils.getGsonResponse(httpclient, postArtifact);
         RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + getName() + "): submit job response: " + jso.toString());
         return jso;
-    }
-
-    // Bundle then job config overlay
-    private final String[] BUNDLE_ENTITY_KEYS = {"bundle_file", "job_options"};
-    @Override
-    protected String[] getBundleEntityKeys() {
-        return BUNDLE_ENTITY_KEYS;
     }
 
     @Override

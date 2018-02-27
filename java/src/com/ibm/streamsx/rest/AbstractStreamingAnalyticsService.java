@@ -86,8 +86,6 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     /** Version-specific handling for job submit URL with file bundle. */
     protected abstract String getJobSubmitUrl(CloseableHttpClient httpClient,
             File bundle) throws IOException, UnsupportedEncodingException;
-    /** Version-specific submit job bundle keys in . */
-    protected abstract String[] getBundleEntityKeys();
     /** Version-specific handling for job submit URL with artifact. */
     protected abstract String getJobSubmitUrl(JsonObject build)
             throws IOException, UnsupportedEncodingException;
@@ -340,10 +338,9 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         FileBody bundleBody = new FileBody(bundle, ContentType.APPLICATION_OCTET_STREAM);
         StringBody configBody = new StringBody(jobConfigOverlay.toString(), ContentType.APPLICATION_JSON);
 
-        String[] entityKeys = getBundleEntityKeys();
         HttpEntity reqEntity = MultipartEntityBuilder.create()
-                .addPart(entityKeys[0], bundleBody)
-                .addPart(entityKeys[1], configBody).build();
+                .addPart("bundle_file", bundleBody)
+                .addPart("job_options", configBody).build();
 
         postJobWithConfig.setEntity(reqEntity);
 

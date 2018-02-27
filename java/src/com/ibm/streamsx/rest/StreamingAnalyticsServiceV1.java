@@ -29,7 +29,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
-import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 
 /**
  * Implementation of StreamingAnalyticsService for Version 1.
@@ -61,13 +60,6 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
         sb.append("bundle_id=");
         sb.append(URLEncoder.encode(bundle.getName(), StandardCharsets.UTF_8.name()));
         return sb.toString();
-    }
-    
-    // Bundle then job config overlay
-    private final String[] BUNDLE_ENTITY_KEYS = {"sab", DeployKeys.JOB_CONFIG_OVERLAYS};
-    @Override
-    protected String[] getBundleEntityKeys() {
-        return BUNDLE_ENTITY_KEYS;
     }
 
     @Override
