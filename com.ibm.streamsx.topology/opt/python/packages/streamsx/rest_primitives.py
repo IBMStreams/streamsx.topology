@@ -1339,13 +1339,13 @@ class StreamingAnalyticsService(object):
         else:
             self._delegator = _StreamingAnalyticsServiceV1Delegator(rest_client, credentials)
 
-    def submit_job(self, sab_file, job_config=None):
+    def submit_job(self, bundle, job_config=None):
         """Submit a Streams Application Bundle (sab file) to
         this Streaming Analytics service.
         
         Args:
-            sab_file(str): path to a sab file containing the
-                application to be submitted
+            bundle(str): path to a Streams application bundle (sab file)
+                containing the application to be submitted
             job_config(JobConfig): a job configuration overlay
         
         Returns:
@@ -1353,7 +1353,7 @@ class StreamingAnalyticsService(object):
                 job name assigned to submitted job, or, 'error_status' and
                 'description' fields if submission was unsuccessful.
         """
-        return self._delegator._submit_job(sab_file=sab_file, job_config=job_config)
+        return self._delegator._submit_job(bundle=bundle, job_config=job_config)
 
     def cancel_job(self, job_id=None, job_name=None):
         """Cancel a running job.
@@ -1413,16 +1413,16 @@ class _StreamingAnalyticsServiceV2Delegator(object):
                 raise ValueError("Cannot obtain jobs URL")
         return self._jobs_url
 
-    def _submit_job(self, sab_file, job_config):
-        sab_name = os.path.basename(sab_file)
+    def _submit_job(self, bundle, job_config):
+        sab_name = os.path.basename(bundle)
 
         job_options = {}
         if job_config is not None:
             job_config._add_overlays(job_options)
 
-        with open(sab_file, 'rb') as bundle:
+        with open(bundle, 'rb') as bundle_fp:
             files = [
-                ('bundle_file', (sab_name, bundle, 'application/octet-stream')),
+                ('bundle_file', (sab_name, bundle_fp, 'application/octet-stream')),
                 ('job_options', ('job_options', json.dumps(job_options), 'application/json'))
                 ]
             res = self.rest_client.session.post(self._get_jobs_url(),
@@ -1500,8 +1500,8 @@ class _StreamingAnalyticsServiceV1Delegator(object):
     def _get_url(self, req_name):
         return self._credentials['rest_url'] + self._credentials[req_name]
 
-    def _submit_job(self, sab_file, job_config):
-        sab_name = os.path.basename(sab_file)
+    def _submit_job(self, bundle, job_config):
+        sab_name = os.path.basename(bundle)
 
         url = self._get_url('jobs_path')
         params = {'bundle_id': sab_name}
@@ -1509,9 +1509,9 @@ class _StreamingAnalyticsServiceV1Delegator(object):
         if job_config is not None:
             job_config._add_overlays(job_options)
 
-        with open(sab_file, 'rb') as bundle:
+        with open(bundle, 'rb') as bundle_fp:
             files = [
-                ('bundle_file', (sab_name, bundle, 'application/octet-stream')),
+                ('bundle_file', (sab_name, bundle_fp, 'application/octet-stream')),
                 ('job_options', ('job_options', json.dumps(job_options), 'application/json'))
                 ]
             return self.rest_client.session.post(url=url, params=params, files=files).json()

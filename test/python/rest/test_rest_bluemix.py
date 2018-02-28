@@ -85,7 +85,7 @@ class TestRestFeaturesBluemix(CommonTests):
 
         sas = self.sc.get_streaming_analytics()
 
-        sr = sas.submit_job(sab_file=bb['bundlePath'])
+        sr = sas.submit_job(bundle=bb['bundlePath'])
         job_id = sr.get('id', sr.get('jobId'))
         print(sr)
         self.assertIsNotNone(job_id)
@@ -96,7 +96,7 @@ class TestRestFeaturesBluemix(CommonTests):
 
         jn = 'SABTEST:' + str(time.time())
         jc = streamsx.topology.context.JobConfig(job_name=jn)
-        sr = sas.submit_job(sab_file=bb['bundlePath'], job_config=jc)
+        sr = sas.submit_job(bundle=bb['bundlePath'], job_config=jc)
         job_id = sr.get('id', sr.get('jobId'))
         print(sr)
         self.assertIsNotNone(job_id)
