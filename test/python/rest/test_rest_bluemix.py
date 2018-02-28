@@ -1,3 +1,5 @@
+import os
+import time
 import unittest
 import test_vers
 from common_tests import CommonTests, logger
@@ -5,6 +7,9 @@ from streamsx.topology.tester import Tester
 from streamsx.topology.context import ConfigParams
 from streamsx.rest import StreamingAnalyticsConnection
 from streamsx.rest_primitives import _IAMConstants
+from streamsx.topology.topology import Topology
+import streamsx.topology.context
+import streamsx.rest
 
 instance_response_keys = [
     "auto_stop",
@@ -66,3 +71,40 @@ class TestRestFeaturesBluemix(CommonTests):
     def valid_response(self, res):
         for key in instance_response_keys:
             self.assertTrue(key in res)
+
+    # The underscore in front of this test causes it to be skipped by default
+    # This is because the test must run on an os version that matches
+    # the service and has a local Streams Install.
+    # python3 -m unittest test_rest_bluemix.TestRestFeaturesBluemix._test_submit_sab
+    def _test_submit_sab(self):
+        topo = Topology('SabTest', namespace='mynamespace')
+        s = topo.source([1,2])
+        es = s.for_each(lambda x : None)
+        bb = streamsx.topology.context.submit('BUNDLE', topo, {})
+        self.assertIn('bundlePath', bb)
+
+        sas = self.sc.get_streaming_analytics()
+
+        sr = sas.submit_job(sab_file=bb['bundlePath'])
+        job_id = sr.get('id', sr.get('jobId'))
+        print(sr)
+        self.assertIsNotNone(job_id)
+        self.assertIn('name', sr)
+        self.assertIn('application', sr)
+        self.assertEqual('mynamespace::SabTest', sr['application'])
+        cr = sas.cancel_job(job_id=job_id)
+
+        jn = 'SABTEST:' + str(time.time())
+        jc = streamsx.topology.context.JobConfig(job_name=jn)
+        sr = sas.submit_job(sab_file=bb['bundlePath'], job_config=jc)
+        job_id = sr.get('id', sr.get('jobId'))
+        print(sr)
+        self.assertIsNotNone(job_id)
+        self.assertIn('application', sr)
+        self.assertEqual('mynamespace::SabTest', sr['application'])
+        self.assertIn('name', sr)
+        self.assertEqual(jn, sr['name'])
+        cr = sas.cancel_job(job_id=job_id)
+       
+
+        os.remove(bb['bundlePath'])
