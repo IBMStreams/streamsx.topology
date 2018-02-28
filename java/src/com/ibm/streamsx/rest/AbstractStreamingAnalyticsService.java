@@ -17,9 +17,15 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.auth.AUTH;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
@@ -90,10 +96,6 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     /** Version-specific handling for job submit URL with file bundle. */
     protected abstract String getJobSubmitUrl(CloseableHttpClient httpClient,
             File bundle) throws IOException, UnsupportedEncodingException;
-    /** Version-specific post job. */
-    protected abstract JsonObject postJob(CloseableHttpClient httpClient,
-            JsonObject service, File bundle, JsonObject jobConfigOverlay)
-            throws IOException;
     /** Version-specific handling for job submit URL with artifact. */
     protected abstract String getJobSubmitUrl(JsonObject build)
             throws IOException, UnsupportedEncodingException;
@@ -324,5 +326,32 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         default:
             throw new IllegalStateException("Unknown Streaming Analytics Service version");
         }
+    }
+    
+    /**
+     * Submit an application bundle to execute as a job.
+     */
+    protected JsonObject postJob(CloseableHttpClient httpClient,
+            JsonObject service, File bundle, JsonObject jobConfigOverlay)
+            throws IOException {
+
+        String url = getJobSubmitUrl(httpClient, bundle);
+
+        HttpPost postJobWithConfig = new HttpPost(url);
+        postJobWithConfig.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
+        FileBody bundleBody = new FileBody(bundle, ContentType.APPLICATION_OCTET_STREAM);
+        StringBody configBody = new StringBody(jobConfigOverlay.toString(), ContentType.APPLICATION_JSON);
+
+        HttpEntity reqEntity = MultipartEntityBuilder.create()
+                .addPart("bundle_file", bundleBody)
+                .addPart("job_options", configBody).build();
+
+        postJobWithConfig.setEntity(reqEntity);
+
+        JsonObject jsonResponse = StreamsRestUtils.getGsonResponse(httpClient, postJobWithConfig);
+
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + getName() + "): submit job response:" + jsonResponse.toString());
+
+        return jsonResponse;
     }
 }

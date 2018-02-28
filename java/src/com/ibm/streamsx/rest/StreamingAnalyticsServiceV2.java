@@ -192,32 +192,6 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
         return jso;
     }
 
-    /**
-     * Submit an application bundle to execute as a job.
-     */
-    protected JsonObject postJob(CloseableHttpClient httpClient,
-            JsonObject service, File bundle, JsonObject jobConfigOverlay)
-            throws IOException {
-
-        String url = getJobSubmitUrl(httpClient, bundle);
-
-        HttpPost postJobWithConfig = new HttpPost(url);
-        postJobWithConfig.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
-
-        FileBody bundleBody = new FileBody(bundle, ContentType.APPLICATION_OCTET_STREAM);
-        StringBody configBody = new StringBody(jobConfigOverlay.toString(), ContentType.APPLICATION_JSON);
-        HttpEntity reqEntity = MultipartEntityBuilder.create()
-                .addPart("bundle_file", bundleBody)
-                .addPart("job_options", configBody).build();
-        postJobWithConfig.setEntity(reqEntity);
-
-        JsonObject jsonResponse = StreamsRestUtils.getGsonResponse(httpClient, postJobWithConfig);
-
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + getName() + "): submit job response:" + jsonResponse.toString());
-
-        return jsonResponse;
-    }
-
     @Override
     AbstractStreamingAnalyticsConnection createStreamsConnection() throws IOException {
         return StreamingAnalyticsConnectionV2.of(service, getAuthorization(),

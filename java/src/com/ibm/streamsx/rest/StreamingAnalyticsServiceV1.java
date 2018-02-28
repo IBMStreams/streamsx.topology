@@ -16,7 +16,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.auth.AUTH;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -24,14 +23,12 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
-import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 
 /**
  * Implementation of StreamingAnalyticsService for Version 1.
@@ -176,31 +173,6 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
         return jso;
     }
 
-    /**
-     * Submit an application bundle to execute as a job.
-     */
-    protected JsonObject postJob(CloseableHttpClient httpClient,
-            JsonObject service, File bundle, JsonObject jobConfigOverlay)
-            throws IOException {
-
-        String url = getJobSubmitUrl(httpClient, bundle);
-
-        HttpPost postJobWithConfig = new HttpPost(url);
-        postJobWithConfig.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
-        FileBody bundleBody = new FileBody(bundle, ContentType.APPLICATION_OCTET_STREAM);
-        StringBody configBody = new StringBody(jobConfigOverlay.toString(), ContentType.APPLICATION_JSON);
-
-        HttpEntity reqEntity = MultipartEntityBuilder.create().addPart("sab", bundleBody)
-                .addPart(DeployKeys.JOB_CONFIG_OVERLAYS, configBody).build();
-
-        postJobWithConfig.setEntity(reqEntity);
-
-        JsonObject jsonResponse = StreamsRestUtils.getGsonResponse(httpClient, postJobWithConfig);
-
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + getName() + "): submit job response:" + jsonResponse.toString());
-
-        return jsonResponse;
-    }
 
     @Override
     AbstractStreamingAnalyticsConnection createStreamsConnection() throws IOException {
