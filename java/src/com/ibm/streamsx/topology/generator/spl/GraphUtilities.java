@@ -135,12 +135,18 @@ public class GraphUtilities {
             JsonObject graph) {    
         
         Set<JsonObject> children = new HashSet<>();
-                
-        outputConnections(visitOp, inputPort -> {
-            operators(graph, op -> inputs(op, input-> {
-                if (jstring(input, "name").equals(inputPort))
+        Set<String> oportNames = new HashSet<>();
+        
+        // Create list of output port names
+        GraphUtilities.outputs(visitOp, output -> {
+            oportNames.add(jstring(output, "name"));
+        });
+        
+        operators(graph, op -> {
+            GraphUtilities.inputConnections(op, oportName -> {
+                if(oportNames.contains(oportName))
                     children.add(op);
-            }));
+            });
         });
 
         return children;
