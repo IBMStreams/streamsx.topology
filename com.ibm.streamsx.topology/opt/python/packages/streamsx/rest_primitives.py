@@ -1361,6 +1361,22 @@ class StreamingAnalyticsService(object):
         else:
             self._delegator = _StreamingAnalyticsServiceV1Delegator(rest_client, credentials)
 
+    def submit_job(self, bundle, job_config=None):
+        """Submit a Streams Application Bundle (sab file) to
+        this Streaming Analytics service.
+        
+        Args:
+            bundle(str): path to a Streams application bundle (sab file)
+                containing the application to be submitted
+            job_config(JobConfig): a job configuration overlay
+        
+        Returns:
+            dict: JSON response from service containing 'name' field with unique
+                job name assigned to submitted job, or, 'error_status' and
+                'description' fields if submission was unsuccessful.
+        """
+        return self._delegator._submit_job(bundle=bundle, job_config=job_config)
+
     def cancel_job(self, job_id=None, job_name=None):
         """Cancel a running job.
 
@@ -1409,6 +1425,33 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         self.rest_client = rest_client
         self._credentials = credentials
         self._v2_rest_url = self._credentials[_IAMConstants.V2_REST_URL]
+        self._jobs_url = None
+
+    def _get_jobs_url(self):
+        """Get & save jobs URL from the status call."""
+        if self._jobs_url is None:
+            self.get_instance_status()
+            if self._jobs_url is None:
+                raise ValueError("Cannot obtain jobs URL")
+        return self._jobs_url
+
+    def _submit_job(self, bundle, job_config):
+        sab_name = os.path.basename(bundle)
+
+        job_options = {}
+        if job_config is not None:
+            job_config._add_overlays(job_options)
+
+        with open(bundle, 'rb') as bundle_fp:
+            files = [
+                ('bundle_file', (sab_name, bundle_fp, 'application/octet-stream')),
+                ('job_options', ('job_options', json.dumps(job_options), 'application/json'))
+                ]
+            res = self.rest_client.session.post(self._get_jobs_url(),
+                headers = {'Authorization' : self.rest_client._get_authorization(), 'Accept' : 'application/json'},
+                files=files)
+            self.rest_client.handle_http_errors(res)
+            return res.json()
 
     def cancel_job(self, job_id=None, job_name=None):
         if job_id is None and job_name is None:
@@ -1416,7 +1459,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         
         if job_id is None:
             # Get the job id using the job name, since it's required by the REST API
-            req = requests.Request("GET", self._v2_rest_url + '/jobs/',
+            req = requests.Request("GET", self.get_jobs_url(),
                                headers = {'Authorization' : self.rest_client._get_authorization(),
                                           'Accept' : 'application/json'})
             prepared = req.prepare()
@@ -1428,7 +1471,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
                     job_id = job['id']
 
         # Cancel the job using the job id
-        req = requests.Request("DELETE", self._v2_rest_url + '/jobs/' + job_id,
+        req = requests.Request("DELETE", self._get_jobs_url() + '/' + str(job_id),
                                headers = {'Authorization' : self.rest_client._get_authorization(),
                                           'Accept' : 'application/json'})
         prepared = req.prepare()
@@ -1457,7 +1500,11 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         return res.json()
 
     def get_instance_status(self):
-        return self.rest_client.make_request(self._v2_rest_url)
+        resp = self.rest_client.make_request(self._v2_rest_url)
+        # Since we are here, see if we can save the jobs url
+        if self._jobs_url is None and 'jobs' in resp:
+            self._jobs_url = resp['jobs']
+        return resp
 
 
 class _StreamingAnalyticsServiceV1Delegator(object):
@@ -1474,6 +1521,22 @@ class _StreamingAnalyticsServiceV1Delegator(object):
 
     def _get_url(self, req_name):
         return self._credentials['rest_url'] + self._credentials[req_name]
+
+    def _submit_job(self, bundle, job_config):
+        sab_name = os.path.basename(bundle)
+
+        url = self._get_url('jobs_path')
+        params = {'bundle_id': sab_name}
+        job_options = {}
+        if job_config is not None:
+            job_config._add_overlays(job_options)
+
+        with open(bundle, 'rb') as bundle_fp:
+            files = [
+                ('bundle_file', (sab_name, bundle_fp, 'application/octet-stream')),
+                ('job_options', ('job_options', json.dumps(job_options), 'application/json'))
+                ]
+            return self.rest_client.session.post(url=url, params=params, files=files).json()
 
     def cancel_job(self, job_id=None, job_name=None):
         """Cancel a running job.
