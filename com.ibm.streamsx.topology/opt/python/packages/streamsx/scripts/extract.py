@@ -175,6 +175,14 @@ class _Extractor(object):
          os.mkdir(oppath)
          return oppath
 
+    def _make_toolkit(self):
+        # Now make the toolkit if required
+        if self._cmd_args.make_toolkit:
+            si = os.environ['STREAMS_INSTALL']
+            mktk = os.path.join(si, 'bin', 'spl-make-toolkit')
+            mktk_args = [mktk, '--directory', self._cmd_args.directory, '--make-operator']
+            subprocess.check_call(mktk_args)
+
     # Process python objects in a module looking for SPL operators
     # dynm - introspection for the modeul
     # module - module name
@@ -475,9 +483,9 @@ def _extract_from_toolkit(args):
     tk_dir = extractor._tk_dir
 
     tk_streams = os.path.join(tk_dir, 'opt', 'python', 'streams')
-    print(tk_streams)
     if not os.path.isdir(tk_streams):
-        # Nothing to do
+        # Nothing to do for Python extraction
+        extractor._make_toolkit()
         return
     sys.path.insert(1, tk_streams)
 
@@ -501,12 +509,7 @@ def _extract_from_toolkit(args):
         print("Available languages for TopologySplpy resource:", langList)
     extractor._setup_info_xml(langList)
 
-    # Now make the toolkit if required
-    if extractor._cmd_args.make_toolkit:
-        si = os.environ['STREAMS_INSTALL']
-        mktk = os.path.join(si, 'bin', 'spl-make-toolkit')
-        mktk_args = [mktk, '--directory', extractor._cmd_args.directory, '--make-operator']
-        subprocess.check_call(mktk_args)
+    extractor._make_toolkit()
 
 def main(args=None):
     _extract_from_toolkit(args)
