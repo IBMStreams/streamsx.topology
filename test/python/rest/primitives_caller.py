@@ -134,6 +134,38 @@ def _fetch_from_job(tc, job):
         tc.assertEqual(td, os.path.dirname(trace))
         os.remove(trace)
 
+        # PE console log
+
+        console = pe.retrieve_console_log()
+        tc.assertTrue(os.path.isfile(console))
+        fn = os.path.basename(console)
+        tc.assertTrue(fn.startswith('pe_' + pe.id + '_'))
+        tc.assertTrue(fn.endswith('.stdouterr'))
+        tc.assertEqual(os.getcwd(), os.path.dirname(console))
+        os.remove(console)
+
+        fn = 'mypeconsole' + str(random.randrange(999999)) + '.txt'
+        console = pe.retrieve_console_log(fn)
+        tc.assertTrue(os.path.isfile(console))
+        tc.assertEqual(fn, os.path.basename(console))
+        tc.assertEqual(os.getcwd(), os.path.dirname(console))
+        os.remove(console)
+
+        console = pe.retrieve_console_log(dir=td)
+        tc.assertTrue(os.path.isfile(console))
+        fn = os.path.basename(console)
+        tc.assertTrue(fn.startswith('pe_' + pe.id + '_'))
+        tc.assertTrue(fn.endswith('.stdouterr'))
+        tc.assertEqual(td, os.path.dirname(console))
+        os.remove(console)
+
+        fn = 'mypeconsole' + str(random.randrange(999999)) + '.txt'
+        console = pe.retrieve_console_log(filename=fn,dir=td)
+        tc.assertTrue(os.path.isfile(console))
+        tc.assertEqual(fn, os.path.basename(console))
+        tc.assertEqual(td, os.path.dirname(console))
+        os.remove(console)
+
         shutil.rmtree(td)
 
     _check_list(tc, job.get_hosts(), Host)
