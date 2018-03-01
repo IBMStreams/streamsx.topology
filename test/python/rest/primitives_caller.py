@@ -1,6 +1,7 @@
 from streamsx.rest_primitives import *
 import os
 import random
+import shutil
 import tempfile
 
 def check_instance(tc, instance):
@@ -99,6 +100,41 @@ def _fetch_from_job(tc, job):
         tc.assertEqual(fn, os.path.basename(logs))
         tc.assertEqual(td, os.path.dirname(logs))
         os.remove(logs)
+
+        # PE
+        pe = job.get_pes()[0]
+
+        trace = pe.retrieve_trace()
+        tc.assertTrue(os.path.isfile(trace))
+        fn = os.path.basename(trace)
+        tc.assertTrue(fn.startswith('pe_' + pe.id + '_'))
+        tc.assertTrue(fn.endswith('.trace'))
+        tc.assertEqual(os.getcwd(), os.path.dirname(trace))
+        os.remove(trace)
+
+        fn = 'mypetrace_' + str(random.randrange(999999)) + '.txt'
+        trace = pe.retrieve_trace(fn)
+        tc.assertTrue(os.path.isfile(trace))
+        tc.assertEqual(fn, os.path.basename(trace))
+        tc.assertEqual(os.getcwd(), os.path.dirname(trace))
+        os.remove(trace)
+
+        trace = pe.retrieve_trace(dir=td)
+        tc.assertTrue(os.path.isfile(trace))
+        fn = os.path.basename(trace)
+        tc.assertTrue(fn.startswith('pe_' + pe.id + '_'))
+        tc.assertTrue(fn.endswith('.trace'))
+        tc.assertEqual(td, os.path.dirname(trace))
+        os.remove(trace)
+
+        fn = 'mypetrace_' + str(random.randrange(999999)) + '.txt'
+        trace = pe.retrieve_trace(filename=fn,dir=td)
+        tc.assertTrue(os.path.isfile(trace))
+        tc.assertEqual(fn, os.path.basename(trace))
+        tc.assertEqual(td, os.path.dirname(trace))
+        os.remove(trace)
+
+        shutil.rmtree(td)
 
     _check_list(tc, job.get_hosts(), Host)
     _check_list(tc, job.get_pe_connections(), PEConnection)
