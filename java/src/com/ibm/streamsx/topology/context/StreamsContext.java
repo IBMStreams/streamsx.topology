@@ -151,7 +151,7 @@ public interface StreamsContext<T> {
         STANDALONE,
 
         /**
-         * The topology is submitted to a Streams instance.
+         * The topology is submitted to an IBM Streams instance.
          * <P>
          * The returned type for the {@code submit} calls is
          * a {@code Future&lt;BigInteger>} where the value is
@@ -162,8 +162,19 @@ public interface StreamsContext<T> {
          * jobs are long running, consuming continuous streams of data.
          * </P>
          * <P>
-         * This initial implementation uses {@code streamtool} to submit and cancel jobs,
+         * The Streams instance the topology is submitted to is defined by
+         * the <b>required</b> environment variables {@code STREAMS_DOMAIN_ID} and
+         * {@code STREAMS_INSTANCE_ID}. {@code STREAMS_ZKCONNECT} must also be set for
+         * a non-basic instance, one not using embedded ZooKeeper.
+         * <BR>
+         * The user is set by the <em>optional</em> environment variable {@code STREAMS_USERNAME}
+         * defaulting to the current operator system user name. 
+         * </P>
+         * <P>
+         * {@code streamtool} is used to submit the job
          * and requires that {@code streamtool} does not prompt for authentication.
+         * This is achieved by using {@code streamtool genkey}.
+         * @see <a href="https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-user-security-authentication-rsa.html">Generating authentication keys for IBM Streams</a>
          * </P>
          */
         DISTRIBUTED,

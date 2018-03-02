@@ -171,14 +171,27 @@ class Tester(object):
         """
         Set up a unittest.TestCase to run tests using IBM Streams distributed mode.
 
-        Requires a local IBM Streams install define by the STREAMS_INSTALL
-        environment variable. If STREAMS_INSTALL is not set then the
+        Requires a local IBM Streams install define by the ``STREAMS_INSTALL``
+        environment variable. If ``STREAMS_INSTALL`` is not set then the
         test is skipped.
 
         The Streams instance to use is defined by the environment variables:
-         * STREAMS_ZKCONNECT - Zookeeper connection string
-         * STREAMS_DOMAIN_ID - Domain identifier
-         * STREAMS_INSTANCE_ID - Instance identifier
+         * ``STREAMS_ZKCONNECT`` - Zookeeper connection string (optional)
+         * ``STREAMS_DOMAIN_ID`` - Domain identifier
+         * ``STREAMS_INSTANCE_ID`` - Instance identifier
+
+        The user used to submit and monitor the job is set by the
+        optional environment variables:
+         * ``STREAMS_USERNAME - User name defaulting to `streamsadmin`.
+         * ``STREAMS_PASSWORD - User password defaulting to `passw0rd`.
+        The defaults match the setup for testing on a IBM Streams Quick
+        Start Edition (QSE) virtual machine.
+
+        .. warning::
+            ``streamtool`` is used to submit the job and requires that ``streamtool`` does not prompt for authentication.  This is achieved by using ``streamtool genkey``.
+
+            .. seealso::
+                `Generating authentication keys for IBM Streams <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-user-security-authentication-rsa.html>`_
 
         Two attributes are set in the test case:
          * test_ctxtype - Context type the test will be run in.
@@ -188,6 +201,7 @@ class Tester(object):
             test(unittest.TestCase): Test case to be set up to run tests using Tester
 
         Returns: None
+
         """
         if not 'STREAMS_INSTALL' in os.environ:
             raise unittest.SkipTest("Skipped due to no local IBM Streams install")
@@ -461,12 +475,8 @@ class Tester(object):
             ctxtype(str): Context type for submission.
             config: Configuration for submission.
             assert_on_fail(bool): True to raise an assertion if the test fails, False to return the passed status.
-            username(str): username for distributed tests
-                .. deprecated:: 1.8.3
-                Pass the username via the STREAMS_USERNAME environment variable instead.
-            password(str): password for distributed tests
-                .. deprecated:: 1.8.3
-                Pass the password via the STREAMS_PASSWORD environment variable instead.
+            username(str): **Deprecated** 
+            password(str): **Deprecated**
             always_collect_logs(bool): True to always collect the console log and PE trace files of the test.
 
         Attributes:
@@ -478,6 +488,11 @@ class Tester(object):
         Returns:
             bool: `True` if test passed, `False` if test failed if `assert_on_fail` is `False`.
 
+        .. deprecated:: 1.8.3
+            ``username`` and ``password`` parameters. When required for
+             a distributed test use the environment variables
+             ``STREAMS_USERNAME`` and ``STREAMS_PASSWORD`` to define
+             the Streams user.
         """
 
         # Add the conditions into the graph as sink operators

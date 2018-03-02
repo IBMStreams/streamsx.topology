@@ -527,6 +527,13 @@ class ContextTypes(object):
         * **STREAMS_DOMAIN_ID** - Domain identifier for the Streams instance.
         * **STREAMS_INSTANCE_ID** - Instance identifier.
         * **STREAMS_ZKCONNECT** - (optional) ZooKeeper connection string for domain (when not using an embedded ZooKeeper)
+        * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
+
+    .. warning::
+        ``streamtool`` is used to submit the job and requires that ``streamtool`` does not prompt for authentication.  This is achieved by using ``streamtool genkey``.
+
+        .. seealso::
+            `Generating authentication keys for IBM Streams <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-user-security-authentication-rsa.html>`_
 
     """
 

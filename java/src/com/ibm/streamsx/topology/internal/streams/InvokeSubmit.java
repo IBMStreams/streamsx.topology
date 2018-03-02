@@ -49,6 +49,11 @@ public class InvokeSubmit {
 
         commands.add(sj.getAbsolutePath());
         commands.add("submitjob");
+        String user = System.getenv(Util.STREAMS_USERNAME);
+        if (user != null) {
+            commands.add("--User");
+            commands.add(user);
+        }
         commands.add("--outfile");
         commands.add(jobidFile.getAbsolutePath());
                 
