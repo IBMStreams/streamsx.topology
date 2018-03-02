@@ -36,7 +36,7 @@ Usage
                             job submission occurs.
       --topology TOPOLOGY   Topology to call
       --main-composite MAIN_COMPOSITE
-                            SPL main composite
+                            SPL main composite (namespace::composite_name)
       --bundle BUNDLE       Streams application bundle (sab file) to submit to
                             service
     
@@ -126,6 +126,12 @@ For example, an application that uses the Slack toolkit might be submitted as::
         --toolkits $HOME/app/alerters $HOME/toolkits/com.ibm.streamsx.slack
 
 where ``$HOME/app/alerters`` is the location of the SPL application toolkit containing the ``com.example.alert::SlackAlerter`` main composite.
+
+.. warning::
+    The main composite name must be namespace qualified.
+    Use of the default namespace for a main composite is not
+    recommended as it increases the chance of a name clash with
+    another SPL toolkit.
 
 Streams application bundles
 ===========================

@@ -100,8 +100,11 @@ def _get_topology_app(cmd_args):
     return app
 
 def _get_spl_app(cmd_args):
-    ns, name = cmd_args.main_composite.rsplit('::', 1)
-    ns += '._spl'
+    if '::' in cmd_args.main_composite:
+        ns, name = cmd_args.main_composite.rsplit('::', 1)
+        ns += '._spl'
+    else:
+        raise ValueError('--main-composite requires a namespace qualified name: ' + str(cmd_args.main_composite))
     topo = Topology(name=name, namespace=ns)
     if cmd_args.toolkits is not None:
         for tk_path in cmd_args.toolkits:
