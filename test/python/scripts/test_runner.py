@@ -12,6 +12,7 @@ from streamsx.topology import schema
 from streamsx.topology.context import JobConfig
 
 import streamsx.scripts.runner
+import streamsx.rest
 
 def app_topology():
     topo = Topology()
@@ -37,21 +38,33 @@ class TestRunnerService(unittest.TestCase):
         args.append(os.environ['STREAMING_ANALYTICS_SERVICE_NAME'])
         return args
 
-    def _spl_app_args(self, name='ns1::MyApp'):
-        args = self._service_args()
+    def _spl_tk_path(self):
+        return os.path.join(os.path.dirname(os.path.realpath(__file__)), 'spl_app')
+
+    def _spl_app_args(self, name='ns1::MyApp', service=True):
+        args = self._service_args() if service else []
         args.append('--main-composite')
         args.append(name)
         args.append('--toolkit')
-        args.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'spl_app'))
+        args.append(self._spl_tk_path())
         return args
 
     def _run(self, args, cancel=True):
         with unittest.mock.patch('sys.argv', args):
              sr = streamsx.scripts.runner.main()
-             self.assertIn('jobId', sr)
-             self.assertIsNotNone(sr['jobId'])
+             job_id = None
+             if 'id' in sr:
+                 job_id = sr['id']
+             elif 'jobId' in sr:
+                 job_id = sr['jobId']
+          
+             self.assertIsNotNone(job_id)
              if cancel:
-                 sr.job.cancel()
+                 if hasattr(sr, 'job'):
+                     sr.job.cancel()
+                 else:
+                     sas = streamsx.rest.StreamingAnalyticsConnection().get_streaming_analytics()
+                     sas.cancel_job(job_id)
              return sr
  
     def test_topo_submit(self):
@@ -106,3 +119,37 @@ class TestRunnerService(unittest.TestCase):
         args.append(jn)
         sr = self._run(args)
         self.assertEqual(jn, sr.name)
+
+    def _create_bundle_args(self):
+        args = self._spl_app_args(service=False)
+        args.insert(0, '--create-bundle')
+        args.insert(0, 'runner.py')
+        return args
+
+    def _create_bundle(self):
+        args = self._create_bundle_args()
+        with unittest.mock.patch('sys.argv', args):
+             sr = streamsx.scripts.runner.main()
+        self.assertIn('bundlePath', sr)
+        self.assertIn('jobConfigPath', sr)
+        self.assertTrue(os.path.exists(sr['bundlePath']))
+        self.assertTrue(sr['bundlePath'].endswith('sab'))
+        self.assertTrue(os.path.exists(sr['jobConfigPath']))
+        self.assertTrue(sr['jobConfigPath'].endswith('.json'))
+        return sr
+
+    def test_create_bundle(self):
+        sr = self._create_bundle()
+        os.remove(sr['bundlePath'])
+        os.remove(sr['jobConfigPath'])
+        
+    def test_submit_bundle(self):
+        sr = self._create_bundle()
+        args = self._service_args()
+        args.append('--bundle')
+        args.append(sr['bundlePath'])
+        srr = self._run(args)
+        os.remove(sr['bundlePath'])
+        os.remove(sr['jobConfigPath'])
+        
+        
