@@ -70,9 +70,8 @@ The application is submitted as source (except ``--bundle``)  and compiled into
 a Streams application bundle (``sab`` file) using the build service before
 being submitted as a running job to the service instance.
 
-*******************
 Python applications
-*******************
+===================
 
 To submit a Python application a Python function must be defined
 that returns the application (and optionally its configuration)
@@ -113,9 +112,8 @@ it is always submitted with the same job name `SensorIngester`.
 The function must be accessible from the current Python path
 (typically through environment variable ``PYTHONPATH``).
 
-****************
 SPL applications
-****************
+================
 
 The main composite that defines the application is specified using the ``-main-composite`` flag specifing the fully namespace qualified name.
 
@@ -129,9 +127,8 @@ For example, an application that uses the Slack toolkit might be submitted as::
 
 where ``$HOME/app/alerters`` is the location of the SPL application toolkit containing the ``com.example.alert::SlackAlerter`` main composite.
 
-***************************
 Streams application bundles
-***************************
+===========================
 
 A Streams application bundle is submitted to a service instance using ``--bundle``.  The argument to ``--bundle`` is a locally accessible file that will be uploaded to the service.
 
@@ -139,9 +136,8 @@ The bundle must have been created on using an IBM Streams install whose architec
 
 The ``--toolkits`` flag must not be specified when submitting a bundle.
 
-***********
 Job options
-***********
+===========
 
 Job options, such as ``--job-name``, configure the running job.
 
