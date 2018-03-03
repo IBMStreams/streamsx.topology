@@ -58,26 +58,12 @@ public class SPLGenerator {
     private int targetMod;
 
     public String generateSPL(JsonObject graph) throws IOException {
-        
-        // Add a unique ID to every operator and port to allow indexing
-        GraphUtilities.operators(graph, op -> {
-            op.addProperty("__unique_id", UUID.randomUUID().toString());
-            GraphUtilities.inputs(op, input -> {
-                input.addProperty("__unique_id", UUID.randomUUID().toString());
-            });
-            
-            GraphUtilities.outputs(op, output -> {
-                output.addProperty("__unique_id", UUID.randomUUID().toString());
-            });
-        }); 
-            
-        GCompositeDef gcomp = new GCompositeDefImpl(graph);
-        
+
         JsonObject graphConfig = getGraphConfig(graph);
         breakoutVersion(graphConfig);
                 
         stvHelper = new SubmissionTimeValue(graph);
-        new Preprocessor(this, gcomp).preprocess();
+        new Preprocessor(this, graph).preprocess();
         
         // Generate parallel composites
         JsonObject mainCompsiteDef = new JsonObject();
