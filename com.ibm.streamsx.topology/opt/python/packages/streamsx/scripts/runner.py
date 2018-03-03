@@ -147,7 +147,18 @@ def _submit_bundle(cmd_args, app):
     """Submit an existing bundle to the service"""
     sac = streamsx.rest.StreamingAnalyticsConnection(service_name=cmd_args.service_name)
     sas = sac.get_streaming_analytics()
-    return sas.submit_job(bundle=app.app, job_config=app.cfg[ctx.ConfigParams.JOB_CONFIG])
+    sr = sas.submit_job(bundle=app.app, job_config=app.cfg[ctx.ConfigParams.JOB_CONFIG])
+    if 'exception' in sr:
+        rc = 1
+    elif 'status_code' in sr:
+        try:
+            rc = 0 if int(sr['status_code'] == 200) else 1
+        except:
+            rc = 1
+    elif 'id' in sr or 'jobId' in sr:
+        rc = 0
+    sr['return_code'] = rc
+    return sr
 
 def _job_config_args(cmd_args, app):
     cfg = app.cfg
@@ -164,4 +175,7 @@ def _job_config_args(cmd_args, app):
         jc.submission_parameters.update(cmd_args.submission_parameters)
     
 if __name__ == '__main__':
-    main()
+    sr = main()
+    if 'return_code' in sr:
+        sys.exit(int(sr['return_code']))
+    sys.exit(1)
