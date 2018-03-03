@@ -27,7 +27,7 @@ with the `schema` parameter set::
     # s is stream of Python objects representing a sensor
     s = ...
     
-    # map s to a structured stream using a lamda function
+    # map s to a structured stream using a lambda function
     # for each sensor reading r a Python tuple is created
     # with the required values matching the order of the
     # structured schema.
@@ -60,20 +60,35 @@ Example, a `Beacon` operator from the SPL standard toolkit producing 100 tuples 
         params = {'iterations':100, 'period':0.5})
 
 SPL is strictly typed so when passing a constant as a parameter value the
-value may need to be strongly typed. Python booleans, integers, floats and
-strings map automatically to SPL `boolean`, `int32`, `float64` and `rstring`
-respectively. The module :py:mod:`streamsx.spl.types` provides functions to
-create typed SPL values.
+value may need to be strongly typed.
+    * ``bool``, ``int``, ``float`` and ``str`` values map automatically to SPL `boolean`, `int32`, `float64` and `rstring` respectively.
+    * ``Enum`` values map to an operator custom literal using the symbolic name of the value. For custom literals only the symbolic name needs to match a value expected by the operator, the class name and other values are arbitrary.
+    * The module :py:mod:`streamsx.spl.types` provides functions to create typed SPL expressions from values.
 
-For example to create a `count` parameter of type `uint64` for the SPL `DeDuplicate` operator::
+*Examples*
+
+Use an ``IntEnum`` to pass a custom literal to the ``Parse`` operator::
+
+    from enum import IntEnum
+
+    class DataFormats(IntEnum):
+        csv = 0
+        txt = 1
+
+    ...
+
+    params['format'] = DataFormats.csv
+    
+
+Create a `count` parameter of type `uint64` for the SPL `DeDuplicate` operator::
 
     params['count'] = streamsx.spl.types.uint64(20)
 
 After the instance representing the operator
-invocation has been created, addition parameters may be added through
+invocation has been created, additional parameters may be added through
 the `params` attribute. If the value is an expression that is only valid
 in the context of the operator invocation then the parameter must be added
-after 
+after the operator instance is created.
 
 For example, the `Filter` operator uses an expression that is usually dependent on the context, filtering tuples based upon their attribute values::
 

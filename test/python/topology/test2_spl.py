@@ -5,6 +5,7 @@ from __future__ import print_function
 import unittest
 import sys
 import itertools
+from enum import IntEnum
 
 import test_vers
 
@@ -17,6 +18,18 @@ from streamsx.spl.types import Timestamp
 
 def ts_check(tuple_):
     return isinstance(tuple_.ts, Timestamp)
+
+
+class TestFormats(IntEnum):
+    csv = 0
+    txt = 1
+
+
+class TestParseOption(IntEnum):
+    strict = 0
+    permissive = 1
+    fast = 2
+    
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSPL(unittest.TestCase):
@@ -135,6 +148,26 @@ class TestSPL(unittest.TestCase):
         tester.tuple_check(s, ts_check)
         tester.tuple_count(s, 2)
         tester.contents(as_ts, [ts1.tuple(), ts2.tuple()])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_custom_literal(self):
+        schema = StreamSchema('tuple<int32 a, rstring b>')
+        topo = Topology()
+        s = topo.source([(1,'ABC'), (2,'DEF')])
+        s = s.map(lambda x : x, schema=schema)
+
+        fmt = op.Map('spl.utility::Format', s, 'tuple<blob data>',
+            {'format':TestFormats.csv})
+        fmt.data = fmt.output('Output()')
+
+        parse = op.Map('spl.utility::Parse', fmt.stream, schema,
+            {'format':TestFormats.csv, 'parsing': TestParseOption.fast})
+
+        ts = parse.stream
+
+        tester = Tester(topo)
+        tester.tuple_count(ts, 2)
+        tester.contents(ts, [{'a':1,'b':'ABC'},{'a':2,'b':'DEF'}])
         tester.test(self.test_ctxtype, self.test_config)
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
