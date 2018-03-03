@@ -1460,9 +1460,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
     def _submit_job(self, bundle, job_config):
         sab_name = os.path.basename(bundle)
 
-        job_options = {}
-        if job_config is not None:
-            job_config._add_overlays(job_options)
+        job_options = job_config.as_overlays() if job_config else {}
 
         with open(bundle, 'rb') as bundle_fp:
             files = [

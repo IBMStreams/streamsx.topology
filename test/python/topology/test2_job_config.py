@@ -190,4 +190,44 @@ class TestRawOverlay(unittest.TestCase):
         self.assertEqual('xx', dc.get('other'))
         self.assertEqual('manual', dc.get('fusionScheme'))
         self.assertEqual(93, dc.get('fusionTargetPeCount'))
-        
+
+class TestOverlays(unittest.TestCase):
+    def _check_overlays(self, jc):
+        ov = jc.as_overlays()
+        self.assertTrue(isinstance(ov, dict))
+        self.assertTrue(len(ov) <= 2)
+
+        self.assertIn('jobConfigOverlays', ov)
+        jcos = ov['jobConfigOverlays']
+        self.assertTrue(isinstance(jcos, list))
+        self.assertEqual(1, len(jcos))
+        self.assertTrue(isinstance(jcos[0], dict))
+
+        if len(ov) == 2:
+            self.assertTrue(jc.comment)
+            self.assertIn('comment', ov)
+            self.assertTrue(isinstance(ov['comment'], str))
+            self.assertEqual(jc.comment, ov['comment'])
+
+        return jcos[0]
+
+    def test_no_comment(self):
+        jc = JobConfig()
+        self.assertIsNone(jc.comment)
+        ov = self._check_overlays(jc)
+        self.assertNotIn('comment', ov)
+
+    def test_comment(self):
+        jc = JobConfig()
+        jc.comment = 'Test configuration'
+        self.assertEqual('Test configuration', jc.comment)
+        self._check_overlays(jc)
+
+    def test_non_empty(self):
+        jc = JobConfig(job_name='TestIngester')
+        jc.comment = 'Test configuration'
+        jc.target_pe_count = 2
+        jco = self._check_overlays(jc)
+        self.assertIn('jobConfig', jco)
+        self.assertIn('jobName', jco['jobConfig'])
+        self.assertEqual('TestIngester', jco['jobConfig']['jobName'])

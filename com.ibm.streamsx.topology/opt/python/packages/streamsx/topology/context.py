@@ -707,6 +707,7 @@ class JobConfig(object):
         self._pe_count = None
         self._raw_overlay = None
         self._submission_parameters = dict()
+        self._comment = None
 
     @property
     def tracing(self):
@@ -830,6 +831,29 @@ class JobConfig(object):
         """
         return self._submission_parameters
 
+    @property
+    def comment(self):
+        """
+        Comment for job configuration.
+
+        A comment is added to the full job configuration object using :py:meth:`add`.
+
+        The comment does not change the functionality of the job configuration.
+
+        Returns:
+            str: Comment text, `None` if it has not been set.
+
+        .. versionadded:: 1.9
+        """
+        return self._comment
+
+    @comment.setter
+    def comment(self, value):
+        if value:
+            self._comment = str(value)
+        else:
+            self._comment = None
+
     def add(self, config):
         """
         Add this `JobConfig` into a submission configuration object.
@@ -839,15 +863,46 @@ class JobConfig(object):
 
         Returns:
             dict: config.
-
         """
         config[ConfigParams.JOB_CONFIG] = self
         return config
+
+    def as_overlays(self):
+        """Return this jobs configuration as a complete job configuration overlays object.
+
+        Converts this job configuration into the full format supported by IBM Streams.
+        The returned `dict` contains:
+
+            * ``jobConfigOverlays`` key with an array containing a single job configuration overlay.
+            * an optional ``comment`` key containing the comment ``str``.
+
+        For example with this ``JobConfig``::
+
+            jc = JobConfig(job_name='TestIngester')
+            jc.comment = 'Test configuration'
+            jc.target_pe_count = 2
+
+        the returned `dict` would be::
+
+            {"comment": "Test configuration",
+                "jobConfigOverlays":
+                    [{"jobConfig": {"jobName": "TestIngester"},
+                    "deploymentConfig": {"fusionTargetPeCount": 2, "fusionScheme": "manual"}}]}
+
+        Returns:
+            dict: Complete job configuration overlays object built from this object.
+
+        .. versionadded:: 1.9
+        """
+        return self._add_overlays({})
 
     def _add_overlays(self, config):
         """
         Add this as a jobConfigOverlays JSON to config.
         """
+        if self._comment:
+            config['comment'] = self._comment
+
         jco = {}
         config["jobConfigOverlays"] = [jco]
 
@@ -880,6 +935,7 @@ class JobConfig(object):
             deployment = jco.get('deploymentConfig', {})
             deployment.update({'fusionScheme' : 'manual', 'fusionTargetPeCount' : self.target_pe_count})
             jco["deploymentConfig"] = deployment
+        return config
 
 
 class SubmissionResult(object):
