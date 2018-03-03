@@ -219,6 +219,19 @@ class PEPlacement {
 
         Set<JsonObject> llStartChildren = getDownstream(llStart, graph);
         
+        // Determine if the region has already been tagged, which would happen if there are
+        // multiple starts to the low latency region.
+        Boolean[] isAlreadyTagged = {false};
+        llStartChildren.forEach(oper -> {
+            JsonObject placement = object(oper, CONFIG, PLACEMENT);
+            if(placement!=null && jstring(placement, PLACEMENT_LOW_LATENCY_REGION_ID) != null)
+                isAlreadyTagged[0]=true;
+                
+        });
+        
+        if(isAlreadyTagged[0])
+            return;
+        
         Set<BVirtualMarker> boundaries = EnumSet.of(LOW_LATENCY, END_LOW_LATENCY);
 
         GraphUtilities.visitOnce(llStartChildren, boundaries, graph,

@@ -558,8 +558,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     	output.operator().addConfig(OpProperties.PARALLEL, true);
     	output.operator().addConfig(OpProperties.WIDTH, width.get());
     	
-    	throw new UnsupportedOperationException("setParallel is not implemented.");
-    	//return this;
+    	return this;
     }
 
     @Override
