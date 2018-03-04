@@ -16,7 +16,9 @@ class JobConfig(object):
         self.tracing : Any
         self.target_pe_count : Optional[int]
         self.raw_overlay : Optional[dict]
+        self.comment = Optional[str]
     def add(self, config: dict) -> Any: ...
+    def as_overlays(self) -> dict: ...
 
 class SubmissionResult(object):
     def __init__(self, results: Any) -> None: ...
