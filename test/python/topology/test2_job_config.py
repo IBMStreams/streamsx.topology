@@ -1,7 +1,8 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017
+# Copyright IBM Corp. 2017,2018
 import unittest
+import os
 import sys
 import itertools
 import logging
@@ -254,6 +255,27 @@ class TestOverlays(unittest.TestCase):
         jc.submission_parameters['one'] = 1
         jc.submission_parameters['two'] = 2
         self._check_matching(jc)
+
+    def test_from_topology(self):
+        topo = Topology('SabTest', namespace='mynamespace')
+        s = topo.source([1,2])
+        es = s.for_each(lambda x : None)
+        cfg = {}
+        jc = JobConfig(job_name='ABCD', job_group='XXG', preload=True)
+        jc.add(cfg)
+        bb = streamsx.topology.context.submit('BUNDLE', topo, cfg)
+        self.assertIn('bundlePath', bb)
+        self.assertIn('jobConfigPath', bb)
+
+        with open(bb['jobConfigPath']) as json_data:
+            jct = JobConfig.from_overlays(json.load(json_data))
+            self.assertEqual(jc.job_name, jct.job_name)
+            self.assertEqual(jc.job_group, jct.job_group)
+            self.assertEqual(jc.preload, jct.preload)
+            
+        os.remove(bb['bundlePath'])
+        os.remove(bb['jobConfigPath'])
+
 
     def _check_matching(self, jcs):
         jcf = JobConfig.from_overlays(jcs.as_overlays())
