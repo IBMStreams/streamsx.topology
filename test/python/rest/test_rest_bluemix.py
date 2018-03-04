@@ -82,12 +82,12 @@ class TestRestFeaturesBluemix(CommonTests):
         es = s.for_each(lambda x : None)
         bb = streamsx.topology.context.submit('BUNDLE', topo, {})
         self.assertIn('bundlePath', bb)
+        self.assertIn('jobConfigPath', bb)
 
         sas = self.sc.get_streaming_analytics()
 
         sr = sas.submit_job(bundle=bb['bundlePath'])
         job_id = sr.get('id', sr.get('jobId'))
-        print(sr)
         self.assertIsNotNone(job_id)
         self.assertIn('name', sr)
         self.assertIn('application', sr)
@@ -98,7 +98,6 @@ class TestRestFeaturesBluemix(CommonTests):
         jc = streamsx.topology.context.JobConfig(job_name=jn)
         sr = sas.submit_job(bundle=bb['bundlePath'], job_config=jc)
         job_id = sr.get('id', sr.get('jobId'))
-        print(sr)
         self.assertIsNotNone(job_id)
         self.assertIn('application', sr)
         self.assertEqual('mynamespace::SabTest', sr['application'])
@@ -106,5 +105,5 @@ class TestRestFeaturesBluemix(CommonTests):
         self.assertEqual(jn, sr['name'])
         cr = sas.cancel_job(job_id=job_id)
        
-
         os.remove(bb['bundlePath'])
+        os.remove(bb['jobConfigPath'])
