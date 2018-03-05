@@ -673,11 +673,14 @@ class JobConfig(object):
     Job configuration.
 
     `JobConfig` allows configuration of job that will result from
-    submission of a py:class:`Topology` (application).
+    submission of a :py:class:`Topology` (application).
 
     A `JobConfig` is set in the `config` dictionary passed to :py:func:`~streamsx.topology.context.submit`
     using the key :py:const:`~ConfigParams.JOB_CONFIG`. :py:meth:`~JobConfig.add` exists as a convenience
     method to add it to a submission configuration.
+
+    A `JobConfig` can also be used when submitting a Streams application
+    bundle through the Streaming Analytics REST API method :py:meth:`~streamsx.rest_primitives.StreamingAnalyticsService.submit_job`.
 
     Args:
         job_name(str): The name that is assigned to the job. A job name must be unique within a Streasm instance
@@ -697,6 +700,8 @@ class JobConfig(object):
         job_config = JobConfig(job_name='NewsIngester')
         job_config.add(cfg)
         context.submit('STREAMING_ANALYTICS_SERVICE', topo, cfg)
+
+    .. seealso:: `Job configuration overlays reference <https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html>`_
     """
     def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None, tracing=None):
         self.job_name = job_name
@@ -707,6 +712,7 @@ class JobConfig(object):
         self._pe_count = None
         self._raw_overlay = None
         self._submission_parameters = dict()
+        self._comment = None
 
     @property
     def tracing(self):
@@ -786,7 +792,7 @@ class JobConfig(object):
 
         A submitted job is configured using Job Config Overlay which
         is represented as a JSON. `JobConfig` exposes Job Config Overlay
-        logically with properties such as ``job_name` and ``tracing``.
+        logically with properties such as ``job_name`` and ``tracing``.
         This property (as a ``dict``) allows merging of the
         configuration defined by this object and raw representation
         of a Job Config Overlay. This can be used when a capability
@@ -830,6 +836,27 @@ class JobConfig(object):
         """
         return self._submission_parameters
 
+    @property
+    def comment(self):
+        """
+        Comment for job configuration.
+
+        The comment does not change the functionality of the job configuration.
+
+        Returns:
+            str: Comment text, `None` if it has not been set.
+
+        .. versionadded:: 1.9
+        """
+        return self._comment
+
+    @comment.setter
+    def comment(self, value):
+        if value:
+            self._comment = str(value)
+        else:
+            self._comment = None
+
     def add(self, config):
         """
         Add this `JobConfig` into a submission configuration object.
@@ -839,15 +866,58 @@ class JobConfig(object):
 
         Returns:
             dict: config.
-
         """
         config[ConfigParams.JOB_CONFIG] = self
         return config
+
+    def as_overlays(self):
+        """Return this jobs configuration as a complete job configuration overlays object.
+
+        Converts this job configuration into the full format supported by IBM Streams.
+        The returned `dict` contains:
+
+            * ``jobConfigOverlays`` key with an array containing a single job configuration overlay.
+            * an optional ``comment`` key containing the comment ``str``.
+
+        For example with this ``JobConfig``::
+
+            jc = JobConfig(job_name='TestIngester')
+            jc.comment = 'Test configuration'
+            jc.target_pe_count = 2
+
+        the returned `dict` would be::
+
+            {"comment": "Test configuration",
+                "jobConfigOverlays":
+                    [{"jobConfig": {"jobName": "TestIngester"},
+                    "deploymentConfig": {"fusionTargetPeCount": 2, "fusionScheme": "manual"}}]}
+
+        The returned overlays object can be saved as JSON in a file
+        using ``json.dump``. A file can be used with job submission
+        mechanisms that support a job config overlays file, such as
+        ``streamtool submitjob`` or the IBM Streams console.
+
+        Example of saving a ``JobConfig`` instance as a file::
+        
+            jc = JobConfig(job_name='TestIngester')
+            with open('jobconfig.json', 'w') as f:
+                json.dump(jc.as_overlays(), f)
+
+
+        Returns:
+            dict: Complete job configuration overlays object built from this object.
+
+        .. versionadded:: 1.9
+        """
+        return self._add_overlays({})
 
     def _add_overlays(self, config):
         """
         Add this as a jobConfigOverlays JSON to config.
         """
+        if self._comment:
+            config['comment'] = self._comment
+
         jco = {}
         config["jobConfigOverlays"] = [jco]
 
@@ -880,6 +950,7 @@ class JobConfig(object):
             deployment = jco.get('deploymentConfig', {})
             deployment.update({'fusionScheme' : 'manual', 'fusionTargetPeCount' : self.target_pe_count})
             jco["deploymentConfig"] = deployment
+        return config
 
 
 class SubmissionResult(object):
