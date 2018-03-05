@@ -720,15 +720,16 @@ class JobConfig(object):
         overlays object.
 
         All logical items, such as ``comment`` and ``job_name``, are
-        extracted from `overlays`. The single job config overlay is
-        set as ``raw_overlay`` including the representation of any
-        logical items.
+        extracted from `overlays`. The remaining information in the
+        single job config overlay in ``overlays`` is set as ``raw_overlay``.
 
         Args:
             overlays(dict): Full job configuration overlays object.
 
         Returns:
             JobConfig: Instance representing logical view of `overlays`.
+
+        .. versionadded:: 1.9
         """
         jc = JobConfig()
         jc.comment = overlays.get('comment')

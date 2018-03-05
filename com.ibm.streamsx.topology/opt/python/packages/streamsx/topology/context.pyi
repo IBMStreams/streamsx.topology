@@ -17,7 +17,11 @@ class JobConfig(object):
         self.target_pe_count : Optional[int]
         self.raw_overlay : Optional[dict]
         self.comment = Optional[str]
-    def add(self, config: dict) -> Any: ...
+
+    @staticmethod
+    def from_overlays(overlays: dict) -> JobConfig:
+
+    def add(self, config: dict) -> dict: ...
     def as_overlays(self) -> dict: ...
 
 class SubmissionResult(object):
