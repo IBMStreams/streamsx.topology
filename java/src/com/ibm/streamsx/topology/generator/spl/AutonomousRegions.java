@@ -24,19 +24,19 @@ class AutonomousRegions {
 	 * Preprocess autonomous virtual markers to mark
 	 * downstream operators as autonomous.  
 	 */
-    static void preprocessAutonomousRegions(GCompositeDef gcomp) {
+    static void preprocessAutonomousRegions(JsonObject graph) {
 
         Set<JsonObject> autonomousOperators = GraphUtilities.findOperatorByKind(
-                BVirtualMarker.AUTONOMOUS, gcomp);
+                BVirtualMarker.AUTONOMOUS, graph);
 
         for (JsonObject autonomous : autonomousOperators) {
-        	for (JsonObject sa : gcomp.getDownstream(autonomous)) {
+        	for (JsonObject sa : getDownstream(autonomous, graph)) {
         		if (!sa.has(AUTONOMOUS))
         		    sa.addProperty(AUTONOMOUS, Boolean.TRUE);
         	}
         }
  
-        GraphUtilities.removeOperators(autonomousOperators, gcomp);
+        GraphUtilities.removeOperators(autonomousOperators, graph);
     }
     
     /**

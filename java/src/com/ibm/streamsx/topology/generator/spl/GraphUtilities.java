@@ -85,11 +85,11 @@ public class GraphUtilities {
     }
     
     static Set<JsonObject> findOperatorByKind(BVirtualMarker virtualMarker,
-                GCompositeDef gcomp) {
+            JsonObject graph) {
 
         Set<JsonObject> kindOperators = new HashSet<>();
         
-        operators(gcomp.getGraph(), op -> {
+        operators(graph, op -> {
             if (virtualMarker.isThis(kind(op)))
                 kindOperators.add(op);
         });
@@ -100,11 +100,11 @@ public class GraphUtilities {
     /**
      * Find all (non-virtual) operators of specific kinds (by string).
      */
-    static Set<JsonObject> findOperatorsByKinds(final GCompositeDef gcomp, final Set<String> kinds) {
+    static Set<JsonObject> findOperatorsByKinds(final JsonObject graph, final Set<String> kinds) {
 
         Set<JsonObject> kindOperators = new HashSet<>();
 
-        operators(gcomp.getGraph(), op -> {
+        operators(graph, op -> {
             if (kinds.contains(kind(op)))
                 kindOperators.add(op);
         });
@@ -245,17 +245,17 @@ public class GraphUtilities {
         return op_new;
     }
 
-    static void removeOperator(JsonObject op, GCompositeDef gcomp){
-        removeOperators(Collections.singleton(op), gcomp);
+    static void removeOperator(JsonObject op, JsonObject graph){
+        removeOperators(Collections.singleton(op), graph);
     }
 
     static void removeOperators(Collection<JsonObject> operators,
-            GCompositeDef gcomp) {
+            JsonObject graph) {
         for (JsonObject iso : operators) {
 
             // Get parents and children of operator
-            Set<JsonObject> operatorParents = gcomp.getUpstream(iso);
-            Set<JsonObject> operatorChildren = gcomp.getDownstream(iso);
+            Set<JsonObject> operatorParents = getUpstream(iso, graph);
+            Set<JsonObject> operatorChildren = getDownstream(iso, graph);
 
             
             JsonArray operatorOutputs = array(iso, "outputs");
@@ -333,7 +333,7 @@ public class GraphUtilities {
                 for (String name : childInputPortNames)
                     parentConnection.add(new JsonPrimitive(name));
             }
-            JsonArray ops = gcomp.getGraph().get("operators").getAsJsonArray();
+            JsonArray ops = graph.get("operators").getAsJsonArray();
             ops.remove(iso);
         }
     }
@@ -366,10 +366,10 @@ public class GraphUtilities {
     // Visits every node in the region defined by the boundaries, and applies
     // to it the consumer's accept() method.
     static void visitOnce(Set<JsonObject> starts,
-            Set<BVirtualMarker> boundaries, GCompositeDef gcomp,
+            Set<BVirtualMarker> boundaries, JsonObject graph,
             Consumer<JsonObject> consumer) {
         visitOnce(new VisitController(Direction.BOTH, boundaries),
-                starts, gcomp, consumer);
+                starts, graph, consumer);
     }
 
     /**
@@ -387,7 +387,7 @@ public class GraphUtilities {
      * @param consumer
      */
     public static void visitOnce(VisitController visitController,
-            Set<JsonObject> starts, GCompositeDef gcomp,
+            Set<JsonObject> starts, JsonObject graph,
             Consumer<JsonObject> consumer) {
         Set<JsonObject> visited = new HashSet<>();
         List<JsonObject> unvisited = new ArrayList<>();
@@ -406,28 +406,28 @@ public class GraphUtilities {
             consumer.accept(op);
             visited.add(op);  
             GraphUtilities.getUnvisitedAdjacentNodes(visitController, visited,
-                    unvisited, op, gcomp);
+                    unvisited, op, graph);
             unvisited.remove(0);
         }
     }
 
     static void getUnvisitedAdjacentNodes(
             Collection<JsonObject> visited, Collection<JsonObject> unvisited,
-            JsonObject op, GCompositeDef gcomp, Set<BVirtualMarker> boundaries) {
+            JsonObject op, JsonObject graph, Set<BVirtualMarker> boundaries) {
         getUnvisitedAdjacentNodes(new VisitController(Direction.BOTH, boundaries),
-                visited, unvisited, op, gcomp);
+                visited, unvisited, op, graph);
     }
 
     static void getUnvisitedAdjacentNodes(
             VisitController visitController,
             Collection<JsonObject> visited, Collection<JsonObject> unvisited,
-            JsonObject op, GCompositeDef gcomp) {
+            JsonObject op, JsonObject graph) {
         
         Direction direction = visitController.direction();
         Set<BVirtualMarker> boundaries = visitController.markerBoundaries();
         
-        Set<JsonObject> parents = gcomp.getUpstream(op);
-        Set<JsonObject> children = gcomp.getDownstream(op);
+        Set<JsonObject> parents = getUpstream(op, graph);
+        Set<JsonObject> children = getDownstream(op, graph);
         removeVisited(parents, visited);
         removeVisited(children, visited);
 
@@ -438,7 +438,7 @@ public class GraphUtilities {
             for (JsonObject parent : parents) {
                 if (equalsAny(boundaries, jstring(parent, OpProperties.KIND))) {
                     operatorParents.add(parent);
-                    allOperatorChildren.addAll(gcomp.getDownstream(parent));
+                    allOperatorChildren.addAll(getDownstream(parent, graph));
                 }
             }
             visited.addAll(operatorParents);
@@ -457,7 +457,7 @@ public class GraphUtilities {
             for (JsonObject child : children) {
                 if (equalsAny(boundaries, jstring(child, "kind"))) {
                     childrenToRemove.add(child);
-                    allOperatorParents.addAll(gcomp.getUpstream(child));
+                    allOperatorParents.addAll(getUpstream(child, graph));
                 }
             }
             visited.addAll(childrenToRemove);
@@ -513,11 +513,11 @@ public class GraphUtilities {
      * @param addOp Operator to be added
      * @param graph The graph.
      */
-    static void addBefore(JsonObject op, JsonObject addOp, GCompositeDef gcomp){        
-        for(JsonObject parent : gcomp.getUpstream(op)){
+    static void addBefore(JsonObject op, JsonObject addOp, JsonObject graph){        
+        for(JsonObject parent : getUpstream(op, graph)){
             addBetween(parent, op, addOp);
         } 
-        gcomp.getGraph().get("operators").getAsJsonArray().add(addOp);
+        graph.get("operators").getAsJsonArray().add(addOp);
     }
     
     static void addBetween(JsonObject parent, JsonObject child, JsonObject op){

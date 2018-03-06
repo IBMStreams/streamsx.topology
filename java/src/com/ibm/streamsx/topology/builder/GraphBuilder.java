@@ -29,7 +29,6 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.generator.port.PortProperties;
-import com.ibm.streamsx.topology.generator.spl.GCompositeDefImpl;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
@@ -138,7 +137,7 @@ public class GraphBuilder extends BJSONObject {
         for (BOperator operator : operators) {
             JsonObject jop = operator._complete();
             GraphUtilities.visitOnce(visitController,
-                    Collections.singleton(jop), new GCompositeDefImpl(graph),
+                    Collections.singleton(jop), graph,
                 new Consumer<JsonObject>() {
                     private static final long serialVersionUID = 1L;
                     @Override
