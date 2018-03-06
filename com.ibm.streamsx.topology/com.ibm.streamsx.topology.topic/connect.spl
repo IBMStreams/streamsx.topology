@@ -1,0 +1,52 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015,2018
+ */
+
+/**
+ * Topic based publish-subscribe model for streams.
+ * Supports a microservice architecture for IBM Streams
+ * applications where streams are published to topics
+ * and can be subscribed to be independent applications.
+ * Use of interchange schema types allows applications
+ * to be implemented in different langauges, including
+ * SPL, Python, Java & Scala.
+*/
+
+namespace com.ibm.streamsx.topology.topic ;
+
+/**
+ * Directly connect subscriber to publisher.
+ */
+public composite Direct(input In; output Out) {
+  param
+    expression<rstring> $topic ;
+    expression<Sys.CongestionPolicy> $bufferFullPolicy; /* ignored */
+    expression<int32> $bufferCapacity; /* ignored */
+  
+  graph
+    // Use a Filter to dynamically set the subscription
+    // expression based upon the UDP state of this invocation.
+    stream<In> Out = Filter(In) {
+      logic state:
+        int32 rc = setSubscribeSubscription(getTopicSubscription($topic));
+    }
+}
+
+/**
+ * Connect subscriber to publisher using a buffer.
+ */
+public composite Buffered(input In; output Out) {
+  param
+    expression<rstring> $topic ;
+    expression<Sys.CongestionPolicy> $bufferFullPolicy;
+    expression<int32> $bufferCapacity;
+  
+  graph
+    stream<In> Out = Filter(In) {
+      logic state:
+        int32 rc = setSubscribeSubscription(getTopicSubscription($topic));
+      config
+        threadedPort: queue(In, $bufferFullPolicy, $bufferCapacity);
+    }
+}
