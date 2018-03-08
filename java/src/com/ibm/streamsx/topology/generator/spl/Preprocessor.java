@@ -197,7 +197,6 @@ class Preprocessor {
     private void relocateHashAdder(JsonObject hashAdder){
         int numHashAdderCopies = 0;
         int numHashRemoverCopies = 0;
-        String routing = GsonUtilities.jstring(hashAdder, "routing");
 
         // The hashremover object
         // hashAdder -> $Parallel$ -> $Isolate -> hashremover

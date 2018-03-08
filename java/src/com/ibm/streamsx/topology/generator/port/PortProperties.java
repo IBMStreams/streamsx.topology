@@ -9,11 +9,9 @@ public interface PortProperties {
 	String WIDTH = OpProperties.WIDTH;
 	
 	/**
-	 * Boolean top-level parameter indicating whether the port should broadcast tuples
-	 * to all channels in a parallel region, if the port is the start of a parallel
-	 * region.	
+	 * Routing style for a parallel output port.
 	 */
-	String BROADCAST = "broadcast";
+	String ROUTING = "routing";
 	
 	/**
 	 * Top-level boolean parameter indicating that the downstream parallel region

@@ -88,7 +88,16 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
 	     * Tuples will be consistently routed to the same channel based upon 
              * their {@code hashCode()}.
 	     */
-	    HASH_PARTITIONED	    
+	    HASH_PARTITIONED,
+	    
+	    /**
+	     * Tuples are broadcast to all channels.
+	     * For example with a width of four each tuple on the stream results
+	     * in four tuples, one per channel.
+	     * 
+	     * @since 1.9
+	     */
+	    BROADCAST
 	};
 	
     /**

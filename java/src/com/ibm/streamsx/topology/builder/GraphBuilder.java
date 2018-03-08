@@ -175,8 +175,9 @@ public class GraphBuilder extends BJSONObject {
      * Add a marker operator, that is actually a PassThrough in OperatorGraph,
      * so that we can run this graph locally with a single thread.
      */
-    public BOutput parallel(BOutput parallelize, Supplier<Integer> width) {
+    public BOutput parallel(BOutput parallelize, String routing, Supplier<Integer> width) {
         BOutput parallelOutput = addPassThroughMarker(parallelize, BVirtualMarker.PARALLEL, true);
+        parallelOutput._json().addProperty(PortProperties.ROUTING, routing);
         if (width.get() != null)
             parallelOutput._json().addProperty(PortProperties.WIDTH, width.get());
         else {
