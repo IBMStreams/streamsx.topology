@@ -11,6 +11,7 @@ import sysconfig
 import inspect
 import imp
 import glob
+import json
 import os
 import shutil
 import argparse
@@ -85,6 +86,8 @@ def _define_jco_args(cmd_parser):
     jo_group.add_argument('--trace', choices=['error', 'warn', 'info', 'debug', 'trace'], help='Application trace level')
 
     jo_group.add_argument('--submission-parameters', '-p', nargs='+', action=_SubmitParamArg, help="Submission parameters as name=value pairs")
+
+    jo_group.add_argument('--job-config-overlays', help="Path to file containing job configuration overlays JSON. Overrides any job configuration set by the application." , metavar='file')
 
     return jo_group,
 
@@ -171,7 +174,10 @@ def _submit_bundle(cmd_args, app):
 
 def _job_config_args(cmd_args, app):
     cfg = app.cfg
-    if not ctx.ConfigParams.JOB_CONFIG in cfg:
+    if cmd_args.job_config_overlays:
+        with open(cmd_args.job_config_overlays) as fd:
+            ctx.JobConfig.from_overlays(json.load(fd)).add(cfg)
+    elif not ctx.ConfigParams.JOB_CONFIG in cfg:
         ctx.JobConfig().add(cfg)
     jc = cfg[ctx.ConfigParams.JOB_CONFIG]
     if cmd_args.job_name:

@@ -148,7 +148,16 @@ class TestRunnerService(unittest.TestCase):
         args = self._service_args()
         args.append('--bundle')
         args.append(sr['bundlePath'])
+        args.append('--job-config-overlays')
+        args.append(sr['jobConfigPath'])
         srr = self._run(args)
+
+        jn = random_job_name()
+        args.append('--job-name')
+        args.append(jn)
+        srr = self._run(args)
+        self.assertEqual(jn, srr['name'])
+        
         os.remove(sr['bundlePath'])
         os.remove(sr['jobConfigPath'])
 
