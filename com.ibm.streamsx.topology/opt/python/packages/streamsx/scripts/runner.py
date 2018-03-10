@@ -68,6 +68,16 @@ def _parse_args():
     bld_group = cmd_parser.add_argument_group('Build options', 'Application build options')
     bld_group.add_argument('--toolkits', nargs='+', help='SPL toolkit containing the main composite and any other required SPL toolkits.')
 
+    _define_jco_args(cmd_parser)
+
+    cmd_args = cmd_parser.parse_args()
+    return cmd_args
+
+def _define_jco_args(cmd_parser):
+    """
+    Define job configuration arguments.
+    Returns groups defined, currently one.
+    """
     jo_group = cmd_parser.add_argument_group('Job options', 'Job configuration options')
 
     jo_group.add_argument('--job-name', help='Job name')
@@ -76,8 +86,7 @@ def _parse_args():
 
     jo_group.add_argument('--submission-parameters', '-p', nargs='+', action=_SubmitParamArg, help="Submission parameters as name=value pairs")
 
-    cmd_args = cmd_parser.parse_args()
-    return cmd_args
+    return jo_group,
 
 def _get_topology_app(cmd_args):
     mn, fn = cmd_args.topology.rsplit('.', 1)
