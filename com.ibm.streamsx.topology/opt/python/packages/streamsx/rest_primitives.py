@@ -686,7 +686,7 @@ class Operator(_ResourceElement):
         operator
     """
     def get_metrics(self, name=None):
-        """Get metrics for an operator.
+        """Get metrics for this operator.
 
         Args:
             name(str, optional): Only return metrics matching `name`, where `name` can be a regular expression.  If
@@ -718,6 +718,26 @@ class Operator(_ResourceElement):
         .. versionadded:: 1.9
         """
         return PE(self.rest_client.make_request(self.pe), self.rest_client)
+
+    def get_output_ports(self):
+        """Get list of output ports for this operator.
+
+        Returns:
+            list(OperatorOutputPort): Output ports for this operator.
+
+        .. versionadded:: 1.9
+        """
+        return self._get_elements(self.outputPorts, 'outputPorts', OperatorOutputPort)
+
+    def get_input_ports(self):
+        """Get list of input ports for this operator.
+
+        Returns:
+            list(OperatorInputPort): Input ports for this operator.
+
+        .. versionadded:: 1.9
+        """
+        return self._get_elements(self.inputPorts, 'inputPorts', OperatorInputPort)
 
 
 class OperatorConnection(_ResourceElement):
@@ -759,7 +779,41 @@ class OperatorOutputPort(_ResourceElement):
         >>> print (operatoroutputport.resourceType)
         operatorOutputPort
     """
-    pass
+    def get_metrics(self, name=None):
+        """Get metrics for this output port.
+
+        Args:
+            name(str, optional): Only return metrics matching `name`, where `name` can be a regular expression.  If
+                `name` is not supplied, then all metrics for this output port are returned.
+
+        Returns:
+             list(Metric): List of matching metrics.
+
+        .. versionadded:: 1.9
+        """
+        return self._get_elements(self.metrics, 'metrics', Metric, name=name)
+
+class OperatorInputPort(_ResourceElement):
+    """Information about an input port for an operator.
+
+    Attributes:
+        name(str): Name of this output port.
+        resourceType(str): Identifies the REST resource type, which is *operatorInputPort*.
+        indexWithinOperator(int): Index of the input port within the operator.
+
+    .. versionadded:: 1.9
+    """
+    def get_metrics(self, name=None):
+        """Get metrics for this input port.
+
+        Args:
+            name(str, optional): Only return metrics matching `name`, where `name` can be a regular expression.  If
+                `name` is not supplied, then all metrics for this input port are returned.
+
+        Returns:
+             list(Metric): List of matching metrics.
+        """
+        return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
 
 class Metric(_ResourceElement):
@@ -875,6 +929,20 @@ class PE(_ResourceElement):
             filename = _file_name('pe', self.id, '.stdouterr')
  
         return self.rest_client._retrieve_file(self.consoleLog, filename, dir, 'text/plain')
+
+    def get_metrics(self, name=None):
+        """Get metrics for this PE.
+
+        Args:
+            name(str, optional): Only return metrics matching `name`, where `name` can be a regular expression.  If
+                `name` is not supplied, then all metrics for this PE are returned.
+
+        Returns:
+             list(Metric): List of matching metrics.
+
+        .. versionadded:: 1.9
+        """
+        return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
 
 class PEConnection(_ResourceElement):

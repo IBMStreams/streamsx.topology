@@ -34,6 +34,20 @@ def _check_operators(tc, ops):
          tc.assertIsInstance(op.name, str)
          pe = op.get_pe()
          tc.assertIsInstance(pe, PE)
+
+         _check_metrics(tc, op)
+
+         outs = op.get_output_ports()
+         tc.assertIsInstance(outs, list)
+         for out in outs:
+             tc.assertIsInstance(out, OperatorOutputPort)
+             _check_metrics(tc, out)
+
+         ins = op.get_input_ports()
+         tc.assertIsInstance(ins, list)
+         for in_ in ins:
+             tc.assertIsInstance(in_, OperatorInputPort)
+             _check_metrics(tc, in_)
         
          host_op = op.get_host()
          host_pe = pe.get_host()
@@ -54,11 +68,24 @@ def check_job(tc, job):
     job.refresh()
     _fetch_from_job(tc, job)
 
+def _check_metrics(tc, obj):
+    metrics = obj.get_metrics()
+    tc.assertIsInstance(metrics, list)
+    for m in metrics:
+        tc.assertIsInstance(m, Metric)
+        tc.assertIsInstance(m.name, str)
+        tc.assertIsInstance(m.value, int)
+
 def _fetch_from_job(tc, job):
     _check_non_empty_list(tc, job.get_pes(), PE)
     ops = job.get_operators()
     _check_non_empty_list(tc, ops, Operator)
     _check_operators(tc, ops)
+
+    pes = job.get_pes()
+    for pe in pes:
+        tc.assertIsInstance(pe, PE)
+        _check_metrics(tc, pe)
      
     _check_non_empty_list(tc, job.get_views(), View)
     _check_non_empty_list(tc, job.get_operator_connections(), OperatorConnection)
