@@ -797,7 +797,7 @@ class OperatorInputPort(_ResourceElement):
     """Information about an input port for an operator.
 
     Attributes:
-        name(str): Name of this output port.
+        name(str): Name of this input port.
         resourceType(str): Identifies the REST resource type, which is *operatorInputPort*.
         indexWithinOperator(int): Index of the input port within the operator.
 
