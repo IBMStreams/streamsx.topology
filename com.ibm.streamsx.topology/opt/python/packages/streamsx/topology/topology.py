@@ -1004,7 +1004,8 @@ class Stream(_placement._Placement, object):
             else:
                 raise ValueError(schema)
                
-            self._colocate(schema_change, 'publish')
+            if self._placeable:
+                self._colocate(schema_change, 'publish')
             sp = schema_change.publish(topic, schema=schema, name=name)
             sp._op().sl = sl
             return sp
@@ -1014,7 +1015,9 @@ class Stream(_placement._Placement, object):
         op.addInputPort(outputPort=self.oport)
         op._layout_group('Publish', name if name else _name)
         sink = Sink(op)
-        self._colocate(sink, 'publish')
+
+        if self._placeable:
+            self._colocate(sink, 'publish')
         return sink
 
     def autonomous(self):
