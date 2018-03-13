@@ -23,7 +23,7 @@ def slowme(t):
     return True
    
 
-class TestBasicPubSub(unittest.TestCase):
+class TestPubSub(unittest.TestCase):
     """ Test basic pub-sub in SPL
     """
     def setUp(self):
@@ -35,11 +35,15 @@ class TestBasicPubSub(unittest.TestCase):
             params = {'initDelay':10.0, 'iterations':N})
         b.seq = b.output('IterationCount()')
 
+        ps = b.stream
+        if width:
+            ps = ps.parallel(width=width)
+
         p = op.Sink('com.ibm.streamsx.topology.topic::Publish',
-            b.stream,
+            ps,
             params = {'topic': topic},
             name='MSP')
-        return p
+
 
     def _subscribe(self, topo, topic, direct=True, drop=None):
         s = op.Source(topo, "com.ibm.streamsx.topology.topic::Subscribe",
@@ -236,3 +240,11 @@ class TestBasicPubSub(unittest.TestCase):
         self.N = N*M
         self.tester.local_check = self.check_single_sub
         self.tester.test(self.test_ctxtype, self.test_config)
+
+
+class TestPubSubCloud(TestPubSub):
+    """ Test basic pub-sub in SPL
+    """
+    def setUp(self):
+        Tester.setup_streaming_analytics(self)
+
