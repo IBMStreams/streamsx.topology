@@ -48,6 +48,9 @@ def _as_spl_expr(value):
     """ Return value converted to an SPL expression if
     needed other otherwise value.
     """
+    if hasattr(value, 'spl_json'):
+        return value
+      
     if isinstance(value, Enum):
         value = streamsx.spl.op.Expression.expression(value.name)
     return value
