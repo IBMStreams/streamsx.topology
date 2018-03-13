@@ -103,38 +103,13 @@ stateful int32 setTopicNameProperties(rstring exportType, rstring topicName, boo
  * IBM Streams dynamic connections, to all streams
  * published to topics that match the topic filter `topic`
  * and are an exact stream type match to `streamType`.
+ *
  * See [namespace:com.ibm.streamsx.topology.topic] for details.
  * 
- * **Connection mode**
- *
- * The connection mode describes how this subscriber is connected to
- * all matching publishers. The supported modes are:
- *
- * * [Direct] - When `Direct` is used this subscriber is directly connected to publishers, thus the performance of this flow can affect the publishers. For example if the downstream processing of this `Subscribe` cannot keep up with the tuples from all the connected publishers then congestion will occur. This congestion will cause slowdown in the publishers as they block trying to submit tuples to this subscriber. 
- * * [Buffered] - When `Buffered` is used a single buffer queue between this subscriber and all publishers. This can allow spikes in data rates from the producers to be absorbed by this subscriber. The buffer is maintained by this `Subscribe` operator.
- *
- * The `Buffered` mode may be additionally configured by the `bufferFullPolicy` and `bufferCapacity` parameters.
- *
- * * `bufferFullCapacity` - Action to take when a published tuple arrives and the buffer is full.
- *    * `Sys.Wait` - Tuple waits for the space to be available before being inserted into the buffer. When the buffer is full publishers are blocked until space becomes available. This is the default.
- *    * `Sys.DropFirst` - The oldest (first) tuple in the buffer is dropped and the newly arrived tuple is inserted.
- *    * `Sys.DropLast` - Newly arrived tuple (most recent) is dropped.
- * * `bufferCapacity` - The capacity of the buffer in number of tuples, default to 1,000.
- *
- * A common pattern is production critical ingest & prepare microservices
- * that publish streams to two types of subscribers:
- *  * production critical analytics microservices
- *  * exploratory analytics microservices which may be transient and potentially heavyweight.
- *
- * In order for the exportatory microservices to not impact the
- * production critical publishers they are configured to to use
- * connection mode [Buffered] with a drop policy of either `Sys.DropFirst`
- * or `Sys.DropLast`.
- *
  * @output Topic Subscription to `topic`.
  * @param topic Topic filter to subscribe to.
  * @param streamType Type of output stream `Topic`.
- * @param connect Connection mode between subscriber and publishers. Can be set to [Direct] or [Buffered]. The default is `Direct`.
+ * @param connect Connection mode between subscriber and publishers. Can be set to [Direct] or [Buffered]. The default is `Direct`. See [connect.spl|Connection mode].
  *
  * @param bufferFullPolicy Buffer policy when the buffer is full. Ignored when `connect` is set to `Direct`.
  * @param bufferCapacity Capacity of the buffer in number of tuples. Ignored when `connect` is set to `Direct`.
