@@ -112,9 +112,7 @@ public class SPLGenerator {
         // Find composites until there are no more to find.
         while(createComposite(graph)){
 
-        }
-        
-        
+        }     
     }
     
     /**
