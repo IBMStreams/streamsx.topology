@@ -40,7 +40,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.streamsx.topology.TStream.Routing;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
@@ -349,7 +348,7 @@ public class SPLGenerator {
                 parallelInfo.add(OpProperties.WIDTH, outputPort.get(OpProperties.WIDTH));
             
             
-            if(jstring(outputPort, PortProperties.ROUTING).equals(Routing.BROADCAST.name())){
+            if(jstring(outputPort, PortProperties.ROUTING).equals("BROADCAST")){
                 broadcastPorts.add(inputPort.get("name"));
             }
             
