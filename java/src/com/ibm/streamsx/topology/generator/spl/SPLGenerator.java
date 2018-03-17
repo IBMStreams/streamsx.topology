@@ -349,7 +349,7 @@ public class SPLGenerator {
                 parallelInfo.add(OpProperties.WIDTH, outputPort.get(OpProperties.WIDTH));
             
             
-            if(jstring(outputPort, PortProperties.ROUTING).equals(Routing.BROADCAST.toString())){
+            if(jstring(outputPort, PortProperties.ROUTING).equals(Routing.BROADCAST.name())){
                 broadcastPorts.add(inputPort.get("name"));
             }
             
