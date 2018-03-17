@@ -133,7 +133,7 @@ public composite Subscribe(output Topic )
 
          stream<$streamType> Topic = $connect(RawTopic) {
            param
-              topic: $topic;
+              setup: setSubscribeSubscription(getTopicSubscription($topic));
               bufferFullPolicy: $bufferFullPolicy;
               bufferCapacity: $bufferCapacity;
          }
