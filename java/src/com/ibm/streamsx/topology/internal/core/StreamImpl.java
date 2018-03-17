@@ -518,6 +518,9 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             String hashSchema = ObjectSchemas.schemaWithHash(ip._schema());
             toBeParallelized = hashAdder.addOutput(hashSchema);
             isPartitioned = true;
+            
+            // Add dependencies in the hashAdder function
+            JavaFunctional.addDependency(this, hashAdder, TypeDiscoverer.determineStreamType(keyer, null));
         }
                 
         BOutput parallelOutput = builder().parallel(toBeParallelized, routing.name(), width);
