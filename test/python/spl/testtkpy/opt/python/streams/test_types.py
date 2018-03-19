@@ -127,3 +127,19 @@ class MapBlobTest(object):
         if sys.version_info.major == 2:
             v = v.tobytes()
         return str(v, encoding='utf-8'),
+
+
+@spl.map()
+def MapReturnValues(*t):
+    """Simple test of returning values from a map."""
+    if t[0] == 0:
+        return None
+    if t[0] == 1:
+        return 'astuple', 823
+    if t[0] == 2:
+        return 'aspartialtuple', None
+    if t[0] == 3:
+        return ()
+    if t[0] == 4:
+        return {'how': 'asdict', 'val':234}
+    return None

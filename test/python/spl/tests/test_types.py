@@ -16,8 +16,8 @@ import streamsx.spl.op as op
 import streamsx.spl.toolkit
 import streamsx.scripts.extract
 
-class TestBlobs(unittest.TestCase):
-    """ Test blobs in decorated operators.
+class TestTypes(unittest.TestCase):
+    """ Type tests.
     """
     @classmethod
     def setUpClass(cls):
@@ -101,4 +101,27 @@ class TestBlobs(unittest.TestCase):
          
         tester = Tester(topo)
         tester.contents(bt.stream, data)
+        tester.test(self.test_ctxtype, self.test_config)
+
+
+    def test_map_return(self):
+        """Simple test of returning values from a map."""
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        s = topo.source(itertools.range(5))
+        s = s.map(lambda v : (v,), schema='tuple<int32 val>')
+
+        values = op.Map(
+            "com.ibm.streamsx.topology.pytest.pytypes::MapReturnValues",
+            s, 'tuple<rstring how, int32 val>')
+
+        expected = [
+            {'how': 'astuple', 'val':823},
+            {'how': 'aspartialtuple', 'val':2},
+            {'how': '', 'val':3},
+            {'how': 'asdict', 'val':234},
+            ]
+
+        tester = Tester(topo)
+        tester.contents(values.stream, expected)
         tester.test(self.test_ctxtype, self.test_config)
