@@ -275,7 +275,9 @@ extern "C" {
   static __splpy_p_s_fp __spl_fp_PyTuple_New;
   static __splpy_p_p_fp __spl_fp_PyIter_Next;
   static __splpy_v_p_fp __spl_fp_PyDict_New;
+  static __splpy_s_p_fp __spl_fp_PyDict_Size;
   static __splpy_i_ppp_fp __spl_fp_PyDict_SetItem;
+  static __splpy_p_pp_fp __spl_fp_PyDict_GetItem;
   static __splpy_dn_fp __spl_fp_PyDict_Next;
   static __splpy_p_s_fp __spl_fp_PyList_New;
   static __splpy_s_p_fp __spl_fp_PyList_Size;
@@ -293,8 +295,14 @@ extern "C" {
   static PyObject * __spl_fi_PyDict_New() {
      return __spl_fp_PyDict_New();
   }
+  static Py_ssize_t __spl_fi_PyDict_Size(PyObject *d) {
+     return __spl_fp_PyDict_Size(d);
+  }
   static int __spl_fi_PyDict_SetItem(PyObject *d, PyObject *k, PyObject *v) {
      return __spl_fp_PyDict_SetItem(d, k, v);
+  }
+  static PyObject * __spl_fi_PyDict_GetItem(PyObject *d, PyObject *k) {
+     return __spl_fp_PyDict_GetItem(d, k);
   }
   static int __spl_fi_PyDict_Next(PyObject *d, Py_ssize_t *o,PyObject **k, PyObject **v) {
      return __spl_fp_PyDict_Next(d, o, k, v);
@@ -321,7 +329,9 @@ extern "C" {
 #pragma weak PyTuple_New = __spl_fi_PyTuple_New
 #pragma weak PyIter_Next = __spl_fi_PyIter_Next
 #pragma weak PyDict_New = __spl_fi_PyDict_New
+#pragma weak PyDict_Size = __spl_fi_PyDict_Size
 #pragma weak PyDict_SetItem = __spl_fi_PyDict_SetItem
+#pragma weak PyDict_GetItem = __spl_fi_PyDict_GetItem
 #pragma weak PyDict_Next = __spl_fi_PyDict_Next
 #pragma weak PyList_New = __spl_fi_PyList_New
 #pragma weak PyList_Size = __spl_fi_PyList_Size
@@ -518,7 +528,9 @@ class SplpySym {
      __SPLFIX(PyTuple_New, __splpy_p_s_fp);
      __SPLFIX(PyIter_Next, __splpy_p_p_fp);
      __SPLFIX(PyDict_New, __splpy_v_p_fp);
+     __SPLFIX(PyDict_Size, __splpy_s_p_fp);
      __SPLFIX(PyDict_SetItem, __splpy_i_ppp_fp);
+     __SPLFIX(PyDict_GetItem, __splpy_p_pp_fp);
      __SPLFIX(PyDict_Next, __splpy_dn_fp);
      __SPLFIX(PyList_New, __splpy_p_s_fp);
      __SPLFIX(PyList_Size, __splpy_s_p_fp);
