@@ -138,5 +138,44 @@ public class CompGeneration extends TestTopology {
         assertTrue(validCount.valid());
     }
     
+    @Test
+    public void multipleInputPortsDifferentRoutingSchemesMultipleOutputs() throws Exception {
+        assumeTrue(SC_OK);
+        
+        Topology topo = new Topology();
+        
+        TStream<String> nums = topo.strings("1");
+        TStream<String> nums2 = topo.strings("2");
+        TStream<String> nums3 = topo.strings("3");
+        
+        nums = nums.parallel(() -> 3, tup -> 1);
+        nums2 = nums2.parallel(() -> 3, Routing.BROADCAST);
+        nums3 = nums3.parallel(3);
+        
+        Set<TStream<String>> streams = new HashSet<>();
+        streams.add(nums2);
+        streams.add(nums3);
+        nums = nums.union(streams);
+        
+        TStream<String> nums_1_2 = nums.filter(tup -> tup.equals("1") || tup.equals("2"));
+        TStream<String> nums_3 = nums.filter(tup -> tup.equals("3"));
+        
+        nums_1_2 = nums_1_2.endParallel();
+        nums_3 = nums_3.endParallel();
+        
+        
+        Tester tester = topo.getTester();
+        Condition<List<String>> validCount_1_2 = tester.stringContentsUnordered(nums_1_2,
+                "1", "2", "2", "2");
+        Condition<List<String>> validCount_3 = tester.stringContentsUnordered(nums_3, 
+                "3");
+        
+
+        complete(tester, allConditions(validCount_1_2, validCount_3), 10, TimeUnit.SECONDS);
+
+        assertTrue(validCount_1_2.valid());
+        assertTrue(validCount_3.valid());
+    }
+    
     
 }
