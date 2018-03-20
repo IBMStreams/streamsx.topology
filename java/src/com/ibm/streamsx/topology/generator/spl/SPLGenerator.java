@@ -78,6 +78,8 @@ public class SPLGenerator {
         stvHelper = new SubmissionTimeValue(graph);
         new Preprocessor(this, graph).preprocess();
         
+        System.out.println(graph);
+        System.out.println();
         separateIntoComposites(graph);
         
         //Make Main composite
@@ -206,7 +208,7 @@ public class SPLGenerator {
                         // Replace the connection with the composite input port name if the 
                         // port has a connection to the start operator. 
                         if(connections.get(j).getAsString().equals(outputPortName)){
-                            connections.set(j, GsonUtilities.array(opDefinition, "inputNames").get(j));
+                            connections.set(j, GsonUtilities.array(opDefinition, "inputNames").get(i));
                         }
                     }
                 }        
