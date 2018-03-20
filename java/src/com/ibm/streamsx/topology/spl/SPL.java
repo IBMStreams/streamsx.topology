@@ -105,7 +105,7 @@ public class SPL {
      * Use of this is required to construct an SPL operator parameter
      * null value for an optional type.
      * @return the wrapper object
-     * @since 4.3
+     * @since 1.10
      */
     public static Object createNullValue() {
         JsonObject jo = new JsonObject();
