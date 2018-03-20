@@ -51,7 +51,7 @@ class TestRunnerService(unittest.TestCase):
 
     def _run(self, args, cancel=True):
         with unittest.mock.patch('sys.argv', args):
-             sr = streamsx.scripts.runner.main()
+             sr = streamsx.scripts.runner.submit()
              job_id = None
              if 'id' in sr:
                  job_id = sr['id']
@@ -59,6 +59,7 @@ class TestRunnerService(unittest.TestCase):
                  job_id = sr['jobId']
           
              self.assertIsNotNone(job_id)
+             self.assertEqual(0, sr['return_code'])
              if cancel:
                  if hasattr(sr, 'job'):
                      sr.job.cancel()
@@ -129,7 +130,7 @@ class TestRunnerService(unittest.TestCase):
     def _create_bundle(self):
         args = self._create_bundle_args()
         with unittest.mock.patch('sys.argv', args):
-             sr = streamsx.scripts.runner.main()
+             sr = streamsx.scripts.runner.submit()
         self.assertIn('bundlePath', sr)
         self.assertIn('jobConfigPath', sr)
         self.assertTrue(os.path.exists(sr['bundlePath']))

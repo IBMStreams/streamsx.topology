@@ -38,8 +38,12 @@ class _SubmitParamArg(argparse.Action):
             sp[name] = value
         
 
-def main():
-    cmd_args = _parse_args()
+
+def submit(args=None):
+    """ Performs the submit according to arguments and
+    returns an object describing the result.
+    """
+    cmd_args = _parse_args(args)
     if cmd_args.topology is not None:
         app = _get_topology_app(cmd_args)
     elif cmd_args.main_composite is not None:
@@ -48,11 +52,19 @@ def main():
         app = _get_bundle(cmd_args)
     _job_config_args(cmd_args, app)
     sr = _submit(cmd_args, app)
+    if 'return_code' not in sr:
+        sr['return_code'] = 1;
     print(sr)
     return sr
 
+def main(args=None):
+    """ Performs the submit according to arguments and
+    returns 0 for success, non-zero for failure.
+    """
+    sr = submit(args)
+    return int(sr['return_code'])
 
-def _parse_args():
+def _parse_args(args):
     """ Argument parsing
     """
     cmd_parser = argparse.ArgumentParser(description='Execute a Streams application using a Streaming Analytics service.')
@@ -71,7 +83,7 @@ def _parse_args():
 
     _define_jco_args(cmd_parser)
 
-    cmd_args = cmd_parser.parse_args()
+    cmd_args = cmd_parser.parse_args(args)
     return cmd_args
 
 def _define_jco_args(cmd_parser):
@@ -190,7 +202,4 @@ def _job_config_args(cmd_args, app):
         jc.submission_parameters.update(cmd_args.submission_parameters)
     
 if __name__ == '__main__':
-    sr = main()
-    if 'return_code' in sr:
-        sys.exit(int(sr['return_code']))
-    sys.exit(1)
+    sys.exit(main())
