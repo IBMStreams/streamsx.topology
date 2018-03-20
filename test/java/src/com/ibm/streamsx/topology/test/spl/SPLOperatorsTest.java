@@ -25,6 +25,7 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.Type.MetaType;
+import com.ibm.streams.operator.types.RString;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -289,7 +290,7 @@ public class SPLOperatorsTest extends TestTopology {
         
         assertEquals(r, tuple.getString("r"));
         assertEquals(orv, tuple.getString("orv"));
-        assertEquals(orv, tuple.getObject("orv"));
+        assertEquals(new RString(orv), tuple.getObject("orv"));
         assertEquals("null", tuple.getString("ornv"));
         assertEquals(null, tuple.getObject("ornv"));
         assertEquals(i32, tuple.getInt("i32"));

@@ -142,8 +142,7 @@
 
   <target name="optional_types.check">
     <!-- This test assumes the fixpack ("F") is numeric, or not specified. -->
-    <!-- TODO: modify version number to match optional data types support -->
-    <property name="required.product.version" value="4.2.5"/>
+    <property name="required.product.version" value="4.3"/>
     <loadproperties srcFile="${streams.install}/.product" prefix="product">
       <filterchain>
         <linecontains>

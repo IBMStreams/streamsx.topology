@@ -40,4 +40,4 @@ def tester_supported():
     return not v.startswith('4.0.') and not v.startswith('4.1.')
 
 def optional_type_supported():
-    return has_min_version('4.2.5');
+    return has_min_version('4.3');

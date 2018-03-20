@@ -246,6 +246,6 @@ def null():
     Returns:
         Expression: Expression representing an SPL null value.
 
-    .. versionadded:: TODO support for optional data types added.
+    .. versionadded:: 4.3
     """
     return _null
