@@ -3,16 +3,17 @@
 # Copyright IBM Corp. 2018
 from __future__ import print_function
 import unittest
+import os
 import sys
 import time
-import itertools
 
 from streamsx.topology.schema import StreamSchema
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 import streamsx.topology.context
 import streamsx.spl.op as op
-
+import streamsx.spl.toolkit
+ 
 def random_topic(prefix='RT_'):
     return prefix + ''.join(random.choice('ABCDEFGIHIJLK') for i in range(16))
 SCHEMA = StreamSchema('tuple<uint64 seq>')
@@ -22,6 +23,8 @@ def slowme(t):
         time.sleep(0.2)
     return True
    
+def check_lt_87(t):
+    return t['seq'] < 87
 
 class TestPubSub(unittest.TestCase):
     """ Test basic pub-sub in SPL
@@ -29,7 +32,7 @@ class TestPubSub(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
 
-    def _publish(self, topo, N, topic, width=None):
+    def _publish(self, topo, N, topic, width=None, allow_filter=False):
         b = op.Source(topo, "spl.utility::Beacon",
             SCHEMA,
             params = {'initDelay':10.0, 'iterations':N})
@@ -43,13 +46,19 @@ class TestPubSub(unittest.TestCase):
             ps,
             params = {'topic': topic},
             name='MSP')
+        if allow_filter:
+           p.params['allowFilter'] = True
 
 
-    def _subscribe(self, topo, topic, direct=True, drop=None):
-        s = op.Source(topo, "com.ibm.streamsx.topology.topic::Subscribe",
+    def _subscribe(self, topo, topic, direct=True, drop=None, filtered=False, extra=None):
+        s = op.Source(topo,
+               "com.ibm.streamsx.topology.topic::FilteredSubscribe" if filtered else "com.ibm.streamsx.topology.topic::Subscribe",
             SCHEMA,
             params = {'topic':topic, 'streamType':SCHEMA},
             name='MSS')
+
+        if extra:
+            s.params.update(extra)
 
         if not direct:
             s.params['connect'] = op.Expression.expression('com.ibm.streamsx.topology.topic::Buffered')
@@ -240,6 +249,60 @@ class TestPubSub(unittest.TestCase):
         self.N = N*M
         self.tester.local_check = self.check_single_sub
         self.tester.test(self.test_ctxtype, self.test_config)
+
+    def test_allow_filter_subscribe(self):
+        N = 99
+
+        topic = random_topic()
+        topo = Topology()
+
+        # Non-Filter Subscriber
+        s = self._subscribe(topo, topic)
+
+        # Publisher
+        self._publish(topo, N, topic, allow_filter=True)
+
+        self.tester = Tester(topo)
+        self.tester.run_for(15)
+        self.N = N
+        self.tester.tuple_count(s, N)
+        self.tester.local_check = self.check_single_sub
+        self.tester.test(self.test_ctxtype, self.test_config)
+
+
+    def test_allow_filter_filtered_subscribe(self):
+        N = 201
+        F = 87
+        pd = os.path.dirname(os.path.dirname(__file__))
+        ttk = os.path.join(pd, 'testtk')
+
+        for af,d in [(False,False), (False,True), (True,False), (True,True)]:
+
+            #af = c[0]
+            #d = c[1]
+
+            topic = random_topic()
+            topo = Topology()
+
+            streamsx.spl.toolkit.add_toolkit(topo, ttk)
+
+            extra = {}
+            extra['remoteFilter'] = 'seq < 87'
+            extra['localFilterFunction'] = op.Expression.expression('testspl::affs')
+            s = self._subscribe(topo, topic, direct=d, filtered=True, extra=extra)
+
+            sf = s.filter(check_lt_87)
+
+            # Publisher
+            self._publish(topo, N, topic, allow_filter=af)
+
+            self.tester = Tester(topo)
+            self.tester.run_for(15)
+            self.N = F
+            self.tester.tuple_count(s, F)
+            self.tester.tuple_check(s, check_lt_87)
+            #self.tester.local_check = self.check_single_sub
+            self.tester.test(self.test_ctxtype, self.test_config)
 
 
 class TestPubSubCloud(TestPubSub):

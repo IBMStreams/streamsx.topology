@@ -69,7 +69,8 @@ namespace com.ibm.streamsx.topology.topic ;
  */
 public composite Direct(input In; output Out) {
   param
-    expression<rstring> $topic ;
+    expression<int32> $setup;
+    expression<int32> $setup2 : 0;
     expression<Sys.CongestionPolicy> $bufferFullPolicy; /* ignored */
     expression<int32> $bufferCapacity; /* ignored */
   
@@ -78,7 +79,10 @@ public composite Direct(input In; output Out) {
     // expression based upon the UDP state of this invocation.
     stream<In> Out = Filter(In) {
       logic state:
-        int32 rc = setSubscribeSubscription(getTopicSubscription($topic));
+        {
+          int32 rc = $setup;
+          int32 rc2 = $setup2;
+        }
     }
 }
 
@@ -93,14 +97,18 @@ public composite Direct(input In; output Out) {
  */
 public composite Buffered(input In; output Out) {
   param
-    expression<rstring> $topic ;
+    expression<int32> $setup;
+    expression<int32> $setup2 : 0;
     expression<Sys.CongestionPolicy> $bufferFullPolicy;
     expression<int32> $bufferCapacity;
   
   graph
     stream<In> Out = Filter(In) {
       logic state:
-        int32 rc = setSubscribeSubscription(getTopicSubscription($topic));
+        {
+          int32 rc = $setup;
+          int32 rc2 = $setup2;
+        }
       config
         threadedPort: queue(In, $bufferFullPolicy, $bufferCapacity);
     }
