@@ -294,6 +294,9 @@ public class SPLGenerator {
             outputNames.add(new JsonPrimitive("__Out" + i));
         compositeDefinition.add("outputNames", outputNames);
         
+        // Tag composite def so it can be identified as created during comp generation
+        compositeDefinition.add("generated", new JsonPrimitive(true));
+        
         return compositeDefinition;
     }
     
@@ -578,7 +581,7 @@ public class SPLGenerator {
         compBuilder.append("composite ");
 
         compBuilder.append(kind);
-        if (kind.startsWith("Composite")) {
+        if (jboolean(graph, "generated")) {
             JsonArray inputNames = array(graph, "inputNames");
             JsonArray outputNames = array(graph, "outputNames");
             compBuilder.append("(");
