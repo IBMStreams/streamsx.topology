@@ -637,7 +637,9 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         		"com.ibm.streamsx.topology.pytest.pysource.opttype::SpecificValues",
         		null, Type.Factory.getStreamSchema(PYTHON_OPTIONAL_TYPES_SCHEMA_STRING));
         
-        StreamSchema sparseSchema = Type.Factory.getStreamSchema("tuple<optional<int32> a, optional<int32> b, optional<int32> c, optional<int32> d, optional<int32> e>");
+        StreamSchema sparseSchema = Type.Factory.getStreamSchema("tuple<optional<int32> a, optional<int32> b, optional<int32> c, optional<int32> d, optional<int32> e, optional<int32> f, int32 g, int32 h, optional<int32> i>");
+
+        StreamSchema sparseSchemaMap = Type.Factory.getStreamSchema("tuple<optional<int32> a, optional<int32> b, optional<int32> c, optional<int32> d, optional<int32> e, int32 f, int32 g, optional<int32> h, optional<int32> i>");
               
         Tester tester = topology.getTester();
         Condition<Long> expectedCount = tester.tupleCount(pysrc, 1);
@@ -647,7 +649,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         		"com.ibm.streamsx.topology.pytest.pysource.opttype::SparseTuple",
         		null, sparseSchema);
         SPLStream pysparsemap = SPL.invokeOperator("com.ibm.streamsx.topology.pytest.pymap.opttype::SparseTupleMap",
-        		pysparse, sparseSchema.extend("optional<int32>", "f"), null);
+        		pysparse, sparseSchemaMap.extend("optional<int32>", "j"), null);
 
         Condition<Long> expectedCountSparse = tester.tupleCount(pysparse, 1);
         Condition<List<Tuple>> sparseTupleOut = tester.tupleContents(pysparse);
@@ -687,7 +689,11 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(null, st.getObject("b")); // default as None in tuple
         assertEquals(23, st.getObject("c")); // set by op
         assertEquals(-46, st.getObject("d")); // set by op
-        assertEquals(null, st.getObject("e")); // default as no value (short tuple)
+        assertEquals(null, st.getObject("e")); // default as None in tuple
+        assertEquals(56, st.getObject("f")); // set by op
+        assertEquals(67, st.getObject("g")); // set by op
+        assertEquals(78, st.getObject("h")); // set by op
+        assertEquals(null, st.getObject("i")); // default as no value (short tuple)
         
         // Sparse tuple handling - map
         assertEquals(1, sparseTupleMapOut.getResult().size());
@@ -697,7 +703,11 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(23, stm.getObject("c")); // match input as None in tuple
         assertEquals(-46, stm.getObject("d")); // default to matching input
         assertEquals(null, stm.getObject("e")); // default to matching input
-        assertEquals(null, stm.getObject("f")); // default as no value (short tuple)
+        assertEquals(0, stm.getObject("f")); // no match: opt to non-opt
+        assertEquals(67, stm.getObject("g")); // match non-opt to non-opt
+        assertEquals(78, stm.getObject("h")); // match non-opt to opt
+        assertEquals(null, stm.getObject("i")); // default to matching input
+        assertEquals(null, stm.getObject("j")); // default as no value (short tuple)
     }
 
     /**

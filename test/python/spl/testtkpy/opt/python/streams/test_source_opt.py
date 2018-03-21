@@ -13,7 +13,6 @@ from streamsx.spl import spl
 def spl_namespace():
     return "com.ibm.streamsx.topology.pytest.pysource.opttype"
 
-#
 # Returns a value matching the test schema PYTHON_OPTIONAL_TYPES_SCHEMA
 @spl.source()
 class SpecificValues:
@@ -34,7 +33,7 @@ class SparseTuple:
 
     def __iter__(self):
         rv = (
-           37, None, 23, -46
+           37, None, 23, -46, None, 56, 67, 78
            )
         return itertools.repeat(rv, 1)
 

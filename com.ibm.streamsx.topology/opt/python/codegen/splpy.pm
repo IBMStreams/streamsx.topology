@@ -395,8 +395,7 @@ sub splpyInit {
 # Return true if optional data types are supported, else false.
 #
 sub hasOptionalTypesSupport {
-    # TODO: modify version number to match optional data types support
-    return hasMinimumProductVersion("4.2.5");
+    return hasMinimumProductVersion("4.3");
 }
 
 #

@@ -6,8 +6,7 @@
     </description>
     <version>0.9.9</version>
     <!-- Require optional data types support -->
-    <!-- TODO: modify version number to match optional data types support -->
-    <requiredProductVersion>4.2.5.0</requiredProductVersion>
+    <requiredProductVersion>4.3</requiredProductVersion>
   </identity>
   <dependencies/>
 </toolkitInfoModel>

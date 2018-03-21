@@ -50,10 +50,16 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple <%=$
 <%
     if (defined $iport) {
     
-    # Only copy attributes across if they match on name and type
+    # Only copy attributes across if they match on name and type,
+    # or on name and input type T and output type optional<T>
     my $matchInputAttr = $iport->getAttributeByName($name);
     if (defined $matchInputAttr) {
-       if ($matchInputAttr->getSPLType() eq $attribute->getSPLType()) {
+        my $inputType = $matchInputAttr->getSPLType();
+        if (($inputType eq $atype) ||
+            (hasOptionalTypesSupport() &&
+             SPL::CodeGen::Type::isOptional($atype) &&
+             ($inputType eq
+              SPL::CodeGen::Type::getUnderlyingType($atype)))) {
 %>
     if (!setAttr) {
       // value from the input attribute
