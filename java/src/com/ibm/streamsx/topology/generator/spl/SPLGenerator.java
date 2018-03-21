@@ -78,8 +78,6 @@ public class SPLGenerator {
         stvHelper = new SubmissionTimeValue(graph);
         new Preprocessor(this, graph).preprocess();
         
-        System.out.println(graph);
-        System.out.println();
         separateIntoComposites(graph);
         
         //Make Main composite
