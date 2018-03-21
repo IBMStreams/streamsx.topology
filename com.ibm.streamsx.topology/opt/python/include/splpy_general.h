@@ -242,12 +242,27 @@ class SplpyGeneral {
      * in the PE console.
     */
     static SPL::SPLRuntimeException pythonException(std::string const & location) {
-
+      SPL::rstring msg("Unknown Python error");
+      _setupException(msg);
+      
+      SPL::SPLRuntimeOperatorException exc(location, msg);
+      
+      return exc;
+  }
+    static SPL::SPLRuntimeException dataConversionException(std::string const & location) {
+      SPLAPPTRC(L_ERROR, "Python conversion error with SPL " << location, "python");
+      SPL::rstring msg("Data conversion error");
+      _setupException(msg);
+      
+      SPL::SPLRuntimeTypeMismatchException exc(location, msg);
+      
+      return exc;
+  }
+    static void _setupException(SPL::rstring & msg) {
       PyObject *pyType, *pyValue, *pyTraceback;
       PyErr_Fetch(&pyType, &pyValue, &pyTraceback);
       PyErr_NormalizeException(&pyType, &pyValue, &pyTraceback);
       
-      SPL::rstring msg("Unknown Python error");
       if (pyValue != NULL) {
           pyRStringFromPyObject(msg, pyValue);
       }
@@ -256,10 +271,6 @@ class SplpyGeneral {
       // PeErr_Restore steals the references
       PyErr_Restore(pyType, pyValue, pyTraceback);
       SplpyGeneral::flush_PyErr_Print();
-
-      SPL::SPLRuntimeOperatorException exc(location, msg);
-      
-      return exc;
     }
 
     /**
@@ -378,8 +389,7 @@ class SplpyGeneral {
       }
 
       if (size != 0 && bytes == NULL) {
-         SPLAPPTRC(L_ERROR, "Python can't convert to SPL blob!", "python");
-         throw SplpyGeneral::pythonException("blob");
+         throw SplpyGeneral::dataConversionException("blob");
       }
 
       // This takes a copy of the data.
@@ -394,8 +404,7 @@ class SplpyGeneral {
     inline void pySplValueUsingPyObject(SPL::blob & splv, PyObject * value) {
       char * bytes = PyBytes_AsString(value);          
       if (bytes == NULL) {
-         SPLAPPTRC(L_ERROR, "Python can't convert to SPL blob!", "python");
-         throw SplpyGeneral::pythonException("blob");
+         throw SplpyGeneral::dataConversionException("blob");
       }
       long int size = PyBytes_GET_SIZE(value);
       splv.useExternalData((unsigned char *)bytes, size);
@@ -406,8 +415,7 @@ class SplpyGeneral {
     */
     inline void pySplValueFromPyObject(SPL::rstring & splv, PyObject * value) {
       if (pyRStringFromPyObject(splv, value) != 0) {
-         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
-         throw SplpyGeneral::pythonException("rstring");
+         throw SplpyGeneral::dataConversionException("rstring (UTF-8)");
       }
     }
 
@@ -553,7 +561,7 @@ class SplpyGeneral {
 
         PyObject * iterator = PyObject_GetIter(value);
         if (iterator == 0) {
-            throw SplpyGeneral::pythonException("iter(set)");
+            throw SplpyGeneral::dataConversionException("set<...>");
         }
         PyObject *item;
         while ((item = PyIter_Next(iterator))) {
