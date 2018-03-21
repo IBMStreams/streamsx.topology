@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
@@ -221,15 +222,15 @@ class PEPlacement {
         
         // Determine if the region has already been tagged, which would happen if there are
         // multiple starts to the low latency region.
-        Boolean[] isAlreadyTagged = {false};
+        AtomicBoolean isAlreadyTagged = new AtomicBoolean(false);
         llStartChildren.forEach(oper -> {
             JsonObject placement = object(oper, CONFIG, PLACEMENT);
             if(placement!=null && jstring(placement, PLACEMENT_LOW_LATENCY_REGION_ID) != null)
-                isAlreadyTagged[0]=true;
+                isAlreadyTagged.set(true);;
                 
         });
         
-        if(isAlreadyTagged[0])
+        if(isAlreadyTagged.get())
             return;
         
         Set<BVirtualMarker> boundaries = EnumSet.of(LOW_LATENCY, END_LOW_LATENCY);
