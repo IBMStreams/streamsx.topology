@@ -110,7 +110,7 @@ public class SPLGenerator {
         
 
         // Find composites until there are no more to find.
-        while(createComposite(graph)){
+        while(findAndCreateMostNestedComposite(graph)){
 
         }     
     }
@@ -118,10 +118,36 @@ public class SPLGenerator {
     /**
      * Traverses the graph. If it finds a composite region, it creates its definition, invocation, and
      * inserts the invocation into the graph.
+     * 
+     * <br><br>
+     * 
+     * The composite generation algorithm works as follows, given that:
+     * <ol>
+     * <li>the graph is a directed graph with cycles</li>
+     * <li>composites are non-overlapping, contiguous subsections of graph</li>
+     * <li>composites can contain other composites</li>
+     * <li>an "innermost" composite is a composite that does not contain another composite</li>
+     * <li>there can be different "types" of composites, e.g., parallel composites or low latency composites</li>
+     * </ol>
+     * 
+     * 
+     * <pre><code>
+     *  for each type of composite:
+     *      check to see if an innermost composite of that type exists
+     *      if it does exist:
+     *          find the operators of that composite
+     *          add them to a JsonObject representing the definition of the composite
+     *          remove them operators from the graph, and replace them with a single invocation of the composite
+     *      if it does not exist:
+     *          try again with a different composite type
+     * </code></pre>
+     * 
+     * This algorithm is repeated until there are no more composites to generate.
+     * 
      * @param graph
      * @return true if a composite was found. False otherwise.
      */
-    private boolean createComposite(JsonObject graph){
+    private boolean findAndCreateMostNestedComposite(JsonObject graph){
         // Try to find a composite of any type: low latency, parallel, etc.
         for(int i = 0; i < compStarts.size(); i++){
             List<List<JsonObject> > startsEndsAndOperators = findCompositeOpsOfAType(graph, compStarts.get(i), compEnds.get(i), compOperatorStarts.get(i));
