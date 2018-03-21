@@ -610,6 +610,7 @@ class Job(_ResourceElement):
 
     def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this job.
+
         Args:
             name(str): Only return operators matching `name`, where `name` can be a regular expression.  If
                 `name` is not supplied, then all operators for this job are returned.

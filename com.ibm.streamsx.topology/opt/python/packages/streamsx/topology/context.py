@@ -661,6 +661,7 @@ class ConfigParams(object):
     SERVICE_DEFINITION = 'topology.service.definition'
     """Streaming Analytics service definition.
     Identifies the Streaming Analytics service to use. The definition can be one of
+
         * The `service credentials` copied from the `Service credentials` page of the service console (not the Streams console). Credentials are provided in JSON format. They contain such as the API key and secret, as well as connection information for the service. 
         * A JSON object (`dict`) of the form: ``{ "type": "streaming-analytics", "name": "service name", "credentials": {...} }`` with the `service credentials` as the value of the ``credentials`` key.
 
