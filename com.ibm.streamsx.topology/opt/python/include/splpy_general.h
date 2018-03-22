@@ -441,43 +441,74 @@ class SplpyGeneral {
 
     // signed integers
     inline void pySplValueFromPyObject(SPL::int8 & splv, PyObject * value) {
-       splv = (SPL::int8) PyLong_AsLong(value);
+       long v = PyLong_AsLong(value);
+       if (v == -1L && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("int8");
+       splv = (SPL::int8) v;
     }
     inline void pySplValueFromPyObject(SPL::int16 & splv, PyObject * value) {
-       splv = (SPL::int16) PyLong_AsLong(value);
+       long v = PyLong_AsLong(value);
+       if (v == -1L && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("int16");
+       splv = (SPL::int16) v;
     }
     inline void pySplValueFromPyObject(SPL::int32 & splv, PyObject * value) {
-       splv = (SPL::int32) PyLong_AsLong(value);
+       long v = PyLong_AsLong(value);
+       if (v == -1L && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("int32");
+       splv = (SPL::int32) v;
     }
     inline void pySplValueFromPyObject(SPL::int64 & splv, PyObject * value) {
-       splv = (SPL::int64) PyLong_AsLong(value);
+       long v = PyLong_AsLong(value);
+       if (v == -1L && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("int64");
+       splv = (SPL::int64) v;
     }
 
     // unsigned integers
     inline void pySplValueFromPyObject(SPL::uint8 & splv, PyObject * value) {
-       splv = (SPL::uint8) PyLong_AsUnsignedLong(value);
+       unsigned long v = PyLong_AsUnsignedLong(value);
+       if (v == ((unsigned long) -1) && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("uint16");
+       splv = (SPL::uint8) v;
     }
     inline void pySplValueFromPyObject(SPL::uint16 & splv, PyObject * value) {
-       splv = (SPL::uint16) PyLong_AsUnsignedLong(value);
+       unsigned long v = PyLong_AsUnsignedLong(value);
+       if (v == ((unsigned long) -1) && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("uint16");
+       splv = (SPL::uint16) v;
     }
     inline void pySplValueFromPyObject(SPL::uint32 & splv, PyObject * value) {
-       splv = (SPL::uint32) PyLong_AsUnsignedLong(value);
+       unsigned long v = PyLong_AsUnsignedLong(value);
+       if (v == ((unsigned long) -1) && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("uint32");
+       splv = (SPL::uint32) v;
     }
     inline void pySplValueFromPyObject(SPL::uint64 & splv, PyObject * value) {
-       splv = (SPL::uint64) PyLong_AsUnsignedLong(value);
+       unsigned long v = PyLong_AsUnsignedLong(value);
+       if (v == ((unsigned long) -1) && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("uint64");
+       splv = (SPL::uint64) v;
     }
 
     // boolean
     inline void pySplValueFromPyObject(SPL::boolean & splv, PyObject * value) {
-       splv = PyObject_IsTrue(value);
+       int v = PyObject_IsTrue(value);
+       if (v == -1)
+           throw SplpyGeneral::dataConversionException("boolean");
+       splv = (SPL::boolean) v;
     }
  
     // floats
     inline void pySplValueFromPyObject(SPL::float32 & splv, PyObject * value) {
        splv = (SPL::float32) PyFloat_AsDouble(value);
+       if (splv == -1.0 && (PyErr_Occurred() != NULL))
+           throw SplpyGeneral::dataConversionException("float32");
     }
     inline void pySplValueFromPyObject(SPL::float64 & splv, PyObject * value) {
        splv = PyFloat_AsDouble(value);
+       if (splv == -1.0 && (PyErr_Occurred() != NULL))
+           throw SplpyGeneral::dataConversionException("float64");
     }
 
     /**
