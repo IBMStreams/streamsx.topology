@@ -341,7 +341,7 @@ class _SPLInvocation(object):
         return _op
 
     def _addOperatorFunction(self, function):
-        if (function == None):
+        if (function is None):
             return None
         if not hasattr(function, "__call__"):
             raise "argument to _addOperatorFunction is not callable"

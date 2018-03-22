@@ -223,8 +223,8 @@ class _JSONInJSONOut(_FunctionalCallable):
 ##
 ## The style is one of:
 ##
-## pickle - Object is a Python byte string representing a picked object.
-##          The object is depicked/pickled before being passed to/return from
+## pickle - Object is a Python byte string representing a pickled object.
+##          The object is depickled/pickled before being passed to/return from
 ##          the application callable.
 ##          he returned function must not maintain a reference
 ##          to the passed in value as it will be a memory view

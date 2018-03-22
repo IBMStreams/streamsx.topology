@@ -11,7 +11,7 @@ Invoking SPL Operators
 IBM Streams supports *Stream Processing Language* (SPL),
 a domain specific language for streaming analytics.
 SPL creates an application by building a graph of operator
-invocations. These operators are declared in a SPL toolkit.
+invocations. These operators are declared in an SPL toolkit.
 
 SPL streams have a structured schema, such as
 ``tuple<rstring id, timestamp ts, float64 value>`` for
@@ -42,22 +42,20 @@ instance of:
  * :py:class:`Map` - Invocation of an SPL map operator with one input port and one output port.
  * :py:class:`Sink` - Invocation of an SPL sink operator with one output port.
 
-In SPL operator invocation support a number of clauses of which these are
-supported from Python.
+In SPL, operator invocation supports a number of clauses that are
+supported in Python.
 
-Param clause
-------------
-Operator parameterization is through operator parameters that configure
-and modify the operator for the specific application.
+.. _values_for_operator_clauses:
 
-Parameters are passed as a `dict` containing the parameter names and their values. A parameter value may be a constant, an input attribute or an
-arbitrary SPL expression.
-
-Example, a `Beacon` operator from the SPL standard toolkit producing 100 tuples at the rate of two per second::
-
-    schema = StreamSchema('tuple<uint64 seq>')
-    beacon = op.Source(topology, 'spl.utility::Beacon', schema,
-        params = {'iterations':100, 'period':0.5})
+Values for operator clauses
+---------------------------
+When an operator clause requires a value, the value may be passed as
+a constant,
+an input attribute (passed using the `attribute` method of the invocation),
+or an arbitrary SPL expression (passed as a string or an :py:class:`Expression`).
+Because a string is interpreted as an SPL expression, a string constant
+should be passed by enclosing the quoted string in outer quotes
+(for example, '"a string constant"').
 
 SPL is strictly typed so when passing a constant as a parameter value the
 value may need to be strongly typed.
@@ -65,9 +63,22 @@ value may need to be strongly typed.
     * ``Enum`` values map to an operator custom literal using the symbolic name of the value. For custom literals only the symbolic name needs to match a value expected by the operator, the class name and other values are arbitrary.
     * The module :py:mod:`streamsx.spl.types` provides functions to create typed SPL expressions from values.
 
+Param clause
+------------
+Operator parameterization is through operator parameters that configure
+and modify the operator for the specific application.
+
+Parameters are passed as a `dict` containing the parameter names and their values (see :ref:`values_for_operator_clauses`).
+
 *Examples*
 
-Use an ``IntEnum`` to pass a custom literal to the ``Parse`` operator::
+To invoke a `Beacon` operator from the SPL standard toolkit producing 100 tuples at the rate of two per second::
+
+    schema = StreamSchema('tuple<uint64 seq>')
+    beacon = op.Source(topology, 'spl.utility::Beacon', schema,
+        params = {'iterations':100, 'period':0.5})
+
+To use an ``IntEnum`` to pass a custom literal to the ``Parse`` operator::
 
     from enum import IntEnum
 
@@ -80,7 +91,7 @@ Use an ``IntEnum`` to pass a custom literal to the ``Parse`` operator::
     params['format'] = DataFormats.csv
     
 
-Create a `count` parameter of type `uint64` for the SPL `DeDuplicate` operator::
+To create a `count` parameter of type `uint64` for the SPL `DeDuplicate` operator::
 
     params['count'] = streamsx.spl.types.uint64(20)
 
@@ -88,7 +99,7 @@ After the instance representing the operator
 invocation has been created, additional parameters may be added through
 the `params` attribute. If the value is an expression that is only valid
 in the context of the operator invocation then the parameter must be added
-after the operator instance is created.
+after the operator invocation has been created.
 
 For example, the `Filter` operator uses an expression that is usually dependent on the context, filtering tuples based upon their attribute values::
 
@@ -101,16 +112,18 @@ Output clause
 The operator output clause defines the values of attributes on outgoing
 tuples on the operator invocation's output ports.
 
-When a tuple is submitted by an operator invocation its attributes are
-set one of three ways:
+When a tuple is submitted by an operator invocation each of its attributes is
+set in one of three ways:
 
-    * By the operator based upon its state and input tuples. For example a US ZIP code operator would set the `zipcode` attribute based upon its lookup of the ZIP code from the address details in the input tuple.
+    * By the operator based upon its state and input tuples. For example, a US ZIP code operator might set the `zipcode` attribute based upon its lookup of the ZIP code from the address details in the input tuple.
     * By the operator implicitly setting output attributes from matching input attributes. Many streaming operators implicitly set output attributes to allow attributes to flow through the operator without any explicit coding. This only occurs when an output attribute is not explicitly set by the operator or the output clause and the input tuple has an attribute that matches the name and type of the output attribute. For example in the US ZIP code operator if the output tuple included attributes of ``rstring city, rstring state`` matching input attributes then they would be implicitly copied from input tuple to output tuple.
-    * By an ouput clause in the operator invocation. In this case the application invoking the operator is explicitly setting attributes using SPL expressions. An operator may provide output functions that return values based upon the operator's state and input tuples. For example the US ZIP code operator might provide a ``ZIPCode()`` output function rather than explicitly setting an output attribute. Then the application is free to use any attribute name to represent ZIP code in its output tuple.
+    * By an output clause in the operator invocation. In this case the application invoking the operator is explicitly setting attributes using SPL expressions. An operator may provide output functions that return values based upon the operator's state and input tuples. For example, the US ZIP code operator might provide a ``ZIPCode()`` output function rather than explicitly setting an output attribute. Then the application is free to use any attribute name to represent the ZIP code in its output tuple.
 
 In Python an output tuple attribute is set by creating an attribute in the operator invocation instance that is set to a return from the `output` method.
+The attribute value passed to the `output` method is passed as described in
+:ref:`values_for_operator_clauses`.
 
-For example invoking a SPL `Beacon` operator using an output function to set the sequence number of a tuple and a SPL expression to set the timestamp::
+For example, invoking an SPL `Beacon` operator using an output function to set the sequence number of a tuple and an SPL expression to set the timestamp::
 
     schema = StreamSchema('tuple<uint64 seq, timestamp ts>')
     beacon = op.Source(topology, 'spl.utility::Beacon', schema, params = {'period':0.1})
@@ -144,7 +157,7 @@ class Invoke(_placement._Placement, exop.ExtensionOperator):
     an arbitrary number of output ports. The kind of the
     operator places constraints on how many input and output
     ports it supports, and potentially the schemas for those
-    ports. For example ``spl.relational::Filter`` has
+    ports. For example, ``spl.relational::Filter`` has
     a single input port and one or two output ports,
     in addition the schemas of the ports must be identical.
 
@@ -218,7 +231,7 @@ class Invoke(_placement._Placement, exop.ExtensionOperator):
 
         Arguments:
             stream(Stream): Output stream the assignment is for.
-            value(str): SPL expression used for an output assignment.
+            value(str): SPL expression used for an output assignment. This can be a string, a constant, or an :py:class:`Expression`.
 
         Returns:
             Expression: Output assignment expression that is valid as a the context of this operator.
@@ -284,7 +297,7 @@ class Source(Invoke):
         """SPL output port assignment expression.
 
         Arguments:
-            value(str): SPL expression used for an output assignment.
+            value(str): SPL expression used for an output assignment. This can be a string, a constant, or an :py:class:`Expression`.
 
         Returns:
             Expression: Output assignment expression that is valid as a the context of this operator.
@@ -346,7 +359,7 @@ class Map(Invoke):
         """SPL output port assignment expression.
 
         Arguments:
-            value(str): SPL expression used for an output assignment.
+            value(str): SPL expression used for an output assignment. This can be a string, a constant, or an :py:class:`Expression`.
 
         Returns:
             Expression: Output assignment expression that is valid as a the context of this operator.
