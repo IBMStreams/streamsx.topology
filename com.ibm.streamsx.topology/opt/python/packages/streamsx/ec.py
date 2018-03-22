@@ -452,22 +452,27 @@ def _get_opc(obj):
              pass
         raise AssertionError("InternalError")
 
-def _shutdown_op(callable):
-    if hasattr(callable, '_splpy_shutdown'):
-        callable._splpy_shutdown()
+def _shutdown_op(callable_):
+    if hasattr(callable_, '_splpy_shutdown'):
+        callable_._splpy_shutdown()
 
-def _callable_enter(callable):
+def _callable_enter(callable_):
     """Called at initialization time.
     """
-    if hasattr(callable, '__enter__') and hasattr(callable, '__exit__'):
-        callable.__enter__()
+    if hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__'):
+        callable_.__enter__()
+        callable_._splpy_entered = True
 
-def _callable_exit_clean(callable):
+def _callable_exit(callable_, exc_type, exc_value, traceback):
     """Called at shutdown time.
+    Call the callable's __exit__ returning its return.
+    If no callable then return False to indicate the error should
+    be acted upon.
     """
-    if hasattr(callable, '__enter__') and hasattr(callable, '__exit__'):
-        callable.__exit__(None, None, None)
-
+    if hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__') and hasattr(callable_, '_splpy_entered') and callable_._splpy_entered:
+        return callable_.__exit__(exc_type, exc_value, traceback)
+    return False
+        
 def _submit(primitive, port_index, tuple_):
     """Internal method to submit a tuple"""
     tuple_ = primitive._splpy_conv_fns[port_index](tuple_)

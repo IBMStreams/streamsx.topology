@@ -112,9 +112,9 @@ class _FunctionalCallable(object):
         """
         return self._callable(tuple_)
 
-    def _splpy_shutdown(self):
+    def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
         if self._cls:
-            ec._callable_exit_clean(self._callable)
+            ec._callable_exit(self._callable, exc_type, exc_value, traceback)
 
 class _PickleInObjectOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
