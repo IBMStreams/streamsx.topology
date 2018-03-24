@@ -177,7 +177,7 @@ public class GsonUtilities {
     }
     
     
-    public static Boolean hasAny(JsonObject object, Collection<String> coll){
+    public static boolean hasAny(JsonObject object, Collection<String> coll){
         for(String key : coll){
             if(object.has(key))
                 return true;

@@ -52,7 +52,7 @@ public class SPLGenerator {
 
     // The final list of composites (Main composite and parallel regions), which
     // compose the graph.
-    List<JsonObject> composites = new ArrayList<>();
+    private List<JsonObject> composites = new ArrayList<>();
     
     private SubmissionTimeValue stvHelper;
     
