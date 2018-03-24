@@ -297,7 +297,7 @@ public class SPLGenerator {
         
         // If it's a physical composite start operator, add it.
         for(JsonObject obj : startsEndsAndOperators.get(0))
-            if(obj.has("config") && (hasAny(object(obj, "config"), compOperatorStarts)))
+            if(isPhysicalStartOperator(obj))
                 operators.add(obj);
         
         if(operators.size() == 0){
@@ -311,7 +311,7 @@ public class SPLGenerator {
         for(int i = 0; i < startsEndsAndOperators.get(0).size(); i++){
             JsonObject start = startsEndsAndOperators.get(0).get(i);
             // If it's not a source operator
-            if(!(start.has("config") && (hasAny(object(start, "config"), compOperatorStarts)))){
+            if(!isPhysicalStartOperator(start)){
                 inputNames.add(new JsonPrimitive("__In" + i));
             }
         }
@@ -372,7 +372,7 @@ public class SPLGenerator {
             }
             
             // If it's a physical source start operator, ignore its output port, it has no partition information.
-            if(startOp.has("config") && (hasAny(object(startOp, "config"), compOperatorStarts)))
+            if(isPhysicalStartOperator(startOp))
                 continue;
             
             // Otherwise, get the partition information.
@@ -418,7 +418,7 @@ public class SPLGenerator {
             
             // We've found a potential start to a composite. See if the composite doesn't contain another composite.   
             if(kind(potentialStart).equals(startKind) || 
-                    potentialStart.has("config") && jboolean(object(potentialStart, "config"), opStartParam)){
+                    isPhysicalStartOperatorOfAType(potentialStart, opStartParam)){
                 List<List<JsonObject> > startsEndsAndOperators = findCompositeOpsOfATypeGivenPotentialStart(graph, startKind, endKind, opStartParam, potentialStart);
                 if (startsEndsAndOperators != null) {
                     return startsEndsAndOperators;
@@ -503,7 +503,7 @@ public class SPLGenerator {
                 // If the parent is a start operator of a different kind,
                 // then there are overlapping regions.
                 if((compStarts.contains(kind(pOp)) && !kind(pOp).equals(startKind)) ||
-                        op.has("config") && (hasAny(object(op, "config"), compOperatorStarts) && !object(op, "config").has(opStartParam))){
+                        isPhysicalStartOperator(pOp) && !isPhysicalStartOperatorOfAType(pOp, opStartParam)){
                        // Throw an error if regions of a different type overlap
                        throw new IllegalStateException("Cannot have overlapping regions of different types.");
                 }
@@ -1005,5 +1005,30 @@ public class SPLGenerator {
 
     static JsonObject getGraphConfig(JsonObject graph) {
         return GsonUtilities.objectCreate(graph, "config");
+    }
+    
+    /**
+     * Is the operator a physical operator which is also the start of a region.
+     * @param op
+     * @return True if the operator is the start of a region, false otherwise.
+     */
+    private boolean isPhysicalStartOperator(JsonObject op){
+        if(op.has("config") && (hasAny(object(op, "config"), compOperatorStarts))){
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Is the operator a physical operator which is also the start of a particular region type.
+     * @param op
+     * @param opStartParam
+     * @return True if the operator is the start of a particular region type, false otherwise.
+     */
+    private boolean isPhysicalStartOperatorOfAType(JsonObject op, String opStartParam){
+        if(op.has("config") && jboolean(object(op, "config"), opStartParam)){
+            return true;
+        }
+        return false;
     }
 }
