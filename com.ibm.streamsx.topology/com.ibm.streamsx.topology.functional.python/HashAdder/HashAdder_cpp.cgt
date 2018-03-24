@@ -59,12 +59,12 @@ try {
   OPort0Type otuple(value,
        streamsx::topology::Splpy::pyTupleHash(funcop_->callable(), value));
 <%}%>
-} catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
-  SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
-}
 
   // submit tuple
   submit(otuple, 0);
+} catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+  SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+}
 }
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
