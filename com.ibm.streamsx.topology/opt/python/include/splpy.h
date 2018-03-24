@@ -73,7 +73,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
 
       if(pyReturnVar == 0){
-        throw SplpyGeneral::pythonException("filter");
+         throw SplpyExceptionInfo::pythonError("map");
       }
 
       int ret = PyObject_IsTrue(pyReturnVar);
@@ -113,7 +113,7 @@ namespace streamsx {
         Py_DECREF(pyReturnVar);
         return NULL;
       } else if(pyReturnVar == 0){
-         throw SplpyGeneral::pythonException("map");
+         throw SplpyExceptionInfo::pythonError("map");
       } 
 
       return pyReturnVar;

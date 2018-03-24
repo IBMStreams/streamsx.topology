@@ -119,6 +119,7 @@ class SplpyGIL {
         PyGILState_STATE gstate_;
     };
 
+
 class SplpyGeneral {
 
   public:
@@ -242,36 +243,47 @@ class SplpyGeneral {
      * in the PE console.
     */
     static SPL::SPLRuntimeException pythonException(std::string const & location) {
+      //SplpyExceptionInfo exInfo;
       SPL::rstring msg("Unknown Python error");
-      _setupException(msg);
+/*
+      if (exInfo.pyValue_ != NULL) {
+          pyRStringFromPyObject(msg, exInfo.pyValue_);
+      }
+*/
+
+      // Restore the error to get the stack trace
+      // PeErr_Restore steals the references
+      //PyErr_Restore(exInfo.pyType_, exInfo.pyValue_, exInfo.pyTraceback_);
+      SplpyGeneral::flush_PyErr_Print();
       
       SPL::SPLRuntimeOperatorException exc(location, msg);
       
       return exc;
   }
-    static SPL::SPLRuntimeException dataConversionException(std::string const & location) {
+
+/*
       SPLAPPTRC(L_ERROR, "Python conversion error with SPL " << location, "python");
       SPL::rstring msg("Data conversion error");
-      _setupException(msg);
+      _setupException(msg, exInfo);
       
       SPL::SPLRuntimeTypeMismatchException exc(location, msg);
       
       return exc;
-  }
-    static void _setupException(SPL::rstring & msg) {
-      PyObject *pyType, *pyValue, *pyTraceback;
-      PyErr_Fetch(&pyType, &pyValue, &pyTraceback);
-      PyErr_NormalizeException(&pyType, &pyValue, &pyTraceback);
+*/
+
+/*
+    static void _setupException(SPL::rstring & msg, const SplpyExceptionInfo & exInfo) {
       
-      if (pyValue != NULL) {
-          pyRStringFromPyObject(msg, pyValue);
+      if (exInfo.pyValue_ != NULL) {
+          pyRStringFromPyObject(msg, exInfo.pyValue_);
       }
 
       // Restore the error to get the stack trace
       // PeErr_Restore steals the references
-      PyErr_Restore(pyType, pyValue, pyTraceback);
+      PyErr_Restore(exInfo.pyType_, exInfo.pyValue_, exInfo.pyTraceback_);
       SplpyGeneral::flush_PyErr_Print();
     }
+*/
 
     /**
      * Return a general exception to be thrown.
@@ -366,6 +378,98 @@ class SplpyGeneral {
     }
 };
 
+/**
+ * Holds the state of the exception so we can pass
+ * it into __exit__.
+ */
+class SplpyExceptionInfo {
+    public:
+      SplpyExceptionInfo() {
+         PyErr_Fetch(&pyType_, &pyValue_, &pyTraceback_);
+         PyErr_NormalizeException(&pyType_, &pyValue_, &pyTraceback_);
+         // At this point we hold refrences to the objects
+         // and the error indicator is cleared.
+      }
+
+      static SplpyExceptionInfo pythonError(const char * location) {
+          SplpyExceptionInfo exc_info;
+          exc_info.et_ = 0;
+          exc_info.location_ = location;
+          return exc_info;
+      }
+      static SplpyExceptionInfo dataConversion(const char * dt) {
+          SplpyExceptionInfo exc_info;
+          exc_info.et_ = 1;
+          exc_info.location_ = dt;
+          return exc_info;
+      }
+
+      PyObject * asTuple() const {
+          PyObject *info = PyTuple_New(pyValue_ ? (pyTraceback_ ? 3 : 2) : 1);
+          Py_INCREF(pyType_);
+          PyTuple_SET_ITEM(info, 0, pyType_);
+          if (pyValue_) {
+              Py_INCREF(pyValue_);
+              PyTuple_SET_ITEM(info, 1, pyValue_);
+          }
+          if (pyTraceback_) {
+              Py_INCREF(pyTraceback_);
+              PyTuple_SET_ITEM(info, 2, pyTraceback_);
+          }
+          return info;
+      }
+
+      SPL::SPLRuntimeException exception() const {
+          const char * m = "Unknown Python error";
+          if (et_ == 1)
+              m = "Data conversion error";
+          SPL::rstring msg(m);
+
+          if (pyValue_ != NULL) {
+              pyRStringFromPyObject(msg, pyValue_);
+          }
+
+          // Restore the error to get the stack trace
+          //  PeErr_Restore steals the references
+          PyErr_Restore(pyType_, pyValue_, pyTraceback_);
+          SplpyGeneral::flush_PyErr_Print();
+
+          if (et_ == 1) {
+              SPL::SPLRuntimeTypeMismatchException rte(location_, msg);
+              return rte;
+          }
+          SPL::SPLRuntimeOperatorException roe(location_, msg);
+          return roe;
+      }
+      void clear() const {
+          Py_DECREF(pyType_);
+          if (pyValue_)
+              Py_DECREF(pyValue_);
+          if (pyTraceback_)
+              Py_DECREF(pyTraceback_);
+      }
+
+      PyObject *pyType_;
+      PyObject *pyValue_;
+      PyObject *pyTraceback_;
+      int et_;
+      const char * location_;
+};
+
+#define SPLPY_OP_HANDLE_EXCEPTION_INFO(excInfo) \
+    { \
+        if (op()->exceptionRaised(excInfo) == 0) \
+           throw excInfo.exception(); \
+        else \
+            excInfo.clear(); \
+    }
+
+#define SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo) \
+    { \
+        SplpyGIL lock; \
+        SPLPY_OP_HANDLE_EXCEPTION_INFO(excInfo); \
+    }
+
     /*
     ** Conversion of Python objects to SPL values.
     */
@@ -389,7 +493,7 @@ class SplpyGeneral {
       }
 
       if (size != 0 && bytes == NULL) {
-         throw SplpyGeneral::dataConversionException("blob");
+         throw SplpyExceptionInfo::dataConversion("blob");
       }
 
       // This takes a copy of the data.
@@ -404,7 +508,7 @@ class SplpyGeneral {
     inline void pySplValueUsingPyObject(SPL::blob & splv, PyObject * value) {
       char * bytes = PyBytes_AsString(value);          
       if (bytes == NULL) {
-         throw SplpyGeneral::dataConversionException("blob");
+         throw SplpyExceptionInfo::dataConversion("blob");
       }
       long int size = PyBytes_GET_SIZE(value);
       splv.useExternalData((unsigned char *)bytes, size);
@@ -415,7 +519,7 @@ class SplpyGeneral {
     */
     inline void pySplValueFromPyObject(SPL::rstring & splv, PyObject * value) {
       if (pyRStringFromPyObject(splv, value) != 0) {
-         throw SplpyGeneral::dataConversionException("rstring (UTF-8)");
+         throw SplpyExceptionInfo::dataConversion("rstring (UTF-8)");
       }
     }
 
@@ -443,25 +547,25 @@ class SplpyGeneral {
     inline void pySplValueFromPyObject(SPL::int8 & splv, PyObject * value) {
        long v = PyLong_AsLong(value);
        if (v == -1L && PyErr_Occurred() != NULL)
-           throw SplpyGeneral::dataConversionException("int8");
+           throw SplpyExceptionInfo::dataConversion("int8");
        splv = (SPL::int8) v;
     }
     inline void pySplValueFromPyObject(SPL::int16 & splv, PyObject * value) {
        long v = PyLong_AsLong(value);
        if (v == -1L && PyErr_Occurred() != NULL)
-           throw SplpyGeneral::dataConversionException("int16");
+           throw SplpyExceptionInfo::dataConversion("int16");
        splv = (SPL::int16) v;
     }
     inline void pySplValueFromPyObject(SPL::int32 & splv, PyObject * value) {
        long v = PyLong_AsLong(value);
        if (v == -1L && PyErr_Occurred() != NULL)
-           throw SplpyGeneral::dataConversionException("int32");
+           throw SplpyExceptionInfo::dataConversion("int32");
        splv = (SPL::int32) v;
     }
     inline void pySplValueFromPyObject(SPL::int64 & splv, PyObject * value) {
        long v = PyLong_AsLong(value);
        if (v == -1L && PyErr_Occurred() != NULL)
-           throw SplpyGeneral::dataConversionException("int64");
+           throw SplpyExceptionInfo::dataConversion("int64");
        splv = (SPL::int64) v;
     }
 
@@ -469,25 +573,25 @@ class SplpyGeneral {
     inline void pySplValueFromPyObject(SPL::uint8 & splv, PyObject * value) {
        unsigned long v = PyLong_AsUnsignedLong(value);
        if (v == ((unsigned long) -1) && PyErr_Occurred() != NULL)
-           throw SplpyGeneral::dataConversionException("uint16");
+           throw SplpyExceptionInfo::dataConversion("uint16");
        splv = (SPL::uint8) v;
     }
     inline void pySplValueFromPyObject(SPL::uint16 & splv, PyObject * value) {
        unsigned long v = PyLong_AsUnsignedLong(value);
        if (v == ((unsigned long) -1) && PyErr_Occurred() != NULL)
-           throw SplpyGeneral::dataConversionException("uint16");
+           throw SplpyExceptionInfo::dataConversion("uint16");
        splv = (SPL::uint16) v;
     }
     inline void pySplValueFromPyObject(SPL::uint32 & splv, PyObject * value) {
        unsigned long v = PyLong_AsUnsignedLong(value);
        if (v == ((unsigned long) -1) && PyErr_Occurred() != NULL)
-           throw SplpyGeneral::dataConversionException("uint32");
+           throw SplpyExceptionInfo::dataConversion("uint32");
        splv = (SPL::uint32) v;
     }
     inline void pySplValueFromPyObject(SPL::uint64 & splv, PyObject * value) {
        unsigned long v = PyLong_AsUnsignedLong(value);
        if (v == ((unsigned long) -1) && PyErr_Occurred() != NULL)
-           throw SplpyGeneral::dataConversionException("uint64");
+           throw SplpyExceptionInfo::dataConversion("uint64");
        splv = (SPL::uint64) v;
     }
 
@@ -495,7 +599,7 @@ class SplpyGeneral {
     inline void pySplValueFromPyObject(SPL::boolean & splv, PyObject * value) {
        int v = PyObject_IsTrue(value);
        if (v == -1)
-           throw SplpyGeneral::dataConversionException("boolean");
+           throw SplpyExceptionInfo::dataConversion("boolean");
        splv = (SPL::boolean) v;
     }
  
@@ -503,12 +607,12 @@ class SplpyGeneral {
     inline void pySplValueFromPyObject(SPL::float32 & splv, PyObject * value) {
        splv = (SPL::float32) PyFloat_AsDouble(value);
        if (splv == -1.0 && (PyErr_Occurred() != NULL))
-           throw SplpyGeneral::dataConversionException("float32");
+           throw SplpyExceptionInfo::dataConversion("float32");
     }
     inline void pySplValueFromPyObject(SPL::float64 & splv, PyObject * value) {
        splv = PyFloat_AsDouble(value);
        if (splv == -1.0 && (PyErr_Occurred() != NULL))
-           throw SplpyGeneral::dataConversionException("float64");
+           throw SplpyExceptionInfo::dataConversion("float64");
     }
 
     /**
@@ -592,7 +696,7 @@ class SplpyGeneral {
 
         PyObject * iterator = PyObject_GetIter(value);
         if (iterator == 0) {
-            throw SplpyGeneral::dataConversionException("set<...>");
+            throw SplpyExceptionInfo::dataConversion("set<...>");
         }
         PyObject *item;
         while ((item = PyIter_Next(iterator))) {

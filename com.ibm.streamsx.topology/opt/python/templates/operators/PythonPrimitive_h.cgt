@@ -26,6 +26,7 @@ public:
   void convertAndSubmit(uint32_t port, PyObject *tuple_);
 
 private:
+    SplpyOp *op() { return pyop_; }
     SplpyPyOp *pyop_;
 
 

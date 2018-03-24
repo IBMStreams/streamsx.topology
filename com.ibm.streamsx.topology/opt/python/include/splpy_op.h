@@ -97,6 +97,19 @@ class SplpyOp {
           SplpyGeneral::flush_PyErrPyOut();
       }
 
+      int exceptionRaised(const SplpyExceptionInfo& exInfo) {
+          if (callable_) {
+             // callFunction steals the reference to callable_
+             Py_INCREF(callable_);
+             PyObject *ignore = SplpyGeneral::callFunction(
+               "streamsx.ec", "_shutdown_op", callable_, exInfo.asTuple());
+             int ignoreException = PyObject_IsTrue(ignore);
+             Py_DECREF(ignore);
+             return ignoreException;
+          }
+          return 0;
+      }
+
 #if __SPLPY_EC_MODULE_OK
       // Get the capture with a new ref
       PyObject * opc() {

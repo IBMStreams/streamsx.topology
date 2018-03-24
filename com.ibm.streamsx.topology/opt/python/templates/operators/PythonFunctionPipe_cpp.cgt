@@ -113,7 +113,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
 
  @include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
-   
+
 }
 
 // Create member function that converts Python tuple to SPL tuple

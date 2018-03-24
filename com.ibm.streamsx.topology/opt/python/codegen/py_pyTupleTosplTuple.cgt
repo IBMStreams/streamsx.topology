@@ -17,6 +17,8 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple <%=$
 
   <%=$oport->getCppTupleType()%> otuple;
 
+try {
+
   Py_ssize_t frs = PyTuple_GET_SIZE(pyTuple); 
     
 <%
@@ -70,6 +72,11 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple <%=$
 }
  %>
 
+ } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+    SPLPY_OP_HANDLE_EXCEPTION_INFO(excInfo);
+    return;
+ }
+
   Py_BEGIN_ALLOW_THREADS
   submit(otuple, <%=$oport->getIndex()%>);
   Py_END_ALLOW_THREADS
@@ -85,6 +92,8 @@ if (defined $FROM_DICT_TMP) {
 void MY_OPERATOR::fromPythonDictToPort<%=$oport->getIndex()%>(PyObject *pyDict <%=$itypeparam%>) {
 
   <%=$oport->getCppTupleType()%> otuple;
+
+try {
 
   Py_ssize_t available = PyDict_Size(pyDict); 
     
@@ -141,6 +150,11 @@ void MY_OPERATOR::fromPythonDictToPort<%=$oport->getIndex()%>(PyObject *pyDict <
 <%
 }
  %>
+
+ } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+    SPLPY_OP_HANDLE_EXCEPTION_INFO(excInfo);
+    return;
+ }
 
   Py_BEGIN_ALLOW_THREADS
   submit(otuple, <%=$oport->getIndex()%>);

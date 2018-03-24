@@ -27,6 +27,8 @@ public:
   // Punctuation processing
   void process(Punctuation const & punct, uint32_t port);
 private:
+    SplpyOp *op() { return pyop_; }
+
   // Members
     SplpyPyOp *pyop_;
     PyObject *pyInNames_;

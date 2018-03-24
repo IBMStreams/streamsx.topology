@@ -452,9 +452,15 @@ def _get_opc(obj):
              pass
         raise AssertionError("InternalError")
 
-def _shutdown_op(callable_):
+def _shutdown_op(callable_, exc_info=None):
     if hasattr(callable_, '_splpy_shutdown'):
-        callable_._splpy_shutdown()
+        if exc_info is None:
+            return callable_._splpy_shutdown()
+        exc_type = exc_info[0]
+        exc_value = exc_info[1] if len(exc_info) >=2 else None
+        traceback = exc_info[2] if len(exc_info) >=3 else None
+        return callable_._splpy_shutdown(exc_type, exc_value, traceback)
+    return False
 
 def _callable_enter(callable_):
     """Called at initialization time.
@@ -470,7 +476,10 @@ def _callable_exit(callable_, exc_type, exc_value, traceback):
     be acted upon.
     """
     if hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__') and hasattr(callable_, '_splpy_entered') and callable_._splpy_entered:
-        return callable_.__exit__(exc_type, exc_value, traceback)
+        ignore = callable_.__exit__(exc_type, exc_value, traceback)
+        if not ignore:
+            callable_._splpy_entered = False
+        return ignore
     return False
         
 def _submit(primitive, port_index, tuple_):
