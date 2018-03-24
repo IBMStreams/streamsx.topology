@@ -60,9 +60,9 @@
  * <H3>Start of a consistent region</H3>
  * A consistent region is started by marking a source stream as consistent using
  * {@link com.ibm.streamsx.topology.TStream#setConsistent(ConsistentRegionConfig)}.
- * The source operator for the {@code TStream} must support logic that,
+ * The operator that is the source of the {@code TStream} must support logic that,
  * after a failure in the region, can replay tuples since the last checkpoint.
- * Typically the stream is a source stream that produces tuple from an external system
+ * Typically the stream is a source stream that produces tuples from an external system
  * like Apache Kakfa.
  * <P>
  * The logic that produces a replayable stream must be implemented

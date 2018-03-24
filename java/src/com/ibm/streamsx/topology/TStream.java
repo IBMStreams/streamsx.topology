@@ -88,7 +88,16 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
 	     * Tuples will be consistently routed to the same channel based upon 
              * their {@code hashCode()}.
 	     */
-	    HASH_PARTITIONED	    
+	    HASH_PARTITIONED,
+	    
+	    /**
+	     * Tuples are broadcast to all channels.
+	     * For example with a width of four each tuple on the stream results
+	     * in four tuples, one per channel.
+	     * 
+	     * @since 1.9
+	     */
+	    BROADCAST
 	};
 	
     /**
@@ -675,7 +684,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * For Java streams ({@code TStream<T>}) the declared Java type ({@code T}
      * ) of the stream is an exact match.</LI>
      * <LI>
-     * For {@link SPLStream SPL streams} the {@link com.ibm.streamsx.topology.spl.SPLStream#getSchema() SPL
+     * For {@link com.ibm.streamsx.topology.spl.SPLStream SPL streams} the {@link com.ibm.streamsx.topology.spl.SPLStream#getSchema() SPL
      * schema} is an exact match.</LI>
      * </UL>
      * <BR>
@@ -1229,7 +1238,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     TStream<T> autonomous();
     
     /**
-     * Set the source operator for this stream to be the start of a
+     * Set the operator that is the source of this stream to be the start of a
      * consistent region to support at least once and exactly once
      * processing.
      * IBM Streams calculates the boundaries of the consistent region

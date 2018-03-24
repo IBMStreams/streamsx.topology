@@ -29,7 +29,6 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.generator.port.PortProperties;
-import com.ibm.streamsx.topology.generator.spl.GCompositeDefImpl;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
@@ -138,7 +137,7 @@ public class GraphBuilder extends BJSONObject {
         for (BOperator operator : operators) {
             JsonObject jop = operator._complete();
             GraphUtilities.visitOnce(visitController,
-                    Collections.singleton(jop), new GCompositeDefImpl(graph),
+                    Collections.singleton(jop), graph,
                 new Consumer<JsonObject>() {
                     private static final long serialVersionUID = 1L;
                     @Override
@@ -176,8 +175,9 @@ public class GraphBuilder extends BJSONObject {
      * Add a marker operator, that is actually a PassThrough in OperatorGraph,
      * so that we can run this graph locally with a single thread.
      */
-    public BOutput parallel(BOutput parallelize, Supplier<Integer> width) {
+    public BOutput parallel(BOutput parallelize, String routing, Supplier<Integer> width) {
         BOutput parallelOutput = addPassThroughMarker(parallelize, BVirtualMarker.PARALLEL, true);
+        parallelOutput._json().addProperty(PortProperties.ROUTING, routing);
         if (width.get() != null)
             parallelOutput._json().addProperty(PortProperties.WIDTH, width.get());
         else {

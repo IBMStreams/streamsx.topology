@@ -171,14 +171,27 @@ class Tester(object):
         """
         Set up a unittest.TestCase to run tests using IBM Streams distributed mode.
 
-        Requires a local IBM Streams install define by the STREAMS_INSTALL
-        environment variable. If STREAMS_INSTALL is not set then the
+        Requires a local IBM Streams install define by the ``STREAMS_INSTALL``
+        environment variable. If ``STREAMS_INSTALL`` is not set then the
         test is skipped.
 
         The Streams instance to use is defined by the environment variables:
-         * STREAMS_ZKCONNECT - Zookeeper connection string
-         * STREAMS_DOMAIN_ID - Domain identifier
-         * STREAMS_INSTANCE_ID - Instance identifier
+         * ``STREAMS_ZKCONNECT`` - Zookeeper connection string (optional)
+         * ``STREAMS_DOMAIN_ID`` - Domain identifier
+         * ``STREAMS_INSTANCE_ID`` - Instance identifier
+
+        The user used to submit and monitor the job is set by the
+        optional environment variables:
+         * ``STREAMS_USERNAME - User name defaulting to `streamsadmin`.
+         * ``STREAMS_PASSWORD - User password defaulting to `passw0rd`.
+        The defaults match the setup for testing on a IBM Streams Quick
+        Start Edition (QSE) virtual machine.
+
+        .. warning::
+            ``streamtool`` is used to submit the job and requires that ``streamtool`` does not prompt for authentication.  This is achieved by using ``streamtool genkey``.
+
+            .. seealso::
+                `Generating authentication keys for IBM Streams <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-user-security-authentication-rsa.html>`_
 
         Two attributes are set in the test case:
          * test_ctxtype - Context type the test will be run in.
@@ -188,6 +201,7 @@ class Tester(object):
             test(unittest.TestCase): Test case to be set up to run tests using Tester
 
         Returns: None
+
         """
         if not 'STREAMS_INSTALL' in os.environ:
             raise unittest.SkipTest("Skipped due to no local IBM Streams install")
@@ -439,7 +453,7 @@ class Tester(object):
         """
         self._run_for = max(self._run_for, float(duration))
 
-    def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None):
+    def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None, always_collect_logs=False):
         """Test the topology.
 
         Submits the topology for testing and verifies the test conditions are met and the job remained healthy through its execution.
@@ -461,12 +475,9 @@ class Tester(object):
             ctxtype(str): Context type for submission.
             config: Configuration for submission.
             assert_on_fail(bool): True to raise an assertion if the test fails, False to return the passed status.
-            username(str): username for distributed tests
-                .. deprecated:: 1.8.3
-                Pass the username via the STREAMS_USERNAME environment variable instead.
-            password(str): password for distributed tests
-                .. deprecated:: 1.8.3
-                Pass the password via the STREAMS_PASSWORD environment variable instead.
+            username(str): **Deprecated** 
+            password(str): **Deprecated**
+            always_collect_logs(bool): True to always collect the console log and PE trace files of the test.
 
         Attributes:
             result: The result of the test. This can contain exit codes, application log paths, or other relevant test information.
@@ -477,6 +488,11 @@ class Tester(object):
         Returns:
             bool: `True` if test passed, `False` if test failed if `assert_on_fail` is `False`.
 
+        .. deprecated:: 1.8.3
+            ``username`` and ``password`` parameters. When required for
+             a distributed test use the environment variables
+             ``STREAMS_USERNAME`` and ``STREAMS_PASSWORD`` to define
+             the Streams user.
         """
 
         # Add the conditions into the graph as sink operators
@@ -499,6 +515,8 @@ class Tester(object):
 
         if config is None:
             config = {}
+        config['topology.alwaysCollectLogs'] = always_collect_logs
+
         _logger.debug("Starting test topology %s context %s.", self.topology.name, ctxtype)
 
         if stc.ContextTypes.STANDALONE == ctxtype:
@@ -558,7 +576,7 @@ class Tester(object):
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to distributed instance.")
             return False
-        return self._distributed_wait_for_result(stc.ContextTypes.DISTRIBUTED)
+        return self._distributed_wait_for_result(stc.ContextTypes.DISTRIBUTED, config)
 
 
     def _streaming_analytics_test(self, ctxtype, config):
@@ -572,9 +590,9 @@ class Tester(object):
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to Streaming Analytics instance")
             return False
-        return self._distributed_wait_for_result(ctxtype)
+        return self._distributed_wait_for_result(ctxtype, config)
 
-    def _distributed_wait_for_result(self, ctxtype):
+    def _distributed_wait_for_result(self, ctxtype, config):
 
         cc = _ConditionChecker(self, self.streams_connection, self.submission_result)
         # Wait for the job to be healthy before calling the local check.
@@ -588,7 +606,7 @@ class Tester(object):
 
         self.result['submission_result'] = self.submission_result
 
-        if not self.result['passed']:
+        if not self.result['passed'] or config['topology.alwaysCollectLogs']:
             path = self._fetch_application_logs(ctxtype)
             self.result['application_logs'] = path
 

@@ -22,7 +22,7 @@ import com.ibm.streamsx.topology.generator.operator.OpProperties;
 class ThreadingModel {
     
     @SuppressWarnings("serial")
-    static void preProcessThreadedPorts(final GCompositeDef gcomp){
+    static void preProcessThreadedPorts(final JsonObject graph){
         // Remove the threaded port configuration from the operator and its 
         // params if:
         // 1) The operator has a lowLatencyTag assigned
@@ -32,8 +32,8 @@ class ThreadingModel {
         // Added threaded port configuration if the operator is non-functional
         // and it has a threaded port.
         
-        Set<JsonObject> starts = GraphUtilities.findStarts(gcomp.getGraph());
-        GraphUtilities.visitOnce(starts, null, gcomp, new Consumer<JsonObject>(){
+        Set<JsonObject> starts = GraphUtilities.findStarts(graph);
+        GraphUtilities.visitOnce(starts, null, graph, new Consumer<JsonObject>(){
 
             @Override
             public void accept(JsonObject op) {
@@ -81,7 +81,7 @@ class ThreadingModel {
                     colocTag = jstring(placement, OpProperties.PLACEMENT_ISOLATE_REGION_ID);
                 }
 
-                for(JsonObject parent : gcomp.getUpstream(op)){
+                for(JsonObject parent : getUpstream(op, graph)){
                     JsonObject parentPlacement = nestedObject(parent, OpProperties.CONFIG, OpProperties.PLACEMENT);
                     String parentColocTag = null;
                     if (parentPlacement != null)

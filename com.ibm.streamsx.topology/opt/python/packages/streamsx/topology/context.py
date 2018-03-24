@@ -527,6 +527,13 @@ class ContextTypes(object):
         * **STREAMS_DOMAIN_ID** - Domain identifier for the Streams instance.
         * **STREAMS_INSTANCE_ID** - Instance identifier.
         * **STREAMS_ZKCONNECT** - (optional) ZooKeeper connection string for domain (when not using an embedded ZooKeeper)
+        * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
+
+    .. warning::
+        ``streamtool`` is used to submit the job and requires that ``streamtool`` does not prompt for authentication.  This is achieved by using ``streamtool genkey``.
+
+        .. seealso::
+            `Generating authentication keys for IBM Streams <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-user-security-authentication-rsa.html>`_
 
     """
 
@@ -654,6 +661,7 @@ class ConfigParams(object):
     SERVICE_DEFINITION = 'topology.service.definition'
     """Streaming Analytics service definition.
     Identifies the Streaming Analytics service to use. The definition can be one of
+
         * The `service credentials` copied from the `Service credentials` page of the service console (not the Streams console). Credentials are provided in JSON format. They contain such as the API key and secret, as well as connection information for the service. 
         * A JSON object (`dict`) of the form: ``{ "type": "streaming-analytics", "name": "service name", "credentials": {...} }`` with the `service credentials` as the value of the ``credentials`` key.
 
@@ -666,11 +674,14 @@ class JobConfig(object):
     Job configuration.
 
     `JobConfig` allows configuration of job that will result from
-    submission of a py:class:`Topology` (application).
+    submission of a :py:class:`Topology` (application).
 
     A `JobConfig` is set in the `config` dictionary passed to :py:func:`~streamsx.topology.context.submit`
     using the key :py:const:`~ConfigParams.JOB_CONFIG`. :py:meth:`~JobConfig.add` exists as a convenience
     method to add it to a submission configuration.
+
+    A `JobConfig` can also be used when submitting a Streams application
+    bundle through the Streaming Analytics REST API method :py:meth:`~streamsx.rest_primitives.StreamingAnalyticsService.submit_job`.
 
     Args:
         job_name(str): The name that is assigned to the job. A job name must be unique within a Streasm instance
@@ -690,6 +701,8 @@ class JobConfig(object):
         job_config = JobConfig(job_name='NewsIngester')
         job_config.add(cfg)
         context.submit('STREAMING_ANALYTICS_SERVICE', topo, cfg)
+
+    .. seealso:: `Job configuration overlays reference <https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html>`_
     """
     def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None, tracing=None):
         self.job_name = job_name
@@ -700,7 +713,57 @@ class JobConfig(object):
         self._pe_count = None
         self._raw_overlay = None
         self._submission_parameters = dict()
+        self._comment = None
 
+    @staticmethod
+    def from_overlays(overlays):
+        """Create a `JobConfig` instance from a full job configuration
+        overlays object.
+
+        All logical items, such as ``comment`` and ``job_name``, are
+        extracted from `overlays`. The remaining information in the
+        single job config overlay in ``overlays`` is set as ``raw_overlay``.
+
+        Args:
+            overlays(dict): Full job configuration overlays object.
+
+        Returns:
+            JobConfig: Instance representing logical view of `overlays`.
+
+        .. versionadded:: 1.9
+        """
+        jc = JobConfig()
+        jc.comment = overlays.get('comment')
+        if 'jobConfigOverlays' in overlays:
+             if len(overlays['jobConfigOverlays']) >= 1:
+                 jco = copy.deepcopy(overlays['jobConfigOverlays'][0])
+
+                 # Now extract the logical information
+                 if 'jobConfig' in jco:
+                     _jc = jco['jobConfig']
+                     jc.job_name = _jc.pop('jobName', None)
+                     jc.job_group = _jc.pop('jobGroup', None)
+                     jc.preload = _jc.pop('preloadApplicationBundles', False)
+                     jc.data_directory = _jc.pop('dataDirectory', None)
+                     jc.tracing = _jc.pop('tracing', None)
+
+                     for sp in _jc.pop('submissionParameters', []):
+                         jc.submission_parameters[sp['name']] = sp['value']
+
+                     if not _jc:
+                         del jco['jobConfig']
+                 if 'deploymentConfig' in jco:
+                     _dc = jco['deploymentConfig']
+                     if 'manual' == _dc.get('fusionScheme'):
+                         if 'fusionTargetPeCount' in _dc:
+                             jc.target_pe_count = _dc.pop('fusionTargetPeCount')
+                         if len(_dc) == 1:
+                             del jco['deploymentConfig']
+
+                 if jco:
+                     jc.raw_overlay = jco
+        return jc
+                    
     @property
     def tracing(self):
         """
@@ -779,7 +842,7 @@ class JobConfig(object):
 
         A submitted job is configured using Job Config Overlay which
         is represented as a JSON. `JobConfig` exposes Job Config Overlay
-        logically with properties such as ``job_name` and ``tracing``.
+        logically with properties such as ``job_name`` and ``tracing``.
         This property (as a ``dict``) allows merging of the
         configuration defined by this object and raw representation
         of a Job Config Overlay. This can be used when a capability
@@ -823,6 +886,27 @@ class JobConfig(object):
         """
         return self._submission_parameters
 
+    @property
+    def comment(self):
+        """
+        Comment for job configuration.
+
+        The comment does not change the functionality of the job configuration.
+
+        Returns:
+            str: Comment text, `None` if it has not been set.
+
+        .. versionadded:: 1.9
+        """
+        return self._comment
+
+    @comment.setter
+    def comment(self, value):
+        if value:
+            self._comment = str(value)
+        else:
+            self._comment = None
+
     def add(self, config):
         """
         Add this `JobConfig` into a submission configuration object.
@@ -832,15 +916,58 @@ class JobConfig(object):
 
         Returns:
             dict: config.
-
         """
         config[ConfigParams.JOB_CONFIG] = self
         return config
+
+    def as_overlays(self):
+        """Return this jobs configuration as a complete job configuration overlays object.
+
+        Converts this job configuration into the full format supported by IBM Streams.
+        The returned `dict` contains:
+
+            * ``jobConfigOverlays`` key with an array containing a single job configuration overlay.
+            * an optional ``comment`` key containing the comment ``str``.
+
+        For example with this ``JobConfig``::
+
+            jc = JobConfig(job_name='TestIngester')
+            jc.comment = 'Test configuration'
+            jc.target_pe_count = 2
+
+        the returned `dict` would be::
+
+            {"comment": "Test configuration",
+                "jobConfigOverlays":
+                    [{"jobConfig": {"jobName": "TestIngester"},
+                    "deploymentConfig": {"fusionTargetPeCount": 2, "fusionScheme": "manual"}}]}
+
+        The returned overlays object can be saved as JSON in a file
+        using ``json.dump``. A file can be used with job submission
+        mechanisms that support a job config overlays file, such as
+        ``streamtool submitjob`` or the IBM Streams console.
+
+        Example of saving a ``JobConfig`` instance as a file::
+        
+            jc = JobConfig(job_name='TestIngester')
+            with open('jobconfig.json', 'w') as f:
+                json.dump(jc.as_overlays(), f)
+
+
+        Returns:
+            dict: Complete job configuration overlays object built from this object.
+
+        .. versionadded:: 1.9
+        """
+        return self._add_overlays({})
 
     def _add_overlays(self, config):
         """
         Add this as a jobConfigOverlays JSON to config.
         """
+        if self._comment:
+            config['comment'] = self._comment
+
         jco = {}
         config["jobConfigOverlays"] = [jco]
 
@@ -873,6 +1000,7 @@ class JobConfig(object):
             deployment = jco.get('deploymentConfig', {})
             deployment.update({'fusionScheme' : 'manual', 'fusionTargetPeCount' : self.target_pe_count})
             jco["deploymentConfig"] = deployment
+        return config
 
 
 class SubmissionResult(object):

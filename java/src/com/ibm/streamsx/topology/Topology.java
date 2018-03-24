@@ -919,7 +919,7 @@ public class Topology implements TopologyElement {
      * and is added automatically by TODO-add link.
      * </P>
      * <P>
-     * Job control plane is only supported is distributed contexts.
+     * Job control plane is only supported in distributed contexts.
      * </P>
      * @since com.ibm.streamsx.topology 1.5
      */

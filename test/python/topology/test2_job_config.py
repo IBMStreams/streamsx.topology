@@ -1,7 +1,8 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017
+# Copyright IBM Corp. 2017,2018
 import unittest
+import os
 import sys
 import itertools
 import logging
@@ -190,4 +191,105 @@ class TestRawOverlay(unittest.TestCase):
         self.assertEqual('xx', dc.get('other'))
         self.assertEqual('manual', dc.get('fusionScheme'))
         self.assertEqual(93, dc.get('fusionTargetPeCount'))
-        
+
+class TestOverlays(unittest.TestCase):
+    def _check_overlays(self, jc):
+        ov = jc.as_overlays()
+        self.assertTrue(isinstance(ov, dict))
+        self.assertTrue(len(ov) <= 2)
+
+        self.assertIn('jobConfigOverlays', ov)
+        jcos = ov['jobConfigOverlays']
+        self.assertTrue(isinstance(jcos, list))
+        self.assertEqual(1, len(jcos))
+        self.assertTrue(isinstance(jcos[0], dict))
+
+        if len(ov) == 2:
+            self.assertTrue(jc.comment)
+            self.assertIn('comment', ov)
+            self.assertTrue(isinstance(ov['comment'], str))
+            self.assertEqual(jc.comment, ov['comment'])
+
+        return jcos[0]
+
+    def test_no_comment(self):
+        jc = JobConfig()
+        self.assertIsNone(jc.comment)
+        ov = self._check_overlays(jc)
+        self.assertNotIn('comment', ov)
+
+    def test_comment(self):
+        jc = JobConfig()
+        jc.comment = 'Test configuration'
+        self.assertEqual('Test configuration', jc.comment)
+        self._check_overlays(jc)
+
+    def test_non_empty(self):
+        jc = JobConfig(job_name='TestIngester')
+        jc.comment = 'Test configuration'
+        jc.target_pe_count = 2
+        jco = self._check_overlays(jc)
+        self.assertIn('jobConfig', jco)
+        self.assertIn('jobName', jco['jobConfig'])
+        self.assertEqual('TestIngester', jco['jobConfig']['jobName'])
+
+    def test_from_overlays(self):
+
+        self._check_matching(JobConfig())
+
+        jc = JobConfig(job_name='TestIngester', preload=True, data_directory='/tmp/a', job_group='gg', tracing='info')
+        jc.comment = 'Test configuration'
+        jc.target_pe_count = 2
+        self._check_matching(jc)
+
+        jc = JobConfig(job_name='TestIngester2')
+        jc.comment = 'Test configuration2'
+        self._check_matching(jc)
+
+        jc = JobConfig(preload=True)
+        jc.raw_overlay = {'a': 34}
+        self._check_matching(jc)
+
+        jc = JobConfig(preload=True)
+        jc.raw_overlay = {'x': 'fff'}
+        jc.submission_parameters['one'] = 1
+        jc.submission_parameters['two'] = 2
+        self._check_matching(jc)
+
+    def test_from_topology(self):
+        topo = Topology('SabTest', namespace='mynamespace')
+        s = topo.source([1,2])
+        es = s.for_each(lambda x : None)
+        cfg = {}
+        jc = JobConfig(job_name='ABCD', job_group='XXG', preload=True)
+        jc.add(cfg)
+        bb = streamsx.topology.context.submit('BUNDLE', topo, cfg)
+        self.assertIn('bundlePath', bb)
+        self.assertIn('jobConfigPath', bb)
+
+        with open(bb['jobConfigPath']) as json_data:
+            jct = JobConfig.from_overlays(json.load(json_data))
+            self.assertEqual(jc.job_name, jct.job_name)
+            self.assertEqual(jc.job_group, jct.job_group)
+            self.assertEqual(jc.preload, jct.preload)
+            
+        os.remove(bb['bundlePath'])
+        os.remove(bb['jobConfigPath'])
+
+
+    def _check_matching(self, jcs):
+        jcf = JobConfig.from_overlays(jcs.as_overlays())
+
+        self.assertEqual(jcs.comment, jcf.comment)
+
+        self.assertEqual(jcs.job_name, jcf.job_name)
+        self.assertEqual(jcs.job_group, jcf.job_group)
+        self.assertEqual(jcs.preload, jcf.preload)
+        self.assertEqual(jcs.data_directory, jcf.data_directory)
+        self.assertEqual(jcs.tracing, jcf.tracing)
+
+        self.assertEqual(jcs.target_pe_count, jcf.target_pe_count)
+
+        self.assertEqual(jcs.submission_parameters, jcf.submission_parameters)
+
+        self.assertEqual(jcs.raw_overlay, jcf.raw_overlay)

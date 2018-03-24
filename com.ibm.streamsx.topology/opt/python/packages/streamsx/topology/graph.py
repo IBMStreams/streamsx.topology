@@ -10,6 +10,7 @@ import uuid
 import json
 import inspect
 import pickle
+from enum import Enum
 
 try:
     import dill
@@ -23,6 +24,7 @@ import re
 import streamsx.topology.dependency
 import streamsx.topology.functions
 import streamsx.topology.param
+import streamsx.spl.op
 from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.schema import _stream_schema
 
@@ -42,6 +44,16 @@ def _fix_namespace(ns):
 
     return '.'.join(sns)
 
+def _as_spl_expr(value):
+    """ Return value converted to an SPL expression if
+    needed other otherwise value.
+    """
+    if hasattr(value, 'spl_json'):
+        return value
+      
+    if isinstance(value, Enum):
+        value = streamsx.spl.op.Expression.expression(value.name)
+    return value
 
 class SPLGraph(object):
 
@@ -296,18 +308,18 @@ class _SPLInvocation(object):
                 tags = _op['config']['placement']['resourceTags']
                 _op['config']['placement']['resourceTags'] = list(tags)
 
-        # Add parameters as their string representation
-        # unless they value has a spl_json() function,
-        # then use that
-        _params = {}
-
         # Fix up any pending streams for input style
         if 'pyStyle' in self.params and 'pending' == self.params['pyStyle']\
                 and self.kind.startswith('com.ibm.streamsx.topology.functional.python'):
             StreamSchema._fnop_style(self.inputPorts[0].schema, self, 'pyStyle')
 
+        # Add parameters as their natural representation
+        # unless they value has a spl_json() function,
+        # then use that
+        _params = {}
+
         for name in self.params:
-            param = self.params[name]
+            param = _as_spl_expr(self.params[name])
             try:
                 _params[name] = param.spl_json()
             except:
@@ -329,7 +341,7 @@ class _SPLInvocation(object):
         return _op
 
     def _addOperatorFunction(self, function):
-        if (function == None):
+        if (function is None):
             return None
         if not hasattr(function, "__call__"):
             raise "argument to _addOperatorFunction is not callable"

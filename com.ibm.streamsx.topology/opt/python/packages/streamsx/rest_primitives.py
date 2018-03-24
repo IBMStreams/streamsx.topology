@@ -32,6 +32,8 @@ import streamsx.topology.schema
 
 logger = logging.getLogger('streamsx.rest')
 
+def _file_name(prefix, id_, suffix):
+    return prefix + '_' + id_ + '_' + str(int(time.time())) + suffix
 
 def _exact_resource(json_rep, id=None):
     if id is not None:
@@ -172,16 +174,40 @@ class _StreamsRestClient(object):
 
     def make_raw_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
-        res = self.session.get(url)
+        res = self.session.get(url, headers=headers)
         self.handle_http_errors(res)
         return res
 
-    def make_raw_streaming_request(self, url):
+    def make_raw_streaming_request(self, url, mimetype=None):
         logger.debug('Beginning a REST request to: ' + url)
-        res = self.session.get(url, stream=True)
+        headers = {}
+        if mimetype:
+            headers['Accept'] = mimetype
+        res = self.session.get(url, stream=True, headers=headers)
         self.handle_http_errors(res)
 
         return res
+
+    def _retrieve_file(self, url, filename, dir_, mimetype):
+        logs = self.make_raw_streaming_request(url, mimetype)
+        
+        if dir_ is None:
+            dir_ = os.getcwd()
+
+        path = os.path.join(dir_, filename)
+        try:
+            with open(path, 'w+b') as logfile:
+                for chunk in logs.iter_content(chunk_size=1024*64):
+                    if chunk:
+                        logfile.write(chunk)
+        except IOError as e:
+            logger.error("IOError({0}) writing application log files: {1}".format(e.errno, e.strerror))
+            raise e
+        except Exception as e:
+            logger.error("Error while writing application log files")
+            raise e
+
+        return path
 
     def __str__(self):
         return pformat(self.__dict__)
@@ -250,9 +276,12 @@ class _IAMStreamsRestClient(_StreamsRestClient):
         self.handle_http_errors(res)
         return res
 
-    def make_raw_streaming_request(self, url):
+    def make_raw_streaming_request(self, url, mimetype=None):
         logger.debug('Beginning a REST request to: ' + url)
-        req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
+        headers = {'Authorization' : self._get_authorization()}
+        if mimetype:
+            headers['Accept'] = mimetype
+        req = requests.Request("GET", url, headers = headers)
         prepared = req.prepare()
         res = self.session.send(prepared, stream=True)
         self.handle_http_errors(res)
@@ -529,27 +558,11 @@ class Job(_ResourceElement):
         .. versionadded:: 1.8
         """
         logger.debug("Retrieving application logs from: " + self.applicationLogTrace)
-        logs = self.rest_client.make_raw_streaming_request(self.applicationLogTrace)
-        
-        if filename is None:
-            filename = 'job_' + self.id + '_' + str(int(time.time())) + '.tar.gz'
-        if dir is None:
-            dir = os.getcwd()
 
-        path = os.path.join(dir, filename)
-        try:
-            with open(path, 'w+b') as logfile:
-                for chunk in logs.iter_content(chunk_size=1024*64):
-                    if chunk:
-                        logfile.write(chunk)
-        except IOError as e:
-            logger.error("IOError({0}) writing application log files: {1}".format(e.errno, e.strerror))
-            raise e
-        except Exception as e:
-            logger.error("Error while writing application log files")
-            raise e
-
-        return path                    
+        if not filename:
+            filename = _file_name('job', self.id, '.tar.gz')
+ 
+        return self.rest_client._retrieve_file(self.applicationLogTrace, filename, dir, 'application/x-compressed')
 
     def get_views(self, name=None):
         """Get the list of :py:class:`View` elements associated with this job.
@@ -597,6 +610,7 @@ class Job(_ResourceElement):
 
     def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this job.
+
         Args:
             name(str): Only return operators matching `name`, where `name` can be a regular expression.  If
                 `name` is not supplied, then all operators for this job are returned.
@@ -673,7 +687,7 @@ class Operator(_ResourceElement):
         operator
     """
     def get_metrics(self, name=None):
-        """Get metrics for an operator.
+        """Get metrics for this operator.
 
         Args:
             name(str, optional): Only return metrics matching `name`, where `name` can be a regular expression.  If
@@ -705,6 +719,26 @@ class Operator(_ResourceElement):
         .. versionadded:: 1.9
         """
         return PE(self.rest_client.make_request(self.pe), self.rest_client)
+
+    def get_output_ports(self):
+        """Get list of output ports for this operator.
+
+        Returns:
+            list(OperatorOutputPort): Output ports for this operator.
+
+        .. versionadded:: 1.9
+        """
+        return self._get_elements(self.outputPorts, 'outputPorts', OperatorOutputPort)
+
+    def get_input_ports(self):
+        """Get list of input ports for this operator.
+
+        Returns:
+            list(OperatorInputPort): Input ports for this operator.
+
+        .. versionadded:: 1.9
+        """
+        return self._get_elements(self.inputPorts, 'inputPorts', OperatorInputPort)
 
 
 class OperatorConnection(_ResourceElement):
@@ -746,7 +780,41 @@ class OperatorOutputPort(_ResourceElement):
         >>> print (operatoroutputport.resourceType)
         operatorOutputPort
     """
-    pass
+    def get_metrics(self, name=None):
+        """Get metrics for this output port.
+
+        Args:
+            name(str, optional): Only return metrics matching `name`, where `name` can be a regular expression.  If
+                `name` is not supplied, then all metrics for this output port are returned.
+
+        Returns:
+             list(Metric): List of matching metrics.
+
+        .. versionadded:: 1.9
+        """
+        return self._get_elements(self.metrics, 'metrics', Metric, name=name)
+
+class OperatorInputPort(_ResourceElement):
+    """Information about an input port for an operator.
+
+    Attributes:
+        name(str): Name of this input port.
+        resourceType(str): Identifies the REST resource type, which is *operatorInputPort*.
+        indexWithinOperator(int): Index of the input port within the operator.
+
+    .. versionadded:: 1.9
+    """
+    def get_metrics(self, name=None):
+        """Get metrics for this input port.
+
+        Args:
+            name(str, optional): Only return metrics matching `name`, where `name` can be a regular expression.  If
+                `name` is not supplied, then all metrics for this input port are returned.
+
+        Returns:
+             list(Metric): List of matching metrics.
+        """
+        return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
 
 class Metric(_ResourceElement):
@@ -818,6 +886,64 @@ class PE(_ResourceElement):
         .. versionadded:: 1.9
         """
         return Host(self.rest_client.make_request(self.host), self.rest_client) if self.host else None
+
+    def retrieve_trace(self, filename=None, dir=None):
+        """Retrieves the application trace files for this PE
+        and saves them as a plain text file.
+
+        An existing file with the same name will be overwritten.
+
+        Args:
+            filename (str): name of the created file. Defaults to `pe_<id>_<timestamp>.trace` where `id` is the PE identifier and `timestamp` is the number of seconds since the Unix epoch, for example ``pe_83_1511995995.trace``.
+            dir (str): a valid directory in which to save the file. Defaults to the current directory.
+
+        Returns:
+            str: the path to the created file.
+
+        .. versionadded:: 1.9
+        """
+        logger.debug("Retrieving PE trace: " + self.applicationTrace)
+
+        if not filename:
+            filename = _file_name('pe', self.id, '.trace')
+ 
+        return self.rest_client._retrieve_file(self.applicationTrace, filename, dir, 'text/plain')
+
+    def retrieve_console_log(self, filename=None, dir=None):
+        """Retrieves the application console log (standard out and error)
+        files for this PE and saves them as a plain text file.
+
+        An existing file with the same name will be overwritten.
+
+        Args:
+            filename (str): name of the created file. Defaults to `pe_<id>_<timestamp>.stdouterr` where `id` is the PE identifier and `timestamp` is the number of seconds since the Unix epoch, for example ``pe_83_1511995995.trace``.
+            dir (str): a valid directory in which to save the file. Defaults to the current directory.
+
+        Returns:
+            str: the path to the created file.
+
+        .. versionadded:: 1.9
+        """
+        logger.debug("Retrieving PE console log: " + self.consoleLog)
+
+        if not filename:
+            filename = _file_name('pe', self.id, '.stdouterr')
+ 
+        return self.rest_client._retrieve_file(self.consoleLog, filename, dir, 'text/plain')
+
+    def get_metrics(self, name=None):
+        """Get metrics for this PE.
+
+        Args:
+            name(str, optional): Only return metrics matching `name`, where `name` can be a regular expression.  If
+                `name` is not supplied, then all metrics for this PE are returned.
+
+        Returns:
+             list(Metric): List of matching metrics.
+
+        .. versionadded:: 1.9
+        """
+        return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
 
 class PEConnection(_ResourceElement):
@@ -1326,6 +1452,22 @@ class StreamingAnalyticsService(object):
         else:
             self._delegator = _StreamingAnalyticsServiceV1Delegator(rest_client, credentials)
 
+    def submit_job(self, bundle, job_config=None):
+        """Submit a Streams Application Bundle (sab file) to
+        this Streaming Analytics service.
+        
+        Args:
+            bundle(str): path to a Streams application bundle (sab file)
+                containing the application to be submitted
+            job_config(JobConfig): a job configuration overlay
+        
+        Returns:
+            dict: JSON response from service containing 'name' field with unique
+                job name assigned to submitted job, or, 'error_status' and
+                'description' fields if submission was unsuccessful.
+        """
+        return self._delegator._submit_job(bundle=bundle, job_config=job_config)
+
     def cancel_job(self, job_id=None, job_name=None):
         """Cancel a running job.
 
@@ -1374,6 +1516,31 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         self.rest_client = rest_client
         self._credentials = credentials
         self._v2_rest_url = self._credentials[_IAMConstants.V2_REST_URL]
+        self._jobs_url = None
+
+    def _get_jobs_url(self):
+        """Get & save jobs URL from the status call."""
+        if self._jobs_url is None:
+            self.get_instance_status()
+            if self._jobs_url is None:
+                raise ValueError("Cannot obtain jobs URL")
+        return self._jobs_url
+
+    def _submit_job(self, bundle, job_config):
+        sab_name = os.path.basename(bundle)
+
+        job_options = job_config.as_overlays() if job_config else {}
+
+        with open(bundle, 'rb') as bundle_fp:
+            files = [
+                ('bundle_file', (sab_name, bundle_fp, 'application/octet-stream')),
+                ('job_options', ('job_options', json.dumps(job_options), 'application/json'))
+                ]
+            res = self.rest_client.session.post(self._get_jobs_url(),
+                headers = {'Authorization' : self.rest_client._get_authorization(), 'Accept' : 'application/json'},
+                files=files)
+            self.rest_client.handle_http_errors(res)
+            return res.json()
 
     def cancel_job(self, job_id=None, job_name=None):
         if job_id is None and job_name is None:
@@ -1381,7 +1548,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         
         if job_id is None:
             # Get the job id using the job name, since it's required by the REST API
-            req = requests.Request("GET", self._v2_rest_url + '/jobs/',
+            req = requests.Request("GET", self.get_jobs_url(),
                                headers = {'Authorization' : self.rest_client._get_authorization(),
                                           'Accept' : 'application/json'})
             prepared = req.prepare()
@@ -1393,7 +1560,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
                     job_id = job['id']
 
         # Cancel the job using the job id
-        req = requests.Request("DELETE", self._v2_rest_url + '/jobs/' + job_id,
+        req = requests.Request("DELETE", self._get_jobs_url() + '/' + str(job_id),
                                headers = {'Authorization' : self.rest_client._get_authorization(),
                                           'Accept' : 'application/json'})
         prepared = req.prepare()
@@ -1422,7 +1589,11 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         return res.json()
 
     def get_instance_status(self):
-        return self.rest_client.make_request(self._v2_rest_url)
+        resp = self.rest_client.make_request(self._v2_rest_url)
+        # Since we are here, see if we can save the jobs url
+        if self._jobs_url is None and 'jobs' in resp:
+            self._jobs_url = resp['jobs']
+        return resp
 
 
 class _StreamingAnalyticsServiceV1Delegator(object):
@@ -1439,6 +1610,22 @@ class _StreamingAnalyticsServiceV1Delegator(object):
 
     def _get_url(self, req_name):
         return self._credentials['rest_url'] + self._credentials[req_name]
+
+    def _submit_job(self, bundle, job_config):
+        sab_name = os.path.basename(bundle)
+
+        url = self._get_url('jobs_path')
+        params = {'bundle_id': sab_name}
+        job_options = {}
+        if job_config is not None:
+            job_config._add_overlays(job_options)
+
+        with open(bundle, 'rb') as bundle_fp:
+            files = [
+                ('bundle_file', (sab_name, bundle_fp, 'application/octet-stream')),
+                ('job_options', ('job_options', json.dumps(job_options), 'application/json'))
+                ]
+            return self.rest_client.session.post(url=url, params=params, files=files).json()
 
     def cancel_job(self, job_id=None, job_name=None):
         """Cancel a running job.
