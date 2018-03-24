@@ -124,22 +124,24 @@ public class SPLGenerator {
      * The composite generation algorithm works as follows, given that:
      * <ol>
      * <li>the graph is a directed graph with cycles</li>
-     * <li>composites are non-overlapping, contiguous subsections of graph</li>
-     * <li>composites can contain other composites</li>
-     * <li>an "innermost" composite is a composite that does not contain another composite</li>
-     * <li>there can be different "types" of composites, e.g., parallel composites or low latency composites</li>
+     * <li>regions are non-overlapping, contiguous subsections of graph</li>
+     * <li>regions can contain other regions</li>
+     * <li>an "innermost" region is a region that does not contain another region</li>
+     * <li>a the operators of a region are used to create a composite definition.</li>
+     * <li>a composite invocation replaces the region of the graph used to create the corresponding composite definition.</li>
+     * <li>there can be different "types" of regions, e.g., parallel regions or low latency regions</li>
      * </ol>
      * 
      * 
      * <pre><code>
-     *  for each type of composite:
-     *      check to see if an innermost composite of that type exists
+     *  for each type of region:
+     *      check to see if an innermost region of that type exists
      *      if it does exist:
-     *          find the operators of that composite
+     *          find the operators of that region
      *          add them to a JsonObject representing the definition of the composite
      *          remove them operators from the graph, and replace them with a single invocation of the composite
      *      if it does not exist:
-     *          try again with a different composite type
+     *          try again with a different region type
      * </code></pre>
      * 
      * This algorithm is repeated until there are no more composites to generate.
