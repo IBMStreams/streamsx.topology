@@ -21,11 +21,12 @@ import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
-public class CompGeneration extends TestTopology {
+public class CompGenerationTest extends TestTopology {
 
     @Test
     public void parallelSource() throws Exception {
         assumeTrue(SC_OK);
+        assumeTrue(!isMainRun());
         
         Topology topo = new Topology();
         
@@ -50,6 +51,7 @@ public class CompGeneration extends TestTopology {
     @Test
     public void nestedUDPWithBroadcast() throws Exception {
         assumeTrue(SC_OK);
+        assumeTrue(!isMainRun());
         
         Topology topo = new Topology();
         
@@ -75,6 +77,7 @@ public class CompGeneration extends TestTopology {
     @Test
     public void multipleInputPorts() throws Exception {
         assumeTrue(SC_OK);
+        assumeTrue(!isMainRun());
         
         Topology topo = new Topology();
         
@@ -108,6 +111,7 @@ public class CompGeneration extends TestTopology {
     @Test
     public void multipleInputPortsDifferentRoutingSchemes() throws Exception {
         assumeTrue(SC_OK);
+        assumeTrue(!isMainRun());
         
         Topology topo = new Topology();
         
@@ -141,6 +145,7 @@ public class CompGeneration extends TestTopology {
     @Test
     public void multipleInputPortsDifferentRoutingSchemesMultipleOutputs() throws Exception {
         assumeTrue(SC_OK);
+        assumeTrue(!isMainRun());
         
         Topology topo = new Topology();
         
