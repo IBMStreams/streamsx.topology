@@ -89,6 +89,8 @@ public class SPLGenerator {
         mainCompsiteDef.add("operators", graph.get("operators"));
         composites.add(mainCompsiteDef);
         
+        stvHelper.addJsonParamDefs(mainCompsiteDef);
+        
         StringBuilder sb = new StringBuilder();
         generateGraph(graph, sb);
         
