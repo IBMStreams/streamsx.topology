@@ -729,7 +729,7 @@ public class ParallelTest extends TestTopology {
     
     @Test
     public void testBroadcast() throws Exception {
-        assumeTrue(!isMainRun());
+        checkUdpSupported();
         Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("1", "7", "19", "23", "57");
