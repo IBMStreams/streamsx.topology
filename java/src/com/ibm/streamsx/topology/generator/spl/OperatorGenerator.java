@@ -364,7 +364,6 @@ class OperatorGenerator {
     }
 
     static void operatorNameAndKind(JsonObject op, StringBuilder sb, boolean singlePortSingleName) {
-
         if (!singlePortSingleName) {
             String name = jstring(op, "name");
             name = getSPLCompatibleName(name);

@@ -90,7 +90,7 @@ class Preprocessor {
             return;
         
         // Add isolate before the parallel and end parallel markers
-        Set<JsonObject> parallelOperators = findOperatorByKind(PARALLEL, graph);  
+        List<JsonObject> parallelOperators = findOperatorByKind(PARALLEL, graph);  
         parallelOperators.addAll(findOperatorByKind(END_PARALLEL, graph));
         for (JsonObject po : parallelOperators) {
             String schema = po.get("inputs").getAsJsonArray().get(0).getAsJsonObject().get("type").getAsString();
@@ -138,7 +138,7 @@ class Preprocessor {
     
     private void removeRemainingVirtualMarkers(){
         for (BVirtualMarker marker : Arrays.asList(BVirtualMarker.UNION, BVirtualMarker.PENDING)) {
-            Set<JsonObject> unionOps = GraphUtilities.findOperatorByKind(marker, graph);
+            List<JsonObject> unionOps = GraphUtilities.findOperatorByKind(marker, graph);
             GraphUtilities.removeOperators(unionOps, graph);
         }
     }

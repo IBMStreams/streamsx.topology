@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -123,7 +124,7 @@ class PEPlacement {
 
     void tagIsolationRegions() {
         // Check whether graph is valid for colocations
-        Set<JsonObject> isolateOperators = findOperatorByKind(ISOLATE, graph);
+        List<JsonObject> isolateOperators = findOperatorByKind(ISOLATE, graph);
         
         if (!isolateOperators.isEmpty())
             graph.getAsJsonObject("config").addProperty(CFG_HAS_ISOLATE, true);
@@ -195,7 +196,7 @@ class PEPlacement {
     }
     
     void tagLowLatencyRegions() {
-        Set<JsonObject> lowLatencyStartOperators = GraphUtilities
+        List<JsonObject> lowLatencyStartOperators = GraphUtilities
                 .findOperatorByKind(LOW_LATENCY, graph);
         
         if (lowLatencyStartOperators.isEmpty())
