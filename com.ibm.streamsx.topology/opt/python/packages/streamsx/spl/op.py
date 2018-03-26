@@ -57,11 +57,14 @@ Because a string is interpreted as an SPL expression, a string constant
 should be passed by enclosing the quoted string in outer quotes
 (for example, '"a string constant"').
 
-SPL is strictly typed so when passing a constant as a parameter value the
+SPL is strictly typed so when passing a constant as a value the
 value may need to be strongly typed.
     * ``bool``, ``int``, ``float`` and ``str`` values map automatically to SPL `boolean`, `int32`, `float64` and `rstring` respectively.
     * ``Enum`` values map to an operator custom literal using the symbolic name of the value. For custom literals only the symbolic name needs to match a value expected by the operator, the class name and other values are arbitrary.
     * The module :py:mod:`streamsx.spl.types` provides functions to create typed SPL expressions from values.
+
+An optional type may be set to SPL `null` by passing either Python `None` or
+the value returned from :py:func:`~streamsx.spl.types.null`.
 
 Param clause
 ------------
@@ -79,8 +82,6 @@ To invoke a `Beacon` operator from the SPL standard toolkit producing 100 tuples
         params = {'iterations':100, 'period':0.5})
 
 To use an ``IntEnum`` to pass a custom literal to the ``Parse`` operator::
-An optional type may be set to SPL `null` by passing either Python `None` or
-the value returned from :py:func:`~streamsx.topology.spl.types.null`.
 
     from enum import IntEnum
 
