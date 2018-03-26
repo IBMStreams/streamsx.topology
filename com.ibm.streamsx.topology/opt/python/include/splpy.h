@@ -53,7 +53,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
 
       if(pyReturnVar == 0){
-        throw SplpyGeneral::pythonException("for_each");
+        throw SplpyExceptionInfo::pythonError("for_each");
       }
 
       Py_DECREF(pyReturnVar);

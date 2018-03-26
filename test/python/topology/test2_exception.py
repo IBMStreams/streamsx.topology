@@ -113,7 +113,8 @@ class TestExceptions(unittest.TestCase):
 
         tester = Tester(topo)
         tester.tuple_count(s, 57)
-        tester.tuple_count(se, 0)
+        if isinstance(se, Stream):
+            tester.tuple_count(se, 0)
         ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
         self.assertFalse(ok)
 
@@ -174,6 +175,23 @@ class TestExceptions(unittest.TestCase):
         """
         self._run_app(lambda se :
             se.filter(BadCall(self.tf)))
+
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
+
+    def test_exc_on_enter_for_each(self):
+        """Test exception on enter.
+        """
+        self._run_app(lambda se : se.for_each(ExcOnEnter(self.tf)))
+
+        self._result(3)
+
+    def test_exc_on_bad_call_for_each(self):
+        """Test exception in __call__
+        """
+        self._run_app(lambda se :
+            se.for_each(BadCall(self.tf)))
 
         content = self._result(5)
         self.assertEqual('__exit__\n', content[3])
