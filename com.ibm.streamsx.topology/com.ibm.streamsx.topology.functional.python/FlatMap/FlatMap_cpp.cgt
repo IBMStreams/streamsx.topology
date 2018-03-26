@@ -93,8 +93,8 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     PyObject * pyIterator = streamsx::topology::pySplProcessTuple(funcop_->callable(), value);
 
     if (pyIterator == 0) {
-         throw SplpyGeneral::pythonException(
-               getParameterValues("pyName").at(0)->getValue().toString());
+         throw SplpyExceptionInfo::pythonError(
+               getParameterValues("pyName").at(0)->getValue().toString().c_str());
     }
     if (SplpyGeneral::isNone(pyIterator)) {
         Py_DECREF(pyIterator);

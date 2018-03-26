@@ -46,6 +46,10 @@ class BadData(EnterExit):
     def __call__(self, t):
         return {'a':'A' + str(t)}
 
+class BadDataFlatMap(EnterExit):
+    def __call__(self, t):
+        return [{'a':'A' + str(t)}]
+
 class BadCall(EnterExit):
     def __call__(self, t):
         d = {}
@@ -135,6 +139,23 @@ class TestExceptions(unittest.TestCase):
         """
         self._run_app(lambda se :
             se.map(BadCall(self.tf), schema='tuple<int32 a>'))
+
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
+
+    def test_exc_on_enter_flat_map(self):
+        """Test exception on enter.
+        """
+        self._run_app(lambda se : se.flat_map(ExcOnEnter(self.tf)))
+
+        self._result(3)
+
+    def test_exc_on_bad_call_flat_map(self):
+        """Test exception in __call__
+        """
+        self._run_app(lambda se :
+            se.flat_map(BadCall(self.tf)))
 
         content = self._result(5)
         self.assertEqual('__exit__\n', content[3])
