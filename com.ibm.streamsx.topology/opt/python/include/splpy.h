@@ -158,11 +158,12 @@ namespace streamsx {
       PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
 
       if (pyReturnVar == 0){
-        throw SplpyGeneral::pythonException("hash");
+        throw SplpyExceptionInfo::pythonError("hash");
       }
 
       // construct integer from return value
-      SPL::int64 hash = (SPL::int64) PyLong_AsLong(pyReturnVar);
+      SPL::int64 hash;
+      pySplValueFromPyObject(hash, pyReturnVar);
       Py_DECREF(pyReturnVar);
       return hash;
    }

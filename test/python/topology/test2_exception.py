@@ -46,6 +46,10 @@ class BadData(EnterExit):
     def __call__(self, t):
         return {'a':'A' + str(t)}
 
+class BadHash(EnterExit):
+    def __call__(self, t):
+        return 'A'
+
 class BadDataFlatMap(EnterExit):
     def __call__(self, t):
         return [{'a':'A' + str(t)}]
@@ -196,3 +200,31 @@ class TestExceptions(unittest.TestCase):
         content = self._result(5)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('KeyError\n', content[4])
+
+    def test_exc_on_enter_hash(self):
+        """Test exception on enter.
+        """
+        self._run_app(lambda se :
+            se.parallel(1, routing=Routing.HASH_PARTITIONED, func=ExcOnEnter(self.tf)))
+
+        self._result(3)
+
+    def test_exc_on_bad_call_hash(self):
+        """Test exception in __call__
+        """
+        self._run_app(lambda se :
+            se.parallel(1, routing=Routing.HASH_PARTITIONED, func=BadCall(self.tf)))
+
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
+
+    def test_exc_on_data_conversion_hash(self):
+        """Test exception on enter.
+        """
+        self._run_app(lambda se :
+            se.parallel(1, routing=Routing.HASH_PARTITIONED, func=BadHash(self.tf)))
+
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('TypeError\n', content[4])
