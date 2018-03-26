@@ -100,37 +100,32 @@ class TestExceptions(unittest.TestCase):
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('TypeError\n', content[4])
 
-    def test_exc_on_enter_map(self):
-        """Test exception on enter.
-        """
+    def _run_app(self, fn):
         topo = Topology()
         s = topo.source(range(57))
-
         se = topo.source([1,2,3])
-        se.map(ExcOnEnter(self.tf))
+
+        se = fn(se)
 
         tester = Tester(topo)
         tester.tuple_count(s, 57)
         tester.tuple_count(se, 0)
         ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
         self.assertFalse(ok)
+
+    def test_exc_on_enter_map(self):
+        """Test exception on enter.
+        """
+        self._run_app(lambda se : se.map(ExcOnEnter(self.tf)))
+
         self._result(3)
 
     def test_exc_on_data_conversion_map(self):
         """Test exception on enter.
         """
-        topo = Topology()
-        s = topo.source(range(57))
+        self._run_app(lambda se :
+            se.map(BadData(self.tf), schema='tuple<int32 a>'))
 
-        se = topo.source([1,2,3])
-        se = se.map(BadData(self.tf), schema='tuple<int32 a>')
-        se.print(tag='DDDD')
-
-        tester = Tester(topo)
-        tester.tuple_count(s, 57)
-        tester.tuple_count(se, 0)
-        ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
-        self.assertFalse(ok)
         content = self._result(5)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('TypeError\n', content[4])
@@ -138,17 +133,9 @@ class TestExceptions(unittest.TestCase):
     def test_exc_on_bad_call_map(self):
         """Test exception in __call__
         """
-        topo = Topology()
-        s = topo.source(range(57))
+        self._run_app(lambda se :
+            se.map(BadCall(self.tf), schema='tuple<int32 a>'))
 
-        se = topo.source([1,2,3])
-        se = se.map(BadCall(self.tf), schema='tuple<int32 a>')
-
-        tester = Tester(topo)
-        tester.tuple_count(s, 57)
-        tester.tuple_count(se, 0)
-        ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
-        self.assertFalse(ok)
         content = self._result(5)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('KeyError\n', content[4])
@@ -156,33 +143,17 @@ class TestExceptions(unittest.TestCase):
     def test_exc_on_enter_filter(self):
         """Test exception on enter.
         """
-        topo = Topology()
-        s = topo.source(range(57))
+        self._run_app(lambda se :
+            se.filter(ExcOnEnter(self.tf)))
 
-        se = topo.source([1,2,3])
-        se.filter(ExcOnEnter(self.tf))
-
-        tester = Tester(topo)
-        tester.tuple_count(s, 57)
-        tester.tuple_count(se, 0)
-        ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
-        self.assertFalse(ok)
         self._result(3)
 
     def test_exc_on_bad_call_filter(self):
         """Test exception in __call__
         """
-        topo = Topology()
-        s = topo.source(range(57))
+        self._run_app(lambda se :
+            se.filter(BadCall(self.tf)))
 
-        se = topo.source([1,2,3])
-        se = se.filter(BadCall(self.tf))
-
-        tester = Tester(topo)
-        tester.tuple_count(s, 57)
-        tester.tuple_count(se, 0)
-        ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
-        self.assertFalse(ok)
         content = self._result(5)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('KeyError\n', content[4])
