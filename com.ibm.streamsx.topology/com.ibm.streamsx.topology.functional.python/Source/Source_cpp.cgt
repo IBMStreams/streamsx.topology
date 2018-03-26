@@ -64,6 +64,7 @@ void MY_OPERATOR::process(uint32_t idx)
   PyObject *pyReturnVar = NULL;
 
   while(!getPE().getShutdownRequested()) {
+   try {
     
     OPort0Type otuple;
 
@@ -75,7 +76,7 @@ void MY_OPERATOR::process(uint32_t idx)
       pyReturnVar = PyObject_CallObject(funcop_->callable(), NULL);
 
       if (pyReturnVar == NULL) {
-         throw SplpyGeneral::pythonException("source");
+         throw SplpyExceptionInfo::pythonError("source");
       }
  
       if (SplpyGeneral::isNone(pyReturnVar)) {
@@ -104,6 +105,9 @@ void MY_OPERATOR::process(uint32_t idx)
     } // end lock
 
     submit(otuple, 0);
+   } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+     SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+   }
   }
 
   if (pyReturnVar != NULL) {

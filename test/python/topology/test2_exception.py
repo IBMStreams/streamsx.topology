@@ -59,6 +59,28 @@ class BadCall(EnterExit):
         d = {}
         return d['notthere']
 
+class BadSource(EnterExit):
+    def __call__(self):
+        d = {}
+        return d['notthere']
+
+class BadSourceIter(EnterExit):
+    def __call__(self):
+        return self
+
+    def __iter__(self):
+        raise UnicodeError("Bad source __iter__")
+
+class BadSourceNext(EnterExit):
+    def __call__(self):
+        return self
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        raise IndexError("Bad source __next__")
+
 class TestExceptions(unittest.TestCase):
     """ Test exceptions in callables
     """
@@ -108,12 +130,15 @@ class TestExceptions(unittest.TestCase):
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('TypeError\n', content[4])
 
-    def _run_app(self, fn):
+    def _run_app(self, fn=None, data=None):
         topo = Topology()
         s = topo.source(range(57))
-        se = topo.source([1,2,3])
+        if data is None:
+            data = [1,2,3]
+        se = topo.source(data)
 
-        se = fn(se)
+        if fn is not None:
+            se = fn(se)
 
         tester = Tester(topo)
         tester.tuple_count(s, 57)
@@ -228,3 +253,38 @@ class TestExceptions(unittest.TestCase):
         content = self._result(5)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('TypeError\n', content[4])
+
+    def test_exc_on_enter_source(self):
+        """Test exception on enter.
+        """
+        self._run_app(data=ExcOnEnter(self.tf))
+
+        self._result(3)
+
+    def test_exc_on_bad_call_source(self):
+        """Test exception in __call__
+           This is the __call__ that sets up the iterator
+        """
+        self._run_app(data=BadSource(self.tf))
+
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
+
+    def test_exc_on_bad_iter_source(self):
+        """Test exception in __iter__
+        """
+        self._run_app(data=BadSourceIter(self.tf))
+
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('UnicodeError\n', content[4])
+
+    def test_exc_on_bad_next_source(self):
+        """Test exception in __iter__
+        """
+        self._run_app(data=BadSourceNext(self.tf))
+
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('IndexError\n', content[4])
