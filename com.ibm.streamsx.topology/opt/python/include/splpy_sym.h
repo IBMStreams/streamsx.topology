@@ -184,8 +184,13 @@ extern "C" {
 typedef PyObject* (*__splpy_ogas_fp)(PyObject *, const char *);
 typedef int (*__splpy_rssf_fp)(const char *, PyCompilerFlags *);
 #if __SPLPY_EC_MODULE_OK
+#if PY_MAJOR_VERSION == 3
 typedef PyObject* (*__splpy_mc2_fp)(PyModuleDef *, int);
 typedef int (*__splpy_sam_fp)(PyObject *, PyModuleDef *);
+#endif
+#if PY_MAJOR_VERSION == 2
+typedef PyObject * (*__splpy_im4_fp)(const char *, PyMethodDef *, const char *doc, PyObject *self, int);
+#endif
 #endif
 
 extern "C" {
@@ -197,8 +202,14 @@ extern "C" {
   static __splpy_p_p_fp __spl_fp_PyImport_Import;
 
 #if __SPLPY_EC_MODULE_OK
+#if PY_MAJOR_VERSION == 3
   static __splpy_mc2_fp __spl_fp_PyModule_Create2;
   static __splpy_sam_fp __spl_fp_PyState_AddModule;
+#endif
+#if PY_MAJOR_VERSION == 2
+  static __splpy_im4_fp __spl_fp_Py_InitModule4 ;
+#endif
+
 #endif
 
   static PyObject * __spl_fi_PyObject_GetAttrString(PyObject *o, const char * attr_name) {
@@ -221,12 +232,19 @@ extern "C" {
   }
 
 #if __SPLPY_EC_MODULE_OK
+#if PY_MAJOR_VERSION == 3
   static PyObject * __spl_fi_PyModule_Create2(PyModuleDef *module, int apivers) {
      return __spl_fp_PyModule_Create2(module, apivers);
   }
   static int __spl_fi_PyState_AddModule(PyObject *module, PyModuleDef *def) {
      return __spl_fp_PyState_AddModule(module, def);
   }
+#endif
+#if PY_MAJOR_VERSION == 2
+  static PyObject * __spl_fi_Py_InitModule4(const char *name, PyMethodDef *methods, const char *doc, PyObject *self, int apiver) {
+     return __spl_fp_Py_InitModule4(name, methods, doc, self, apiver);
+  }
+#endif
 #endif
 }
 #pragma weak PyObject_GetAttrString = __spl_fi_PyObject_GetAttrString
@@ -237,8 +255,14 @@ extern "C" {
 #pragma weak PyImport_Import = __spl_fi_PyImport_Import
 
 #if __SPLPY_EC_MODULE_OK
+#if PY_MAJOR_VERSION == 3
 #pragma weak PyModule_Create2 = __spl_fi_PyModule_Create2
 #pragma weak PyState_AddModule = __spl_fi_PyState_AddModule
+#endif
+#if PY_MAJOR_VERSION == 2
+#pragma weak Py_InitModule4_64 = __spl_fi_Py_InitModule4
+#pragma weak Py_InitModule4TraceRefs_64 = __spl_fi_Py_InitModule4
+#endif
 #endif
 
 /*
@@ -251,7 +275,9 @@ extern "C" {
   static __splpy_p_s_fp __spl_fp_PyTuple_New;
   static __splpy_p_p_fp __spl_fp_PyIter_Next;
   static __splpy_v_p_fp __spl_fp_PyDict_New;
+  static __splpy_s_p_fp __spl_fp_PyDict_Size;
   static __splpy_i_ppp_fp __spl_fp_PyDict_SetItem;
+  static __splpy_p_pp_fp __spl_fp_PyDict_GetItem;
   static __splpy_dn_fp __spl_fp_PyDict_Next;
   static __splpy_p_s_fp __spl_fp_PyList_New;
   static __splpy_s_p_fp __spl_fp_PyList_Size;
@@ -269,8 +295,14 @@ extern "C" {
   static PyObject * __spl_fi_PyDict_New() {
      return __spl_fp_PyDict_New();
   }
+  static Py_ssize_t __spl_fi_PyDict_Size(PyObject *d) {
+     return __spl_fp_PyDict_Size(d);
+  }
   static int __spl_fi_PyDict_SetItem(PyObject *d, PyObject *k, PyObject *v) {
      return __spl_fp_PyDict_SetItem(d, k, v);
+  }
+  static PyObject * __spl_fi_PyDict_GetItem(PyObject *d, PyObject *k) {
+     return __spl_fp_PyDict_GetItem(d, k);
   }
   static int __spl_fi_PyDict_Next(PyObject *d, Py_ssize_t *o,PyObject **k, PyObject **v) {
      return __spl_fp_PyDict_Next(d, o, k, v);
@@ -297,7 +329,9 @@ extern "C" {
 #pragma weak PyTuple_New = __spl_fi_PyTuple_New
 #pragma weak PyIter_Next = __spl_fi_PyIter_Next
 #pragma weak PyDict_New = __spl_fi_PyDict_New
+#pragma weak PyDict_Size = __spl_fi_PyDict_Size
 #pragma weak PyDict_SetItem = __spl_fi_PyDict_SetItem
+#pragma weak PyDict_GetItem = __spl_fi_PyDict_GetItem
 #pragma weak PyDict_Next = __spl_fi_PyDict_Next
 #pragma weak PyList_New = __spl_fi_PyList_New
 #pragma weak PyList_Size = __spl_fi_PyList_Size
@@ -437,6 +471,10 @@ extern "C" {
 
 #define __SPLFIX(_NAME, _TYPE) __SPLFIX_EX( __spl_fp_##_NAME, #_NAME, _TYPE ) 
 
+#define __SPL_STRINGIFY(_X) #_X
+
+#define __SPL_TOSTRING(_X) __SPL_STRINGIFY(_X)
+
 namespace streamsx {
   namespace topology {
 
@@ -478,14 +516,21 @@ class SplpySym {
      __SPLFIX(PyImport_Import, __splpy_p_p_fp);
 
 #if __SPLPY_EC_MODULE_OK
+#if PY_MAJOR_VERSION == 3
      __SPLFIX(PyModule_Create2, __splpy_mc2_fp);
      __SPLFIX(PyState_AddModule, __splpy_sam_fp);
+#endif
+#if PY_MAJOR_VERSION == 2
+     __SPLFIX_EX(__spl_fp_Py_InitModule4, __SPL_TOSTRING(Py_InitModule4), __splpy_im4_fp);
+#endif
 #endif
  
      __SPLFIX(PyTuple_New, __splpy_p_s_fp);
      __SPLFIX(PyIter_Next, __splpy_p_p_fp);
      __SPLFIX(PyDict_New, __splpy_v_p_fp);
+     __SPLFIX(PyDict_Size, __splpy_s_p_fp);
      __SPLFIX(PyDict_SetItem, __splpy_i_ppp_fp);
+     __SPLFIX(PyDict_GetItem, __splpy_p_pp_fp);
      __SPLFIX(PyDict_Next, __splpy_dn_fp);
      __SPLFIX(PyList_New, __splpy_p_s_fp);
      __SPLFIX(PyList_Size, __splpy_s_p_fp);

@@ -17,9 +17,15 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.auth.AUTH;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
@@ -28,6 +34,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.StreamsRestUtils.StreamingAnalyticsServiceVersion;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
@@ -71,6 +78,16 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         return streamsConnection;
     }
 
+    JsonObject getServiceStatus(CloseableHttpClient httpClient)
+            throws IOException, IllegalStateException {
+        String url = getStatusUrl(httpClient);
+
+        HttpGet getStatus = new HttpGet(url);
+        getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
+
+        return StreamsRestUtils.getGsonResponse(httpClient, getStatus);
+  }
+
     /** Version-specific authorization header handling. */
     protected abstract String getAuthorization();
     /** Version-specific handling for status URL. */
@@ -79,10 +96,6 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     /** Version-specific handling for job submit URL with file bundle. */
     protected abstract String getJobSubmitUrl(CloseableHttpClient httpClient,
             File bundle) throws IOException, UnsupportedEncodingException;
-    /** Version-specific post job. */
-    protected abstract JsonObject postJob(CloseableHttpClient httpClient,
-            JsonObject service, File bundle, JsonObject jobConfigOverlay)
-            throws IOException;
     /** Version-specific handling for job submit URL with artifact. */
     protected abstract String getJobSubmitUrl(JsonObject build)
             throws IOException, UnsupportedEncodingException;
@@ -145,35 +158,32 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     
     @Override
     public Result<StreamingAnalyticsService, JsonObject> checkStatus(boolean requireRunning) throws IOException {
-        
         final CloseableHttpClient httpClient = HttpClients.createDefault();
         try {
-            String url = getStatusUrl(httpClient);
+            JsonObject response = getServiceStatus(httpClient);
 
-            HttpGet getStatus = new HttpGet(url);
-            getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
-
-            JsonObject response = StreamsRestUtils.getGsonResponse(httpClient, getStatus);
-            
             boolean running =
                     "true".equals(jstring(response, "enabled"))
                     &&
                     "running".equals(jstring(response, "status"));
-            
+
             if (requireRunning && !running)
                 throw new IllegalStateException("Service (" + serviceName + ") is not running!");
-            
-            return new ResultImpl<>(running, null, () -> this, response);            
 
+            return new ResultImpl<>(running, null, () -> this, response); 
         } finally {
             httpClient.close();
         }
+
     }
-    
+
     @Override
     public Result<Job, JsonObject> buildAndSubmitJob(File archive, JsonObject jco,
             String buildName) throws IOException {
-    	
+        
+        JsonObject metrics = new JsonObject();
+        metrics.addProperty(SubmissionResultsKeys.SUBMIT_ARCHIVE_SIZE, archive.length());
+           	
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
             // Set up the build name
@@ -184,14 +194,31 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
             // Perform initial post of the archive
             RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submitting build " + buildName);
+            final long startUploadTime = System.currentTimeMillis();
             JsonObject build = submitBuild(httpclient, getAuthorization(), archive, buildName);
-
+            final long endUploadTime = System.currentTimeMillis();
+            metrics.addProperty(SubmissionResultsKeys.SUBMIT_UPLOAD_TIME, (endUploadTime - startUploadTime));
+            
             String buildId = jstring(build, "id");
             String outputId = jstring(build, "output_id");
 
             // Loop until built
+            final long startBuildTime = endUploadTime;
+            long lastCheckTime = endUploadTime;
             String status = buildStatusGet(buildId, httpclient, getAuthorization());
             while (!status.equals("built")) {
+                String mkey = SubmissionResultsKeys.buildStateMetricKey(status);
+                long now = System.currentTimeMillis();
+                long duration;
+                if (metrics.has(mkey)) {
+                    duration = metrics.get(mkey).getAsLong();                  
+                } else {
+                    duration = 0;
+                }
+                duration += (now - lastCheckTime);
+                metrics.addProperty(mkey, duration);
+                lastCheckTime = now;
+                
                 // 'building', 'notBuilt', and 'waiting' are all states which can eventualy result in 'built'
                 // sleep and continue to monitor
                 if (status.equals("building") || status.equals("notBuilt") || status.equals("waiting")) {
@@ -213,6 +240,8 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
                     throw new IllegalStateException("Error submitting archive for compilation: \n" + strOutput);
                 }
             }
+            final long endBuildTime = System.currentTimeMillis();
+            metrics.addProperty(SubmissionResultsKeys.SUBMIT_TOTAL_BUILD_TIME, (endBuildTime - startBuildTime));
 
             // Now perform archive put
             build = getBuild(buildId, httpclient, getAuthorization());
@@ -227,10 +256,15 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             String submitUrl = getJobSubmitUrl(artifact);
 
             RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submitting job request.");
+            final long startSubmitTime = System.currentTimeMillis();
             JsonObject response = submitBuildArtifact(httpclient, jco,
                     getAuthorization(), submitUrl);
+            final long endSubmitTime = System.currentTimeMillis();
+            metrics.addProperty(SubmissionResultsKeys.SUBMIT_JOB_TIME, (endSubmitTime - startSubmitTime));
             
-            return jobResult(response);
+            Result<Job,JsonObject> result = jobResult(response);
+            result.getRawResult().add(SubmissionResultsKeys.SUBMIT_METRICS, metrics);
+            return result;
         } finally {
             httpclient.close();
         }
@@ -292,5 +326,32 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         default:
             throw new IllegalStateException("Unknown Streaming Analytics Service version");
         }
+    }
+    
+    /**
+     * Submit an application bundle to execute as a job.
+     */
+    protected JsonObject postJob(CloseableHttpClient httpClient,
+            JsonObject service, File bundle, JsonObject jobConfigOverlay)
+            throws IOException {
+
+        String url = getJobSubmitUrl(httpClient, bundle);
+
+        HttpPost postJobWithConfig = new HttpPost(url);
+        postJobWithConfig.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
+        FileBody bundleBody = new FileBody(bundle, ContentType.APPLICATION_OCTET_STREAM);
+        StringBody configBody = new StringBody(jobConfigOverlay.toString(), ContentType.APPLICATION_JSON);
+
+        HttpEntity reqEntity = MultipartEntityBuilder.create()
+                .addPart("bundle_file", bundleBody)
+                .addPart("job_options", configBody).build();
+
+        postJobWithConfig.setEntity(reqEntity);
+
+        JsonObject jsonResponse = StreamsRestUtils.getGsonResponse(httpClient, postJobWithConfig);
+
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + getName() + "): submit job response:" + jsonResponse.toString());
+
+        return jsonResponse;
     }
 }

@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.findOperatorByKind;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.first;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
@@ -27,7 +28,7 @@ public class GraphValidation {
             // Setting up loop
             JsonObject endParallelParent = endParallel;
             do {
-                Set<JsonObject> endParallelParents = GraphUtilities.getUpstream(endParallelParent, graph);
+                Set<JsonObject> endParallelParents = getUpstream(endParallelParent, graph);
                 if (endParallelParents.size() != 1) {
                     throw new IllegalStateException("Cannot union multiple streams before invoking endParallel()");
                 }

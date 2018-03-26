@@ -23,6 +23,9 @@ void MY_OPERATOR::pySubmitTuplesPort<%=$oport->getIndex()%>(PyObject *value <%=$
   {
     fromPythonToPort<%=$oport->getIndex()%>(value <%=$ituplearg%>);
   }
+  else if (PyDict_Check(value)) {
+    fromPythonDictToPort<%=$oport->getIndex()%>(value <%=$ituplearg%>);
+  }
   else if (PyList_Check(value))
   {
 
@@ -32,12 +35,15 @@ void MY_OPERATOR::pySubmitTuplesPort<%=$oport->getIndex()%>(PyObject *value <%=$
        PyObject *ltuple = PyList_GET_ITEM(value, k);
        if (SplpyGeneral::isNone(ltuple))
            continue;
-       if (!PyTuple_Check(ltuple)) {    
+       if (PyTuple_Check(ltuple)) {    
+           fromPythonToPort<%=$oport->getIndex()%>(ltuple <%=$ituplearg%>);
+       } else if (PyDict_Check(ltuple)) {
+           fromPythonDictToPort<%=$oport->getIndex()%>(ltuple <%=$ituplearg%>);
+       } else {
           throw SplpyGeneral::generalException("submit",
-             "Fatal error: Value submitted must be a Python tuple or a Python list of tuples: Port <%=$oport->getIndex()%>");
+             "Fatal error: Value submitted must be a Python tuple, dict or list of tuples or dicts: Port <%=$oport->getIndex()%>");
        }
      
-      fromPythonToPort<%=$oport->getIndex()%>(ltuple <%=$ituplearg%>);
      }
   }
   else {

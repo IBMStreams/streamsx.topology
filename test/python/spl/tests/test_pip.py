@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 import unittest
@@ -10,6 +11,7 @@ from streamsx.topology import schema
 import streamsx.topology.context
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
+import streamsx.scripts.extract
 
 def down_a_pint():
     try:
@@ -28,6 +30,12 @@ class TestLocal(unittest.TestCase):
 class TestPipInstalls(unittest.TestCase):
     """ Test remote pip install of packages.
     """
+    @classmethod
+    def setUpClass(cls):
+        """Extract Python operators in toolkit"""
+        streamsx.scripts.extract.main(['-i', '../testtkpy_pip_op', '--make-toolkit'])
+        streamsx.scripts.extract.main(['-i', '../testtkpy_pip_toolkit', '--make-toolkit'])
+
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
 

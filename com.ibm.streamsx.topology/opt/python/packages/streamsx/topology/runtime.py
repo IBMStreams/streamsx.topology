@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 from __future__ import unicode_literals
-from builtins import str
+from future.builtins import *
 
 import os
 import sys
@@ -223,8 +223,8 @@ class _JSONInJSONOut(_FunctionalCallable):
 ##
 ## The style is one of:
 ##
-## pickle - Object is a Python byte string representing a picked object.
-##          The object is depicked/pickled before being passed to/return from
+## pickle - Object is a Python byte string representing a pickled object.
+##          The object is depickled/pickled before being passed to/return from
 ##          the application callable.
 ##          he returned function must not maintain a reference
 ##          to the passed in value as it will be a memory view

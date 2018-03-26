@@ -25,7 +25,7 @@ _hwcountU = 0
 # because sc defaults to optimized
 # compilation
 def check_asserts_disabled(tuple):
-    assert False
+    assert False, "Expect assertions to be disabled"
     return True
     
 

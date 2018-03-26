@@ -2,6 +2,9 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 
+from future.builtins import *
+from past.builtins import basestring
+
 import streamsx.topology.topology
 import streamsx.topology.schema
 
@@ -49,7 +52,7 @@ class ExtensionOperator(object):
         self.outputs = []
         if schemas is not None:
             stream_name = None
-            if isinstance(schemas, str):
+            if isinstance(schemas, basestring):
                 schemas = (schemas,)
                 stream_name = self._op().name
 

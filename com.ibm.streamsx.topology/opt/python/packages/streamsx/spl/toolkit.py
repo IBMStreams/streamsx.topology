@@ -18,6 +18,7 @@ Toolkits shipped with the IBM Streams product under
 must not be added through ``add_toolkit``.
 
 """
+from future.builtins import *
 
 import os
 import streamsx.topology.topology

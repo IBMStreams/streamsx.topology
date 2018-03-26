@@ -54,6 +54,8 @@ class TimeCounter(object):
         self.count += 1
         time.sleep(self.period)
         return to_return
+    def next(self):
+        return self.__next__()
 
 class TriggerDiff(object):
     """Given any input, returns the timespan (in seconds) between now
@@ -97,7 +99,8 @@ class TestPythonWindowing(unittest.TestCase):
     def test_BasicCountCountWindow(self):
         topo = Topology()
         s = topo.source([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
-        s = s.last(10).trigger(2).aggregate(lambda x: sum(x)/len(x))
+        # Need a float cast to make the value consistent with Python 2/3
+        s = s.last(10).trigger(2).aggregate(lambda x: float(sum(x))/float(len(x)))
 
         tester = Tester(topo)
         tester.contents(s, [1.5,2.5,3.5,4.5,5.5,7.5,9.5])

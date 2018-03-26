@@ -1,6 +1,8 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
+from future.builtins import *
+
 import subprocess
 import io
 import os
@@ -44,7 +46,8 @@ def _cancel_job(job_id, force):
 
 def _run_st(args, lines=None):
     args.insert(0, os.path.join(_install, 'bin', 'streamtool'))
-    process = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.DEVNULL)
+    process = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    process.stdin.close()
     while True:
         line = process.stdout.readline()
         if len(line) == 0:

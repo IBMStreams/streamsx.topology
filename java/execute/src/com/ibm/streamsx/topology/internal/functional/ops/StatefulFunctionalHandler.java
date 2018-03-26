@@ -4,24 +4,27 @@
  */
 package com.ibm.streamsx.topology.internal.functional.ops;
 
+import static com.ibm.streamsx.topology.internal.functional.FunctionalHelper.getLogicObject;
+
 import com.ibm.streams.operator.state.Checkpoint;
 import com.ibm.streams.operator.state.StateHandler;
 import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.internal.functional.FunctionalHandler;
-import com.ibm.streamsx.topology.internal.logic.ObjectUtils;
 
+/**
+ * Functional logic handler used when checkpointing/consistent region is configured
+ * and the logic is not immutable.
+ * 
+ */
 class StatefulFunctionalHandler<T> extends FunctionalHandler<T> implements StateHandler {
     
+    private final String initialLogic;
     private T logic;
 
     StatefulFunctionalHandler(FunctionContext context,
-            String serializedLogic) throws Exception {
-        super(context, serializedLogic);
-        resetToInitialState();
-    }
-    
-    boolean isStateful() {
-        return !ObjectUtils.isImmutable(getLogic().getClass());
+            String initialLogic) throws Exception {
+        super(context);
+        this.initialLogic = initialLogic;
     }
     
     @Override
@@ -29,16 +32,24 @@ class StatefulFunctionalHandler<T> extends FunctionalHandler<T> implements State
         return logic;
     }
     
-    private void setLogic(T logic) throws Exception {
-        synchronized(this) {
-            this.logic = logic;
+    private synchronized void closeLogic() {
+        if (this.logic != null) {
+            // Clear mapping of custom metrics to any objects in the logic.
+            ((FunctionOperatorContext) getFunctionContext()).clearMetrics();
+            closeLogic(this.logic);
+            this.logic = null;
         }
-        initializeLogic();
+    }
+    
+    private synchronized void setLogic(T logic) {
+        this.logic = logic;
     }
     
     @Override
     public void resetToInitialState() throws Exception {
-        setLogic(initialLogic());      
+        closeLogic();
+        setLogic(getLogicObject(initialLogic));
+        initializeLogic();
     }
 
     @Override
@@ -56,8 +67,10 @@ class StatefulFunctionalHandler<T> extends FunctionalHandler<T> implements State
     @SuppressWarnings("unchecked")
     @Override
     public void reset(Checkpoint checkpoint) throws Exception {
+        closeLogic();
         final Object logic = checkpoint.getInputStream().readObject();
         setLogic((T) logic);
+        initializeLogic();
     }
 
     @Override

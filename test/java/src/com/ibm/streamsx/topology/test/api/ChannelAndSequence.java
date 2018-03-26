@@ -23,5 +23,10 @@ public class ChannelAndSequence implements Serializable {
     public int getSequence() {
         return sequence;
     }
+    
+    @Override
+    public String toString() {
+        return "CS:" + getChannel() + ":" + getSequence();
+    }
 
 }

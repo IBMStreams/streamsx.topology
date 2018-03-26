@@ -254,12 +254,27 @@ class SplpyGeneral {
      * in the PE console.
     */
     static SPL::SPLRuntimeException pythonException(std::string const & location) {
-
+      SPL::rstring msg("Unknown Python error");
+      _setupException(msg);
+      
+      SPL::SPLRuntimeOperatorException exc(location, msg);
+      
+      return exc;
+  }
+    static SPL::SPLRuntimeException dataConversionException(std::string const & location) {
+      SPLAPPTRC(L_ERROR, "Python conversion error with SPL " << location, "python");
+      SPL::rstring msg("Data conversion error");
+      _setupException(msg);
+      
+      SPL::SPLRuntimeTypeMismatchException exc(location, msg);
+      
+      return exc;
+  }
+    static void _setupException(SPL::rstring & msg) {
       PyObject *pyType, *pyValue, *pyTraceback;
       PyErr_Fetch(&pyType, &pyValue, &pyTraceback);
       PyErr_NormalizeException(&pyType, &pyValue, &pyTraceback);
       
-      SPL::rstring msg("Unknown Python error");
       if (pyValue != NULL) {
           pyRStringFromPyObject(msg, pyValue);
       }
@@ -268,10 +283,6 @@ class SplpyGeneral {
       // PeErr_Restore steals the references
       PyErr_Restore(pyType, pyValue, pyTraceback);
       SplpyGeneral::flush_PyErr_Print();
-
-      SPL::SPLRuntimeOperatorException exc(location, msg);
-      
-      return exc;
     }
 
     /**
@@ -390,8 +401,7 @@ class SplpyGeneral {
       }
 
       if (size != 0 && bytes == NULL) {
-         SPLAPPTRC(L_ERROR, "Python can't convert to SPL blob!", "python");
-         throw SplpyGeneral::pythonException("blob");
+         throw SplpyGeneral::dataConversionException("blob");
       }
 
       // This takes a copy of the data.
@@ -406,8 +416,7 @@ class SplpyGeneral {
     inline void pySplValueUsingPyObject(SPL::blob & splv, PyObject * value) {
       char * bytes = PyBytes_AsString(value);          
       if (bytes == NULL) {
-         SPLAPPTRC(L_ERROR, "Python can't convert to SPL blob!", "python");
-         throw SplpyGeneral::pythonException("blob");
+         throw SplpyGeneral::dataConversionException("blob");
       }
       long int size = PyBytes_GET_SIZE(value);
       splv.useExternalData((unsigned char *)bytes, size);
@@ -418,8 +427,7 @@ class SplpyGeneral {
     */
     inline void pySplValueFromPyObject(SPL::rstring & splv, PyObject * value) {
       if (pyRStringFromPyObject(splv, value) != 0) {
-         SPLAPPTRC(L_ERROR, "Python can't convert to UTF-8!", "python");
-         throw SplpyGeneral::pythonException("rstring");
+         throw SplpyGeneral::dataConversionException("rstring (UTF-8)");
       }
     }
 
@@ -445,43 +453,74 @@ class SplpyGeneral {
 
     // signed integers
     inline void pySplValueFromPyObject(SPL::int8 & splv, PyObject * value) {
-       splv = (SPL::int8) PyLong_AsLong(value);
+       long v = PyLong_AsLong(value);
+       if (v == -1L && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("int8");
+       splv = (SPL::int8) v;
     }
     inline void pySplValueFromPyObject(SPL::int16 & splv, PyObject * value) {
-       splv = (SPL::int16) PyLong_AsLong(value);
+       long v = PyLong_AsLong(value);
+       if (v == -1L && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("int16");
+       splv = (SPL::int16) v;
     }
     inline void pySplValueFromPyObject(SPL::int32 & splv, PyObject * value) {
-       splv = (SPL::int32) PyLong_AsLong(value);
+       long v = PyLong_AsLong(value);
+       if (v == -1L && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("int32");
+       splv = (SPL::int32) v;
     }
     inline void pySplValueFromPyObject(SPL::int64 & splv, PyObject * value) {
-       splv = (SPL::int64) PyLong_AsLong(value);
+       long v = PyLong_AsLong(value);
+       if (v == -1L && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("int64");
+       splv = (SPL::int64) v;
     }
 
     // unsigned integers
     inline void pySplValueFromPyObject(SPL::uint8 & splv, PyObject * value) {
-       splv = (SPL::uint8) PyLong_AsUnsignedLong(value);
+       unsigned long v = PyLong_AsUnsignedLong(value);
+       if (v == ((unsigned long) -1) && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("uint16");
+       splv = (SPL::uint8) v;
     }
     inline void pySplValueFromPyObject(SPL::uint16 & splv, PyObject * value) {
-       splv = (SPL::uint16) PyLong_AsUnsignedLong(value);
+       unsigned long v = PyLong_AsUnsignedLong(value);
+       if (v == ((unsigned long) -1) && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("uint16");
+       splv = (SPL::uint16) v;
     }
     inline void pySplValueFromPyObject(SPL::uint32 & splv, PyObject * value) {
-       splv = (SPL::uint32) PyLong_AsUnsignedLong(value);
+       unsigned long v = PyLong_AsUnsignedLong(value);
+       if (v == ((unsigned long) -1) && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("uint32");
+       splv = (SPL::uint32) v;
     }
     inline void pySplValueFromPyObject(SPL::uint64 & splv, PyObject * value) {
-       splv = (SPL::uint64) PyLong_AsUnsignedLong(value);
+       unsigned long v = PyLong_AsUnsignedLong(value);
+       if (v == ((unsigned long) -1) && PyErr_Occurred() != NULL)
+           throw SplpyGeneral::dataConversionException("uint64");
+       splv = (SPL::uint64) v;
     }
 
     // boolean
     inline void pySplValueFromPyObject(SPL::boolean & splv, PyObject * value) {
-       splv = PyObject_IsTrue(value);
+       int v = PyObject_IsTrue(value);
+       if (v == -1)
+           throw SplpyGeneral::dataConversionException("boolean");
+       splv = (SPL::boolean) v;
     }
  
     // floats
     inline void pySplValueFromPyObject(SPL::float32 & splv, PyObject * value) {
        splv = (SPL::float32) PyFloat_AsDouble(value);
+       if (splv == -1.0 && (PyErr_Occurred() != NULL))
+           throw SplpyGeneral::dataConversionException("float32");
     }
     inline void pySplValueFromPyObject(SPL::float64 & splv, PyObject * value) {
        splv = PyFloat_AsDouble(value);
+       if (splv == -1.0 && (PyErr_Occurred() != NULL))
+           throw SplpyGeneral::dataConversionException("float64");
     }
 
     /**
@@ -565,7 +604,7 @@ class SplpyGeneral {
 
         PyObject * iterator = PyObject_GetIter(value);
         if (iterator == 0) {
-            throw SplpyGeneral::pythonException("iter(set)");
+            throw SplpyGeneral::dataConversionException("set<...>");
         }
         PyObject *item;
         while ((item = PyIter_Next(iterator))) {
@@ -831,8 +870,9 @@ class SplpyGeneral {
  * as we release the memory view once process returns
  * using MemoryViewCleanup RAII.
  *
- * In Python2 there is no release to to allow blobs
- * in schemas we copy the contents.
+ * In Python2 there is no release so to allow blobs
+ * in schemas we copy the contents. See pySplValueToPyObject
+ * overload that takes an SPL::blob.
  *
  * We do it this way
  * rather than in the conversion method as if the schema
@@ -907,8 +947,8 @@ class MemoryViewCleanup {
 
 #else /* VER == 2 */
 
-#define PYSPL_MEMORY_VIEW_CLEANUP() /* TODO */
-#define PYSPL_MEMORY_VIEW(o) /* TODO */
+#define PYSPL_MEMORY_VIEW_CLEANUP() 
+#define PYSPL_MEMORY_VIEW(o) 
 
 #endif /* END VER 2/3 */
 

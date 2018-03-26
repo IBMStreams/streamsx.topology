@@ -200,8 +200,18 @@ class TestTopologyMethodsNew(unittest.TestCase):
 
     def test_TopologySourceItertools(self):
         topo = Topology('test_TopologySourceItertools')
-        hw = topo.source(itertools.repeat(9, 3))
-        hw = hw.filter(test_functions.check_asserts_disabled)
+        if sys.version_info.major == 2:
+            # Iterators not serializable in 2.7
+            hw = topo.source(lambda : itertools.repeat(9, 3))
+        else:
+            hw = topo.source(itertools.repeat(9, 3))
+
+        if sys.version_info.major == 2:
+            # Disabling assertions not supported on Python 2.7
+            # See splpy_setup.h
+            pass
+        else:
+            hw = hw.filter(test_functions.check_asserts_disabled)
         tester = Tester(topo)
         tester.contents(hw, [9, 9, 9])
         tester.test(self.test_ctxtype, self.test_config)

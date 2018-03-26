@@ -34,8 +34,6 @@ def has_min_version(required_version):
     return 1
 
 def tester_supported():
-    if sys.version_info.major == 2:
-        return False
     v = get_version()
     return not v.startswith('4.0.') and not v.startswith('4.1.')
 

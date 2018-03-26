@@ -31,6 +31,7 @@ import com.ibm.streams.operator.PERuntime;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Type;
 import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.TStream.Routing;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
@@ -47,6 +48,7 @@ import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
+import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -723,6 +725,52 @@ public class ParallelTest extends TestTopology {
         complete(tester, allConditions(fiveTuples, contents), 10, TimeUnit.SECONDS);
 
         assertTrue("contents: "+contents, contents.valid());
+    }
+    
+    @Test
+    public void testBroadcast() throws Exception {
+        Topology topology = newTopology();
+        
+        TStream<String> strings = topology.strings("1", "7", "19", "23", "57");
+        TStream<String> stringsP = strings.parallel(()->3, Routing.BROADCAST);
+        TStream<ChannelAndSequence> withChannel = stringsP.map(stringTupleChannelSeqTransformer());    
+        withChannel = withChannel.asType(ChannelAndSequence.class).endParallel();
+        TStream<String> result = StringStreams.toString(withChannel);
+        
+        Tester tester = topology.getTester();
+        
+        Condition<Long> fifeteenTuples = tester.tupleCount(result, 15);
+        
+        Condition<List<String>> contents = tester.stringContentsUnordered(result,
+                "CS:0:1", "CS:0:7", "CS:0:19", "CS:0:23", "CS:0:57",
+                "CS:1:1", "CS:1:7", "CS:1:19", "CS:1:23", "CS:1:57",
+                "CS:2:1", "CS:2:7", "CS:2:19", "CS:2:23", "CS:2:57");
+        
+        this.getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+        
+        complete(tester, allConditions(fifeteenTuples, contents), 10, TimeUnit.SECONDS);  
+        
+        assertTrue("broadcast count: ", fifeteenTuples.valid());
+        assertTrue("broadcast contents: ", contents.valid());
+    }
+    
+    public static class TT<T> implements Function<T,String> {
+
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String apply(T v) {
+            System.err.println("TT:" + (v == null ? "NULL": v.getClass().getName()));
+            try {
+            return v.toString();
+            } finally {
+                System.err.println("TT:DONE");
+            }
+        }
+        
     }
     
     @Test

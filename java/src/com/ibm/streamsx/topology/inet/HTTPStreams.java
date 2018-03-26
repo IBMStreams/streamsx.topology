@@ -36,7 +36,7 @@ public class HTTPStreams {
      * @param url
      *            URL to poll.
      * @param period
-     *            Poling period.
+     *            Polling period.
      * @param unit
      *            Unit for {@code period}.
      * @return Stream that will contain the JSON tuples from periodic HTTP

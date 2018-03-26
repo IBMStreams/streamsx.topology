@@ -467,7 +467,7 @@ For example:
        return "com.ibm.streamsx.topology.pysamples.mail"
 
 Decorating a Python class produces a stateful SPL operator. The instance fields of the class are the state for the operator. Any parameters to the
-`__init__` method (exluding the first `self` parameter) are mapped to
+`__init__` method (excluding the first `self` parameter) are mapped to
 operator parameters.
 
 Decorating a Python function produces a stateless SPL operator. The function may reference variables in the module that are effectively state but such variables are shared by all invocations of the operator within the same processing element.
@@ -575,7 +575,7 @@ of the toolkit, thus increasing the distribution size of the toolkit.
 
 # Packages installed by pip at SPL compile time
 
-Python packages can be requested to be installed during the SPL
+Python packages can be explictly requested to be installed during the SPL
 compilation using `pip install --user`. The packages are installed locally into
 the compliation's output directory, thus becoming part of the
 Streams application bundle (`sab`). The packages will be installed
@@ -593,6 +593,8 @@ For example is there was a dependency on `numpy` and `geocoder` and
 `numpy` was globally installed then only `geocoder` would be installed
 into the compliation's output directory (in addition to any dependencies
 `geocoder` has that were not globally installed).
+
+Packages are explictly requested for the whole toolkit or a specific module.
 
 **Tookit wide requirements**
 
