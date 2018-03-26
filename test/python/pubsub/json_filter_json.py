@@ -19,6 +19,9 @@ def main():
   # Verify that autonomous can be called from Python
   ts = ts.autonomous()
 
+  # stream must be placeable
+  ts = ts.filter(lambda x: True)
+
   ts.publish("pytest/json/filter/result", schema=CommonSchema.Json)
 
   config = {}

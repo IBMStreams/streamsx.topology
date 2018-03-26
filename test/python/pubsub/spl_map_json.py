@@ -20,6 +20,9 @@ def main():
 
   ts = ts.isolate().map(pytest_funcs.remove_complex).isolate()
   ts = ts.map(pytest_funcs.change_set_to_list).isolate()
+  
+  # stream must be placeable to publish
+  ts = ts.filter(lambda x: True)
 
   ts.publish("pytest/spl/map/result", schema=CommonSchema.Json)
 

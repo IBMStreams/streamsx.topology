@@ -24,7 +24,7 @@ public class PublishSubscribeTopicNames extends TestTopology {
        
         t.strings().publish((String) null, true);
     }
-    @Test(expected=NullPointerException.class)
+    @Test(expected=IllegalStateException.class)
     public void testNullTopicNameParam() throws Exception {
         final Topology t = new Topology();
        
@@ -77,7 +77,7 @@ public class PublishSubscribeTopicNames extends TestTopology {
     public void testNullTopicFilter() throws Exception {
         new Topology().subscribe((String) null, String.class);
     }
-    @Test(expected=NullPointerException.class)
+    @Test(expected=IllegalStateException.class)
     public void testNullTopicFilterParam() throws Exception {
         new Topology().subscribe((Supplier<String>) null, String.class);
     }
