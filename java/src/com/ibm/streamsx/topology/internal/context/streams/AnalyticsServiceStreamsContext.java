@@ -145,8 +145,10 @@ public class AnalyticsServiceStreamsContext extends
             Instance instance = sas.getInstance();
             ActiveVersion ver = instance.getActiveVersion();
             
+            // Compare base versions, ir it doesn't exactly match the
+            // service force remote build.
             int serviceBase = Integer.valueOf(ver.getMinimumOSBaseVersion());
-            if (version != serviceBase)
+            if (((int) version) != serviceBase)
                 return true;          
             
         } catch (SecurityException | IOException | NumberFormatException e) {

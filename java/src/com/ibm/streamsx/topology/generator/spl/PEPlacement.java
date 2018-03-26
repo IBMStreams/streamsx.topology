@@ -99,9 +99,8 @@ class PEPlacement {
      */
     @SuppressWarnings("serial")
     private void checkValidColocationRegion(JsonObject isolate) {
-        final Set<JsonObject> isolateChildren = GraphUtilities.getDownstream(
-                isolate, graph);
-        Set<JsonObject> isoParents = GraphUtilities.getUpstream(isolate, graph);
+        final Set<JsonObject> isolateChildren = getDownstream(isolate, graph);
+        Set<JsonObject> isoParents = getUpstream(isolate, graph);
 
         assertNotIsolated(isoParents);
 

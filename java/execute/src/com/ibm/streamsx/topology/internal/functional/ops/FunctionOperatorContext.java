@@ -20,6 +20,7 @@ import java.util.function.LongSupplier;
 
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.metrics.Metric;
+import com.ibm.streams.operator.metrics.Metric.Kind;
 import com.ibm.streamsx.topology.function.FunctionContainer;
 import com.ibm.streamsx.topology.function.FunctionContext;
 
@@ -28,8 +29,18 @@ class FunctionOperatorContext implements FunctionContext {
     private final OperatorContext context;
     private final FunctionContainer container;
     
-    private List<Runnable> metrics;
+    private List<MetricSetter> metrics;
     private ScheduledFuture<?> metricsGetter;
+    
+    static class MetricSetter {
+        final Metric metric;
+        final LongSupplier value;
+        
+        MetricSetter(Metric metric, LongSupplier value) {
+            this.metric = metric;
+            this.value = value;
+        }
+    }
     
     FunctionOperatorContext( OperatorContext context) {
         this.context = context;
@@ -70,31 +81,57 @@ class FunctionOperatorContext implements FunctionContext {
     @Override
     public synchronized void createCustomMetric(String name, String description, String kind, LongSupplier value) {
         
+        name = requireNonNull(name);
+        description = requireNonNull(description);
         LongSupplier supplier = requireNonNull(value);
-        Metric cm = context.getMetrics().createCustomMetric(
-                requireNonNull(name),
-                requireNonNull(description),
-                Metric.Kind.valueOf(kind.toUpperCase(Locale.US)));
+        Kind ekind = Metric.Kind.valueOf(kind.toUpperCase(Locale.US));
+        
+        Metric cm;
+        try {
+            cm = context.getMetrics().createCustomMetric(name, description, ekind);
+        } catch (IllegalArgumentException e) {
+            // See if this incarnation of the logic
+            // already created it. If not then the operator
+            // has been reset so the metric was created by a previous incarnation.
+            // if so we use the existing metric and effectively rebind it to
+            // the new value supplier.
+            if (metrics != null) {
+                synchronized (metrics) {
+                    for (MetricSetter ms : metrics)
+                        if (ms.metric.getName().equals(name))
+                            throw e;
+                }
+            }
+            cm = context.getMetrics().getCustomMetric(name);           
+        }
         cm.setValue(supplier.getAsLong());
         
         if (metrics == null) {
-            metrics = new ArrayList<>();
+            metrics = Collections.synchronizedList(new ArrayList<>());
             
             metricsGetter = getScheduledExecutorService().scheduleWithFixedDelay(this::updateMetrics,
                     1, 1, TimeUnit.SECONDS);
         }
         
-        metrics.add(() -> cm.setValue(supplier.getAsLong()));
+        metrics.add(new MetricSetter(cm, value));
     }
     
     private void updateMetrics() {
-        for (Runnable mu : metrics)
-            mu.run();
+        synchronized (metrics) {
+            for (MetricSetter ms : metrics)
+                ms.metric.setValue(ms.value.getAsLong());
+        }
+    }
+    
+    void clearMetrics() {
+        if (metrics != null)
+            metrics.clear();
     }
     
     synchronized void finalMarkers() {
         if (metricsGetter != null) {
             metricsGetter.cancel(false);
+            metricsGetter = null;
             
             // Final update of the metrics
             updateMetrics();

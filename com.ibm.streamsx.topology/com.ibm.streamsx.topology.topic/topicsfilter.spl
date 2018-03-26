@@ -114,6 +114,10 @@ namespace com.ibm.streamsx.topology.topic ;
  * tuple that arrives locally from a pubisher. The function is passed two arguments, the tuple and the value of `localFilterParameter`. If the function returns true` then the filter is present on `FilteredTopic`, otherwise it is discarded.
  * @param localFilterParameter Optional parameter passed as the second argument
  * to `localFilterFunction`. If not supplied then zero is passed as an `int32`.
+ * @param connect Connection mode between subscriber and publishers. Can be set to [Direct] or [Buffered]. The default is `Direct`. See [connect.spl|Connection mode].
+ *
+ * @param bufferFullPolicy Buffer policy when the buffer is full. Ignored when `connect` is set to `Direct`.
+ * @param bufferCapacity Capacity of the buffer in number of tuples. Ignored when `connect` is set to `Direct`.
 */
 public composite FilteredSubscribe(output FilteredTopic)
 {
@@ -123,6 +127,9 @@ public composite FilteredSubscribe(output FilteredTopic)
                 expression<rstring> $remoteFilter;
                 function $localFilterFunction;
                 expression $localFilterParameter : 0;
+                operator $connect : Direct;
+                expression<Sys.CongestionPolicy> $bufferFullPolicy: Sys.Wait;
+                expression<int32> $bufferCapacity: 1000;
 	graph
          stream<$streamType> FilterImport = Import()
          {
@@ -134,12 +141,12 @@ public composite FilteredSubscribe(output FilteredTopic)
 
          // Use a Filter to dynamically set the subscription
          // expression based upon the UDP state of this invocation.
-         stream<$streamType> Filtered = Filter(FilterImport) {
-             logic state:
-             {
-               int32 rcs = setSubscribeSubscription(getTopicSubscription($topic, true));
-               int32 rcf = rcs == 0 ? setSubscribeFilter($remoteFilter) : -1;
-             }
+         stream<$streamType> Filtered = $connect(FilterImport) {
+           param
+             setup: setSubscribeSubscription(getTopicSubscription($topic, true));
+             setup2: setSubscribeFilter($remoteFilter);
+             bufferFullPolicy: $bufferFullPolicy;
+             bufferCapacity: $bufferCapacity;
          }
 
          stream<$streamType> AllImport = Import()
@@ -152,11 +159,11 @@ public composite FilteredSubscribe(output FilteredTopic)
 
          // Use a Filter to dynamically set the subscription
          // expression based upon the UDP state of this invocation.
-         stream<$streamType> All = Filter(AllImport) {
-             logic state:
-             {
-               int32 rcs = setSubscribeSubscription(getTopicSubscription($topic, false));
-             }
+         stream<$streamType> All = $connect(AllImport) {
+           param
+             setup: setSubscribeSubscription(getTopicSubscription($topic, false));
+             bufferFullPolicy: $bufferFullPolicy;
+             bufferCapacity: $bufferCapacity;
          }
 
          (stream<$streamType> FilteredTopic) as LocalFilter = Filter(Filtered,All as In) {

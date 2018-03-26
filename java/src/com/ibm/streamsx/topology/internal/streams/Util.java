@@ -20,6 +20,8 @@ public class Util {
     public static final String STREAMS_DOMAIN_ID = "STREAMS_DOMAIN_ID";
     public static final String STREAMS_INSTANCE_ID = "STREAMS_INSTANCE_ID";
     private static final String STREAMS_INSTALL = "STREAMS_INSTALL";
+    public static final String STREAMS_USERNAME = "STREAMS_USERNAME";
+    public static final String STREAMS_PASSWORD = "STREAMS_PASSWORD";
     private static String streamsInstall;
     
     /**

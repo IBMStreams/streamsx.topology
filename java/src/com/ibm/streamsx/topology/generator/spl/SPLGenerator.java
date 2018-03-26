@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonArray;
@@ -39,6 +40,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.builder.JParamTypes;
+import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class SPLGenerator {
@@ -57,7 +59,7 @@ public class SPLGenerator {
     private int targetMod;
 
     public String generateSPL(JsonObject graph) throws IOException {
-        
+
         JsonObject graphConfig = getGraphConfig(graph);
         breakoutVersion(graphConfig);
                 
@@ -420,16 +422,18 @@ public class SPLGenerator {
         
         JsonObject output = startOp.get("outputs").getAsJsonArray().get(0).getAsJsonObject();
         
+        JsonArray parallelInputs = startOp.get("inputs").getAsJsonArray();
+        assert parallelInputs.size() == 1;
+        
+        String parallelInputPortName = jstring(parallelInputs.get(0).getAsJsonObject(), "name");
+        compositeInvocation.addProperty("parallelInputPortName",
+                parallelInputPortName);
+        
         boolean partitioned = jboolean(output, "partitioned");
         if (partitioned) {
-            JsonArray inputs = startOp.get("inputs").getAsJsonArray();
-            assert inputs.size() == 1;
-            
-            String parallelInputPortName = jstring(inputs.get(0).getAsJsonObject(), "name");
 
             compositeInvocation.addProperty("partitioned", true);
-            compositeInvocation.addProperty("parallelInputPortName",
-                    parallelInputPortName);
+
             compositeInvocation.add("partitionedKeys", output.get("partitionedKeys"));
         }
 
@@ -437,8 +441,8 @@ public class SPLGenerator {
         // operator
         // refers to is parallelized.
         compositeInvocation.addProperty("parallelOperator", true);
-
         compositeInvocation.add("width", output.get("width"));
+        compositeInvocation.add(PortProperties.ROUTING, output.get(PortProperties.ROUTING));
 
         // Get the start operators in the composite -- the ones
         // immediately downstream from the virtual marker

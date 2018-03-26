@@ -78,3 +78,7 @@ public composite Int64SubscribeFilter(output stream<TestType> Out) {
 public boolean testvl(TestType t, int64 v) {
    return t.vl == v;
 }
+
+public boolean affs(tuple<uint64 seq> t, int32 _) {
+    return t.seq < (uint64) 87;
+}

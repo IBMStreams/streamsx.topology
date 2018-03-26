@@ -1,0 +1,115 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2015,2018
+ */
+
+/**
+ * Connection modes for `Subscribe` operator.
+ *
+ * **Connection mode**
+ *
+ * The connection mode describes how a subscriber is connected to
+ * all matching publishers. The supported modes are:
+ *
+ * * [Direct] - When `Direct` is used a subscriber is directly connected to publishers, thus the performance of the  flow can affect the publishers. For example if the downstream processing of a [Subscribe] cannot keep up with the tuples from all the connected publishers then congestion will occur. This congestion will cause slowdown in the publishers as they block trying to submit tuples to the subscriber. 
+ * * [Buffered] - When `Buffered` is used a single buffer queue between a subscriber and all connected publishers. This can allow spikes in data rates from the producers to be absorbed by the subscriber. The buffer is maintained by the `Subscribe` operator.
+ *
+ * *Note: The* `connect` *parameter is of SPL type operator, accepting an operator kind. It may specifed as the fully qualified name (* `com.ibm.streamsx.topology.topic::Buffered` *) or the simple name* `Buffered` *following a `use` statement.*
+ *
+ * The `Buffered` mode may be additionally configured by the `bufferFullPolicy` and `bufferCapacity` parameters.
+ *
+ * * `bufferFullCapacity` - Action to take when a published tuple arrives and the buffer is full.
+ *    * `Sys.Wait` - Tuple waits for the space to be available before being inserted into the buffer. When the buffer is full publishers are blocked until space becomes available. This is the default.
+ *    * `Sys.DropFirst` - The oldest (first) tuple in the buffer is dropped and the newly arrived tuple is inserted.
+ *    * `Sys.DropLast` - Newly arrived tuple (most recent) is dropped.
+ * * `bufferCapacity` - The capacity of the buffer in number of tuples, default to 1,000.
+ *
+ * A common pattern is production critical ingest & prepare microservices
+ * that publish streams to two types of subscribers:
+ *  * production critical analytics microservices
+ *  * exploratory analytics microservices which may be transient and potentially heavyweight.
+ *
+ * In order for the exportatory microservices to not impact the
+ * production critical publishers they are configured to to use
+ * connection mode [Buffered] with a drop policy of either `Sys.DropFirst`
+ * or `Sys.DropLast`.
+ *
+ * For example a subscriber that is buffered from any publisher
+ * and drops oldest tuples when the buffer is full:
+ *
+ *     use com.ibm.streamsx.topology::Json;
+ *     use com.ibm.streamsx.topology.topic::Buffered;
+ *     use com.ibm.streamsx.topology.topic::Subscribe;
+ *
+ *     public composite LocationAnalyticsService {
+ *     graph
+ *
+ *       stream<Json> Locations = Subscribe() {
+ *         param
+ *           topic: 'vehicles/+/locations';
+ *           streamType: Json;
+ *           connect: Buffered;
+ *           bufferFullPolicy: Sys.DropFirst;
+ *       }
+ *
+ *       // processing of Locations omitted
+ *     }
+*/
+
+namespace com.ibm.streamsx.topology.topic ;
+
+/**
+ * Directly connect subscriber to publisher.
+ *
+ * Used as a value for [Subscribe] `connect` parameter.
+ *
+ * **Warning:** *This operator is only intended for use with* `Subscribe`
+ * *through its* `connect` *parameter. Parameters are subject to change
+ * in order support evolution of* `Subscribe`.
+ */
+public composite Direct(input In; output Out) {
+  param
+    expression<int32> $setup;
+    expression<int32> $setup2 : 0;
+    expression<Sys.CongestionPolicy> $bufferFullPolicy; /* ignored */
+    expression<int32> $bufferCapacity; /* ignored */
+  
+  graph
+    // Use a Filter to dynamically set the subscription
+    // expression based upon the UDP state of this invocation.
+    stream<In> Out = Filter(In) {
+      logic state:
+        {
+          int32 rc = $setup;
+          int32 rc2 = $setup2;
+        }
+    }
+}
+
+/**
+ * Connect subscriber to publisher using a buffer.
+ *
+ * Used as a value for [Subscribe] `connect` parameter.
+ *
+ * **Warning:** *This operator is only intended for use with* `Subscribe`
+ * *through its* `connect` *parameter. Parameters are subject to change
+ * in order support evolution of* `Subscribe`.
+ */
+public composite Buffered(input In; output Out) {
+  param
+    expression<int32> $setup;
+    expression<int32> $setup2 : 0;
+    expression<Sys.CongestionPolicy> $bufferFullPolicy;
+    expression<int32> $bufferCapacity;
+  
+  graph
+    stream<In> Out = Filter(In) {
+      logic state:
+        {
+          int32 rc = $setup;
+          int32 rc2 = $setup2;
+        }
+      config
+        threadedPort: queue(In, $bufferFullPolicy, $bufferCapacity);
+    }
+}

@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
 
@@ -22,7 +23,7 @@ def splNamespace():
 #
 # Returns a value matching the test schema ALL_PYTHON_TYPES_SCHEMA
 @spl.source()
-class SpecificValues:
+class SpecificValues(object):
     def __init__(self):
         pass
 
@@ -54,7 +55,7 @@ class SpecificValues:
         return itertools.repeat(rv, 1)
 
 @spl.source()
-class SparseTuple:
+class SparseTuple(object):
     def __init__(self):
         pass
 
@@ -65,7 +66,7 @@ class SparseTuple:
         return itertools.repeat(rv, 1)
 
 @spl.source()
-class DictTuple:
+class DictTuple(object):
     def __init__(self):
         pass
 

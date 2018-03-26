@@ -85,7 +85,7 @@ public class GraphUtilities {
     }
     
     static Set<JsonObject> findOperatorByKind(BVirtualMarker virtualMarker,
-                JsonObject graph) {
+            JsonObject graph) {
 
         Set<JsonObject> kindOperators = new HashSet<>();
         
@@ -135,12 +135,18 @@ public class GraphUtilities {
             JsonObject graph) {    
         
         Set<JsonObject> children = new HashSet<>();
-                
-        outputConnections(visitOp, inputPort -> {
-            operators(graph, op -> inputs(op, input-> {
-                if (jstring(input, "name").equals(inputPort))
+        Set<String> oportNames = new HashSet<>();
+        
+        // Create list of output port names
+        GraphUtilities.outputs(visitOp, output -> {
+            oportNames.add(jstring(output, "name"));
+        });
+        
+        operators(graph, op -> {
+            GraphUtilities.inputConnections(op, oportName -> {
+                if(oportNames.contains(oportName))
                     children.add(op);
-            }));
+            });
         });
 
         return children;
@@ -248,10 +254,8 @@ public class GraphUtilities {
         for (JsonObject iso : operators) {
 
             // Get parents and children of operator
-            Set<JsonObject> operatorParents = GraphUtilities.getUpstream(iso,
-                    graph);
-            Set<JsonObject> operatorChildren = GraphUtilities.getDownstream(iso,
-                    graph);
+            Set<JsonObject> operatorParents = getUpstream(iso, graph);
+            Set<JsonObject> operatorChildren = getDownstream(iso, graph);
 
             
             JsonArray operatorOutputs = array(iso, "outputs");
@@ -422,8 +426,8 @@ public class GraphUtilities {
         Direction direction = visitController.direction();
         Set<BVirtualMarker> boundaries = visitController.markerBoundaries();
         
-        Set<JsonObject> parents = GraphUtilities.getUpstream(op, graph);
-        Set<JsonObject> children = GraphUtilities.getDownstream(op, graph);
+        Set<JsonObject> parents = getUpstream(op, graph);
+        Set<JsonObject> children = getDownstream(op, graph);
         removeVisited(parents, visited);
         removeVisited(children, visited);
 
@@ -434,8 +438,7 @@ public class GraphUtilities {
             for (JsonObject parent : parents) {
                 if (equalsAny(boundaries, jstring(parent, OpProperties.KIND))) {
                     operatorParents.add(parent);
-                    allOperatorChildren.addAll(GraphUtilities.getDownstream(parent,
-                            graph));
+                    allOperatorChildren.addAll(getDownstream(parent, graph));
                 }
             }
             visited.addAll(operatorParents);
@@ -454,8 +457,7 @@ public class GraphUtilities {
             for (JsonObject child : children) {
                 if (equalsAny(boundaries, jstring(child, "kind"))) {
                     childrenToRemove.add(child);
-                    allOperatorParents.addAll(GraphUtilities.getUpstream(child,
-                            graph));
+                    allOperatorParents.addAll(getUpstream(child, graph));
                 }
             }
             visited.addAll(childrenToRemove);

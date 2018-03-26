@@ -120,6 +120,14 @@
      <arg value="${testtk}"/>
    </exec>
   </target>
+  <target name="test.python.toolkit">
+   <exec executable="${topology.test.python}">
+     <arg value="${tk}/bin/spl-python-extract.py"/>
+     <arg value="-i"/>
+     <arg value="../python/spl/testtkpy"/>
+     <arg value="--make-toolkit"/>
+   </exec>
+   </target>
 	
   <target name="test.toolkit.clean">
   	<delete file="${testtk}/toolkit.xml"/>
@@ -204,13 +212,13 @@
      </antcall>
   </target>
 
-  <target name="unittest.standalone" depends="jar">
+  <target name="unittest.standalone" depends="jar,test.python.toolkit">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="STANDALONE_TESTER"/>
      </antcall>
   </target>
 
-  <target name="unittest.distributed" depends="jar">
+  <target name="unittest.distributed" depends="jar,test.python.toolkit">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="DISTRIBUTED_TESTER"/>
      </antcall>

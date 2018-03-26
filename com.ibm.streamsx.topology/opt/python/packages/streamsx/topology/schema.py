@@ -14,9 +14,17 @@ and an attribute is a named value of a specific type.
 The supported types are defined by IBM Streams Streams Processing Language (SPL).
 
 """
+
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-from builtins import *
+# For style dicts passed into Python from Streams C++
+# are raw dicts since they are created by Python C-API code
+# not the future dict in Python 2.7.
+_spl_dict = dict
+_spl_object = object
+
+from future.builtins import *
+from past.builtins import basestring, unicode
 
 import collections
 import enum
@@ -25,6 +33,8 @@ import itertools
 import sys
 import token
 import tokenize
+
+_spl_str = unicode if sys.version_info.major == 2 else str
 
 
 
@@ -42,7 +52,7 @@ def is_common(schema):
         return schema.schema() in _SCHEMA_COMMON
     if isinstance(schema, CommonSchema):
         return True
-    if isinstance(schema, str):
+    if isinstance(schema, basestring):
         return is_common(StreamSchema(schema))
     return False
 
@@ -212,7 +222,7 @@ _SCHEMA_XML = 'tuple<xml document>' # not yet supported
 
 _SCHEMA_COMMON = frozenset([_SCHEMA_PYTHON_OBJECT, _SCHEMA_JSON, _SCHEMA_STRING, _SCHEMA_BINARY, _SCHEMA_XML])
 
-_SCHEMA_COMMON_STYLES = {_SCHEMA_PYTHON_OBJECT:object, _SCHEMA_STRING: str, _SCHEMA_JSON: dict, _SCHEMA_BINARY:None, _SCHEMA_XML: None }
+_SCHEMA_COMMON_STYLES = {_SCHEMA_PYTHON_OBJECT:_spl_object, _SCHEMA_STRING: _spl_str, _SCHEMA_JSON: _spl_dict, _SCHEMA_BINARY:None, _SCHEMA_XML: None }
 
 class StreamSchema(object) :
     """Defines a schema for a structured stream.
@@ -286,6 +296,7 @@ class StreamSchema(object) :
     for example as the return from the function invoked in a 
     :py:meth:`~streamsx.topology.topology.Stream.map` with the
     `schema` parameter set, it must be:
+
          * A Python ``dict``. Attributes are set by name using value in the dict for the name. If a value does not exist (the name does not exist as a key) or is set to `None` then the attribute has its default value, zero, false, empty list or string etc.
          * A Python ``tuple`` or named tuple. Attributes are set by position, with the first attribute being the value at index 0 in the Python `tuple`. If a value does not exist (the tuple has less values than the structured schema) or is set to `None` then the attribute has its default value, zero, false, empty list or string etc.
 
@@ -320,7 +331,7 @@ class StreamSchema(object) :
         For the common schemas the style is fixed:
 
             * ``CommonSchema.Python`` - ``object`` - Stream tuples are arbitrary objects.
-            * ``CommonSchema.String`` - ``str`` - Stream tuples are strings.
+            * ``CommonSchema.String`` - ``str`` - Stream tuples are unicode strings. (``unicode`` on Python 2.7).
             * ``CommonSchema.Json`` - ``dict`` - Stream tuples are a ``dict`` that represents the JSON object.
 
         For a structured schema the supported styles are:
@@ -345,13 +356,13 @@ class StreamSchema(object) :
 
     def _default_style(self):
         if self.__spl_type:
-            return dict
-        return _SCHEMA_COMMON_STYLES[self.schema()] if is_common(self) else dict
+            return _spl_dict
+        return _SCHEMA_COMMON_STYLES[self.schema()] if is_common(self) else _spl_dict
 
     def _copy(self, style=None):
         if style is None:
             return self
-        if self._style == style:
+        if self._style is style:
             return self
         # Cannot change style of common schemas
         if is_common(self):
@@ -363,7 +374,7 @@ class StreamSchema(object) :
     def _make_named_tuple(self, name):
         if self.__spl_type:
             return tuple
-        if name == True:
+        if name is True:
             name = 'StreamTuple'
         fields = _attribute_names(self._types)
         nt = collections.namedtuple(name, fields, rename=True)
@@ -424,7 +435,7 @@ class StreamSchema(object) :
         if not named:
             return self._copy(tuple)
 
-        if named == True or isinstance(named, str):
+        if named == True or isinstance(named, basestring):
             return self._copy(self._make_named_tuple(name=named))
 
         return self._copy(tuple)
@@ -443,7 +454,7 @@ class StreamSchema(object) :
 
         .. versionadded:: 1.8
         """
-        return self._copy(dict)
+        return self._copy(_spl_dict)
 
     def schema(self):
         """Private method. May be removed at any time."""
@@ -500,9 +511,9 @@ class StreamSchema(object) :
             return
         if _is_pending(schema):
             ntp = 'pending'
-        elif schema.style == tuple:
+        elif schema.style is tuple:
             ntp = 'tuple'
-        elif schema.style == dict:
+        elif schema.style is _spl_dict:
             ntp = 'dict'
         elif _is_namedtuple(schema.style) and hasattr(schema.style, '_splpy_namedtuple'):
             ntp = 'namedtuple:' + schema.style._splpy_namedtuple

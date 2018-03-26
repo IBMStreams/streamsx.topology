@@ -103,19 +103,27 @@ stateful int32 setTopicNameProperties(rstring exportType, rstring topicName, boo
  * IBM Streams dynamic connections, to all streams
  * published to topics that match the topic filter `topic`
  * and are an exact stream type match to `streamType`.
+ *
  * See [namespace:com.ibm.streamsx.topology.topic] for details.
- 
+ * 
  * @output Topic Subscription to `topic`.
  * @param topic Topic filter to subscribe to.
  * @param streamType Type of output stream `Topic`.
+ * @param connect Connection mode between subscriber and publishers. Can be set to [Direct] or [Buffered]. The default is `Direct`. See [connect.spl|Connection mode].
+ *
+ * @param bufferFullPolicy Buffer policy when the buffer is full. Ignored when `connect` is set to `Direct`.
+ * @param bufferCapacity Capacity of the buffer in number of tuples. Ignored when `connect` is set to `Direct`.
 */
 public composite Subscribe(output Topic )
 {
 	param		
 		expression<rstring> $topic ;
 		type $streamType ;
+                operator $connect : Direct;
+                expression<Sys.CongestionPolicy> $bufferFullPolicy: Sys.Wait;
+                expression<int32> $bufferCapacity: 1000;
 	graph
-         stream<$streamType> TopicImport = Import()
+         stream<$streamType> RawTopic = Import()
          {
            param
               // Initially match nothing, the initialization
@@ -123,11 +131,11 @@ public composite Subscribe(output Topic )
               subscription : __spl_exportType == "none";
          }
 
-         // Use a Filter to dynamically set the subscription
-         // expression based upon the UDP state of this invocation.
-         stream<TopicImport> Topic = Filter(TopicImport) {
-             logic state:
-               int32 rc = setSubscribeSubscription(getTopicSubscription($topic));
+         stream<$streamType> Topic = $connect(RawTopic) {
+           param
+              setup: setSubscribeSubscription(getTopicSubscription($topic));
+              bufferFullPolicy: $bufferFullPolicy;
+              bufferCapacity: $bufferCapacity;
          }
 }
 

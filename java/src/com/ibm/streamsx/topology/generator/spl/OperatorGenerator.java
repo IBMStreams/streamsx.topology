@@ -41,6 +41,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
+import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
 import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
@@ -219,9 +220,10 @@ class OperatorGenerator {
             } else {
                 splValueSupportingSubmission(width.getAsJsonObject(), sb);
             }
+            String parallelInputPortName = jstring(op, "parallelInputPortName");
             boolean partitioned = jboolean(op, "partitioned");
             if (partitioned) {
-                String parallelInputPortName = jstring(op, "parallelInputPortName");
+                
                 JsonArray partitionKeys = op.get("partitionedKeys").getAsJsonArray();
 
                 parallelInputPortName = getSPLCompatibleName(parallelInputPortName);
@@ -234,6 +236,10 @@ class OperatorGenerator {
                     sb.append(partitionKeys.get(i).getAsString());
                 }
                 sb.append("]}]");
+            } else if ("BROADCAST".equals(jstring(op, PortProperties.ROUTING))) {
+                sb.append(", broadcast=[");
+                sb.append(parallelInputPortName);
+                sb.append("]");
             }
             sb.append(")\n");
         }

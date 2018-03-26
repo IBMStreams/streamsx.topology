@@ -50,6 +50,18 @@ class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
         tester.local_check = self._correct_job_ids
         tester.test(self.test_ctxtype, self.test_config)
 
+        sr = tester.submission_result
+        self.assertIn('submitMetrics', sr)
+        m = sr['submitMetrics']
+        self.assertIn('buildArchiveSize', m)
+        self.assertIn('buildArchiveUploadTime_ms', m)
+        self.assertIn('totalBuildTime_ms', m)
+        self.assertIn('jobSubmissionTime_ms', m)
+
+        self.assertTrue(m['buildArchiveSize'] > 0)
+        self.assertTrue(m['buildArchiveUploadTime_ms'] > 0)
+        self.assertTrue(m['totalBuildTime_ms'] > 0)
+        self.assertTrue(m['jobSubmissionTime_ms'] > 0)
 
     def test_fetch_logs_on_failure(self):
         topo = Topology("fetch_logs_on_failure")
@@ -70,6 +82,24 @@ class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
         exists = os.path.isfile(logs)
 
         self.assertTrue(exists, "Application logs were not downloaded on test failure")
+
+        if exists:
+            os.remove(logs)
+
+    def test_always_fetch_logs(self):
+        topo = Topology("always_fetch_logs")
+        s = topo.source(["foo"])
+
+        tester = Tester(topo)
+        tester.contents(s, ["foo"])
+
+        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
+
+        # Check if logs were downloaded
+        logs = tester.result['application_logs']
+        exists = os.path.isfile(logs)
+
+        self.assertTrue(exists, "Application logs were not downloaded on test success")
 
         if exists:
             os.remove(logs)

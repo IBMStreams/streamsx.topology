@@ -5,6 +5,7 @@ from __future__ import print_function
 import unittest
 import sys
 import itertools
+from enum import IntEnum
 
 import test_vers
 
@@ -19,6 +20,18 @@ from streamsx.spl.types import Timestamp
 
 def ts_check(tuple_):
     return isinstance(tuple_.ts, Timestamp)
+
+
+class TestFormats(IntEnum):
+    csv = 0
+    txt = 1
+
+
+class TestParseOption(IntEnum):
+    strict = 0
+    permissive = 1
+    fast = 2
+    
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSPL(unittest.TestCase):
@@ -182,6 +195,26 @@ class TestSPL(unittest.TestCase):
         tester.contents(as_ts, [ts1.tuple(), ts2.tuple()])
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_custom_literal(self):
+        schema = StreamSchema('tuple<int32 a, rstring b>')
+        topo = Topology()
+        s = topo.source([(1,'ABC'), (2,'DEF')])
+        s = s.map(lambda x : x, schema=schema)
+
+        fmt = op.Map('spl.utility::Format', s, 'tuple<blob data>',
+            {'format':TestFormats.csv})
+        fmt.data = fmt.output('Output()')
+
+        parse = op.Map('spl.utility::Parse', fmt.stream, schema,
+            {'format':TestFormats.csv, 'parsing': TestParseOption.fast})
+
+        ts = parse.stream
+
+        tester = Tester(topo)
+        tester.tuple_count(ts, 2)
+        tester.contents(ts, [{'a':1,'b':'ABC'},{'a':2,'b':'DEF'}])
+        tester.test(self.test_ctxtype, self.test_config)
+
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestDistributedSPL(TestSPL):
     def setUp(self):
@@ -193,3 +226,58 @@ class TestBluemixSPL(TestSPL):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
         # Ensure the old name still works.
         self.test_ctxtype = "ANALYTICS_SERVICE"
+
+SPL_TYPES = {
+             'float32', 'float64',
+             'uint8','uint16', 'uint32', 'uint64',
+             'int8','int16', 'int32', 'int64'
+            }
+
+GOOD_DATA = {
+    'float32': [7.5, 3, 0, False],
+    'float64': [10.5, -2, 0, True],
+    'int8': [23.5, -7, 0, 127, -128, False],
+    'int16': [43.5, -7, 0, 32767, -32768, False],
+    'int32': [9.5, -7, 0, 2147483647, -2147483648, False],
+    'int64': [-83.5, -7, 0, 9223372036854775807,  -9223372036854775808, False]
+}
+
+
+@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
+class TestConversion(unittest.TestCase):
+    """ Test conversions of Python values to SPL attributes/types.
+    """
+    def setUp(self):
+        Tester.setup_standalone(self)
+
+    def test_bad_from_string(self):
+        for dt in SPL_TYPES:
+            topo = Topology()
+            schema = StreamSchema('tuple<' + dt + ' a>')
+            s = topo.source(['ABC'])
+            c = s.map(lambda x : (x,), schema=schema)
+            e = s.filter(lambda t : True)
+        
+            tester = Tester(topo)
+            tester.tuple_count(e, 1)
+            tr = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
+            self.assertFalse(tr, msg=dt)
+
+    def test_good(self):
+        for dt in SPL_TYPES:
+            if dt in GOOD_DATA:
+                data = GOOD_DATA[dt]
+                topo = Topology()
+                schema = StreamSchema('tuple<' + dt + ' a>')
+                s = topo.source(data)
+                c = s.map(lambda x : (x,), schema=schema)
+        
+                if dt.startswith('float'):
+                    expected = [{'a':float(d)} for d in data]
+                elif dt.startswith('int'):
+                    expected = [{'a':int(d)} for d in data]
+
+                tester = Tester(topo)
+                tester.tuple_count(c, len(data))
+                tester.contents(c, expected)
+                tester.test(self.test_ctxtype, self.test_config)

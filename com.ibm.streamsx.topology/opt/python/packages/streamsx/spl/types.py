@@ -13,6 +13,7 @@ using classes from ``streamsx.spl.op`` then any parameters
 must use the SPL type required by the operator.
 
 """
+from future.builtins import *
 
 import collections
 import datetime
@@ -171,18 +172,27 @@ def _get_timestamp_tuple(ts):
 def int8(value):
     """
     Create an SPL ``int8`` value.
+
+    Returns:
+        Expression: Expression representing the value.
     """
     return streamsx.spl.op.Expression('INT8', int(value))
 
 def int16(value):
     """
     Create an SPL ``int16`` value.
+
+    Returns:
+        Expression: Expression representing the value.
     """
     return streamsx.spl.op.Expression('INT16', int(value))
 
 def int32(value):
     """
     Create an SPL ``int32`` value.
+
+    Returns:
+        Expression: Expression representing the value.
 
     Args:
         value(int): Value to be types as ``int32``.
@@ -192,48 +202,72 @@ def int32(value):
 def int64(value):
     """
     Create an SPL ``int64`` value.
+
+    Returns:
+        Expression: Expression representing the value.
     """
     return streamsx.spl.op.Expression('INT64', int(value))
 
 def uint8(value):
     """
     Create an SPL ``uint8`` value.
+
+    Returns:
+        Expression: Expression representing the value.
     """
     return streamsx.spl.op.Expression('UINT8', int(value))
 
 def uint16(value):
     """
     Create an SPL ``uint16`` value.
+
+    Returns:
+        Expression: Expression representing the value.
     """
     return streamsx.spl.op.Expression('UINT16', int(value))
 
 def uint32(value):
     """
     Create an SPL ``uint32`` value.
+
+    Returns:
+        Expression: Expression representing the value.
     """
     return streamsx.spl.op.Expression('UINT32', int(value))
 
 def uint64(value):
     """
     Create an SPL ``uint64`` value.
+
+    Returns:
+        Expression: Expression representing the value.
     """
     return streamsx.spl.op.Expression('UINT64', int(value))
 
 def float32(value):
     """
     Create an SPL ``float32`` value.
+
+    Returns:
+        Expression: Expression representing the value.
     """
     return streamsx.spl.op.Expression('FLOAT32', float(value))
 
 def float64(value):
     """
     Create an SPL ``float64`` value.
+
+    Returns:
+        Expression: Expression representing the value.
     """
     return streamsx.spl.op.Expression('FLOAT64', float(value))
 
 def rstring(value):
     """
     Create an SPL ``rstring`` value.
+
+    Returns:
+        Expression: Expression representing the value.
     """
     return streamsx.spl.op.Expression('RSTRING', str(value))
 

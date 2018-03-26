@@ -131,6 +131,9 @@ Example of using ``__enter__`` to create custom metrics::
         def __exit__(self, exc_type, exc_value, traceback):
             pass
 
+        def __call__(self):
+            pass
+
 Tuple semantics
 ===============
 
@@ -171,7 +174,7 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
-from builtins import str
+from future.builtins import *
 try:
     from future import standard_library
     standard_library.install_aliases()
@@ -614,7 +617,7 @@ class Stream(_placement._Placement, object):
             name(str): Name of the view. Name must be unique within the topology. Defaults to a generated name.
             description: Description of the view.
             start(bool): Start buffering data when the job is submitted.
-                If `False` then the view is starts buffering data when the first
+                If `False` then the view starts buffering data when the first
                 remote client accesses it to retrieve data.
  
         Returns:
@@ -655,7 +658,7 @@ class Stream(_placement._Placement, object):
         no tuple submission will occur.
 
         By default the submitted tuple is ``result`` without modification
-        resulting in a stream of pickable Python objects. Setting the
+        resulting in a stream of picklable Python objects. Setting the
         `schema` parameter changes the type of the stream and
         modifies each ``result`` before submission.
 
@@ -699,8 +702,8 @@ class Stream(_placement._Placement, object):
 
         For each tuple on this stream ``func(tuple)`` is called.
         If the result is not `None` then the the result is iterated over
-        with each value from the iterator that is not None will be submitted
-         to the return stream.
+        with each value from the iterator that is not `None` will be submitted
+        to the return stream.
 
         If the result is `None` or an empty iterable then no tuples are submitted to
         the returned stream.
@@ -813,7 +816,7 @@ class Stream(_placement._Placement, object):
             
         _name = self.topology.graph._requested_name(name, action='parallel', func=func)
 
-        if routing == None or routing == Routing.ROUND_ROBIN:
+        if routing is None or routing == Routing.ROUND_ROBIN:
             op2 = self.topology.graph.addOperator("$Parallel$", name=_name)
             op2.addInputPort(outputPort=self.oport)
             oport = op2.addOutputPort(width, schema=self.oport.schema)
@@ -928,7 +931,7 @@ class Stream(_placement._Placement, object):
         """
         Prints each tuple to stdout flushing after each tuple.
 
-        If `tag` is not `None` then each tuple has `tag: ` prepended
+        If `tag` is not `None` then each tuple has "tag: " prepended
         to it before printing.
 
         Args:
@@ -1004,7 +1007,8 @@ class Stream(_placement._Placement, object):
             else:
                 raise ValueError(schema)
                
-            self._colocate(schema_change, 'publish')
+            if self._placeable:
+                self._colocate(schema_change, 'publish')
             sp = schema_change.publish(topic, schema=schema, name=name)
             sp._op().sl = sl
             return sp
@@ -1014,7 +1018,9 @@ class Stream(_placement._Placement, object):
         op.addInputPort(outputPort=self.oport)
         op._layout_group('Publish', name if name else _name)
         sink = Sink(op)
-        self._colocate(sink, 'publish')
+
+        if self._placeable:
+            self._colocate(sink, 'publish')
         return sink
 
     def autonomous(self):

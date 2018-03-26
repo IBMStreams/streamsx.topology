@@ -18,6 +18,7 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.logic.Logic.notKeyed;
 import static com.ibm.streamsx.topology.logic.Value.of;
+import static java.util.Objects.requireNonNull;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -54,6 +55,7 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
+import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
@@ -459,12 +461,22 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     @Override
     public TStream<T> parallel(Supplier<Integer> width, Routing routing) {
-        if (routing == Routing.ROUND_ROBIN)
-            return _parallel(width, null);
         
-        UnaryOperator<T> identity = Logic.identity();
-        
-        return _parallel(width, identity);
+        switch (requireNonNull(routing)) {
+        case ROUND_ROBIN:
+        case BROADCAST:
+            return _parallel(width, routing, null);
+            
+        case HASH_PARTITIONED:
+            UnaryOperator<T> identity = Logic.identity();
+            return _parallel(width, routing, identity);
+            
+        case KEY_PARTITIONED:
+            throw new IllegalArgumentException(
+                    "Routing.KEY_PARTITIONED requires a key function. Use parallel(Supplier<Integer> width, Function<T,?> keyer).");
+        default:
+            throw new UnsupportedOperationException("Unsupported routing:" + routing);            
+        }         
     }
     
     @Override
@@ -472,13 +484,13 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             Function<T, ?> keyer) {
         if (keyer == null)
             throw new IllegalArgumentException("keyer");
-        return _parallel(width, keyer);
+        return _parallel(width, Routing.KEY_PARTITIONED, keyer);
     }
     
-    private TStream<T> _parallel(Supplier<Integer> width, Function<T,?> keyer) {
+    private TStream<T> _parallel(Supplier<Integer> width, Routing routing, Function<T,?> keyer) {
 
         if (width == null)
-            throw new IllegalArgumentException("width");
+            throw new IllegalArgumentException(PortProperties.WIDTH);
         Integer widthVal;
         if (width.get() != null)
             widthVal = width.get();
@@ -501,7 +513,6 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                     "HashAdder",
                     HASH_ADDER_KIND, hasher);
             hashAdder.layout().addProperty("hidden", true);
-            // hashAdder.json().put("routing", routing.toString());
             BInputPort ip = connectTo(hashAdder, true, null);
 
             String hashSchema = ObjectSchemas.schemaWithHash(ip._schema());
@@ -509,12 +520,12 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             isPartitioned = true;
         }
                 
-        BOutput parallelOutput = builder().parallel(toBeParallelized, width);
+        BOutput parallelOutput = builder().parallel(toBeParallelized, routing.name(), width);
         if (isPartitioned) {
-            parallelOutput._json().addProperty("partitioned", true);
+            parallelOutput._json().addProperty(PortProperties.PARTITIONED, true);
             JsonArray partitionKeys = new JsonArray();
             partitionKeys.add(new JsonPrimitive("__spl_hash"));
-            parallelOutput._json().add("partitionedKeys", partitionKeys);
+            parallelOutput._json().add(PortProperties.PARTITION_KEYS, partitionKeys);
             // Add hash remover
             StreamImpl<T> parallelStream = new StreamImpl<T>(this,
                     parallelOutput, getTupleType());
@@ -539,6 +550,16 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> parallel(Supplier<Integer> width) {
         return parallel(width, TStream.Routing.ROUND_ROBIN);
+    }
+    
+    @Override
+    public TStream<T> setParallel(Supplier<Integer> width){
+    	BOutputPort output = (BOutputPort)this.output;
+    	output.operator().addConfig(OpProperties.PARALLEL, true);
+    	output.operator().addConfig(OpProperties.WIDTH, width.get());
+    	
+    	throw new UnsupportedOperationException("setParallel is not implemented.");
+    	//return this;
     }
 
     @Override
