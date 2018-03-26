@@ -138,6 +138,9 @@ Example of using ``__enter__`` and ``__exit__`` to open and close a file::
             if self.file is not None:
                 self.file.close()
 
+        def __call__(self):
+            pass
+
 Application log and trace
 =========================
 
@@ -292,6 +295,7 @@ For signatures only containing a parameter of the form
 
 Otherwise the style is set by the ``style`` parameter to the decorator,
 defaulting to *attributes by name*. The style value can be set to:
+
   * ``'name'`` - *attributes by name* (the default)
   * ``'position'`` - *attributes by position*
 
@@ -465,7 +469,7 @@ The returned tuple may be *sparse*, any attribute value in the tuple
 that is ``None`` will be set to their SPL default or copied from the
 input tuple, depending on the operator kind::
     
-    # SPL input schema: tuple<int32 x, float64 x>
+    # SPL input schema: tuple<int32 x, float64 y>
     # SPL output schema: tuple<int32 x, float64 y, float32 z>
     @spl.map(style='position')
     def myfunc(a,b):
@@ -481,7 +485,7 @@ schema the attributes not set by the Python function will be set
 to their SPL default or copied from the input tuple, depending on
 the operator kind::
     
-    # SPL input schema: tuple<int32 x, float64 x>
+    # SPL input schema: tuple<int32 x, float64 y>
     # SPL output schema: tuple<int32 x, float64 y, float32 z>
     @spl.map(style='position')
     def myfunc(a,b):
@@ -494,7 +498,7 @@ the operator kind::
 
 When a returned tuple has more values than attributes in the SPL output schema then the additional values are ignored::
 
-    # SPL input schema: tuple<int32 x, float64 x>
+    # SPL input schema: tuple<int32 x, float64 y>
     # SPL output schema: tuple<int32 x, float64 y, float32 z>
     @spl.map(style='position')
     def myfunc(a,b):
@@ -803,6 +807,7 @@ class source(object):
             param
                 stop: 100;
         }
+
     Args:
        docpy: Copy Python docstrings into SPL operator model for SPLDOC.
     """
@@ -1005,12 +1010,14 @@ class PrimitiveOperator(object):
         the SPL runtime to determine when an operator completes.
         An operator completes, and finalizes its output ports
         when:
+
             * All input ports (if any) have been finalized.
             * All background processing is complete.
 
         The return from ``all_ports_ready`` defines when
         background processing, such as threads started by
         ``all_ports_ready``, is complete. The value is one of:
+
             * A value that evaluates to `False` - No background processing exists.
             * A value that evaluates to `True` - Background processing exists and never completes. E.g. a source operator that processes real time events.
             * A callable - Background processing is complete when the callable returns. The SPL runtime invokes the callable once (passing no arguments) when the method returns background processing is assumed to be complete.

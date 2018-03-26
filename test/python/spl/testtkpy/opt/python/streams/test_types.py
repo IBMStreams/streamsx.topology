@@ -127,3 +127,29 @@ class MapBlobTest(object):
         if sys.version_info.major == 2:
             v = v.tobytes()
         return str(v, encoding='utf-8'),
+
+MRV = [
+    None,
+    ('astuple', 823),
+    ('aspartialtuple', None),
+    (),
+    {'how': 'asdict', 'val':234},
+    {'how': 'aspartialdict1', 'val':None},
+    {'how': 'aspartialdict2'},
+    {},
+    [],
+    [None,None,None],
+    [(), None, {}, {}],
+    [('listtuple', 494), {'how':'listdict', 'val':863}],
+    [('listpartialtuple',None), {'how':'listpartialdict'}],
+    ]
+
+@spl.map()
+def MapReturnValues(*t):
+    """Simple test of returning values from a map."""
+    idx = t[0]
+    return MRV[idx] if idx < len(MRV) else None
+
+@spl.source()
+def SourceReturnValues():
+    return iter(MRV)

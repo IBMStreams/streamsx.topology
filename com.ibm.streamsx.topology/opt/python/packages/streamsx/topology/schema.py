@@ -267,7 +267,6 @@ class StreamSchema(object) :
     ``set<T>[N]``                 Bounded set, limted to N elements       ``set``
     ``map<K,V>``                  Map with typed keys and values          ``dict``
     ``map<K,V>[N]``               Bounded map, limted to N pairs          ``dict``
- 
     ``enum{id [,...]}``           Enumeration                             Not supported
     ``xml``                       XML value                               Not supported
     ``tuple<type name [, ...]>``  Nested tuple                            Not supported
@@ -289,6 +288,7 @@ class StreamSchema(object) :
     for example as the return from the function invoked in a 
     :py:meth:`~streamsx.topology.topology.Stream.map` with the
     `schema` parameter set, it must be:
+
          * A Python ``dict``. Attributes are set by name using value in the dict for the name. If a value does not exist (the name does not exist as a key) or is set to `None` then the attribute has its default value, zero, false, empty list or string etc.
          * A Python ``tuple`` or named tuple. Attributes are set by position, with the first attribute being the value at index 0 in the Python `tuple`. If a value does not exist (the tuple has less values than the structured schema) or is set to `None` then the attribute has its default value, zero, false, empty list or string etc.
 
