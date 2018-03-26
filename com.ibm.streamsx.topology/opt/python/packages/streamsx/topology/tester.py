@@ -187,7 +187,10 @@ class Tester(object):
             raise unittest.SkipTest("Skipped due to STREAMS_DOMAIN_ID environment variable not set")
 
         test.test_ctxtype = stc.ContextTypes.DISTRIBUTED
-        test.test_config = {}
+        if hasattr(test, "username") and hasattr(test, "password"):
+            test.test_config = {'username' : test.username, 'password' : test.password}
+        else:
+            test.test_config = {}
 
     @staticmethod
     def setup_streaming_analytics(test, service_name=None, force_remote_build=False):
@@ -484,7 +487,10 @@ class Tester(object):
         if stc.ContextTypes.STANDALONE == ctxtype:
             passed = self._standalone_test(config)
         elif stc.ContextTypes.DISTRIBUTED == ctxtype:
-            passed = self._distributed_test(config, username, password)
+            if 'username' in config and 'password' in config:
+                passed = self._distributed_test(config, config['username'], config['password'])
+            else:
+                passed = self._distributed_test(config, username, password)
         elif stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype:
             passed = self._streaming_analytics_test(ctxtype, config)
         else:
