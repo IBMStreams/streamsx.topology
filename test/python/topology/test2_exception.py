@@ -288,3 +288,20 @@ class TestExceptions(unittest.TestCase):
         content = self._result(5)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('IndexError\n', content[4])
+
+    def test_exc_on_enter_aggregate(self):
+        """Test exception on enter.
+        """
+        self._run_app(lambda se : se.last(10).aggregate(ExcOnEnter(self.tf)))
+
+        self._result(3)
+
+    def test_exc_on_bad_call_aggregate(self):
+        """Test exception in __call__
+        """
+        self._run_app(lambda se :
+            se.last(10).aggregate(BadCall(self.tf)))
+
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
