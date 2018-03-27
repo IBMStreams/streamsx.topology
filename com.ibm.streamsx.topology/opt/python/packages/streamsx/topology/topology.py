@@ -935,6 +935,10 @@ class Stream(_placement._Placement, object):
         endP = Stream(self.topology, oport)
         return endP
 
+    def set_parallel(self, width):
+        self.oport.operator.config['parallel'] = True
+        self.oport.operator.config['width'] = width
+
     def last(self, size=1):
         """ Declares a window containing most recent tuples on this stream.
 

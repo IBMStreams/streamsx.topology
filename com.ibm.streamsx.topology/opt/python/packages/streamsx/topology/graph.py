@@ -222,6 +222,7 @@ class _SPLInvocation(object):
         self.sl = sl
         self._placement = {}
         self._start_op = False
+        self.config = {}
 
         if view_configs is None:
             self.view_configs = []
@@ -297,7 +298,7 @@ class _SPLInvocation(object):
             _inputs.append(input.getSPLInputPort())
         _op["outputs"] = _outputs
         _op["inputs"] = _inputs
-        _op["config"] = {}
+        _op["config"] = self.config
         _op["config"]["streamViewability"] = self.viewable
         _op["config"]["viewConfigs"] = self.view_configs
         if self._placement:
