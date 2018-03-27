@@ -38,8 +38,8 @@ tuple processing using Python.
 See the documentation under [namespace:com.ibm.streamsx.topology.python|com.ibm.streamsx.topology.python] for details.
 
     </description>
-    <version>1.9.1.__dev__</version>
-    <requiredProductVersion>4.2</requiredProductVersion>
+    <version>1.10.0.__dev__</version>
+    <requiredProductVersion>4.3</requiredProductVersion>
     </identity>
   <dependencies/>
   <resources>

@@ -29,6 +29,10 @@ def DictTupleMap(**tuple):
         tuple.pop('c')
         tuple['d'] = None
         tuple['e'] = None
+        tuple.pop('f')
+        tuple.pop('g')
+        tuple.pop('h')
+        tuple.pop('i')
         return tuple
     if a == 831:
         return None

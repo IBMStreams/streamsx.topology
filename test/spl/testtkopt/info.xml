@@ -4,7 +4,7 @@
     <name>testtkopt</name>
     <description>
     </description>
-    <version>0.9.9</version>
+    <version>1.0.0</version>
     <!-- Require optional data types support -->
     <requiredProductVersion>4.3</requiredProductVersion>
   </identity>

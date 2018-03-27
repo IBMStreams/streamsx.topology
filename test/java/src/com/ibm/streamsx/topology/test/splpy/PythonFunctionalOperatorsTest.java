@@ -706,7 +706,7 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(0, stm.getObject("f")); // no match: opt to non-opt
         assertEquals(67, stm.getObject("g")); // match non-opt to non-opt
         assertEquals(78, stm.getObject("h")); // match non-opt to opt
-        assertEquals(null, stm.getObject("i")); // default to matching input
+        assertEquals(null, stm.getObject("i")); // match null opt to opt
         assertEquals(null, stm.getObject("j")); // default as no value (short tuple)
     }
 
@@ -723,14 +723,16 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         
         addTestToolkit(topology);
                
-        StreamSchema schema = Type.Factory.getStreamSchema("tuple<optional<int32> a, optional<int32> b, optional<int32> c, optional<int32> d, optional<int32> e>");
+        StreamSchema schema = Type.Factory.getStreamSchema("tuple<optional<int32> a, optional<int32> b, optional<int32> c, optional<int32> d, optional<int32> e, optional<int32> f, int32 g, int32 h, optional<int32> i>");
+               
+        StreamSchema schemaMap = Type.Factory.getStreamSchema("tuple<optional<int32> a, optional<int32> b, optional<int32> c, optional<int32> d, optional<int32> e, int32 f, int32 g, optional<int32> h, optional<int32> i>");
         
         SPLStream pyds = SPL.invokeSource(topology,
         		"com.ibm.streamsx.topology.pytest.pysource.opttype::DictTuple",
         		null, schema);
         
         SPLStream pydm = SPL.invokeOperator("com.ibm.streamsx.topology.pytest.pymap.opttype::DictTupleMap",
-        		pyds, schema.extend("optional<int32>", "f"), null);
+        		pyds, schemaMap.extend("optional<int32>", "j"), null);
             
         Tester tester = topology.getTester();
         Condition<?> expectedCount = tester.tupleCount(pyds, 4).and(tester.tupleCount(pydm, 4));
@@ -744,10 +746,14 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         // Dict tuple handling - source
         Tuple r1 = outTuples.getResult().get(0);
         assertEquals(3245, r1.getObject("a"));
-        assertEquals(null, r1.getObject("b"));
+        assertEquals(null, r1.getObject("b")); // default as missing
         assertEquals(93, r1.getObject("c"));
         assertEquals(1234, r1.getObject("d"));
-        assertEquals(null, r1.getObject("e"));
+        assertEquals(null, r1.getObject("e")); // default as missing
+        assertEquals(234, r1.getObject("f"));
+        assertEquals(345, r1.getObject("g"));
+        assertEquals(456, r1.getObject("h"));
+        assertEquals(null, r1.getObject("i")); // default as missing
         
         Tuple r2 = outTuples.getResult().get(1);
         assertEquals(831, r2.getObject("a"));
@@ -755,6 +761,10 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(null, r2.getObject("c"));
         assertEquals(-4455, r2.getObject("d"));
         assertEquals(null, r2.getObject("e"));
+        assertEquals(null, r2.getObject("f"));
+        assertEquals(0, r2.getObject("g"));
+        assertEquals(0, r2.getObject("h"));
+        assertEquals(null, r2.getObject("i"));
         
         Tuple r3 = outTuples.getResult().get(2);
         assertEquals(1, r3.getObject("a"));
@@ -762,6 +772,10 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(3, r3.getObject("c"));
         assertEquals(4, r3.getObject("d"));
         assertEquals(5, r3.getObject("e"));
+        assertEquals(6, r3.getObject("f"));
+        assertEquals(7, r3.getObject("g"));
+        assertEquals(8, r3.getObject("h"));
+        assertEquals(9, r3.getObject("i"));
         
         Tuple r4 = outTuples.getResult().get(3);
         assertEquals(null, r4.getObject("a"));
@@ -769,39 +783,59 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         assertEquals(null, r4.getObject("c"));
         assertEquals(null, r4.getObject("d"));
         assertEquals(-64, r4.getObject("e"));
+        assertEquals(null, r4.getObject("f"));
+        assertEquals(0, r4.getObject("g"));
+        assertEquals(0, r4.getObject("h"));
+        assertEquals(null, r4.getObject("i"));
         
         // Now the map
-        Tuple m1 = outTuplesMap.getResult().get(0);
+        Tuple m1 = outTuplesMap.getResult().get(0); // dict with changes
         assertEquals(3245, m1.getObject("a"));
         assertEquals(120, m1.getObject("b"));
-        assertEquals(93, m1.getObject("c"));
-        assertEquals(1234, m1.getObject("d"));
-        assertEquals(null, m1.getObject("e"));
-        assertEquals(null, m1.getObject("f"));
+        assertEquals(93, m1.getObject("c")); // missing, copy from input
+        assertEquals(1234, m1.getObject("d")); // None, copy from input
+        assertEquals(null, m1.getObject("e")); // None, copy null from input
+        assertEquals(0, m1.getObject("f")); // no match: opt to non-opt
+        assertEquals(345, m1.getObject("g")); // match non-opt to non-opt
+        assertEquals(456, m1.getObject("h")); // match non-opt to opt
+        assertEquals(null, m1.getObject("i")); // match null opt to opt
+        assertEquals(null, m1.getObject("j")); // default as no value (short dict)
         
-        Tuple m2 = outTuplesMap.getResult().get(1);
+        Tuple m2 = outTuplesMap.getResult().get(1); // dict no changes
         assertEquals(1, m2.getObject("a"));
         assertEquals(2, m2.getObject("b"));
         assertEquals(3, m2.getObject("c"));
         assertEquals(4, m2.getObject("d"));
         assertEquals(5, m2.getObject("e"));
-        assertEquals(null, m1.getObject("f"));
+        assertEquals(6, m2.getObject("f"));
+        assertEquals(7, m2.getObject("g"));
+        assertEquals(8, m2.getObject("h"));
+        assertEquals(9, m2.getObject("i"));
+        assertEquals(null, m1.getObject("j"));
         
-        Tuple m3 = outTuplesMap.getResult().get(2);
+        Tuple m3 = outTuplesMap.getResult().get(2); // copied and modified
         assertEquals(1, m3.getObject("a"));
         assertEquals(2, m3.getObject("b"));
         assertEquals(23, m3.getObject("c"));
         assertEquals(4, m3.getObject("d"));
         assertEquals(25, m3.getObject("e"));
-        assertEquals(null, m1.getObject("f"));
+        assertEquals(6, m3.getObject("f"));
+        assertEquals(7, m3.getObject("g"));
+        assertEquals(8, m3.getObject("h"));
+        assertEquals(9, m3.getObject("i"));
+        assertEquals(null, m1.getObject("j"));
         
-        Tuple m4 = outTuplesMap.getResult().get(3);
-        assertEquals(null, m4.getObject("a"));
-        assertEquals(-39, m4.getObject("b"));
+        Tuple m4 = outTuplesMap.getResult().get(3); // set or copy from input
+        assertEquals(null, m4.getObject("a")); // set to null
+        assertEquals(-39, m4.getObject("b")); // set to value
         assertEquals(null, m4.getObject("c"));
         assertEquals(null, m4.getObject("d"));
         assertEquals(-64, m4.getObject("e"));
-        assertEquals(null, m1.getObject("f"));
+        assertEquals(0, m4.getObject("f"));
+        assertEquals(0, m4.getObject("g"));
+        assertEquals(0, m4.getObject("h"));
+        assertEquals(null, m4.getObject("i"));
+        assertEquals(null, m4.getObject("j"));
     }
     
     private final StreamSchema INT32_SCHEMA =
