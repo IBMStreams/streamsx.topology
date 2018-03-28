@@ -456,6 +456,22 @@ class SplpyExceptionInfo {
       const char * location_;
 };
 
+/**
+ * Handle a Python exception thrown from application Python
+ * code or due to a data conversion error. 
+ *
+ * if the user code was a callable and had __enter__ and __exit__
+ * and __enter__ was called then call __exit__ passing the
+ * exception information.
+ *
+ * If __exit__ returns a non-true value then an exception
+ * will be raised to terminate the PE.
+ *
+ * If __exit__ returns a true value then no-action is
+ * taken and processing continues.
+ *
+ * This macro requires that the GIL is held.
+ */
 #define SPLPY_OP_HANDLE_EXCEPTION_INFO(excInfo) \
     { \
         if (op()->exceptionRaised(excInfo) == 0) \
@@ -464,6 +480,10 @@ class SplpyExceptionInfo {
             excInfo.clear(); \
     }
 
+/**
+ * Version of SPLPY_OP_HANDLE_EXCEPTION_INFO that gets the GIL
+ * for its duration.
+ */
 #define SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo) \
     { \
         SplpyGIL lock; \

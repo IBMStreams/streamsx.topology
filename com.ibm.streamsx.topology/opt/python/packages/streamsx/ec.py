@@ -477,7 +477,7 @@ def _callable_exit(callable_, exc_type, exc_value, traceback):
     """
     if hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__') and hasattr(callable_, '_splpy_entered') and callable_._splpy_entered:
         ignore = callable_.__exit__(exc_type, exc_value, traceback)
-        if not ignore:
+        if not ignore or exc_type is None:
             callable_._splpy_entered = False
         return ignore
     return False

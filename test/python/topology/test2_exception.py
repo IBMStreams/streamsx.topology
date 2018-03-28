@@ -81,13 +81,12 @@ class BadSourceNext(EnterExit):
     def __next__(self):
         raise IndexError("Bad source __next__")
 
-class TestExceptions(unittest.TestCase):
+class TestBaseExceptions(unittest.TestCase):
     """ Test exceptions in callables
     """
     def setUp(self):
-        self.tf = None
-        Tester.setup_standalone(self)
         self.tf = _create_tf()
+        Tester.setup_standalone(self)
 
     def tearDown(self):
         if self.tf:
@@ -102,6 +101,8 @@ class TestExceptions(unittest.TestCase):
         self.assertEqual('__enter__\n', content[2])
         self.assertEqual(n, len(content), msg=str(content))
         return content
+
+class TestExceptions(TestBaseExceptions):
 
     def test_context_mgr_ok(self):
         try:
@@ -305,3 +306,153 @@ class TestExceptions(unittest.TestCase):
         content = self._result(5)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('KeyError\n', content[4])
+
+class SuppressSourceCall(EnterExit):
+    def __call__(self):
+        raise ValueError("Error setting up iterable")
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        super(SuppressSourceCall, self).__exit__(exc_type, exc_value, traceback)
+        return exc_type == ValueError
+
+class SuppressSourceIter(EnterExit):
+    def __call__(self):
+        return self
+    def __iter__(self):
+        raise ValueError("Error setting up iterable")
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        super(SuppressSourceIter, self).__exit__(exc_type, exc_value, traceback)
+        return exc_type == ValueError
+
+class SuppressSourceNext(EnterExit):
+    def __call__(self):
+        return self
+    def __iter__(self):
+        self.count = 3
+        return self
+    def __next__(self):
+        self.count += 1
+        if self.count == 5:
+            raise ValueError("Skip 5!")
+        return self.count
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        super(SuppressSourceIter, self).__exit__(exc_type, exc_value, traceback)
+        return exc_type == ValueError
+
+class SuppressMapCall(EnterExit):
+    def __call__(self, t):
+        if t == 2:
+            raise ValueError("Skip 2")
+        return t
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        super(SuppressMapCall, self).__exit__(exc_type, exc_value, traceback)
+        return exc_type == ValueError
+
+class SuppressFlatMapCall(EnterExit):
+    def __call__(self, t):
+        if t == 2:
+            raise ValueError("Skip 2")
+        return [t, t]
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        super(SuppressFlatMapCall, self).__exit__(exc_type, exc_value, traceback)
+        return exc_type == ValueError
+
+
+class SuppressFilterCall(EnterExit):
+    def __call__(self, t):
+        if t != 2:
+            raise ValueError("Skip everything but 2")
+        return t
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        super(SuppressFilterCall, self).__exit__(exc_type, exc_value, traceback)
+        return exc_type == ValueError
+
+class TestSupressExceptions(TestBaseExceptions):
+    """ Test exception supression in callables
+    """
+    def _run_app(self, fn=None, data=None, n=None, e=None):
+        topo = Topology()
+        s = topo.source(range(93))
+        if data is None:
+            data = [1,2,3]
+        se = topo.source(data)
+
+        if fn is not None:
+            se = fn(se)
+
+        tester = Tester(topo)
+        tester.tuple_count(s, 93)
+        if n is not None:
+            tester.tuple_count(se, n)
+        if e is not None:
+            tester.contents(se, e)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_exc_on_call_source(self):
+        """Ignore exception on __call__.
+        Effectively since we've been told to ignore the __call__
+        exception we have no data source so we create an empty stream.
+        """
+        self._run_app(data=SuppressSourceCall(self.tf), n=0)
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+
+    def test_exc_on_iter_source(self):
+        """Ignore exception on __iter__.
+        Effectively since we've been told to ignore the __iter__
+        exception we have no data source so we create an empty stream.
+        """
+        self._run_app(data=SuppressSourceIter(self.tf), n=0)
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+
+    def test_exc_on_next_source(self):
+        """Ignore exception on __next__.
+        Ignore that step of the iteration.
+        """
+        self._run_app(data=SuppressSourceNext(self.tf), n=2, e=[4,6])
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+
+    def test_exc_on_call_map(self):
+        """Ignore exception on __call__.
+        Ignore the tuple.
+        """
+        self._run_app(fn= lambda se : se.map(SuppressMapCall(self.tf)), n=2, e=[1,3])
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+
+    def test_exc_on_call_filter(self):
+        """Ignore exception on __call__.
+        Ignore the tuple.
+        """
+        self._run_app(fn= lambda se : se.map(SuppressFilterCall(self.tf)), n=1, e=[2])
+        content = self._result(8)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+        self.assertEqual('ValueError\n', content[6])
+        self.assertEqual('__exit__\n', content[7])
+
+    def test_exc_on_call_flat_map(self):
+        """Ignore exception on __call__.
+        Ignore the tuple.
+        """
+        self._run_app(fn= lambda se : se.flat_map(SuppressFlatMapCall(self.tf)), n=4, e=[1,1,3,3])
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])

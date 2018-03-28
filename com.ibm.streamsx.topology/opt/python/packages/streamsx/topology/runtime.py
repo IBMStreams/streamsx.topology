@@ -114,7 +114,7 @@ class _FunctionalCallable(object):
 
     def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
         if self._cls:
-            ec._callable_exit(self._callable, exc_type, exc_value, traceback)
+            return ec._callable_exit(self._callable, exc_type, exc_value, traceback)
 
 class _PickleInObjectOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
@@ -290,16 +290,21 @@ class _IterableAnyOut(_FunctionalCallable):
             if not ignore:
                 raise ei[1]
             # Ignored by nothing to do so use empty iterator
-            self._it=iter([])
+            self._it = iter([])
 
     def __call__(self):
-        try:
-            while True:
+        while True:
+            try:
                 tuple_ = next(self._it)
                 if not tuple_ is None:
                     return tuple_
-        except StopIteration:
-            return None
+            except StopIteration:
+                return None
+            except:
+                ei = sys.exc_info()
+                ignore = ec._callable_exit(self._callable, ei[0], ei[1], ei[2])
+                if not ignore:
+                    raise ei[1]
 
 class _IterablePickleOut(_IterableAnyOut):
     def __init__(self, callable, attributes=None):
