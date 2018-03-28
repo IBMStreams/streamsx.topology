@@ -943,6 +943,8 @@ class Stream(_placement._Placement, object):
 
         Returns:
             Stream: Returns this stream.
+
+        .. versionadded:: 1.9
         """
         self.oport.operator.config['parallel'] = True
         self.oport.operator.config['width'] = width
