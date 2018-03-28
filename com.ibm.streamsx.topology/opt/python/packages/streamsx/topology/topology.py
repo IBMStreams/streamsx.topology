@@ -855,10 +855,6 @@ class Stream(_placement._Placement, object):
         In other words, a parallel sink is created by calling parallel() and creating a sink operation.
         It is not necessary to invoke end_parallel() on parallel sinks.
         
-        Nested parallelism is not currently supported.
-        A call to parallel() should never be made immediately after another call to parallel() without 
-        having an end_parallel() in between.
-        
         Every call to end_parallel() must have a call to parallel() preceding it.
         
         Args:
