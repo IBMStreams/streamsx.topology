@@ -251,6 +251,10 @@ class Routing(Enum):
     A parallel region is started by :py:meth:`~Stream.parallel`
     and ended with :py:meth:`~Stream.end_parallel` or :py:meth:`~Stream.for_each`.
     """
+    BROADCAST=0
+    """
+    Tuples are routed to every channel in the parallel region.
+    """
     ROUND_ROBIN=1
     """
     Tuples are routed to maintain an even distribution of tuples to the channels.
@@ -875,10 +879,14 @@ class Stream(_placement._Placement, object):
             
         _name = self.topology.graph._requested_name(name, action='parallel', func=func)
 
-        if routing is None or routing == Routing.ROUND_ROBIN:
+        if routing is None or routing == Routing.ROUND_ROBIN or routing == Routing.BROADCAST:
             op2 = self.topology.graph.addOperator("$Parallel$", name=_name)
             op2.addInputPort(outputPort=self.oport)
-            oport = op2.addOutputPort(width, schema=self.oport.schema, routing="ROUND_ROBIN")
+            if routing == Routing.BROADCAST:
+                oport = op2.addOutputPort(width, schema=self.oport.schema, routing="BROADCAST")
+            else:
+                oport = op2.addOutputPort(width, schema=self.oport.schema, routing="ROUND_ROBIN")
+
             return Stream(self.topology, oport)
         elif routing == Routing.HASH_PARTITIONED:
 
