@@ -936,8 +936,17 @@ class Stream(_placement._Placement, object):
         return endP
 
     def set_parallel(self, width):
+        """
+        Indicates that the stream is the start of a parallel region. Should only be invoked on source operators.
+        Args:
+            width: The degree of parallelism for the parallel region.
+
+        Returns:
+            Stream: Returns this stream.
+        """
         self.oport.operator.config['parallel'] = True
         self.oport.operator.config['width'] = width
+        return self
 
     def last(self, size=1):
         """ Declares a window containing most recent tuples on this stream.
