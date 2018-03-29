@@ -144,7 +144,7 @@ public class LowLatencyTest extends TestTopology {
                         new HashSet<>(splitChResults.subList(1, splitChResults.size())));
         
         /////////////////////////////////////
-        TStream<String> all = splitChFanin.filter(tup -> true).endLowLatency();
+        TStream<String> all = splitChFanin.endLowLatency();
 
         Tester tester = topology.getTester();
         
