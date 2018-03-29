@@ -105,10 +105,9 @@ public class SPLGenerator {
         compStarts.add(BVirtualMarker.PARALLEL.kind());
         compEnds.add(BVirtualMarker.END_PARALLEL.kind());
         
-        // TODO: add support for lowLatency
-        // compOperatorStarts.add(null);
-        // compStarts.add(BVirtualMarker.LOW_LATENCY.kind());
-        // compEnds.add(BVirtualMarker.END_LOW_LATENCY.kind());
+        compOperatorStarts.add(null);
+        compStarts.add(BVirtualMarker.LOW_LATENCY.kind());
+        compEnds.add(BVirtualMarker.END_LOW_LATENCY.kind());
         
 
         // Find composites until there are no more to find.
@@ -404,7 +403,7 @@ public class SPLGenerator {
 
     private JsonObject createLowLatencyCompositeInvocation(JsonObject opDefinition, List<List<JsonObject>> startsEndsAndOperators) {
         JsonObject compositeInvocation = createCompositeInvocation(opDefinition, startsEndsAndOperators);
-        
+        compositeInvocation.addProperty("lowLatency", true);
         return compositeInvocation;
     }
 

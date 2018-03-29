@@ -45,7 +45,6 @@ public class LowLatencyTest extends TestTopology {
     @Test
     public void testSimpleLowLatency() throws Exception{
         assumeTrue(SC_OK);
-        assumeTrue(isMainRun());
         
         Topology topology = newTopology();
 
@@ -61,7 +60,6 @@ public class LowLatencyTest extends TestTopology {
     @Test
     public void testMultipleRegionLowLatency() throws Exception{
         assumeTrue(SC_OK);
-        assumeTrue(isMainRun());
         
         Topology topology = newTopology();
 
@@ -81,7 +79,7 @@ public class LowLatencyTest extends TestTopology {
     
     @Test
     public void testThreadedPort() throws Exception{
-        assumeTrue(isMainRun());
+        assumeTrue(SC_OK);
         
         Topology topology = newTopology();
 
@@ -242,6 +240,7 @@ public class LowLatencyTest extends TestTopology {
      */
     @Test
     public void testSameThread() throws Exception {
+        assumeTrue(SC_OK);
         final int tc = 2000;
         final Topology topology = newTopology("testSameThread");
         final Tester tester = topology.getTester();
