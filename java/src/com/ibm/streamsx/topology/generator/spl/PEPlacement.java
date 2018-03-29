@@ -208,10 +208,6 @@ class PEPlacement {
         for (JsonObject llStart : lowLatencyStartOperators) {
             assignLowLatency(llStart);
         }
-
-        // Remove all the markers
-        lowLatencyStartOperators.addAll(findOperatorByKind(END_LOW_LATENCY, graph));
-        GraphUtilities.removeOperators(lowLatencyStartOperators, graph);
     }
 
     @SuppressWarnings("serial")

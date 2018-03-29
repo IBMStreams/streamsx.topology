@@ -130,7 +130,7 @@ public class LowLatencyTest extends TestTopology {
         
         // assume that if s1.modify and the split().[modify()] are
         // in the same PE, that s1.split() is in the same too
-        TStream<String> s2 = s1.modify(unaryGetPEId());
+        TStream<String> s2 = s1.modify(unaryGetPEId()).endLowLatency();
         
         List<TStream<String>> splits = s1
                 .split(splitWidth, roundRobinSplitter());
@@ -144,7 +144,7 @@ public class LowLatencyTest extends TestTopology {
                         new HashSet<>(splitChResults.subList(1, splitChResults.size())));
         
         /////////////////////////////////////
-        TStream<String> all = splitChFanin.endLowLatency();
+        TStream<String> all = splitChFanin.filter(tup -> true).endLowLatency();
 
         Tester tester = topology.getTester();
         

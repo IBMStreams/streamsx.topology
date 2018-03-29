@@ -437,6 +437,8 @@ public class SPLGenerator {
         unvisited.push(potentialStart);
         while(unvisited.size() > 0){
             JsonObject op = unvisited.pop();
+            System.out.println(op);
+            System.out.println();
             visited.add(op);
             Set<JsonObject> parents = new HashSet<>(), children = new HashSet<>();
             // Add the op to one of the lists containing the composite's operators
@@ -493,6 +495,8 @@ public class SPLGenerator {
                 // then it means that there are at least two inputs to the end
                 // of the composite.
                 if(kind(op).equals(endKind)){
+                    System.out.println("THE PARENTS ARE");
+                    System.out.println(parents);
                     throw new IllegalStateException("Cannot invoke union() before ending a region.");
                 }
                 
