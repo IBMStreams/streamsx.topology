@@ -665,6 +665,9 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> endLowLatency() {
         BOutput toEndLowLatency = output();
+        if(toEndLowLatency instanceof BUnionOutput){
+            toEndLowLatency = builder().addPassThroughOperator(toEndLowLatency);
+        }
         BOutput endedLowLatency = builder().endLowLatency(toEndLowLatency);
         return addMatchingStream(endedLowLatency);
 
