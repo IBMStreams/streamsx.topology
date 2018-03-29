@@ -17,6 +17,7 @@ import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.InputPorts;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.OutputPorts;
+import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
@@ -35,6 +36,13 @@ public class HashAdder extends FunctionFunctor {
 
     protected SPLMapping<Object> mapping;
     protected StreamingOutput<OutputTuple> output;
+    
+    private String inputSerializer;
+    
+    @Parameter(optional=true)
+    public void setInputSerializer(String inputSerializer) {
+        this.inputSerializer = inputSerializer;
+    }
 
     @Override
     public void initialize(OperatorContext context)
@@ -44,7 +52,7 @@ public class HashAdder extends FunctionFunctor {
         hasher = getLogicObject(getFunctionalLogic());
 
         output = getOutput(0);
-        mapping = getInputMapping(this, 0);
+        mapping = getInputMapping(this, 0, inputSerializer);
     }
 
     @Override

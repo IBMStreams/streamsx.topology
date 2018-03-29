@@ -163,6 +163,19 @@ public class DependencyResolver {
             operatorToJarDependencies.get(op).add(absolutePath);
         }
     }
+
+    /**
+     * Copy dependencies from one operator to another.
+     */
+    public void copyDependencies(BOperatorInvocation source, BOperatorInvocation op) {
+        if (operatorToJarDependencies.containsKey(source)) {
+            Set<Path> sourceDeps = operatorToJarDependencies.get(source);
+            if (!operatorToJarDependencies.containsKey(op))
+               operatorToJarDependencies.put(op, new HashSet<>());
+                            
+            operatorToJarDependencies.get(op).addAll(sourceDeps);
+        }
+    }
     
     /**
      * Add a file dependency {@code location} to be 
