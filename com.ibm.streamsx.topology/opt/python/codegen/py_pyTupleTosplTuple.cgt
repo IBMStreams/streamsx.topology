@@ -77,9 +77,7 @@ try {
     return;
  }
 
-  Py_BEGIN_ALLOW_THREADS
-  submit(otuple, <%=$oport->getIndex()%>);
-  Py_END_ALLOW_THREADS
+ STREAMSX_TUPLE_SUBMIT_ALLOW_THREADS(otuple, <%=$oport->getIndex()%>);
 }
 
 <%
@@ -156,9 +154,7 @@ try {
     return;
  }
 
-  Py_BEGIN_ALLOW_THREADS
-  submit(otuple, <%=$oport->getIndex()%>);
-  Py_END_ALLOW_THREADS
+ STREAMSX_TUPLE_SUBMIT_ALLOW_THREADS(otuple, <%=$oport->getIndex()%>);
 }
 
 <%
