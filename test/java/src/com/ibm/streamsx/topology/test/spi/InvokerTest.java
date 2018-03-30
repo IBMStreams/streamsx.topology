@@ -2,6 +2,7 @@ package com.ibm.streamsx.topology.test.spi;
 
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import org.junit.Test;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TStream.Routing;
+import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -30,6 +32,13 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 public class InvokerTest extends TestTopology {
+    
+    // TEMP -  move to TestTopology
+    private void checkUdpSupported() {
+        assumeTrue(SC_OK);
+        assumeTrue(getTesterType() == StreamsContext.Type.STANDALONE_TESTER ||
+                getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+    }
     
     public static class ByteSerializer implements TupleSerializer {
 
@@ -128,6 +137,8 @@ public class InvokerTest extends TestTopology {
     
     @Test
     public void testParallelHashSerializers() throws Exception {
+        
+        checkUdpSupported();
 
         Topology topology = newTopology();
         SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtk"));
