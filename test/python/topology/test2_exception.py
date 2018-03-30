@@ -385,6 +385,16 @@ class SuppressForEach(EnterExit):
         super(SuppressForEach, self).__exit__(exc_type, exc_value, traceback)
         return exc_type == ValueError
 
+class SuppressHash(EnterExit):
+    def __call__(self, t):
+        if t == 3:
+            raise ValueError("Skip 3")
+        return hash(t)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        super(SuppressHash, self).__exit__(exc_type, exc_value, traceback)
+        return exc_type == ValueError
+
 class TestSuppressExceptions(TestBaseExceptions):
     """ Test exception suppression in callables
     """
@@ -479,3 +489,15 @@ class TestSuppressExceptions(TestBaseExceptions):
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('ValueError\n', content[4])
         self.assertEqual('__exit__\n', content[5])
+
+    def test_exc_on_call_hash(self):
+        """Ignore exception on __call__.
+        Ignore the tuple.
+        """
+        self._run_app(lambda se :
+            se.parallel(1, routing=Routing.HASH_PARTITIONED, func=SuppressHash(self.tf)).filter(lambda x : True).end_parallel(), n=2, e=[1,2])
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+
