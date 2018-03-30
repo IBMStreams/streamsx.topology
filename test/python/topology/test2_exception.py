@@ -335,10 +335,12 @@ class SuppressSourceNext(EnterExit):
         self.count += 1
         if self.count == 5:
             raise ValueError("Skip 5!")
+        if self.count == 7:
+            raise StopIteration()
         return self.count
 
     def __exit__(self, exc_type, exc_value, traceback):
-        super(SuppressSourceIter, self).__exit__(exc_type, exc_value, traceback)
+        super(SuppressSourceNext, self).__exit__(exc_type, exc_value, traceback)
         return exc_type == ValueError
 
 class SuppressMapCall(EnterExit):
@@ -372,8 +374,8 @@ class SuppressFilterCall(EnterExit):
         super(SuppressFilterCall, self).__exit__(exc_type, exc_value, traceback)
         return exc_type == ValueError
 
-class TestSupressExceptions(TestBaseExceptions):
-    """ Test exception supression in callables
+class TestSuppressExceptions(TestBaseExceptions):
+    """ Test exception suppression in callables
     """
     def _run_app(self, fn=None, data=None, n=None, e=None):
         topo = Topology()
