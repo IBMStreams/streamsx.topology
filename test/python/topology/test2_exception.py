@@ -374,6 +374,17 @@ class SuppressFilterCall(EnterExit):
         super(SuppressFilterCall, self).__exit__(exc_type, exc_value, traceback)
         return exc_type == ValueError
 
+
+class SuppressForEach(EnterExit):
+    def __call__(self, t):
+        if t == 1:
+            raise ValueError("Skip 1")
+        return t
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        super(SuppressForEach, self).__exit__(exc_type, exc_value, traceback)
+        return exc_type == ValueError
+
 class TestSuppressExceptions(TestBaseExceptions):
     """ Test exception suppression in callables
     """
@@ -454,6 +465,16 @@ class TestSuppressExceptions(TestBaseExceptions):
         Ignore the tuple.
         """
         self._run_app(fn= lambda se : se.flat_map(SuppressFlatMapCall(self.tf)), n=4, e=[1,1,3,3])
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+
+    def test_exc_on_call_for_each(self):
+        """Ignore exception on __call__.
+        Ignore the tuple.
+        """
+        self._run_app(lambda se : se.for_each(SuppressForEach(self.tf)))
         content = self._result(6)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('ValueError\n', content[4])
