@@ -913,8 +913,8 @@ class PE(_ResourceElement):
                 filename = _file_name('pe', self.id, '.trace')
             return self.rest_client._retrieve_file(self.applicationTrace, filename, dir, 'text/plain')
 
-            else:
-                return None
+        else:
+            return None
 
     def retrieve_console_log(self, filename=None, dir=None):
         """Retrieves the application console log (standard out and error)
