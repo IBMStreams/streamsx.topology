@@ -577,6 +577,7 @@ class Job(_ResourceElement):
         Returns:
             list(View): List of views matching `name`.
 
+        Retrieving a list of views that contain the string "temperatureSensor" could be performed as followed
         Example:
             >>> from streamsx import rest
             >>> sc = rest.StreamingAnalyticsConnection()
@@ -628,6 +629,7 @@ class Job(_ResourceElement):
         Returns:
             list(Operator): List of Operator elements associated with this job.
 
+        Retrieving a list of operators whose name contains the string "temperatureSensor" could be performed as followed
         Example:
             >>> from streamsx import rest
             >>> sc = rest.StreamingAnalyticsConnection()
@@ -714,12 +716,13 @@ class Operator(_ResourceElement):
         Returns:
              list(Metric): List of matching metrics.
 
+        Retrieving a list of metrics whose name contains the string "temperatureSensor" could be performed as followed
         Example:
             >>> from streamsx import rest
             >>> sc = rest.StreamingAnalyticsConnection()
             >>> instances = sc.get_instances()
             >>> operator = instances[0].get_operators()[0]
-            >>> metrics = op.get_metrics(name=Condition._METRIC_PREFIX + '*')
+            >>> metrics = op.get_metrics(name='*temperatureSensor*')
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
@@ -815,13 +818,14 @@ class OperatorOutputPort(_ResourceElement):
         Returns:
              list(Metric): List of matching metrics.
 
+        Retrieving a list of metrics whose name contains the string "temperatureSensor" could be performed as followed
         Example:
             >>> from streamsx import rest
             >>> sc = rest.StreamingAnalyticsConnection()
             >>> instances = sc.get_instances()
             >>> exportedstreams = instances[0].get_exported_streams()
             >>> operatoroutputport = exportedstreams[0].get_operator_output_port()
-            >>> operatoroutputport.get_metrics(name=Condition._METRIC_PREFIX + '*')
+            >>> operatoroutputport.get_metrics(name='*temperatureSensor*')
 
         .. versionadded:: 1.9
         """
@@ -846,14 +850,15 @@ class OperatorInputPort(_ResourceElement):
 
         Returns:
              list(Metric): List of matching metrics.
-
+        
+        Retrieving a list of metrics whose name contains the string "temperatureSensor" could be performed as followed
         Example:
             >>> from streamsx import rest
             >>> sc = rest.StreamingAnalyticsConnection()
             >>> instances = sc.get_instances()
             >>> operator = instances[0].get_operators()[0]
             >>> input_port = operator.get_input_ports()[0]
-            >>> metrics = input_port.get_metrics(name=Condition._METRIC_PREFIX + '*')
+            >>> metrics = input_port.get_metrics(name='*temperatureSensor*')
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
@@ -988,12 +993,13 @@ class PE(_ResourceElement):
         Returns:
              list(Metric): List of matching metrics.
         
+        Retrieving a list of metrics whose name contains the string "temperatureSensor" could be performed as followed
         Example:
             >>> from streamsx import rest
             >>> sc = rest.StreamingAnalyticsConnection()
             >>> instances = sc.get_instances()
             >>> pe = instances.get_pes()[0]
-            >>> metrics = pe.get_metrics(name=Condition._METRICS_PREFIX + '*')
+            >>> metrics = pe.get_metrics(name='*temperatureSensor*')
 
         .. versionadded:: 1.9
         """
@@ -1191,6 +1197,7 @@ class Instance(_ResourceElement):
         Returns:
             list(Operator): List of Operator elements associated with this instance.
 
+        Retrieving a list of operators whose name contains the string "temperatureSensor" could be performed as followed
         Example:
             >>> from streamsx import rest
             >>> sc = rest.StreamingAnalyticsConnection()
@@ -1235,6 +1242,7 @@ class Instance(_ResourceElement):
         Returns:
             list(View): List of views matching `name`.
 
+        Retrieving a list of views whose name contains the string "temperatureSensor" could be performed as followed
         Example:
             >>> from streamsx import rest
             >>> sc = rest.StreamingAnalyticsConnection()
@@ -1269,6 +1277,7 @@ class Instance(_ResourceElement):
         Returns:
             list(Job): A list of jobs matching the given `name`.
         
+        Retrieving a list of jobs whose name contains the string "temperatureSensor" could be performed as followed
         Example:
             >>> from streamsx import rest
             >>> sc = rest.StreamingAnalyticsConnection()
