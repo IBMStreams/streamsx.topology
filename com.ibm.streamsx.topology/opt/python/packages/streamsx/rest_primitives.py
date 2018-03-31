@@ -559,9 +559,10 @@ class Job(_ResourceElement):
         """
         logger.debug("Retrieving application logs from: " + self.applicationLogTrace)
 
-        if not filename:
-            filename = _file_name('job', self.id, '.tar.gz')
         if hasattr(self, "applicationLogTrace") and self.applicationLogTrace is not None:
+            if not filename:
+                filename = _file_name('job', self.id, '.tar.gz')
+
             return self.rest_client._retrieve_file(self.applicationLogTrace, filename, dir, 'application/x-compressed')
         else:
             return None
