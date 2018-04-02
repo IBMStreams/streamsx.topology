@@ -371,6 +371,19 @@ class Topology(object):
             func(callable): An iterable or a zero-argument callable that returns an iterable of tuples.
             name(str): Name of the stream, defaults to a generated name.
 
+        Exceptions raised by ``func`` or its iterator will cause
+        its processing element will terminate. 
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method.
+
+        Suppressing an exception raised by ``func.__iter__`` causes the
+        source to be empty, no tuples are submitted to the stream.
+
+        Suppressing an exception raised by ``__next__`` on the iterator
+        results in no tuples being submitted for that call to ``__next__``.
+        Processing continues with calls to ``__next__`` to fetch subsequent tuples.
+
         Returns:
             Stream: A stream whose tuples are the result of the iterable obtained from `func`.
         """
@@ -549,6 +562,15 @@ class Stream(_placement._Placement, object):
             func: A callable that takes a single parameter for the tuple and returns None.
             name(str): Name of the stream, defaults to a generated name.
 
+        If invoking ``func`` for a tuple on the stream raises an exception
+        then its processing element will terminate. By default the processing
+        element will automatically restart though tuples may be lost.
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method. When an
+        exception is suppressed no further processing occurs for the
+        input tuple that caused the exception.
+
         Returns:
             streamsx.topology.topology.Sink: Stream termination.
 
@@ -582,6 +604,16 @@ class Stream(_placement._Placement, object):
         Args:
             func: Filter callable that takes a single parameter for the tuple.
             name(str): Name of the stream, defaults to a generated name.
+
+        If invoking ``func`` for a tuple on the stream raises an exception
+        then its processing element will terminate. By default the processing
+        element will automatically restart though tuples may be lost.
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method. When an
+        exception is suppressed no tuple is submitted to the filtered
+        stream corresponding to the input tuple that caused the exception.
+
         Returns:
             Stream: A Stream containing tuples that have not been filtered out.
         """
@@ -679,6 +711,16 @@ class Stream(_placement._Placement, object):
             name(str): Name of the mapped stream, defaults to a generated name.
             schema(StreamSchema): Schema of the resulting stream.
 
+        If invoking ``func`` for a tuple on the stream raises an exception
+        then its processing element will terminate. By default the processing
+        element will automatically restart though tuples may be lost.
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method. When an
+        exception is suppressed no tuple is submitted to the mapped
+        stream corresponding to the input tuple that caused the exception.
+       
+
         Returns:
             Stream: A stream containing tuples mapped by `func`.
 
@@ -719,8 +761,18 @@ class Stream(_placement._Placement, object):
             func: A callable that takes a single parameter for the tuple.
             name(str): Name of the flattened stream, defaults to a generated name.
 
+        If invoking ``func`` for a tuple on the stream raises an exception
+        then its processing element will terminate. By default the processing
+        element will automatically restart though tuples may be lost.
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method. When an
+        exception is suppressed no tuples are submitted to the flattened
+        and mapped stream corresponding to the input tuple
+        that caused the exception.
+
         Returns:
-            Stream: A Stream containing transformed tuples.
+            Stream: A Stream containing flattened and mapped tuples.
         Raises:
             TypeError: if `func` does not return an iterator nor None
         """     
