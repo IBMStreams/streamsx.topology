@@ -20,7 +20,7 @@ Ant targets:
 
 Most testing is performed using Python unittest.
 * `test/python/topology` - Python topology tests (application API).
-  * Any test starting with `test2` uses the testing capability supported by the toolkit and thus only runs on Streams 4.2 and Python 3.5.
+  * Any test starting with `test2` uses the testing capability supported by the toolkit.
   * Most `test2` tests have three classes running the same test in standalone, distributed and streaming analytics service. Typically the base class is the standalone tests, then subclasses exist for distributed and streaming analytics.
   * `test2` standalone tests are skipped if environment variable `STREAMS_INSTALL` is not set.
   * `test2` distributed tests are skipped if any of the environment variables `STREAMS_INSTALL`, `STREAMS_DOMAIN_ID` or `STREAMS_INSTANCE_ID`is not set is not set.
