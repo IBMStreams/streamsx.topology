@@ -57,6 +57,12 @@ Run these `ant` targets in `test/java`
 * `unitest.standalone`
 * `unitest.distributed`
 
+### test/spl
+
+Run `python3 -u -m unittest` in each of these directories:
+
+   * `test/spl/tests`
+
 ### test/python
 
 #### Python 3.5
