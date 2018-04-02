@@ -67,9 +67,26 @@ class SuppressFilter(EnterExit):
             raise ValueError('Skip 2')
         return True
 
-    def __enter__(self):
-        EnterExit.__enter__(self)
-    
+    def __exit__(self, exc_type, exc_value, traceback):
+        EnterExit.__exit__(self, exc_type, exc_value, traceback)
+        return exc_type == ValueError
+
+@spl.map()
+class ExcEnterMap(ExcOnEnter):
+    pass
+
+
+@spl.map()
+class ExcCallMap(ExcOnCall):
+    pass
+
+@spl.map()
+class SuppressMap(EnterExit):
+    def __call__(self, *t):
+        if t[1] == 2:
+            raise ValueError('Skip 2')
+        return t[0]+'SM', t[1]+7
+
     def __exit__(self, exc_type, exc_value, traceback):
         EnterExit.__exit__(self, exc_type, exc_value, traceback)
         return exc_type == ValueError

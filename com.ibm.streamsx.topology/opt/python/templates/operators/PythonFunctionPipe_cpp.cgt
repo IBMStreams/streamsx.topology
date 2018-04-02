@@ -107,13 +107,16 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
 
+ try {
  // GIL is released across submission
  SplpyGIL lock;
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
 
  @include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
-
+ } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+    SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+ }
 }
 
 // Create member function that converts Python tuple to SPL tuple

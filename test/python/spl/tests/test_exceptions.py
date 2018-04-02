@@ -82,6 +82,17 @@ class TestExceptions(TestBaseExceptions):
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('KeyError\n', content[4])
 
+    def test_exc_enter_map(self):
+        self._run_app('ExcEnterMap')
+        self._result(3)
+
+    def test_exc_call_map(self):
+        self._run_app('ExcCallMap')
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
+
+
 class TestSuppressExceptions(TestBaseExceptions):
 
     def _run_app(self, kind, e):
@@ -105,9 +116,16 @@ class TestSuppressExceptions(TestBaseExceptions):
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_suppress_filter(self):
-
         self._run_app('SuppressFilter',
             [{'a':'hello', 'b':1}, {'a':'hello', 'b':3}])
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+
+    def test_suppress_map(self):
+        self._run_app('SuppressMap',
+            [{'a':'helloSM', 'b':8}, {'a':'helloSM', 'b':10}])
         content = self._result(6)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('ValueError\n', content[4])
