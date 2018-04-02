@@ -91,6 +91,26 @@ class SuppressMap(EnterExit):
         EnterExit.__exit__(self, exc_type, exc_value, traceback)
         return exc_type == ValueError
 
+@spl.for_each()
+class ExcEnterForEach(ExcOnEnter):
+    def __call__(self, *t):
+        pass
+
+
+@spl.for_each()
+class ExcCallForEach(ExcOnCall):
+    pass
+
+@spl.for_each()
+class SuppressForEach(EnterExit):
+    def __call__(self, *t):
+        if t[1] == 2:
+            raise ValueError('Skip 2')
+        return None
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        EnterExit.__exit__(self, exc_type, exc_value, traceback)
+        return exc_type == ValueError
 
 @spl.source()
 class ExcEnterSource(ExcOnEnter):

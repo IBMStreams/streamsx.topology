@@ -1007,6 +1007,12 @@ class for_each(object):
     Args:
        style: How the SPL tuple is passed into Python callable, see  :ref:`spl-tuple-to-python`.
        docpy: Copy Python docstrings into SPL operator model for SPLDOC.
+
+    Exceptions raised by ``__call__`` can be suppressed when this decorator
+    wraps a class with context manager ``__enter__`` and ``__exit__`` methods.
+    If ``__exit__`` returns a true value when called with the exception 
+    then the expression is suppressed and the tuple that caused the
+    exception is ignored.
     """
     def __init__(self, style=None, docpy=True):
         self.style = style

@@ -54,7 +54,7 @@ class TestExceptions(TestBaseExceptions):
         schema = 'tuple<rstring a, int32 b>'
         topo = Topology()
         streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
-        s = topo.source(range(234))
+        s = topo.source(range(13))
 
         if opi == 'M':
             data = [1,2,3]
@@ -71,10 +71,19 @@ class TestExceptions(TestBaseExceptions):
                 "com.ibm.streamsx.topology.pytest.pyexceptions::" + kind,
                 schema=schema, params={'tf':self.tf})
             res = prim.stream
+        elif opi == 'E':
+            data = [1,2,3]
+            se = topo.source(data)
+            se = se.map(lambda x : {'a':'hello', 'b':x} , schema=schema)
+            prim = op.Sink(
+                "com.ibm.streamsx.topology.pytest.pyexceptions::" + kind,
+                se, params={'tf':self.tf})
+            res = None
 
         tester = Tester(topo)
-        tester.tuple_count(s, 234)
-        tester.tuple_count(res, 0)
+        tester.tuple_count(s, 13)
+        if res is not None:
+            tester.tuple_count(res, 0)
         ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
         self.assertFalse(ok)
 
@@ -94,6 +103,16 @@ class TestExceptions(TestBaseExceptions):
 
     def test_exc_call_map(self):
         self._run_app('ExcCallMap')
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
+
+    def test_exc_enter_for_each(self):
+        self._run_app('ExcEnterForEach', opi='E')
+        self._result(3)
+
+    def test_exc_call_for_each(self):
+        self._run_app('ExcCallForEach', opi='E')
         content = self._result(5)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('KeyError\n', content[4])
@@ -137,11 +156,22 @@ class TestSuppressExceptions(TestBaseExceptions):
                 "com.ibm.streamsx.topology.pytest.pyexceptions::" + kind,
                 schema=schema, params={'tf':self.tf})
             res = prim.stream
+        elif opi == 'E':
+            data = [1,2,3]
+            se = topo.source(data)
+            se = se.map(lambda x : {'a':'hello', 'b':x} , schema=schema)
+            prim = op.Sink(
+                "com.ibm.streamsx.topology.pytest.pyexceptions::" + kind,
+                se, params={'tf':self.tf})
+            res = None
     
         tester = Tester(topo)
-        tester.tuple_count(res, len(e))
-        if e:
-            tester.contents(res, e)
+        if res is not None:
+            tester.tuple_count(res, len(e))
+            if e:
+                tester.contents(res, e)
+        else:
+            tester.run_for(5)
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_suppress_filter(self):
@@ -155,6 +185,13 @@ class TestSuppressExceptions(TestBaseExceptions):
     def test_suppress_map(self):
         self._run_app('SuppressMap',
             [{'a':'helloSM', 'b':8}, {'a':'helloSM', 'b':10}])
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+
+    def test_suppress_for_each(self):
+        self._run_app('SuppressForEach', None, opi='E')
         content = self._result(6)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('ValueError\n', content[4])
