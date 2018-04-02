@@ -391,12 +391,25 @@ class SplpyExceptionInfo {
          // and the error indicator is cleared.
       }
 
+      /*
+       * Returns a SplpyExceptionInfo instance that can be thrown
+       * when a Python error is raised through the Python C-API,
+       * tpyically indicated by a function returning NULL or -1.
+       * 
+       * The object is then caught by one
+       * of the SPLPY_OP_HANDLE_EXCEPTION_INFO macros
+       * which then handles interacting with the operator's
+       * __exit__ method.
+       */
       static SplpyExceptionInfo pythonError(const char * location) {
           SplpyExceptionInfo exc_info;
           exc_info.et_ = 0;
           exc_info.location_ = location;
           return exc_info;
       }
+      /**
+       * Data conversion error variant of pythonError
+       */
       static SplpyExceptionInfo dataConversion(const char * dt) {
           SplpyExceptionInfo exc_info;
           exc_info.et_ = 1;
