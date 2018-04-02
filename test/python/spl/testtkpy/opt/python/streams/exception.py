@@ -91,3 +91,49 @@ class SuppressMap(EnterExit):
         EnterExit.__exit__(self, exc_type, exc_value, traceback)
         return exc_type == ValueError
 
+
+@spl.source()
+class ExcEnterSource(ExcOnEnter):
+    pass
+
+
+@spl.source()
+class ExcIterSource(EnterExit):
+    def __iter__(self):
+        raise KeyError()
+
+
+@spl.source()
+class ExcNextSource(EnterExit):
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        raise KeyError()
+
+@spl.source()
+class SuppressNextSource(EnterExit):
+    def __iter__(self):
+        self.count = 0
+        return self
+
+    def __next__(self):
+        self.count += 1
+        if self.count == 2:
+           raise ValueError('Skip 2!')
+        if self.count == 4:
+           raise StopIteration()
+        return 'helloSS', self.count
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        EnterExit.__exit__(self, exc_type, exc_value, traceback)
+        return exc_type == ValueError
+
+@spl.source()
+class SuppressIterSource(EnterExit):
+    def __iter__(self):
+        raise KeyError('Bad Iter')
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        EnterExit.__exit__(self, exc_type, exc_value, traceback)
+        return exc_type == KeyError

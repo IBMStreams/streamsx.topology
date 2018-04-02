@@ -16,12 +16,23 @@
 #
 
 from future.builtins import *
+import sys
 
 def _splpy_iter_source(iterable) :
   try:
       it = iter(iterable)
   except TypeError:
       it = iterable()
+  except:
+      if hasattr(iterable, '_splpy_shutdown'):
+         ei = sys.exc_info()
+         ignore = iterable._splpy_shutdown(ei[0], ei[1], ei[2])
+         if ignore:
+             it = iter([])
+         else:
+             raise
+      else:
+          raise
   def _wf():
      try:
         while True:
@@ -36,8 +47,8 @@ def _splpy_iter_source(iterable) :
 
 def _add_shutdown_hook(fn, wrapper):
     if hasattr(fn, '_splpy_shutdown'):
-        def _splpy_shutdown():
-            fn._splpy_shutdown()
+        def _splpy_shutdown(exc_type=None, exc_value=None, traceback=None):
+            return fn._splpy_shutdown(exc_type, exc_value, traceback)
         wrapper._splpy_shutdown = _splpy_shutdown
 
 # The decorated operators only support converting

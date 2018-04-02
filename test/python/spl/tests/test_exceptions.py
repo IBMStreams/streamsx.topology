@@ -50,21 +50,27 @@ class TestBaseExceptions(unittest.TestCase):
 
 class TestExceptions(TestBaseExceptions):
 
-    def _run_app(self, kind):
+    def _run_app(self, kind, opi='M'):
         schema = 'tuple<rstring a, int32 b>'
         topo = Topology()
         streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
         s = topo.source(range(234))
-        data = [1,2,3]
-        se = topo.source(data)
 
-        se = se.map(lambda x : {'a':'hello', 'b':x} , schema=schema)
+        if opi == 'M':
+            data = [1,2,3]
+            se = topo.source(data)
+            se = se.map(lambda x : {'a':'hello', 'b':x} , schema=schema)
+            prim = op.Map(
+                "com.ibm.streamsx.topology.pytest.pyexceptions::" + kind,
+                se, params={'tf':self.tf})
 
-        prim = op.Map(
-            "com.ibm.streamsx.topology.pytest.pyexceptions::" + kind,
-            se, params={'tf':self.tf})
-
-        res = prim.stream
+            res = prim.stream
+        elif opi == 'S':
+            prim = op.Source(
+                topo,
+                "com.ibm.streamsx.topology.pytest.pyexceptions::" + kind,
+                schema=schema, params={'tf':self.tf})
+            res = prim.stream
 
         tester = Tester(topo)
         tester.tuple_count(s, 234)
@@ -92,27 +98,50 @@ class TestExceptions(TestBaseExceptions):
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('KeyError\n', content[4])
 
+    def test_exc_enter_source(self):
+        self._run_app('ExcEnterSource', opi='S')
+        self._result(3)
+
+    def test_exc_iter_source(self):
+        self._run_app('ExcIterSource', opi='S')
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
+
+    def test_exc_next_source(self):
+        self._run_app('ExcNextSource', opi='S')
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
+
 
 class TestSuppressExceptions(TestBaseExceptions):
 
-    def _run_app(self, kind, e):
+    def _run_app(self, kind, e, opi='M'):
         schema = 'tuple<rstring a, int32 b>'
         topo = Topology()
         streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
-        data = [1,2,3]
-        se = topo.source(data)
 
-        se = se.map(lambda x : {'a':'hello', 'b':x} , schema=schema)
+        if opi == 'M':
+            data = [1,2,3]
+            se = topo.source(data)
+            se = se.map(lambda x : {'a':'hello', 'b':x} , schema=schema)
+            prim = op.Map(
+                "com.ibm.streamsx.topology.pytest.pyexceptions::" + kind,
+                se, params={'tf':self.tf})
 
-        prim = op.Map(
-            "com.ibm.streamsx.topology.pytest.pyexceptions::" + kind,
-            se, params={'tf':self.tf})
-
-        res = prim.stream
-
+            res = prim.stream
+        elif opi == 'S':
+            prim = op.Source(
+                topo,
+                "com.ibm.streamsx.topology.pytest.pyexceptions::" + kind,
+                schema=schema, params={'tf':self.tf})
+            res = prim.stream
+    
         tester = Tester(topo)
         tester.tuple_count(res, len(e))
-        tester.contents(res, e)
+        if e:
+            tester.contents(res, e)
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_suppress_filter(self):
@@ -126,6 +155,21 @@ class TestSuppressExceptions(TestBaseExceptions):
     def test_suppress_map(self):
         self._run_app('SuppressMap',
             [{'a':'helloSM', 'b':8}, {'a':'helloSM', 'b':10}])
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+
+    def test_suppress_iter_source(self):
+        self._run_app('SuppressIterSource', [], opi='S')
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+
+    def test_suppress_next_source(self):
+        self._run_app('SuppressNextSource',
+            [{'a':'helloSS', 'b':1}, {'a':'helloSS', 'b':3}], opi='S')
         content = self._result(6)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('ValueError\n', content[4])
