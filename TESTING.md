@@ -43,3 +43,43 @@ Most testing is performed using Python unittest.
  # Run a single test
   python3 -u -m unittest test2_spl.TestDistributedSPL.test_SPLBeaconFilter
  ```
+ 
+ 
+## Full test set for a release
+
+Full set of tests assumes setup is correct for running distributed and Streaming Analytics
+ 
+### test/java
+
+Run these `ant` targets in `test/java`
+
+* `unitest.main`
+* `unitest.standalone`
+* `unitest.distributed`
+
+### test/python
+
+#### Python 3.5
+
+Run `python3 -u -m unittest` in each of these directories:
+
+   * `test/python/topology`
+   * `test/python/spl/tests`
+   * `test/python/scripts`
+   * `test/python/rest`
+   
+ Ideally this would be a single command (nosetests) but it's not yet supported.
+ 
+#### Python 2.7
+
+Since Streaming Analytics is only Python 3.5 these tests should be run without a `VCAP_SERVICES` environment variable set.
+ 
+
+Run `python -u -m unittest` in each of these directories:
+
+A distributed environment with a 2.7 Python setup must exist (and `STREAMS_INSTANCE_ID` set to it.)
+
+   * `test/python/topology`
+   * `test/python/spl/tests`
+   
+ Ideally this would be a single command (nosetests) but it's not yet supported.
