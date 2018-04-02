@@ -81,3 +81,34 @@ class TestExceptions(TestBaseExceptions):
         content = self._result(5)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('KeyError\n', content[4])
+
+class TestSuppressExceptions(TestBaseExceptions):
+
+    def _run_app(self, kind, e):
+        schema = 'tuple<rstring a, int32 b>'
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        data = [1,2,3]
+        se = topo.source(data)
+
+        se = se.map(lambda x : {'a':'hello', 'b':x} , schema=schema)
+
+        prim = op.Map(
+            "com.ibm.streamsx.topology.pytest.pyexceptions::" + kind,
+            se, params={'tf':self.tf})
+
+        res = prim.stream
+
+        tester = Tester(topo)
+        tester.tuple_count(res, len(e))
+        tester.contents(res, e)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_suppress_filter(self):
+
+        self._run_app('SuppressFilter',
+            [{'a':'hello', 'b':1}, {'a':'hello', 'b':3}])
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])

@@ -59,3 +59,18 @@ class ExcEnterFilter(ExcOnEnter):
 @spl.filter()
 class ExcCallFilter(ExcOnCall):
     pass
+
+@spl.filter()
+class SuppressFilter(EnterExit):
+    def __call__(self, *t):
+        if t[1] == 2:
+            raise ValueError('Skip 2')
+        return True
+
+    def __enter__(self):
+        EnterExit.__enter__(self)
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        EnterExit.__exit__(self, exc_type, exc_value, traceback)
+        return exc_type == ValueError
+

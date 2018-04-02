@@ -632,7 +632,7 @@ def _wrapforsplop(optype, wrapped, style, docpy):
                 ec._callable_enter(self)
 
             def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
-                ec._callable_exit(self, exc_type, exc_value, traceback)
+                return ec._callable_exit(self, exc_type, exc_value, traceback)
 
         if optype in (_OperatorType.Sink, _OperatorType.Pipe, _OperatorType.Filter):
             _op_class._splpy_style = _define_style(wrapped, wrapped.__call__, style)
