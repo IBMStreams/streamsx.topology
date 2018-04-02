@@ -134,6 +134,13 @@ Example of using ``__enter__`` to create custom metrics::
         def __call__(self):
             pass
 
+When an instance defines a valid ``__exit__`` method then it will be called with an exception when:
+
+ * the instance raises an exception during processing of a tuple
+ * a data conversion exception is raised converting a value to an structutured schema tuple or attribute
+
+If ``__exit__`` returns a true value then the exception is suppressed and processing continues, otherwise the enclosing processing element will be terminated.
+
 Tuple semantics
 ===============
 

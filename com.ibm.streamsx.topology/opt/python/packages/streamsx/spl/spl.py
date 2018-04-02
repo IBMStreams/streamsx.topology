@@ -141,7 +141,7 @@ Example of using ``__enter__`` and ``__exit__`` to open and close a file::
         def __call__(self):
             pass
 
-When a instance defines a valid ``__exit__`` method then it will be called with an exception when:
+When an instance defines a valid ``__exit__`` method then it will be called with an exception when:
 
  * the instance raises an exception during processing of a tuple
  * a data conversion exception is raised converting a Python value to an SPL tuple or attribute
