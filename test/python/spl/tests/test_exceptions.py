@@ -133,6 +133,21 @@ class TestExceptions(TestBaseExceptions):
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('KeyError\n', content[4])
 
+    def test_exc_enter_primitive(self):
+        self._run_app('ExcEnterPrimitive', opi='S')
+        self._result(3)
+
+    def test_exc_all_ports_ready_primitive(self):
+        self._run_app('ExcAllPortsReadyPrimitive', opi='S')
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
+
+    def test_exc_input_primitive(self):
+        self._run_app('ExcInputPrimitive')
+        content = self._result(5)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
 
 class TestSuppressExceptions(TestBaseExceptions):
 
@@ -207,6 +222,22 @@ class TestSuppressExceptions(TestBaseExceptions):
     def test_suppress_next_source(self):
         self._run_app('SuppressNextSource',
             [{'a':'helloSS', 'b':1}, {'a':'helloSS', 'b':3}], opi='S')
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('ValueError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+
+    def test_suppress_all_ports_ready_primitive(self):
+        self._run_app('SuppressAllPortsReadyPrimitive',
+            [{'a':'helloAPR', 'b':5}, {'a':'helloAPR', 'b':6},  {'a':'helloAPR', 'b':7}])
+        content = self._result(6)
+        self.assertEqual('__exit__\n', content[3])
+        self.assertEqual('KeyError\n', content[4])
+        self.assertEqual('__exit__\n', content[5])
+
+    def test_suppress_input_primitive(self):
+        self._run_app('SuppressInputPrimitive',
+            [{'a':'helloAPR', 'b':5}, {'a':'helloAPR', 'b':7}])
         content = self._result(6)
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('ValueError\n', content[4])

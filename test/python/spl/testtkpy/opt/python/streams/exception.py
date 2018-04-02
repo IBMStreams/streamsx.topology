@@ -157,3 +157,45 @@ class SuppressIterSource(EnterExit):
     def __exit__(self, exc_type, exc_value, traceback):
         EnterExit.__exit__(self, exc_type, exc_value, traceback)
         return exc_type == KeyError
+
+@spl.primitive_operator(output_ports=['A'])
+class ExcEnterPrimitive(ExcOnEnter):
+    pass
+
+@spl.primitive_operator(output_ports=['A'])
+class ExcAllPortsReadyPrimitive(spl.PrimitiveOperator, EnterExit):
+    def all_ports_ready(self):
+        raise KeyError('not so ready!!')
+
+
+@spl.primitive_operator(output_ports=['A'])
+class ExcInputPrimitive(spl.PrimitiveOperator, EnterExit):
+    @spl.input_port()
+    def p1e(self):
+        raise KeyError('Can not process tuple')
+
+
+@spl.primitive_operator(output_ports=['A'])
+class SuppressAllPortsReadyPrimitive(spl.PrimitiveOperator, EnterExit):
+    def all_ports_ready(self):
+        raise KeyError('not so ready!!')
+
+    @spl.input_port()
+    def p1(self, *t):
+        self.submit('A', (t[0] + 'APR', t[1] + 4))
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        EnterExit.__exit__(self, exc_type, exc_value, traceback)
+        return exc_type == KeyError
+
+@spl.primitive_operator(output_ports=['A'])
+class SuppressInputPrimitive(spl.PrimitiveOperator, EnterExit):
+    @spl.input_port()
+    def p1(self, *t):
+        if t[1] == 2:
+            raise ValueError('Skip 2!!')
+        self.submit('A', (t[0] + 'APR', t[1] + 4))
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        EnterExit.__exit__(self, exc_type, exc_value, traceback)
+        return exc_type == ValueError

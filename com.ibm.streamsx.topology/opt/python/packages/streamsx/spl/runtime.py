@@ -18,19 +18,20 @@
 from future.builtins import *
 import sys
 
+def _exc_shutdown(callable_):
+    if hasattr(callable_, '_splpy_shutdown'):
+        ei = sys.exc_info()
+        return callable_._splpy_shutdown(ei[0], ei[1], ei[2])
+    return False
+
 def _splpy_iter_source(iterable) :
   try:
       it = iter(iterable)
   except TypeError:
       it = iterable()
   except:
-      if hasattr(iterable, '_splpy_shutdown'):
-         ei = sys.exc_info()
-         ignore = iterable._splpy_shutdown(ei[0], ei[1], ei[2])
-         if ignore:
-             it = iter([])
-         else:
-             raise
+      if _exc_shutdown(iterable):
+          it = iter([])
       else:
           raise
   def _wf():
@@ -128,5 +129,10 @@ def _splpy_primitive_output_attrs(callable_, port_attributes):
 def _splpy_all_ports_ready(callable_):
     """Call all_ports_ready for a primitive operator."""
     if hasattr(type(callable_), 'all_ports_ready'):
-        return callable_.all_ports_ready()
+        try:
+            return callable_.all_ports_ready()
+        except:
+            if _exc_shutdown(callable_):
+                return None
+            raise
     return None
