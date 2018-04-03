@@ -107,6 +107,8 @@
 
   <target name="test.toolkit">
     <mkdir dir="${testtk.java}/bin"/>
+    <mkdir dir="${testtk.java}/lib"/>
+    <copy file="${topology.toolkit.jar}" todir="${testtk.java}/lib"/>
     <javac debug="true"
    	   srcdir="${testtk.java}/src"
    	   destdir="${testtk.java}/bin"

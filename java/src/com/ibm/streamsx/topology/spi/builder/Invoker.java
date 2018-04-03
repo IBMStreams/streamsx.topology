@@ -58,13 +58,18 @@ public interface Invoker {
         
         parameters = copyParameters(parameters);
 
-        if (outputSerializer != null)
+        if (outputSerializer != null) {
             parameters.put("outputSerializer", serializeLogic(outputSerializer));
+        }
 
         BOperatorInvocation source = JavaFunctional.addFunctionalOperator(topology,
                 jstring(invokeInfo, "name"),
                 kind,
                 logic, parameters);
+        
+        if (outputSerializer != null) {
+            JavaFunctional.addDependency(topology, source, outputSerializer.getClass());
+        }
 
         // Extract any source location information from the config.
         SourceInfo.setInvocationInfo(source, invokeInfo);
@@ -142,6 +147,13 @@ public interface Invoker {
                 jstring(invokeInfo, "name"),
                 kind,
                 logic, parameters);
+        
+        if (inputSerializer != null) {
+            JavaFunctional.addDependency(stream, pipe, inputSerializer.getClass());
+        }
+        if (outputSerializer != null) {
+            JavaFunctional.addDependency(stream, pipe, outputSerializer.getClass());
+        }
 
         // Extract any source location information from the config.
         SourceInfo.setInvocationInfo(pipe, invokeInfo);
@@ -211,6 +223,17 @@ public interface Invoker {
                 jstring(invokeInfo, "name"),
                 kind,
                 logic, parameters);
+        
+        if (inputSerializers != null) {
+            for (TupleSerializer serializer : inputSerializers)
+                if (serializer != null)
+                    JavaFunctional.addDependency(te, primitive, serializer.getClass());
+        }
+        if (outputSerializers != null) {
+            for (TupleSerializer serializer : outputSerializers)
+                if (serializer != null)
+                    JavaFunctional.addDependency(te, primitive, serializer.getClass());
+        }
 
         // Extract any source location information from the config.
         SourceInfo.setInvocationInfo(primitive, invokeInfo);
