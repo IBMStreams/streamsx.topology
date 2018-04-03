@@ -104,16 +104,6 @@ def _splpy_primitive_input_fns(obj):
         ofns.append(getattr(obj, fn.__name__))
     return ofns
     
-
-def _splpy_primitive_output_attrs(callable_, port_attributes):
-    """Sets output conversion functions in the callable."""
-    conv_fns = []
-    for attributes in port_attributes:
-        conv_fns.append(_splpy_convert_tuple(attributes))
-        
-    callable_._splpy_conv_fns = conv_fns
-
-
 def _splpy_all_ports_ready(callable_):
     """Call all_ports_ready for a primitive operator."""
     if hasattr(type(callable_), 'all_ports_ready'):

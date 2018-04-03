@@ -470,7 +470,6 @@ def _callable_exit_clean(callable):
 
 def _submit(primitive, port_index, tuple_):
     """Internal method to submit a tuple"""
-    tuple_ = primitive._splpy_conv_fns[port_index](tuple_)
     args = (_get_opc(primitive), port_index, tuple_)
     _ec._submit(args)
 
