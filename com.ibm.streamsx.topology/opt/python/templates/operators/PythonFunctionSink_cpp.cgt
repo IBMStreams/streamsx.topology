@@ -79,6 +79,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
 
+try {
    SplpyGIL lock;
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
@@ -86,11 +87,13 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     PyObject * pyReturnNone = SplpyGeneral::pyObject_Call(pyop_->callable(), pyTuple, pyDict);
 
     if (pyReturnNone == NULL) {
-        SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
-        throw SplpyGeneral::pythonException("<%=$functionName%>");
+        throw SplpyExceptionInfo::pythonError("<%=$functionName%>");
     }
 
     Py_DECREF(pyReturnNone);
+ } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+    SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+ }
 }
 
 <%SPL::CodeGen::implementationEpilogue($model);%>

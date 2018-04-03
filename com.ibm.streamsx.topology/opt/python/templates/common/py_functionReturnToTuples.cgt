@@ -13,9 +13,7 @@
     PyObject * pyReturnVar = SplpyGeneral::pyObject_Call(pyop_->callable(), pyTuple, pyDict);
 
     if (pyReturnVar == NULL) {
-        SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
-       
-        throw SplpyGeneral::pythonException("<%=$functionName%>");
+        throw SplpyExceptionInfo::pythonError("<%=$functionName%>");
     }
 
     if (SplpyGeneral::isNone(pyReturnVar)) {

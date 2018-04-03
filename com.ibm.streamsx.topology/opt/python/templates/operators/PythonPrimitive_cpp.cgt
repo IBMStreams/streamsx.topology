@@ -197,7 +197,7 @@ for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
   }
 
 %>
- {
+ try {
  // Code block for a single port
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
 
@@ -209,11 +209,13 @@ for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
     PyObject * pyReturnVar = SplpyGeneral::pyObject_Call(fn, pyTuple, pyDict);
 
     if (pyReturnVar == NULL) {
-        SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
-        throw SplpyGeneral::pythonException("<%=$functionName%>");
+        throw SplpyExceptionInfo::pythonError("<%=$functionName%>");
     }
     Py_DECREF(pyReturnVar);
 
+    return;
+ } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+    SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
     return;
  }
 

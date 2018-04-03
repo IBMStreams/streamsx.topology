@@ -50,7 +50,7 @@ def stupid_hash(v):
     return hash(v+89)
 
 def s2_hash(t):
-    return t['s2']
+    return hash(t['s2'])
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestUDP(unittest.TestCase):
