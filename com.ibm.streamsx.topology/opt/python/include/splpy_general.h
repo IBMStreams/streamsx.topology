@@ -673,24 +673,32 @@ class SplpyExceptionInfo {
         Py_DECREF(tst);
     }
 
+#define SPLPY_PY2DECIMAL(T) \
+    if (PyFloat_Check(value)) { \
+        SPL::float64 f64; \
+        pySplValueFromPyObject(f64, value); \
+        splv = (T) f64; \
+        return; \
+    } \
+    if (PyLong_Check(value)) { \
+        SPL::int64 i64; \
+        pySplValueFromPyObject(i64, value); \
+        splv = (T) i64; \
+        return; \
+    } \
+    SPL::rstring rs; \
+    pySplValueFromPyObject(rs, value); \
+    splv = SPL::spl_cast<T, SPL::rstring>::cast(rs);
+
     // decimal
     inline void pySplValueFromPyObject(SPL::decimal32 & splv, PyObject *value) {
-        SPL::rstring rs;
-        pySplValueFromPyObject(rs, value);
-        std::istringstream is(rs);
-        SPL::deserializeWithNanAndInfs(is, splv);
+        SPLPY_PY2DECIMAL(SPL::decimal32)
     }
     inline void pySplValueFromPyObject(SPL::decimal64 & splv, PyObject *value) {
-        SPL::rstring rs;
-        pySplValueFromPyObject(rs, value);
-        std::istringstream is(rs);
-        SPL::deserializeWithNanAndInfs(is, splv);
+        SPLPY_PY2DECIMAL(SPL::decimal64)
     }
     inline void pySplValueFromPyObject(SPL::decimal128 & splv, PyObject *value) {
-        SPL::rstring rs;
-        pySplValueFromPyObject(rs, value);
-        std::istringstream is(rs);
-        SPL::deserializeWithNanAndInfs(is, splv);
+        SPLPY_PY2DECIMAL(SPL::decimal128)
     }
 
     // complex

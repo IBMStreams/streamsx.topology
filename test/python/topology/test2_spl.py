@@ -6,6 +6,7 @@ import unittest
 import sys
 import itertools
 from enum import IntEnum
+import decimal
 
 import test_vers
 
@@ -185,7 +186,8 @@ class TestBluemixSPL(TestSPL):
 SPL_TYPES = {
              'float32', 'float64',
              'uint8','uint16', 'uint32', 'uint64',
-             'int8','int16', 'int32', 'int64'
+             'int8','int16', 'int32', 'int64',
+             'decimal32', 'decimal64', 'decimal128'
             }
 
 GOOD_DATA = {
@@ -194,7 +196,11 @@ GOOD_DATA = {
     'int8': [23.5, -7, 0, 127, -128, False],
     'int16': [43.5, -7, 0, 32767, -32768, False],
     'int32': [9.5, -7, 0, 2147483647, -2147483648, False],
-    'int64': [-83.5, -7, 0, 9223372036854775807,  -9223372036854775808, False]
+    'int64': [-83.5, -7, 0, 9223372036854775807,  -9223372036854775808, False],
+    'decimal32': [-83.5, -7, 0, '4.33', decimal.Decimal('17.832')],
+    'decimal64': [-993.335, -8, 0, '933.4543', decimal.Decimal('4932.3221')],
+    'decimal128': [-83993.7883, -9, 0, '9355.332222', decimal.Decimal('5345.79745902883')]
+
 }
 
 
@@ -211,7 +217,8 @@ class TestConversion(unittest.TestCase):
             schema = StreamSchema('tuple<' + dt + ' a>')
             s = topo.source(['ABC'])
             c = s.map(lambda x : (x,), schema=schema)
-            e = s.filter(lambda t : True)
+            e = c.filter(lambda t : True)
+            #e.print(tag='dt')
         
             tester = Tester(topo)
             tester.tuple_count(e, 1)
@@ -226,11 +233,21 @@ class TestConversion(unittest.TestCase):
                 schema = StreamSchema('tuple<' + dt + ' a>')
                 s = topo.source(data)
                 c = s.map(lambda x : (x,), schema=schema)
+                #c.print(tag=dt)
         
                 if dt.startswith('float'):
                     expected = [{'a':float(d)} for d in data]
                 elif dt.startswith('int'):
                     expected = [{'a':int(d)} for d in data]
+                elif dt == 'decimal32':
+                    ctx = decimal.Context(prec=7, rounding=decimal.ROUND_HALF_EVEN)
+                    expected = [{'a':decimal.Decimal(d).normalize(ctx)} for d in data]
+                elif dt == 'decimal64':
+                    ctx = decimal.Context(prec=16, rounding=decimal.ROUND_HALF_EVEN)
+                    expected = [{'a':decimal.Decimal(d).normalize(ctx)} for d in data]
+                elif dt == 'decimal128':
+                    ctx = decimal.Context(prec=34, rounding=decimal.ROUND_HALF_EVEN)
+                    expected = [{'a':decimal.Decimal(d).normalize(ctx)} for d in data]
 
                 tester = Tester(topo)
                 tester.tuple_count(c, len(data))
