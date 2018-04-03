@@ -275,7 +275,7 @@ public class SubmissionTimeValue {
             }
             boolean isParallel = jboolean(op, "parallelOperator"); 
             if (isParallel) {
-                JsonElement width = op.get("width");
+                JsonElement width = op.get("parallelInfo").getAsJsonObject().get("width");
                 if (width.isJsonObject()) {
                     JsonObject jwidth = width.getAsJsonObject(); 
                     String type = jstring(jwidth, "type");

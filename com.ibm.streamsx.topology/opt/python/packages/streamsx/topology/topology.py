@@ -819,7 +819,7 @@ class Stream(_placement._Placement, object):
         if routing is None or routing == Routing.ROUND_ROBIN:
             op2 = self.topology.graph.addOperator("$Parallel$", name=_name)
             op2.addInputPort(outputPort=self.oport)
-            oport = op2.addOutputPort(width, schema=self.oport.schema)
+            oport = op2.addOutputPort(width, schema=self.oport.schema, routing="ROUND_ROBIN")
             return Stream(self.topology, oport)
         elif routing == Routing.HASH_PARTITIONED:
 
@@ -843,7 +843,7 @@ class Stream(_placement._Placement, object):
 
             parallel_op = self.topology.graph.addOperator("$Parallel$", name=_name)
             parallel_op.addInputPort(outputPort=parallel_input)
-            parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=parallel_input.schema, partitioned_keys=keys)
+            parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=parallel_input.schema, partitioned_keys=keys, routing="HASH_PARTITIONED")
 
             if func is not None:
                 # use the Functor passthru operator to remove the hash attribute by removing it from output port schema

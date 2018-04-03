@@ -28,7 +28,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
@@ -122,7 +124,7 @@ class PEPlacement {
 
     void tagIsolationRegions() {
         // Check whether graph is valid for colocations
-        Set<JsonObject> isolateOperators = findOperatorByKind(ISOLATE, graph);
+        List<JsonObject> isolateOperators = findOperatorByKind(ISOLATE, graph);
         
         if (!isolateOperators.isEmpty())
             graph.getAsJsonObject("config").addProperty(CFG_HAS_ISOLATE, true);
@@ -194,7 +196,7 @@ class PEPlacement {
     }
     
     void tagLowLatencyRegions() {
-        Set<JsonObject> lowLatencyStartOperators = GraphUtilities
+        List<JsonObject> lowLatencyStartOperators = GraphUtilities
                 .findOperatorByKind(LOW_LATENCY, graph);
         
         if (lowLatencyStartOperators.isEmpty())
@@ -218,6 +220,19 @@ class PEPlacement {
         final String lowLatencyTag = "__spl_lowLatencyRegionId" + lowLatencyRegionCount++;
 
         Set<JsonObject> llStartChildren = getDownstream(llStart, graph);
+        
+        // Determine if the region has already been tagged, which would happen if there are
+        // multiple starts to the low latency region.
+        AtomicBoolean isAlreadyTagged = new AtomicBoolean(false);
+        llStartChildren.forEach(oper -> {
+            JsonObject placement = object(oper, CONFIG, PLACEMENT);
+            if(placement!=null && jstring(placement, PLACEMENT_LOW_LATENCY_REGION_ID) != null)
+                isAlreadyTagged.set(true);;
+                
+        });
+        
+        if(isAlreadyTagged.get())
+            return;
         
         Set<BVirtualMarker> boundaries = EnumSet.of(LOW_LATENCY, END_LOW_LATENCY);
 

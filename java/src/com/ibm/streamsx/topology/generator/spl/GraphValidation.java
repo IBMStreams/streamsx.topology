@@ -10,6 +10,7 @@ import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.first;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
+import java.util.List;
 import java.util.Set;
 
 import com.google.gson.JsonObject;
@@ -22,7 +23,7 @@ public class GraphValidation {
     }
     
     private void checkValidEndParallel(JsonObject graph){
-        Set<JsonObject> endParallels = findOperatorByKind(BVirtualMarker.END_PARALLEL, graph);	
+        List<JsonObject> endParallels = findOperatorByKind(BVirtualMarker.END_PARALLEL, graph);	
 
         for (JsonObject endParallel : endParallels) {
             // Setting up loop

@@ -29,7 +29,6 @@ from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.schema import _stream_schema
 
 
-
 def _fix_namespace(ns):
     ns = str(ns)
     sns = ns.split('.')
@@ -233,10 +232,10 @@ class _SPLInvocation(object):
         self.outputPorts = []
         self._layout_hints = {}
 
-    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned_keys=None):
+    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned_keys=None, routing = None):
         if name is None:
             name = self.name + "_OUT"+str(len(self.outputPorts))
-        oport = OPort(name, self, len(self.outputPorts), schema, oWidth, partitioned_keys)
+        oport = OPort(name, self, len(self.outputPorts), schema, oWidth, partitioned_keys, routing=routing)
         self.outputPorts.append(oport)
         if schema == CommonSchema.Python:
             self.viewable = False
@@ -459,7 +458,7 @@ class IPort(object):
         return _iport
 
 class OPort(object):
-    def __init__(self, name, operator, index, schema, width=None, partitioned_keys=None):
+    def __init__(self, name, operator, index, schema, width=None, partitioned_keys=None, routing=None):
         self.name = name
         self.operator = operator
         self.schema = _stream_schema(schema)
@@ -467,6 +466,7 @@ class OPort(object):
         self.width = width
         self.partitioned = partitioned_keys is not None
         self.partitioned_keys = partitioned_keys
+        self.routing = routing
 
         self.inputPorts = []
 
@@ -482,12 +482,15 @@ class OPort(object):
         _oport["type"] = self.schema.schema()
         _oport["name"] = self.name
         _oport["connections"] = [port.name for port in self.inputPorts]
+        _oport["routing"] = self.routing
+
         if not self.width is None:
             _oport["width"] = int(self.width)
         if not self.partitioned is None:
             _oport["partitioned"] = self.partitioned
         if self.partitioned_keys is not None:
             _oport["partitionedKeys"] = self.partitioned_keys
+
         return _oport
 
 class Marker(_SPLInvocation):
