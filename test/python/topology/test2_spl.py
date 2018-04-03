@@ -184,10 +184,11 @@ class TestBluemixSPL(TestSPL):
         self.test_ctxtype = "ANALYTICS_SERVICE"
 
 SPL_TYPES = {
-             'float32', 'float64',
-             'uint8','uint16', 'uint32', 'uint64',
-             'int8','int16', 'int32', 'int64',
-             'decimal32', 'decimal64', 'decimal128'
+             #'float32', 'float64',
+             #'uint8','uint16', 'uint32', 'uint64',
+             #'int8','int16', 'int32', 'int64',
+             #'decimal32', 'decimal64', 'decimal128',
+             'complex32', 'complex64'
             }
 
 GOOD_DATA = {
@@ -199,8 +200,9 @@ GOOD_DATA = {
     'int64': [-83.5, -7, 0, 9223372036854775807,  -9223372036854775808, False],
     'decimal32': [-83.5, -7, 0, '4.33', decimal.Decimal('17.832')],
     'decimal64': [-993.335, -8, 0, '933.4543', decimal.Decimal('4932.3221')],
-    'decimal128': [-83993.7883, -9, 0, '9355.332222', decimal.Decimal('5345.79745902883')]
-
+    'decimal128': [-83993.7883, -9, 0, '9355.332222', decimal.Decimal('5345.79745902883')],
+    'complex32': [complex(8.0, -32.0), 0, 10.5, 93],
+    'complex64': [complex(27.0, -8.0), 0, -83.5, 134]
 }
 
 
@@ -218,7 +220,7 @@ class TestConversion(unittest.TestCase):
             s = topo.source(['ABC'])
             c = s.map(lambda x : (x,), schema=schema)
             e = c.filter(lambda t : True)
-            #e.print(tag='dt')
+            e.print(tag=dt)
         
             tester = Tester(topo)
             tester.tuple_count(e, 1)
@@ -248,6 +250,10 @@ class TestConversion(unittest.TestCase):
                 elif dt == 'decimal128':
                     ctx = decimal.Context(prec=34, rounding=decimal.ROUND_HALF_EVEN)
                     expected = [{'a':decimal.Decimal(d).normalize(ctx)} for d in data]
+                elif dt.startswith('complex'):
+                    expected = [{'a':complex(d)} for d in data]
+                print("GOOD", GOOD_DATA[dt])
+                print("EXPECTED", expected)
 
                 tester = Tester(topo)
                 tester.tuple_count(c, len(data))
