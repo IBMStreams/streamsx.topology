@@ -184,10 +184,10 @@ class TestBluemixSPL(TestSPL):
         self.test_ctxtype = "ANALYTICS_SERVICE"
 
 SPL_TYPES = {
-             #'float32', 'float64',
-             #'uint8','uint16', 'uint32', 'uint64',
-             #'int8','int16', 'int32', 'int64',
-             #'decimal32', 'decimal64', 'decimal128',
+             'float32', 'float64',
+             'uint8','uint16', 'uint32', 'uint64',
+             'int8','int16', 'int32', 'int64',
+             'decimal32', 'decimal64', 'decimal128',
              'complex32', 'complex64'
             }
 
@@ -220,7 +220,7 @@ class TestConversion(unittest.TestCase):
             s = topo.source(['ABC'])
             c = s.map(lambda x : (x,), schema=schema)
             e = c.filter(lambda t : True)
-            e.print(tag=dt)
+            #e.print(tag=dt)
         
             tester = Tester(topo)
             tester.tuple_count(e, 1)
@@ -252,8 +252,6 @@ class TestConversion(unittest.TestCase):
                     expected = [{'a':decimal.Decimal(d).normalize(ctx)} for d in data]
                 elif dt.startswith('complex'):
                     expected = [{'a':complex(d)} for d in data]
-                print("GOOD", GOOD_DATA[dt])
-                print("EXPECTED", expected)
 
                 tester = Tester(topo)
                 tester.tuple_count(c, len(data))
