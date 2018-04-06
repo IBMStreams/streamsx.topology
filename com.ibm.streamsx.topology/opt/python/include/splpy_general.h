@@ -673,36 +673,52 @@ class SplpyExceptionInfo {
         Py_DECREF(tst);
     }
 
+#define SPLPY_PY2DECIMAL(T) \
+    if (PyFloat_Check(value)) { \
+        SPL::float64 f64; \
+        pySplValueFromPyObject(f64, value); \
+        splv = (T) f64; \
+        return; \
+    } \
+    if (PyLong_Check(value)) { \
+        SPL::int64 i64; \
+        pySplValueFromPyObject(i64, value); \
+        splv = (T) i64; \
+        return; \
+    } \
+    SPL::rstring rs; \
+    pySplValueFromPyObject(rs, value); \
+    splv = SPL::spl_cast<T, SPL::rstring>::cast(rs);
+
     // decimal
     inline void pySplValueFromPyObject(SPL::decimal32 & splv, PyObject *value) {
-        SPL::rstring rs;
-        pySplValueFromPyObject(rs, value);
-        std::istringstream is(rs);
-        SPL::deserializeWithNanAndInfs(is, splv);
+        SPLPY_PY2DECIMAL(SPL::decimal32)
     }
     inline void pySplValueFromPyObject(SPL::decimal64 & splv, PyObject *value) {
-        SPL::rstring rs;
-        pySplValueFromPyObject(rs, value);
-        std::istringstream is(rs);
-        SPL::deserializeWithNanAndInfs(is, splv);
+        SPLPY_PY2DECIMAL(SPL::decimal64)
     }
     inline void pySplValueFromPyObject(SPL::decimal128 & splv, PyObject *value) {
-        SPL::rstring rs;
-        pySplValueFromPyObject(rs, value);
-        std::istringstream is(rs);
-        SPL::deserializeWithNanAndInfs(is, splv);
+        SPLPY_PY2DECIMAL(SPL::decimal128)
     }
 
     // complex
     inline void pySplValueFromPyObject(SPL::complex32 & splv, PyObject * value) {
+        SPL::float32 real = (SPL::float32) PyComplex_RealAsDouble(value);
+        if (real == ((SPL::float32) -1.0) && PyErr_Occurred() != NULL)
+           throw SplpyExceptionInfo::dataConversion("complex32");
+
         splv = SPL::complex32(
-          (SPL::float32) PyComplex_RealAsDouble(value),
+          real,
           (SPL::float32) PyComplex_ImagAsDouble(value)
         );
     }
     inline void pySplValueFromPyObject(SPL::complex64 & splv, PyObject * value) {
+        SPL::float64 real = (SPL::float64) PyComplex_RealAsDouble(value);
+        if (real == ((SPL::float64) -1.0) && PyErr_Occurred() != NULL)
+           throw SplpyExceptionInfo::dataConversion("complex64");
+
         splv = SPL::complex64(
-          (SPL::float64) PyComplex_RealAsDouble(value),
+          real,
           (SPL::float64) PyComplex_ImagAsDouble(value)
         );
     }
