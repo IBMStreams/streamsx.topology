@@ -12,13 +12,11 @@ import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.StreamingInput;
 import com.ibm.streams.operator.StreamingOutput;
 import com.ibm.streams.operator.Tuple;
-import com.ibm.streams.operator.model.Icons;
 import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.InputPorts;
 import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.OutputPorts;
 import com.ibm.streams.operator.model.Parameter;
-import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
 
@@ -26,11 +24,9 @@ import com.ibm.streamsx.topology.internal.spljava.SPLMapping;
  * Generically adds an int32 hash value as the second
  * attribute to a stream.
  */
-@PrimitiveOperator
-@Icons(location16 = "opt/icons/functor_16.gif", location32 = "opt/icons/functor_32.gif")
 @InputPorts({@InputPortSet(cardinality = 1)})
 @OutputPorts({@OutputPortSet(cardinality = 1)})
-public class HashAdder extends FunctionFunctor {
+public abstract class HashAdder extends FunctionFunctor {
     
     private ToIntFunction<Object> hasher;
 
