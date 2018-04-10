@@ -264,11 +264,9 @@ public class SPLGenerator {
             String inputPortName = GsonUtilities.jstring(end.get("inputs").getAsJsonArray().get(0).getAsJsonObject(), "name");
             
             for(JsonObject parent : getUpstream(end, graph)){
-                if (jstring(parent, "kind").equals("com.ibm.streamsx.topology.functional.java::HashAdder")) {
-                    
-                    String endType = jstring(array(end, "outputs").get(0).getAsJsonObject(), "type");
-                    array(opInvocation, "outputs").get(0).getAsJsonObject().addProperty("type", endType);
-                }
+		String endType = jstring(array(end, "outputs").get(0).getAsJsonObject(), "type");
+		array(opInvocation, "outputs").get(i[0]).getAsJsonObject().addProperty("type", endType);
+
                 
                 GraphUtilities.outputs(parent, output -> {
                     JsonArray conns = array(output, "connections");
