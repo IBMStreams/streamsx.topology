@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016,2017
+# Copyright IBM Corp. 2016,2018
 #
 # Wrap the operator's iterable in a function
 # that when called returns each value from
@@ -16,7 +16,9 @@
 #
 
 from future.builtins import *
+import collections
 import sys
+import streamsx.spl.types
 
 def _exc_shutdown(callable_):
     if hasattr(callable_, '_splpy_shutdown'):
@@ -126,3 +128,11 @@ def _splpy_all_ports_ready(callable_):
                 return None
             raise
     return None
+
+_Timestamp = collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', 'machine_id'])
+
+# Used by Timestamp.__reduce__ to avoid dill
+# trying to treat a Timestamp as a namedtuple.
+def _stored_ts(s, ns, mid):
+    return streamsx.spl.types.Timestamp(s, ns, mid)
+

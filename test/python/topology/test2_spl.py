@@ -6,6 +6,7 @@ import unittest
 import sys
 import itertools
 from enum import IntEnum
+import datetime
 import decimal
 
 import test_vers
@@ -188,7 +189,8 @@ SPL_TYPES = {
              'uint8','uint16', 'uint32', 'uint64',
              'int8','int16', 'int32', 'int64',
              'decimal32', 'decimal64', 'decimal128',
-             'complex32', 'complex64'
+             'complex32', 'complex64',
+             'timestamp'
             }
 
 GOOD_DATA = {
@@ -202,7 +204,8 @@ GOOD_DATA = {
     'decimal64': [-993.335, -8, 0, '933.4543', decimal.Decimal('4932.3221')],
     'decimal128': [-83993.7883, -9, 0, '9355.332222', decimal.Decimal('5345.79745902883')],
     'complex32': [complex(8.0, -32.0), 0, 10.5, 93],
-    'complex64': [complex(27.0, -8.0), 0, -83.5, 134]
+    'complex64': [complex(27.0, -8.0), 0, -83.5, 134],
+    'timestamp': [Timestamp.now(7), datetime.datetime.today()]
 }
 
 
@@ -252,6 +255,9 @@ class TestConversion(unittest.TestCase):
                     expected = [{'a':decimal.Decimal(d).normalize(ctx)} for d in data]
                 elif dt.startswith('complex'):
                     expected = [{'a':complex(d)} for d in data]
+                elif dt == 'timestamp':
+                    expected = [{'a': d if isinstance(d, Timestamp) else Timestamp.from_datetime(d)} for d in data]
+                    
 
                 tester = Tester(topo)
                 tester.tuple_count(c, len(data))

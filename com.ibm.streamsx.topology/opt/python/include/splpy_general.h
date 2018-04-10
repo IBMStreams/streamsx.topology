@@ -661,8 +661,11 @@ class SplpyExceptionInfo {
         Py_INCREF(value);
         PyTuple_SET_ITEM(args, 0, value);
 
-        PyObject *tst = SplpyGeneral::pyCallObject(
-                 SplpyGeneral::timestampGetter(NULL), args);
+        PyObject *tst = SplpyGeneral::pyObject_Call(
+                 SplpyGeneral::timestampGetter(NULL), args, NULL);
+        if (tst == NULL)
+           throw SplpyExceptionInfo::dataConversion("timestamp");
+      
 
         splv.setSeconds(
             (int64_t) PyLong_AsLong(PyTuple_GET_ITEM(tst, 0)));
