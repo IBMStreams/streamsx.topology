@@ -62,6 +62,34 @@ class TestUDP(unittest.TestCase):
   def setUp(self):
       Tester.setup_standalone(self)
 
+  def test_TopologySetParallel(self):
+      topo = Topology("test_TopologySetParallel")
+      s = topo.source([1])
+      s.set_parallel(5)
+      s = s.end_parallel()
+      
+      tester = Tester(topo)
+      tester.contents(s, [1,1,1,1,1])
+      tester.test(self.test_ctxtype, self.test_config)
+      print(tester.result)
+
+  def test_TopologyMultiSetParallel(self):
+      topo = Topology("test_TopologyMultiSetParallel")
+
+      s = topo.source([1])
+      s.set_parallel(5)
+
+      s2 = topo.source([2])
+      s2.set_parallel(5)
+
+      s = s.union({s2})
+      s = s.end_parallel()
+      
+      tester = Tester(topo)
+      tester.contents(s, [1,1,1,1,1,2,2,2,2,2], ordered=False)
+      tester.test(self.test_ctxtype, self.test_config)
+      print(tester.result)
+
   def test_TopologyParallelRoundRobin(self):
       for width in (1,3):
           with self.subTest(width=width):
