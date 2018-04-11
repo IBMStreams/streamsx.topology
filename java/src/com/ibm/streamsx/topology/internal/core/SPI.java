@@ -17,7 +17,7 @@ public class SPI {
     
     static {
         try {
-            SPI_PROPERTIES.load(SPI.class.getResourceAsStream("/com/ibm/streamsx/topology/spi.properties"));
+            SPI_PROPERTIES.load(SPI.class.getResourceAsStream("/com/ibm/streamsx/topology/spi/spi.properties"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
