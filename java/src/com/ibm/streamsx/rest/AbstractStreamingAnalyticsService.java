@@ -27,7 +27,6 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -132,7 +131,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
 
     @Override
     public Result<Job, JsonObject> submitJob(File bundle, JsonObject jco) throws IOException {
-        final CloseableHttpClient httpClient = HttpClients.createDefault();
+        final CloseableHttpClient httpClient = StreamsRestUtils.createHttpClient();
         try {
 
             Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Submitting bundle : " + bundle.getName() + " to " + serviceName);
@@ -158,7 +157,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     
     @Override
     public Result<StreamingAnalyticsService, JsonObject> checkStatus(boolean requireRunning) throws IOException {
-        final CloseableHttpClient httpClient = HttpClients.createDefault();
+        final CloseableHttpClient httpClient = StreamsRestUtils.createHttpClient();
         try {
             JsonObject response = getServiceStatus(httpClient);
 
@@ -184,7 +183,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         JsonObject metrics = new JsonObject();
         metrics.addProperty(SubmissionResultsKeys.SUBMIT_ARCHIVE_SIZE, archive.length());
            	
-        CloseableHttpClient httpclient = HttpClients.createDefault();
+        CloseableHttpClient httpclient = StreamsRestUtils.createHttpClient();
         try {
             // Set up the build name
             if (null == buildName) {
