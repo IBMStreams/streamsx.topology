@@ -36,6 +36,7 @@ import org.apache.http.client.fluent.Response;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -137,18 +138,15 @@ class StreamsRestUtils {
                                 return true;
                             }
                         }).build();
-                HostnameVerifier hostnameVerifier = new HostnameVerifier() {
-                    @Override
-                    public boolean verify(String hostname, SSLSession session) {
-                        return true;
-                    }
-                };
+
                 // Set protocols to allow for different handling of "TLS" by Oracle and
                 // IBM JVMs.
                 SSLConnectionSocketFactory factory =
                         new SSLConnectionSocketFactory(
                                 sslContext,
-                                hostnameVerifier);
+                                new String[] {"TLSv1", "TLSv1.1","TLSv1.2"},
+                                null,
+                                NoopHostnameVerifier.INSTANCE);
                 client = HttpClients.custom()
                         .setSSLSocketFactory(factory)
                         .build();
