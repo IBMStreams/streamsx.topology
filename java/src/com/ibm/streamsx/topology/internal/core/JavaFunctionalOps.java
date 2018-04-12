@@ -18,7 +18,7 @@ public interface JavaFunctionalOps {
     
 
     
-    String NS = "com.ibm.streamsx.topology.functional.java";
+    String NS = SPI.namespaceJava();
     
     String PKG_O = "com.ibm.streamsx.topology.internal.functional.ops.";
 
