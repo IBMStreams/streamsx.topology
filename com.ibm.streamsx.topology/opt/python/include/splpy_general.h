@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015,2016
+# Copyright IBM Corp. 2015,2018
 */
 
 /*
@@ -676,13 +676,12 @@ class SplpyExceptionInfo {
         Py_DECREF(tst);
     }
 
+// A float to decimal is coverted through a string which
+// has the nice property of maintaining the expected
+// value rather than the precise value, for example
+// 993.335 is converted as 993.335 rather than
+// 993.3350000000000363797880709171295166015625
 #define SPLPY_PY2DECIMAL(T) \
-    if (PyFloat_Check(value)) { \
-        SPL::float64 f64; \
-        pySplValueFromPyObject(f64, value); \
-        splv = (T) f64; \
-        return; \
-    } \
     if (PyLong_Check(value)) { \
         SPL::int64 i64; \
         pySplValueFromPyObject(i64, value); \
