@@ -246,13 +246,13 @@ class TestConversion(unittest.TestCase):
                     expected = [{'a':int(d)} for d in data]
                 elif dt == 'decimal32':
                     ctx = decimal.Context(prec=7, rounding=decimal.ROUND_HALF_EVEN)
-                    expected = [{'a':decimal.Decimal(d).normalize(ctx)} for d in data]
+                    expected = [{'a':decimal.Decimal(str(d)).normalize(ctx)} for d in data]
                 elif dt == 'decimal64':
                     ctx = decimal.Context(prec=16, rounding=decimal.ROUND_HALF_EVEN)
-                    expected = [{'a':decimal.Decimal(d).normalize(ctx)} for d in data]
+                    expected = [{'a':decimal.Decimal(str(d)).normalize(ctx)} for d in data]
                 elif dt == 'decimal128':
                     ctx = decimal.Context(prec=34, rounding=decimal.ROUND_HALF_EVEN)
-                    expected = [{'a':decimal.Decimal(d).normalize(ctx)} for d in data]
+                    expected = [{'a':decimal.Decimal(str(d)).normalize(ctx)} for d in data]
                 elif dt.startswith('complex'):
                     expected = [{'a':complex(d)} for d in data]
                 elif dt == 'timestamp':
