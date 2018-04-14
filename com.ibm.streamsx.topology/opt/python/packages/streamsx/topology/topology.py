@@ -37,6 +37,16 @@ This effectively, from a Python point of view, produces a runnable
 version of the Python topology that includes application
 specific Python C extensions to optimize performance.
 
+The bundle also includes any required Python packages or modules
+that were used in the declaration of the application. For example
+the Python module containing the callable used in a
+:py:meth:`~Stream.map` invocation. These modules are copied into
+the bundle from their local location. This allows the bundle to
+be self-contained, and thus not the Streams instance have all the required
+Python packages pre-installed. The addition of packages to the bundle
+can be controlled with :py:attr:`Topology.include_packages` and
+:py:attr:`Topology.exclude_packages`.
+
 The Streams runtime distributes the application's operations
 across the resources available in the instance.
 
@@ -296,13 +306,13 @@ class Topology(object):
               from the calling evironment if it can be determined, otherwise
               a random name.
 
-       Instance variables:
-           include_packages(set): Python package names to be included in the built application. 
+       Attributes:
+           include_packages(set[str]): Python package names to be included in the built application. Any package in this list is copied into the bundle and made available at runtime to the Python callables used in the application. By default a ``Topology`` will automatically discover which packages and modules are required to be copied, this field may be used to add additional packages that were not automatically discovered.
 
-           exclude_packages(set): Python top-level package names to be excluded from the built application. Excluding a top-level packages excludes all sub-modules at any level in the package, e.g. `sound` excludes `sound.effects.echo`. Only the top-level package can be defined, e.g. `sound` rather than `sound.filters`. Behavior when adding a module within a package is undefined.
-           When compiling the application using Anaconda this set is pre-loaded with Python packages from the Anaconda pre-loaded set.
+           exclude_packages(set[str]): Python top-level package names to be excluded from the built application. Excluding a top-level packages excludes all sub-modules at any level in the package, e.g. `sound` excludes `sound.effects.echo`. Only the top-level package can be defined, e.g. `sound` rather than `sound.filters`. Behavior when adding a module within a package is undefined.
+               When compiling the application using Anaconda this set is pre-loaded with Python packages from the Anaconda pre-loaded set.
 
-           Package names in `include_packages` take precedence over package names in `exclude_packages`.
+               Package names in `include_packages` take precedence over package names in `exclude_packages`.
     """  
 
     def __init__(self, name=None, namespace=None, files=None):
@@ -344,15 +354,19 @@ class Topology(object):
     @property
     def name(self):
         """
-        Return the name of the topology.
-        Returns:str:Name of the topology.
+        Name of the topology.
+
+        Returns:
+            str: Name of the topology.
         """
         return self.graph.name
     @property
     def namespace(self):
         """
-        Return the namespace of the topology.
-        Returns:str:Namespace of the topology.
+        Namespace of the topology.
+
+        Returns:
+            str:Namespace of the topology.
         """
         return self.graph.namespace
 
@@ -515,7 +529,8 @@ class Stream(_placement._Placement, object):
 
     @property
     def name(self):
-        """Name of the stream.
+        """
+        Name of the stream.
 
         Returns:
             str: Name of the stream.
