@@ -519,6 +519,7 @@ class Topology(object):
         is not pre-installed on the build system then the
         package is installed using `pip` and becomes part
         of the Streams application bundle (`sab` file).
+        The package is expected to be available from `pypi.org`.
 
         If the package is already installed on the build system
         then it is not added into the `sab` file.
@@ -526,6 +527,12 @@ class Topology(object):
         instance have the same Python packages installed as the
         build machines. This is always true for the Streaming
         Analytics service on IBM Cloud.
+
+        The project name extracted from the requirement
+        specifier is added to :py:attr:`~exclude_packages`
+        to avoid the package being added by the dependency
+        resolver. Thus the package should be added before
+        it is used in any stream transformation.
 
         Example::
 
