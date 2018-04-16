@@ -63,6 +63,7 @@ class OperatorGenerator {
         noteAnnotations(_op, sb);
         categoryAnnotation(_op, sb);
         parallelAnnotation(_op, sb);
+        lowLatencyAnnotation(_op, sb);
         viewAnnotation(_op, sb);
         consistentAnnotation(_op, sb);
         AutonomousRegions.autonomousAnnotation(_op, sb);
@@ -209,6 +210,13 @@ class OperatorGenerator {
         });
     }
 
+    private void lowLatencyAnnotation(JsonObject op, StringBuilder sb){
+        boolean lowLatencyOperator = jboolean(op, "lowLatency");
+        if(lowLatencyOperator){
+            sb.append("@threading(model=manual)\n");
+        }
+    }
+    
     private void parallelAnnotation(JsonObject op, StringBuilder sb) {
         boolean parallel = jboolean(op, "parallelOperator");
         
