@@ -156,6 +156,7 @@ class SPLGraph(object):
         return lgi
 
     def generateSPLGraph(self):
+        self.topology._prepare()
         _graph = {}
         _graph["name"] = self.name
         _graph["namespace"] = self.namespace
@@ -195,17 +196,19 @@ class SPLGraph(object):
          for location in fls:
              files = fls[location]
              for path in files:
-                 f = {}
-                 f["source"] = path
-                 f["target"] = location
-                 includes.append(f)
+                 if isinstance(path, str):
+                     # Simple file with a source to copy
+                     f = {}
+                     f['source'] = path
+                     f['target'] = location
+                     includes.append(f)
+                 else:
+                     # Arbitray file description
+                     includes.append(path)
 
     def getLastOperator(self):
         return self.operators[len(self.operators) -1]      
         
-    def printJSON(self):
-      print(json.dumps(self.generateSPLGraph(), sort_keys=True, indent=4, separators=(',', ': ')))
-
 class _SPLInvocation(object):
 
     def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None):

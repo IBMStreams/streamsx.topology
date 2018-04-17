@@ -214,6 +214,7 @@ import time
 import inspect
 import logging
 import datetime
+import pkg_resources
 from enum import Enum
 
 logger = logging.getLogger('streamsx.topology')
@@ -342,6 +343,7 @@ class Topology(object):
           raise ValueError("Python version not supported.")
         self.include_packages = set() 
         self.exclude_packages = set() 
+        self._pip_packages = list() 
         self._files = dict()
         if "Anaconda" in sys.version:
             import streamsx.topology.condapkgs
@@ -508,6 +510,72 @@ class Topology(object):
         else:
              self._files[location].append(path)
         return location + '/' + os.path.basename(path)
+
+    def add_pip_package(self, requirement):
+        """
+        Add a Python package dependency for this topology.
+
+        If the package defined by the requirement specifier
+        is not pre-installed on the build system then the
+        package is installed using `pip` and becomes part
+        of the Streams application bundle (`sab` file).
+        The package is expected to be available from `pypi.org`.
+
+        If the package is already installed on the build system
+        then it is not added into the `sab` file.
+        The assumption is that the runtime hosts for a Streams
+        instance have the same Python packages installed as the
+        build machines. This is always true for the Streaming
+        Analytics service on IBM Cloud.
+
+        The project name extracted from the requirement
+        specifier is added to :py:attr:`~exclude_packages`
+        to avoid the package being added by the dependency
+        resolver. Thus the package should be added before
+        it is used in any stream transformation.
+
+        Example::
+
+            topo = Topology()
+            # Add dependency on pint package
+            # and astral at version 0.8.1
+            topo.add_pip_package('pint')
+            topo.add_pip_package('astral==0.8.1')
+        
+        Args:
+            requirement(str): Package requirements specifier.
+
+        .. warning::
+            Only supported when using the remote build service with
+            the Streaming Analytics service.
+
+        .. versionadded:: 1.9
+        """
+        self._pip_packages.append(str(requirement))
+        pr = pkg_resources.Requirement.parse(requirement) 
+        self.exclude_packages.add(pr.project_name)
+
+    def _prepare(self):
+        """Prepare object prior to SPL generation."""
+        self._generate_requirements()
+
+    def _generate_requirements(self):
+        """Generate the info to create requirements.txt in the toookit."""
+        if not self._pip_packages:
+            return
+
+        reqs = ''
+        for req in self._pip_packages:
+                reqs += "{}\n".format(req)
+        reqs_include = {
+            'contents': reqs,
+            'target':'opt/python/streams',
+            'name': 'requirements.txt'}
+
+        if 'opt' not in self._files:
+             self._files['opt'] = [reqs_include]
+        else:
+             self._files['opt'].append(reqs_include)
 
 
 class Stream(_placement._Placement, object):
