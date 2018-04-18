@@ -107,9 +107,10 @@ public interface ContextProperties {
     String SUBMISSION_PARAMS = "topology.submissionParams";
 
     /**
-     * Flag to be supplied to force the compilation to occur on a 
-     * Bluemix instance, if possible. Currently only be used in
-     * conjunction with the {@code ANALYTICS_SERVICE} context.
+     * Flag to be supplied to force the compilation to occur on the
+     * build service associated with a Streaming Analytics service.
+     * Currently only be used in
+     * conjunction with the {@code STREAMING_ANALYTICS_SERVICE} context.
      * <p>
      * Its values can be {@code true} and {@code false}. If true,
      * it will force remote compilation when possible. If false
