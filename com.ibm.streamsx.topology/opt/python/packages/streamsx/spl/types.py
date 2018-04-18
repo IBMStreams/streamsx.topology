@@ -265,3 +265,15 @@ def rstring(value):
     """
     return streamsx.spl.op.Expression('RSTRING', str(value))
 
+_null = streamsx.spl.op.Expression.expression("null")
+
+def null():
+    """
+    Return an SPL ``null``.
+
+    Returns:
+        Expression: Expression representing an SPL null value.
+
+    .. versionadded:: 1.10
+    """
+    return _null

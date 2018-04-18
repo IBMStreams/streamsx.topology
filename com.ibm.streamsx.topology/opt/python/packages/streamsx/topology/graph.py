@@ -249,7 +249,11 @@ class _SPLInvocation(object):
         return oport
 
     def setParameters(self, params):
+        import streamsx.spl.op
         for param in params:
+            if params[param] is None:
+                # map Python None to SPL null
+                params[param] = streamsx.spl.op.Expression.expression("null")
             self.params[param] = params[param]
 
     def appendParameters(self, params):

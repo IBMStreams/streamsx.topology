@@ -16,6 +16,8 @@ from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 import streamsx.topology.context
 import streamsx.spl.op as op
+import streamsx.spl.toolkit
+import streamsx.spl.types
 from streamsx.spl.types import Timestamp
 
 def ts_check(tuple_):
@@ -77,6 +79,49 @@ class TestSPL(unittest.TestCase):
 
         tester = Tester(topo)
         tester.contents(s, [0, 4, 8, 12, 16, 20, 24])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    @unittest.skipIf(not test_vers.optional_type_supported() , "Optional type not supported")
+    def test_map_attr_opt(self):
+        """Test a Source and a Map operator with optional types.
+           Including with operator parameters and output clauses.
+        """
+        topo = Topology('test_map_attr_opt')
+        streamsx.spl.toolkit.add_toolkit(topo, '../../spl/testtkopt')
+        schema = 'tuple<' \
+            'rstring r, ' \
+            'optional<rstring> orv, ' \
+            'optional<rstring> ornv, ' \
+            'int32 i32, ' \
+            'optional<int32> oi32v, ' \
+            'optional<int32> oi32nv>'
+        s = op.Source(topo, "testgen::TypeLiteralTester", schema, params = {
+            'r': 'a string',
+            'orv': 'optional string',
+            'ornv': None,
+            'i32': 123,
+            'oi32v': 456,
+            'oi32nv': streamsx.spl.types.null()})
+        f = op.Map('spl.relational::Functor', s.stream, schema = schema)
+        f.orv = f.output("null")
+        f.ornv = f.output('"string value"')
+        f.oi32v = f.output(streamsx.spl.types.null())
+        f.oi32nv = f.output('789')
+        tester = Tester(topo)
+        tester.contents(s.stream, [{
+            'r': 'a string',
+            'orv': 'optional string',
+            'ornv': None,
+            'i32': 123,
+            'oi32v': 456,
+            'oi32nv': None}])
+        tester.contents(f.stream, [{
+            'r': 'a string',
+            'orv': None,
+            'ornv': 'string value',
+            'i32': 123,
+            'oi32v': None,
+            'oi32nv': 789}])
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_stream_alias(self):

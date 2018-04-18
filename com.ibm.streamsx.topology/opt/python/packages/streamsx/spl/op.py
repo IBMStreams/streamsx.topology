@@ -57,11 +57,14 @@ Because a string is interpreted as an SPL expression, a string constant
 should be passed by enclosing the quoted string in outer quotes
 (for example, '"a string constant"').
 
-SPL is strictly typed so when passing a constant as a parameter value the
+SPL is strictly typed so when passing a constant as a value the
 value may need to be strongly typed.
     * ``bool``, ``int``, ``float`` and ``str`` values map automatically to SPL `boolean`, `int32`, `float64` and `rstring` respectively.
     * ``Enum`` values map to an operator custom literal using the symbolic name of the value. For custom literals only the symbolic name needs to match a value expected by the operator, the class name and other values are arbitrary.
     * The module :py:mod:`streamsx.spl.types` provides functions to create typed SPL expressions from values.
+
+An optional type may be set to SPL `null` by passing either Python `None` or
+the value returned from :py:func:`~streamsx.spl.types.null`.
 
 Param clause
 ------------
@@ -116,7 +119,7 @@ When a tuple is submitted by an operator invocation each of its attributes is
 set in one of three ways:
 
     * By the operator based upon its state and input tuples. For example, a US ZIP code operator might set the `zipcode` attribute based upon its lookup of the ZIP code from the address details in the input tuple.
-    * By the operator implicitly setting output attributes from matching input attributes. Many streaming operators implicitly set output attributes to allow attributes to flow through the operator without any explicit coding. This only occurs when an output attribute is not explicitly set by the operator or the output clause and the input tuple has an attribute that matches the name and type of the output attribute. For example in the US ZIP code operator if the output tuple included attributes of ``rstring city, rstring state`` matching input attributes then they would be implicitly copied from input tuple to output tuple.
+    * By the operator implicitly setting output attributes from matching input attributes when those attributes have not been explicitly set elsewhere. Many streaming operators implicitly set output attributes to allow attributes to flow through the operator without any explicit coding. This only occurs when an output attribute is not explicitly set by the operator, or the output clause, and the input tuple has an attribute that matches the output attribute (same name and type, or same name and same type as the underlying type of an output attribute with an optional type). For example, in the US ZIP code operator, if the output tuple included attributes of ``rstring city, rstring state`` that matched input attributes, then they would be implicitly copied from the input tuple to the output tuple.
     * By an output clause in the operator invocation. In this case the application invoking the operator is explicitly setting attributes using SPL expressions. An operator may provide output functions that return values based upon the operator's state and input tuples. For example, the US ZIP code operator might provide a ``ZIPCode()`` output function rather than explicitly setting an output attribute. Then the application is free to use any attribute name to represent the ZIP code in its output tuple.
 
 In Python an output tuple attribute is set by creating an attribute in the operator invocation instance that is set to a return from the `output` method.

@@ -31,6 +31,7 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
+import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.context.remote.TkInfo;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
@@ -50,7 +51,8 @@ import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
  * the {@code FileSource} operator from the SPL Standard toolkit must be specified
  * as {@code spl.adapter::FileSource}.
  * <p>
- * When necessary use {@code createValue(T, MetaType)}
+ * When necessary use {@code createValue(T, MetaType)},
+ * or {@code createNullValue()},
  * to create parameter values for SPL types.
  * For example:
  * <pre>{@code
@@ -80,12 +82,12 @@ import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 public class SPL {
     
     /**
-     * Create a SPL value wrapper object for the 
+     * Create an SPL value wrapper object for the 
      * specified SPL {@code MetaType}.
      * <p>
-     * Use of this is required to construct a SPL operator parameter value
+     * Use of this is required to construct an SPL operator parameter value
      * whose SPL type is not implied from simple Java type.  e.g.,
-     * a {@code String} value is interpreted as a SPL {@code rstring},
+     * a {@code String} value is interpreted as an SPL {@code rstring},
      * and {@code Byte,Short,Integer,Long} are interpreted as SPL signed integers.
      * @param value the value to wrap
      * @param metaType the SPL meta type
@@ -95,6 +97,21 @@ public class SPL {
      */
     public static <T> Object createValue(T value, MetaType metaType) {
         return new SPLValue<T>(value, metaType).asJSON();
+    }
+    
+    /**
+     * Create an SPL value wrapper object for an SPL null value.
+     * <p>
+     * Use of this is required to construct an SPL operator parameter
+     * null value for an optional type.
+     * @return the wrapper object
+     * @since 1.10
+     */
+    public static Object createNullValue() {
+        JsonObject jo = new JsonObject();
+        jo.addProperty("type", JParamTypes.TYPE_SPL_EXPRESSION);
+        jo.addProperty("value", "null");
+        return jo;
     }
     
     private static SPLValue<?> createSPLValue(Object paramValue) {
@@ -109,7 +126,7 @@ public class SPL {
      * Create a submission parameter with or without a default value.
      * <p>
      * Use of this is required to construct a submission parameter for
-     * a SPL operator parameter whose SPL type requires the use of
+     * an SPL operator parameter whose SPL type requires the use of
      * {@code createValue(Object, MetaType)}.
      * <p>
      * See {@link Topology#createSubmissionParameter(String, Class)} for
