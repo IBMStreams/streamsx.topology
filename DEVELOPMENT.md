@@ -154,3 +154,22 @@ Container types such as lists and dictionaries can use the following syntax:
 ```
 
 The `__init__` method should be documented on the `__init__` method itself (not in the class level docstring).  This results in better rendering for the builtin help() function. 
+
+## Proposing changes
+Please submit changes through a pull request (PR), typically against `master` or a feature branch.
+
+For a pull request:
+
+ * **Restrict to a single issue**, this speeds up acceptance and makes it easier to merge across release branches if needed.
+    * Don't lump several unrelated fixes/features into a single PR
+    * Don't fix/change formatting in unrelated code in the same PR
+    * Don't fix unrelated documentation/comments in the same PR
+    * Propose such unrelated fixes in new PRs, it's git, branches are cheap.
+    * If unsure if something is related, just ask!
+ * Features and defect fixes are typically associated with an issue.
+    * For a defect, create an issue that describes the problem as its summary (not the fix).
+ * Describe what changes you made in the PR summary (or indirectly in the associated issue)
+    * Help out reviewers with explanations, don't make them have to make assumuptions to review the code.
+ * Describe what tests were run.
+ 
+ It's recommended that you use branches for your development, modifying the target branch (e.g. `master` or the feature branch) directly (even locally in the clone) is not recommended, as multiple changes by other developers may be made to the official copy before you have a chance to merge.  

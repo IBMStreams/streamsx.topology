@@ -153,3 +153,18 @@ def MapReturnValues(*t):
 @spl.source()
 def SourceReturnValues():
     return iter(MRV)
+
+import threading
+@spl.primitive_operator(output_ports=['A'])
+class PrimitiveReturnValues(spl.PrimitiveOperator):
+    def __init__(self):
+        pass
+
+    def all_ports_ready(self):
+        self.submitter = threading.Thread(target=self.submit_some)
+        self.submitter.start()
+        return self.submitter.join
+
+    def submit_some(self):
+        for tuple_ in MRV:
+            self.submit('A', tuple_)

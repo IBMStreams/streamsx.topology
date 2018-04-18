@@ -71,5 +71,14 @@ class TestDistributedPackages(TestPackages):
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestBluemixPackages(TestPackages):
-  def setUp(self):
-      Tester.setup_streaming_analytics(self, force_remote_build=True)
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)
+
+    def test_add_pip_package(self):
+        topo = Topology()
+        topo.add_pip_package('pint')
+        s = topo.source([1])
+        s = s.map(lambda x : __import__('pint').__name__)
+        tester = Tester(topo)
+        tester.contents(s, ['pint'])
+        tester.test(self.test_ctxtype, self.test_config)

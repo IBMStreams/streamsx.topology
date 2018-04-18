@@ -87,6 +87,7 @@
                <exclude name="com/ibm/streamsx/topology/builder/**"/>
                <exclude name="com/ibm/streamsx/topology/generator/**"/>
                <include name="com/ibm/streamsx/rest/**"/>
+               <exclude name="**/*.properties"/>
             </fileset>
             <fileset dir="java/runtime/src">
                <include name="com/ibm/streamsx/topology/**"/>

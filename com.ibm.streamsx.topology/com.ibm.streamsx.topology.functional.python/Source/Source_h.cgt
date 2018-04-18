@@ -24,6 +24,8 @@ public:
   void process(uint32_t idx);
     
 private:
+  SplpyOp * op() { return funcop_; }
+
   // Members
   // Control for interaction with Python
   SplpyFuncOp *funcop_;

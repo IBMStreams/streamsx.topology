@@ -28,9 +28,9 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.ResetterUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.StringPredicateUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
-import com.ibm.streamsx.topology.internal.tester.conditions.handlers.StringTupleTester;
 import com.ibm.streamsx.topology.internal.tester.embedded.EmbeddedTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.rest.RESTTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.tcp.TCPTesterRuntime;
@@ -82,6 +82,9 @@ public class ConditionTesterImpl implements Tester {
     }
     
     private void checkStream(TStream<?> stream) {
+        // Some conditions are not against streams.
+        if (stream == null)
+            return;
         if (stream.topology() != this.getTopology())
             throw new IllegalStateException();
     }
@@ -154,6 +157,14 @@ public class ConditionTesterImpl implements Tester {
             String... values) {
         
         return addCondition(stream, new ContentsUserCondition<String>(String.class, Arrays.asList(values), false));
+    }
+    
+    @Override
+    public Condition<Void> resetConsistentRegions(Integer minimumResets) {
+        if (minimumResets != null && minimumResets <= 0) {
+            throw new IllegalArgumentException(minimumResets.toString());
+        }
+        return addCondition(null, new ResetterUserCondition(minimumResets));
     }
 
     /*

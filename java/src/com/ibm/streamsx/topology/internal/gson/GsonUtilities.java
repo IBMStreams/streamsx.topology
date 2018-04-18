@@ -176,6 +176,14 @@ public class GsonUtilities {
         return jobject(nester, property);
     }
     
+    
+    public static boolean hasAny(JsonObject object, Collection<String> coll){
+        for(String key : coll){
+            if(object.has(key))
+                return true;
+        }
+        return false;
+    }
     /**
      * Get a json object from a property or properties.
      * @param object

@@ -182,6 +182,16 @@ public class BOperatorInvocation extends BOperator {
         
         jparams.add(name, param);
     }
+    
+    /**
+     * Get the raw value for a parameter for this operator invocation.
+     * @return Json representation of parameter or null if the parameter is not set.
+     */
+    public JsonObject getRawParameter(String name) {
+        if (jparams.has(name))
+            return jparams.getAsJsonObject(name);
+        return null;             
+    }
 
     public BOutputPort addOutput(String schema) {
         return addOutput(schema, Optional.empty());

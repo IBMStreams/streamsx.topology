@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016,2017
+# Copyright IBM Corp. 2016,2018
 #
 # Wrap the operator's iterable in a function
 # that when called returns each value from
@@ -16,12 +16,26 @@
 #
 
 from future.builtins import *
+import collections
+import sys
+import streamsx.spl.types
+
+def _exc_shutdown(callable_):
+    if hasattr(callable_, '_splpy_shutdown'):
+        ei = sys.exc_info()
+        return callable_._splpy_shutdown(ei[0], ei[1], ei[2])
+    return False
 
 def _splpy_iter_source(iterable) :
   try:
       it = iter(iterable)
   except TypeError:
       it = iterable()
+  except:
+      if _exc_shutdown(iterable):
+          it = iter([])
+      else:
+          raise
   def _wf():
      try:
         while True:
@@ -36,8 +50,8 @@ def _splpy_iter_source(iterable) :
 
 def _add_shutdown_hook(fn, wrapper):
     if hasattr(fn, '_splpy_shutdown'):
-        def _splpy_shutdown():
-            fn._splpy_shutdown()
+        def _splpy_shutdown(exc_type=None, exc_value=None, traceback=None):
+            return fn._splpy_shutdown(exc_type, exc_value, traceback)
         wrapper._splpy_shutdown = _splpy_shutdown
 
 # The decorated operators only support converting
@@ -104,18 +118,21 @@ def _splpy_primitive_input_fns(obj):
         ofns.append(getattr(obj, fn.__name__))
     return ofns
     
-
-def _splpy_primitive_output_attrs(callable_, port_attributes):
-    """Sets output conversion functions in the callable."""
-    conv_fns = []
-    for attributes in port_attributes:
-        conv_fns.append(_splpy_convert_tuple(attributes))
-        
-    callable_._splpy_conv_fns = conv_fns
-
-
 def _splpy_all_ports_ready(callable_):
     """Call all_ports_ready for a primitive operator."""
     if hasattr(type(callable_), 'all_ports_ready'):
-        return callable_.all_ports_ready()
+        try:
+            return callable_.all_ports_ready()
+        except:
+            if _exc_shutdown(callable_):
+                return None
+            raise
     return None
+
+_Timestamp = collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', 'machine_id'])
+
+# Used by Timestamp.__reduce__ to avoid dill
+# trying to treat a Timestamp as a namedtuple.
+def _stored_ts(s, ns, mid):
+    return streamsx.spl.types.Timestamp(s, ns, mid)
+

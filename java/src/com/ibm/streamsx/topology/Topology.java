@@ -435,6 +435,7 @@ public class Topology implements TopologyElement {
      * <P>
      * Publish-subscribe only works when the topology is
      * submitted to a {@link com.ibm.streamsx.topology.context.StreamsContext.Type#DISTRIBUTED}
+     * or {@link com.ibm.streamsx.topology.context.StreamsContext.Type#STREAMING_ANALYTICS_SERVICE}
      * context. This allows different applications (or
      * even within the same application) to communicate
      * using published streams.

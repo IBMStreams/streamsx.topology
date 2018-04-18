@@ -504,7 +504,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                     "The parallel width must be greater than or equal to 1.");
 
         BOutput toBeParallelized = output();
-        boolean isPartitioned = false;
+        boolean isPartitioned = false;        
         if (keyer != null) {
 
             final ToIntFunction<T> hasher = new KeyFunctionHasher<>(keyer);
@@ -512,6 +512,17 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             BOperatorInvocation hashAdder = JavaFunctional.addFunctionalOperator(this,
                     "HashAdder",
                     HASH_ADDER_KIND, hasher);
+                      
+            if (isPlaceable()) {
+                BOperatorInvocation op = operator();
+                
+                JsonObject serializer = op.getRawParameter("outputSerializer");
+                if (serializer != null) {              
+                    hashAdder.setParameter("inputSerializer", serializer);
+                    JavaFunctional.copyDependencies(this, op, hashAdder);
+                }
+            }           
+            
             hashAdder.layout().addProperty("hidden", true);
             BInputPort ip = connectTo(hashAdder, true, null);
 
@@ -534,6 +545,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             hashRemover.setModel(MODEL_SPL, LANGUAGE_JAVA);
             
             hashRemover.layout().addProperty("hidden", true);
+            
             @SuppressWarnings("unused")
             BInputPort pip = parallelStream.connectTo(hashRemover, true, null);
             parallelOutput = hashRemover.addOutput(output._type());
@@ -558,8 +570,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     	output.operator().addConfig(OpProperties.PARALLEL, true);
     	output.operator().addConfig(OpProperties.WIDTH, width.get());
     	
-    	throw new UnsupportedOperationException("setParallel is not implemented.");
-    	//return this;
+    	return this;
     }
 
     @Override
@@ -654,6 +665,9 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> endLowLatency() {
         BOutput toEndLowLatency = output();
+        if(toEndLowLatency instanceof BUnionOutput){
+            toEndLowLatency = builder().addPassThroughOperator(toEndLowLatency);
+        }
         BOutput endedLowLatency = builder().endLowLatency(toEndLowLatency);
         return addMatchingStream(endedLowLatency);
 

@@ -112,9 +112,9 @@ class _FunctionalCallable(object):
         """
         return self._callable(tuple_)
 
-    def _splpy_shutdown(self):
+    def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
         if self._cls:
-            ec._callable_exit_clean(self._callable)
+            return ec._callable_exit(self._callable, exc_type, exc_value, traceback)
 
 class _PickleInObjectOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
@@ -274,34 +274,51 @@ class _JSONInJSONOut(_FunctionalCallable):
 # Given a callable that returns an iterable
 # return a function that can be called
 # repeatably by a source operator returning
+#
 # the next tuple in its pickled form
-class _IterablePickleOut(_FunctionalCallable):
+# Set up iterator from the callable.
+# If an error occurs and __exit__ asks for it to be
+# ignored then an empty source is created.
+class _IterableAnyOut(_FunctionalCallable):
     def __init__(self, callable, attributes=None):
-        super(_IterablePickleOut, self).__init__(callable, attributes)
-        self._it = iter(self._callable())
+        super(_IterableAnyOut, self).__init__(callable, attributes)
+        try:
+            self._it = iter(self._callable())
+        except:
+            ei = sys.exc_info()
+            ignore = ec._callable_exit(self._callable, ei[0], ei[1], ei[2])
+            if not ignore:
+                raise ei[1]
+            # Ignored by nothing to do so use empty iterator
+            self._it = iter([])
 
     def __call__(self):
-        try:
-            while True:
-                tuple_ = next(self._it)
-                if not tuple_ is None:
-                    return pickle.dumps(tuple_)
-        except StopIteration:
-            return None
-
-class _IterableObjectOut(_FunctionalCallable):
-    def __init__(self, callable, attributes=None):
-        super(_IterableObjectOut, self).__init__(callable, attributes)
-        self._it = iter(self._callable())
-
-    def __call__(self):
-        try:
-            while True:
+        while True:
+            try:
                 tuple_ = next(self._it)
                 if not tuple_ is None:
                     return tuple_
-        except StopIteration:
-            return None
+            except StopIteration:
+                return None
+            except:
+                ei = sys.exc_info()
+                ignore = ec._callable_exit(self._callable, ei[0], ei[1], ei[2])
+                if not ignore:
+                    raise ei[1]
+
+class _IterablePickleOut(_IterableAnyOut):
+    def __init__(self, callable, attributes=None):
+        super(_IterablePickleOut, self).__init__(callable, attributes)
+        self.pdfn = pickle.dumps
+
+    def __call__(self):
+        tuple_ = super(_IterablePickleOut, self).__call__()
+        if tuple_ is not None:
+            return self.pdfn(tuple_)
+        return tuple_
+
+class _IterableObjectOut(_IterableAnyOut):
+     pass
 
 # Iterator that wraps another iterator
 # to discard any values that are None

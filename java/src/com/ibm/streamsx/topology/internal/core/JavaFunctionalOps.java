@@ -18,7 +18,7 @@ public interface JavaFunctionalOps {
     
 
     
-    String NS = "com.ibm.streamsx.topology.functional.java";
+    String NS = SPI.namespaceJava();
     
     String PKG_O = "com.ibm.streamsx.topology.internal.functional.ops.";
 
@@ -40,7 +40,6 @@ public interface JavaFunctionalOps {
     
     String MAP_KIND = NS + "::Map";
     
-    String PASS_CLASS = PKG_O + "PassThrough";
     String PASS_KIND = NS + "::PassThrough"; // Technically not a functional op.
     
     String PERIODIC_MULTI_SOURCE_KIND = NS + "::FunctionPeriodicSource";
@@ -54,6 +53,8 @@ public interface JavaFunctionalOps {
     
     String SOURCE_KIND = NS + "::Source";
     
+    String PASS_CLASS = PKG + "PassThrough";
+    
     static JsonObject kind2Class() {
         final JsonObject kinds = new JsonObject();
         
@@ -64,14 +65,12 @@ public interface JavaFunctionalOps {
         
         kinds.addProperty(FLAT_MAP_KIND, PKG_O + "FunctionMultiTransform");
         
-        kinds.addProperty(HASH_ADDER_KIND, PKG_O + "HashAdder");      
-        kinds.addProperty(HASH_REMOVER_KIND, PKG_O + "HashRemover");
 
         kinds.addProperty(JOIN_KIND, PKG_O + "FunctionJoin");
         
         kinds.addProperty(MAP_KIND, PKG_O + "FunctionTransform");
         
-        kinds.addProperty(PASS_KIND, PASS_CLASS);
+
         
         kinds.addProperty(PERIODIC_MULTI_SOURCE_KIND, PKG_O + "FunctionPeriodicSource");
         
@@ -80,7 +79,12 @@ public interface JavaFunctionalOps {
         
         kinds.addProperty(FOR_EACH_KIND, PKG + "ForEach");
         
-        kinds.addProperty(SOURCE_KIND, PKG + "Source");     
+        kinds.addProperty(SOURCE_KIND, PKG + "Source");
+        
+        kinds.addProperty(PASS_KIND, PASS_CLASS);
+        kinds.addProperty(HASH_ADDER_KIND, PKG + "HashAdder");      
+        kinds.addProperty(HASH_REMOVER_KIND, PKG + "HashRemover");
+
         
         return kinds;
     }
