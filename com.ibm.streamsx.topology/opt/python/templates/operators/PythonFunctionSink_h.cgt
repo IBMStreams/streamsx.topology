@@ -25,6 +25,8 @@ public:
   void process(Tuple const & tuple, uint32_t port);
 
 private:
+    SplpyOp *op() { return pyop_; }
+
   // Members
     SplpyPyOp *pyop_;
     PyObject *pyInNames_;

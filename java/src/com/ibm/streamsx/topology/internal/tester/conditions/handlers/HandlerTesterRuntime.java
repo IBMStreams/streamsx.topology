@@ -23,6 +23,7 @@ import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.NoStreamCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.StringPredicateUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
 
@@ -52,7 +53,7 @@ public abstract class HandlerTesterRuntime extends TesterRuntime {
         }
     }
 
-    private static void setupHandlersFromConditions(
+    private void setupHandlersFromConditions(
             Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers,
             Map<TStream<?>, Set<UserCondition<?>>> conditions) {
         
@@ -64,13 +65,18 @@ public abstract class HandlerTesterRuntime extends TesterRuntime {
                 handlers.put(stream, streamHandlers = new HashSet<>());
             
             for (UserCondition<?> userCondition : streamConditions) {
+                if (stream == null) {
+                    ((NoStreamCondition) userCondition).addTo(topology(), userCondition.getClass().getSimpleName());
+                    continue;
+                }
+                
                 streamHandlers.add(createHandler(userCondition));
             }
         }
     }
     
     @SuppressWarnings("unchecked")
-    private static StreamHandler<Tuple> createHandler(UserCondition<?> userCondition) {
+    private StreamHandler<Tuple> createHandler(UserCondition<?> userCondition) {
         
         HandlerCondition<?,?,?> handlerCondition = null;
         

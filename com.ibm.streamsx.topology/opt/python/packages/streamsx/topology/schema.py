@@ -243,43 +243,48 @@ class StreamSchema(object) :
 
     The complete list of supported types are:
 
-    ============================  ======================================  =====================
-    Type                          Description                             Python representation
+    ============================  ==============================  =========================================  =======================================
+    Type                          Description                     Python representation                      Conversion from Python
+    ============================  ==============================  =========================================  =======================================
+    ``boolean``                   True or False                   ``bool``                                   ``bool(value)``
+    ``int8``                      8-bit signed integer            ``int``                                    ``int(value)`` truncated to 8 bits
+    ``int16``                     16-bit signed integer           ``int``                                    ``int(value)`` truncated to 16 bits
+    ``int32``                     32-bit signed integer           ``int``                                    ``int(value)`` truncated to 32 bits
+    ``int64``                     64-bit signed integer           ``int``                                    ``int(value)``
+    ``uint8``                     8-bit unsigned integer          ``int``                                    -
+    ``uint16``                    16-bit unsigned integer         ``int``                                    -
+    ``uint32``                    32-bit unsigned integer         ``int``                                    -
+    ``uint64``                    64-bit unsigned integer         ``int``                                    -
+    ``float32``                   32-bit binary floating point    ``float``                                  ``float(value)`` truncated to 32 bits
+    ``float64``                   64-bit binary floating point    ``float``                                  ``float(value)``
+    ``decimal32``                 32-bit decimal floating point   ``decimal.Decimal``                        ``decimal.Decimal(value)`` normalized to IEEE 754 decimal32
+    ``decimal64``                 64-bit decimal floating point   ``decimal.Decimal``                        ``decimal.Decimal(value)`` normalized to IEEE 754 decimal64
+    ``decimal128``                128-bit decimal floating point  ``decimal.Decimal``                        ``decimal.Decimal(value)`` normalized to IEEE 754 decimal128
+    ``complex32``                 complex with `float32` values   ``complex``                                ``complex(value)`` with real and imaginary values truncated to 32 bits
+    ``complex64``                 complex with `float64` values   ``complex``                                ``complex(value)``
+    ``timestamp``                 Nanosecond timestamp            :py:class:`~streamsx.spl.types.Timestamp`  -
+    ``rstring``                   UTF-8 string                    ``str`` (``unicode`` 2.7)                  ``str(value)``
+    ``rstring[N]``                Bounded UTF-8 string            ``str`` (``unicode`` 2.7)                  ``str(value)``
+    ``ustring``                   UTF-16 string                   ``str`` (``unicode`` 2.7)                  ``str(value)``
+    ``blob``                      Sequence of bytes               ``memoryview``                             -
+    ``list<T>``                   List with elements of type `T`  ``list``                                   -
+    ``list<T>[N]``                Bounded list                    ``list``                                   -
+    ``set<T>``                    Set with elements of type `T`   ``set``                                    -
+    ``set<T>[N]``                 Bounded set                     ``set``                                    -
+    ``map<K,V>``                  Map with typed keys and values  ``dict``                                   -
+    ``map<K,V>[N]``               Bounded map, limted to N pairs  ``dict``                                   -
+    ``optional<T>``               Optional value of type `T`      Value of type `T`, or None                 Value of for type ``T``
+    ``enum{id [,...]}``           Enumeration                     Not supported                              Not supported
+    ``xml``                       XML value                       Not supported                              Not supported
+    ``tuple<type name [, ...]>``  Nested tuple                    Not supported                              Not supported
+    ============================  ==============================  =========================================  =======================================
 
-    ============================  ======================================  =====================
-    ``boolean``                   True or False                           ``bool``
-    ``int8``                      8-bit signed integer                    ``int``
-    ``int16``                     16-bit signed integer                   ``int``
-    ``int32``                     32-bit signed integer                   ``int``
-    ``int64``                     64-bit signed integer                   ``int``
-    ``uint8``                     8-bit unsigned integer                  ``int``
-    ``uint16``                    16-bit unsigned integer                 ``int``
-    ``uint32``                    32-bit unsigned integer                 ``int``
-    ``uint64``                    64-bit unsigned integer                 ``int``
-    ``float32``                   32-bit binary floating point            ``float``
-    ``float64``                   64-bit binary floating point            ``float``
-    ``decimal32``                 32-bit decimal floating point           ``decimal.Decimal``
-    ``decimal64``                 64-bit decimal floating point           ``decimal.Decimal``
-    ``decimal128``                128-bit decimal floating point          ``decimal.Decimal``
-    ``complex32``                 complex using `float32` values          ``complex``
-    ``complex64``                 complex using `float64` values          ``complex``
-    ``timestamp``                 Timestamp with nanosecond resolution    :py:class:`~streamsx.spl.types.Timestamp`
-    ``rstring``                   Character string (UTF-8 encoded)        ``str`` (``unicode`` 2.7)
-    ``rstring[N]``                Bounded string (UTF-8 encoded)          ``str`` (``unicode`` 2.7)
-    ``ustring``                   Character string (UTF-16 encoded)       ``str`` (``unicode`` 2.7)
-    ``blob``                      Sequence of bytes                       ``memoryview``
-    ``list<T>``                   List with elements of type `T`          ``list``
-    ``list<T>[N]``                Bounded list, limted to N elements      ``list``
-    ``set<T>``                    Set with elements of type `T`           ``set``
-    ``set<T>[N]``                 Bounded set, limted to N elements       ``set``
-    ``map<K,V>``                  Map with typed keys and values          ``dict``
-    ``map<K,V>[N]``               Bounded map, limted to N pairs          ``dict``
-    ``optional<T>``               Optional value of type `T`              Value of type `T`, or None
-    ``enum{id [,...]}``           Enumeration                             Not supported
-    ``xml``                       XML value                               Not supported
-    ``tuple<type name [, ...]>``  Nested tuple                            Not supported
-    ============================  ======================================  =====================
+    Python representation is how an attribute value in a structured schema is passed into a Python function. 
 
+    Conversion from Python indicates how a value from Python is converted to an attribute value in a structured schema.
+    For example a value ``v`` assigned to ``float64`` attribute is converted as though ``float(v)`` is called first,
+    thus ``v`` may be a ``float``, ``int`` or any type that has a ``__float__`` method.
+    
     When a type is not supported in Python it can only be used in a schema used for streams produced and consumed by invocation of SPL operators.
 
     A `StreamSchema` can be created by passing a string of the

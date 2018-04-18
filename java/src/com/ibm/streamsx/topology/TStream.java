@@ -988,19 +988,6 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * It is not necessary to invoke {@link #endParallel()} on parallel sinks.</b>
      * <br><br>
      * Limitations of parallel() are as follows: <br>
-     * Nested parallelism is not currently supported. A call to {@code parallel(...)}
-     * should never be made immediately after another call to {@code parallel(...)} without
-     * having an {@code endParallel()} in between. <br>
-     * <br>
-     * {@code parallel()} should not be invoked immediately after another call to
-     * {@code parallel()}. The following is invalid:
-     * 
-     * <pre>
-     * <code>
-     * myStream.parallel(2).parallel(2);
-     * </pre>
-     * 
-     * </code>
      * 
      * Every call to {@code endParallel()} must have a call to {@code parallel(...)} preceding it. The
      * following is invalid:

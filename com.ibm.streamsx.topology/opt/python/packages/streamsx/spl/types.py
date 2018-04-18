@@ -15,18 +15,12 @@ must use the SPL type required by the operator.
 """
 from future.builtins import *
 
-import collections
 import datetime
 import time
 import streamsx.spl.op
+import streamsx.spl.runtime
 
-# Used by Timestamp.__reduce__ to avoid dill
-# trying to treat a Timestamp as a namedtuple.
-def _stored_ts(s, ns, mid):
-    return Timestamp(s, ns, mid)
-
-_Timestamp = collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', 'machine_id'])
-class Timestamp(_Timestamp):
+class Timestamp(streamsx.spl.runtime._Timestamp):
     """
     SPL native timestamp type with nanosecond resolution.
 
@@ -120,7 +114,7 @@ class Timestamp(_Timestamp):
          return ns
 
     def __new__(cls, seconds, nanoseconds, machine_id=0):
-        return _Timestamp.__new__(cls, int(seconds), Timestamp._check_nanos(nanoseconds), int(machine_id))
+        return streamsx.spl.runtime._Timestamp.__new__(cls, int(seconds), Timestamp._check_nanos(nanoseconds), int(machine_id))
 
     def time(self):
         """
@@ -155,7 +149,7 @@ class Timestamp(_Timestamp):
         return self
 
     def __reduce__(self):
-        return _stored_ts, tuple(self)
+        return streamsx.spl.runtime._stored_ts, tuple(self)
 
 def _get_timestamp_tuple(ts):
     """
@@ -166,7 +160,7 @@ def _get_timestamp_tuple(ts):
         return Timestamp.from_datetime(ts).tuple()
     elif isinstance(ts, Timestamp):    
         return ts
-    raise ValueError('Timestamp or dtate.datetime required')
+    raise TypeError('Timestamp or datetime.datetime required')
     
 
 def int8(value):

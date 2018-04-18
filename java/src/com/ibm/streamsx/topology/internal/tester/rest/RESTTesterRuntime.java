@@ -27,6 +27,7 @@ import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
+import com.ibm.streamsx.topology.internal.tester.conditions.NoStreamCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.StringPredicateUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
 import com.ibm.streamsx.topology.internal.tester.fns.StringPredicateChecker;
@@ -77,8 +78,12 @@ public class RESTTesterRuntime extends TesterRuntime {
             throw new UnsupportedOperationException();
         
         for (TStream<?> stream : conditions.keySet()) {
-            for (UserCondition<?> uc : conditions.get(stream))
-                addConditionToStream(stream, uc);
+            for (UserCondition<?> uc : conditions.get(stream)) {
+                if (stream != null)
+                    addConditionToStream(stream, uc);
+                else
+                    addNoStreamCondition((NoStreamCondition) uc);
+            }
         }
     }
 
@@ -127,6 +132,18 @@ public class RESTTesterRuntime extends TesterRuntime {
         TSink end = os.forEach(fn);
         if (os.isPlaceable())
             end.colocate(os);
+        
+        metricsChecker.addCondition(name, condition);       
+    }
+    
+    private void addNoStreamCondition(NoStreamCondition userCondition) {
+
+        String name = userCondition.getClass().getSimpleName() + id++;       
+        userCondition.addTo(topology(), name);
+        
+        @SuppressWarnings("unchecked")
+        MetricCondition<?> condition =
+                new MetricCondition<Object>(name, (UserCondition<Object>) userCondition);
         
         metricsChecker.addCondition(name, condition);       
     }

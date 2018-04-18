@@ -97,22 +97,24 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
 
    int ret = 0;
-   {
-    // Don't hold the lock across submission
-    SplpyGIL lock;
+   try {
+     SplpyGIL lock;
 
  @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
 
     PyObject * pyReturnVar = SplpyGeneral::pyObject_Call(pyop_->callable(), pyTuple, pyDict);
 
     if (pyReturnVar == NULL) {
-        SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
-        throw SplpyGeneral::pythonException("<%=$functionName%>");
+        throw SplpyExceptionInfo::pythonError("<%=$functionName%>");
     }
     ret = PyObject_IsTrue(pyReturnVar);
 
     Py_DECREF(pyReturnVar);
-    }
+   } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+       SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+       return;
+   }
+
    if (ret)
        submit(tuple, 0);   
 <%if ($nonMatchOutput) {%>

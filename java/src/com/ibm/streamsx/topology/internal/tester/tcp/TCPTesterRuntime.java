@@ -86,6 +86,8 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
         addTCPServerAndSink();
         collectorGraph = OperatorGraphFactory.newGraph();
         for (TStream<?> stream : this.handlers.keySet()) {
+            if (stream == null)
+                continue;
             int testerId = connectToTesterSink(stream);
             testers.put(stream, new StreamTester(collectorGraph, testerId,
                     stream));
@@ -166,6 +168,9 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
     private void setupTestHandlers() throws Exception {
 
         for (TStream<?> stream : handlers.keySet()) {
+            if (stream == null)
+                continue;
+            
             Set<StreamHandler<Tuple>> streamHandlers = handlers.get(stream);
             StreamTester tester = testers.get(stream);
 

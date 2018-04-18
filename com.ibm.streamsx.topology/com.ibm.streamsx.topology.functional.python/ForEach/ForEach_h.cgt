@@ -21,6 +21,7 @@ public:
   void process(Tuple const & tuple, uint32_t port);
 
 private:
+  SplpyOp * op() { return funcop_; }
   
   // Members
   // Control for interaction with Python
