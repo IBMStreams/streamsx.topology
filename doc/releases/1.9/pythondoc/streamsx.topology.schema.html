@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.schema &mdash; streamsx 1.9a1 documentation</title>
+  <title>streamsx.topology.schema &mdash; streamsx 1.9.2b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.9a1 documentation" href="index.html"/>
+    <link rel="top" title="streamsx 1.9.2b documentation" href="index.html"/>
         <link rel="next" title="streamsx.topology.tester" href="streamsx.topology.tester.html"/>
         <link rel="prev" title="streamsx.topology.context" href="streamsx.topology.context.html"/> 
 
@@ -311,139 +311,211 @@ for example:</p>
 <p>The complete list of supported types are:</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="26%" />
-<col width="36%" />
-<col width="38%" />
+<col width="17%" />
+<col width="18%" />
+<col width="24%" />
+<col width="41%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Type</th>
 <th class="head">Description</th>
 <th class="head">Python representation</th>
+<th class="head">Conversion from Python</th>
 </tr>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">boolean</span></code></td>
 <td>True or False</td>
 <td><code class="docutils literal"><span class="pre">bool</span></code></td>
+<td><code class="docutils literal"><span class="pre">bool(value)</span></code></td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">int8</span></code></td>
 <td>8-bit signed integer</td>
 <td><code class="docutils literal"><span class="pre">int</span></code></td>
+<td><code class="docutils literal"><span class="pre">int(value)</span></code> truncated to 8 bits</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">int16</span></code></td>
 <td>16-bit signed integer</td>
 <td><code class="docutils literal"><span class="pre">int</span></code></td>
+<td><code class="docutils literal"><span class="pre">int(value)</span></code> truncated to 16 bits</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">int32</span></code></td>
 <td>32-bit signed integer</td>
 <td><code class="docutils literal"><span class="pre">int</span></code></td>
+<td><code class="docutils literal"><span class="pre">int(value)</span></code> truncated to 32 bits</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">int64</span></code></td>
 <td>64-bit signed integer</td>
 <td><code class="docutils literal"><span class="pre">int</span></code></td>
+<td><code class="docutils literal"><span class="pre">int(value)</span></code></td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">uint8</span></code></td>
 <td>8-bit unsigned integer</td>
 <td><code class="docutils literal"><span class="pre">int</span></code></td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">uint16</span></code></td>
 <td>16-bit unsigned integer</td>
 <td><code class="docutils literal"><span class="pre">int</span></code></td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">uint32</span></code></td>
 <td>32-bit unsigned integer</td>
 <td><code class="docutils literal"><span class="pre">int</span></code></td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">uint64</span></code></td>
 <td>64-bit unsigned integer</td>
 <td><code class="docutils literal"><span class="pre">int</span></code></td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">float32</span></code></td>
 <td>32-bit binary floating point</td>
 <td><code class="docutils literal"><span class="pre">float</span></code></td>
+<td><code class="docutils literal"><span class="pre">float(value)</span></code> truncated to 32 bits</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">float64</span></code></td>
 <td>64-bit binary floating point</td>
 <td><code class="docutils literal"><span class="pre">float</span></code></td>
+<td><code class="docutils literal"><span class="pre">float(value)</span></code></td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">decimal32</span></code></td>
 <td>32-bit decimal floating point</td>
 <td><code class="docutils literal"><span class="pre">decimal.Decimal</span></code></td>
+<td><code class="docutils literal"><span class="pre">decimal.Decimal(value)</span></code> normalized to IEEE 754 decimal32</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">decimal64</span></code></td>
 <td>64-bit decimal floating point</td>
 <td><code class="docutils literal"><span class="pre">decimal.Decimal</span></code></td>
+<td><code class="docutils literal"><span class="pre">decimal.Decimal(value)</span></code> normalized to IEEE 754 decimal64</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">decimal128</span></code></td>
 <td>128-bit decimal floating point</td>
 <td><code class="docutils literal"><span class="pre">decimal.Decimal</span></code></td>
+<td><code class="docutils literal"><span class="pre">decimal.Decimal(value)</span></code> normalized to IEEE 754 decimal128</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">complex32</span></code></td>
-<td>complex using <cite>float32</cite> values</td>
+<td>complex with <cite>float32</cite> values</td>
 <td><code class="docutils literal"><span class="pre">complex</span></code></td>
+<td><code class="docutils literal"><span class="pre">complex(value)</span></code> with real and imaginary values truncated to 32 bits</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">complex64</span></code></td>
-<td>complex using <cite>float64</cite> values</td>
+<td>complex with <cite>float64</cite> values</td>
 <td><code class="docutils literal"><span class="pre">complex</span></code></td>
+<td><code class="docutils literal"><span class="pre">complex(value)</span></code></td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">timestamp</span></code></td>
-<td>Timestamp with nanosecond resolution</td>
+<td>Nanosecond timestamp</td>
 <td><a class="reference internal" href="streamsx.spl.types.html#streamsx.spl.types.Timestamp" title="streamsx.spl.types.Timestamp"><code class="xref py py-class docutils literal"><span class="pre">Timestamp</span></code></a></td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">rstring</span></code></td>
-<td>Character string (UTF-8 encoded)</td>
+<td>UTF-8 string</td>
 <td><code class="docutils literal"><span class="pre">str</span></code> (<code class="docutils literal"><span class="pre">unicode</span></code> 2.7)</td>
+<td><code class="docutils literal"><span class="pre">str(value)</span></code></td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">rstring[N]</span></code></td>
-<td>Bounded string (UTF-8 encoded)</td>
+<td>Bounded UTF-8 string</td>
 <td><code class="docutils literal"><span class="pre">str</span></code> (<code class="docutils literal"><span class="pre">unicode</span></code> 2.7)</td>
+<td><code class="docutils literal"><span class="pre">str(value)</span></code></td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">ustring</span></code></td>
-<td>Character string (UTF-16 encoded)</td>
+<td>UTF-16 string</td>
 <td><code class="docutils literal"><span class="pre">str</span></code> (<code class="docutils literal"><span class="pre">unicode</span></code> 2.7)</td>
+<td><code class="docutils literal"><span class="pre">str(value)</span></code></td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">blob</span></code></td>
 <td>Sequence of bytes</td>
 <td><code class="docutils literal"><span class="pre">memoryview</span></code></td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">list&lt;T&gt;</span></code></td>
 <td>List with elements of type <cite>T</cite></td>
 <td><code class="docutils literal"><span class="pre">list</span></code></td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">list&lt;T&gt;[N]</span></code></td>
-<td>Bounded list, limted to N elements</td>
+<td>Bounded list</td>
 <td><code class="docutils literal"><span class="pre">list</span></code></td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">set&lt;T&gt;</span></code></td>
 <td>Set with elements of type <cite>T</cite></td>
 <td><code class="docutils literal"><span class="pre">set</span></code></td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">set&lt;T&gt;[N]</span></code></td>
-<td>Bounded set, limted to N elements</td>
+<td>Bounded set</td>
 <td><code class="docutils literal"><span class="pre">set</span></code></td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">map&lt;K,V&gt;</span></code></td>
 <td>Map with typed keys and values</td>
 <td><code class="docutils literal"><span class="pre">dict</span></code></td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">map&lt;K,V&gt;[N]</span></code></td>
 <td>Bounded map, limted to N pairs</td>
 <td><code class="docutils literal"><span class="pre">dict</span></code></td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">enum{id</span> <span class="pre">[,...]}</span></code></td>
 <td>Enumeration</td>
+<td>Not supported</td>
 <td>Not supported</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">xml</span></code></td>
 <td>XML value</td>
 <td>Not supported</td>
+<td>Not supported</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">tuple&lt;type</span> <span class="pre">name</span> <span class="pre">[,</span> <span class="pre">...]&gt;</span></code></td>
 <td>Nested tuple</td>
 <td>Not supported</td>
+<td>Not supported</td>
 </tr>
 </tbody>
 </table>
+<p>Python representation is how an attribute value in a structured schema is passed into a Python function.</p>
+<p>Conversion from Python indicates how a value from Python is converted to an attribute value in a structured schema.
+For example a value <code class="docutils literal"><span class="pre">v</span></code> assigned to <code class="docutils literal"><span class="pre">float64</span></code> attribute is converted as though <code class="docutils literal"><span class="pre">float(v)</span></code> is called first,
+thus <code class="docutils literal"><span class="pre">v</span></code> may be a <code class="docutils literal"><span class="pre">float</span></code>, <code class="docutils literal"><span class="pre">int</span></code> or any type that has a <code class="docutils literal"><span class="pre">__float__</span></code> method.</p>
 <p>When a type is not supported in Python it can only be used in a schema used for streams produced and consumed by invocation of SPL operators.</p>
 <p>A <cite>StreamSchema</cite> can be created by passing a string of the
 form <code class="docutils literal"><span class="pre">tuple&lt;...&gt;</span></code> or by passing the name of an SPL type from
@@ -698,7 +770,7 @@ with <code class="docutils literal"><span class="pre">tuple&lt;float32</span> <s
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9a1',
+            VERSION:'1.9.2b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

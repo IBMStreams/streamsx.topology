@@ -22,7 +22,7 @@
 <div class="body refbody">
 <div class="section">
 <p class="p">
-<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.9.0.__dev__</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$6.html">Creating SPL Operators from Python code</a> &gt; Dependent Python packages</p>
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.9.2.beta</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$6.html">Creating SPL Operators from Python code</a> &gt; Dependent Python packages</p>
 
 </div>
 
@@ -77,6 +77,9 @@
 <p class="p">Packages are explictly requested for the whole toolkit or a specific module.
 </p>
 
+<p class="p">Any packages the modules (under <tt class="ph tt">opt/python/streams</tt>) depend on when being loaded, must be accessible at operator extraction time.  For example, if the module <tt class="ph tt">opt/python/streams/geo_ops.py</tt> directly imports <tt class="ph tt">geocoder</tt> for use in its decorated functions or classes then since <tt class="ph tt">geo_ops.py</tt> is loaded to determine the SPL primitive operators, <tt class="ph tt">geocoder</tt> must be accessible to the Python environment running the extraction script.
+</p>
+
 <p class="p"><strong class="ph b">Tookit wide requirements</strong>
 </p>
 
@@ -84,6 +87,9 @@
 </p>
 
 <p class="p">See: <a class="xref" href="https://pip.pypa.io/en/stable/user_guide/#requirements-files">https://pip.pypa.io/en/stable/user_guide/#requirements-files</a>
+</p>
+
+<p class="p">When a toolkit with a <tt class="ph tt">requirements.txt</tt> is built using the build service then its required packages are installed remotely and made available to the extraction script.
 </p>
 
 <p class="p"><strong class="ph b">Module specific requirements</strong>

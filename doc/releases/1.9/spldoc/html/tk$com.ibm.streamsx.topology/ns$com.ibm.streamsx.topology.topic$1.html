@@ -22,7 +22,7 @@
 <div class="body refbody">
 <div class="section">
 <p class="p">
-<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.9.0.__dev__</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.topic.html">com.ibm.streamsx.topology.topic</a> &gt; Publish-subscribe Overview</p>
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.9.2.beta</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.topic.html">com.ibm.streamsx.topology.topic</a> &gt; Publish-subscribe Overview</p>
 
 </div>
 
@@ -248,19 +248,19 @@
 
 <thead class="thead" align="left">
 <tr class="row">
-<th class="entry" colspan="1" valign="top" id="d11067e557">
+<th class="entry" colspan="1" valign="top" id="d13633e557">
 <p class="p">Publisher
 </p>
 
 </th>
 
-<th class="entry" colspan="1" valign="top" id="d11067e563">
+<th class="entry" colspan="1" valign="top" id="d13633e563">
 <p class="p">Subscriber
 </p>
 
 </th>
 
-<th class="entry" colspan="1" valign="top" id="d11067e569">
+<th class="entry" colspan="1" valign="top" id="d13633e569">
 <p class="p">Behavior
 </p>
 
@@ -272,19 +272,19 @@
 
 <tbody class="tbody">
 <tr class="row">
-<td class="entry" colspan="1" valign="top" headers="d11067e557 ">
+<td class="entry" colspan="1" valign="top" headers="d13633e557 ">
 <p class="p"><em class="ph i">not-parallel</em>
 </p>
 
 </td>
 
-<td class="entry" colspan="1" valign="top" headers="d11067e563 ">
+<td class="entry" colspan="1" valign="top" headers="d13633e563 ">
 <p class="p"><em class="ph i">not-parallel</em>
 </p>
 
 </td>
 
-<td class="entry" rowspan="2" colspan="1" valign="top" headers="d11067e569 ">
+<td class="entry" rowspan="2" colspan="1" valign="top" headers="d13633e569 ">
 <p class="p">Single connection between the publisher and subscriber containing all the tuples
 </p>
 
@@ -293,13 +293,13 @@
 </tr>
 
 <tr class="row">
-<td class="entry" colspan="1" valign="top" headers="d11067e557 ">
+<td class="entry" colspan="1" valign="top" headers="d13633e557 ">
 <p class="p"><em class="ph i">parallel(1)</em>
 </p>
 
 </td>
 
-<td class="entry" colspan="1" valign="top" headers="d11067e563 ">
+<td class="entry" colspan="1" valign="top" headers="d13633e563 ">
 <p class="p"><em class="ph i">parallel(1)</em>
 </p>
 
@@ -308,13 +308,13 @@
 </tr>
 
 <tr class="row">
-<td class="entry" colspan="1" valign="top" headers="d11067e557 ">
+<td class="entry" colspan="1" valign="top" headers="d13633e557 ">
 <p class="p"><em class="ph i">not-parallel</em>
 </p>
 
 </td>
 
-<td class="entry" rowspan="2" colspan="1" valign="top" headers="d11067e563 ">
+<td class="entry" rowspan="2" colspan="1" valign="top" headers="d13633e563 ">
 <p class="p"><em class="ph i">parallel(N)</em>
 </p>
 
@@ -323,7 +323,7 @@
 
 </td>
 
-<td class="entry" rowspan="2" colspan="1" valign="top" headers="d11067e569 ">
+<td class="entry" rowspan="2" colspan="1" valign="top" headers="d13633e569 ">
 <p class="p">One and only one of the N subscribers connects to the single publisher and thus the subscriber region correctly processes the tuples once.  Note that which subscriber channel processes the single published channel is not defined, it could be any of 0,1,...,N-1.
 </p>
 
@@ -332,7 +332,7 @@
 </tr>
 
 <tr class="row">
-<td class="entry" colspan="1" valign="top" headers="d11067e557 ">
+<td class="entry" colspan="1" valign="top" headers="d13633e557 ">
 <p class="p"><em class="ph i">parallel(1)</em>
 </p>
 
@@ -341,7 +341,7 @@
 </tr>
 
 <tr class="row">
-<td class="entry" rowspan="2" colspan="1" valign="top" headers="d11067e557 ">
+<td class="entry" rowspan="2" colspan="1" valign="top" headers="d13633e557 ">
 <p class="p"><em class="ph i">parallel(M)</em>
 </p>
 
@@ -350,13 +350,13 @@
 
 </td>
 
-<td class="entry" colspan="1" valign="top" headers="d11067e563 ">
+<td class="entry" colspan="1" valign="top" headers="d13633e563 ">
 <p class="p"><em class="ph i">not-parallel</em>
 </p>
 
 </td>
 
-<td class="entry" rowspan="2" colspan="1" valign="top" headers="d11067e569 ">
+<td class="entry" rowspan="2" colspan="1" valign="top" headers="d13633e569 ">
 <p class="p">Single subscriber connects to each of the M publishers so that the subscriber region will process all the the published tuples once.
 </p>
 
@@ -365,7 +365,7 @@
 </tr>
 
 <tr class="row">
-<td class="entry" colspan="1" valign="top" headers="d11067e563 ">
+<td class="entry" colspan="1" valign="top" headers="d13633e563 ">
 <p class="p"><em class="ph i">parallel(1)</em>
 </p>
 
@@ -374,19 +374,19 @@
 </tr>
 
 <tr class="row">
-<td class="entry" colspan="1" valign="top" headers="d11067e557 ">
+<td class="entry" colspan="1" valign="top" headers="d13633e557 ">
 <p class="p"><em class="ph i">parallel(M)</em> <em class="ph i">M &gt; 1</em>
 </p>
 
 </td>
 
-<td class="entry" colspan="1" valign="top" headers="d11067e563 ">
+<td class="entry" colspan="1" valign="top" headers="d13633e563 ">
 <p class="p"><em class="ph i">parallel(N)</em> <em class="ph i">N &gt; 1</em>
 </p>
 
 </td>
 
-<td class="entry" colspan="1" valign="top" headers="d11067e569 ">
+<td class="entry" colspan="1" valign="top" headers="d13633e569 ">
 <p class="p">Each published channel is connected to a single subscribe channel with channel number <tt class="ph tt">publish channel % N</tt>. Thus the subscriber region processes the tuples once. 
 </p>
 

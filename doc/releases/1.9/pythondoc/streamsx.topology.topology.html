@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.topology &mdash; streamsx 1.9a1 documentation</title>
+  <title>streamsx.topology.topology &mdash; streamsx 1.9.2b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.9a1 documentation" href="index.html"/>
+    <link rel="top" title="streamsx 1.9.2b documentation" href="index.html"/>
         <link rel="next" title="streamsx.topology.context" href="streamsx.topology.context.html"/>
         <link rel="prev" title="streamsx.topology" href="streamsx.topology.html"/> 
 
@@ -219,6 +219,15 @@ IBM Streams installation.</p>
 This effectively, from a Python point of view, produces a runnable
 version of the Python topology that includes application
 specific Python C extensions to optimize performance.</p>
+<p>The bundle also includes any required Python packages or modules
+that were used in the declaration of the application. For example
+the Python module containing the callable used in a
+<a class="reference internal" href="#streamsx.topology.topology.Stream.map" title="streamsx.topology.topology.Stream.map"><code class="xref py py-meth docutils literal"><span class="pre">map()</span></code></a> invocation. These modules are copied into
+the bundle from their local location. This allows the bundle to
+be self-contained, and thus not the Streams instance have all the required
+Python packages pre-installed. The addition of packages to the bundle
+can be controlled with <a class="reference internal" href="#streamsx.topology.topology.Topology.include_packages" title="streamsx.topology.topology.Topology.include_packages"><code class="xref py py-attr docutils literal"><span class="pre">Topology.include_packages</span></code></a> and
+<a class="reference internal" href="#streamsx.topology.topology.Topology.exclude_packages" title="streamsx.topology.topology.Topology.exclude_packages"><code class="xref py py-attr docutils literal"><span class="pre">Topology.exclude_packages</span></code></a>.</p>
 <p>The Streams runtime distributes the application’s operations
 across the resources available in the instance.</p>
 <div class="admonition note">
@@ -306,8 +315,19 @@ Initialization at runtime, such as opening connections, occurs through the <code
 
     <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
         <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
 </pre></div>
 </div>
+<p>When an instance defines a valid <code class="docutils literal"><span class="pre">__exit__</span></code> method then it will be called with an exception when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the instance raises an exception during processing of a tuple</li>
+<li>a data conversion exception is raised converting a value to an structutured schema tuple or attribute</li>
+</ul>
+</div></blockquote>
+<p>If <code class="docutils literal"><span class="pre">__exit__</span></code> returns a true value then the exception is suppressed and processing continues, otherwise the enclosing processing element will be terminated.</p>
 </div>
 <div class="section" id="tuple-semantics">
 <h3>Tuple semantics<a class="headerlink" href="#tuple-semantics" title="Permalink to this headline">¶</a></h3>
@@ -426,6 +446,12 @@ this method returns.</p>
 parallel region.</p>
 <p>A parallel region is started by <a class="reference internal" href="#streamsx.topology.topology.Stream.parallel" title="streamsx.topology.topology.Stream.parallel"><code class="xref py py-meth docutils literal"><span class="pre">parallel()</span></code></a>
 and ended with <a class="reference internal" href="#streamsx.topology.topology.Stream.end_parallel" title="streamsx.topology.topology.Stream.end_parallel"><code class="xref py py-meth docutils literal"><span class="pre">end_parallel()</span></code></a> or <a class="reference internal" href="#streamsx.topology.topology.Stream.for_each" title="streamsx.topology.topology.Stream.for_each"><code class="xref py py-meth docutils literal"><span class="pre">for_each()</span></code></a>.</p>
+<dl class="attribute">
+<dt id="streamsx.topology.topology.Routing.BROADCAST">
+<code class="descname">BROADCAST</code><em class="property"> = 0</em><a class="headerlink" href="#streamsx.topology.topology.Routing.BROADCAST" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tuples are routed to every channel in the parallel region.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="streamsx.topology.topology.Routing.HASH_PARTITIONED">
 <code class="descname">HASH_PARTITIONED</code><em class="property"> = 3</em><a class="headerlink" href="#streamsx.topology.topology.Routing.HASH_PARTITIONED" title="Permalink to this definition">¶</a></dt>
@@ -817,17 +843,28 @@ tuple will be present on the returned stream, otherwise the tuple is filtered ou
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>func</strong> – Filter callable that takes a single parameter for the tuple.</li>
 <li><strong>name</strong> (<em>str</em>) – Name of the stream, defaults to a generated name.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A Stream containing tuples that have not been filtered out.</p>
-</td>
+</tbody>
+</table>
+<p>If invoking <code class="docutils literal"><span class="pre">func</span></code> for a tuple on the stream raises an exception
+then its processing element will terminate. By default the processing
+element will automatically restart though tuples may be lost.</p>
+<p>If <code class="docutils literal"><span class="pre">func</span></code> is a callable object then it may suppress exceptions
+by return a true value from its <code class="docutils literal"><span class="pre">__exit__</span></code> method. When an
+exception is suppressed no tuple is submitted to the filtered
+stream corresponding to the input tuple that caused the exception.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A Stream containing tuples that have not been filtered out.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></p>
-</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></td>
 </tr>
 </tbody>
 </table>
@@ -839,29 +876,39 @@ tuple will be present on the returned stream, otherwise the tuple is filtered ou
 <dd><p>Maps and flatterns each tuple from this stream into 0 or more tuples.</p>
 <p>For each tuple on this stream <code class="docutils literal"><span class="pre">func(tuple)</span></code> is called.
 If the result is not <cite>None</cite> then the the result is iterated over
-with each value from the iterator that is not None will be submitted</p>
-<blockquote>
-<div>to the return stream.</div></blockquote>
+with each value from the iterator that is not <cite>None</cite> will be submitted
+to the return stream.</p>
 <p>If the result is <cite>None</cite> or an empty iterable then no tuples are submitted to
 the returned stream.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>func</strong> – A callable that takes a single parameter for the tuple.</li>
 <li><strong>name</strong> (<em>str</em>) – Name of the flattened stream, defaults to a generated name.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A Stream containing transformed tuples.</p>
-</td>
+</tbody>
+</table>
+<p>If invoking <code class="docutils literal"><span class="pre">func</span></code> for a tuple on the stream raises an exception
+then its processing element will terminate. By default the processing
+element will automatically restart though tuples may be lost.</p>
+<p>If <code class="docutils literal"><span class="pre">func</span></code> is a callable object then it may suppress exceptions
+by return a true value from its <code class="docutils literal"><span class="pre">__exit__</span></code> method. When an
+exception is suppressed no tuples are submitted to the flattened
+and mapped stream corresponding to the input tuple
+that caused the exception.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A Stream containing flattened and mapped tuples.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></p>
-</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> – if <cite>func</cite> does not return an iterator nor None</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> – if <cite>func</cite> does not return an iterator nor None</td>
 </tr>
 </tbody>
 </table>
@@ -876,17 +923,28 @@ the returned stream.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>func</strong> – A callable that takes a single parameter for the tuple and returns None.</li>
 <li><strong>name</strong> (<em>str</em>) – Name of the stream, defaults to a generated name.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Stream termination.</p>
-</td>
+</tbody>
+</table>
+<p>If invoking <code class="docutils literal"><span class="pre">func</span></code> for a tuple on the stream raises an exception
+then its processing element will terminate. By default the processing
+element will automatically restart though tuples may be lost.</p>
+<p>If <code class="docutils literal"><span class="pre">func</span></code> is a callable object then it may suppress exceptions
+by return a true value from its <code class="docutils literal"><span class="pre">__exit__</span></code> method. When an
+exception is suppressed no further processing occurs for the
+input tuple that caused the exception.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Stream termination.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink">streamsx.topology.topology.Sink</a></p>
-</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink">streamsx.topology.topology.Sink</a></td>
 </tr>
 </tbody>
 </table>
@@ -965,7 +1023,7 @@ If <cite>result</cite> is not <cite>None</cite> then the result will be submitte
 as a tuple on the returned stream. If <cite>result</cite> is <cite>None</cite> then
 no tuple submission will occur.</p>
 <p>By default the submitted tuple is <code class="docutils literal"><span class="pre">result</span></code> without modification
-resulting in a stream of pickable Python objects. Setting the
+resulting in a stream of picklable Python objects. Setting the
 <cite>schema</cite> parameter changes the type of the stream and
 modifies each <code class="docutils literal"><span class="pre">result</span></code> before submission.</p>
 <ul class="simple">
@@ -978,18 +1036,29 @@ modifies each <code class="docutils literal"><span class="pre">result</span></co
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>func</strong> – A callable that takes a single parameter for the tuple.</li>
 <li><strong>name</strong> (<em>str</em>) – Name of the mapped stream, defaults to a generated name.</li>
 <li><strong>schema</strong> (<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema"><em>StreamSchema</em></a>) – Schema of the resulting stream.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A stream containing tuples mapped by <cite>func</cite>.</p>
-</td>
+</tbody>
+</table>
+<p>If invoking <code class="docutils literal"><span class="pre">func</span></code> for a tuple on the stream raises an exception
+then its processing element will terminate. By default the processing
+element will automatically restart though tuples may be lost.</p>
+<p>If <code class="docutils literal"><span class="pre">func</span></code> is a callable object then it may suppress exceptions
+by return a true value from its <code class="docutils literal"><span class="pre">__exit__</span></code> method. When an
+exception is suppressed no tuple is submitted to the mapped
+stream corresponding to the input tuple that caused the exception.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A stream containing tuples mapped by <cite>func</cite>.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></p>
-</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></td>
 </tr>
 </tbody>
 </table>
@@ -1044,9 +1113,6 @@ before the call to <a class="reference internal" href="#streamsx.topology.topolo
 <p>Parallel regions aren’t required to have an output stream, and thus may be used as sinks.
 In other words, a parallel sink is created by calling parallel() and creating a sink operation.
 It is not necessary to invoke end_parallel() on parallel sinks.</p>
-<p>Nested parallelism is not currently supported.
-A call to parallel() should never be made immediately after another call to parallel() without
-having an end_parallel() in between.</p>
 <p>Every call to end_parallel() must have a call to parallel() preceding it.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1076,7 +1142,7 @@ the tuple channel routing.</li>
 <dt id="streamsx.topology.topology.Stream.print">
 <code class="descname">print</code><span class="sig-paren">(</span><em>tag=None</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.print" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prints each tuple to stdout flushing after each tuple.</p>
-<p>If <cite>tag</cite> is not <cite>None</cite> then each tuple has <a href="#id1"><span class="problematic" id="id2">`</span></a>tag: ` prepended
+<p>If <cite>tag</cite> is not <cite>None</cite> then each tuple has “tag: ” prepended
 to it before printing.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1194,6 +1260,26 @@ cannot be modified.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="streamsx.topology.topology.Stream.set_parallel">
+<code class="descname">set_parallel</code><span class="sig-paren">(</span><em>width</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.set_parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates that the stream is the start of a parallel region. Should only be invoked on source operators.
+:param width: The degree of parallelism for the parallel region.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns this stream.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></td>
+</tr>
+</tbody>
+</table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.9.</span></p>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="streamsx.topology.topology.Stream.sink">
 <code class="descname">sink</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.sink" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to calling <a class="reference internal" href="#streamsx.topology.topology.Stream.for_each" title="streamsx.topology.topology.Stream.for_each"><code class="xref py py-meth docutils literal"><span class="pre">for_each()</span></code></a>.</p>
@@ -1251,7 +1337,7 @@ to JSON.</p>
 <li><strong>name</strong> (<em>str</em>) – Name of the view. Name must be unique within the topology. Defaults to a generated name.</li>
 <li><strong>description</strong> – Description of the view.</li>
 <li><strong>start</strong> (<em>bool</em>) – Start buffering data when the job is submitted.
-If <cite>False</cite> then the view is starts buffering data when the first
+If <cite>False</cite> then the view starts buffering data when the first
 remote client accesses it to retrieve data.</li>
 </ul>
 </td>
@@ -1289,14 +1375,20 @@ a random name.</li>
 </tr>
 </tbody>
 </table>
-<dl class="docutils">
-<dt>Instance variables:</dt>
-<dd><p class="first">include_packages(set): Python package names to be included in the built application.</p>
-<p>exclude_packages(set): Python top-level package names to be excluded from the built application. Excluding a top-level packages excludes all sub-modules at any level in the package, e.g. <cite>sound</cite> excludes <cite>sound.effects.echo</cite>. Only the top-level package can be defined, e.g. <cite>sound</cite> rather than <cite>sound.filters</cite>. Behavior when adding a module within a package is undefined.
+<dl class="attribute">
+<dt id="streamsx.topology.topology.Topology.include_packages">
+<code class="descname">include_packages</code><a class="headerlink" href="#streamsx.topology.topology.Topology.include_packages" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>set[str]</em> – Python package names to be included in the built application. Any package in this list is copied into the bundle and made available at runtime to the Python callables used in the application. By default a <code class="docutils literal"><span class="pre">Topology</span></code> will automatically discover which packages and modules are required to be copied, this field may be used to add additional packages that were not automatically discovered.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.topology.Topology.exclude_packages">
+<code class="descname">exclude_packages</code><a class="headerlink" href="#streamsx.topology.topology.Topology.exclude_packages" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>set[str]</em> – Python top-level package names to be excluded from the built application. Excluding a top-level packages excludes all sub-modules at any level in the package, e.g. <cite>sound</cite> excludes <cite>sound.effects.echo</cite>. Only the top-level package can be defined, e.g. <cite>sound</cite> rather than <cite>sound.filters</cite>. Behavior when adding a module within a package is undefined.
 When compiling the application using Anaconda this set is pre-loaded with Python packages from the Anaconda pre-loaded set.</p>
-<p class="last">Package names in <cite>include_packages</cite> take precedence over package names in <cite>exclude_packages</cite>.</p>
-</dd>
-</dl>
+<p>Package names in <cite>include_packages</cite> take precedence over package names in <cite>exclude_packages</cite>.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="streamsx.topology.topology.Topology.add_file_dependency">
 <code class="descname">add_file_dependency</code><span class="sig-paren">(</span><em>path</em>, <em>location</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.add_file_dependency" title="Permalink to this definition">¶</a></dt>
@@ -1341,18 +1433,82 @@ For example the path above at runtime is
 </div>
 </dd></dl>
 
+<dl class="method">
+<dt id="streamsx.topology.topology.Topology.add_pip_package">
+<code class="descname">add_pip_package</code><span class="sig-paren">(</span><em>requirement</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.add_pip_package" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a Python package dependency for this topology.</p>
+<p>If the package defined by the requirement specifier
+is not pre-installed on the build system then the
+package is installed using <cite>pip</cite> and becomes part
+of the Streams application bundle (<cite>sab</cite> file).
+The package is expected to be available from <cite>pypi.org</cite>.</p>
+<p>If the package is already installed on the build system
+then it is not added into the <cite>sab</cite> file.
+The assumption is that the runtime hosts for a Streams
+instance have the same Python packages installed as the
+build machines. This is always true for the Streaming
+Analytics service on IBM Cloud.</p>
+<p>The project name extracted from the requirement
+specifier is added to <a class="reference internal" href="#streamsx.topology.topology.Topology.exclude_packages" title="streamsx.topology.topology.Topology.exclude_packages"><code class="xref py py-attr docutils literal"><span class="pre">exclude_packages</span></code></a>
+to avoid the package being added by the dependency
+resolver. Thus the package should be added before
+it is used in any stream transformation.</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">()</span>
+<span class="c1"># Add dependency on pint package</span>
+<span class="c1"># and astral at version 0.8.1</span>
+<span class="n">topo</span><span class="o">.</span><span class="n">add_pip_package</span><span class="p">(</span><span class="s1">&#39;pint&#39;</span><span class="p">)</span>
+<span class="n">topo</span><span class="o">.</span><span class="n">add_pip_package</span><span class="p">(</span><span class="s1">&#39;astral==0.8.1&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>requirement</strong> (<em>str</em>) – Package requirements specifier.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Only supported when using the remote build service with
+the Streaming Analytics service.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.9.</span></p>
+</div>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="streamsx.topology.topology.Topology.name">
 <code class="descname">name</code><a class="headerlink" href="#streamsx.topology.topology.Topology.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the name of the topology.
-Returns:str:Name of the topology.</p>
+<dd><p>Name of the topology.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Name of the topology.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="streamsx.topology.topology.Topology.namespace">
 <code class="descname">namespace</code><a class="headerlink" href="#streamsx.topology.topology.Topology.namespace" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the namespace of the topology.
-Returns:str:Namespace of the topology.</p>
+<dd><p>Namespace of the topology.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Namespace of the topology.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -1370,17 +1526,30 @@ to be distributed across available resources in the Streams instance.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>func</strong> (<em>callable</em>) – An iterable or a zero-argument callable that returns an iterable of tuples.</li>
 <li><strong>name</strong> (<em>str</em>) – Name of the stream, defaults to a generated name.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A stream whose tuples are the result of the iterable obtained from <cite>func</cite>.</p>
-</td>
+</tbody>
+</table>
+<p>Exceptions raised by <code class="docutils literal"><span class="pre">func</span></code> or its iterator will cause
+its processing element will terminate.</p>
+<p>If <code class="docutils literal"><span class="pre">func</span></code> is a callable object then it may suppress exceptions
+by return a true value from its <code class="docutils literal"><span class="pre">__exit__</span></code> method.</p>
+<p>Suppressing an exception raised by <code class="docutils literal"><span class="pre">func.__iter__</span></code> causes the
+source to be empty, no tuples are submitted to the stream.</p>
+<p>Suppressing an exception raised by <code class="docutils literal"><span class="pre">__next__</span></code> on the iterator
+results in no tuples being submitted for that call to <code class="docutils literal"><span class="pre">__next__</span></code>.
+Processing continues with calls to <code class="docutils literal"><span class="pre">__next__</span></code> to fetch subsequent tuples.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A stream whose tuples are the result of the iterable obtained from <cite>func</cite>.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></p>
-</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></td>
 </tr>
 </tbody>
 </table>
@@ -1610,7 +1779,7 @@ duration of the window.</td>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9a1',
+            VERSION:'1.9.2b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.tester &mdash; streamsx 1.9a1 documentation</title>
+  <title>streamsx.topology.tester &mdash; streamsx 1.9.2b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.9a1 documentation" href="index.html"/>
+    <link rel="top" title="streamsx 1.9.2b documentation" href="index.html"/>
         <link rel="next" title="streamsx.topology.tester_runtime" href="streamsx.topology.tester_runtime.html"/>
         <link rel="prev" title="streamsx.topology.schema" href="streamsx.topology.schema.html"/> 
 
@@ -447,17 +447,37 @@ message queue system.</p>
 <dt id="streamsx.topology.tester.Tester.setup_distributed">
 <em class="property">static </em><code class="descname">setup_distributed</code><span class="sig-paren">(</span><em>test</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.setup_distributed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set up a unittest.TestCase to run tests using IBM Streams distributed mode.</p>
-<p>Requires a local IBM Streams install define by the STREAMS_INSTALL
-environment variable. If STREAMS_INSTALL is not set then the
+<p>Requires a local IBM Streams install define by the <code class="docutils literal"><span class="pre">STREAMS_INSTALL</span></code>
+environment variable. If <code class="docutils literal"><span class="pre">STREAMS_INSTALL</span></code> is not set then the
 test is skipped.</p>
 <dl class="docutils">
 <dt>The Streams instance to use is defined by the environment variables:</dt>
 <dd><ul class="first last simple">
-<li>STREAMS_ZKCONNECT - Zookeeper connection string</li>
-<li>STREAMS_DOMAIN_ID - Domain identifier</li>
-<li>STREAMS_INSTANCE_ID - Instance identifier</li>
+<li><code class="docutils literal"><span class="pre">STREAMS_ZKCONNECT</span></code> - Zookeeper connection string (optional)</li>
+<li><code class="docutils literal"><span class="pre">STREAMS_DOMAIN_ID</span></code> - Domain identifier</li>
+<li><code class="docutils literal"><span class="pre">STREAMS_INSTANCE_ID</span></code> - Instance identifier</li>
 </ul>
 </dd>
+</dl>
+<p>The user used to submit and monitor the job is set by the
+optional environment variables:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a href="#id1"><span class="problematic" id="id2">``</span></a>STREAMS_USERNAME - User name defaulting to <cite>streamsadmin</cite>.</li>
+<li><a href="#id3"><span class="problematic" id="id4">``</span></a>STREAMS_PASSWORD - User password defaulting to <cite>passw0rd</cite>.</li>
+</ul>
+</div></blockquote>
+<p>The defaults match the setup for testing on a IBM Streams Quick
+Start Edition (QSE) virtual machine.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p><code class="docutils literal"><span class="pre">streamtool</span></code> is used to submit the job and requires that <code class="docutils literal"><span class="pre">streamtool</span></code> does not prompt for authentication.  This is achieved by using <code class="docutils literal"><span class="pre">streamtool</span> <span class="pre">genkey</span></code>.</p>
+<div class="last admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference external" href="https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-user-security-authentication-rsa.html">Generating authentication keys for IBM Streams</a></p>
+</div>
+</div>
+<dl class="docutils">
 <dt>Two attributes are set in the test case:</dt>
 <dd><ul class="first last simple">
 <li>test_ctxtype - Context type the test will be run in.</li>
@@ -548,7 +568,7 @@ is supported with Streaming Analytics service.</p>
 
 <dl class="method">
 <dt id="streamsx.topology.tester.Tester.test">
-<code class="descname">test</code><span class="sig-paren">(</span><em>ctxtype</em>, <em>config=None</em>, <em>assert_on_fail=True</em>, <em>username=None</em>, <em>password=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.test" title="Permalink to this definition">¶</a></dt>
+<code class="descname">test</code><span class="sig-paren">(</span><em>ctxtype</em>, <em>config=None</em>, <em>assert_on_fail=True</em>, <em>username=None</em>, <em>password=None</em>, <em>always_collect_logs=False</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester.Tester.test" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test the topology.</p>
 <p>Submits the topology for testing and verifies the test conditions are met and the job remained healthy through its execution.</p>
 <p>The submitted application (job) is monitored for the test conditions and
@@ -569,12 +589,9 @@ tester’s result object under the <cite>application_logs</cite> key, i.e. <cite
 <li><strong>ctxtype</strong> (<em>str</em>) – Context type for submission.</li>
 <li><strong>config</strong> – Configuration for submission.</li>
 <li><strong>assert_on_fail</strong> (<em>bool</em>) – True to raise an assertion if the test fails, False to return the passed status.</li>
-<li><strong>username</strong> (<em>str</em>) – username for distributed tests
-.. deprecated:: 1.8.3
-Pass the username via the STREAMS_USERNAME environment variable instead.</li>
-<li><strong>password</strong> (<em>str</em>) – password for distributed tests
-.. deprecated:: 1.8.3
-Pass the password via the STREAMS_PASSWORD environment variable instead.</li>
+<li><strong>username</strong> (<em>str</em>) – <strong>Deprecated</strong></li>
+<li><strong>password</strong> (<em>str</em>) – <strong>Deprecated</strong></li>
+<li><strong>always_collect_logs</strong> (<em>bool</em>) – True to always collect the console log and PE trace files of the test.</li>
 </ul>
 </td>
 </tr>
@@ -609,6 +626,12 @@ the Streaming Analytics service or instance.</p>
 </tr>
 </tbody>
 </table>
+<div class="deprecated">
+<p><span class="versionmodified">Deprecated since version 1.8.3: </span><code class="docutils literal"><span class="pre">username</span></code> and <code class="docutils literal"><span class="pre">password</span></code> parameters. When required for
+ a distributed test use the environment variables
+ <code class="docutils literal"><span class="pre">STREAMS_USERNAME</span></code> and <code class="docutils literal"><span class="pre">STREAMS_PASSWORD</span></code> to define
+ the Streams user.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -748,7 +771,7 @@ tuples, <cite>False</cite> if the stream must contain at least <cite>count</cite
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9a1',
+            VERSION:'1.9.2b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

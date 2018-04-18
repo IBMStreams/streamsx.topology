@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.spl.op &mdash; streamsx 1.9a1 documentation</title>
+  <title>streamsx.spl.op &mdash; streamsx 1.9.2b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.9a1 documentation" href="index.html"/>
+    <link rel="top" title="streamsx 1.9.2b documentation" href="index.html"/>
         <link rel="next" title="streamsx.spl.types" href="streamsx.spl.types.html"/>
         <link rel="prev" title="streamsx.ec" href="streamsx.ec.html"/> 
 
@@ -100,6 +100,7 @@
 <li class="toctree-l1"><a class="reference internal" href="streamsx.ec.html">streamsx.ec</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx.spl.op</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#invoking-spl-operators">Invoking SPL Operators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#values-for-operator-clauses">Values for operator clauses</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#param-clause">Param clause</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#output-clause">Output clause</a></li>
 </ul>
@@ -191,7 +192,7 @@
 <p>IBM Streams supports <em>Stream Processing Language</em> (SPL),
 a domain specific language for streaming analytics.
 SPL creates an application by building a graph of operator
-invocations. These operators are declared in a SPL toolkit.</p>
+invocations. These operators are declared in an SPL toolkit.</p>
 <p>SPL streams have a structured schema, such as
 <code class="docutils literal"><span class="pre">tuple&lt;rstring</span> <span class="pre">id,</span> <span class="pre">timestamp</span> <span class="pre">ts,</span> <span class="pre">float64</span> <span class="pre">value&gt;</span></code> for
 a sensor reading with a sensor identifier, timestamp and value.
@@ -204,7 +205,7 @@ with the <cite>schema</cite> parameter set:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># s is stream of Python objects representing a sensor</span>
 <span class="n">s</span> <span class="o">=</span> <span class="o">...</span>
 
-<span class="c1"># map s to a structured stream using a lamda function</span>
+<span class="c1"># map s to a structured stream using a lambda function</span>
 <span class="c1"># for each sensor reading r a Python tuple is created</span>
 <span class="c1"># with the required values matching the order of the</span>
 <span class="c1"># structured schema.</span>
@@ -222,34 +223,60 @@ instance of:</p>
 <li><a class="reference internal" href="#streamsx.spl.op.Sink" title="streamsx.spl.op.Sink"><code class="xref py py-class docutils literal"><span class="pre">Sink</span></code></a> - Invocation of an SPL sink operator with one output port.</li>
 </ul>
 </div></blockquote>
-<p>In SPL operator invocation support a number of clauses of which these are
-supported from Python.</p>
+<p>In SPL, operator invocation supports a number of clauses that are
+supported in Python.</p>
+<div class="section" id="values-for-operator-clauses">
+<span id="id1"></span><h3>Values for operator clauses<a class="headerlink" href="#values-for-operator-clauses" title="Permalink to this headline">¶</a></h3>
+<p>When an operator clause requires a value, the value may be passed as
+a constant,
+an input attribute (passed using the <cite>attribute</cite> method of the invocation),
+or an arbitrary SPL expression (passed as a string or an <a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression"><code class="xref py py-class docutils literal"><span class="pre">Expression</span></code></a>).
+Because a string is interpreted as an SPL expression, a string constant
+should be passed by enclosing the quoted string in outer quotes
+(for example, ‘“a string constant”’).</p>
+<p>SPL is strictly typed so when passing a constant as a parameter value the
+value may need to be strongly typed.</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">bool</span></code>, <code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code> and <code class="docutils literal"><span class="pre">str</span></code> values map automatically to SPL <cite>boolean</cite>, <cite>int32</cite>, <cite>float64</cite> and <cite>rstring</cite> respectively.</li>
+<li><code class="docutils literal"><span class="pre">Enum</span></code> values map to an operator custom literal using the symbolic name of the value. For custom literals only the symbolic name needs to match a value expected by the operator, the class name and other values are arbitrary.</li>
+<li>The module <a class="reference internal" href="streamsx.spl.types.html#module-streamsx.spl.types" title="streamsx.spl.types"><code class="xref py py-mod docutils literal"><span class="pre">streamsx.spl.types</span></code></a> provides functions to create typed SPL expressions from values.</li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="param-clause">
 <h3>Param clause<a class="headerlink" href="#param-clause" title="Permalink to this headline">¶</a></h3>
 <p>Operator parameterization is through operator parameters that configure
 and modify the operator for the specific application.</p>
-<p>Parameters are passed as a <cite>dict</cite> containing the parameter names and their values. A parameter value may be a constant, an input attribute or an
-arbitrary SPL expression.</p>
-<p>Example, a <cite>Beacon</cite> operator from the SPL standard toolkit producing 100 tuples at the rate of two per second:</p>
+<p>Parameters are passed as a <cite>dict</cite> containing the parameter names and their values (see <a class="reference internal" href="#values-for-operator-clauses"><span class="std std-ref">Values for operator clauses</span></a>).</p>
+<p><em>Examples</em></p>
+<p>To invoke a <cite>Beacon</cite> operator from the SPL standard toolkit producing 100 tuples at the rate of two per second:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">schema</span> <span class="o">=</span> <span class="n">StreamSchema</span><span class="p">(</span><span class="s1">&#39;tuple&lt;uint64 seq&gt;&#39;</span><span class="p">)</span>
 <span class="n">beacon</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">Source</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="s1">&#39;spl.utility::Beacon&#39;</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span>
     <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;iterations&#39;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span> <span class="s1">&#39;period&#39;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>SPL is strictly typed so when passing a constant as a parameter value the
-value may need to be strongly typed. Python booleans, integers, floats and
-strings map automatically to SPL <cite>boolean</cite>, <cite>int32</cite>, <cite>float64</cite> and <cite>rstring</cite>
-respectively. The module <a class="reference internal" href="streamsx.spl.types.html#module-streamsx.spl.types" title="streamsx.spl.types"><code class="xref py py-mod docutils literal"><span class="pre">streamsx.spl.types</span></code></a> provides functions to
-create typed SPL values.</p>
-<p>For example to create a <cite>count</cite> parameter of type <cite>uint64</cite> for the SPL <cite>DeDuplicate</cite> operator:</p>
+<p>To use an <code class="docutils literal"><span class="pre">IntEnum</span></code> to pass a custom literal to the <code class="docutils literal"><span class="pre">Parse</span></code> operator:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">IntEnum</span>
+
+<span class="k">class</span> <span class="nc">DataFormats</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">csv</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">txt</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="o">...</span>
+
+<span class="n">params</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataFormats</span><span class="o">.</span><span class="n">csv</span>
+</pre></div>
+</div>
+<p>To create a <cite>count</cite> parameter of type <cite>uint64</cite> for the SPL <cite>DeDuplicate</cite> operator:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">streamsx</span><span class="o">.</span><span class="n">spl</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">uint64</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>After the instance representing the operator
-invocation has been created, addition parameters may be added through
+invocation has been created, additional parameters may be added through
 the <cite>params</cite> attribute. If the value is an expression that is only valid
 in the context of the operator invocation then the parameter must be added
-after</p>
+after the operator invocation has been created.</p>
 <p>For example, the <cite>Filter</cite> operator uses an expression that is usually dependent on the context, filtering tuples based upon their attribute values:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">fs</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">Map</span><span class="p">(</span><span class="s1">&#39;spl.relational::Filter&#39;</span><span class="p">,</span> <span class="n">beacon</span><span class="p">)</span>
 <span class="n">fs</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">expression</span><span class="p">(</span><span class="s1">&#39;seq </span><span class="si">% 2u</span><span class="s1">l == 0ul&#39;</span><span class="p">)</span>
@@ -260,17 +287,19 @@ after</p>
 <h3>Output clause<a class="headerlink" href="#output-clause" title="Permalink to this headline">¶</a></h3>
 <p>The operator output clause defines the values of attributes on outgoing
 tuples on the operator invocation’s output ports.</p>
-<p>When a tuple is submitted by an operator invocation its attributes are
-set one of three ways:</p>
+<p>When a tuple is submitted by an operator invocation each of its attributes is
+set in one of three ways:</p>
 <blockquote>
 <div><ul class="simple">
-<li>By the operator based upon its state and input tuples. For example a US ZIP code operator would set the <cite>zipcode</cite> attribute based upon its lookup of the ZIP code from the address details in the input tuple.</li>
+<li>By the operator based upon its state and input tuples. For example, a US ZIP code operator might set the <cite>zipcode</cite> attribute based upon its lookup of the ZIP code from the address details in the input tuple.</li>
 <li>By the operator implicitly setting output attributes from matching input attributes. Many streaming operators implicitly set output attributes to allow attributes to flow through the operator without any explicit coding. This only occurs when an output attribute is not explicitly set by the operator or the output clause and the input tuple has an attribute that matches the name and type of the output attribute. For example in the US ZIP code operator if the output tuple included attributes of <code class="docutils literal"><span class="pre">rstring</span> <span class="pre">city,</span> <span class="pre">rstring</span> <span class="pre">state</span></code> matching input attributes then they would be implicitly copied from input tuple to output tuple.</li>
-<li>By an ouput clause in the operator invocation. In this case the application invoking the operator is explicitly setting attributes using SPL expressions. An operator may provide output functions that return values based upon the operator’s state and input tuples. For example the US ZIP code operator might provide a <code class="docutils literal"><span class="pre">ZIPCode()</span></code> output function rather than explicitly setting an output attribute. Then the application is free to use any attribute name to represent ZIP code in its output tuple.</li>
+<li>By an output clause in the operator invocation. In this case the application invoking the operator is explicitly setting attributes using SPL expressions. An operator may provide output functions that return values based upon the operator’s state and input tuples. For example, the US ZIP code operator might provide a <code class="docutils literal"><span class="pre">ZIPCode()</span></code> output function rather than explicitly setting an output attribute. Then the application is free to use any attribute name to represent the ZIP code in its output tuple.</li>
 </ul>
 </div></blockquote>
-<p>In Python an output tuple attribute is set by creating an attribute in the operator invocation instance that is set to a return from the <cite>output</cite> method.</p>
-<p>For example invoking a SPL <cite>Beacon</cite> operator using an output function to set the sequence number of a tuple and a SPL expression to set the timestamp:</p>
+<p>In Python an output tuple attribute is set by creating an attribute in the operator invocation instance that is set to a return from the <cite>output</cite> method.
+The attribute value passed to the <cite>output</cite> method is passed as described in
+<a class="reference internal" href="#values-for-operator-clauses"><span class="std std-ref">Values for operator clauses</span></a>.</p>
+<p>For example, invoking an SPL <cite>Beacon</cite> operator using an output function to set the sequence number of a tuple and an SPL expression to set the timestamp:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">schema</span> <span class="o">=</span> <span class="n">StreamSchema</span><span class="p">(</span><span class="s1">&#39;tuple&lt;uint64 seq, timestamp ts&gt;&#39;</span><span class="p">)</span>
 <span class="n">beacon</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">Source</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="s1">&#39;spl.utility::Beacon&#39;</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;period&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">})</span>
 
@@ -358,7 +387,7 @@ set one of three ways:</p>
 an arbitrary number of output ports. The kind of the
 operator places constraints on how many input and output
 ports it supports, and potentially the schemas for those
-ports. For example <code class="docutils literal"><span class="pre">spl.relational::Filter</span></code> has
+ports. For example, <code class="docutils literal"><span class="pre">spl.relational::Filter</span></code> has
 a single input port and one or two output ports,
 in addition the schemas of the ports must be identical.</p>
 <p>When the operator has output ports an instance of
@@ -500,7 +529,7 @@ as a list of streams.</td>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><em>Stream</em></a>) – Output stream the assignment is for.</li>
-<li><strong>value</strong> (<em>str</em>) – SPL expression used for an output assignment.</li>
+<li><strong>value</strong> (<em>str</em>) – SPL expression used for an output assignment. This can be a string, a constant, or an <a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression"><code class="xref py py-class docutils literal"><span class="pre">Expression</span></code></a>.</li>
 </ul>
 </td>
 </tr>
@@ -690,7 +719,7 @@ as a list of streams.</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>str</em>) – SPL expression used for an output assignment.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>str</em>) – SPL expression used for an output assignment. This can be a string, a constant, or an <a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression"><code class="xref py py-class docutils literal"><span class="pre">Expression</span></code></a>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Output assignment expression that is valid as a the context of this operator.</td>
 </tr>
@@ -898,7 +927,7 @@ as a list of streams.</td>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><em>Stream</em></a>) – Output stream the assignment is for.</li>
-<li><strong>value</strong> (<em>str</em>) – SPL expression used for an output assignment.</li>
+<li><strong>value</strong> (<em>str</em>) – SPL expression used for an output assignment. This can be a string, a constant, or an <a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression"><code class="xref py py-class docutils literal"><span class="pre">Expression</span></code></a>.</li>
 </ul>
 </td>
 </tr>
@@ -1095,7 +1124,7 @@ as a list of streams.</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>str</em>) – SPL expression used for an output assignment.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>str</em>) – SPL expression used for an output assignment. This can be a string, a constant, or an <a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression"><code class="xref py py-class docutils literal"><span class="pre">Expression</span></code></a>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Output assignment expression that is valid as a the context of this operator.</td>
 </tr>
@@ -1214,7 +1243,7 @@ cannot be modified.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9a1',
+            VERSION:'1.9.2b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

@@ -22,7 +22,7 @@
 <div class="body refbody">
 <div class="section">
 <p class="p">
-<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.9.0.__dev__</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.topic.html">com.ibm.streamsx.topology.topic</a> &gt; topicsfilter.spl</p>
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.9.2.beta</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.topic.html">com.ibm.streamsx.topology.topic</a> &gt; topicsfilter.spl</p>
 
 </div>
 
@@ -194,6 +194,15 @@ public boolean filterByReading(Sensor t, int32 unused) {
 </li>
 
 <li class="sli"><strong class="ph b">localFilterParameter</strong>: Optional parameter passed as the second argument to <tt class="ph tt">localFilterFunction</tt>. If not supplied then zero is passed as an <tt class="ph tt">int32</tt>.
+</li>
+
+<li class="sli"><strong class="ph b">connect</strong>: Connection mode between subscriber and publishers. Can be set to <a class="xref" href="spl$com.ibm.streamsx.topology.topic$connect.html#spldoc_compilationunit__composite_operator__Direct">Direct</a> or <a class="xref" href="spl$com.ibm.streamsx.topology.topic$connect.html#spldoc_compilationunit__composite_operator__Buffered">Buffered</a>. The default is <tt class="ph tt">Direct</tt>. See <a class="xref" href="spl$com.ibm.streamsx.topology.topic$connect.html">Connection mode</a>. 
+</li>
+
+<li class="sli"><strong class="ph b">bufferFullPolicy</strong>: Buffer policy when the buffer is full. Ignored when <tt class="ph tt">connect</tt> is set to <tt class="ph tt">Direct</tt>.
+</li>
+
+<li class="sli"><strong class="ph b">bufferCapacity</strong>: Capacity of the buffer in number of tuples. Ignored when <tt class="ph tt">connect</tt> is set to <tt class="ph tt">Direct</tt>.
 </li>
 
 </ul>

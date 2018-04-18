@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.spl.spl &mdash; streamsx 1.9a1 documentation</title>
+  <title>streamsx.spl.spl &mdash; streamsx 1.9.2b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.9a1 documentation" href="index.html"/>
+    <link rel="top" title="streamsx 1.9.2b documentation" href="index.html"/>
         <link rel="next" title="streamsx.rest" href="streamsx.rest.html"/>
         <link rel="prev" title="streamsx.spl.toolkit" href="streamsx.spl.toolkit.html"/> 
 
@@ -331,8 +331,19 @@ in order to support stateful operator restart &amp; checkpointing in the future.
     <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
 </pre></div>
 </div>
+<p>When an instance defines a valid <code class="docutils literal"><span class="pre">__exit__</span></code> method then it will be called with an exception when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the instance raises an exception during processing of a tuple</li>
+<li>a data conversion exception is raised converting a Python value to an SPL tuple or attribute</li>
+</ul>
+</div></blockquote>
+<p>If <code class="docutils literal"><span class="pre">__exit__</span></code> returns a true value then the exception is suppressed and processing continues, otherwise the enclosing processing element will be terminated.</p>
 </div>
 <div class="section" id="application-log-and-trace">
 <h3>Application log and trace<a class="headerlink" href="#application-log-and-trace" title="Permalink to this headline">¶</a></h3>
@@ -633,7 +644,7 @@ in the SPL tuple:</p>
 <p>The returned tuple may be <em>sparse</em>, any attribute value in the tuple
 that is <code class="docutils literal"><span class="pre">None</span></code> will be set to their SPL default or copied from the
 input tuple, depending on the operator kind:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># SPL input schema: tuple&lt;int32 x, float64 x&gt;</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># SPL input schema: tuple&lt;int32 x, float64 y&gt;</span>
 <span class="c1"># SPL output schema: tuple&lt;int32 x, float64 y, float32 z&gt;</span>
 <span class="nd">@spl</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;position&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">myfunc</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
@@ -649,7 +660,7 @@ input tuple, depending on the operator kind:</p>
 schema the attributes not set by the Python function will be set
 to their SPL default or copied from the input tuple, depending on
 the operator kind:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># SPL input schema: tuple&lt;int32 x, float64 x&gt;</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># SPL input schema: tuple&lt;int32 x, float64 y&gt;</span>
 <span class="c1"># SPL output schema: tuple&lt;int32 x, float64 y, float32 z&gt;</span>
 <span class="nd">@spl</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;position&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">myfunc</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
@@ -662,7 +673,7 @@ the operator kind:</p>
 </pre></div>
 </div>
 <p>When a returned tuple has more values than attributes in the SPL output schema then the additional values are ignored:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># SPL input schema: tuple&lt;int32 x, float64 x&gt;</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># SPL input schema: tuple&lt;int32 x, float64 y&gt;</span>
 <span class="c1"># SPL output schema: tuple&lt;int32 x, float64 y, float32 z&gt;</span>
 <span class="nd">@spl</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;position&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">myfunc</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
@@ -888,6 +899,11 @@ not specified in the SPL invocation.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>Exceptions raised by <code class="docutils literal"><span class="pre">__call__</span></code> can be suppressed when this decorator
+wraps a class with context manager <code class="docutils literal"><span class="pre">__enter__</span></code> and <code class="docutils literal"><span class="pre">__exit__</span></code> methods.
+If <code class="docutils literal"><span class="pre">__exit__</span></code> returns a true value when called with the exception
+then the expression is suppressed and the tuple that caused the
+exception is dropped.</p>
 </dd></dl>
 
 <dl class="class">
@@ -920,6 +936,11 @@ is called passing the contents of the tuple.</p>
 </tr>
 </tbody>
 </table>
+<p>Exceptions raised by <code class="docutils literal"><span class="pre">__call__</span></code> can be suppressed when this decorator
+wraps a class with context manager <code class="docutils literal"><span class="pre">__enter__</span></code> and <code class="docutils literal"><span class="pre">__exit__</span></code> methods.
+If <code class="docutils literal"><span class="pre">__exit__</span></code> returns a true value when called with the exception
+then the expression is suppressed and the tuple that caused the
+exception is ignored.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1005,6 +1026,16 @@ port, see <a class="reference internal" href="#submit-from-python"><span class="
 </tr>
 </tbody>
 </table>
+<p>Exceptions raised by <code class="docutils literal"><span class="pre">__call__</span></code> can be suppressed when this decorator
+wraps a class with context manager <code class="docutils literal"><span class="pre">__enter__</span></code> and <code class="docutils literal"><span class="pre">__exit__</span></code> methods.
+If <code class="docutils literal"><span class="pre">__exit__</span></code> returns a true value when called with the exception
+then the exception is suppressed and the tuple that caused the
+exception is dropped.</p>
+<p>Data conversion errors of the value returned by <code class="docutils literal"><span class="pre">__call__</span></code> can
+also be suppressed by <code class="docutils literal"><span class="pre">__exit__</span></code>.
+If <code class="docutils literal"><span class="pre">__exit__</span></code> returns a true value when called with the exception
+then the exception is suppressed and the value that caused the
+exception is not submitted as an SPL tuple.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1157,6 +1188,21 @@ is submitted to the output port.</p>
 </tr>
 </tbody>
 </table>
+<p>Exceptions raised by <code class="docutils literal"><span class="pre">__iter__</span></code> and <code class="docutils literal"><span class="pre">__next__</span></code> can be suppressed
+when this decorator wraps a class with context manager
+<code class="docutils literal"><span class="pre">__enter__</span></code> and <code class="docutils literal"><span class="pre">__exit__</span></code> methods.</p>
+<p>If <code class="docutils literal"><span class="pre">__exit__</span></code> returns a true value when called with an exception
+then the exception is suppressed.</p>
+<p>Suppressing an exception raised by <code class="docutils literal"><span class="pre">__iter__</span></code> results in the
+source producing an empty iteration. No tuples will be submitted.</p>
+<p>Suppressing an exception raised by <code class="docutils literal"><span class="pre">__next__</span></code> results in the
+source not producing any tuples for that invocation. Processing
+continues with a call to <code class="docutils literal"><span class="pre">__next__</span></code>.</p>
+<p>Data conversion errors of the value returned by <code class="docutils literal"><span class="pre">__next__</span></code> can
+also be suppressed by <code class="docutils literal"><span class="pre">__exit__</span></code>.
+If <code class="docutils literal"><span class="pre">__exit__</span></code> returns a true value when called with the exception
+then the exception is suppressed and the value that caused the
+exception is not submitted as an SPL tuple.</p>
 </dd></dl>
 
 </div>
@@ -1206,7 +1252,7 @@ is submitted to the output port.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9a1',
+            VERSION:'1.9.2b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

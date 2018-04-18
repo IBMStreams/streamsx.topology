@@ -37,6 +37,7 @@ streamsx\.rest\_primitives
       Metric
       Operator
       OperatorConnection
+      OperatorInputPort
       OperatorOutputPort
       PE
       PEConnection
