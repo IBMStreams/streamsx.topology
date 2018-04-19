@@ -617,7 +617,7 @@ class Tester(object):
 
     def _fetch_application_logs(self, ctxtype):
         # Fetch the logs if submitting to a Streaming Analytics Service
-        if stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.DISTRIBUTED = ctxtype:
+        if stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.DISTRIBUTED == ctxtype:
             application_logs = self.submission_result.job.retrieve_log_trace()
             if application_logs is not None:
                 _logger.info("Application logs have been fetched to " + application_logs)
