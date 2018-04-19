@@ -253,4 +253,21 @@ public interface Invoker {
            
         return outputs;
     }
+    
+    /**
+     * Set the functional namespace for Java functional operators
+     * for a topology.
+     * 
+     * This is used to ensure the topologies declared using an SPI toolkit
+     * invoke its own versions of the operators from this topology toolkit.
+     * For example HashAdder, HashRemover etc. This means:
+     *   * The operators are in-sync with the topology definition
+     *   * The share the same class loader as any other operators
+     *   provided by the toolkit using the SPI.
+     *   
+     * This must be called immediately after the Topology is created.
+     */
+    static void setFunctionalNamespace(Topology topology, String namespace) {
+        topology.builder().setFunctionalNamespace(namespace);
+    }
 }

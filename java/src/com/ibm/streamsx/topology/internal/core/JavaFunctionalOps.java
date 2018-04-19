@@ -17,41 +17,47 @@ public interface JavaFunctionalOps {
     }
     
 
-    
-    String NS = SPI.namespaceJava();
+    /**
+     * Default namespace for functional operators.
+     * A library that uses the SPI interface must
+     * set their own namespace for Java functional operators
+     * extended from this toolkit.
+     */
+    String NS = "com.ibm.streamsx.topology.functional.java";
+    String NS_COLON = NS+"::";
     
     String PKG_O = "com.ibm.streamsx.topology.internal.functional.ops.";
 
     String AGGREGATE = PKG_O + "FunctionAggregate";
-    String AGGREGATE_KIND = NS + "::Aggregate";
+    String AGGREGATE_KIND = NS_COLON + "Aggregate";
     
     String CONVERT_SPL = PKG_O + "FunctionConvertToSPL";
-    String CONVERT_SPL_KIND = NS + "::ToSPL";
+    String CONVERT_SPL_KIND = NS_COLON + "ToSPL";
     
-    String FILTER_KIND = NS + "::Filter";
+    String FILTER_KIND = NS_COLON + "Filter";
     
-    String FLAT_MAP_KIND = NS + "::FlatMap";
+    String FLAT_MAP_KIND = NS_COLON + "FlatMap";
     
-    String HASH_ADDER_KIND = NS + "::HashAdder";
+    String HASH_ADDER_KIND = NS_COLON + "HashAdder";
     
-    String HASH_REMOVER_KIND = NS + "::HashRemover"; // Technically not a functional op.
+    String HASH_REMOVER_KIND = NS_COLON + "HashRemover"; // Technically not a functional op.
 
-    String JOIN_KIND = NS + "::Join";
+    String JOIN_KIND = NS_COLON + "Join";
     
-    String MAP_KIND = NS + "::Map";
+    String MAP_KIND = NS_COLON + "Map";
     
-    String PASS_KIND = NS + "::PassThrough"; // Technically not a functional op.
+    String PASS_KIND = NS_COLON + "PassThrough"; // Technically not a functional op.
     
-    String PERIODIC_MULTI_SOURCE_KIND = NS + "::FunctionPeriodicSource";
+    String PERIODIC_MULTI_SOURCE_KIND = NS_COLON + "FunctionPeriodicSource";
     
-    String SPLIT_KIND = NS + "::Split";
+    String SPLIT_KIND = NS_COLON + "Split";
     
     
     String PKG = "com.ibm.streamsx.topology.internal.functional.operators.";    
    
-    String FOR_EACH_KIND = NS + "::ForEach";
+    String FOR_EACH_KIND = NS_COLON + "ForEach";
     
-    String SOURCE_KIND = NS + "::Source";
+    String SOURCE_KIND = NS_COLON + "Source";
     
     String PASS_CLASS = PKG + "PassThrough";
     
