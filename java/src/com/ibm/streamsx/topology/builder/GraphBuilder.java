@@ -11,6 +11,8 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_SPL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_VIRTUAL;
+import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.NS_COLON;
+import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.PASS_KIND;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAME;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.NAMESPACE;
@@ -55,6 +57,8 @@ public class GraphBuilder extends BJSONObject {
     private final List<BOperator> ops = new ArrayList<>();
     
     private final JsonObject config = new JsonObject();
+    
+    private String functionalNamespaceColon;
 
     /**
      * Submission parameters.
@@ -78,6 +82,7 @@ public class GraphBuilder extends BJSONObject {
    
     public BOperatorInvocation addOperator(String name, String kind, Map<String, ? extends Object> params) {
 
+        kind = correctFunctionalNamespace(kind);
         final BOperatorInvocation op = new BOperatorInvocation(this, kind, params);
         ops.add(op);
         
@@ -216,7 +221,8 @@ public class GraphBuilder extends BJSONObject {
     }
     
     public BOutput addPassThroughOperator(BOutput output) {
-        BOperatorInvocation op = addOperator("Pass", JavaFunctionalOps.PASS_KIND, null);
+        BOperatorInvocation op = addOperator("Pass",
+                correctFunctionalNamespace(PASS_KIND), null);
         op.setModel(MODEL_SPL, LANGUAGE_JAVA);
         // Create the input port that consumes the output
         BInputPort input = op.inputFrom(output, null);
@@ -290,5 +296,22 @@ public class GraphBuilder extends BJSONObject {
         if (params.has(name))
             throw new IllegalArgumentException("name is already defined");
         params.add(name, jo);
+    }
+
+    /**
+     * Sets the namespace to be used for functional operators
+     * for this topology.
+     * @param namespace Namespace for functional java operators.
+     */
+    public void setFunctionalNamespace(String namespace) {
+        functionalNamespaceColon = namespace + "::";   
+    }
+    
+    private String correctFunctionalNamespace(String kind) {
+        if (functionalNamespaceColon != null) {
+            if (kind.startsWith(NS_COLON))
+                kind = kind.replace(NS_COLON, functionalNamespaceColon);
+        }
+        return kind;
     }
 }
