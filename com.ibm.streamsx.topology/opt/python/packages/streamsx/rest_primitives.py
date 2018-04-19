@@ -561,7 +561,7 @@ class Job(_ResourceElement):
 
         if not filename:
             filename = _file_name('job', self.id, '.tar.gz')
-        if hasattr(self, "applicationLogTrace"), and self.applicationLogTrace is not None:
+        if hasattr(self, "applicationLogTrace") and self.applicationLogTrace is not None:
             return self.rest_client._retrieve_file(self.applicationLogTrace, filename, dir, 'application/x-compressed')
         else:
             return None
