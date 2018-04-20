@@ -7,7 +7,7 @@ These Ant targets include the Scala tests.
 
 Some of the JUnit tests include Python application API and decorator operator tests (e.g. test packages with `python`, `splpy`).
 
-* `unitest.quick` - Runs Java application api tests using `EMBEDDED_TESTER` context 
+* `unitest.main` - Runs Java application api tests using `EMBEDDED_TESTER` context 
 * `unitest.standalone` - Runs Java application api tests using `STANDALONE_TESTER` context
 * `unitest.distributed` - Runs Java application api tests using `DISTRIBUTED_TESTER` context
 * `unittest.streaminganalytics` - Runs Java application api tests using the `STREAMING_ANALYTICS_SERVICE` context.
