@@ -7,6 +7,7 @@ from enum import Enum
 import datetime
 
 from streamsx.topology.schema import _AnySchema
+import streamsx.types
 
 _StreamWindow = Union[Stream, Window]
 
@@ -16,12 +17,17 @@ class Routing(Enum):
     HASH_PARTITIONED=3
 
 
+class SubscribeConnection(Enum):
+    Direct = 0
+    Buffered = 1
+
+
 class Topology(object):
     def __init__(self, name: str=None, namespace: str=None, files: Any=None) -> None: ...
     def source(self, func : Union[Callable[[], Any],Iterable[Any]], name: str =None) -> Stream: ...
     def name(self) -> str: ...
     def namespace(self) -> str: ...
-    def subscribe(self, topic: str, schema: _AnySchema=None, name: str=None) -> Stream: ...
+    def subscribe(self, topic: str, schema: _AnySchema=None, name: str=None, connect: SubscribeConnection=None, buffer_capacity: int=None, buffer_full_policy: streamsx.types.CongestionPolicy=None) -> Stream: ...
     def add_file_dependency(self, path: str, location: str) -> str: ...
     def add_pip_package(self, requirement: str) -> None: ...
 
