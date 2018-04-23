@@ -33,7 +33,7 @@ class SplpyOp {
           op_(op),
           callable_(NULL),
           pydl_(NULL),
-          exc_supresses(NULL)
+          exc_suppresses(NULL)
 
 #if __SPLPY_EC_MODULE_OK
           , opc_(NULL)
@@ -100,7 +100,7 @@ class SplpyOp {
                       "nExceptionsSuppressed",
                       "Number of exceptions suppressed by callable's __exit__ method.",
                       SPL::Metric::Counter);
-                  exc_supresses = &cm;
+                  exc_suppresses = &cm;
               }
               Py_DECREF(entered);
           }
@@ -133,8 +133,8 @@ class SplpyOp {
                "streamsx.ec", "_shutdown_op", callable_, exInfo.asTuple());
              int ignoreException = PyObject_IsTrue(ignore);
              Py_DECREF(ignore);
-             if (ignoreException)
-                 exc_supresses->incrementValue();
+             if (ignoreException && exc_suppresses)
+                 exc_suppresses->incrementValue();
              return ignoreException;
           }
           return 0;
@@ -172,7 +172,8 @@ class SplpyOp {
       // Handle to libpythonX.Y.so
       void * pydl_;
 
-      SPL::Metric *exc_supresses;
+      // Number of exceptions suppressed by __exit__
+      SPL::Metric *exc_suppresses;
 
 #if __SPLPY_EC_MODULE_OK
       // PyLong of op_
