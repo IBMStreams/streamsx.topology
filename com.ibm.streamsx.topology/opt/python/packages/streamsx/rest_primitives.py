@@ -188,7 +188,7 @@ class _StreamsRestClient(object):
 
         return res
 
-    def _retrieve_file(self, url, filename, dir_, mimetype):
+    def _retrieve_file(self, url, filename, dir_, mimetype):        
         logs = self.make_raw_streaming_request(url, mimetype)
         
         if dir_ is None:
@@ -553,16 +553,19 @@ class Job(_ResourceElement):
             dir (str): a valid directory in which to save the archive. Defaults to the current directory.
 
         Returns:
-            str: the path to the created tar file.
+            str: the path to the created tar file, or None if retrieving a job's logs is not supported in the version of streams to which the job is submitted.
 
         .. versionadded:: 1.8
         """
         logger.debug("Retrieving application logs from: " + self.applicationLogTrace)
 
-        if not filename:
-            filename = _file_name('job', self.id, '.tar.gz')
- 
-        return self.rest_client._retrieve_file(self.applicationLogTrace, filename, dir, 'application/x-compressed')
+        if hasattr(self, "applicationLogTrace") and self.applicationLogTrace is not None:
+            if not filename:
+                filename = _file_name('job', self.id, '.tar.gz')
+
+            return self.rest_client._retrieve_file(self.applicationLogTrace, filename, dir, 'application/x-compressed')
+        else:
+            return None
 
     def get_views(self, name=None):
         """Get the list of :py:class:`View` elements associated with this job.
@@ -898,16 +901,20 @@ class PE(_ResourceElement):
             dir (str): a valid directory in which to save the file. Defaults to the current directory.
 
         Returns:
-            str: the path to the created file.
+            str: the path to the created file, or None if retrieving a job's logs is not supported in the version of streams to which the job is submitted.
 
         .. versionadded:: 1.9
         """
         logger.debug("Retrieving PE trace: " + self.applicationTrace)
 
-        if not filename:
-            filename = _file_name('pe', self.id, '.trace')
- 
-        return self.rest_client._retrieve_file(self.applicationTrace, filename, dir, 'text/plain')
+
+        if hasattr(self, "applicationTrace") and self.applicationTrace is not None:
+            if not filename:
+                filename = _file_name('pe', self.id, '.trace')
+            return self.rest_client._retrieve_file(self.applicationTrace, filename, dir, 'text/plain')
+
+        else:
+            return None
 
     def retrieve_console_log(self, filename=None, dir=None):
         """Retrieves the application console log (standard out and error)
@@ -920,16 +927,18 @@ class PE(_ResourceElement):
             dir (str): a valid directory in which to save the file. Defaults to the current directory.
 
         Returns:
-            str: the path to the created file.
+            str: the path to the created file, or None if retrieving a job's logs is not supported in the version of streams to which the job is submitted.
 
         .. versionadded:: 1.9
         """
         logger.debug("Retrieving PE console log: " + self.consoleLog)
+        if hasattr(self, "consoleLog") and self.consoleLog is not None:
+            if not filename:
+                filename = _file_name('pe', self.id, '.stdouterr')
+            return self.rest_client._retrieve_file(self.consoleLog, filename, dir, 'text/plain')
 
-        if not filename:
-            filename = _file_name('pe', self.id, '.stdouterr')
- 
-        return self.rest_client._retrieve_file(self.consoleLog, filename, dir, 'text/plain')
+        else:
+            return None
 
     def get_metrics(self, name=None):
         """Get metrics for this PE.

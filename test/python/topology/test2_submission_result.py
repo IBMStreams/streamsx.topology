@@ -35,34 +35,6 @@ class TestSubmissionResult(unittest.TestCase):
         tester.local_check = self._correct_job_ids
         tester.test(self.test_ctxtype, config)
 
-
-class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
-    def setUp(self):
-        Tester.setup_streaming_analytics(self, force_remote_build=True)
-
-    def test_get_job(self):
-        topo = Topology("job_in_result_test")
-        topo.source(["foo"])
-
-        tester = Tester(topo)
-        self.tester = tester
-
-        tester.local_check = self._correct_job_ids
-        tester.test(self.test_ctxtype, self.test_config)
-
-        sr = tester.submission_result
-        self.assertIn('submitMetrics', sr)
-        m = sr['submitMetrics']
-        self.assertIn('buildArchiveSize', m)
-        self.assertIn('buildArchiveUploadTime_ms', m)
-        self.assertIn('totalBuildTime_ms', m)
-        self.assertIn('jobSubmissionTime_ms', m)
-
-        self.assertTrue(m['buildArchiveSize'] > 0)
-        self.assertTrue(m['buildArchiveUploadTime_ms'] > 0)
-        self.assertTrue(m['totalBuildTime_ms'] > 0)
-        self.assertTrue(m['jobSubmissionTime_ms'] > 0)
-
     def test_fetch_logs_on_failure(self):
         topo = Topology("fetch_logs_on_failure")
         s = topo.source(["foo"])
@@ -102,7 +74,33 @@ class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
         self.assertTrue(exists, "Application logs were not downloaded on test success")
 
         if exists:
-            os.remove(logs)
+            os.remove(logs)                            
 
-            
-                
+
+class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)
+
+    def test_get_job(self):
+        topo = Topology("job_in_result_test")
+        topo.source(["foo"])
+
+        tester = Tester(topo)
+        self.tester = tester
+
+        tester.local_check = self._correct_job_ids
+        tester.test(self.test_ctxtype, self.test_config)
+
+        sr = tester.submission_result
+        self.assertIn('submitMetrics', sr)
+        m = sr['submitMetrics']
+        self.assertIn('buildArchiveSize', m)
+        self.assertIn('buildArchiveUploadTime_ms', m)
+        self.assertIn('totalBuildTime_ms', m)
+        self.assertIn('jobSubmissionTime_ms', m)
+
+        self.assertTrue(m['buildArchiveSize'] > 0)
+        self.assertTrue(m['buildArchiveUploadTime_ms'] > 0)
+        self.assertTrue(m['totalBuildTime_ms'] > 0)
+        self.assertTrue(m['jobSubmissionTime_ms'] > 0)
+
